@@ -6,6 +6,8 @@ import {
   HandleBlock,
   HandleTransaction,
   Finding,
+  FindingType,
+  FindingSeverity,
 } from 'forta-agent'
 
 import * as agentLidoOracle from './agent-lido-oracle'
@@ -62,6 +64,8 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
 
 
 const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) => {
+  const wasInitialized = initialized
+
   if (!initialized) {
     initialized = true
     await initialize(txEvent.blockNumber)
@@ -74,6 +78,16 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
     blockFindings = []
   } else {
     findings = []
+  }
+
+  if (!wasInitialized) {
+    findings.push(Finding.fromObject({
+      name: 'Agent launched',
+      description: `Agent launched on a new machine`,
+      alertId: 'LIDO-AGENT-LAUNCHED',
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+    }))
   }
 
   await Promise.all(subAgents.map(async agent => {
