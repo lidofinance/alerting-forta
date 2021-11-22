@@ -42,7 +42,7 @@ export async function initialize(currentBlock: number) {
 
   // ~2 days ago
   const pastBlock = currentBlock - Math.ceil(50 * 60 * 60 / 13)
-  const sellEvents = await anchorVault.queryFilter(rewardsSoldFilter, pastBlock, currentBlock)
+  const sellEvents = await anchorVault.queryFilter(rewardsSoldFilter, pastBlock, currentBlock - 1)
 
   if (sellEvents.length > 0) {
     const byBlockNumberDesc = (e1: Event, e2: Event) => e2.blockNumber - e1.blockNumber

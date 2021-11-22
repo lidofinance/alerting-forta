@@ -29,13 +29,15 @@ export interface OracleReport {
   timestamp: number
   beaconBalance: BigNumber
   beaconValidators: number
+  rewards: BigNumber
 }
 
 // re-fetched from history on startup
 let lastOracleReport: OracleReport = {
   timestamp: 0,
   beaconBalance: new BigNumber(0),
-  beaconValidators: 0
+  beaconValidators: 0,
+  rewards: new BigNumber(0),
 }
 
 let lastTriggeredAt = 0
@@ -53,7 +55,7 @@ export async function initialize(currentBlock: number) {
 
   // ~2 days ago
   const pastBlock = currentBlock - Math.ceil(50 * 60 * 60 / 13)
-  const reportEvents = await lidoOracle.queryFilter(oracleReportFilter, pastBlock, currentBlock)
+  const reportEvents = await lidoOracle.queryFilter(oracleReportFilter, pastBlock, currentBlock - 1)
 
   if (reportEvents.length > 0) {
     const byBlockNumberDesc = (e1: Event, e2: Event) => e2.blockNumber - e1.blockNumber
@@ -68,6 +70,7 @@ export async function initialize(currentBlock: number) {
       timestamp: lastBlock.timestamp,
       beaconBalance: new BigNumber(String(beaconBalance)),
       beaconValidators: +beaconValidators,
+      rewards: new BigNumber(0),
     }
   }
 
@@ -123,32 +126,66 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 
+const ETH_PER_VALIDATOR = new BigNumber(10).pow(18).times(32)
+
+
 function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
   const [completedEvent] = txEvent.filterLog(LIDO_ORACLE_COMPLETED_EVENT, LIDO_ORACLE_ADDRESS)
   if (completedEvent == undefined) {
     return
   }
 
-  const {beaconBalance, beaconValidators} = completedEvent.args
+  const beaconBalance = new BigNumber(String(completedEvent.args.beaconBalance))
+  const beaconValidators = +completedEvent.args.beaconValidators
   const beaconBalanceEth = formatEth(beaconBalance, 3)
 
-  lastOracleReport = {
+  const validatorsDiff = beaconValidators - lastOracleReport.beaconValidators
+  const rewardBase = lastOracleReport.beaconBalance.plus(ETH_PER_VALIDATOR.times(validatorsDiff))
+  const rewards = beaconBalance.minus(rewardBase)
+  const rewardsEth = formatEth(rewards, 3)
+
+  let newOracleReport = {
     timestamp: txEvent.block.timestamp,
     beaconBalance: new BigNumber(String(beaconBalance)),
     beaconValidators: +beaconValidators,
+    rewards: rewards,
   }
 
   findings.push(Finding.fromObject({
     name: 'Lido Oracle report',
-    description: `Total balance: ${beaconBalanceEth} ETH, total validators: ${beaconValidators}`,
+    description: `Total balance: ${beaconBalanceEth} ETH, total validators: ${beaconValidators}, ` +
+      `rewards: ${rewardsEth} ETH`,
     alertId: 'LIDO-ORACLE-REPORT',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
     metadata: {
       beaconBalance: `${beaconBalance}`,
       beaconValidators: `${beaconValidators}`,
+      rewards: `${rewards}`,
     },
   }))
+
+  if (rewards.isLessThan(lastOracleReport.rewards)) {
+    const rewardsDiff = rewards.minus(lastOracleReport.rewards)
+    const rewardsDiffEth = formatEth(rewardsDiff, 3)
+    const prevRewardsEth = formatEth(lastOracleReport.rewards, 3)
+    findings.push(Finding.fromObject({
+      name: 'Lido Beacon rewards decreased',
+      description: `Rewards decreased from ${prevRewardsEth} ETH to ${rewardsEth} ` +
+        `by ${rewardsDiffEth} ETH`,
+      alertId: 'LIDO-ORACLE-REWARDS-DECREASED',
+      severity: FindingSeverity.Medium,
+      type: FindingType.Degraded,
+      metadata: {
+        beaconBalance: `${beaconBalance}`,
+        beaconValidators: `${beaconValidators}`,
+        rewards: `${rewards}`,
+        prevRewards: `${lastOracleReport.rewards}`,
+      },
+    }))
+  }
+
+  lastOracleReport = newOracleReport
 }
 
 
