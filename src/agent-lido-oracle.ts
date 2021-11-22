@@ -11,13 +11,18 @@ import {
 
 import {Event} from 'ethers'
 
-import {formatEth} from './utils'
+import {formatEth, formatDelay} from './utils'
 import {makeFuture} from './utils/future'
 import {ethersProvider} from './ethers'
 
 import LIDO_ORACLE_ABI from './abi/LidoOracle.json'
 
-import {LIDO_ORACLE_ADDRESS, LIDO_ORACLE_COMPLETED_EVENT} from './constants'
+import {
+  LIDO_ORACLE_ADDRESS,
+  LIDO_ORACLE_COMPLETED_EVENT,
+  MAX_ORACLE_REPORT_DELAY,
+  TRIGGER_PERIOD,
+} from './constants'
 
 
 export interface OracleReport {
@@ -32,6 +37,8 @@ let lastOracleReport: OracleReport = {
   beaconBalance: new BigNumber(0),
   beaconValidators: 0
 }
+
+let lastTriggeredAt = 0
 
 const fBlockHandled = makeFuture<void>()
 const fTxHandled = makeFuture<void>()
@@ -73,8 +80,26 @@ export async function handleBlock(blockEvent: BlockEvent) {
   fBlockHandled.reset()
 
   const findings: Finding[] = []
+  const now = blockEvent.block.timestamp
+  const reportDelay = now - lastOracleReport.timestamp
 
-  // TODO: check report missing for >24h
+  if (reportDelay > 24 * 60 * 60) {
+    console.log(`[AgentLidoOracle] reportDelay: ${reportDelay}`)
+  }
+
+  if (reportDelay > MAX_ORACLE_REPORT_DELAY && now - lastTriggeredAt >= TRIGGER_PERIOD) {
+    findings.push(Finding.fromObject({
+      name: 'Lido Oracle report overdue',
+      description: `Time since last report: ${formatDelay(reportDelay)}`,
+      alertId: 'LIDO-ORACLE-OVERDUE',
+      severity: FindingSeverity.High,
+      type: FindingType.Degraded,
+      metadata: {
+        delay: `${reportDelay}`,
+      },
+    }))
+    lastTriggeredAt = now
+  }
 
   fBlockHandled.resolve()
 

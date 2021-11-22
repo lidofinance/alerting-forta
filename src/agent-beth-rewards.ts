@@ -19,7 +19,7 @@ import ANCHOR_VAULT_ABI from './abi/AnchorVault.json'
 import {
   ANCHOR_VAULT_ADDRESS,
   ANCHOR_VAULT_REWARDS_COLLECTED_EVENT,
-  MAX_REWARDS_SELL_DELAY,
+  MAX_BETH_REWARDS_SELL_DELAY,
   TRIGGER_PERIOD,
 } from './constants'
 
@@ -60,7 +60,7 @@ export async function initialize(currentBlock: number) {
     }
   }
 
-  console.log('lastRewardsSell:', lastRewardsSell)
+  console.log('[AgentBethRewards] lastRewardsSell:', lastRewardsSell)
 }
 
 
@@ -80,7 +80,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   console.log(`sellDelay: ${sellDelay}`)
 
-  if (sellDelay <= MAX_REWARDS_SELL_DELAY || now - lastTriggeredAt < TRIGGER_PERIOD) {
+  if (sellDelay <= MAX_BETH_REWARDS_SELL_DELAY || now - lastTriggeredAt < TRIGGER_PERIOD) {
     return findings
   }
 
