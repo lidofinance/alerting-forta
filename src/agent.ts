@@ -32,10 +32,17 @@ const subAgents: SubAgent[] = [
 let initialized = false
 
 
-const initialize = async (blockNumber: number) => {
+const initialize = async (blockNumber: number, findings: Finding[]) => {
   await Promise.all(subAgents.map(
     a => a.initialize?  a.initialize(blockNumber) : EMPTY_PROMISE
   ))
+  findings.push(Finding.fromObject({
+    name: 'Agent launched',
+    description: `Agent launched and initialized`,
+    alertId: 'LIDO-AGENT-LAUNCHED',
+    severity: FindingSeverity.Info,
+    type: FindingType.Info,
+  }))
 }
 
 
@@ -45,7 +52,7 @@ let blockFindings: Finding[] = []
 const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding[]> => {
   if (!initialized) {
     initialized = true
-    await initialize(blockEvent.blockNumber)
+    await initialize(blockEvent.blockNumber, blockFindings)
   }
 
   await Promise.all(subAgents.map(async agent => {
@@ -64,13 +71,6 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
 
 
 const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) => {
-  const wasInitialized = initialized
-
-  if (!initialized) {
-    initialized = true
-    await initialize(txEvent.blockNumber)
-  }
-
   let findings: Finding[]
 
   if (blockFindings.length > 0) {
@@ -80,14 +80,9 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
     findings = []
   }
 
-  if (!wasInitialized) {
-    findings.push(Finding.fromObject({
-      name: 'Agent launched',
-      description: `Agent launched on a new machine`,
-      alertId: 'LIDO-AGENT-LAUNCHED',
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-    }))
+  if (!initialized) {
+    initialized = true
+    await initialize(txEvent.blockNumber, findings)
   }
 
   await Promise.all(subAgents.map(async agent => {
