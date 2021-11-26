@@ -19,6 +19,7 @@ import ANCHOR_VAULT_ABI from './abi/AnchorVault.json'
 import {
   ANCHOR_VAULT_ADDRESS,
   ANCHOR_VAULT_REWARDS_COLLECTED_EVENT,
+  ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT,
   MAX_BETH_REWARDS_SELL_DELAY,
   TRIGGER_PERIOD,
 } from './constants'
@@ -26,6 +27,8 @@ import {
 import {OracleReport} from './agent-lido-oracle'
 import * as agentLidoOracle from './agent-lido-oracle'
 
+
+let rewardsLiquidatorAddress: string
 
 let lastRewardsSell = {
   timestamp: 0,
@@ -60,7 +63,10 @@ export async function initialize(currentBlock: number) {
     }
   }
 
+  rewardsLiquidatorAddress = await anchorVault.rewards_liquidator()
+
   console.log('[AgentBethRewards] lastRewardsSell:', lastRewardsSell)
+  console.log('[AgentBethRewards] rewardsLiquidatorAddress:', rewardsLiquidatorAddress)
 }
 
 
@@ -78,7 +84,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const now = blockEvent.block.timestamp
   const sellDelay = now - lastOracleReport.timestamp
 
-  console.log(`sellDelay: ${sellDelay}`)
+  console.log(`[AgentBethRewards] sellDelay: ${sellDelay}`)
 
   if (sellDelay <= MAX_BETH_REWARDS_SELL_DELAY || now - lastTriggeredAt < TRIGGER_PERIOD) {
     return findings
@@ -112,6 +118,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 
+const TEN_TO_18 = new BigNumber(10).pow(18)
+const TEN_TO_36 = TEN_TO_18.times(TEN_TO_18)
+
+
 function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
   const [rewardsCollectedEvent] = txEvent.filterLog(ANCHOR_VAULT_REWARDS_COLLECTED_EVENT, ANCHOR_VAULT_ADDRESS)
   if (rewardsCollectedEvent == undefined) {
@@ -120,24 +130,46 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   const {steth_amount, ust_amount} = rewardsCollectedEvent.args
 
+  const [soldEvent] = txEvent.filterLog(ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT, rewardsLiquidatorAddress)
+  const {steth_eth_price, eth_usdc_price, usdc_ust_price} = soldEvent.args
+
+  const stethAmount = new BigNumber(String(steth_amount))
+  const ustAmount = new BigNumber(String(ust_amount))
+
+  const stethUstPrice = new BigNumber(String(steth_eth_price))
+    .times(String(eth_usdc_price))
+    .times(String(usdc_ust_price))
+    .div(TEN_TO_36)
+
+  const ustAmountNoSlippage = stethAmount.times(stethUstPrice).div(TEN_TO_18)
+
+  const slippagePercent = ustAmount.isGreaterThan(ustAmountNoSlippage)
+    ? new BigNumber(0)
+    : ustAmount.div(ustAmountNoSlippage).minus(1).times(-100)
+
   lastRewardsSell = {
     timestamp: txEvent.block.timestamp,
-    stethAmount: new BigNumber(String(steth_amount)),
-    ustAmount: new BigNumber(String(ust_amount)),
+    stethAmount,
+    ustAmount,
   }
 
-  const stethAmount = formatEth(rewardsCollectedEvent.args.steth_amount, 3)
-  const ustAmount = formatEth(rewardsCollectedEvent.args.ust_amount, 1)
+  const stethDispAmount = formatEth(rewardsCollectedEvent.args.steth_amount, 3)
+  const ustDispAmount = formatEth(rewardsCollectedEvent.args.ust_amount, 1)
+  const stethUstDispPrice = formatEth(stethUstPrice, 1)
+  const slippageDispPercent = slippagePercent.toFixed(2)
 
   findings.push(Finding.fromObject({
     name: 'Anchor rewards collected',
-    description: `Sold ${stethAmount} stETH to ${ustAmount} UST`,
+    description: `Sold ${stethDispAmount} stETH to ${ustDispAmount} UST, ` +
+      `feed price ${stethUstDispPrice} UST per ETH, slippage ${slippageDispPercent}%`,
     alertId: 'BETH-REWARDS-COLLECTED',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
     metadata: {
       stethAmount: `${rewardsCollectedEvent.args.steth_amount}`,
       ustAmount: `${rewardsCollectedEvent.args.ust_amount}`,
+      slippagePercent: `${slippagePercent.toString(10)}`,
+      stethUstFeedPrice: `${stethUstPrice.toFixed(0, 3)}`,
     },
   }))
 }

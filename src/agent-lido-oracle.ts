@@ -74,7 +74,7 @@ export async function initialize(currentBlock: number) {
     }
   }
 
-  console.log('lastOracleReport:', lastOracleReport)
+  console.log('[AgentLidoOracle] lastOracleReport:', lastOracleReport)
 }
 
 
