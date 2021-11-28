@@ -8,6 +8,9 @@ export function formatEth(amount: any, dp: number): string {
   return new BigNumber(String(amount)).div(TEN_TO_18).toFixed(dp)
 }
 
+export function formatLdo(amount: any, dp: number): string {
+  return new BigNumber(String(amount)).div(TEN_TO_18).toFixed(dp)
+}
 
 export function formatDelay(fullDelaySec: number) {
   let sign = fullDelaySec >= 0 ? 1 : -1
