@@ -65,8 +65,12 @@ export async function initialize(currentBlock: number) {
 
   rewardsLiquidatorAddress = await anchorVault.rewards_liquidator()
 
-  console.log('[AgentBethRewards] lastRewardsSell:', lastRewardsSell)
-  console.log('[AgentBethRewards] rewardsLiquidatorAddress:', rewardsLiquidatorAddress)
+  console.log(`[AgentBethRewards] lastRewardsSell: {
+    timestamp: ${lastRewardsSell.timestamp},
+    stethAmount: ${formatEth(lastRewardsSell.stethAmount, 5)},
+    ustAmount: ${formatEth(lastRewardsSell.ustAmount, 3)}\n}`)
+
+  console.log(`[AgentBethRewards] rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`)
 }
 
 
@@ -76,7 +80,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   await agentLidoOracle.waitBlockHandled(blockEvent.blockHash)
   const lastOracleReport = await agentLidoOracle.getLastOracleReport()
 
-  if (lastRewardsSell.timestamp > lastOracleReport.timestamp) {
+  if (lastOracleReport == null || lastRewardsSell.timestamp > lastOracleReport.timestamp) {
     // rewards already sold
     return findings
   }
