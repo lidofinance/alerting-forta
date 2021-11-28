@@ -46,39 +46,29 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
 }
 
 
-let blockFindings: Finding[] = []
-
-
 const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding[]> => {
+  let findings: Finding[] = []
+
   if (!initialized) {
     initialized = true
-    await initialize(blockEvent.blockNumber, blockFindings)
+    await initialize(blockEvent.blockNumber, findings)
   }
 
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleBlock) {
       const newFindings = await agent.handleBlock(blockEvent)
       if (newFindings.length) {
-        blockFindings = blockFindings.concat(newFindings)
+        findings = findings.concat(newFindings)
       }
     }
   }))
 
-  // temporary fix for Defender not forwarding Forta block findings:
-  // report them in the block's first tx instead
-  return []
+  return findings
 }
 
 
 const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) => {
-  let findings: Finding[]
-
-  if (blockFindings.length > 0) {
-    findings = blockFindings
-    blockFindings = []
-  } else {
-    findings = []
-  }
+  let findings: Finding[] = []
 
   if (!initialized) {
     initialized = true
