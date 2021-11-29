@@ -165,7 +165,7 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
   findings.push(Finding.fromObject({
     name: 'Anchor rewards collected',
     description: `Sold ${stethDispAmount} stETH to ${ustDispAmount} UST, ` +
-      `feed price ${stethUstDispPrice} UST per ETH, slippage ${slippageDispPercent}%`,
+      `feed price ${stethUstDispPrice} UST per stETH, slippage ${slippageDispPercent}%`,
     alertId: 'BETH-REWARDS-COLLECTED',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
