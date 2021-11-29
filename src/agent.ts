@@ -13,6 +13,8 @@ import {
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 
+import VERSION from './version'
+
 
 interface SubAgent {
   handleBlock?: HandleBlock
@@ -38,10 +40,14 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
   ))
   findings.push(Finding.fromObject({
     name: 'Agent launched',
-    description: `Agent launched and initialized`,
+    description: `Version: ${VERSION.desc}`,
     alertId: 'LIDO-AGENT-LAUNCHED',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
+    metadata: {
+      'version.commitHash': VERSION.commitHash,
+      'version.commitMsg': VERSION.commitMsg,
+    }
   }))
 }
 
@@ -58,6 +64,7 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
     if (agent.handleBlock) {
       const newFindings = await agent.handleBlock(blockEvent)
       if (newFindings.length) {
+        enrichFindingsMetadata(newFindings)
         findings = findings.concat(newFindings)
       }
     }
@@ -79,12 +86,23 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
     if (agent.handleTransaction) {
       const newFindings = await agent.handleTransaction(txEvent)
       if (newFindings.length) {
+        enrichFindingsMetadata(newFindings)
         findings = findings.concat(newFindings)
       }
     }
   }))
 
   return findings
+}
+
+
+function enrichFindingsMetadata(findings: Finding[]) {
+  return findings.forEach(enrichFindingMetadata)
+}
+
+
+function enrichFindingMetadata(finding: Finding) {
+  finding.metadata['version.commitHash'] = VERSION.commitHash
 }
 
 
