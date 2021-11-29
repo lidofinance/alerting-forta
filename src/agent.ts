@@ -17,9 +17,10 @@ import VERSION from './version'
 
 
 interface SubAgent {
+  name: string
   handleBlock?: HandleBlock
   handleTransaction?: HandleTransaction
-  initialize?: (blockNumber: number) => Promise<void>
+  initialize?: (blockNumber: number) => Promise<{[key: string]: string}>
 }
 
 
@@ -35,19 +36,27 @@ let initialized = false
 
 
 const initialize = async (blockNumber: number, findings: Finding[]) => {
-  await Promise.all(subAgents.map(
-    a => a.initialize?  a.initialize(blockNumber) : EMPTY_PROMISE
-  ))
+  const metadata: {[key: string]: string} = {
+    'version.commitHash': VERSION.commitHash,
+    'version.commitMsg': VERSION.commitMsg,
+  }
+
+  await Promise.all(subAgents.map(async agent => {
+    if (agent.initialize) {
+      const agentMeta = await agent.initialize(blockNumber)
+      for (const metaKey in agentMeta) {
+        metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
+      }
+    }
+  }))
+
   findings.push(Finding.fromObject({
     name: 'Agent launched',
     description: `Version: ${VERSION.desc}`,
     alertId: 'LIDO-AGENT-LAUNCHED',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
-    metadata: {
-      'version.commitHash': VERSION.commitHash,
-      'version.commitMsg': VERSION.commitMsg,
-    }
+    metadata,
   }))
 }
 

@@ -46,7 +46,10 @@ let lastBlockHash: string
 let lastTxHash: string
 
 
-export async function initialize(currentBlock: number) {
+export const name = 'AgentLidoOracle'
+
+
+export async function initialize(currentBlock: number): Promise<{[key: string]: string}> {
   const lidoOracle = new ethers.Contract(LIDO_ORACLE_ADDRESS, LIDO_ORACLE_ABI, ethersProvider)
   const oracleReportFilter = lidoOracle.filters.Completed()
 
@@ -69,6 +72,11 @@ export async function initialize(currentBlock: number) {
 
   console.log(`[AgentLidoOracle] prevReport: ${printReport(prevReport)}`)
   console.log(`[AgentLidoOracle] lastReport: ${printReport(lastReport)}`)
+
+  return {
+    prevReportTimestamp: prevReport ? `${prevReport.timestamp}` : 'unknown',
+    lastReportTimestamp: lastReport ? `${lastReport.timestamp}` : 'unknown',
+  }
 }
 
 
