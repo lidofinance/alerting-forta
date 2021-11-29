@@ -16,4 +16,5 @@ COPY .yarn/releases ./.yarn/releases/
 COPY --from=builder /app/.yarn/cache ./.yarn/cache
 RUN yarn install --immutable
 COPY --from=builder /app/dist ./src
+COPY version.json ./
 CMD [ "yarn", "run", "start:prod" ]

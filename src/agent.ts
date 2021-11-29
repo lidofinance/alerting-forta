@@ -13,11 +13,14 @@ import {
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 
+import VERSION from './version'
+
 
 interface SubAgent {
+  name: string
   handleBlock?: HandleBlock
   handleTransaction?: HandleTransaction
-  initialize?: (blockNumber: number) => Promise<void>
+  initialize?: (blockNumber: number) => Promise<{[key: string]: string}>
 }
 
 
@@ -33,15 +36,27 @@ let initialized = false
 
 
 const initialize = async (blockNumber: number, findings: Finding[]) => {
-  await Promise.all(subAgents.map(
-    a => a.initialize?  a.initialize(blockNumber) : EMPTY_PROMISE
-  ))
+  const metadata: {[key: string]: string} = {
+    'version.commitHash': VERSION.commitHash,
+    'version.commitMsg': VERSION.commitMsg,
+  }
+
+  await Promise.all(subAgents.map(async agent => {
+    if (agent.initialize) {
+      const agentMeta = await agent.initialize(blockNumber)
+      for (const metaKey in agentMeta) {
+        metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
+      }
+    }
+  }))
+
   findings.push(Finding.fromObject({
     name: 'Agent launched',
-    description: `Agent launched and initialized`,
+    description: `Version: ${VERSION.desc}`,
     alertId: 'LIDO-AGENT-LAUNCHED',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
+    metadata,
   }))
 }
 
@@ -58,6 +73,7 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
     if (agent.handleBlock) {
       const newFindings = await agent.handleBlock(blockEvent)
       if (newFindings.length) {
+        enrichFindingsMetadata(newFindings)
         findings = findings.concat(newFindings)
       }
     }
@@ -79,12 +95,23 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
     if (agent.handleTransaction) {
       const newFindings = await agent.handleTransaction(txEvent)
       if (newFindings.length) {
+        enrichFindingsMetadata(newFindings)
         findings = findings.concat(newFindings)
       }
     }
   }))
 
   return findings
+}
+
+
+function enrichFindingsMetadata(findings: Finding[]) {
+  return findings.forEach(enrichFindingMetadata)
+}
+
+
+function enrichFindingMetadata(finding: Finding) {
+  finding.metadata['version.commitHash'] = VERSION.commitHash
 }
 
 

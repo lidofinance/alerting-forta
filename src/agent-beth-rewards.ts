@@ -39,7 +39,10 @@ let lastRewardsSell = {
 let lastTriggeredAt = 0
 
 
-export async function initialize(currentBlock: number) {
+export const name = 'AgentBethRewards'
+
+
+export async function initialize(currentBlock: number): Promise<{[key: string]: string}> {
   const anchorVault = new ethers.Contract(ANCHOR_VAULT_ADDRESS, ANCHOR_VAULT_ABI, ethersProvider)
   const rewardsSoldFilter = anchorVault.filters.RewardsCollected()
 
@@ -71,6 +74,11 @@ export async function initialize(currentBlock: number) {
     ustAmount: ${formatEth(lastRewardsSell.ustAmount, 3)}\n}`)
 
   console.log(`[AgentBethRewards] rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`)
+
+  return {
+    rewardsLiquidatorAddress: `${rewardsLiquidatorAddress}`,
+    lastRewardsSellTimestamp: `${lastRewardsSell.timestamp}`,
+  }
 }
 
 

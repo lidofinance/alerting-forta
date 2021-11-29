@@ -4,3 +4,4 @@ forta.config.json
 .yarn/*
 !.yarn/releases/
 *.log
+version.json
