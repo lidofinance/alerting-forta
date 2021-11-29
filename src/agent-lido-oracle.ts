@@ -175,23 +175,39 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
   const beaconBalanceEth = formatEth(newReport.beaconBalance, 3)
   const rewardsEth = formatEth(newReport.rewards, 3)
 
+  let rewardsDiff: BigNumber | null = null
+  let reportDelay: number | null = null
+  let rewardsDiffDesc = 'unknown'
+  let reportDelayDesc = 'unknown'
+
+  if (lastReport != null) {
+    rewardsDiff = newReport.rewards.minus(lastReport.rewards)
+    rewardsDiffDesc = `${rewardsDiff.isNegative() ? '' : '+'}${formatEth(rewardsDiff, 3)} ETH`
+    reportDelay = txEvent.block.timestamp - lastReport.timestamp
+    reportDelayDesc = formatDelay(reportDelay)
+  }
+
+  const metadata = {
+    beaconBalance: `${newReport.beaconBalance.toFixed(0)}`,
+    beaconValidators: `${newReport.beaconValidators}`,
+    rewards: `${newReport.rewards.toFixed(0)}`,
+    rewardsDiff: `${rewardsDiff == null ? 'null' : rewardsDiff.toFixed(0)}`,
+    reportDelay: `${reportDelay == null ? 'null' : reportDelay}`,
+  }
+
   findings.push(Finding.fromObject({
     name: 'Lido Oracle report',
     description: `Total balance: ${beaconBalanceEth} ETH, ` +
       `total validators: ${newReport.beaconValidators}, ` +
-      `rewards: ${rewardsEth} ETH`,
+      `rewards: ${rewardsEth} ETH (${rewardsDiffDesc}), ` +
+      `time since last report: ${reportDelayDesc}`,
     alertId: 'LIDO-ORACLE-REPORT',
     severity: FindingSeverity.Info,
     type: FindingType.Info,
-    metadata: {
-      beaconBalance: `${newReport.beaconBalance.toFixed(0)}`,
-      beaconValidators: `${newReport.beaconValidators}`,
-      rewards: `${newReport.rewards.toFixed(0)}`,
-    },
+    metadata: metadata,
   }))
 
-  if (lastReport != null && newReport.rewards.isLessThan(lastReport.rewards)) {
-    const rewardsDiff = newReport.rewards.minus(lastReport.rewards)
+  if (lastReport != null && rewardsDiff!.isNegative()) {
     const rewardsDiffEth = formatEth(rewardsDiff, 3)
     const prevRewardsEth = formatEth(lastReport.rewards, 3)
     findings.push(Finding.fromObject({
@@ -202,9 +218,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
       severity: FindingSeverity.Medium,
       type: FindingType.Degraded,
       metadata: {
-        beaconBalance: `${newReport.beaconBalance.toFixed(0)}`,
-        beaconValidators: `${newReport.beaconValidators.toFixed(0)}`,
-        rewards: `${newReport.rewards.toFixed(0)}`,
+        ...metadata,
         prevRewards: `${lastReport.rewards.toFixed(0)}`,
       },
     }))
