@@ -1,9 +1,6 @@
 import {
-  FindingType,
-  FindingSeverity,
+    FindingSeverity,
 } from 'forta-agent'
-import BigNumber from 'bignumber.js'
-import { ethers } from 'forta-agent'
 
 
 export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
@@ -13,6 +10,9 @@ export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)'
+
+// Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
+export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
 export const EASY_TRACK_ADDRESS = '0xF0211b7660680B49De1A7E9f25C65660F0a13Fea'
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = '0xFE5986E06210aC1eCC1aDCafc0cc7f8D63B3F977'
@@ -83,7 +83,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
         description: (args: any) => `EasyTrack motion ${args.motionId} was rejected`,
         severity: FindingSeverity.Info,
     },
-
+    
     {
         address: REWARD_PROGRAMS_REGISTRY_ADDRESS,
         event: 'event RoleGranted (bytes32 indexed role, address indexed account, address indexed sender)',
@@ -100,7 +100,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
         description: (args: any) => `Role ${args.role} was revoked from ${args.account} on RewardProgramsRegistry by ${args.sender}`,
         severity: FindingSeverity.High,
     },
-
+    
     {
         address: EVM_SCRIPT_EXECUTOR_ADDRESS,
         event: 'EasyTrackChanged(address indexed previousEasyTrack, address indexed newEasyTrack)',
@@ -135,149 +135,62 @@ export const MAX_SUSHI_REWARDS_RECEIPT_DELAY = 60 * 10 // 10 minutes
 // max delay of receipt of funds for Sushi rewards contract
 export const MIN_SUSHI_MANAGER_FUNDS_RECEIPT_MARGIN = 3 * 24 * 60 * 60 // TODO
 
-export const POOL_REWARDS_STILL_NOT_PROLONGED_ALERT_PERIOD = 10 * 60 // 10 mins
+// max deley of receipt of funds for pool rewards manager contract
+export const MAX_DELAY_OF_POOL_REWARDS_PERIOD_PROLONGATION = 10 * 60 // 10 mins
 
-// ==== DEBUG ====
-// const baseTime = 1638921636 + 7*60*60 // 8 December 2021 00:00:36
 
-// const sushiPeriodEnd = 1639648015
-// const sushiFirstAlertPeriod = sushiPeriodEnd - baseTime - (0 * 60*60 + 1 * 60)
-
-// const curvePeriodEnd = 1639189742
-// const curveFirstAlertPeriod = curvePeriodEnd - baseTime - (0 * 60*60 + 6 * 60)
-
-// const balancerPeriodEnd = 1638748800
-// const balancerFirstAlertPeriod = balancerPeriodEnd - baseTime - (0 * 60*60 + 2 * 60)
-
-// const oneInchPeriodEnd = 1640328279
-// const oneInchFirstAlertPeriod = oneInchPeriodEnd - baseTime - (0 * 60*60 + 5 * 60 + 20)
-
+export const POOLS_PARAMS = {
+    Sushi: {
+        managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
+        rewardsAddress: '0x75ff3dd673ef9fc459a52e1054db5df2a1101212',
+    },
+    Curve: {
+        managerAddress: '0x753D5167C31fBEB5b49624314d74A957Eb271709',
+        rewardsAddress: '0x99ac10631F69C753DDb595D074422a0922D9056B',
+    },
+    Balancer: {
+        managerAddress: '0x1dD909cDdF3dbe61aC08112dC0Fdf2Ab949f79D8',
+        rewardsAddress: '',
+    },
+    OneInch: {
+        managerAddress: '0xf5436129Cf9d8fa2a1cb6e591347155276550635',
+        rewardsAddress: '',
+    },
+}
 
 const period10days = 10 * 24 * 60 * 60
 const period5days = 5 * 24 * 60 * 60
 const period3days = 3 * 24 * 60 * 60
 const period2days = 2 * 24 * 60 * 60
 
-
-export const REWARDS_ALERT_PARAMETERS = {
-    Sushi: {
-        managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
-        rewardsAddress: '0x75ff3dd673ef9fc459a52e1054db5df2a1101212',
-        alerts: [
-            {
-                beforehandPeriod: period10days,
-                minimumLdo: null,
-                description: `Sushi rewards period expires in 10 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period5days,
-                minimumLdo: null,
-                description: `Sushi rewards period expires in 5 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period3days,
-                minimumLdo: '0',
-                description: `Sushi rewards period expires in 3 days`,
-                severity: FindingSeverity.High,
-            },
-            {
-                beforehandPeriod: period2days,
-                minimumLdo: '10000',
-                description: `Sushi rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
-                severity: FindingSeverity.High,
-            },
-        ]
+// Must be sorted by period ascending
+export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
+    {
+        period: period3days,
+        minManagerLdoBalance: '0',
+        description: (poolName: string) => `${poolName} rewards period expires in 3 days`,
+        severity: FindingSeverity.High,
+        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
-    Curve: {
-        managerAddress: '0x753D5167C31fBEB5b49624314d74A957Eb271709',
-        rewardsAddress: '0x99ac10631F69C753DDb595D074422a0922D9056B',
-        alerts: [
-            {
-                beforehandPeriod: period10days,
-                minimumLdo: null,
-                description: `Curve rewards period expires in 10 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period5days,
-                minimumLdo: null,
-                description: `Curve rewards period expires in 5 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period3days,
-                minimumLdo: '0',
-                description: `Curve rewards period expires in 3 days`,
-                severity: FindingSeverity.High,
-            },
-            {
-                beforehandPeriod: period2days,
-                minimumLdo: '10000',
-                description: `Curve rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
-                severity: FindingSeverity.High,
-            },
-        ],
+    {
+        period: period2days,
+        minManagerLdoBalance: '10000',
+        description: (poolName: string) => `${poolName} rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
+        severity: FindingSeverity.High,
+        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
-    Balancer: {
-        managerAddress: '0x1dD909cDdF3dbe61aC08112dC0Fdf2Ab949f79D8',
-        rewardsAddress: '',
-        alerts: [
-            {
-                beforehandPeriod: period10days,
-                minimumLdo: null,
-                description: `Balancer rewards period expires in 10 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period5days,
-                minimumLdo: null,
-                description: `Balancer rewards period expires in 5 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period3days,
-                minimumLdo: '0',
-                description: `Balancer rewards period expires in 3 days`,
-                severity: FindingSeverity.High,
-            },
-            {
-                beforehandPeriod: period2days,
-                minimumLdo: '10000',
-                description: `Balancer rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
-                severity: FindingSeverity.High,
-            },
-        ]
+    {
+        period: period5days,
+        minManagerLdoBalance: null,
+        description: (poolName: string) => `${poolName} rewards period expires in 5 days`,
+        severity: FindingSeverity.Info,
+        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
-    OneInch: {
-        managerAddress: '0xf5436129Cf9d8fa2a1cb6e591347155276550635',
-        rewardsAddress: '',
-        alerts: [
-            {
-                beforehandPeriod: period10days,
-                minimumLdo: null,
-                description: `OneInch rewards period expires in 10 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period5days,
-                minimumLdo: null,
-                description: `OneInch rewards period expires in 5 days`,
-                severity: FindingSeverity.Info,
-            },
-            {
-                beforehandPeriod: period3days,
-                minimumLdo: '0',
-                description: `OneInch rewards period expires in 3 days`,
-                severity: FindingSeverity.High,
-            },
-            {
-                beforehandPeriod: period2days,
-                minimumLdo: '10000',
-                description: `OneInch rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
-                severity: FindingSeverity.High,
-            },
-        ]
-    }
-}
+    {
+        period: period10days,
+        minManagerLdoBalance: null,
+        description: (poolName: string) => `${poolName} rewards period expires in 10 days`,
+        severity: FindingSeverity.Info,
+        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
+    },
+]
