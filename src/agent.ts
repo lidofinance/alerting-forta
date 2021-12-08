@@ -13,6 +13,7 @@ import {
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 import * as agentPoolsRewards from './agent-pools-rewards'
+import * as agentEasyTrack from './agent-easy-track'
 
 import VERSION from './version'
 
@@ -29,9 +30,10 @@ const EMPTY_PROMISE = new Promise<void>(resolve => resolve())
 
 
 const subAgents: SubAgent[] = [
-  // agentLidoOracle,
-  // agentBethRewards,
+  agentLidoOracle,
+  agentBethRewards,
   agentPoolsRewards,
+  agentEasyTrack,
 ]
 
 let initialized = false
@@ -121,5 +123,5 @@ export default {
   // not using initialize() since it doens't provide the starting block number
   // which makes testing not as convenient
   handleBlock,
-  // handleTransaction,
+  handleTransaction,
 }
