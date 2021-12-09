@@ -21,6 +21,7 @@ import LIDO_ORACLE_ABI from './abi/LidoOracle.json'
 import {
   LIDO_ORACLE_ADDRESS,
   LIDO_ORACLE_COMPLETED_EVENT,
+  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD,
   MAX_ORACLE_REPORT_DELAY,
   TRIGGER_PERIOD,
 } from './constants'
@@ -184,12 +185,14 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
   const rewardsEth = formatEth(newReport.rewards, 3)
 
   let rewardsDiff: BigNumber | null = null
+  let rewardsDiffPercent: number | null = null
   let reportDelay: number | null = null
   let rewardsDiffDesc = 'unknown'
   let reportDelayDesc = 'unknown'
 
   if (lastReport != null) {
     rewardsDiff = newReport.rewards.minus(lastReport.rewards)
+    rewardsDiffPercent = +rewardsDiff.dividedBy(lastReport.rewards).toFixed(4) * 100
     rewardsDiffDesc = `${rewardsDiff.isNegative() ? '' : '+'}${formatEth(rewardsDiff, 3)} ETH`
     reportDelay = txEvent.block.timestamp - lastReport.timestamp
     reportDelayDesc = formatDelay(reportDelay)
@@ -200,6 +203,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     beaconValidators: `${newReport.beaconValidators}`,
     rewards: `${newReport.rewards.toFixed(0)}`,
     rewardsDiff: `${rewardsDiff == null ? 'null' : rewardsDiff.toFixed(0)}`,
+    rewardsDiffPercent: `${rewardsDiffPercent == null ? 'null' : rewardsDiffPercent}`,
     reportDelay: `${reportDelay == null ? 'null' : reportDelay}`,
   }
 
@@ -215,7 +219,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     metadata: metadata,
   }))
 
-  if (lastReport != null && rewardsDiff!.isNegative()) {
+  if (lastReport != null && rewardsDiffPercent! < -LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD) {
     const rewardsDiffEth = formatEth(rewardsDiff, 3)
     const prevRewardsEth = formatEth(lastReport.rewards, 3)
     findings.push(Finding.fromObject({
