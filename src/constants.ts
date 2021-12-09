@@ -166,16 +166,16 @@ const period2days = 2 * 24 * 60 * 60
 // Must be sorted by period ascending
 export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
     {
-        period: period3days,
-        minManagerLdoBalance: '0',
-        description: (poolName: string) => `${poolName} rewards period expires in 3 days`,
+        period: period2days,
+        minManagerLdoBalance: '10000',
+        description: (poolName: string) => `${poolName} rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
         severity: FindingSeverity.High,
         pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
     {
-        period: period2days,
-        minManagerLdoBalance: '10000',
-        description: (poolName: string) => `${poolName} rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
+        period: period3days,
+        minManagerLdoBalance: '0',
+        description: (poolName: string) => `${poolName} rewards period expires in 3 days`,
         severity: FindingSeverity.High,
         pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
