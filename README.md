@@ -7,9 +7,21 @@
 
 ## Alerts
 
-* ANCHOR_REWARDS_OVERDUE: Anchor rewards sell overdue (MAJOR)
-* ANCHOR_REWARDS_COLLECTED: Anchor rewards sold (INFO)
-* LIDO_ORACLE_REPORT: Lido oracles quorum achieved (INFO)
+General:
+
+* LIDO-AGENT-LAUNCHED: Agent launched (INFO)
+* LIDO-AGENT-ERROR: An error occured while initializing, handling tx or block (HIGH)
+
+Lido Oracle:
+
+* LIDO-ORACLE-REPORT: Lido oracles quorum reached (INFO)
+* LIDO-ORACLE-OVERDUE: No Lido Oracle report within the expected timeframe (HIGH)
+* LIDO-ORACLE-REWARDS-DECREASED: Lido staking rewards decreased compared to the previous report (MEDUIM)
+
+Anchor/bETH integration:
+
+* ANCHOR-REWARDS-OVERDUE: Anchor rewards sell overdue (MAJOR)
+* ANCHOR-REWARDS-COLLECTED: Anchor rewards sold (INFO)
 
 
 ## Development

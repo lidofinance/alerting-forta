@@ -18,11 +18,13 @@ import * as agentEasyTrack from './agent-easy-track'
 import VERSION from './version'
 
 
+type Metadata = {[key: string]: string}
+
 interface SubAgent {
   name: string
   handleBlock?: HandleBlock
   handleTransaction?: HandleTransaction
-  initialize?: (blockNumber: number) => Promise<{[key: string]: string}>
+  initialize?: (blockNumber: number) => Promise<Metadata>
 }
 
 
@@ -40,21 +42,36 @@ let initialized = false
 
 
 const initialize = async (blockNumber: number, findings: Finding[]) => {
-  const metadata: {[key: string]: string} = {
+  const metadata: Metadata = {
     'version.commitHash': VERSION.commitHash,
     'version.commitMsg': VERSION.commitMsg,
   }
 
-  await Promise.all(subAgents.map(async agent => {
+  const launchFindingIndex = findings.length
+  const failedAgentIndices: number[] = []
+
+  await Promise.all(subAgents.map(async (agent, index) => {
     if (agent.initialize) {
-      const agentMeta = await agent.initialize(blockNumber)
-      for (const metaKey in agentMeta) {
-        metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
+      try {
+        const agentMeta = await agent.initialize(blockNumber)
+        for (const metaKey in agentMeta) {
+          metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
+        }
+      } catch (err) {
+        findings.push(errorToFinding(err, agent, 'initialize'))
+        failedAgentIndices.push(index)
       }
     }
   }))
 
-  findings.push(Finding.fromObject({
+  failedAgentIndices.forEach((agentIndex, j) => {
+    const agent = subAgents.splice(agentIndex - j, 1)[0]
+    console.log(`WARN Removed failed agent ${agent.name}`)
+  })
+
+  metadata.agents = '[' + subAgents.map(a => `"${a.name}"`).join(', ') + ']'
+
+  findings.splice(launchFindingIndex, 0, Finding.fromObject({
     name: 'Agent launched',
     description: `Version: ${VERSION.desc}`,
     alertId: 'LIDO-AGENT-LAUNCHED',
@@ -75,10 +92,14 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
 
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleBlock) {
-      const newFindings = await agent.handleBlock(blockEvent)
-      if (newFindings.length) {
-        enrichFindingsMetadata(newFindings)
-        findings = findings.concat(newFindings)
+      try {
+        const newFindings = await agent.handleBlock(blockEvent)
+        if (newFindings.length) {
+          enrichFindingsMetadata(newFindings)
+          findings = findings.concat(newFindings)
+        }
+      } catch (err) {
+        findings.push(errorToFinding(err, agent, 'handleBlock'))
       }
     }
   }))
@@ -97,10 +118,14 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
 
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleTransaction) {
-      const newFindings = await agent.handleTransaction(txEvent)
-      if (newFindings.length) {
-        enrichFindingsMetadata(newFindings)
-        findings = findings.concat(newFindings)
+      try {
+        const newFindings = await agent.handleTransaction(txEvent)
+        if (newFindings.length) {
+          enrichFindingsMetadata(newFindings)
+          findings = findings.concat(newFindings)
+        }
+      } catch (err) {
+        findings.push(errorToFinding(err, agent, 'handleTransaction'))
       }
     }
   }))
@@ -116,6 +141,21 @@ function enrichFindingsMetadata(findings: Finding[]) {
 
 function enrichFindingMetadata(finding: Finding) {
   finding.metadata['version.commitHash'] = VERSION.commitHash
+}
+
+
+function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
+  const err: Error = (e instanceof Error) ? e : new Error(`non-Error thrown: ${e}`)
+  const finding = Finding.fromObject({
+    name: `Error in ${agent.name}.${fnName}`,
+    description: `${err}`,
+    alertId: 'LIDO-AGENT-ERROR',
+    severity: FindingSeverity.High,
+    type: FindingType.Degraded,
+    metadata: { stack: `${err.stack}` },
+  })
+  enrichFindingMetadata(finding)
+  return finding
 }
 
 
