@@ -53,6 +53,9 @@ export const name = 'AgentPoolsRewards'
 
 const ldoToken = new ethers.Contract(LDO_TOKEN_ADDRESS, LDO_TOKEN_ABI, ethersProvider)
 
+//! Don't report if time passed since report moment is greater than REPORT_WINDOW
+const REPORT_WINDOW = 60 * 60 // 1 hour
+
 
 //! Keeps parameters of reporting as well as cached values
 let g_pools = {} as any
@@ -107,7 +110,7 @@ async function handlePeriodFinishChange(poolName: string, newPeriodFinish: numbe
     findings.push(Finding.fromObject({
       name: `${poolName} rewards prolonged`,
       description: `${poolName} rewards successfully prolonged till ${formatTimestamp(g_pools[poolName].periodFinish)}`,
-      alertId: `LDO-${poolName.toUpperCase()}-REWARDS-PROLONGED-DEBUG`,
+      alertId: `LDO-${poolName.toUpperCase()}-REWARDS-PROLONGED`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
     }))
@@ -121,7 +124,7 @@ async function handleRewardExpire(poolName: string, blockEvent: BlockEvent, find
     findings.push(Finding.fromObject({
       name: `${poolName} rewards are still not prolonged`,
       description: `${poolName} rewards are still not prolonged 10 min past expiration`,
-      alertId: `LDO-${poolName.toUpperCase()}-REWARDS-STILL-NOT-PROLONGED-DEBUG`,
+      alertId: `LDO-${poolName.toUpperCase()}-REWARDS-STILL-NOT-PROLONGED`,
       severity: FindingSeverity.Critical,
       type: FindingType.Info,
     }))
@@ -129,12 +132,12 @@ async function handleRewardExpire(poolName: string, blockEvent: BlockEvent, find
   }
 
   const handlePeriodExpiration = async function () {
-    const sushiRewardsBalance = await ldoToken.balanceOf(poolInfo.managerAddress)
-    if (sushiRewardsBalance === 0) {
+    const rewardsBalance = await ldoToken.balanceOf(poolInfo.managerAddress)
+    if (rewardsBalance === 0) {
       findings.push(Finding.fromObject({
         name: `${poolName} rewards expired but no LDO`,
         description: `${poolName} rewards expired but no LDO on manager balance`,
-        alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRED-NO-LDO-DEBUG`,
+        alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRED-NO-LDO`,
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
       }))
@@ -149,7 +152,8 @@ async function handleRewardExpire(poolName: string, blockEvent: BlockEvent, find
     }
 
     const thisPeriodWasAlreadyReported = poolInfo.lastNotification >= poolInfo.periodFinish - period
-    if (timeTillEnd < period && !thisPeriodWasAlreadyReported) {
+    const hasReportWindowClosed = period - timeTillEnd > REPORT_WINDOW
+    if (timeTillEnd < period && !hasReportWindowClosed && !thisPeriodWasAlreadyReported) {
       const poolManagerBalance = await ldoToken.balanceOf(poolInfo.managerAddress)
 
       if (minManagerLdoBalance !== null) {
@@ -163,7 +167,7 @@ async function handleRewardExpire(poolName: string, blockEvent: BlockEvent, find
       findings.push(Finding.fromObject({
         name: `${poolName} rewards period expiriation`,
         description: description(poolName),
-        alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRATION-DEBUG`,
+        alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRATION`,
         severity: severity,
         type: FindingType.Info,
       }))
