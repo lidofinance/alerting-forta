@@ -225,7 +225,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     findings.push(Finding.fromObject({
       name: 'Lido Beacon rewards decreased',
       description: `Rewards decreased from ${prevRewardsEth} ETH to ${rewardsEth} ` +
-        `by ${rewardsDiffEth} ETH`,
+        `by ${rewardsDiffEth} ETH (${rewardsDiffPercent?.toFixed(2)}%)`,
       alertId: 'LIDO-ORACLE-REWARDS-DECREASED',
       severity: FindingSeverity.Medium,
       type: FindingType.Degraded,
