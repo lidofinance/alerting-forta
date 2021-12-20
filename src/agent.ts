@@ -28,9 +28,6 @@ interface SubAgent {
 }
 
 
-const EMPTY_PROMISE = new Promise<void>(resolve => resolve())
-
-
 const subAgents: SubAgent[] = [
   agentLidoOracle,
   agentBethRewards,
@@ -39,6 +36,7 @@ const subAgents: SubAgent[] = [
 ]
 
 let initialized = false
+let initializedPromise: Promise<void> | null = null
 
 
 const initialize = async (blockNumber: number, findings: Finding[]) => {
@@ -85,10 +83,7 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
 const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding[]> => {
   let findings: Finding[] = []
 
-  if (!initialized) {
-    initialized = true
-    await initialize(blockEvent.blockNumber, findings)
-  }
+  await initializeIfNeeded(blockEvent.blockNumber, findings)
 
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleBlock) {
@@ -111,10 +106,7 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
 const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) => {
   let findings: Finding[] = []
 
-  if (!initialized) {
-    initialized = true
-    await initialize(txEvent.blockNumber, findings)
-  }
+  await initializeIfNeeded(txEvent.blockNumber, findings)
 
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleTransaction) {
@@ -131,6 +123,18 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
   }))
 
   return findings
+}
+
+
+async function initializeIfNeeded(blockNumber: number, findings: Finding[]) {
+  if (!initialized) {
+    initialized = true
+    initializedPromise = initialize(blockNumber, findings)
+    await initializedPromise
+    initializedPromise = null
+  } else if (initializedPromise) {
+    await initializedPromise
+  }
 }
 
 
