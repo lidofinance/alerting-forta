@@ -242,7 +242,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
 
 export async function waitBlockHandled(expectedBlockHash: string) {
   if (lastBlockHash !== expectedBlockHash) {
-    throw new Error(`unexpected block hash`)
+    throw new Error(`unexpected block hash: ${lastBlockHash} !== ${expectedBlockHash}`)
   }
   await fBlockHandled.promise
 }
