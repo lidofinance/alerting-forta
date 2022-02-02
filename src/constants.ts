@@ -139,17 +139,18 @@ export const MIN_SUSHI_MANAGER_FUNDS_RECEIPT_MARGIN = 3 * 24 * 60 * 60 // TODO
 export const MAX_DELAY_OF_POOL_REWARDS_PERIOD_PROLONGATION = 10 * 60 // 10 mins
 
 
+// rewardsAddress is needed only if manager contract doesn't have `period_finish` function
 export const POOLS_PARAMS = {
     Sushi: {
         managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
-        rewardsAddress: '0x75ff3dd673ef9fc459a52e1054db5df2a1101212',
+        rewardsAddress: '',
     },
     Curve: {
         managerAddress: '0x753D5167C31fBEB5b49624314d74A957Eb271709',
         rewardsAddress: '0x99ac10631F69C753DDb595D074422a0922D9056B',
     },
     Balancer: {
-        managerAddress: '0x1dD909cDdF3dbe61aC08112dC0Fdf2Ab949f79D8',
+        managerAddress: '0x1220ccCDc9BBA5CF626a84586C74D6f940932342',
         rewardsAddress: '',
     },
     OneInch: {

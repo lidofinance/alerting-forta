@@ -69,7 +69,11 @@ async function readPeriodFinish(poolName: string) {
   try {
     return +(await g_pools[poolName].manager.period_finish()).toString()
   } catch (err) {
-    return +(await g_pools[poolName].rewards.periodFinish()).toString()
+    const rewardsContract = g_pools[poolName].rewards
+    if (!rewardsContract) {
+      throw 'rewardsContract is undefined but is needed to get periodFinish'
+    }
+    return +(await rewardsContract.periodFinish()).toString()
   }
 }
 
