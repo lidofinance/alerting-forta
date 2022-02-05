@@ -30,7 +30,7 @@ interface SubAgent {
 
 const subAgents: SubAgent[] = [
   agentLidoOracle,
-  // agentBethRewards,
+  agentBethRewards,
   agentPoolsRewards,
   agentEasyTrack,
 ]
