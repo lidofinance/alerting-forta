@@ -131,6 +131,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 
 const TEN_TO_18 = new BigNumber(10).pow(18)
+const TEN_TO_12 = new BigNumber(10).pow(12)
 const TEN_TO_36 = TEN_TO_18.times(TEN_TO_18)
 
 
@@ -140,13 +141,11 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
     return
   }
 
-  const {steth_amount, ust_amount} = rewardsCollectedEvent.args
-
   const [soldEvent] = txEvent.filterLog(ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT, rewardsLiquidatorAddress)
   const {steth_eth_price, eth_usdc_price, usdc_ust_price} = soldEvent.args
 
-  const stethAmount = new BigNumber(String(steth_amount))
-  const ustAmount = new BigNumber(String(ust_amount))
+  const stethAmount = new BigNumber(String(rewardsCollectedEvent.args.steth_amount))
+  const ustAmount = new BigNumber(String(rewardsCollectedEvent.args.ust_amount)).times(TEN_TO_12)
 
   const stethUstPrice = new BigNumber(String(steth_eth_price))
     .times(String(eth_usdc_price))
@@ -165,8 +164,8 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
     ustAmount,
   }
 
-  const stethDispAmount = formatEth(rewardsCollectedEvent.args.steth_amount, 3)
-  const ustDispAmount = formatEth(rewardsCollectedEvent.args.ust_amount, 1)
+  const stethDispAmount = formatEth(stethAmount, 3)
+  const ustDispAmount = formatEth(ustAmount, 1)
   const stethUstDispPrice = formatEth(stethUstPrice, 1)
   const slippageDispPercent = slippagePercent.toFixed(2)
 
@@ -178,7 +177,7 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
     severity: FindingSeverity.Info,
     type: FindingType.Info,
     metadata: {
-      stethAmount: `${rewardsCollectedEvent.args.steth_amount}`,
+      stethAmount: `${stethAmount}`,
       ustAmount: `${rewardsCollectedEvent.args.ust_amount}`,
       slippagePercent: `${slippagePercent.toString(10)}`,
       stethUstFeedPrice: `${stethUstPrice.toFixed(0, 3)}`,
