@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 
 import {
+  Initialize,
   BlockEvent,
   TransactionEvent,
   HandleBlock,
@@ -9,6 +10,10 @@ import {
   FindingType,
   FindingSeverity,
 } from 'forta-agent'
+
+import {ethersProvider} from './ethers'
+
+import { argv } from 'process';
 
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
@@ -35,18 +40,38 @@ const subAgents: SubAgent[] = [
   agentEasyTrack,
 ]
 
-let initialized = false
-let initializedPromise: Promise<void> | null = null
+
+let findingsOnInit: Finding[] = []
 
 
-const initialize = async (blockNumber: number, findings: Finding[]) => {
+const initialize = async () => {
   const metadata: Metadata = {
     'version.commitHash': VERSION.commitHash,
     'version.commitMsg': VERSION.commitMsg,
   }
 
-  const launchFindingIndex = findings.length
   const failedAgentIndices: number[] = []
+
+  let blockNumber: number = -1
+
+  if ( argv.includes("--block") ) {
+    blockNumber = parseInt(argv[4])
+  } else if ( argv.includes("--range") ) {
+    blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")))
+  } else if ( argv.includes("--tx") ) {
+    const tx = await ethersProvider.getTransaction(argv[4])
+    if (!tx) {
+      throw new Error(`Can't find transaction ${argv[4]}`)
+    }
+    if (!tx.blockNumber) {
+      throw new Error(`Transaction ${argv[4]} was not yet included into block`)
+    }
+    blockNumber = (await ethersProvider.getTransaction(argv[4])).blockNumber || -1
+  }
+
+  if (blockNumber == -1) {
+    blockNumber = await ethersProvider.getBlockNumber()
+  }
 
   await Promise.all(subAgents.map(async (agent, index) => {
     if (agent.initialize) {
@@ -56,7 +81,7 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
           metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
         }
       } catch (err) {
-        findings.push(errorToFinding(err, agent, 'initialize'))
+        findingsOnInit.push(errorToFinding(err, agent, 'initialize'))
         failedAgentIndices.push(index)
       }
     }
@@ -69,7 +94,7 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
 
   metadata.agents = '[' + subAgents.map(a => `"${a.name}"`).join(', ') + ']'
 
-  findings.splice(launchFindingIndex, 0, Finding.fromObject({
+  findingsOnInit.push(Finding.fromObject({
     name: 'Agent launched',
     description: `Version: ${VERSION.desc}`,
     alertId: 'LIDO-AGENT-LAUNCHED',
@@ -83,7 +108,11 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
 const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding[]> => {
   let findings: Finding[] = []
 
-  await initializeIfNeeded(blockEvent.blockNumber, findings)
+  // report findings from init. Will be done only for the first block report.
+  if (findingsOnInit) {
+    findings = findingsOnInit
+    findingsOnInit = []
+  }
 
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleBlock) {
@@ -106,8 +135,6 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
 const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) => {
   let findings: Finding[] = []
 
-  await initializeIfNeeded(txEvent.blockNumber, findings)
-
   await Promise.all(subAgents.map(async agent => {
     if (agent.handleTransaction) {
       try {
@@ -123,18 +150,6 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
   }))
 
   return findings
-}
-
-
-async function initializeIfNeeded(blockNumber: number, findings: Finding[]) {
-  if (!initialized) {
-    initialized = true
-    initializedPromise = initialize(blockNumber, findings)
-    await initializedPromise
-    initializedPromise = null
-  } else if (initializedPromise) {
-    await initializedPromise
-  }
 }
 
 
@@ -166,6 +181,7 @@ function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
 export default {
   // not using initialize() since it doens't provide the starting block number
   // which makes testing not as convenient
+  initialize,
   handleBlock,
   handleTransaction,
 }
