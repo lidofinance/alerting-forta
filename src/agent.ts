@@ -43,6 +43,8 @@ const subAgents: SubAgent[] = [
 // block or tx handlinig should take no more than 5 sec. If not all processing is done it will be done later in background
 const handlerResolveTimeot = 5000
 
+const maxHandlerRetries = 5
+
 let findingsOnInit: Finding[] = []
 let blockFindingsCache: Finding[] = []
 let txFindingsCache: Finding[] = []
@@ -132,14 +134,23 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
   // run agents handlers
   Promise.all(subAgents.map(async agent => {
     if (agent.handleBlock) {
-      try {
-        const newFindings = await agent.handleBlock(blockEvent)
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings)
-          blockFindingsCache = blockFindingsCache.concat(newFindings)
+      let retries = maxHandlerRetries
+      let success = false
+      let lastError
+      while (retries-- > 0 && !success) {
+        try {
+          const newFindings = await agent.handleBlock(blockEvent)
+          if (newFindings.length) {
+            enrichFindingsMetadata(newFindings)
+            blockFindingsCache = blockFindingsCache.concat(newFindings)
+          }
+          success = true
+        } catch (err) {
+          lastError = err
         }
-      } catch (err) {
-        blockFindingsCache.push(errorToFinding(err, agent, 'handleBlock'))
+      }
+      if (!success) {
+        blockFindingsCache.push(errorToFinding(lastError, agent, 'handleTransaction'))
       }
     }
   })).then(() => {
@@ -167,16 +178,25 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
   },handlerResolveTimeot)
 
   // run agents handlers
-  await Promise.all(subAgents.map(async agent => {
+  Promise.all(subAgents.map(async agent => {
     if (agent.handleTransaction) {
-      try {
-        const newFindings = await agent.handleTransaction(txEvent)
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings)
-          txFindingsCache = txFindingsCache.concat(newFindings)
+      let retries = maxHandlerRetries
+      let success = false
+      let lastError
+      while (retries-- > 0 && !success) {
+        try {
+          const newFindings = await agent.handleTransaction(txEvent)
+          if (newFindings.length) {
+            enrichFindingsMetadata(newFindings)
+            txFindingsCache = txFindingsCache.concat(newFindings)
+          }
+          success = true
+        } catch (err) {
+          lastError = err
         }
-      } catch (err) {
-        txFindingsCache.push(errorToFinding(err, agent, 'handleTransaction'))
+      }
+      if (!success) {
+        txFindingsCache.push(errorToFinding(lastError, agent, 'handleTransaction'))
       }
     }
   })).then(() => {
