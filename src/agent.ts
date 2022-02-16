@@ -56,8 +56,6 @@ const initialize = async () => {
     'version.commitMsg': VERSION.commitMsg,
   }
 
-  const failedAgentIndices: number[] = []
-
   let blockNumber: number = -1
 
   if ( argv.includes("--block") ) {
@@ -87,16 +85,11 @@ const initialize = async () => {
           metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
         }
       } catch (err) {
-        findingsOnInit.push(errorToFinding(err, agent, 'initialize'))
-        failedAgentIndices.push(index)
+        console.log(`Exiting due to init failure on ${agent.name}`)
+        process.exit(1)
       }
     }
   }))
-
-  failedAgentIndices.forEach((agentIndex, j) => {
-    const agent = subAgents.splice(agentIndex - j, 1)[0]
-    console.log(`WARN Removed failed agent ${agent.name}`)
-  })
 
   metadata.agents = '[' + subAgents.map(a => `"${a.name}"`).join(', ') + ']'
 
