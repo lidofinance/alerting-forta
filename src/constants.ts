@@ -11,6 +11,8 @@ export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)'
 
+export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
@@ -144,18 +146,23 @@ export const POOLS_PARAMS = {
     Sushi: {
         managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
         rewardsAddress: '',
+        poolContractAddress: '',
     },
     Curve: {
         managerAddress: '0x753D5167C31fBEB5b49624314d74A957Eb271709',
         rewardsAddress: '0x99ac10631F69C753DDb595D074422a0922D9056B',
+        poolContractAddress: '0xdc24316b9ae028f1497c275eb9192a3ea0f67022',
     },
     Balancer: {
         managerAddress: '0x1220ccCDc9BBA5CF626a84586C74D6f940932342',
         rewardsAddress: '',
+        valutContractAddress: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        poolId: "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
     },
     OneInch: {
         managerAddress: '0xf5436129Cf9d8fa2a1cb6e591347155276550635',
         rewardsAddress: '',
+        poolContractAddress: '',
     },
 }
 

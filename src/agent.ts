@@ -13,6 +13,7 @@ import {
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 import * as agentPoolsRewards from './agent-pools-rewards'
+import * as agentPoolsBalances from './agent-pools-balances'
 import * as agentEasyTrack from './agent-easy-track'
 
 import VERSION from './version'
@@ -29,10 +30,11 @@ interface SubAgent {
 
 
 const subAgents: SubAgent[] = [
-  agentLidoOracle,
-  agentBethRewards,
-  agentPoolsRewards,
-  agentEasyTrack,
+  // agentLidoOracle,
+  // agentBethRewards,
+  // agentPoolsRewards,
+  // agentEasyTrack,
+  agentPoolsBalances,
 ]
 
 let initialized = false
