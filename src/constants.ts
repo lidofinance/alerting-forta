@@ -11,6 +11,8 @@ export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)'
 
+export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5"
+
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
@@ -195,3 +197,5 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
         pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
 ]
+
+export const MIN_AVAILABLE_KEYS_COUNT = 1000
