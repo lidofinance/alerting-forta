@@ -31,16 +31,13 @@ interface SubAgent {
 
 
 const subAgents: SubAgent[] = [
-  // agentLidoOracle,
-  // agentBethRewards,
-  // agentPoolsRewards,
-  // agentEasyTrack,
-<<<<<<< HEAD
+  agentLidoOracle,
+  agentBethRewards,
+  agentPoolsRewards,
+  agentEasyTrack,
   agentDaoOps,
-=======
-  agentPoolsBalances,
->>>>>>> 5b9d3bd (Add pools balances alerting)
 ]
+
 
 let initialized = false
 let initializedPromise: Promise<void> | null = null
