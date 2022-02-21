@@ -34,12 +34,10 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all(
-    [
-      handleNodeOperatorsKeys(blockEvent, findings),
-      handleBufferedEth(blockEvent, findings),
-    ]
-  )
+  await Promise.all([
+    handleNodeOperatorsKeys(blockEvent, findings),
+    handleBufferedEth(blockEvent, findings),
+  ]);
 
   return findings;
 }
@@ -55,12 +53,16 @@ async function handleNodeOperatorsKeys(
   );
   const nodeOperatorsCount =
     await nodeOperatorsRegistry.functions.getActiveNodeOperatorsCount();
+  let availableKeys: Promise<any>[] = [];
   let availableKeysCount = 0;
   for (let i = 0; i < nodeOperatorsCount; i++) {
-    availableKeysCount +=
-      parseInt(String(await nodeOperatorsRegistry.functions.getUnusedSigningKeyCount(i)));
+    availableKeys.push(
+      nodeOperatorsRegistry.functions
+        .getUnusedSigningKeyCount(i)
+        .then((value) => (availableKeysCount += parseInt(String(value))))
+    );
   }
-  console.log(availableKeysCount);
+  await Promise.all(availableKeys);
   if (availableKeysCount < MIN_AVAILABLE_KEYS_COUNT) {
     findings.push(
       Finding.fromObject({
@@ -74,19 +76,16 @@ async function handleNodeOperatorsKeys(
   }
 }
 
-
-async function handleBufferedEth(
-  blockEvent: BlockEvent,
-  findings: Finding[]
-) {
+async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const lidoDao = new ethers.Contract(
     LIDO_DAO_ADDRESS,
     LIDO_DAO_ABI,
     ethersProvider
   );
-  const bufferedEthRaw = new BigNumber(String(await lidoDao.functions.getBufferedEther()));
-  const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber()
-  console.log(bufferedEth.toFixed(4));
+  const bufferedEthRaw = new BigNumber(
+    String(await lidoDao.functions.getBufferedEther())
+  );
+  const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
   if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT) {
     findings.push(
       Finding.fromObject({
