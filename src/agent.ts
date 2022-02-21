@@ -113,7 +113,7 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
   });
 
   // we need to resolve Promise in handlerResolveTimeout maximum.
-  // If not all handlers has finished execution we will left them working in background
+  // If not all handlers have finished execution we will leave them working in background
   const blockHandlingTimeout = setTimeout(function(){
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length))
   },handlerResolveTimeout)
@@ -143,7 +143,7 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
         }
       }
       if (!success) {
-        blockFindingsCache.push(errorToFinding(lastError, agent, 'handleTransaction'))
+        blockFindingsCache.push(errorToFinding(lastError, agent, 'handleBlock'))
       }
     }
   })).then(() => {
