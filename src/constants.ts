@@ -202,3 +202,12 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
         pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
     },
 ]
+
+
+// all consts in the block bellow are in percents
+export const IMBALANCE_TOLERANCE = 10;
+export const IMBALANCE_CHANGE_TOLERANCE = 5;
+export const POOL_SIZE_CAHNGE_TOLERANCE = 3;
+
+//! Don't report if time passed since report moment is greater than REPORT_WINDOW
+export const POOLS_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
