@@ -13,6 +13,7 @@ import {
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 import * as agentPoolsRewards from './agent-pools-rewards'
+import * as agentPoolsBalances from './agent-pools-balances'
 import * as agentEasyTrack from './agent-easy-track'
 import * as agentDaoOps from './agent-dao-ops'
 
@@ -34,7 +35,11 @@ const subAgents: SubAgent[] = [
   // agentBethRewards,
   // agentPoolsRewards,
   // agentEasyTrack,
+<<<<<<< HEAD
   agentDaoOps,
+=======
+  agentPoolsBalances,
+>>>>>>> 5b9d3bd (Add pools balances alerting)
 ]
 
 let initialized = false
