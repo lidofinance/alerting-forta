@@ -16,13 +16,13 @@ import {
   WSTETH_TOKEN_ADDRESS,
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
-  POOL_SIZE_CAHNGE_TOLERANCE,
+  POOL_SIZE_CHANGE_TOLERANCE,
   POOLS_REPORT_WINDOW,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
 
-import CURVE_POOL_ABI from "./abi/CurrvePool.json";
+import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
 
@@ -50,7 +50,7 @@ let poolsParams: { [name: string]: IPoolParams } = {
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
-  console.log(`Start initialisation of [${name}]`);
+  console.log(`Start initialization of [${name}]`);
 
   const block = await ethersProvider.getBlock(currentBlock);
   const now = block.timestamp;
@@ -79,7 +79,7 @@ export async function initialize(
     poolsParams.Curve.lastReported = now;
   }
 
-  console.log(`Initialisation of [${name}] is done`);
+  console.log(`Initialization of [${name}] is done`);
   return {
     curvePoolSize: poolsParams.Curve.poolSize.toString(),
     balancerPoolSize: poolsParams.Balancer.poolSize.toString(),
@@ -155,7 +155,7 @@ async function handleCurvePoolImbalance(
     findings.push(
       Finding.fromObject({
         name: "Curve Pool rapid imbalance change",
-        description: `Curve Pool imblanace has changed from ${imbalanceMessage(
+        description: `Curve Pool imbalance has changed from ${imbalanceMessage(
           poolParams.lastReportedImbalance,
           "stETH",
           "ETH"
@@ -203,7 +203,7 @@ async function handleCurvePoolSize(
   const poolTokens = await getCurvePoolTokens();
   const poolSize = BigNumber.sum.apply(null, poolTokens);
   const poolSizeChange = calcImbalance(poolParams.poolSize, poolSize);
-  if (Math.abs(poolSizeChange) > POOL_SIZE_CAHNGE_TOLERANCE) {
+  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE) {
     findings.push(
       Finding.fromObject({
         name: "Significant Curve Pool size change",
@@ -262,7 +262,7 @@ async function handleBalancerPoolImbalance(
     findings.push(
       Finding.fromObject({
         name: "Balancer Pool rapid imbalance change",
-        description: `Balancer Pool imblanace has changed from ${imbalanceMessage(
+        description: `Balancer Pool imbalance has changed from ${imbalanceMessage(
           poolParams.lastReportedImbalance,
           "wstETH (recounted to stETH)",
           "ETH"
@@ -282,8 +282,8 @@ async function handleBalancerPoolImbalance(
 }
 
 async function getBalancerPoolTokens(blockNumber?: number) {
-  const balancerValut = new ethers.Contract(
-    POOLS_PARAMS.Balancer.valutContractAddress,
+  const balancerVault = new ethers.Contract(
+    POOLS_PARAMS.Balancer.vaultContractAddress,
     BALANCER_POOL_ABI,
     ethersProvider
   );
@@ -291,7 +291,7 @@ async function getBalancerPoolTokens(blockNumber?: number) {
   if (blockNumber) {
     overrides.blockTag = blockNumber;
   }
-  const poolTokens = await balancerValut.functions.getPoolTokens(
+  const poolTokens = await balancerVault.functions.getPoolTokens(
     POOLS_PARAMS.Balancer.poolId,
     overrides
   );
@@ -301,7 +301,7 @@ async function getBalancerPoolTokens(blockNumber?: number) {
 async function balancerPoolImbalancePercent(blockNumber?: number) {
   // Value between -100 (only ETH in pool) to 100 (only wstETH in pool).
   // Note wstETH is not rebasable so it is not bounded to ETH 1:1
-  // to count imbalance we accuire current wstETH to stETH relation
+  // to count imbalance we acquire current wstETH to stETH relation
   const [wstethBalance, ethBalance] = await getBalancerPoolTokens(blockNumber);
 
   const wstETH = new ethers.Contract(
@@ -340,7 +340,7 @@ async function handleBalancerPoolSize(
   const poolTokens = await getBalancerPoolTokens();
   const poolSize = BigNumber.sum.apply(null, poolTokens);
   const poolSizeChange = calcImbalance(poolParams.poolSize, poolSize);
-  if (Math.abs(poolSizeChange) > POOL_SIZE_CAHNGE_TOLERANCE) {
+  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE) {
     findings.push(
       Finding.fromObject({
         name: "Significant Balancer Pool size change",
