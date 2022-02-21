@@ -40,8 +40,8 @@ const subAgents: SubAgent[] = [
   agentEasyTrack,
 ]
 
-// block or tx handlinig should take no more than 5 sec. If not all processing is done it will be done later in background
-const handlerResolveTimeot = 5000
+// block or tx handling should take no more than 5 sec. If not all processing is done it will be done later in background
+const handlerResolveTimeout = 5000
 
 const maxHandlerRetries = 5
 
@@ -112,11 +112,11 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
     responseResolve = resolve
   });
 
-  // we need to resolve Promise in handlerResolveTimeot maximum.
+  // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers has finished execution we will left them working in background
   const blockHandlingTimeout = setTimeout(function(){
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length))
-  },handlerResolveTimeot)
+  },handlerResolveTimeout)
 
   // report findings from init. Will be done only for the first block report.
   if (findingsOnInit) {
@@ -147,7 +147,7 @@ const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding
       }
     }
   })).then(() => {
-    // if all hadlers have finished execution drop timeout and resolve promise
+    // if all handlers have finished execution drop timeout and resolve promise
     clearTimeout(blockHandlingTimeout)
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length))
   })
@@ -164,11 +164,11 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
     responseResolve = resolve
   });
 
-  // we need to resolve Promise in handlerResolveTimeot maximum.
+  // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers has finished execution we will left them working in background
   const txHandlingTimeout = setTimeout(function(){
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length))
-  },handlerResolveTimeot)
+  },handlerResolveTimeout)
 
   // run agents handlers
   Promise.all(subAgents.map(async agent => {
@@ -193,7 +193,7 @@ const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) =
       }
     }
   })).then(() => {
-    // if all hadlers have finished execution drop timeout and resolve promise
+    // if all handlers have finished execution drop timeout and resolve promise
     clearTimeout(txHandlingTimeout)
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length))
   })
@@ -228,7 +228,7 @@ function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
 
 
 export default {
-  // not using initialize() since it doens't provide the starting block number
+  // not using initialize() since it doesn't provide the starting block number
   // which makes testing not as convenient
   initialize,
   handleBlock,
