@@ -137,7 +137,7 @@ export const MAX_SUSHI_REWARDS_RECEIPT_DELAY = 60 * 10 // 10 minutes
 // max delay of receipt of funds for Sushi rewards contract
 export const MIN_SUSHI_MANAGER_FUNDS_RECEIPT_MARGIN = 3 * 24 * 60 * 60 // TODO
 
-// max deley of receipt of funds for pool rewards manager contract
+// max delay of receipt of funds for pool rewards manager contract
 export const MAX_DELAY_OF_POOL_REWARDS_PERIOD_PROLONGATION = 10 * 60 // 10 mins
 
 
@@ -156,7 +156,7 @@ export const POOLS_PARAMS = {
     Balancer: {
         managerAddress: '0x1220ccCDc9BBA5CF626a84586C74D6f940932342',
         rewardsAddress: '',
-        valutContractAddress: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        vaultContractAddress: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         poolId: "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
     },
     OneInch: {
@@ -207,7 +207,7 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
 export const IMBALANCE_CHANGE_TOLERANCE = 5;
-export const POOL_SIZE_CAHNGE_TOLERANCE = 3;
+export const POOL_SIZE_CHANGE_TOLERANCE = 3;
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
