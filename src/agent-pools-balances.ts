@@ -17,7 +17,7 @@ import {
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
   POOL_SIZE_CHANGE_TOLERANCE,
-  POOLS_REPORT_WINDOW,
+  POOLS_BALANCES_REPORT_WINDOW,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
@@ -62,6 +62,7 @@ export async function initialize(
   // get initial Curve Poll size
   const curvePoolTokens = await getCurvePoolTokens();
   poolsParams.Curve.poolSize = BigNumber.sum.apply(null, curvePoolTokens);
+
   // get Balancer Poll imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Balancer.lastReportedImbalance =
     await balancerPoolImbalancePercent(currentBlock - Math.ceil((5 * 60) / 13));
@@ -115,7 +116,7 @@ function imbalanceMessage(imbalance: number, token1: string, token2: string) {
 }
 
 function alreadyReported(poolParams: IPoolParams, now: number) {
-  return poolParams.lastReported + POOLS_REPORT_WINDOW >= now;
+  return poolParams.lastReported + POOLS_BALANCES_REPORT_WINDOW >= now;
 }
 
 async function handleCurvePoolImbalance(
