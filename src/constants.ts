@@ -1,11 +1,18 @@
+import BigNumber from 'bignumber.js'
 import {
     FindingSeverity,
 } from 'forta-agent'
 
 
+export const ETH_DECIMALS = new BigNumber(10).pow(18)
+
 export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
 export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT = 'event RewardsCollected(uint256 steth_amount, uint256 ust_amount)'
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)'
+// 0.51 ETH
+export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.51).times(ETH_DECIMALS)
+// 1 hour
+export const BALANCE_REPORT_WINDOW = 60 * 60
 
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
