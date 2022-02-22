@@ -25,6 +25,9 @@ import {
   MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE,
   ETH_DECIMALS,
   BALANCE_REPORT_WINDOW,
+  ANCHOR_DEPOSIT_EVENT,
+  ANCHOR_WITHDRAW_EVENT,
+  MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT,
 } from './constants'
 
 import {OracleReport} from './agent-lido-oracle'
@@ -157,6 +160,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   if (txEvent.to === ANCHOR_VAULT_ADDRESS) {
     handleAnchorVaultTx(txEvent, findings)
+    handleAnchorVaultWithdrawOrDepositTx(txEvent, findings)
   }
 
   return findings
@@ -216,4 +220,36 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
       stethUstFeedPrice: `${stethUstPrice.toFixed(0, 3)}`,
     },
   }))
+}
+
+
+function handleAnchorVaultWithdrawOrDepositTx(txEvent: TransactionEvent, findings: Finding[]) {
+  const [withdrawEvent] = txEvent.filterLog(ANCHOR_WITHDRAW_EVENT, ANCHOR_VAULT_ADDRESS)
+  const [depositEvent] = txEvent.filterLog(ANCHOR_DEPOSIT_EVENT, ANCHOR_VAULT_ADDRESS)
+  if (withdrawEvent != undefined) {
+    const withdrawAmount = new BigNumber(String(withdrawEvent.args.amount))
+    if (withdrawAmount.isGreaterThanOrEqualTo(MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT)) {
+      findings.push(Finding.fromObject({
+        name: 'Huge Anchor withdraw',
+        description: `${withdrawAmount.div(ETH_DECIMALS).toFixed(4)} stETH were withdrawn from Anchor`,
+        alertId: 'ANCHOR-VAULT-HUGE-TX',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }))
+    }
+  }
+
+  if (depositEvent != undefined) {
+    const depositAmount = new BigNumber(String(depositEvent.args.amount))
+    if (depositAmount.isGreaterThanOrEqualTo(MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT)) {
+      findings.push(Finding.fromObject({
+        name: 'Huge Anchor deposit',
+        description: `${depositAmount.div(ETH_DECIMALS).toFixed(4)} stETH were deposited to Anchor`,
+        alertId: 'ANCHOR-VAULT-HUGE-TX',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }))
+    }
+  }
+
 }
