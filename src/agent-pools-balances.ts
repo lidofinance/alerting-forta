@@ -56,15 +56,15 @@ export async function initialize(
   const block = await ethersProvider.getBlock(currentBlock);
   const now = block.timestamp;
 
-  // get initial Balancer Poll size
+  // get initial Balancer Pool size
   const balancerPoolTokens = await getBalancerPoolTokens();
   poolsParams.Balancer.poolSize = BigNumber.sum.apply(null, balancerPoolTokens);
 
-  // get initial Curve Poll size
+  // get initial Curve Pool size
   const curvePoolTokens = await getCurvePoolTokens();
   poolsParams.Curve.poolSize = BigNumber.sum.apply(null, curvePoolTokens);
 
-  // get Balancer Poll imbalance 5 mins ago. If there already was an imbalance do not report on start
+  // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Balancer.lastReportedImbalance =
     await balancerPoolImbalancePercent(currentBlock - Math.ceil((5 * 60) / 13));
   if (
@@ -73,7 +73,7 @@ export async function initialize(
     poolsParams.Balancer.lastReported = now;
   }
 
-  // get Curve Poll imbalance 5 mins ago. If there already was an imbalance do not report on start
+  // get Curve Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Curve.lastReportedImbalance = await curvePoolImbalancePercent(
     currentBlock - Math.ceil((5 * 60) / 13)
   );
