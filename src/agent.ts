@@ -18,6 +18,7 @@ import { argv } from 'process';
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 import * as agentPoolsRewards from './agent-pools-rewards'
+import * as agentPoolsBalances from './agent-pools-balances'
 import * as agentEasyTrack from './agent-easy-track'
 
 import VERSION from './version'
@@ -38,6 +39,7 @@ const subAgents: SubAgent[] = [
   agentBethRewards,
   agentPoolsRewards,
   agentEasyTrack,
+  agentPoolsBalances,
 ]
 
 // block or tx handling should take no more than 5 sec. If not all processing is done it will be done later in background
