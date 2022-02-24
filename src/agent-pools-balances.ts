@@ -16,7 +16,7 @@ import {
   WSTETH_TOKEN_ADDRESS,
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
-  POOL_SIZE_CHANGE_TOLERANCE,
+  POOL_SIZE_CHANGE_TOLERANCE_INFO,
   POOLS_BALANCES_REPORT_WINDOW,
 } from "./constants";
 
@@ -25,6 +25,7 @@ import { capitalizeFirstLetter } from "./utils/tools";
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
+import { POOL_SIZE_CHANGE_TOLERANCE_HIGH } from './constants';
 
 export const name = "PoolsBalances";
 
@@ -204,7 +205,8 @@ async function handleCurvePoolSize(
   const poolTokens = await getCurvePoolTokens();
   const poolSize = BigNumber.sum.apply(null, poolTokens);
   const poolSizeChange = calcImbalance(poolParams.poolSize, poolSize);
-  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE) {
+  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
+    const severity = Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH ? FindingSeverity.High : FindingSeverity.Info
     findings.push(
       Finding.fromObject({
         name: "Significant Curve Pool size change",
@@ -214,7 +216,7 @@ async function handleCurvePoolSize(
             : "decreased by " + -poolSizeChange.toFixed(2).toString()
         }% since the last block`,
         alertId: "CURVE_POOL_SIZE_CHANGE",
-        severity: FindingSeverity.Info,
+        severity: severity,
         type: FindingType.Info,
       })
     );
@@ -341,7 +343,8 @@ async function handleBalancerPoolSize(
   const poolTokens = await getBalancerPoolTokens();
   const poolSize = BigNumber.sum.apply(null, poolTokens);
   const poolSizeChange = calcImbalance(poolParams.poolSize, poolSize);
-  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE) {
+  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
+    const severity = Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH ? FindingSeverity.High : FindingSeverity.Info
     findings.push(
       Finding.fromObject({
         name: "Significant Balancer Pool size change",
@@ -351,7 +354,7 @@ async function handleBalancerPoolSize(
             : "decreased by " + -poolSizeChange.toFixed(2).toString()
         }% since the last block`,
         alertId: "BALANCER_POOL_SIZE_CHANGE",
-        severity: FindingSeverity.Info,
+        severity: severity,
         type: FindingType.Info,
       })
     );

@@ -207,7 +207,8 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
 export const IMBALANCE_CHANGE_TOLERANCE = 5;
-export const POOL_SIZE_CHANGE_TOLERANCE = 3;
+export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 3;
+export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 3;
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
