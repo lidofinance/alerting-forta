@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 
 import {
+  Initialize,
   BlockEvent,
   TransactionEvent,
   HandleBlock,
@@ -10,9 +11,14 @@ import {
   FindingSeverity,
 } from 'forta-agent'
 
+import {ethersProvider} from './ethers'
+
+import { argv } from 'process';
+
 import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 import * as agentPoolsRewards from './agent-pools-rewards'
+import * as agentPoolsBalances from './agent-pools-balances'
 import * as agentEasyTrack from './agent-easy-track'
 
 import VERSION from './version'
@@ -33,20 +39,45 @@ const subAgents: SubAgent[] = [
   agentBethRewards,
   agentPoolsRewards,
   agentEasyTrack,
+  agentPoolsBalances,
 ]
 
-let initialized = false
-let initializedPromise: Promise<void> | null = null
+// block or tx handling should take no more than 5 sec. If not all processing is done it will be done later in background
+const handlerResolveTimeout = 5000
+
+const maxHandlerRetries = 5
+
+let findingsOnInit: Finding[] = []
+let blockFindingsCache: Finding[] = []
+let txFindingsCache: Finding[] = []
 
 
-const initialize = async (blockNumber: number, findings: Finding[]) => {
+const initialize = async () => {
   const metadata: Metadata = {
     'version.commitHash': VERSION.commitHash,
     'version.commitMsg': VERSION.commitMsg,
   }
 
-  const launchFindingIndex = findings.length
-  const failedAgentIndices: number[] = []
+  let blockNumber: number = -1
+
+  if ( argv.includes("--block") ) {
+    blockNumber = parseInt(argv[4])
+  } else if ( argv.includes("--range") ) {
+    blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")))
+  } else if ( argv.includes("--tx") ) {
+    const tx = await ethersProvider.getTransaction(argv[4])
+    if (!tx) {
+      throw new Error(`Can't find transaction ${argv[4]}`)
+    }
+    if (!tx.blockNumber) {
+      throw new Error(`Transaction ${argv[4]} was not yet included into block`)
+    }
+    blockNumber = (await ethersProvider.getTransaction(argv[4])).blockNumber || -1
+  }
+
+  if (blockNumber == -1) {
+    blockNumber = await ethersProvider.getBlockNumber()
+  }
 
   await Promise.all(subAgents.map(async (agent, index) => {
     if (agent.initialize) {
@@ -56,20 +87,15 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
           metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
         }
       } catch (err) {
-        findings.push(errorToFinding(err, agent, 'initialize'))
-        failedAgentIndices.push(index)
+        console.log(`Exiting due to init failure on ${agent.name}`)
+        process.exit(1)
       }
     }
   }))
 
-  failedAgentIndices.forEach((agentIndex, j) => {
-    const agent = subAgents.splice(agentIndex - j, 1)[0]
-    console.log(`WARN Removed failed agent ${agent.name}`)
-  })
-
   metadata.agents = '[' + subAgents.map(a => `"${a.name}"`).join(', ') + ']'
 
-  findings.splice(launchFindingIndex, 0, Finding.fromObject({
+  findingsOnInit.push(Finding.fromObject({
     name: 'Agent launched',
     description: `Version: ${VERSION.desc}`,
     alertId: 'LIDO-AGENT-LAUNCHED',
@@ -81,60 +107,100 @@ const initialize = async (blockNumber: number, findings: Finding[]) => {
 
 
 const handleBlock: HandleBlock = async (blockEvent: BlockEvent): Promise<Finding[]> => {
-  let findings: Finding[] = []
 
-  await initializeIfNeeded(blockEvent.blockNumber, findings)
+  let responseResolve: (value: Finding[]) => void
 
-  await Promise.all(subAgents.map(async agent => {
+  const response = new Promise<Finding[]>((resolve,reject)=>{
+    responseResolve = resolve
+  });
+
+  // we need to resolve Promise in handlerResolveTimeout maximum.
+  // If not all handlers have finished execution we will leave them working in background
+  const blockHandlingTimeout = setTimeout(function(){
+    responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length))
+  },handlerResolveTimeout)
+
+  // report findings from init. Will be done only for the first block report.
+  if (findingsOnInit) {
+    blockFindingsCache = findingsOnInit
+    findingsOnInit = []
+  }
+
+  // run agents handlers
+  Promise.all(subAgents.map(async agent => {
     if (agent.handleBlock) {
-      try {
-        const newFindings = await agent.handleBlock(blockEvent)
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings)
-          findings = findings.concat(newFindings)
+      let retries = maxHandlerRetries
+      let success = false
+      let lastError
+      while (retries-- > 0 && !success) {
+        try {
+          const newFindings = await agent.handleBlock(blockEvent)
+          if (newFindings.length) {
+            enrichFindingsMetadata(newFindings)
+            blockFindingsCache = blockFindingsCache.concat(newFindings)
+          }
+          success = true
+        } catch (err) {
+          lastError = err
         }
-      } catch (err) {
-        findings.push(errorToFinding(err, agent, 'handleBlock'))
+      }
+      if (!success) {
+        blockFindingsCache.push(errorToFinding(lastError, agent, 'handleBlock'))
       }
     }
-  }))
+  })).then(() => {
+    // if all handlers have finished execution drop timeout and resolve promise
+    clearTimeout(blockHandlingTimeout)
+    responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length))
+  })
 
-  return findings
+  return response
 }
 
 
 const handleTransaction: HandleTransaction = async (txEvent: TransactionEvent) => {
-  let findings: Finding[] = []
 
-  await initializeIfNeeded(txEvent.blockNumber, findings)
+  let responseResolve: (value: Finding[]) => void
 
-  await Promise.all(subAgents.map(async agent => {
+  const response = new Promise<Finding[]>((resolve,reject)=>{
+    responseResolve = resolve
+  });
+
+  // we need to resolve Promise in handlerResolveTimeout maximum.
+  // If not all handlers has finished execution we will left them working in background
+  const txHandlingTimeout = setTimeout(function(){
+    responseResolve(txFindingsCache.splice(0, txFindingsCache.length))
+  },handlerResolveTimeout)
+
+  // run agents handlers
+  Promise.all(subAgents.map(async agent => {
     if (agent.handleTransaction) {
-      try {
-        const newFindings = await agent.handleTransaction(txEvent)
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings)
-          findings = findings.concat(newFindings)
+      let retries = maxHandlerRetries
+      let success = false
+      let lastError
+      while (retries-- > 0 && !success) {
+        try {
+          const newFindings = await agent.handleTransaction(txEvent)
+          if (newFindings.length) {
+            enrichFindingsMetadata(newFindings)
+            txFindingsCache = txFindingsCache.concat(newFindings)
+          }
+          success = true
+        } catch (err) {
+          lastError = err
         }
-      } catch (err) {
-        findings.push(errorToFinding(err, agent, 'handleTransaction'))
+      }
+      if (!success) {
+        txFindingsCache.push(errorToFinding(lastError, agent, 'handleTransaction'))
       }
     }
-  }))
+  })).then(() => {
+    // if all handlers have finished execution drop timeout and resolve promise
+    clearTimeout(txHandlingTimeout)
+    responseResolve(txFindingsCache.splice(0, txFindingsCache.length))
+  })
 
-  return findings
-}
-
-
-async function initializeIfNeeded(blockNumber: number, findings: Finding[]) {
-  if (!initialized) {
-    initialized = true
-    initializedPromise = initialize(blockNumber, findings)
-    await initializedPromise
-    initializedPromise = null
-  } else if (initializedPromise) {
-    await initializedPromise
-  }
+  return response
 }
 
 
@@ -164,8 +230,9 @@ function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
 
 
 export default {
-  // not using initialize() since it doens't provide the starting block number
+  // not using initialize() since it doesn't provide the starting block number
   // which makes testing not as convenient
+  initialize,
   handleBlock,
   handleTransaction,
 }
