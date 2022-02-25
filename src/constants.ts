@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js'
 import {
     FindingSeverity,
 } from 'forta-agent'
@@ -7,9 +8,12 @@ export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
 export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT = 'event RewardsCollected(uint256 steth_amount, uint256 ust_amount)'
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)'
 
+export const LIDO_DAO_ADDRESS = '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)'
+
+export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5"
 
 export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
 
@@ -203,6 +207,11 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
     },
 ]
 
+export const MIN_AVAILABLE_KEYS_COUNT = 1000
+
+export const MAX_BUFFERED_ETH_AMOUNT = 1000
+
+export const ETH_DECIMALS = new BigNumber(10).pow(18)
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
