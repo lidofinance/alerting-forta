@@ -102,6 +102,19 @@ export async function handleBlock(blockEvent: BlockEvent) {
     return findings
   }
 
+    // final check to handle case of missed event
+
+    const anchorVault = new ethers.Contract(ANCHOR_VAULT_ADDRESS, ANCHOR_VAULT_ABI, ethersProvider)
+    const lastLiquidationTime = parseInt(String(await anchorVault.functions.last_liquidation_time()))
+  
+    if (lastLiquidationTime > lastRewardsSell.timestamp) {
+      lastRewardsSell.timestamp = lastLiquidationTime
+      lastRewardsSell.stethAmount = new BigNumber(0)
+      lastRewardsSell.ustAmount = new BigNumber(0)
+      return findings
+    }
+  
+
   findings.push(Finding.fromObject({
     name: 'Anchor rewards sell overdue',
     description: `Time since oracle report: ${formatDelay(sellDelay)}`,
