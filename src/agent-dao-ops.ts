@@ -115,7 +115,6 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
     criticalBufferAmountFrom = 0;
   }
-  console.log(criticalBufferAmountFrom)
   if (lastReportedBufferedEth + REPORT_WINDOW < now) {
     if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL && criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME) {
       findings.push(
