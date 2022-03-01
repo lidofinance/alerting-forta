@@ -88,8 +88,10 @@ const initialize = async () => {
         for (const metaKey in agentMeta) {
           metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey]
         }
-      } catch (err) {
+      } catch (err: any) {
         console.log(`Exiting due to init failure on ${agent.name}`)
+        console.log(`${err}`)
+        console.log(`Stack: ${err.stack}`)
         process.exit(1)
       }
     }
