@@ -90,7 +90,7 @@ const initialize = async () => {
         }
       } catch (err) {
         console.log(`Exiting due to init failure on ${agent.name}`)
-        console.log(`Err:\n${err}`)
+        console.log(err)
         process.exit(1)
       }
     }
