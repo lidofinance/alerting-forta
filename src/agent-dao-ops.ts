@@ -122,7 +122,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "Huge buffered ETH amount",
           description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO for more than ${Math.floor(MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / ( 60 * 60 ))} hour(s)`,
-          alertId: "HUGE_BUFFERED_ETH",
+          alertId: "HUGE-BUFFERED-ETH",
           severity: FindingSeverity.High,
           type: FindingType.Degraded,
         })
@@ -133,7 +133,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "High buffered ETH amount",
           description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO and there are more than ${Math.floor(MAX_DEPOSITOR_TX_DELAY / ( 60 * 60 ))} hours since last Depositor TX`,
-          alertId: "HIGH_BUFFERED_ETH",
+          alertId: "HIGH-BUFFERED-ETH",
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
         })
