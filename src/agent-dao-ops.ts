@@ -32,8 +32,8 @@ export const name = "DaoOps";
 
 // 24 hours
 const REPORT_WINDOW = 60 * 60 * 24;
-// 1 hour
-const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60;
+// 4 hours
+const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
 let lastDepositorTxTime = 0;
