@@ -211,7 +211,17 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000
 
-export const MAX_BUFFERED_ETH_AMOUNT = 2000
+// 5000 ETH
+export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL = 5000
+
+// 2000 ETH
+export const MAX_BUFFERED_ETH_AMOUNT_MEDIUM = 2000
+
+// 72 hours
+export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72
+
+// 1 hour
+export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
 
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
 

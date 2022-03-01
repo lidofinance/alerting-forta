@@ -18,26 +18,28 @@ import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   LIDO_DAO_ADDRESS,
   MIN_AVAILABLE_KEYS_COUNT,
-  MAX_BUFFERED_ETH_AMOUNT,
+  MAX_BUFFERED_ETH_AMOUNT_CRITICAL,
+  MAX_BUFFERED_ETH_AMOUNT_MEDIUM,
   ETH_DECIMALS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
+  MAX_DEPOSITOR_TX_DELAY,
+  MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
 } from "./constants";
 
 export const name = "DaoOps";
 
 const REPORT_WINDOW = 60 * 60 * 24;
-// 12 hours
-const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 12;
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
 let lastDepositorTxTime = 0;
+let criticalBufferAmountFrom = 0;
 
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   let provider = new ethers.providers.EtherscanProvider();
-  let history = await provider.getHistory(LIDO_DEPOSIT_SECURITY_ADDRESS, currentBlock - Math.floor(60 * 60 * 24 / 13));
+  let history = await provider.getHistory(LIDO_DEPOSIT_SECURITY_ADDRESS, currentBlock - Math.floor(60 * 60 * 24 / 13), currentBlock - 1);
   const depositorTxTimestamps = history.map(x => x.timestamp ? x.timestamp : 0);
   if (depositorTxTimestamps.length > 0) {
     depositorTxTimestamps.sort((a,b) => a - b)
@@ -97,24 +99,42 @@ async function handleNodeOperatorsKeys(
 
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
+  const lidoDao = new ethers.Contract(
+    LIDO_DAO_ADDRESS,
+    LIDO_DAO_ABI,
+    ethersProvider
+  );
+  const bufferedEthRaw = new BigNumber(
+    String(await lidoDao.functions.getBufferedEther({blockTag:blockEvent.block.number}))
+  );
+  const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
+  // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
+  if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
+    criticalBufferAmountFrom = criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now
+  } else {
+    // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
+    criticalBufferAmountFrom = 0;
+  }
   if (lastReportedBufferedEth + REPORT_WINDOW < now) {
-    const lidoDao = new ethers.Contract(
-      LIDO_DAO_ADDRESS,
-      LIDO_DAO_ABI,
-      ethersProvider
-    );
-    const bufferedEthRaw = new BigNumber(
-      String(await lidoDao.functions.getBufferedEther())
-    );
-    const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
-    if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT && lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY) {
+    if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL && criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME) {
+      findings.push(
+        Finding.fromObject({
+          name: "Huge buffered ETH amount",
+          description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO for more than ${Math.floor(MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / ( 60 * 60 ))} hour(s)`,
+          alertId: "HUGE-BUFFERED-ETH",
+          severity: FindingSeverity.High,
+          type: FindingType.Degraded,
+        })
+      );
+      lastReportedBufferedEth = now
+    } else if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM && lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY) {
       findings.push(
         Finding.fromObject({
           name: "High buffered ETH amount",
-          description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO and there are more than 12 hours since last Depositor TX`,
-          alertId: "HIGH_BUFFERED_ETH",
+          description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO and there are more than ${Math.floor(MAX_DEPOSITOR_TX_DELAY / ( 60 * 60 ))} hours since last Depositor TX`,
+          alertId: "HIGH-BUFFERED-ETH",
           severity: FindingSeverity.Medium,
-          type: FindingType.Info,
+          type: FindingType.Suspicious,
         })
       );
       lastReportedBufferedEth = now
