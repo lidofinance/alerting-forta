@@ -24,15 +24,21 @@ import {
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   MAX_DEPOSITOR_TX_DELAY,
   MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
+  LIDO_DEPOSIT_EXECUTOR_ADDRESS,
+  MIN_DEPOSIT_EXECUTOR_BALANCE,
 } from "./constants";
 
 export const name = "DaoOps";
 
+// 24 hours
 const REPORT_WINDOW = 60 * 60 * 24;
+// 4 hours
+const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
 let lastDepositorTxTime = 0;
 let criticalBufferAmountFrom = 0;
+let lastReportedExecutorBalance = 0;
 
 export async function initialize(
   currentBlock: number
@@ -54,6 +60,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   await Promise.all([
     handleNodeOperatorsKeys(blockEvent, findings),
     handleBufferedEth(blockEvent, findings),
+    handleDepositExecutorBalance(blockEvent, findings),
   ]);
 
   return findings;
@@ -138,6 +145,27 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
         })
       );
       lastReportedBufferedEth = now
+    }
+  }
+}
+
+
+async function handleDepositExecutorBalance(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
+    const executorBalanceRaw = new BigNumber(String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS)))
+    const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
+    if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
+      findings.push(
+        Finding.fromObject({
+          name: "Low deposit executor balance",
+          description: `Balance of deposit executor is ${executorBalance.toFixed(4)}. This is extremely low!`,
+          alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
+        })
+      );
+      lastReportedExecutorBalance = now
     }
   }
 }
