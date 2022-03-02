@@ -43,6 +43,8 @@ const ZERO = new BigNumber(0);
 let lastReport: OracleReport | null = null;
 let lastTriggeredAt = 0;
 
+const TWO_WEEKS = 60 * 60 * 24 * 14
+
 const fBlockHandled = makeFuture<void>();
 const fTxHandled = makeFuture<void>();
 
@@ -50,12 +52,14 @@ let lastBlockHash: string;
 let lastTxHash: string;
 let oraclesLastVotes: Map<string, number> = new Map();
 let oraclesVotesLastAlert: Map<string, number> = new Map();
+let agentStartTime = 0;
 
 export const name = "AgentLidoOracle";
 
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
+  agentStartTime = (await ethersProvider.getBlock(currentBlock)).timestamp
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
@@ -69,9 +73,9 @@ export async function initialize(
     ","
   );
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
-  // ~14 days ago
+  // ~7 days ago
   const beaconReportStartBlock =
-    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 13);
+    currentBlock - Math.ceil((7 * 24 * 60 * 60) / 13);
   const reportBeaconEvents = await lidoOracle.queryFilter(
     oracleReportBeaconFilter,
     beaconReportStartBlock,
@@ -206,13 +210,14 @@ export async function handleBlock(blockEvent: BlockEvent) {
     );
     lastTriggeredAt = now;
   }
+  console.log(oraclesLastVotes)
   oraclesLastVotes.forEach((lastRepBlock, oracle) => {
     let lastAlert = oraclesVotesLastAlert.get(oracle);
     if (
       lastAlert == undefined ||
       lastAlert < now - BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW
     ) {
-      if (lastRepBlock < blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
+      if ((lastRepBlock != 0 || agentStartTime + TWO_WEEKS < now) && lastRepBlock < blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
         findings.push(
           Finding.fromObject({
             name: "Super sloppy Lido Oracle",
