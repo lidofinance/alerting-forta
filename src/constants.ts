@@ -23,8 +23,8 @@ export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
-export const EASY_TRACK_ADDRESS = '0xF0211b7660680B49De1A7E9f25C65660F0a13Fea'
-export const EVM_SCRIPT_EXECUTOR_ADDRESS = '0xFE5986E06210aC1eCC1aDCafc0cc7f8D63B3F977'
+export const EASY_TRACK_ADDRESS = '0xf0211b7660680b49de1a7e9f25c65660f0a13fea'
+export const EVM_SCRIPT_EXECUTOR_ADDRESS = '0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977'
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS = '0x3129c041b372ee93a5a8756dc4ec6f154d85bc9a'
 
 export const EASY_TRACK_EVENTS_OF_NOTICE = [
@@ -62,34 +62,34 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionCreated(uint256 indexed motionId, address creator, address indexed evmScriptFactory, bytes evmScriptCallData, bytes evmScript)',
+        event: 'event MotionCreated(uint256 indexed _motionId, address _creator, address indexed _evmScriptFactory, bytes _evmScriptCallData, bytes _evmScript)',
         alertId: 'EASY-TRACK-MOTION-CREATED',
         name: 'EasyTrack: New motion created',
-        description: (args: any) => `EasyTrack new motion ${args.motionId} created by ${args.creator}`,
+        description: (args: any) => `EasyTrack new motion ${args._motionId} created by ${args._creator}`,
         severity: FindingSeverity.Info,
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionEnacted(uint256 indexed motionId)',
+        event: 'event MotionEnacted(uint256 indexed _motionId)',
         alertId: 'EASY-TRACK-MOTION-ENACTED',
         name: 'EasyTrack: Motion executed',
-        description: (args: any) => `EasyTrack motion ${args.motionId} was enacted`,
+        description: (args: any) => `EasyTrack motion ${args._motionId} was enacted`,
         severity: FindingSeverity.Info,
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionObjected(uint256 indexed motionId, address indexed objector, uint256 weight, uint256 newObjectionsAmount, uint256 newObjectionsAmountPct)',
+        event: 'event MotionObjected(uint256 indexed _motionId, address indexed _objector, uint256 _weight, uint256 _newObjectionsAmount, uint256 _newObjectionsAmountPct)',
         alertId: 'EASY-TRACK-MOTION-OBJECTED',
         name: 'EasyTrack: Motion objected',
-        description: (args: any) => `EasyTrack motion ${args.motionId} was objected by ${args.objector}`,
+        description: (args: any) => `EasyTrack motion ${args._motionId} was objected by ${args._objector}`,
         severity: FindingSeverity.Info,
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionRejected(uint256 indexed motionId)',
+        event: 'event MotionRejected(uint256 indexed _motionId)',
         alertId: 'EASY-TRACK-MOTION-REJECTED',
         name: 'EasyTrack: Motion rejected',
-        description: (args: any) => `EasyTrack motion ${args.motionId} was rejected`,
+        description: (args: any) => `EasyTrack motion ${args._motionId} was rejected`,
         severity: FindingSeverity.Info,
     },
     
@@ -112,10 +112,10 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     
     {
         address: EVM_SCRIPT_EXECUTOR_ADDRESS,
-        event: 'EasyTrackChanged(address indexed previousEasyTrack, address indexed newEasyTrack)',
+        event: 'event EasyTrackChanged(address indexed _previousEasyTrack, address indexed _newEasyTrack)',
         alertId: 'EVM-SCRIPT-EXECUTOR-EASY-TRACK-CHANGED',
         name: "EasyTrack: EVMScriptExecutor's EasyTrack address changed",
-        description: (args: any) => `EVMScriptExecutor's EasyTrack address changed from ${args.previousEasyTrack} to ${args.newEasyTrack}`,
+        description: (args: any) => `EVMScriptExecutor's EasyTrack address changed from ${args._previousEasyTrack} to ${args._newEasyTrack}`,
         severity: FindingSeverity.High,
     },
     {
