@@ -17,15 +17,20 @@ import {
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
   POOL_SIZE_CHANGE_TOLERANCE_INFO,
+  POOL_SIZE_CHANGE_TOLERANCE_HIGH,
   POOLS_BALANCES_REPORT_WINDOW,
+  CHAINLINK_STETH_USD_PRICE_ADDRESS,
+  PRICE_DIFFERENCE_THRESHOLD,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
 
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
+import SUSHI_POOL_ABI from "./abi/SushiPool.json";
+import SUSHI_ROUTER_ABI from "./abi/sushiRouter.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
-import { POOL_SIZE_CHANGE_TOLERANCE_HIGH } from './constants';
+import CHAINLINK_STETH_USD_ABI from "./abi/ChainlinkStEthUsd.json";
 
 export const name = "PoolsBalances";
 
@@ -33,6 +38,8 @@ interface IPoolParams {
   lastReported: number;
   lastReportedImbalance: number;
   poolSize: BigNumber;
+  poolSizeToken1: BigNumber;
+  poolSizeToken2: BigNumber;
 }
 
 let poolsParams: { [name: string]: IPoolParams } = {
@@ -40,11 +47,22 @@ let poolsParams: { [name: string]: IPoolParams } = {
     lastReported: 0,
     lastReportedImbalance: 0,
     poolSize: new BigNumber(0),
+    poolSizeToken1: new BigNumber(0),
+    poolSizeToken2: new BigNumber(0),
   },
   Balancer: {
     lastReported: 0,
     lastReportedImbalance: 0,
     poolSize: new BigNumber(0),
+    poolSizeToken1: new BigNumber(0),
+    poolSizeToken2: new BigNumber(0),
+  },
+  Sushi: {
+    lastReported: 0,
+    lastReportedImbalance: 0,
+    poolSize: new BigNumber(0),
+    poolSizeToken1: new BigNumber(0),
+    poolSizeToken2: new BigNumber(0),
   },
 };
 
@@ -63,6 +81,9 @@ export async function initialize(
   // get initial Curve Pool size
   const curvePoolTokens = await getCurvePoolTokens();
   poolsParams.Curve.poolSize = BigNumber.sum.apply(null, curvePoolTokens);
+
+  //get Sushi pool size
+  [poolsParams.Sushi.poolSizeToken1, poolsParams.Sushi.poolSizeToken2] = await getSushiTokens();
 
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Balancer.lastReportedImbalance =
@@ -99,6 +120,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBalancerPoolImbalance(blockEvent, findings),
     handleBalancerPoolSize(blockEvent, findings),
     handleCurvePoolSize(blockEvent, findings),
+    handleSushiPrice(blockEvent, findings),
+    handleSushiPoolSize(blockEvent, findings),
   ]);
 
   return findings;
@@ -186,8 +209,12 @@ async function getCurvePoolTokens(blockNumber?: number) {
   if (blockNumber) {
     overrides.blockTag = blockNumber;
   }
-  const ethBalance = new BigNumber(String(await curveStableSwap.functions.balances(0, overrides)));
-  const stethBalance = new BigNumber(String(await curveStableSwap.functions.balances(1, overrides)));
+  const ethBalance = new BigNumber(
+    String(await curveStableSwap.functions.balances(0, overrides))
+  );
+  const stethBalance = new BigNumber(
+    String(await curveStableSwap.functions.balances(1, overrides))
+  );
   return [ethBalance, stethBalance];
 }
 
@@ -206,7 +233,10 @@ async function handleCurvePoolSize(
   const poolSize = BigNumber.sum.apply(null, poolTokens);
   const poolSizeChange = calcImbalance(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    const severity = Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH ? FindingSeverity.High : FindingSeverity.Info
+    const severity =
+      Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
+        ? FindingSeverity.High
+        : FindingSeverity.Info;
     findings.push(
       Finding.fromObject({
         name: "Significant Curve Pool size change",
@@ -344,7 +374,10 @@ async function handleBalancerPoolSize(
   const poolSize = BigNumber.sum.apply(null, poolTokens);
   const poolSizeChange = calcImbalance(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    const severity = Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH ? FindingSeverity.High : FindingSeverity.Info
+    const severity =
+      Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
+        ? FindingSeverity.High
+        : FindingSeverity.Info;
     findings.push(
       Finding.fromObject({
         name: "Significant Balancer Pool size change",
@@ -360,4 +393,135 @@ async function handleBalancerPoolSize(
     );
   }
   poolParams.poolSize = poolSize;
+}
+
+async function getSushiTokens(blockNumber?: number) {
+  const sushiPool = new ethers.Contract(
+    POOLS_PARAMS.Sushi.poolContractAddress,
+    SUSHI_POOL_ABI,
+    ethersProvider
+  );
+
+  let overrides = {} as any;
+  if (blockNumber) {
+    overrides.blockTag = blockNumber;
+  }
+
+  const reserves = await sushiPool.functions.getReserves(overrides);
+  const daiReserve = new BigNumber(String(reserves[0]));
+  const wstEthReserve = new BigNumber(String(reserves[1]));
+
+  return [daiReserve, wstEthReserve];
+}
+
+async function handleSushiPrice(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  let poolParams = poolsParams.Sushi;
+  if (!alreadyReported(poolParams, now)) {
+    const [daiReserve, wstEthReserve] = await getSushiTokens();
+
+    // 0.1% of token supply in pool
+    const wstEthTestAmount = wstEthReserve.idiv(1000);
+
+    const sushiRouter = new ethers.Contract(
+      POOLS_PARAMS.Sushi.routerContractAddress,
+      SUSHI_ROUTER_ABI,
+      ethersProvider
+    );
+
+    const daiTestAmount = new BigNumber(
+      String(
+        await sushiRouter.functions.getAmountIn(
+          wstEthTestAmount.toFixed(),
+          daiReserve.toFixed(),
+          wstEthReserve.toFixed()
+        )
+      )
+    );
+
+    const wstETH = new ethers.Contract(
+      WSTETH_TOKEN_ADDRESS,
+      WSTETH_TOKEN_ABI,
+      ethersProvider
+    );
+    const stEthTestBalance = new BigNumber(
+      String(
+        await wstETH.functions.getStETHByWstETH(wstEthTestAmount.toFixed())
+      )
+    );
+
+    const wstEthPricePool = daiTestAmount.div(wstEthTestAmount);
+
+    const chainlink = new ethers.Contract(
+      CHAINLINK_STETH_USD_PRICE_ADDRESS,
+      CHAINLINK_STETH_USD_ABI,
+      ethersProvider
+    );
+
+    const stEthPrice = new BigNumber(
+      String((await chainlink.functions.latestRoundData())[1])
+    );
+    const decimals = parseInt(String(await chainlink.functions.decimals()));
+
+    const wstEthPriceFeed = stEthPrice.div(10 ** decimals).times(stEthTestBalance).div(wstEthTestAmount);
+
+    const priceDifference = wstEthPricePool
+      .div(wstEthPriceFeed)
+      .times(100)
+      .minus(100)
+      .toNumber();
+
+    if (Math.abs(priceDifference) > PRICE_DIFFERENCE_THRESHOLD) {
+      findings.push(
+        Finding.fromObject({
+          name: "Significant wstETH price difference between Sushi pool and chainlink feed",
+          description: `wstETH price in pool (${wstEthPricePool.toFixed(2)}) is ${priceDifference.toFixed(2)}% ${priceDifference > 0 ? 'higher' : 'lower'} than chainlink feed (${wstEthPriceFeed.toFixed(2)})`,
+          alertId: "BAD-SUSHI-PRICE",
+          severity: FindingSeverity.Medium,
+          type: FindingType.Suspicious,
+        })
+      );
+      poolParams.lastReported = now;
+    }
+  }
+}
+
+
+async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) {
+  let poolParams = poolsParams.Sushi;
+  const [daiReserve, wstEthReserve] = await getSushiTokens();
+  const poolSizeChangeDai = calcImbalance(poolParams.poolSizeToken1, daiReserve);
+  const poolSizeChangeWstEth = calcImbalance(poolParams.poolSizeToken2, wstEthReserve);
+  if (Math.abs(poolSizeChangeDai) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
+    findings.push(
+      Finding.fromObject({
+        name: "Significant Sushi Pool size change",
+        description: `Sushi Pool size (DAI part) has ${
+          poolSizeChangeDai > 0
+            ? "increased by " + poolSizeChangeDai.toFixed(2).toString()
+            : "decreased by " + -poolSizeChangeDai.toFixed(2).toString()
+        }% since the last block`,
+        alertId: "SUSHI-POOL-SIZE-CHANGE",
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      })
+    );
+  }
+  if (Math.abs(poolSizeChangeWstEth) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
+    findings.push(
+      Finding.fromObject({
+        name: "Significant Sushi Pool size change",
+        description: `Sushi Pool size (wstETH part) has ${
+          poolSizeChangeWstEth > 0
+            ? "increased by " + poolSizeChangeWstEth.toFixed(2).toString()
+            : "decreased by " + -poolSizeChangeWstEth.toFixed(2).toString()
+        }% since the last block`,
+        alertId: "SUSHI-POOL-SIZE-CHANGE",
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      })
+    );
+  }
+  poolParams.poolSizeToken1 = daiReserve;
+  poolParams.poolSizeToken2 = wstEthReserve;
 }

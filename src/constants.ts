@@ -20,6 +20,8 @@ export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E
 
 export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
 
+export const CHAINLINK_STETH_USD_PRICE_ADDRESS = '0xcfe54b5cd566ab89272946f602d76ea879cab4a8'
+
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
@@ -153,7 +155,8 @@ export const POOLS_PARAMS = {
     Sushi: {
         managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
         rewardsAddress: '',
-        poolContractAddress: '',
+        poolContractAddress: '0xc5578194d457dcce3f272538d1ad52c68d1ce849',
+        routerContractAddress: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f'
     },
     Curve: {
         managerAddress: '0x753D5167C31fBEB5b49624314d74A957Eb271709',
@@ -172,6 +175,9 @@ export const POOLS_PARAMS = {
         poolContractAddress: '',
     },
 }
+
+// threshold for price difference between LP and Chainlink feed in percents
+export const PRICE_DIFFERENCE_THRESHOLD = 10
 
 const period10days = 10 * 24 * 60 * 60
 const period5days = 5 * 24 * 60 * 60
@@ -233,7 +239,7 @@ export const ETH_DECIMALS = new BigNumber(10).pow(18)
 export const IMBALANCE_TOLERANCE = 10;
 export const IMBALANCE_CHANGE_TOLERANCE = 5;
 export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 3;
-export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 3;
+export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 7;
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
