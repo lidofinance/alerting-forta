@@ -16,6 +16,7 @@ export const LIDO_DAO_ADDRESS = '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)'
+export const LIDO_ORACLE_BEACON_REPORTED_EVENT = 'event BeaconReported(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators, address caller)'
 
 export const LIDO_DEPOSIT_SECURITY_ADDRESS = "0xDb149235B6F40dC08810AA69869783Be101790e7"
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xf82ac5937a20dc862f9bc0668779031e06000f17"
@@ -248,3 +249,7 @@ export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 3;
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
+
+export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO = Math.floor(60 * 60 * 24 * 7 / 13) // 1 week
+export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM = Math.floor(60 * 60 * 24 * 14 / 13) // 2 weeks
+export const BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
