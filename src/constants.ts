@@ -8,6 +8,10 @@ export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
 export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT = 'event RewardsCollected(uint256 steth_amount, uint256 ust_amount)'
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)'
 
+export const AAWE_ASTETH_ADDRESS = '0x1982b2f5814301d4e9a8b0201555376e62f82428'
+export const AAWE_STABLE_DEBT_STETH_ADDRESS = '0x66457616dd8489df5d0afd8678f4a260088aaf55'
+export const AAWE_VARIABLE_DEBT_STETH_ADDRESS = '0xa9deac9f00dc4310c35603fcd9d34d1a750f81db'
+
 export const LIDO_DAO_ADDRESS = '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
@@ -15,6 +19,7 @@ export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uin
 export const LIDO_ORACLE_BEACON_REPORTED_EVENT = 'event BeaconReported(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators, address caller)'
 
 export const LIDO_DEPOSIT_SECURITY_ADDRESS = "0xDb149235B6F40dC08810AA69869783Be101790e7"
+export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xf82ac5937a20dc862f9bc0668779031e06000f17"
 
 export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5"
 
@@ -23,8 +28,8 @@ export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
-export const EASY_TRACK_ADDRESS = '0xF0211b7660680B49De1A7E9f25C65660F0a13Fea'
-export const EVM_SCRIPT_EXECUTOR_ADDRESS = '0xFE5986E06210aC1eCC1aDCafc0cc7f8D63B3F977'
+export const EASY_TRACK_ADDRESS = '0xf0211b7660680b49de1a7e9f25c65660f0a13fea'
+export const EVM_SCRIPT_EXECUTOR_ADDRESS = '0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977'
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS = '0x3129c041b372ee93a5a8756dc4ec6f154d85bc9a'
 
 export const EASY_TRACK_EVENTS_OF_NOTICE = [
@@ -62,34 +67,34 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionCreated(uint256 indexed motionId, address creator, address indexed evmScriptFactory, bytes evmScriptCallData, bytes evmScript)',
+        event: 'event MotionCreated(uint256 indexed _motionId, address _creator, address indexed _evmScriptFactory, bytes _evmScriptCallData, bytes _evmScript)',
         alertId: 'EASY-TRACK-MOTION-CREATED',
         name: 'EasyTrack: New motion created',
-        description: (args: any) => `EasyTrack new motion ${args.motionId} created by ${args.creator}`,
+        description: (args: any) => `EasyTrack new motion ${args._motionId} created by ${args._creator}`,
         severity: FindingSeverity.Info,
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionEnacted(uint256 indexed motionId)',
+        event: 'event MotionEnacted(uint256 indexed _motionId)',
         alertId: 'EASY-TRACK-MOTION-ENACTED',
         name: 'EasyTrack: Motion executed',
-        description: (args: any) => `EasyTrack motion ${args.motionId} was enacted`,
+        description: (args: any) => `EasyTrack motion ${args._motionId} was enacted`,
         severity: FindingSeverity.Info,
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionObjected(uint256 indexed motionId, address indexed objector, uint256 weight, uint256 newObjectionsAmount, uint256 newObjectionsAmountPct)',
+        event: 'event MotionObjected(uint256 indexed _motionId, address indexed _objector, uint256 _weight, uint256 _newObjectionsAmount, uint256 _newObjectionsAmountPct)',
         alertId: 'EASY-TRACK-MOTION-OBJECTED',
         name: 'EasyTrack: Motion objected',
-        description: (args: any) => `EasyTrack motion ${args.motionId} was objected by ${args.objector}`,
+        description: (args: any) => `EasyTrack motion ${args._motionId} was objected by ${args._objector}`,
         severity: FindingSeverity.Info,
     },
     {
         address: EASY_TRACK_ADDRESS,
-        event: 'event MotionRejected(uint256 indexed motionId)',
+        event: 'event MotionRejected(uint256 indexed _motionId)',
         alertId: 'EASY-TRACK-MOTION-REJECTED',
         name: 'EasyTrack: Motion rejected',
-        description: (args: any) => `EasyTrack motion ${args.motionId} was rejected`,
+        description: (args: any) => `EasyTrack motion ${args._motionId} was rejected`,
         severity: FindingSeverity.Info,
     },
     
@@ -112,10 +117,10 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     
     {
         address: EVM_SCRIPT_EXECUTOR_ADDRESS,
-        event: 'EasyTrackChanged(address indexed previousEasyTrack, address indexed newEasyTrack)',
+        event: 'event EasyTrackChanged(address indexed _previousEasyTrack, address indexed _newEasyTrack)',
         alertId: 'EVM-SCRIPT-EXECUTOR-EASY-TRACK-CHANGED',
         name: "EasyTrack: EVMScriptExecutor's EasyTrack address changed",
-        description: (args: any) => `EVMScriptExecutor's EasyTrack address changed from ${args.previousEasyTrack} to ${args.newEasyTrack}`,
+        description: (args: any) => `EVMScriptExecutor's EasyTrack address changed from ${args._previousEasyTrack} to ${args._newEasyTrack}`,
         severity: FindingSeverity.High,
     },
     {
@@ -212,9 +217,29 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000
 
-export const MAX_BUFFERED_ETH_AMOUNT = 2000
+// 5000 ETH
+export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL = 5000
 
+// 2000 ETH
+export const MAX_BUFFERED_ETH_AMOUNT_MEDIUM = 2000
+
+// 2 ETH
+export const MIN_DEPOSIT_EXECUTOR_BALANCE = 2
+
+// 72 hours
+export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72
+
+// 1 hour
+export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
+
+// 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
+
+// 1 gwei
+export const GWEI_DECIMALS = new BigNumber(10).pow(9)
+
+// 1 gwe1
+export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
