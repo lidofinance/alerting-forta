@@ -43,10 +43,13 @@ const ZERO = new BigNumber(0);
 let lastReport: OracleReport | null = null;
 let lastTriggeredAt = 0;
 
+const ONE_WEEK = 60 * 60 * 24 * 7
 const TWO_WEEKS = 60 * 60 * 24 * 14
 
 const fBlockHandled = makeFuture<void>();
 const fTxHandled = makeFuture<void>();
+const byBlockNumberDesc = (e1: Event, e2: Event) =>
+e2.blockNumber - e1.blockNumber;
 
 let lastBlockHash: string;
 let lastTxHash: string;
@@ -66,16 +69,13 @@ export async function initialize(
     ethersProvider
   );
 
-  const byBlockNumberDesc = (e1: Event, e2: Event) =>
-    e2.blockNumber - e1.blockNumber;
-
   const oracles = String(await lidoOracle.functions.getOracleMembers()).split(
     ","
   );
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
-  // ~7 days ago
+  // ~2 days ago
   const beaconReportStartBlock =
-    currentBlock - Math.ceil((7 * 24 * 60 * 60) / 13);
+    currentBlock - Math.ceil((2 * 24 * 60 * 60) / 13);
   const reportBeaconEvents = await lidoOracle.queryFilter(
     oracleReportBeaconFilter,
     beaconReportStartBlock,
@@ -100,10 +100,26 @@ export async function initialize(
     oraclesVotesLastAlert.set(element, 0);
   });
 
+  await getLasOracleReport(currentBlock)
+
+  console.log(`[AgentLidoOracle] lastReport: ${printReport(lastReport)}`);
+
+  return {
+    lastReportTimestamp: lastReport ? `${lastReport.timestamp}` : "unknown",
+  };
+}
+
+async function getLasOracleReport(currentBlock: number) {
+  const lidoOracle = new ethers.Contract(
+    LIDO_ORACLE_ADDRESS,
+    LIDO_ORACLE_ABI,
+    ethersProvider
+  );
+
   const oracleReportFilter = lidoOracle.filters.Completed();
 
-  // ~2 days 3 hours ago
-  const pastBlock = currentBlock - Math.ceil((51 * 60 * 60) / 13);
+  // ~1 day 1 hours ago
+  const pastBlock = currentBlock - Math.ceil((25 * 60 * 60) / 13);
   const reportEvents = await lidoOracle.queryFilter(
     oracleReportFilter,
     pastBlock,
@@ -114,30 +130,13 @@ export async function initialize(
 
   const reportBlocks = await Promise.all(reportEvents.map((e) => e.getBlock()));
 
-  const prevReport: OracleReport | null =
-    reportEvents.length > 1
-      ? processReportEvent(
-          reportEvents[1].args,
-          reportBlocks[1].timestamp,
-          null
-        )
-      : null;
-
   if (reportEvents.length > 0) {
     lastReport = processReportEvent(
       reportEvents[0].args,
       reportBlocks[0].timestamp,
-      prevReport
+      null
     );
   }
-
-  console.log(`[AgentLidoOracle] prevReport: ${printReport(prevReport)}`);
-  console.log(`[AgentLidoOracle] lastReport: ${printReport(lastReport)}`);
-
-  return {
-    prevReportTimestamp: prevReport ? `${prevReport.timestamp}` : "unknown",
-    lastReportTimestamp: lastReport ? `${lastReport.timestamp}` : "unknown",
-  };
 }
 
 function processReportEvent(
@@ -196,21 +195,26 @@ export async function handleBlock(blockEvent: BlockEvent) {
     reportDelay > MAX_ORACLE_REPORT_DELAY &&
     now - lastTriggeredAt >= TRIGGER_PERIOD
   ) {
-    findings.push(
-      Finding.fromObject({
-        name: "Lido Oracle report overdue",
-        description: `Time since last report: ${formatDelay(reportDelay)}`,
-        alertId: "LIDO-ORACLE-OVERDUE",
-        severity: FindingSeverity.High,
-        type: FindingType.Degraded,
-        metadata: {
-          delay: `${reportDelay}`,
-        },
-      })
-    );
-    lastTriggeredAt = now;
+    // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
+    // needed to handle situation with the missed TX with pres report
+    await getLasOracleReport(blockEvent.blockNumber)
+    const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
+    if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
+      findings.push(
+        Finding.fromObject({
+          name: "Lido Oracle report overdue",
+          description: `Time since last report: ${formatDelay(reportDelayUpdated)}`,
+          alertId: "LIDO-ORACLE-OVERDUE",
+          severity: FindingSeverity.High,
+          type: FindingType.Degraded,
+          metadata: {
+            delay: `${reportDelayUpdated}`,
+          },
+        })
+      );
+      lastTriggeredAt = now;
+    }
   }
-  console.log(oraclesLastVotes)
   oraclesLastVotes.forEach((lastRepBlock, oracle) => {
     let lastAlert = oraclesVotesLastAlert.get(oracle);
     if (
@@ -228,7 +232,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
           })
         );
         oraclesVotesLastAlert.set(oracle, now);
-      } else if ( lastRepBlock < blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO) {
+      } else if ( (lastRepBlock != 0 || agentStartTime + ONE_WEEK < now) && lastRepBlock < blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO) {
         findings.push(
           Finding.fromObject({
             name: "Sloppy Lido Oracle",
