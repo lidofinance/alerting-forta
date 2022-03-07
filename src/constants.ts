@@ -8,6 +8,10 @@ export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
 export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT = 'event RewardsCollected(uint256 steth_amount, uint256 ust_amount)'
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)'
 
+export const AAWE_ASTETH_ADDRESS = '0x1982b2f5814301d4e9a8b0201555376e62f82428'
+export const AAWE_STABLE_DEBT_STETH_ADDRESS = '0x66457616dd8489df5d0afd8678f4a260088aaf55'
+export const AAWE_VARIABLE_DEBT_STETH_ADDRESS = '0xa9deac9f00dc4310c35603fcd9d34d1a750f81db'
+
 export const LIDO_DAO_ADDRESS = '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
@@ -228,7 +232,14 @@ export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72
 // 1 hour
 export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
 
+// 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
+
+// 1 gwei
+export const GWEI_DECIMALS = new BigNumber(10).pow(9)
+
+// 1 gwe1
+export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
