@@ -100,16 +100,21 @@ export async function initialize(
     oraclesVotesLastAlert.set(element, 0);
   });
 
-  await getLasOracleReport(currentBlock)
+  const block24HoursAgo = currentBlock - Math.ceil(24 * 60 * 60 / 13)
+  const block48HoursAgo = currentBlock - Math.ceil(48 * 60 * 60 / 13) 
+  const prevReport = await getOracleReport(block48HoursAgo, block24HoursAgo - 1, null)
+  lastReport = await getOracleReport(block24HoursAgo, currentBlock - 1, prevReport)
 
+  console.log(`[AgentLidoOracle] prevReport: ${printReport(prevReport)}`);
   console.log(`[AgentLidoOracle] lastReport: ${printReport(lastReport)}`);
 
   return {
     lastReportTimestamp: lastReport ? `${lastReport.timestamp}` : "unknown",
+    prevReportTimestamp: prevReport ? `${prevReport.timestamp}` : "unknown",
   };
 }
 
-async function getLasOracleReport(currentBlock: number) {
+async function getOracleReport(blockFrom: number, blockTo: number, prevReport: OracleReport | null = null) {
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
@@ -118,12 +123,10 @@ async function getLasOracleReport(currentBlock: number) {
 
   const oracleReportFilter = lidoOracle.filters.Completed();
 
-  // ~1 day 1 hours ago
-  const pastBlock = currentBlock - Math.ceil((25 * 60 * 60) / 13);
   const reportEvents = await lidoOracle.queryFilter(
     oracleReportFilter,
-    pastBlock,
-    currentBlock - 1
+    blockFrom,
+    blockTo
   );
 
   reportEvents.sort(byBlockNumberDesc);
@@ -131,11 +134,13 @@ async function getLasOracleReport(currentBlock: number) {
   const reportBlocks = await Promise.all(reportEvents.map((e) => e.getBlock()));
 
   if (reportEvents.length > 0) {
-    lastReport = processReportEvent(
+    return processReportEvent(
       reportEvents[0].args,
       reportBlocks[0].timestamp,
-      null
+      prevReport
     );
+  } else {
+    return null
   }
 }
 
@@ -197,7 +202,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
   ) {
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with pres report
-    await getLasOracleReport(blockEvent.blockNumber)
+    lastReport = await getOracleReport(blockEvent.blockNumber - Math.ceil(24 * 60 * 60 / 13), blockEvent.blockNumber - 1, lastReport)
+    console.log(lastReport)
     const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
     if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
       findings.push(
