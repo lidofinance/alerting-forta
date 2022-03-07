@@ -18,14 +18,14 @@ import VARIABLE_DEBT_STETH_ABI from "./abi/variableDebtStETH.json";
 
 import {
   LIDO_DAO_ADDRESS,
-  AAWE_ASTETH_ADDRESS,
-  AAWE_STABLE_DEBT_STETH_ADDRESS,
-  AAWE_VARIABLE_DEBT_STETH_ADDRESS,
+  AAVE_ASTETH_ADDRESS,
+  AAVE_STABLE_DEBT_STETH_ADDRESS,
+  AAVE_VARIABLE_DEBT_STETH_ADDRESS,
   GWEI_DECIMALS,
   ASTETH_GWEI_DIFFERENCE_THRESHOLD,
 } from "./constants";
 
-export const name = "AAWE";
+export const name = "AAVE";
 
 // 12 hours
 const REPORT_WINDOW = 60 * 60 * 12;
@@ -61,13 +61,13 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
       ethersProvider
     );
     const astETH = new ethers.Contract(
-      AAWE_ASTETH_ADDRESS,
+      AAVE_ASTETH_ADDRESS,
       ASTETH_ABI,
       ethersProvider
     );
 
     const astEthBalance = new BigNumber(
-      String(await stETH.functions.balanceOf(AAWE_ASTETH_ADDRESS))
+      String(await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS))
     );
     const astEthTotalSupply = new BigNumber(
       String(await astETH.functions.totalSupply())
@@ -79,7 +79,7 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
       findings.push(
         Finding.fromObject({
           name: "astETH balance and totalSupply difference",
-          description: `stETH.balanceOf(${AAWE_ASTETH_ADDRESS})=${
+          description: `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})=${
             astEthBalance.div(GWEI_DECIMALS).toFixed()
           } gwei differs from astETH.totalSupply = ${
             astEthTotalSupply.div(GWEI_DECIMALS).toFixed()
@@ -101,7 +101,7 @@ async function handleStableStEthSupply(
   const now = blockEvent.block.timestamp;
   if (lastReportedStableStEthSupply + REPORT_WINDOW < now) {
     const stableDebtStEth = new ethers.Contract(
-      AAWE_STABLE_DEBT_STETH_ADDRESS,
+      AAVE_STABLE_DEBT_STETH_ADDRESS,
       STABLE_DEBT_STETH_ABI,
       ethersProvider
     );
@@ -132,7 +132,7 @@ async function handleVariableStEthSupply(
   const now = blockEvent.block.timestamp;
   if (lastReportedVariableStEthSupply + REPORT_WINDOW < now) {
     const variableDebtStEth = new ethers.Contract(
-      AAWE_VARIABLE_DEBT_STETH_ADDRESS,
+      AAVE_VARIABLE_DEBT_STETH_ADDRESS,
       VARIABLE_DEBT_STETH_ABI,
       ethersProvider
     );
