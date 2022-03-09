@@ -45,7 +45,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   let provider = new ethers.providers.EtherscanProvider();
-  let history = await provider.getHistory(LIDO_DEPOSIT_SECURITY_ADDRESS, currentBlock - Math.floor(60 * 60 * 24 / 13), currentBlock - 1);
+  let history = await provider.getHistory(LIDO_DEPOSIT_SECURITY_ADDRESS, currentBlock - Math.floor(60 * 60 * 72 / 13), currentBlock - 1);
   const depositorTxTimestamps = history.map(x => x.timestamp ? x.timestamp : 0);
   if (depositorTxTimestamps.length > 0) {
     depositorTxTimestamps.sort((a,b) => a - b)
