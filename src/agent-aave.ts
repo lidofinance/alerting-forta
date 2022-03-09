@@ -67,10 +67,10 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
     );
 
     const astEthBalance = new BigNumber(
-      String(await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS))
+      String(await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS, {blockTag: blockEvent.blockNumber}))
     );
     const astEthTotalSupply = new BigNumber(
-      String(await astETH.functions.totalSupply())
+      String(await astETH.functions.totalSupply({blockTag: blockEvent.blockNumber}))
     );
 
     const difference = astEthBalance.minus(astEthTotalSupply).abs();
