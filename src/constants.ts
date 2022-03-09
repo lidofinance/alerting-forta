@@ -20,6 +20,7 @@ export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xf82ac5937a20dc862f9bc0668779031e
 export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5"
 
 export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+export const DAI_TOKEN_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f"
 
 export const CHAINLINK_STETH_USD_PRICE_ADDRESS = '0xcfe54b5cd566ab89272946f602d76ea879cab4a8'
 
@@ -173,7 +174,7 @@ export const POOLS_PARAMS = {
     OneInch: {
         managerAddress: '0xf5436129Cf9d8fa2a1cb6e591347155276550635',
         rewardsAddress: '',
-        poolContractAddress: '',
+        poolContractAddress: '0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431',
     },
 }
 
