@@ -30,7 +30,7 @@ import { capitalizeFirstLetter } from "./utils/tools";
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
 import SUSHI_POOL_ABI from "./abi/SushiPool.json";
-import SUSHI_ROUTER_ABI from "./abi/sushiRouter.json";
+import SUSHI_ROUTER_ABI from "./abi/SushiRouter.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
 import CHAINLINK_STETH_USD_ABI from "./abi/ChainlinkStEthUsd.json";
 import LIDO_ABI from "./abi/LidoDAO.json";
