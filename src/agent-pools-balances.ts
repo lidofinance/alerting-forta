@@ -190,7 +190,7 @@ async function handleCurvePoolImbalance(
           description: capitalizeFirstLetter(
             imbalanceMessage(curveImbalance, "stETH", "ETH")
           ),
-          alertId: "CURVE_POOL_IMBALANCE",
+          alertId: "CURVE-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
         })
@@ -218,7 +218,7 @@ async function handleCurvePoolImbalance(
           "stETH",
           "ETH"
         )} since the last alert!`,
-        alertId: "CURVE_POOL_IMBALANCE_RAPID_CHANGE",
+        alertId: "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
       })
@@ -274,7 +274,7 @@ async function handleCurvePoolSize(
             ? "increased by " + poolSizeChange.toFixed(2).toString()
             : "decreased by " + -poolSizeChange.toFixed(2).toString()
         }% since the last block`,
-        alertId: "CURVE_POOL_SIZE_CHANGE",
+        alertId: "CURVE-POOL-SIZE-CHANGE",
         severity: severity,
         type: FindingType.Info,
       })
@@ -305,7 +305,7 @@ async function handleBalancerPoolImbalance(
               "ETH"
             )
           ),
-          alertId: "BALANCER_POOL_IMBALANCE",
+          alertId: "BALANCER-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
         })
@@ -333,7 +333,7 @@ async function handleBalancerPoolImbalance(
           "wstETH (recounted to stETH)",
           "ETH"
         )} since the last alert!`,
-        alertId: "BALANCER_POOL_IMBALANCE_RAPID_CHANGE",
+        alertId: "BALANCER-POOL-IMBALANCE-RAPID-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
       })
@@ -415,7 +415,7 @@ async function handleBalancerPoolSize(
             ? "increased by " + poolSizeChange.toFixed(2).toString()
             : "decreased by " + -poolSizeChange.toFixed(2).toString()
         }% since the last block`,
-        alertId: "BALANCER_POOL_SIZE_CHANGE",
+        alertId: "BALANCER-POOL-SIZE-CHANGE",
         severity: severity,
         type: FindingType.Info,
       })
