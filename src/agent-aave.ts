@@ -80,10 +80,10 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "astETH balance and totalSupply difference",
           description: `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})=${
-            astEthBalance.div(GWEI_DECIMALS).toFixed()
+            astEthBalance.div(GWEI_DECIMALS).toFixed(0)
           } gwei differs from astETH.totalSupply = ${
-            astEthTotalSupply.div(GWEI_DECIMALS).toFixed()
-          } gwei by ${difference} gwei`,
+            astEthTotalSupply.div(GWEI_DECIMALS).toFixed(0)
+          } gwei by ${difference.div(GWEI_DECIMALS).toFixed(0)} gwei`,
           alertId: "ASTETH-BALANCE-AND-SUPPLY-DIFFERENCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,

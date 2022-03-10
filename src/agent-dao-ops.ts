@@ -94,7 +94,7 @@ async function handleNodeOperatorsKeys(
         Finding.fromObject({
           name: "Few available keys count",
           description: `There are only ${availableKeysCount} available keys left`,
-          alertId: "LOW_OPERATORS_AVAILABLE_KEYS_NUM",
+          alertId: "LOW-OPERATORS-AVAILABLE-KEYS-NUM",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
         })
