@@ -12,18 +12,18 @@ export const AAVE_ASTETH_ADDRESS = '0x1982b2f5814301d4e9a8b0201555376e62f82428'
 export const AAVE_STABLE_DEBT_STETH_ADDRESS = '0x66457616dd8489df5d0afd8678f4a260088aaf55'
 export const AAVE_VARIABLE_DEBT_STETH_ADDRESS = '0xa9deac9f00dc4310c35603fcd9d34d1a750f81db'
 
-export const LIDO_DAO_ADDRESS = '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'
+export const LIDO_DAO_ADDRESS = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84'
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 export const LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 export const LIDO_ORACLE_COMPLETED_EVENT = 'event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)'
 export const LIDO_ORACLE_BEACON_REPORTED_EVENT = 'event BeaconReported(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators, address caller)'
 
-export const LIDO_DEPOSIT_SECURITY_ADDRESS = "0xDb149235B6F40dC08810AA69869783Be101790e7"
+export const LIDO_DEPOSIT_SECURITY_ADDRESS = "0xdb149235b6f40dc08810aa69869783be101790e7"
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xf82ac5937a20dc862f9bc0668779031e06000f17"
 
-export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5"
+export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5"
 
-export const WSTETH_TOKEN_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+export const WSTETH_TOKEN_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
 
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
@@ -161,18 +161,18 @@ export const POOLS_PARAMS = {
         poolContractAddress: '',
     },
     Curve: {
-        managerAddress: '0x753D5167C31fBEB5b49624314d74A957Eb271709',
-        rewardsAddress: '0x99ac10631F69C753DDb595D074422a0922D9056B',
+        managerAddress: '0x753d5167c31fbeb5b49624314d74a957eb271709',
+        rewardsAddress: '0x99ac10631f69c753ddb595d074422a0922d9056b',
         poolContractAddress: '0xdc24316b9ae028f1497c275eb9192a3ea0f67022',
     },
     Balancer: {
-        managerAddress: '0x1220ccCDc9BBA5CF626a84586C74D6f940932342',
+        managerAddress: '0x1220cccdc9bba5cf626a84586c74d6f940932342',
         rewardsAddress: '',
-        vaultContractAddress: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        vaultContractAddress: '0xba12222222228d8ba445958a75a0704d566bf2c8',
         poolId: "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
     },
     OneInch: {
-        managerAddress: '0xf5436129Cf9d8fa2a1cb6e591347155276550635',
+        managerAddress: '0xf5436129cf9d8fa2a1cb6e591347155276550635',
         rewardsAddress: '',
         poolContractAddress: '',
     },
