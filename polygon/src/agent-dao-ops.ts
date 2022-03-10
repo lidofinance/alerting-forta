@@ -103,10 +103,10 @@ async function handleBufferedMatic(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Huge buffered ETH amount",
+          name: "Huge buffered MATIC amount",
           description: `There are ${bufferedMatic.toFixed(
             4
-          )} (more that ${MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract`,
+          )} (more than ${MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract`,
           alertId: "HUGE-BUFFERED-MATIC",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
@@ -119,10 +119,10 @@ async function handleBufferedMatic(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "High buffered ETH amount",
+          name: "High buffered MATIC amount",
           description: `There are ${bufferedMatic.toFixed(
             4
-          )} (more that ${MAX_BUFFERED_MATIC_DAILY_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ${Math.floor(
+          )} (more than ${MAX_BUFFERED_MATIC_DAILY_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ${Math.floor(
             (now - timeHighPooledMaticStart) / (60 * 60)
           )} hours`,
           alertId: "HIGH-BUFFERED-MATIC",
