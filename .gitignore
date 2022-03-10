@@ -5,3 +5,4 @@ forta.config.json
 !.yarn/releases/
 *.log
 version.json
+.DS_Store
