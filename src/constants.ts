@@ -4,9 +4,27 @@ import {
 } from 'forta-agent'
 
 
+// COMMON CONSTS
+
+// 1 ETH
+export const ETH_DECIMALS = new BigNumber(10).pow(18)
+// 1 gwei
+export const GWEI_DECIMALS = new BigNumber(10).pow(9)
+
+
+// ADDRESSES AND EVENTS
+
 export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
+export const ANCHOR_DEPOSIT_EVENT = 'event Deposited (address indexed sender, uint256 amount, bytes32 terra_address, uint256 beth_amount_received)'
+export const ANCHOR_WITHDRAW_EVENT = 'event Withdrawn (address indexed recipient, uint256 amount, uint256 steth_amount_received)'
 export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT = 'event RewardsCollected(uint256 steth_amount, uint256 ust_amount)'
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)'
+// 1000 stETH/bETH
+export const MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT = new BigNumber(1000).times(ETH_DECIMALS)
+// 0.51 ETH
+export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.51).times(ETH_DECIMALS)
+// 1 hour
+export const BALANCE_REPORT_WINDOW = 60 * 60
 
 export const AAVE_ASTETH_ADDRESS = '0x1982b2f5814301d4e9a8b0201555376e62f82428'
 export const AAVE_STABLE_DEBT_STETH_ADDRESS = '0x66457616dd8489df5d0afd8678f4a260088aaf55'
@@ -24,6 +42,9 @@ export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xf82ac5937a20dc862f9bc0668779031e
 export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5"
 
 export const WSTETH_TOKEN_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+export const DAI_TOKEN_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f"
+
+export const CHAINLINK_STETH_USD_PRICE_ADDRESS = '0xcfe54b5cd566ab89272946f602d76ea879cab4a8'
 
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
@@ -158,7 +179,8 @@ export const POOLS_PARAMS = {
     Sushi: {
         managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
         rewardsAddress: '',
-        poolContractAddress: '',
+        poolContractAddress: '0xc5578194d457dcce3f272538d1ad52c68d1ce849',
+        routerContractAddress: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f'
     },
     Curve: {
         managerAddress: '0x753d5167c31fbeb5b49624314d74a957eb271709',
@@ -174,9 +196,12 @@ export const POOLS_PARAMS = {
     OneInch: {
         managerAddress: '0xf5436129cf9d8fa2a1cb6e591347155276550635',
         rewardsAddress: '',
-        poolContractAddress: '',
+        poolContractAddress: '0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431',
     },
 }
+
+// threshold for price difference between LP and Chainlink feed in percents
+export const PRICE_DIFFERENCE_THRESHOLD = 10
 
 const period10days = 10 * 24 * 60 * 60
 const period5days = 5 * 24 * 60 * 60
@@ -232,12 +257,6 @@ export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72
 // 1 hour
 export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
 
-// 1 ETH
-export const ETH_DECIMALS = new BigNumber(10).pow(18)
-
-// 1 gwei
-export const GWEI_DECIMALS = new BigNumber(10).pow(9)
-
 // 1 gwe1
 export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
 
@@ -245,7 +264,7 @@ export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
 export const IMBALANCE_TOLERANCE = 10;
 export const IMBALANCE_CHANGE_TOLERANCE = 5;
 export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 3;
-export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 3;
+export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 7;
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
