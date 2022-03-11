@@ -22,13 +22,21 @@ import {
   ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT,
   MAX_BETH_REWARDS_SELL_DELAY,
   TRIGGER_PERIOD,
+  MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE,
+  ETH_DECIMALS,
+  BALANCE_REPORT_WINDOW,
+  ANCHOR_DEPOSIT_EVENT,
+  ANCHOR_WITHDRAW_EVENT,
+  MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT,
 } from './constants'
 
 import {OracleReport} from './agent-lido-oracle'
 import * as agentLidoOracle from './agent-lido-oracle'
 
 
+
 let rewardsLiquidatorAddress: string
+let rewardsLiquidatorAdminAddress: string
 
 let lastRewardsSell = {
   timestamp: 0,
@@ -36,7 +44,8 @@ let lastRewardsSell = {
   ustAmount: new BigNumber(0),
 }
 
-let lastTriggeredAt = 0
+let lastOverdueTriggeredAt = 0
+let lastLowBalanceTriggeredAt = 0
 
 
 export const name = 'AgentBethRewards'
@@ -67,6 +76,7 @@ export async function initialize(currentBlock: number): Promise<{[key: string]: 
   }
 
   rewardsLiquidatorAddress = await anchorVault.rewards_liquidator()
+  rewardsLiquidatorAdminAddress = await anchorVault.liquidations_admin()
 
   console.log(`[AgentBethRewards] lastRewardsSell: {
     timestamp: ${lastRewardsSell.timestamp},
@@ -74,9 +84,11 @@ export async function initialize(currentBlock: number): Promise<{[key: string]: 
     ustAmount: ${formatEth(lastRewardsSell.ustAmount, 3)}\n}`)
 
   console.log(`[AgentBethRewards] rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`)
+  console.log(`[AgentBethRewards] rewardsLiquidatorAdminAddress: ${rewardsLiquidatorAdminAddress}`)
 
   return {
     rewardsLiquidatorAddress: `${rewardsLiquidatorAddress}`,
+    rewardsLiquidatorAdminAddress: `${rewardsLiquidatorAdminAddress}`,
     lastRewardsSellTimestamp: `${lastRewardsSell.timestamp}`,
   }
 }
@@ -85,12 +97,22 @@ export async function initialize(currentBlock: number): Promise<{[key: string]: 
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = []
 
+  await Promise.all([
+    handleSellOverdue(blockEvent, findings),
+    handleAdminBalance(blockEvent, findings),
+  ])
+
+  return findings
+}
+
+
+async function handleSellOverdue(blockEvent: BlockEvent, findings: Finding[]) {
   await agentLidoOracle.waitBlockHandled(blockEvent.blockHash)
   const lastOracleReport = await agentLidoOracle.getLastOracleReport()
 
   if (lastOracleReport == null || lastRewardsSell.timestamp > lastOracleReport.timestamp) {
     // rewards already sold
-    return findings
+    return
   }
 
   const now = blockEvent.block.timestamp
@@ -98,8 +120,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   console.log(`[AgentBethRewards] sellDelay: ${sellDelay}`)
 
-  if (sellDelay <= MAX_BETH_REWARDS_SELL_DELAY || now - lastTriggeredAt < TRIGGER_PERIOD) {
-    return findings
+  if (sellDelay <= MAX_BETH_REWARDS_SELL_DELAY || now - lastOverdueTriggeredAt < TRIGGER_PERIOD) {
+    return
   }
 
     // final check to handle case of missed event
@@ -126,17 +148,32 @@ export async function handleBlock(blockEvent: BlockEvent) {
     },
   }))
 
-  lastTriggeredAt = now
-
-  return findings
+  lastOverdueTriggeredAt = now
 }
 
+async function handleAdminBalance(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp
+  if (lastLowBalanceTriggeredAt + BALANCE_REPORT_WINDOW < now) {
+    const accountBalance = new BigNumber(String(await ethersProvider.getBalance(rewardsLiquidatorAdminAddress, blockEvent.blockNumber)))
+    if (accountBalance.isLessThanOrEqualTo(MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE)) {
+      findings.push(Finding.fromObject({
+        name: 'Low anchor rewards liquidator admin balance',
+        description: `Anchor rewards liquidator admin balance is ${accountBalance.div(ETH_DECIMALS).toFixed(4)}`,
+        alertId: 'ANCHOR-REWARDS-ADMIN-LOW-BALANCE',
+        severity: FindingSeverity.High,
+        type: FindingType.Degraded,
+      }))
+      lastLowBalanceTriggeredAt = now
+    }
+  }
+}
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = []
 
   if (txEvent.to === ANCHOR_VAULT_ADDRESS) {
     handleAnchorVaultTx(txEvent, findings)
+    handleAnchorVaultWithdrawOrDepositTx(txEvent, findings)
   }
 
   return findings
@@ -196,4 +233,36 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
       stethUstFeedPrice: `${stethUstPrice.toFixed(0, 3)}`,
     },
   }))
+}
+
+
+function handleAnchorVaultWithdrawOrDepositTx(txEvent: TransactionEvent, findings: Finding[]) {
+  const [withdrawEvent] = txEvent.filterLog(ANCHOR_WITHDRAW_EVENT, ANCHOR_VAULT_ADDRESS)
+  const [depositEvent] = txEvent.filterLog(ANCHOR_DEPOSIT_EVENT, ANCHOR_VAULT_ADDRESS)
+  if (withdrawEvent != undefined) {
+    const withdrawAmount = new BigNumber(String(withdrawEvent.args.amount))
+    if (withdrawAmount.isGreaterThanOrEqualTo(MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT)) {
+      findings.push(Finding.fromObject({
+        name: 'Huge Anchor withdraw',
+        description: `${withdrawAmount.div(ETH_DECIMALS).toFixed(4)} stETH were withdrawn from Anchor`,
+        alertId: 'ANCHOR-VAULT-HUGE-TX',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }))
+    }
+  }
+
+  if (depositEvent != undefined) {
+    const depositAmount = new BigNumber(String(depositEvent.args.amount))
+    if (depositAmount.isGreaterThanOrEqualTo(MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT)) {
+      findings.push(Finding.fromObject({
+        name: 'Huge Anchor deposit',
+        description: `${depositAmount.div(ETH_DECIMALS).toFixed(4)} stETH were deposited to Anchor`,
+        alertId: 'ANCHOR-VAULT-HUGE-TX',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }))
+    }
+  }
+
 }
