@@ -4,7 +4,15 @@ import {
 } from 'forta-agent'
 
 
+// COMMON CONSTS
+
+// 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
+// 1 gwei
+export const GWEI_DECIMALS = new BigNumber(10).pow(9)
+
+
+// ADDRESSES AND EVENTS
 
 export const ANCHOR_VAULT_ADDRESS = '0xa2f987a546d4cd1c607ee8141276876c26b72bdf'
 export const ANCHOR_DEPOSIT_EVENT = 'event Deposited (address indexed sender, uint256 amount, bytes32 terra_address, uint256 beth_amount_received)'
@@ -248,12 +256,6 @@ export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72
 
 // 1 hour
 export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
-
-// 1 ETH
-export const ETH_DECIMALS = new BigNumber(10).pow(18)
-
-// 1 gwei
-export const GWEI_DECIMALS = new BigNumber(10).pow(9)
 
 // 1 gwe1
 export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
