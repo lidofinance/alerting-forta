@@ -25,6 +25,7 @@ import {
   OWNER_MULTISIG_ADDRESS,
   LIDO_ON_POLYGON_PROXIES,
   PROXY_ADMIN_OWNERSHIP_TRANSFERRED,
+  ST_MATIC_ADMIN_EVENTS,
 } from "./constants";
 
 export const name = "DaoOps";
@@ -204,9 +205,11 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
-
-  handleProxyAdminEvents(txEvent, findings);
-
+  await Promise.all([
+    handleProxyAdminEvents(txEvent, findings),
+    handleStMaticTx(txEvent, findings),
+  ]
+  )
   return findings;
 }
 
@@ -231,4 +234,23 @@ function handleProxyAdminEvents(
       );
     }
   }
+}
+
+function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
+  ST_MATIC_ADMIN_EVENTS.forEach(eventInfo => {
+    if (txEvent.to === eventInfo.address) {
+      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address)
+      if (event) {
+        findings.push(Finding.fromObject({
+          name: eventInfo.name,
+          description: eventInfo.description(event.args),
+          alertId: eventInfo.alertId,
+          severity: eventInfo.severity,
+          type: eventInfo.type,
+          metadata: { args: String(event.args) },
+        }))
+      }
+    }
+  }
+  )
 }

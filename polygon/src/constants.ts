@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { FindingSeverity } from "forta-agent";
+import { FindingSeverity, FindingType } from "forta-agent";
 
 // COMMON CONSTS
 export const MATIC_DECIMALS = new BigNumber(10 ** 18);
@@ -23,6 +23,90 @@ export const LIDO_ON_POLYGON_PROXIES = {
 // EVENT ABIs
 export const PROXY_ADMIN_OWNERSHIP_TRANSFERRED =
   "event OwnershipTransferred (address indexed previousOwner, address indexed newOwner)";
+
+export const ST_MATIC_ADMIN_EVENTS = [
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event Paused(address account)',
+        alertId: 'STMATIC-CONTRACT-PAUSED',
+        name: 'stMATIC: stMATIC contract was paused',
+        description: (args: any) => `stMATIC contract was paused by ${args.account}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event Unpaused(address account)',
+        alertId: 'STMATIC-CONTRACT-UNPAUSED',
+        name: 'stMATIC: stMATIC contract was unpaused',
+        description: (args: any) => `stMATIC contract was unpaused by ${args.account}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
+        alertId: 'STMATIC-CONTRACT-ROLE-GRANTED',
+        name: 'stMATIC: stMATIC RoleGranted',
+        description: (args: any) => `Role ${args.role} was granted to ${args.account} by ${args.sender}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)',
+        alertId: 'STMATIC-CONTRACT-ROLE-REVOKED',
+        name: 'stMATIC: stMATIC RoleRevoked',
+        description: (args: any) => `Role ${args.role} was revoked from ${args.account} by ${args.sender}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)',
+        alertId: 'STMATIC-CONTRACT-ROLE-ADMIN-CHANGED',
+        name: 'stMATIC: stMATIC RoleAdminChanged',
+        description: (args: any) => `Admin role ${args.role} was changed form ${args.previousAdminRole} to ${args.newAdminRole}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event AdminChanged(address newAdmin)',
+        alertId: 'STMATIC-CONTRACT-ADMIN-CHANGED',
+        name: 'stMATIC: stMATIC AdminChanged',
+        description: (args: any) => `Proxy admin was changed to ${args.newAdmin}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event Upgraded(address indexed implementation)',
+        alertId: 'STMATIC-CONTRACT-UPGRADED',
+        name: 'stMATIC: stMATIC Upgraded',
+        description: (args: any) => `Implementation for stMATIC contract was changed to ${args.implementation}`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event DistributeRewardsEvent(uint256 indexed _amount)',
+        alertId: 'STMATIC-CONTRACT-REWARDS-DISTRIBUTED',
+        name: 'stMATIC: stMATIC DistributeRewards',
+        description: (args: any) => `Rewards for stMATIC was distributed. Rewards amount ${args._amount / MATIC_DECIMALS.toNumber()}`,
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+    },
+    {
+        address: ST_MATIC_TOKEN_ADDRESS,
+        event: 'event DelegateEvent(uint256 indexed _amountDelegated, uint256 indexed _remainder)',
+        alertId: 'STMATIC-CONTRACT-POOLED-MATIC-DELEGATED',
+        name: 'stMATIC: stMATIC DelegateEvent',
+        description: (args: any) => `Pooled MATIC was delegated to validators. Delegated amount ${args._amountDelegated / MATIC_DECIMALS.toNumber()}. MATIC remained pooled ${args._remainder / MATIC_DECIMALS.toNumber()}`,
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+    },
+]
 
 // THRESHOLDS
 // 3.1% MATIC of total pooled MATIC
