@@ -10,6 +10,7 @@ import {
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
+import { Event } from "ethers";
 
 import MATIC_ABI from "./abi/MaticToken.json";
 import ST_MATIC_ABI from "./abi/stMaticToken.json";
@@ -24,14 +25,18 @@ import {
   PROXY_ADMIN_ADDRESS,
   OWNER_MULTISIG_ADDRESS,
   LIDO_ON_POLYGON_PROXIES,
-  PROXY_ADMIN_OWNERSHIP_TRANSFERRED,
+  PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT,
   ST_MATIC_ADMIN_EVENTS,
+  ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
+  MAX_REWARDS_DISTRIBUTION_INTERVAL,
 } from "./constants";
 
 export const name = "DaoOps";
 
 // 4 hours
 const REPORT_WINDOW_BUFFERED_MATIC = 60 * 60 * 4;
+// 1 hour
+const REPORT_WINDOW_REWARDS_DISTRIBUTION = 60 * 60;
 // 15 min
 const REPORT_WINDOW_PROXY_ALERTS = 15 * 60;
 
@@ -39,11 +44,35 @@ let lastReportedBufferedMatic = 0;
 let timeHighPooledMaticStart = 0;
 let lastReportedInvalidProxyOwner = 0;
 let lastReportedInvalidProxyAdmin = 0;
+let lastRewardsDistributeTime = 0;
+let lastReportedRewards = 0;
+
+const byBlockNumberDesc = (e1: Event, e2: Event) =>
+  e2.blockNumber - e1.blockNumber;
 
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
+  const stMATIC = new ethers.Contract(
+    ST_MATIC_TOKEN_ADDRESS,
+    ST_MATIC_ABI,
+    ethersProvider
+  );
+  const rewardsDistributedFilter = stMATIC.filters.DistributeRewardsEvent();
+
+  // ~25 hours ago
+  const pastBlock = currentBlock - Math.ceil((25 * 60 * 60) / 13);
+  const distributeEvents = await stMATIC.queryFilter(
+    rewardsDistributedFilter,
+    pastBlock,
+    currentBlock - 1
+  );
+  if (distributeEvents.length > 0) {
+    distributeEvents.sort(byBlockNumberDesc);
+    lastRewardsDistributeTime = (await distributeEvents[0].getBlock())
+      .timestamp;
+  }
   return {};
 }
 
@@ -52,6 +81,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   await Promise.all([
     handleBufferedMatic(blockEvent, findings),
+    handleRewardsDistribution(blockEvent, findings),
     handleProxyAdmin(blockEvent, findings),
   ]);
 
@@ -148,6 +178,32 @@ async function handleBufferedMatic(
   }
 }
 
+async function handleRewardsDistribution(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  const rewardsDistributionDelay = now - lastRewardsDistributeTime;
+  console.log(rewardsDistributionDelay);
+  if (
+    lastReportedRewards + REPORT_WINDOW_BUFFERED_MATIC < now &&
+    rewardsDistributionDelay > MAX_REWARDS_DISTRIBUTION_INTERVAL
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "stMATIC rewards distribution delay",
+        description: `More that ${Math.floor(
+          rewardsDistributionDelay / (60 * 60)
+        )} hours passed since last stMATIC rewards distribution`,
+        alertId: "STMATIC-REWARDS-DISTRIBUTION-DELAY",
+        severity: FindingSeverity.High,
+        type: FindingType.Degraded,
+      })
+    );
+    lastReportedRewards = now;
+  }
+}
+
 async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
 
@@ -207,10 +263,25 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
   await Promise.all([
     handleProxyAdminEvents(txEvent, findings),
+    handleRewardDistributionEvent(txEvent, findings),
     handleStMaticTx(txEvent, findings),
-  ]
-  )
+  ]);
   return findings;
+}
+
+function handleRewardDistributionEvent(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  if (txEvent.to == ST_MATIC_TOKEN_ADDRESS) {
+    const [event] = txEvent.filterLog(
+      ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
+      ST_MATIC_TOKEN_ADDRESS
+    );
+    if (event) {
+      lastRewardsDistributeTime = txEvent.timestamp;
+    }
+  }
 }
 
 function handleProxyAdminEvents(
@@ -219,7 +290,7 @@ function handleProxyAdminEvents(
 ) {
   if (txEvent.to == PROXY_ADMIN_ADDRESS) {
     const [event] = txEvent.filterLog(
-      PROXY_ADMIN_OWNERSHIP_TRANSFERRED,
+      PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT,
       PROXY_ADMIN_ADDRESS
     );
     if (event) {
@@ -237,20 +308,21 @@ function handleProxyAdminEvents(
 }
 
 function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
-  ST_MATIC_ADMIN_EVENTS.forEach(eventInfo => {
+  ST_MATIC_ADMIN_EVENTS.forEach((eventInfo) => {
     if (txEvent.to === eventInfo.address) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address)
+      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
       if (event) {
-        findings.push(Finding.fromObject({
-          name: eventInfo.name,
-          description: eventInfo.description(event.args),
-          alertId: eventInfo.alertId,
-          severity: eventInfo.severity,
-          type: eventInfo.type,
-          metadata: { args: String(event.args) },
-        }))
+        findings.push(
+          Finding.fromObject({
+            name: eventInfo.name,
+            description: eventInfo.description(event.args),
+            alertId: eventInfo.alertId,
+            severity: eventInfo.severity,
+            type: eventInfo.type,
+            metadata: { args: String(event.args) },
+          })
+        );
       }
     }
-  }
-  )
+  });
 }

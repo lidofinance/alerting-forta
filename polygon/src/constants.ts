@@ -21,8 +21,11 @@ export const LIDO_ON_POLYGON_PROXIES = {
 };
 
 // EVENT ABIs
-export const PROXY_ADMIN_OWNERSHIP_TRANSFERRED =
+export const PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT =
   "event OwnershipTransferred (address indexed previousOwner, address indexed newOwner)";
+
+export const ST_MATIC_DISTRIBUTE_REWARDS_EVENT =
+  "event DistributeRewardsEvent(uint256 indexed _amount)";
 
 export const ST_MATIC_ADMIN_EVENTS = [
     {
@@ -90,9 +93,9 @@ export const ST_MATIC_ADMIN_EVENTS = [
     },
     {
         address: ST_MATIC_TOKEN_ADDRESS,
-        event: 'event DistributeRewardsEvent(uint256 indexed _amount)',
+        event: ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
         alertId: 'STMATIC-CONTRACT-REWARDS-DISTRIBUTED',
-        name: 'stMATIC: stMATIC DistributeRewards',
+        name: 'stMATIC: stMATIC Rewards distributed',
         description: (args: any) => `Rewards for stMATIC was distributed. Rewards amount ${args._amount / MATIC_DECIMALS.toNumber()}`,
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -101,7 +104,7 @@ export const ST_MATIC_ADMIN_EVENTS = [
         address: ST_MATIC_TOKEN_ADDRESS,
         event: 'event DelegateEvent(uint256 indexed _amountDelegated, uint256 indexed _remainder)',
         alertId: 'STMATIC-CONTRACT-POOLED-MATIC-DELEGATED',
-        name: 'stMATIC: stMATIC DelegateEvent',
+        name: 'stMATIC: stMATIC Pooled MATIC delegated',
         description: (args: any) => `Pooled MATIC was delegated to validators. Delegated amount ${args._amountDelegated / MATIC_DECIMALS.toNumber()}. MATIC remained pooled ${args._remainder / MATIC_DECIMALS.toNumber()}`,
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -114,3 +117,6 @@ export const MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT = 3.1;
 
 // 1.1% MATIC of total pooled MATIC
 export const MAX_BUFFERED_MATIC_DAILY_PERCENT = 1.1;
+
+// 24 hours 10 min
+export const MAX_REWARDS_DISTRIBUTION_INTERVAL = 24 * 60 * 60 + 10 * 60
