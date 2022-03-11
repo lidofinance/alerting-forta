@@ -13,6 +13,7 @@ import { ethersProvider } from "./ethers";
 
 import MATIC_ABI from "./abi/MaticToken.json";
 import ST_MATIC_ABI from "./abi/stMaticToken.json";
+import PROXY_ADMIN_ABI from "./abi/ProxyAdmin.json";
 import {
   MATIC_TOKEN_ADDRESS,
   ST_MATIC_TOKEN_ADDRESS,
@@ -20,15 +21,23 @@ import {
   MATIC_DECIMALS,
   MAX_BUFFERED_MATIC_DAILY_PERCENT,
   MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT,
+  PROXY_ADMIN_ADDRESS,
+  OWNER_MULTISIG_ADDRESS,
+  LIDO_ON_POLYGON_PROXIES,
+  PROXY_ADMIN_OWNERSHIP_TRANSFERRED,
 } from "./constants";
 
 export const name = "DaoOps";
 
 // 4 hours
 const REPORT_WINDOW_BUFFERED_MATIC = 60 * 60 * 4;
+// 15 min
+const REPORT_WINDOW_PROXY_ALERTS = 15 * 60;
 
 let lastReportedBufferedMatic = 0;
 let timeHighPooledMaticStart = 0;
+let lastReportedInvalidProxyOwner = 0;
+let lastReportedInvalidProxyAdmin = 0;
 
 export async function initialize(
   currentBlock: number
@@ -40,7 +49,10 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleBufferedMatic(blockEvent, findings)]);
+  await Promise.all([
+    handleBufferedMatic(blockEvent, findings),
+    handleProxyAdmin(blockEvent, findings),
+  ]);
 
   return findings;
 }
@@ -131,6 +143,92 @@ async function handleBufferedMatic(
         })
       );
       lastReportedBufferedMatic = now;
+    }
+  }
+}
+
+async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+
+  const proxyAdmin = new ethers.Contract(
+    PROXY_ADMIN_ADDRESS,
+    PROXY_ADMIN_ABI,
+    ethersProvider
+  );
+
+  if (lastReportedInvalidProxyOwner + REPORT_WINDOW_PROXY_ALERTS < now) {
+    const proxyOwner = String(
+      await proxyAdmin.functions.owner({ blockTag: blockEvent.block.number })
+    ).toLowerCase();
+
+    if (proxyOwner != OWNER_MULTISIG_ADDRESS) {
+      findings.push(
+        Finding.fromObject({
+          name: "Invalid proxy admin owner (detected by method call)",
+          description: `Owner of proxy admin is ${proxyOwner} but should be ${OWNER_MULTISIG_ADDRESS}`,
+          alertId: "INVALID-PROXY-ADMIN-OWNER",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Exploit,
+        })
+      );
+      lastReportedInvalidProxyOwner = now;
+    }
+  }
+
+  if (lastReportedInvalidProxyAdmin + REPORT_WINDOW_PROXY_ALERTS < now) {
+    let proxyAdminFor = "";
+    await Object.entries(LIDO_ON_POLYGON_PROXIES).forEach(
+      async ([contractName, contractAddr]) => {
+        proxyAdminFor = String(
+          await proxyAdmin.functions.getProxyAdmin(contractAddr, {
+            blockTag: blockEvent.block.number,
+          })
+        ).toLowerCase();
+
+        if (proxyAdminFor != PROXY_ADMIN_ADDRESS) {
+          findings.push(
+            Finding.fromObject({
+              name: `Invalid proxy admin for ${contractName}`,
+              description: `Proxy admin address for ${contractName}[${contractAddr}] is ${proxyAdminFor} but should be ${PROXY_ADMIN_ADDRESS}`,
+              alertId: "INVALID-PROXY-ADMIN-ADDR",
+              severity: FindingSeverity.Critical,
+              type: FindingType.Exploit,
+            })
+          );
+          lastReportedInvalidProxyAdmin = now;
+        }
+      }
+    );
+  }
+}
+
+export async function handleTransaction(txEvent: TransactionEvent) {
+  const findings: Finding[] = [];
+
+  handleProxyAdminEvents(txEvent, findings);
+
+  return findings;
+}
+
+function handleProxyAdminEvents(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  if (txEvent.to == PROXY_ADMIN_ADDRESS) {
+    const [event] = txEvent.filterLog(
+      PROXY_ADMIN_OWNERSHIP_TRANSFERRED,
+      PROXY_ADMIN_ADDRESS
+    );
+    if (event) {
+      findings.push(
+        Finding.fromObject({
+          name: "Proxy admin owner has changed (detected by event)",
+          description: `New owner of proxy admin is ${event.args[1]}`,
+          alertId: "PROXY-ADMIN-OWNER-CHANGE",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        })
+      );
     }
   }
 }
