@@ -46,8 +46,8 @@ const subAgents: SubAgent[] = [
   agentAave,
 ]
 
-// block or tx handling should take no more than 5 sec. If not all processing is done it will be done later in background
-const handlerResolveTimeout = 5000
+// block or tx handling should take no more than 10 sec. If not all processing is done it will be done later in background
+const handlerResolveTimeout = 10000
 
 const maxHandlerRetries = 5
 
