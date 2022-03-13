@@ -9,11 +9,9 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { Event } from "ethers";
 import { Result } from "@ethersproject/abi";
 
 import { formatEth, formatDelay } from "./utils";
-import { makeFuture } from "./utils/future";
 import { ethersProvider } from "./ethers";
 
 import LIDO_ORACLE_ABI from "./abi/LidoOracle.json";
@@ -29,6 +27,7 @@ import {
   MAX_ORACLE_REPORT_DELAY,
   TRIGGER_PERIOD,
 } from "./constants";
+import { byBlockNumberDesc } from "./utils/tools";
 
 export interface OracleReport {
   timestamp: number;
@@ -46,10 +45,6 @@ let lastTriggeredAt = 0;
 const ONE_WEEK = 60 * 60 * 24 * 7
 const TWO_WEEKS = 60 * 60 * 24 * 14
 
-const fBlockHandled = makeFuture<void>();
-const fTxHandled = makeFuture<void>();
-const byBlockNumberDesc = (e1: Event, e2: Event) =>
-e2.blockNumber - e1.blockNumber;
 
 let lastBlockHash: string;
 let lastTxHash: string;
@@ -186,7 +181,6 @@ function printReport(report: OracleReport | null) {
 
 export async function handleBlock(blockEvent: BlockEvent) {
   lastBlockHash = blockEvent.blockHash;
-  fBlockHandled.reset();
 
   const findings: Finding[] = [];
   const now = blockEvent.block.timestamp;
@@ -253,14 +247,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
     }
   });
 
-  fBlockHandled.resolve();
-
   return findings;
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   lastTxHash = txEvent.hash;
-  fTxHandled.reset();
 
   const findings: Finding[] = [];
 
@@ -268,8 +259,6 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     handleOracleTx(txEvent, findings);
     handleReportBeacon(txEvent);
   }
-
-  fTxHandled.resolve();
 
   return findings;
 }
@@ -365,26 +354,6 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
   }
 
   lastReport = newReport;
-}
-
-export async function waitBlockHandled(expectedBlockHash: string) {
-  if (lastBlockHash !== expectedBlockHash) {
-    throw new Error(
-      `unexpected block hash: ${lastBlockHash} !== ${expectedBlockHash}`
-    );
-  }
-  await fBlockHandled.promise;
-}
-
-export async function waitTxHandled(expectedTxHash: string) {
-  if (lastTxHash !== expectedTxHash) {
-    throw new Error(`unexpected tx hash`);
-  }
-  await fTxHandled.promise;
-}
-
-export function getLastOracleReport() {
-  return lastReport == null ? null : { ...lastReport };
 }
 
 function handleReportBeacon(txEvent: TransactionEvent) {
