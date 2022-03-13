@@ -197,7 +197,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with pres report
     lastReport = await getOracleReport(blockEvent.blockNumber - Math.ceil(24 * 60 * 60 / 13), blockEvent.blockNumber - 1, lastReport)
-    console.log(lastReport)
     const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
     if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
       findings.push(
