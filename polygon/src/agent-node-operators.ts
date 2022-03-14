@@ -57,8 +57,7 @@ async function handleNodeOperatorsStatus(
       if (key.length > 2) {
         const parsedValue = parseInt(String(value));
         if (
-          (key == "_totalJailedNodeOperator" ||
-          key == "_totalEjectedNodeOperator") &&
+          key in ["_totalJailedNodeOperator", "_totalEjectedNodeOperator"] &&
           parsedValue !== 0
         ) {
           error += `${key}=${parsedValue},\n`;
