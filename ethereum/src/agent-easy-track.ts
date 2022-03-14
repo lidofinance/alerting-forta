@@ -40,7 +40,7 @@ function handleEasyTrackTransaction(txEvent: TransactionEvent, findings: Finding
       const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address)
       if (event) {
         findings.push(Finding.fromObject({
-          name: event.name,
+          name: eventInfo.name,
           description: eventInfo.description(event.args),
           alertId: eventInfo.alertId,
           severity: eventInfo.severity,
