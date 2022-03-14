@@ -184,17 +184,20 @@ async function handleRewardsDistribution(
 ) {
   const now = blockEvent.block.timestamp;
   const rewardsDistributionDelay = now - lastRewardsDistributeTime;
-  console.log(rewardsDistributionDelay);
+  let description = ''
   if (
     lastReportedRewards + REPORT_WINDOW_BUFFERED_MATIC < now &&
     rewardsDistributionDelay > MAX_REWARDS_DISTRIBUTION_INTERVAL
   ) {
+    if (lastReportedBufferedMatic == 0) {
+      description = `Far more that ${Math.floor(MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60))} hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`
+    } else {
+      description = `More that ${Math.floor(rewardsDistributionDelay / (60 * 60))} hours passed since last stMATIC rewards distribution`
+    }
     findings.push(
       Finding.fromObject({
         name: "stMATIC rewards distribution delay",
-        description: `More that ${Math.floor(
-          rewardsDistributionDelay / (60 * 60)
-        )} hours passed since last stMATIC rewards distribution`,
+        description: description,
         alertId: "STMATIC-REWARDS-DISTRIBUTION-DELAY",
         severity: FindingSeverity.High,
         type: FindingType.Degraded,

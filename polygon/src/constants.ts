@@ -27,7 +27,17 @@ export const PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT =
 export const ST_MATIC_DISTRIBUTE_REWARDS_EVENT =
   "event DistributeRewardsEvent(uint256 indexed _amount)";
 
-export const ST_MATIC_ADMIN_EVENTS = [
+type StMaticAdminEvent = {
+	address: string
+	event: string
+	alertId: string
+	name: string
+	description: CallableFunction
+	severity: FindingSeverity
+	type: FindingType
+}
+
+export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     {
         address: ST_MATIC_TOKEN_ADDRESS,
         event: 'event Paused(address account)',
