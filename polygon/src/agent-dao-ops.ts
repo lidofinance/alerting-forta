@@ -29,14 +29,15 @@ import {
   ST_MATIC_ADMIN_EVENTS,
   ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
   MAX_REWARDS_DISTRIBUTION_INTERVAL,
+  MAX_REWARDS_DECREASE,
 } from "./constants";
 
 export const name = "DaoOps";
 
 // 4 hours
 const REPORT_WINDOW_BUFFERED_MATIC = 60 * 60 * 4;
-// 1 hour
-const REPORT_WINDOW_REWARDS_DISTRIBUTION = 60 * 60;
+// 4 hour
+const REPORT_WINDOW_REWARDS_DISTRIBUTION = 60 * 60 * 4;
 // 15 min
 const REPORT_WINDOW_PROXY_ALERTS = 15 * 60;
 
@@ -46,6 +47,7 @@ let lastReportedInvalidProxyOwner = 0;
 let lastReportedInvalidProxyAdmin = 0;
 let lastRewardsDistributeTime = 0;
 let lastReportedRewards = 0;
+let lastRewardsAmount = new BigNumber(0);
 
 const byBlockNumberDesc = (e1: Event, e2: Event) =>
   e2.blockNumber - e1.blockNumber;
@@ -72,6 +74,11 @@ export async function initialize(
     distributeEvents.sort(byBlockNumberDesc);
     lastRewardsDistributeTime = (await distributeEvents[0].getBlock())
       .timestamp;
+    if (distributeEvents[0].args) {
+      lastRewardsAmount = new BigNumber(
+        String(distributeEvents[0].args._amount)
+      );
+    }
   }
   return {};
 }
@@ -184,15 +191,19 @@ async function handleRewardsDistribution(
 ) {
   const now = blockEvent.block.timestamp;
   const rewardsDistributionDelay = now - lastRewardsDistributeTime;
-  let description = ''
+  let description = "";
   if (
-    lastReportedRewards + REPORT_WINDOW_BUFFERED_MATIC < now &&
+    lastReportedRewards + REPORT_WINDOW_REWARDS_DISTRIBUTION < now &&
     rewardsDistributionDelay > MAX_REWARDS_DISTRIBUTION_INTERVAL
   ) {
     if (lastReportedBufferedMatic == 0) {
-      description = `Far more that ${Math.floor(MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60))} hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`
+      description = `Far more that ${Math.floor(
+        MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60)
+      )} hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`;
     } else {
-      description = `More that ${Math.floor(rewardsDistributionDelay / (60 * 60))} hours passed since last stMATIC rewards distribution`
+      description = `More that ${Math.floor(
+        rewardsDistributionDelay / (60 * 60)
+      )} hours passed since last stMATIC rewards distribution`;
     }
     findings.push(
       Finding.fromObject({
@@ -283,6 +294,34 @@ function handleRewardDistributionEvent(
     );
     if (event) {
       lastRewardsDistributeTime = txEvent.timestamp;
+      const rewardsAmount = new BigNumber(String(event.args._amount));
+      if (lastRewardsAmount.isGreaterThan(0)) {
+        const rewardsChangePercent = rewardsAmount
+          .div(lastRewardsAmount)
+          .minus(1)
+          .times(100);
+        if (rewardsChangePercent.isLessThanOrEqualTo(-MAX_REWARDS_DECREASE)) {
+          findings.push(
+            Finding.fromObject({
+              name: `stMATIC rewards decreased`,
+              description: `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
+                2
+              )}% from ${lastRewardsAmount
+                .div(MATIC_DECIMALS)
+                .toFixed(4)} MATIC to ${rewardsAmount
+                .div(MATIC_DECIMALS)
+                .toFixed(4)} MATIC (${rewardsAmount
+                .minus(lastRewardsAmount)
+                .div(MATIC_DECIMALS)
+                .toFixed(4)} MATIC)`,
+              alertId: "STMATIC-REWARDS-DECREASED",
+              severity: FindingSeverity.High,
+              type: FindingType.Suspicious,
+            })
+          );
+        }
+      }
+      lastRewardsAmount = rewardsAmount;
     }
   }
 }

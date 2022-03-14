@@ -130,3 +130,6 @@ export const MAX_BUFFERED_MATIC_DAILY_PERCENT = 1.1;
 
 // 24 hours 10 min
 export const MAX_REWARDS_DISTRIBUTION_INTERVAL = 24 * 60 * 60 + 10 * 60
+
+// report if curents rewards are less than 95% of previous rewards
+export const MAX_REWARDS_DECREASE = 5
