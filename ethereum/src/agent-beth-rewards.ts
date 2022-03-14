@@ -9,12 +9,12 @@ import {
   FindingSeverity,
 } from 'forta-agent'
 
-import {Event} from 'ethers'
 
 import {formatEth, formatDelay} from './utils'
 import {ethersProvider} from './ethers'
 
 import ANCHOR_VAULT_ABI from './abi/AnchorVault.json'
+import LIDO_ORACLE_ABI from "./abi/LidoOracle.json";
 
 import {
   ANCHOR_VAULT_ADDRESS,
@@ -28,10 +28,11 @@ import {
   ANCHOR_DEPOSIT_EVENT,
   ANCHOR_WITHDRAW_EVENT,
   MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT,
+  LIDO_ORACLE_COMPLETED_EVENT,
+  LIDO_ORACLE_ADDRESS,
 } from './constants'
 
-import {OracleReport} from './agent-lido-oracle'
-import * as agentLidoOracle from './agent-lido-oracle'
+import { byBlockNumberDesc } from './utils/tools'
 
 
 
@@ -46,12 +47,18 @@ let lastRewardsSell = {
 
 let lastOverdueTriggeredAt = 0
 let lastLowBalanceTriggeredAt = 0
+let lastOracleReportTime = 0
 
 
 export const name = 'AgentBethRewards'
 
 
 export async function initialize(currentBlock: number): Promise<{[key: string]: string}> {
+
+  // ~2 hours ago
+  const pastBlockOracleReport = currentBlock - Math.ceil(2 * 60 * 60 / 13)
+  lastOracleReportTime = await getLastOracleReportTime(pastBlockOracleReport, currentBlock - 1)
+
   const anchorVault = new ethers.Contract(ANCHOR_VAULT_ADDRESS, ANCHOR_VAULT_ABI, ethersProvider)
   const rewardsSoldFilter = anchorVault.filters.RewardsCollected()
 
@@ -60,8 +67,6 @@ export async function initialize(currentBlock: number): Promise<{[key: string]: 
   const sellEvents = await anchorVault.queryFilter(rewardsSoldFilter, pastBlock, currentBlock - 1)
 
   if (sellEvents.length > 0) {
-    const byBlockNumberDesc = (e1: Event, e2: Event) => e2.blockNumber - e1.blockNumber
-
     sellEvents.sort(byBlockNumberDesc)
     const lastSellEvent = sellEvents[0]
 
@@ -107,16 +112,14 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 
 async function handleSellOverdue(blockEvent: BlockEvent, findings: Finding[]) {
-  await agentLidoOracle.waitBlockHandled(blockEvent.blockHash)
-  const lastOracleReport = await agentLidoOracle.getLastOracleReport()
 
-  if (lastOracleReport == null || lastRewardsSell.timestamp > lastOracleReport.timestamp) {
+  if (lastRewardsSell.timestamp > lastOracleReportTime) {
     // rewards already sold
     return
   }
 
   const now = blockEvent.block.timestamp
-  const sellDelay = now - lastOracleReport.timestamp
+  const sellDelay = now - lastOracleReportTime
 
   console.log(`[AgentBethRewards] sellDelay: ${sellDelay}`)
 
@@ -175,6 +178,8 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     handleAnchorVaultTx(txEvent, findings)
     handleAnchorVaultWithdrawOrDepositTx(txEvent, findings)
   }
+
+  handleOracleTx(txEvent, findings)
 
   return findings
 }
@@ -265,4 +270,40 @@ function handleAnchorVaultWithdrawOrDepositTx(txEvent: TransactionEvent, finding
     }
   }
 
+}
+
+function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
+  const [reportEvent] = txEvent.filterLog(
+    LIDO_ORACLE_COMPLETED_EVENT,
+    LIDO_ORACLE_ADDRESS
+  );
+  if (reportEvent == undefined) {
+    lastOracleReportTime = txEvent.timestamp;
+  }
+}
+
+async function getLastOracleReportTime(blockFrom: number, blockTo: number) {
+  const lidoOracle = new ethers.Contract(
+    LIDO_ORACLE_ADDRESS,
+    LIDO_ORACLE_ABI,
+    ethersProvider
+  );
+
+  const oracleReportFilter = lidoOracle.filters.Completed();
+
+  const reportEvents = await lidoOracle.queryFilter(
+    oracleReportFilter,
+    blockFrom,
+    blockTo
+  );
+
+  reportEvents.sort(byBlockNumberDesc);
+
+  const reportBlocks = await Promise.all(reportEvents.map((e) => e.getBlock()));
+
+  if (reportEvents.length > 0) {
+    return reportBlocks[0].timestamp;
+  } else {
+    return 0
+  }
 }

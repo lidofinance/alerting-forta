@@ -99,18 +99,18 @@ export async function initialize(
   const now = block.timestamp;
 
   // get initial Balancer Pool size
-  const balancerPoolTokens = await getBalancerPoolTokens();
+  const balancerPoolTokens = await getBalancerPoolTokens(currentBlock);
   poolsParams.Balancer.poolSize.poolSizeTotal = BigNumber.sum.apply(null, balancerPoolTokens);
 
   // get initial Curve Pool size
-  const curvePoolTokens = await getCurvePoolTokens();
+  const curvePoolTokens = await getCurvePoolTokens(currentBlock);
   poolsParams.Curve.poolSize.poolSizeTotal = BigNumber.sum.apply(null, curvePoolTokens);
 
   //get Sushi pool size
-  [poolsParams.Sushi.poolSize.poolSizeToken1, poolsParams.Sushi.poolSize.poolSizeToken2] = await getSushiTokens();
+  [poolsParams.Sushi.poolSize.poolSizeToken1, poolsParams.Sushi.poolSize.poolSizeToken2] = await getSushiTokens(currentBlock);
 
   //get OneInch pool size
-  [poolsParams.OneInch.poolSize.poolSizeToken1, poolsParams.OneInch.poolSize.poolSizeToken2] = await getOneInchTokens();
+  [poolsParams.OneInch.poolSize.poolSizeToken1, poolsParams.OneInch.poolSize.poolSizeToken2] = await getOneInchTokens(currentBlock);
 
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Balancer.lastReportedImbalance =
@@ -519,7 +519,7 @@ async function handleSushiPrice(blockEvent: BlockEvent, findings: Finding[]) {
 
 async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) {
   let poolParams = poolsParams.Sushi;
-  const [daiReserve, wstEthReserve] = await getSushiTokens();
+  const [daiReserve, wstEthReserve] = await getSushiTokens(blockEvent.blockNumber);
   const poolSizeChangeDai = calcImbalance(poolParams.poolSize.poolSizeToken1, daiReserve);
   const poolSizeChangeWstEth = calcImbalance(poolParams.poolSize.poolSizeToken2, wstEthReserve);
   if (Math.abs(poolSizeChangeDai) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
