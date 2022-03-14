@@ -17,6 +17,7 @@ import { argv } from 'process';
 
 import * as agentDaoOps from './agent-dao-ops'
 import * as agentNodeOperators from './agent-node-operators'
+import * as agentWithdrawalsMonitor from './agent-withdrawals-monitor'
 
 import VERSION from './version'
 
@@ -34,6 +35,7 @@ interface SubAgent {
 const subAgents: SubAgent[] = [
   agentDaoOps,
   agentNodeOperators,
+  agentWithdrawalsMonitor,
 ]
 
 // block or tx handling should take no more than 5 sec. If not all processing is done it will be done later in background

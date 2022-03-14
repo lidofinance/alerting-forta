@@ -31,6 +31,7 @@ import {
   MAX_REWARDS_DISTRIBUTION_INTERVAL,
   MAX_REWARDS_DECREASE,
 } from "./constants";
+import { byBlockNumberDesc } from "./utils/tools";
 
 export const name = "DaoOps";
 
@@ -49,8 +50,6 @@ let lastRewardsDistributeTime = 0;
 let lastReportedRewards = 0;
 let lastRewardsAmount = new BigNumber(0);
 
-const byBlockNumberDesc = (e1: Event, e2: Event) =>
-  e2.blockNumber - e1.blockNumber;
 
 export async function initialize(
   currentBlock: number
