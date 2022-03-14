@@ -55,7 +55,6 @@ export async function initialize(
   await Promise.all(withdrawEvents.map(async (evt: Event) => {
     if (evt.args) {
       const blockTime = (await evt.getBlock()).timestamp
-      console.log(blockTime)
       withdrawalsCache.push({
         time: blockTime ? blockTime : now,
         amount: new BigNumber(String(evt.args._amount))
