@@ -48,7 +48,7 @@ export async function initialize(
   let history = await provider.getHistory(LIDO_DEPOSIT_SECURITY_ADDRESS, currentBlock - Math.floor(60 * 60 * 72 / 13), currentBlock - 1);
   const depositorTxTimestamps = history.map(x => x.timestamp ? x.timestamp : 0);
   if (depositorTxTimestamps.length > 0) {
-    depositorTxTimestamps.sort((a,b) => a - b)
+    depositorTxTimestamps.sort((a,b) => b - a)
     lastDepositorTxTime = depositorTxTimestamps[0]
   }
   console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`)
