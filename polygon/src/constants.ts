@@ -23,7 +23,7 @@ export const LIDO_ON_POLYGON_PROXIES = {
 
 // EVENT ABIs
 export const PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT =
-  "event OwnershipTransferred (address indexed previousOwner, address indexed newOwner)";
+  "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)";
 
 export const ST_MATIC_DISTRIBUTE_REWARDS_EVENT =
   "event DistributeRewardsEvent(uint256 indexed _amount)";
