@@ -14,8 +14,8 @@ import { ethersProvider } from "./ethers";
 import NODE_OPERATORS_ABI from "./abi/NodeOperators.json";
 import { NODE_OPERATORS_REGISTRY_ADDRESS } from "./constants";
 
-// 4 hours
-const REPORT_WINDOW_BAD_OPERATORS_STATE = 60 * 60 * 4;
+// 2 hours
+const REPORT_WINDOW_BAD_OPERATORS_STATE = 60 * 60 * 2;
 
 let lastReportedBadOperatorsState = 0;
 
@@ -57,11 +57,21 @@ async function handleNodeOperatorsStatus(
       if (key.length > 2) {
         const parsedValue = parseInt(String(value));
         if (
-          key !== "_totalNodeOperator" &&
-          key !== "_totalActiveNodeOperator" &&
+          key in ["_totalJailedNodeOperator", "_totalEjectedNodeOperator"] &&
           parsedValue !== 0
         ) {
           error += `${key}=${parsedValue},\n`;
+        }
+        if (key == "_totalActiveNodeOperator" && parsedValue == 0) {
+          findings.push(
+            Finding.fromObject({
+              name: "No Active Node Operators",
+              description: `There are ${parsedValue} active node operators!`,
+              alertId: "NO-ACTIVE-NODE-OPERATORS-POLYGON",
+              severity: FindingSeverity.Critical,
+              type: FindingType.Degraded,
+            })
+          );
         }
       }
     }
