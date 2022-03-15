@@ -51,6 +51,7 @@ export async function initialize(
     depositorTxTimestamps.sort((a,b) => a - b)
     lastDepositorTxTime = depositorTxTimestamps[0]
   }
+  console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`)
   return {};
 }
 
@@ -134,7 +135,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
         })
       );
       lastReportedBufferedEth = now
-    } else if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM && lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY) {
+    } else if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM && lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY && lastDepositorTxTime !== 0) {
       findings.push(
         Finding.fromObject({
           name: "High buffered ETH amount",
