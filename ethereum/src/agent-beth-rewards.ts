@@ -277,7 +277,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     LIDO_ORACLE_COMPLETED_EVENT,
     LIDO_ORACLE_ADDRESS
   );
-  if (reportEvent == undefined) {
+  if (reportEvent !== undefined) {
     lastOracleReportTime = txEvent.timestamp;
   }
 }
