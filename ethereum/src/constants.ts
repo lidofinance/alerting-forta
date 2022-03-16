@@ -262,8 +262,8 @@ export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
 // 1 gwe1
 export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
 
-// 1000 astETH
-export const MAX_ASTETH_MINT_AMOUNT = 1000;
+// 10000 astETH
+export const MAX_ASTETH_MINT_AMOUNT = 10000;
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
