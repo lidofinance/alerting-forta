@@ -15,6 +15,7 @@ import LIDO_DAO_ABI from "./abi/LidoDAO.json";
 import ASTETH_ABI from "./abi/astETH.json";
 import STABLE_DEBT_STETH_ABI from "./abi/stableDebtStETH.json";
 import VARIABLE_DEBT_STETH_ABI from "./abi/variableDebtStETH.json";
+import { AAVE_LANDING_POOL_ADDRESS, ETH_DECIMALS, MAX_ASTETH_MINT_AMOUNT } from "./constants";
 
 import {
   LIDO_DAO_ADDRESS,
@@ -23,6 +24,7 @@ import {
   AAVE_VARIABLE_DEBT_STETH_ADDRESS,
   GWEI_DECIMALS,
   ASTETH_GWEI_DIFFERENCE_THRESHOLD,
+  AAVE_ATOKEN_MINT_EVENT,
 } from "./constants";
 
 export const name = "AAVE";
@@ -67,10 +69,16 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
     );
 
     const astEthBalance = new BigNumber(
-      String(await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS, {blockTag: blockEvent.blockNumber}))
+      String(
+        await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS, {
+          blockTag: blockEvent.blockNumber,
+        })
+      )
     );
     const astEthTotalSupply = new BigNumber(
-      String(await astETH.functions.totalSupply({blockTag: blockEvent.blockNumber}))
+      String(
+        await astETH.functions.totalSupply({ blockTag: blockEvent.blockNumber })
+      )
     );
 
     const difference = astEthBalance.minus(astEthTotalSupply).abs();
@@ -79,11 +87,15 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
       findings.push(
         Finding.fromObject({
           name: "astETH balance and totalSupply difference",
-          description: `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})=${
-            astEthBalance.div(GWEI_DECIMALS).toFixed(0)
-          } gwei differs from astETH.totalSupply = ${
-            astEthTotalSupply.div(GWEI_DECIMALS).toFixed(0)
-          } gwei by ${difference.div(GWEI_DECIMALS).toFixed(0)} gwei`,
+          description: `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})=${astEthBalance
+            .div(GWEI_DECIMALS)
+            .toFixed(
+              0
+            )} gwei differs from astETH.totalSupply = ${astEthTotalSupply
+            .div(GWEI_DECIMALS)
+            .toFixed(0)} gwei by ${difference
+            .div(GWEI_DECIMALS)
+            .toFixed(0)} gwei`,
           alertId: "ASTETH-BALANCE-AND-SUPPLY-DIFFERENCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
@@ -153,5 +165,38 @@ async function handleVariableStEthSupply(
       );
       lastReportedVariableStEthSupply = now;
     }
+  }
+}
+
+export async function handleTransaction(txEvent: TransactionEvent) {
+  const findings: Finding[] = [];
+
+  if (txEvent.to === AAVE_LANDING_POOL_ADDRESS) {
+    handleAaveTx(txEvent, findings);
+  }
+
+  return findings;
+}
+
+function handleAaveTx(txEvent: TransactionEvent, findings: Finding[]) {
+  const [event] = txEvent.filterLog(
+    AAVE_ATOKEN_MINT_EVENT,
+    AAVE_ASTETH_ADDRESS
+  );
+  if (
+    event !== undefined &&
+    event.args.value / ETH_DECIMALS.toNumber() > MAX_ASTETH_MINT_AMOUNT
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "Huge number of astETH minted",
+        description: `${(event.args.value / ETH_DECIMALS.toNumber()).toFixed(
+          4
+        )} astETH (AAVE) minted in a single TX`,
+        alertId: "HUGE-ASTETH-MINT-SINGLE-TX",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
   }
 }

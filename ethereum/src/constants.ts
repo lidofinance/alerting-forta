@@ -29,6 +29,8 @@ export const BALANCE_REPORT_WINDOW = 60 * 60
 export const AAVE_ASTETH_ADDRESS = '0x1982b2f5814301d4e9a8b0201555376e62f82428'
 export const AAVE_STABLE_DEBT_STETH_ADDRESS = '0x66457616dd8489df5d0afd8678f4a260088aaf55'
 export const AAVE_VARIABLE_DEBT_STETH_ADDRESS = '0xa9deac9f00dc4310c35603fcd9d34d1a750f81db'
+export const AAVE_ATOKEN_MINT_EVENT = 'event Mint(address indexed from, uint256 value, uint256 index)'
+export const AAVE_LANDING_POOL_ADDRESS = '0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9'
 
 export const LIDO_DAO_ADDRESS = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84'
 export const LDO_TOKEN_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
@@ -259,6 +261,9 @@ export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60
 
 // 1 gwe1
 export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1)
+
+// 1000 astETH
+export const MAX_ASTETH_MINT_AMOUNT = 1000;
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
