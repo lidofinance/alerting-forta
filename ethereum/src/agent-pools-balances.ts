@@ -634,7 +634,7 @@ async function handleOneInchPrice(blockEvent: BlockEvent, findings: Finding[]) {
     if (Math.abs(priceDifference) > PRICE_DIFFERENCE_THRESHOLD) {
       findings.push(
         Finding.fromObject({
-          name: "Significant wstETH price difference between Sushi pool and chainlink feed",
+          name: "Significant stETH price difference between 1inch pool and chainlink feed",
           description: `stETH price in pool (${stEthPricePool.toFixed(2)}) is ${priceDifference.toFixed(2)}% ${priceDifference > 0 ? 'higher' : 'lower'} than chainlink feed (${stEthPriceFeed.toFixed(2)})`,
           alertId: "BAD-ONEINCH-PRICE",
           severity: FindingSeverity.Medium,
