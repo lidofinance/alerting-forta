@@ -3,6 +3,7 @@ import { FindingSeverity, FindingType } from "forta-agent";
 
 // COMMON CONSTS
 export const MATIC_DECIMALS = new BigNumber(10 ** 18);
+export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
 // 24 hours
 export const FULL_24_HOURS = 24 * 60 * 60;
@@ -12,6 +13,7 @@ export const MATIC_TOKEN_ADDRESS = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0";
 export const ST_MATIC_TOKEN_ADDRESS = "0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599";
 export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x797c1369e578172112526dfcd0d5f9182067c928";
 export const PROXY_ADMIN_ADDRESS = "0x0833f5bd45803e05ef54e119a77e463ce6b1a963";
+export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xa22d223e732a5dcf4ff4529aa9a135293b7258fe";
 
 export const OWNER_MULTISIG_ADDRESS = "0xd65fa54f8df43064dfd8ddf223a446fc638800a9";
 export const LIDO_ON_POLYGON_PROXIES = {
@@ -141,3 +143,6 @@ export const MAX_REWARDS_DECREASE = 5;
 // 48 hours 
 export const WITHDRAWALS_MONITORING_WINDOW = 60 * 60 * 24 * 2;
 export const MAX_WITHDRAWALS_SUM_PERCENT = 5;
+
+// 0.5 ETH
+export const MIN_DEPOSIT_EXECUTOR_BALANCE = 0.5;

@@ -30,6 +30,9 @@ import {
   ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
   MAX_REWARDS_DISTRIBUTION_INTERVAL,
   MAX_REWARDS_DECREASE,
+  MIN_DEPOSIT_EXECUTOR_BALANCE,
+  ETH_DECIMALS,
+  LIDO_DEPOSIT_EXECUTOR_ADDRESS,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
 
@@ -41,6 +44,8 @@ const REPORT_WINDOW_BUFFERED_MATIC = 60 * 60 * 4;
 const REPORT_WINDOW_REWARDS_DISTRIBUTION = 60 * 60 * 4;
 // 15 min
 const REPORT_WINDOW_PROXY_ALERTS = 15 * 60;
+// 6 hours
+const REPORT_WINDOW_EXECUTOR_BALANCE =  60 * 60 * 6;
 
 let lastReportedBufferedMatic = 0;
 let timeHighPooledMaticStart = 0;
@@ -49,6 +54,7 @@ let lastReportedInvalidProxyAdmin = 0;
 let lastRewardsDistributeTime = 0;
 let lastReportedRewards = 0;
 let lastRewardsAmount = new BigNumber(0);
+let lastReportedExecutorBalance = 0;
 
 
 export async function initialize(
@@ -89,6 +95,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBufferedMatic(blockEvent, findings),
     handleRewardsDistribution(blockEvent, findings),
     handleProxyAdmin(blockEvent, findings),
+    handleDepositExecutorBalance(blockEvent, findings),
   ]);
 
   return findings;
@@ -269,6 +276,26 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
         }
       }
     );
+  }
+}
+
+async function handleDepositExecutorBalance(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
+    const executorBalanceRaw = new BigNumber(String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS)))
+    const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
+    if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
+      findings.push(
+        Finding.fromObject({
+          name: "Low deposit executor balance (Lido on Polygon)",
+          description: `Balance of deposit executor (${LIDO_DEPOSIT_EXECUTOR_ADDRESS}) is ${executorBalance.toFixed(4)} ETH. This is extremely low!`,
+          alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
+        })
+      );
+      lastReportedExecutorBalance = now
+    }
   }
 }
 
