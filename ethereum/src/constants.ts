@@ -21,10 +21,10 @@ export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT = 'event RewardsCollected(uint
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT = 'event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)'
 // 1000 stETH/bETH
 export const MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT = new BigNumber(1000).times(ETH_DECIMALS)
-// 0.51 ETH
-export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.51).times(ETH_DECIMALS)
-// 1 hour
-export const BALANCE_REPORT_WINDOW = 60 * 60
+// 0.3 ETH
+export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.3).times(ETH_DECIMALS)
+// 4 hours
+export const BALANCE_REPORT_WINDOW = 60 * 60 * 4
 
 export const AAVE_ASTETH_ADDRESS = '0x1982b2f5814301d4e9a8b0201555376e62f82428'
 export const AAVE_STABLE_DEBT_STETH_ADDRESS = '0x66457616dd8489df5d0afd8678f4a260088aaf55'
