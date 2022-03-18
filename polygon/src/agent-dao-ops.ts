@@ -56,7 +56,6 @@ let lastReportedRewards = 0;
 let lastRewardsAmount = new BigNumber(0);
 let lastReportedExecutorBalance = 0;
 
-
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
@@ -85,7 +84,10 @@ export async function initialize(
       );
     }
   }
-  return {};
+  console.log(`[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`)
+  return {
+    lastRewardsDistributeTime: `${lastRewardsDistributeTime}`,
+  };
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
