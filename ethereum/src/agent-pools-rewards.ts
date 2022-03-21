@@ -206,9 +206,11 @@ async function handleRewardExpire(poolName: string, blockEvent: BlockEvent, find
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = []
 
-  for (const key of Object.keys(g_pools)) {
-    await handleRewardExpire(key, blockEvent, findings)
-  }
+  await Promise.all(
+    Object.keys(g_pools).map(async (key) => {
+      handleRewardExpire(key, blockEvent, findings)
+    })
+  )
 
   return findings
 }
