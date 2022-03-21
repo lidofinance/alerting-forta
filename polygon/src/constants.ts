@@ -135,8 +135,8 @@ export const MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT = 3.1;
 // 1.1% MATIC of total pooled MATIC
 export const MAX_BUFFERED_MATIC_DAILY_PERCENT = 1.1;
 
-// 24 hours 10 min
-export const MAX_REWARDS_DISTRIBUTION_INTERVAL = 24 * 60 * 60 + 10 * 60;
+// 25 hours (rewards should be distributed each 24 hours but there is a possible delay due to the gas optimization)
+export const MAX_REWARDS_DISTRIBUTION_INTERVAL = 25 * 60 * 60;
 
 // report if curent rewards are less than 95% of previous rewards
 export const MAX_REWARDS_DECREASE = 5;
