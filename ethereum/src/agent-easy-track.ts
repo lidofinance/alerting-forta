@@ -36,7 +36,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleEasyTrackTransaction(txEvent: TransactionEvent, findings: Finding[]) {
   EASY_TRACK_EVENTS_OF_NOTICE.forEach(eventInfo => {
-    if (txEvent.to === eventInfo.address) {
+    if (eventInfo.address in txEvent.addresses) {
       const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address)
       if (event) {
         findings.push(Finding.fromObject({
