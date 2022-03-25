@@ -42,7 +42,7 @@ let spenders = new Map<string, Map<string, Set<string>>>();
 let spendersLastAlerted = new Map<string, ILastAlertedSummary>();
 
 const bigZero = new BigNumber(0);
-const uintMaxValue = new BigNumber(10).pow(60);
+const uintMaxValue = new BigNumber(10).pow(59);
 
 export const name = "PhishingDetect";
 
