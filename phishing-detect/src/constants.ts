@@ -32,11 +32,17 @@ export const MONITORED_ERC20_ADDRESSES = new Map<string, string>([
 ]);
 
 export const WHITE_LIST_ADDRESSES = {
+  // owned by Lido
   curvePool: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
   balancerPool: "0x32296969ef14eb0c6d29669c550d4a0449130230",
   oneInchPool: "0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431",
   sushiPool: "0xc5578194d457dcce3f272538d1ad52c68d1ce849",
+  wstETH: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+  // externally owned
   aaveLandingPoolV2: "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
+  oneInchV4Router: "0x1111111254fb6c44bac0bed2854e76f90643097d",
+  metamaskSwapRouter: "0x881d40237659c251811cec9c364ef91dc08d300c",
+  paraswapV5TokenTransferProxyMainnet: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
 };
 
 export const APPROVE_FUNCTION_ABI =
