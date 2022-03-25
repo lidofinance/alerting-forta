@@ -220,7 +220,7 @@ function handleERC20FuncCall(
                 metadata: {
                   spender: spender,
                   token: token,
-                  approvers: String(spenderToken),
+                  approvers: `[${Array.from(spenderToken).join(",")}]`,
                 },
               })
             );
@@ -246,7 +246,7 @@ function handleERC20FuncCall(
               type: FindingType.Suspicious,
               metadata: {
                 spender: spender,
-                tokens: String(Array.from(spenderInfo.keys())),
+                tokens: `[${Array.from(spenderInfo.keys()).join(",")}]`,
               },
             })
           );
