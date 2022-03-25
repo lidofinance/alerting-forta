@@ -42,6 +42,7 @@ let spenders = new Map<string, Map<string, Set<string>>>();
 let spendersLastAlerted = new Map<string, ILastAlertedSummary>();
 
 const bigZero = new BigNumber(0);
+const uintMaxValue = new BigNumber(10).pow(60);
 
 export const name = "PhishingDetect";
 
@@ -170,7 +171,13 @@ function handleERC20FuncCall(
   if (!Object.values(WHITE_LIST_ADDRESSES).includes(spender)) {
     let spenderInfo = spenders.get(spender);
 
-    console.log(`New ${func} of ${MONITORED_ERC20_ADDRESSES.get(token)} from ${from} to ${spender} for ${amount.toFixed(4)} ${MONITORED_ERC20_ADDRESSES.get(token)}`)
+    console.log(
+      `New ${func} of ${MONITORED_ERC20_ADDRESSES.get(
+        token
+      )} from ${from} to ${spender} for ${
+        amount.isGreaterThan(uintMaxValue) ? "infinite" : amount.toFixed(4)
+      } ${MONITORED_ERC20_ADDRESSES.get(token)}`
+    );
 
     // call of approve with 0 amount equals to approve removal
     if (func == "approve" && amount.eq(bigZero)) {
@@ -203,7 +210,10 @@ function handleERC20FuncCall(
             findings.push(
               Finding.fromObject({
                 name: "Significant amount of ERC20 approvals to the single address",
-                description: `${spenderToken.size} addresses approved ${MONITORED_ERC20_ADDRESSES.get(token)}(${token}) tokens to ${spender}`,
+                description:
+                  `${spenderToken.size} addresses approved` +
+                  ` ${MONITORED_ERC20_ADDRESSES.get(token)}(${token})` +
+                  ` tokens to ${spender}`,
                 alertId: "HIGH-ERC20-APPROVALS",
                 severity: FindingSeverity.High,
                 type: FindingType.Suspicious,
@@ -236,7 +246,7 @@ function handleERC20FuncCall(
               type: FindingType.Suspicious,
               metadata: {
                 spender: spender,
-                tokens: String(spenderInfo.keys()),
+                tokens: String(Array.from(spenderInfo.keys())),
               },
             })
           );
