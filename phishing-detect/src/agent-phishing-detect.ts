@@ -214,7 +214,7 @@ function handleERC20FuncCall(
                 name: "Significant amount of ERC20 approvals to the single address",
                 description:
                   `${spenderToken.size} addresses approved` +
-                  ` ${MONITORED_ERC20_ADDRESSES.get(token)}(${token})` +
+                  ` ${MONITORED_ERC20_ADDRESSES.get(token)}` +
                   ` tokens to ${spender}\n${etherscanLink(spender)}`,
                 alertId: "HIGH-ERC20-APPROVALS",
                 severity: FindingSeverity.High,
@@ -222,7 +222,7 @@ function handleERC20FuncCall(
                 metadata: {
                   spender: spender,
                   token: token,
-                  approvers: `[${Array.from(spenderToken).join(",")}]`,
+                  approvers: `[${Array.from(spenderToken).join(", ")}]`,
                 },
               })
             );
@@ -239,18 +239,21 @@ function handleERC20FuncCall(
           spenderInfo.size - lastAlertedTokens.count >
             UNIQ_TOKENS_CHANGE_THRESHOLD
         ) {
+          const tokensArray = Array.from(spenderInfo.keys());
+          const tokensReadable = tokensArray.map(token => MONITORED_ERC20_ADDRESSES.get(token))
           findings.push(
             Finding.fromObject({
-              name: "Significant amount of uniq ERC20 tokens approvals to the single address",
+              name: "Significant amount of ERC20 token types approvals to the single address",
               description:
-                `${spenderInfo.size} types of tokens` +
+                `${spenderInfo.size} types of tokens (${tokensReadable.join(", ")}) ` +
                 `approved to ${spender}\n${etherscanLink(spender)}`,
               alertId: "HIGH-ERC20-TOKENS",
               severity: FindingSeverity.High,
               type: FindingType.Suspicious,
               metadata: {
                 spender: spender,
-                tokens: `[${Array.from(spenderInfo.keys()).join(",")}]`,
+                tokens: `[${tokensArray.join(", ")}]`,
+                tokensReadable: `[${tokensReadable.join(", ")}]`
               },
             })
           );
