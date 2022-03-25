@@ -11,7 +11,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { etherscanLink } from "../utils/formatting";
+import { etherscanLink } from "./utils/formatting";
 
 import {
   ETH_DECIMALS,
