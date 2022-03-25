@@ -534,6 +534,10 @@ async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) 
         alertId: "SUSHI-POOL-SIZE-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Info,
+        metadata:{
+          sizeDAIBefore: poolParams.poolSize.poolSizeToken2.toFixed(),
+          sizeDAIAfter: daiReserve.toFixed()
+        }
       })
     );
   }
@@ -549,6 +553,10 @@ async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) 
         alertId: "SUSHI-POOL-SIZE-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Info,
+        metadata:{
+          sizeWstETHBefore: poolParams.poolSize.poolSizeToken2.toFixed(),
+          sizeWstETHAfter: wstEthReserve.toFixed()
+        }
       })
     );
   }
@@ -662,8 +670,12 @@ async function handleOneInchPoolSize(blockEvent: BlockEvent, findings: Finding[]
             : "decreased by " + -poolSizeChangeDai.toFixed(2).toString()
         }% since the last block`,
         alertId: "ONEINCH-POOL-SIZE-CHANGE",
-        severity: FindingSeverity.High,
+        severity: FindingSeverity.Info,
         type: FindingType.Info,
+        metadata:{
+          sizeDAIBefore: poolParams.poolSize.poolSizeToken1.toFixed(),
+          sizeDAIAfter: daiReserve.toFixed()
+        }
       })
     );
   }
@@ -677,8 +689,12 @@ async function handleOneInchPoolSize(blockEvent: BlockEvent, findings: Finding[]
             : "decreased by " + -poolSizeChangeStEth.toFixed(2).toString()
         }% since the last block`,
         alertId: "ONEINCH-POOL-SIZE-CHANGE",
-        severity: FindingSeverity.High,
+        severity: FindingSeverity.Info,
         type: FindingType.Info,
+        metadata:{
+          sizeStETHBefore: poolParams.poolSize.poolSizeToken2.toFixed(),
+          sizeStETHAfter: stEthReserve.toFixed()
+        }
       })
     );
   }
