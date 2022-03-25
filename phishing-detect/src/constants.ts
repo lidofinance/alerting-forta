@@ -36,6 +36,7 @@ export const WHITE_LIST_ADDRESSES = {
   balancerPool: "0x32296969ef14eb0c6d29669c550d4a0449130230",
   oneInchPool: "0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431",
   sushiPool: "0xc5578194d457dcce3f272538d1ad52c68d1ce849",
+  aaveLandingPoolV2: "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
 };
 
 export const APPROVE_FUNCTION_ABI =
