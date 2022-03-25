@@ -42,7 +42,11 @@ export const WHITE_LIST_ADDRESSES = {
   aaveLandingPoolV2: "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
   oneInchV4Router: "0x1111111254fb6c44bac0bed2854e76f90643097d",
   metamaskSwapRouter: "0x881d40237659c251811cec9c364ef91dc08d300c",
-  paraswapV5TokenTransferProxyMainnet: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+  paraswapV5TokenTransferProxyMainnet:
+    "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+  sushiSwapRouter: "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
+  anchorVault: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
+  uniswapV3Router2: "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
 };
 
 export const APPROVE_FUNCTION_ABI =

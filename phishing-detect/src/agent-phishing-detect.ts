@@ -10,6 +10,7 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
+import { etherscanLink } from "../utils/formatting";
 
 import {
   ETH_DECIMALS,
@@ -213,7 +214,7 @@ function handleERC20FuncCall(
                 description:
                   `${spenderToken.size} addresses approved` +
                   ` ${MONITORED_ERC20_ADDRESSES.get(token)}(${token})` +
-                  ` tokens to ${spender}`,
+                  ` tokens to ${spender}\n${etherscanLink(spender)}`,
                 alertId: "HIGH-ERC20-APPROVALS",
                 severity: FindingSeverity.High,
                 type: FindingType.Suspicious,
@@ -240,7 +241,9 @@ function handleERC20FuncCall(
           findings.push(
             Finding.fromObject({
               name: "Significant amount of uniq ERC20 tokens approvals to the single address",
-              description: `${spenderInfo.size} uniq tokens approved to ${spender}`,
+              description:
+                `${spenderInfo.size} uniq tokens` +
+                `approved to ${spender}\n${etherscanLink(spender)}`,
               alertId: "HIGH-ERC20-TOKENS",
               severity: FindingSeverity.High,
               type: FindingType.Suspicious,
