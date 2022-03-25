@@ -277,6 +277,10 @@ async function handleCurvePoolSize(
         alertId: "CURVE-POOL-SIZE-CHANGE",
         severity: severity,
         type: FindingType.Info,
+        metadata:{
+          sizeBefore: poolParams.poolSize.poolSizeTotal.toFixed(),
+          sizeAfter: poolSize.toFixed()
+        }
       })
     );
   }
@@ -418,6 +422,10 @@ async function handleBalancerPoolSize(
         alertId: "BALANCER-POOL-SIZE-CHANGE",
         severity: severity,
         type: FindingType.Info,
+        metadata:{
+          sizeBefore: poolParams.poolSize.poolSizeTotal.toFixed(),
+          sizeAfter: poolSize.toFixed()
+        }
       })
     );
   }
