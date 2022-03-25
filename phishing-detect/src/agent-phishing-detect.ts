@@ -10,6 +10,7 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
+
 import { etherscanLink } from "../utils/formatting";
 
 import {
@@ -242,7 +243,7 @@ function handleERC20FuncCall(
             Finding.fromObject({
               name: "Significant amount of uniq ERC20 tokens approvals to the single address",
               description:
-                `${spenderInfo.size} uniq tokens` +
+                `${spenderInfo.size} types of tokens` +
                 `approved to ${spender}\n${etherscanLink(spender)}`,
               alertId: "HIGH-ERC20-TOKENS",
               severity: FindingSeverity.High,
