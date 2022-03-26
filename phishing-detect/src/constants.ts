@@ -47,6 +47,10 @@ export const WHITE_LIST_ADDRESSES = {
   sushiSwapRouter: "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
   anchorVault: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
   uniswapV3Router2: "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+  uniswapV2Router2: "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+  zeroXExchangeProxy: "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+  balancerVault: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+  oneInchV3: "0x11111112542d85b3ef69ae05771c2dccff4faa26",
 };
 
 export const APPROVE_FUNCTION_ABI =
