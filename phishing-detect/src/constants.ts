@@ -47,12 +47,18 @@ export const WHITE_LIST_ADDRESSES = {
   sushiSwapRouter: "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
   anchorVault: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
   uniswapV3Router2: "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+  uniswapV3Router: "0xe592427a0aece92de3edee1f18e0157c05861564",
   uniswapV2Router2: "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+  uniswapV3PositionsNFT: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
   zeroXExchangeProxy: "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
   balancerVault: "0xba12222222228d8ba445958a75a0704d566bf2c8",
   oneInchV3: "0x11111112542d85b3ef69ae05771c2dccff4faa26",
   coWProtocolGPv2VaultRelayer: "0xc92e8bdf79f0507f65a392b0ab4667716bfe0110",
   curveRETHtoWstETH: "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08",
+  zapperZap: "0x8e52522e6a77578904ddd7f528a22521dc4154f5",
+  wormholeTokenBridge: "0x3ee18b2214aff97000d974cf647e7c347e8fa585",
+  ribbonFinanceStETHCoveredCallVault: "0x53773e034d9784153471813dacaff53dbbb78e8c",
+  DODOApproveV2: "0xcb859ea579b28e02b87a1fde08d087ab9dbe5149",
 };
 
 export const APPROVE_FUNCTION_ABI =
