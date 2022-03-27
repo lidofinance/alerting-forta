@@ -59,6 +59,7 @@ export const WHITE_LIST_ADDRESSES = {
   wormholeTokenBridge: "0x3ee18b2214aff97000d974cf647e7c347e8fa585",
   ribbonFinanceStETHCoveredCallVault: "0x53773e034d9784153471813dacaff53dbbb78e8c",
   DODOApproveV2: "0xcb859ea579b28e02b87a1fde08d087ab9dbe5149",
+  mooniswap: "0x1f629794b34ffb3b29ff206be5478a52678b47ae",
 };
 
 export const APPROVE_FUNCTION_ABI =
