@@ -11,7 +11,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { etherscanLink } from "./utils/formatting";
+import { etherscanLink, makeSummary } from "./utils/formatting";
 
 import {
   ETH_DECIMALS,
@@ -25,22 +25,19 @@ import {
   WHITE_LIST_ADDRESSES,
 } from "./constants";
 
-interface ILastAlerted {
-  count: number;
-  lastAlerted: number;
-}
-
-interface ILastAlertedSummary {
-  tokens?: ILastAlerted;
-  approvals?: Map<string, ILastAlerted>;
-}
+import { isContract } from "./utils/tools";
+import {
+  ILastAlerted,
+  ILastAlertedSummary,
+  ISpenderInfo,
+} from "./utils/interfaces";
 
 const notAlerted: ILastAlerted = {
   count: 0,
   lastAlerted: 0,
 };
 
-let spenders = new Map<string, Map<string, Set<string>>>();
+let spenders = new Map<string, ISpenderInfo>();
 let spendersLastAlerted = new Map<string, ILastAlertedSummary>();
 
 const bigZero = new BigNumber(0);
@@ -121,6 +118,16 @@ function setLastAlertedApprovalsInfo(
   spenderLastAlerted.approvals.set(token, approvalsAlertedInfoNew);
 }
 
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+
+  if (blockEvent.blockNumber % 300 == 0) {
+    console.log(makeSummary(spenders))
+  }
+
+  return findings;
+}
+
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
@@ -141,25 +148,29 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const increase_allowance = txEvent.filterFunction(INCREASE_ALLOWANCE_ABI);
   const now = txEvent.block.timestamp;
 
-  approvals.forEach((event: ethers.utils.TransactionDescription) => {
-    handleERC20FuncCall(event, "approve", from, token, now, findings);
-  });
+  await Promise.all(
+    approvals.map((event: ethers.utils.TransactionDescription) => {
+      handleERC20FuncCall(event, "approve", from, token, now, findings);
+    })
+  );
 
-  increase_allowance.forEach((event: ethers.utils.TransactionDescription) => {
-    handleERC20FuncCall(
-      event,
-      "increase_allowance",
-      from,
-      token,
-      now,
-      findings
-    );
-  });
+  await Promise.all(
+    increase_allowance.map((event: ethers.utils.TransactionDescription) => {
+      handleERC20FuncCall(
+        event,
+        "increase_allowance",
+        from,
+        token,
+        now,
+        findings
+      );
+    })
+  );
 
   return findings;
 }
 
-function handleERC20FuncCall(
+async function handleERC20FuncCall(
   event: ethers.utils.TransactionDescription,
   func: string,
   from: string,
@@ -184,19 +195,24 @@ function handleERC20FuncCall(
     // call of approve with 0 amount equals to approve removal
     if (func == "approve" && amount.eq(bigZero)) {
       if (spenderInfo) {
-        let spenderToken = spenderInfo.get(token);
+        let spenderToken = spenderInfo.approvers.get(token);
         if (spenderToken) {
           spenderToken.delete(from);
           if (spenderToken.size != 0) {
-            spenderInfo.set(token, spenderToken);
+            spenderInfo.approvers.set(token, spenderToken);
           } else {
-            spenderInfo.delete(token);
+            spenderInfo.approvers.delete(token);
           }
         }
       }
     } else {
       if (spenderInfo) {
-        let spenderToken = spenderInfo.get(token);
+        // alert should be critical if spender is not contract
+        const severity = spenderInfo.isContract
+          ? FindingSeverity.High
+          : FindingSeverity.Critical;
+        const addressType = spenderInfo.isContract ? "contract" : "EOA";
+        let spenderToken = spenderInfo.approvers.get(token);
         if (spenderToken) {
           spenderToken.add(from);
           const lastAlertedApprovals = getLastAlertedApprovalsInfo(
@@ -211,13 +227,14 @@ function handleERC20FuncCall(
           ) {
             findings.push(
               Finding.fromObject({
-                name: "Significant amount of ERC20 approvals to the single address",
+                name: `Significant amount of ERC20 approvals to the single address (${addressType})`,
                 description:
                   `${spenderToken.size} addresses approved` +
                   ` ${MONITORED_ERC20_ADDRESSES.get(token)}` +
-                  ` tokens to ${spender}\n${etherscanLink(spender)}`,
+                  ` tokens to ${spender} (${addressType})` +
+                  `\n${etherscanLink(spender)}`,
                 alertId: "HIGH-ERC20-APPROVALS",
-                severity: FindingSeverity.High,
+                severity: severity,
                 type: FindingType.Suspicious,
                 metadata: {
                   spender: spender,
@@ -231,36 +248,44 @@ function handleERC20FuncCall(
         } else {
           spenderToken = new Set([from]);
         }
-        spenderInfo.set(token, spenderToken);
+        spenderInfo.approvers.set(token, spenderToken);
         const lastAlertedTokens = getLastAlertedTokensInfo(spender);
         if (
-          (spenderInfo.size >= UNIQ_DELEGATES_THRESHOLD &&
+          (spenderInfo.approvers.size >= UNIQ_DELEGATES_THRESHOLD &&
             now - lastAlertedTokens.lastAlerted > ALERT_SILENCE_PERIOD) ||
-          spenderInfo.size - lastAlertedTokens.count >
+          spenderInfo.approvers.size - lastAlertedTokens.count >
             UNIQ_TOKENS_CHANGE_THRESHOLD
         ) {
-          const tokensArray = Array.from(spenderInfo.keys());
-          const tokensReadable = tokensArray.map(token => MONITORED_ERC20_ADDRESSES.get(token))
+          const tokensArray = Array.from(spenderInfo.approvers.keys());
+          const tokensReadable = tokensArray.map((token) =>
+            MONITORED_ERC20_ADDRESSES.get(token)
+          );
           findings.push(
             Finding.fromObject({
-              name: "Significant amount of ERC20 token types approvals to the single address",
+              name: `Significant amount of ERC20 types approvals to the single address (${addressType})`,
               description:
-                `${spenderInfo.size} types of tokens (${tokensReadable.join(", ")}) ` +
-                `approved to ${spender}\n${etherscanLink(spender)}`,
+                `${
+                  spenderInfo.approvers.size
+                } types of tokens (${tokensReadable.join(", ")}) ` +
+                `approved to ${spender} (${addressType})` +
+                `\n${etherscanLink(spender)}`,
               alertId: "HIGH-ERC20-TOKENS",
-              severity: FindingSeverity.High,
+              severity: severity,
               type: FindingType.Suspicious,
               metadata: {
                 spender: spender,
                 tokens: `[${tokensArray.join(", ")}]`,
-                tokensReadable: `[${tokensReadable.join(", ")}]`
+                tokensReadable: `[${tokensReadable.join(", ")}]`,
               },
             })
           );
-          setLastAlertedTokensInfo(spender, spenderInfo.size, now);
+          setLastAlertedTokensInfo(spender, spenderInfo.approvers.size, now);
         }
       } else {
-        spenderInfo = new Map([[token, new Set([from])]]);
+        spenderInfo = {
+          approvers: new Map([[token, new Set([from])]]),
+          isContract: await isContract(spender),
+        };
       }
       spenders.set(spender, spenderInfo);
     }
