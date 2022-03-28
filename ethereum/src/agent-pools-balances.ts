@@ -21,8 +21,6 @@ import {
   POOLS_BALANCES_REPORT_WINDOW,
   CHAINLINK_STETH_USD_PRICE_ADDRESS,
   PRICE_DIFFERENCE_THRESHOLD,
-  LIDO_DAO_ADDRESS,
-  DAI_TOKEN_ADDRESS,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
@@ -33,9 +31,6 @@ import SUSHI_POOL_ABI from "./abi/SushiPool.json";
 import SUSHI_ROUTER_ABI from "./abi/SushiRouter.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
 import CHAINLINK_STETH_USD_ABI from "./abi/ChainlinkStEthUsd.json";
-import LIDO_ABI from "./abi/LidoDAO.json";
-import DAI_ABI from "./abi/DaiToken.json"
-import ONE_INCH_POOL_ABI from "./abi/1inchPool.json"
 
 export const name = "PoolsBalances";
 
@@ -79,21 +74,12 @@ let poolsParams: { [name: string]: IPoolParams } = {
       poolSizeToken2: new BigNumber(0),
     }
   },
-  OneInch: {
-    lastReported: 0,
-    lastReportedImbalance: 0,
-    poolSize: {
-      poolSizeTotal: new BigNumber(0),
-      poolSizeToken1: new BigNumber(0),
-      poolSizeToken2: new BigNumber(0),
-    }
-  },
 };
 
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
-  console.log(`Start initialization of [${name}]`);
+  console.log(`[${name}]`);
 
   const block = await ethersProvider.getBlock(currentBlock);
   const now = block.timestamp;
@@ -108,9 +94,6 @@ export async function initialize(
 
   //get Sushi pool size
   [poolsParams.Sushi.poolSize.poolSizeToken1, poolsParams.Sushi.poolSize.poolSizeToken2] = await getSushiTokens(currentBlock);
-
-  //get OneInch pool size
-  [poolsParams.OneInch.poolSize.poolSizeToken1, poolsParams.OneInch.poolSize.poolSizeToken2] = await getOneInchTokens(currentBlock);
 
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Balancer.lastReportedImbalance =
@@ -129,7 +112,6 @@ export async function initialize(
     poolsParams.Curve.lastReported = now;
   }
 
-  console.log(`Initialization of [${name}] is done`);
   return {
     curvePoolSize: poolsParams.Curve.poolSize.poolSizeTotal.toString(),
     balancerPoolSize: poolsParams.Balancer.poolSize.poolSizeTotal.toString(),
@@ -139,21 +121,16 @@ export async function initialize(
   };
 }
 
-export async function handleBlock(blockEvent: BlockEvent) {
-  const findings: Finding[] = [];
+function calcChange(balancePrev: BigNumber, balanceCur: BigNumber) {
+  return (balanceCur.div(balancePrev).toNumber() - 1) * 100;
+}
 
-  await Promise.all([
-    handleCurvePoolImbalance(blockEvent, findings),
-    handleBalancerPoolImbalance(blockEvent, findings),
-    handleBalancerPoolSize(blockEvent, findings),
-    handleCurvePoolSize(blockEvent, findings),
-    handleSushiPrice(blockEvent, findings),
-    handleSushiPoolSize(blockEvent, findings),
-    handleOneInchPrice(blockEvent, findings),
-    handleOneInchPoolSize(blockEvent, findings),
-  ]);
-
-  return findings;
+function calcImbalance(balance1: BigNumber, balance2: BigNumber) {
+  if (balance2 >= balance1) {
+    return (balance2.div(balance1).toNumber() - 1) * 100;
+  } else {
+    return -(balance1.div(balance2).toNumber() - 1) * 100;
+  }
 }
 
 function imbalanceMessage(imbalance: number, token1: string, token2: string) {
@@ -170,6 +147,21 @@ function imbalanceMessage(imbalance: number, token1: string, token2: string) {
 
 function alreadyReported(poolParams: IPoolParams, now: number) {
   return poolParams.lastReported + POOLS_BALANCES_REPORT_WINDOW >= now;
+}
+
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+
+  await Promise.all([
+    handleCurvePoolImbalance(blockEvent, findings),
+    handleBalancerPoolImbalance(blockEvent, findings),
+    handleBalancerPoolSize(blockEvent, findings),
+    handleCurvePoolSize(blockEvent, findings),
+    handleSushiPrice(blockEvent, findings),
+    handleSushiPoolSize(blockEvent, findings),
+  ]);
+
+  return findings;
 }
 
 async function handleCurvePoolImbalance(
@@ -260,7 +252,7 @@ async function handleCurvePoolSize(
   let poolParams = poolsParams.Curve;
   const poolTokens = await getCurvePoolTokens(blockEvent.blockNumber);
   const poolSize = BigNumber.sum.apply(null, poolTokens);
-  const poolSizeChange = calcImbalance(poolParams.poolSize.poolSizeTotal, poolSize);
+  const poolSizeChange = calcChange(poolParams.poolSize.poolSizeTotal, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
     const severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
@@ -390,14 +382,6 @@ async function balancerPoolImbalancePercent(blockNumber?: number) {
   return calcImbalance(ethBalance, stethBalance);
 }
 
-function calcImbalance(balance1: BigNumber, balance2: BigNumber) {
-  if (balance2 >= balance1) {
-    return (balance2.div(balance1).toNumber() - 1) * 100;
-  } else {
-    return -(balance1.div(balance2).toNumber() - 1) * 100;
-  }
-}
-
 async function handleBalancerPoolSize(
   blockEvent: BlockEvent,
   findings: Finding[]
@@ -405,7 +389,7 @@ async function handleBalancerPoolSize(
   let poolParams = poolsParams.Balancer;
   const poolTokens = await getBalancerPoolTokens(blockEvent.blockNumber);
   const poolSize = BigNumber.sum.apply(null, poolTokens);
-  const poolSizeChange = calcImbalance(poolParams.poolSize.poolSizeTotal, poolSize);
+  const poolSizeChange = calcChange(poolParams.poolSize.poolSizeTotal, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
     const severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
@@ -528,8 +512,8 @@ async function handleSushiPrice(blockEvent: BlockEvent, findings: Finding[]) {
 async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) {
   let poolParams = poolsParams.Sushi;
   const [daiReserve, wstEthReserve] = await getSushiTokens(blockEvent.blockNumber);
-  const poolSizeChangeDai = calcImbalance(poolParams.poolSize.poolSizeToken1, daiReserve);
-  const poolSizeChangeWstEth = calcImbalance(poolParams.poolSize.poolSizeToken2, wstEthReserve);
+  const poolSizeChangeDai = calcChange(poolParams.poolSize.poolSizeToken1, daiReserve);
+  const poolSizeChangeWstEth = calcChange(poolParams.poolSize.poolSizeToken2, wstEthReserve);
   if (Math.abs(poolSizeChangeDai) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
     findings.push(
       Finding.fromObject({
@@ -570,142 +554,4 @@ async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) 
   }
   poolParams.poolSize.poolSizeToken1 = daiReserve;
   poolParams.poolSize.poolSizeToken2 = wstEthReserve;
-}
-
-
-async function getOneInchTokens(blockNumber?: number) {
-  let overrides = {} as any;
-  if (blockNumber) {
-    overrides.blockTag = blockNumber;
-  }
-
-  const sthETH = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
-    LIDO_ABI,
-    ethersProvider
-  )
-
-  const DAI = new ethers.Contract(
-    DAI_TOKEN_ADDRESS,
-    DAI_ABI,
-    ethersProvider
-  )
-
-  return await Promise.all(
-    [
-      DAI.functions.balanceOf(POOLS_PARAMS.OneInch.poolContractAddress, overrides).then((value) => new BigNumber(String(value))),
-      sthETH.functions.balanceOf(POOLS_PARAMS.OneInch.poolContractAddress, overrides).then((value) => new BigNumber(String(value))),
-    ]
-  );
-}
-
-
-async function handleOneInchPrice(blockEvent: BlockEvent, findings: Finding[]) {
-  const now = blockEvent.block.timestamp;
-  let poolParams = poolsParams.OneInch;
-  if (!alreadyReported(poolParams, now)) {
-    const [_, stEthReserve] = await getOneInchTokens(blockEvent.blockNumber)
-
-    // 0.1% of token supply in pool
-    const stEthTestAmount = stEthReserve.idiv(1000);
-
-    const oneInchPool = new ethers.Contract(
-      POOLS_PARAMS.OneInch.poolContractAddress,
-      ONE_INCH_POOL_ABI,
-      ethersProvider
-    );
-
-    const daiTestAmount = new BigNumber(
-      String(
-        await oneInchPool.functions.getReturn(
-          LIDO_DAO_ADDRESS,
-          DAI_TOKEN_ADDRESS,
-          stEthTestAmount.toFixed(),
-          {blockTag: blockEvent.blockNumber}
-        )
-      )
-    );
-
-    const stEthPricePool = daiTestAmount.div(stEthTestAmount);
-
-    const chainlink = new ethers.Contract(
-      CHAINLINK_STETH_USD_PRICE_ADDRESS,
-      CHAINLINK_STETH_USD_ABI,
-      ethersProvider
-    );
-
-    const stEthPrice = new BigNumber(
-      String((await chainlink.functions.latestRoundData({blockTag: blockEvent.blockNumber}))[1])
-    );
-    const decimals = parseInt(String(await chainlink.functions.decimals({blockTag: blockEvent.blockNumber})));
-
-    const stEthPriceFeed = stEthPrice.div(10 ** decimals);
-
-    const priceDifference = stEthPricePool
-      .div(stEthPriceFeed)
-      .times(100)
-      .minus(100)
-      .toNumber();
-
-    if (Math.abs(priceDifference) > PRICE_DIFFERENCE_THRESHOLD) {
-      findings.push(
-        Finding.fromObject({
-          name: "Significant stETH price difference between 1inch pool and chainlink feed",
-          description: `stETH price in pool (${stEthPricePool.toFixed(2)}) is ${priceDifference.toFixed(2)}% ${priceDifference > 0 ? 'higher' : 'lower'} than chainlink feed (${stEthPriceFeed.toFixed(2)})`,
-          alertId: "BAD-ONEINCH-PRICE",
-          severity: FindingSeverity.Medium,
-          type: FindingType.Suspicious,
-        })
-      );
-      poolParams.lastReported = now;
-    }
-  }
-}
-
-
-async function handleOneInchPoolSize(blockEvent: BlockEvent, findings: Finding[]) {
-  let poolParams = poolsParams.OneInch;
-  const [daiReserve, stEthReserve] = await getOneInchTokens(blockEvent.blockNumber);
-  const poolSizeChangeDai = calcImbalance(poolParams.poolSize.poolSizeToken1, daiReserve);
-  const poolSizeChangeStEth = calcImbalance(poolParams.poolSize.poolSizeToken2, stEthReserve);
-  if (Math.abs(poolSizeChangeDai) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
-    findings.push(
-      Finding.fromObject({
-        name: "Significant OneInch Pool size change",
-        description: `OneInch Pool size (DAI part) has ${
-          poolSizeChangeDai > 0
-            ? "increased by " + poolSizeChangeDai.toFixed(2).toString()
-            : "decreased by " + -poolSizeChangeDai.toFixed(2).toString()
-        }% since the last block`,
-        alertId: "ONEINCH-POOL-SIZE-CHANGE",
-        severity: FindingSeverity.Info,
-        type: FindingType.Info,
-        metadata:{
-          sizeDAIBefore: poolParams.poolSize.poolSizeToken1.toFixed(),
-          sizeDAIAfter: daiReserve.toFixed()
-        }
-      })
-    );
-  }
-  if (Math.abs(poolSizeChangeStEth) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
-    findings.push(
-      Finding.fromObject({
-        name: "Significant OneInch Pool size change",
-        description: `OneInch Pool size (stETH part) has ${
-          poolSizeChangeStEth > 0
-            ? "increased by " + poolSizeChangeStEth.toFixed(2).toString()
-            : "decreased by " + -poolSizeChangeStEth.toFixed(2).toString()
-        }% since the last block`,
-        alertId: "ONEINCH-POOL-SIZE-CHANGE",
-        severity: FindingSeverity.Info,
-        type: FindingType.Info,
-        metadata:{
-          sizeStETHBefore: poolParams.poolSize.poolSizeToken2.toFixed(),
-          sizeStETHAfter: stEthReserve.toFixed()
-        }
-      })
-    );
-  }
-  poolParams.poolSize.poolSizeToken1 = daiReserve;
-  poolParams.poolSize.poolSizeToken2 = stEthReserve;
 }

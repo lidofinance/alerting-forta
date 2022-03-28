@@ -195,11 +195,6 @@ export const POOLS_PARAMS = {
         vaultContractAddress: '0xba12222222228d8ba445958a75a0704d566bf2c8',
         poolId: "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
     },
-    OneInch: {
-        managerAddress: '0xf5436129cf9d8fa2a1cb6e591347155276550635',
-        rewardsAddress: '',
-        poolContractAddress: '0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431',
-    },
 }
 
 // threshold for price difference between LP and Chainlink feed in percents
@@ -217,28 +212,28 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
         minManagerLdoBalance: '10000',
         description: (poolName: string) => `${poolName} rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
         severity: FindingSeverity.High,
-        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
+        pools: ['Sushi', 'Curve', 'Balancer'],
     },
     {
         period: period3days,
         minManagerLdoBalance: '0',
         description: (poolName: string) => `${poolName} rewards period expires in 3 days`,
         severity: FindingSeverity.High,
-        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
+        pools: ['Sushi', 'Curve', 'Balancer'],
     },
     {
         period: period5days,
         minManagerLdoBalance: null,
         description: (poolName: string) => `${poolName} rewards period expires in 5 days`,
         severity: FindingSeverity.Info,
-        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
+        pools: ['Sushi', 'Curve', 'Balancer'],
     },
     {
         period: period10days,
         minManagerLdoBalance: null,
         description: (poolName: string) => `${poolName} rewards period expires in 10 days`,
         severity: FindingSeverity.Info,
-        pools: ['Sushi', 'Curve', 'Balancer', "OneInch"],
+        pools: ['Sushi', 'Curve', 'Balancer'],
     },
 ]
 
