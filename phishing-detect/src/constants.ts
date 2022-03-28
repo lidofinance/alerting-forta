@@ -54,7 +54,7 @@ export const WHITE_LIST_ADDRESSES = {
   balancerVault: "0xba12222222228d8ba445958a75a0704d566bf2c8",
   oneInchV3: "0x11111112542d85b3ef69ae05771c2dccff4faa26",
   coWProtocolGPv2VaultRelayer: "0xc92e8bdf79f0507f65a392b0ab4667716bfe0110",
-  curveRETHtoWstETH: "0x447Ddd4960d9fdBF6af9a790560d0AF76795CB08",
+  curveRETHtoWstETH: "0x447ddd4960d9fdbf6af9a790560d0af76795cb08",
   zapperZap: "0x8e52522e6a77578904ddd7f528a22521dc4154f5",
   wormholeTokenBridge: "0x3ee18b2214aff97000d974cf647e7c347e8fa585",
   ribbonFinanceStETHCoveredCallVault: "0x53773e034d9784153471813dacaff53dbbb78e8c",
