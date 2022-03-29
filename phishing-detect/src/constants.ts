@@ -44,6 +44,7 @@ export const WHITE_LIST_ADDRESSES = {
   metamaskSwapRouter: "0x881d40237659c251811cec9c364ef91dc08d300c",
   paraswapV5TokenTransferProxyMainnet:
     "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+  paraSwapLiquiditySwapAdapter: "0x135896de8421be2ec868e0b811006171d9df802a",
   sushiSwapRouter: "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
   anchorVault: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
   uniswapV3Router2: "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
@@ -51,6 +52,7 @@ export const WHITE_LIST_ADDRESSES = {
   uniswapV2Router2: "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
   uniswapV3PositionsNFT: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
   zeroXExchangeProxy: "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+  zeroExProxy: "0xe66b31678d6c16e9ebf358268a790b763c133750",
   balancerVault: "0xba12222222228d8ba445958a75a0704d566bf2c8",
   oneInchV3: "0x11111112542d85b3ef69ae05771c2dccff4faa26",
   coWProtocolGPv2VaultRelayer: "0xc92e8bdf79f0507f65a392b0ab4667716bfe0110",
@@ -61,6 +63,10 @@ export const WHITE_LIST_ADDRESSES = {
   DODOApproveV2: "0xcb859ea579b28e02b87a1fde08d087ab9dbe5149",
   mooniswap: "0x1f629794b34ffb3b29ff206be5478a52678b47ae",
   sensePeriphery: "0x9a8fbc2548da808e6cbc853fee7e18fb06d52f18",
+  dForceWstETH: "0xbfd291da8a403daaf7e5e9dc1ec0aceacd4848b9",
+  OlympusV2ZapIn: "0x6f5cc3edea92ab52b75bad50bcf4c6daa781b87e",
+  curveRouter: "0xfa9a30350048b2bf66865ee20363067c66f67e58",
+  tokenlonAllowanceTarget: "0x8a42d311d282bfcaa5133b2de0a8bcdbecea3073",
 };
 
 export const APPROVE_FUNCTION_ABI =

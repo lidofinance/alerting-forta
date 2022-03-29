@@ -11,7 +11,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { etherscanLink, makeSummary } from "./utils/formatting";
+import { etherscanLink, makeTopSummary } from "./utils/formatting";
 
 import {
   ETH_DECIMALS,
@@ -122,7 +122,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   if (blockEvent.blockNumber % 300 == 0) {
-    console.log(makeSummary(spenders))
+    console.log(makeTopSummary(spenders))
   }
 
   return findings;
