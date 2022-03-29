@@ -14,4 +14,5 @@ export function makeSummary(spenders:Map<string, ISpenderInfo>) {
             summary += ` Approvers: ${Array.from(approvers).join(", ")}\n`
         })
     })
+    return summary;
 }
