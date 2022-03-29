@@ -37,7 +37,7 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
   topSpendersByApprovals.forEach((spenderSummary: ISpenderSummary) => {
     summary +=
       `${spenderSummary.spender} | ${spenderSummary.spenderType} ` +
-      `| ${spenderSummary.totalApprovers}`;
+      `| ${spenderSummary.totalApprovers}\n`;
   });
   topSpenders.sort((a, b) => a.totalTypes - b.totalTypes);
   const topSpendersByTypes = topSpenders.slice(
@@ -49,7 +49,7 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
   topSpendersByTypes.forEach((spenderSummary: ISpenderSummary) => {
     summary +=
       `${spenderSummary.spender} | ${spenderSummary.spenderType} ` +
-      `| ${spenderSummary.totalTypes}`;
+      `| ${spenderSummary.totalTypes}\n`;
   });
   return summary;
 }
