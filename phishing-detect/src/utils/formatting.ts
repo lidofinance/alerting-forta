@@ -27,7 +27,7 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
     spenderSummary.totalApprovers = totalApprovers;
     topSpenders.push(spenderSummary);
   });
-  topSpenders.sort((a, b) => a.totalApprovers - b.totalApprovers);
+  topSpenders.sort((a, b) => b.totalApprovers - a.totalApprovers);
   const topSpendersByApprovals = topSpenders.slice(
     0,
     topSpenders.length > 10 ? 9 : topSpenders.length
@@ -39,7 +39,7 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
       `${spenderSummary.spender} | ${spenderSummary.spenderType} ` +
       `| ${spenderSummary.totalApprovers}\n`;
   });
-  topSpenders.sort((a, b) => a.totalTypes - b.totalTypes);
+  topSpenders.sort((a, b) => b.totalTypes - a.totalTypes);
   const topSpendersByTypes = topSpenders.slice(
     0,
     topSpenders.length > 10 ? 9 : topSpenders.length
