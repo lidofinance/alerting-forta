@@ -207,6 +207,81 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
 ]
 
+export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event DepositsPaused(guardian address)',
+        alertId: 'LIDO-DEPOSITOR-PAUSED',
+        name: 'Deposit Security: Deposits paused',
+        description: (args: any) => `Deposits were paused by ${args.guardian}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event DepositsUnpaused()',
+        alertId: 'LIDO-DEPOSITOR-UNPAUSED',
+        name: 'Deposit Security: Deposits resumed',
+        description: (args: any) => `Deposits were resumed`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event GuardianAdded(guardian address)',
+        alertId: 'LIDO-DEPOSITOR-GUARDIAN-ADDED',
+        name: 'Deposit Security: Guardian added',
+        description: (args: any) => `New guardian added ${args.guardian}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event GuardianRemoved(guardian address)',
+        alertId: 'LIDO-DEPOSITOR-GUARDIAN-REMOVED',
+        name: 'Deposit Security: Guardian removed',
+        description: (args: any) => `Guardian ${args.guardian} was removed`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event GuardianQuorumChanged(newValue uint256)',
+        alertId: 'LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED',
+        name: 'Deposit Security: Guardian quorum changed',
+        description: (args: any) => `New quorum size ${args.newValue.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event MaxDepositsChanged(newValue uint256)',
+        alertId: 'LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED',
+        name: 'Deposit Security: Max deposits changed',
+        description: (args: any) => `New value ${args.newValue.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event MinDepositBlockDistanceChanged(newValue uint256)',
+        alertId: 'LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED',
+        name: 'Deposit Security: Min deposit block distance changed',
+        description: (args: any) => `New value ${args.newValue.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event NodeOperatorsRegistryChanged(newValue address)',
+        alertId: 'LIDO-DEPOSITOR-NO-REGISTRY-CHANGED',
+        name: 'Deposit Security: Node operators registry changed',
+        description: (args: any) => `New node operators registry ${args.newValue}`,
+        severity: FindingSeverity.Critical,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event OwnerChanged(newValue address)',
+        alertId: 'LIDO-DEPOSITOR-OWNER-CHANGED',
+        name: 'Deposit Security: Owner changed',
+        description: (args: any) => `New owner ${args.newValue}`,
+        severity: FindingSeverity.Critical,
+    },
+]
+
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5
 
