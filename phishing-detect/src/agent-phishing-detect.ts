@@ -122,7 +122,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   if (blockEvent.blockNumber % 300 == 0) {
-    console.log(makeTopSummary(spenders))
+    console.log(makeTopSummary(spenders));
   }
 
   return findings;
@@ -150,7 +150,15 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   await Promise.all(
     approvals.map((event: ethers.utils.TransactionDescription) => {
-      handleERC20FuncCall(event, "approve", from, token, now, findings);
+      handleERC20FuncCall(
+        event,
+        "approve",
+        from,
+        token,
+        txEvent.hash,
+        now,
+        findings
+      );
     })
   );
 
@@ -161,6 +169,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
         "increase_allowance",
         from,
         token,
+        txEvent.hash,
         now,
         findings
       );
@@ -175,6 +184,7 @@ async function handleERC20FuncCall(
   func: string,
   from: string,
   token: string,
+  txHash: string,
   now: number,
   findings: Finding[]
 ) {
@@ -185,11 +195,11 @@ async function handleERC20FuncCall(
     let spenderInfo = spenders.get(spender);
 
     console.log(
-      `New ${func} of ${MONITORED_ERC20_ADDRESSES.get(
-        token
-      )} from ${from} to ${spender} for ${
-        amount.isGreaterThan(uintMaxValue) ? "infinite" : amount.toFixed(4)
-      } ${MONITORED_ERC20_ADDRESSES.get(token)}`
+      `New ${func} of ${MONITORED_ERC20_ADDRESSES.get(token)} ` +
+        `from ${from} to ${spender} for ${
+          amount.isGreaterThan(uintMaxValue) ? "infinite" : amount.toFixed(4)
+        } ${MONITORED_ERC20_ADDRESSES.get(token)}` +
+        `\ntx:${txHash}`
     );
 
     // call of approve with 0 amount equals to approve removal
