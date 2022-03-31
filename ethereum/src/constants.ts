@@ -156,6 +156,131 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     },
 ]
 
+export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event AllowedBeaconBalanceAnnualRelativeIncreaseSet(value uint256)',
+        alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-INCREASE-SET',
+        name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change',
+        description: (args: any) => `Allowed beacon balance annual relative increase was set to ${args.value.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event AllowedBeaconBalanceRelativeDecreaseSet(value uint256)',
+        alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-DECREASE-SET',
+        name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change',
+        description: (args: any) => `Allowed beacon balance annual relative decrease was set to ${args.value.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event BeaconReportReceiverSet(callback address)',
+        alertId: 'LIDO-ORACLE-BEACON-REPORT-RECEIVER-SET',
+        name: 'Lido Oracle: Beacon Report Receiver Change',
+        description: (args: any) => `New beacon report receiver was set to ${args.callback}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event MemberAdded(member address)',
+        alertId: 'LIDO-ORACLE-MEMBER-ADDED',
+        name: 'Lido Oracle: Member Added',
+        description: (args: any) => `New oracle member added - ${args.member}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event MemberRemoved(member address)',
+        alertId: 'LIDO-ORACLE-MEMBER-REMOVED',
+        name: 'Lido Oracle: Member Removed',
+        description: (args: any) => `New oracle member removed - ${args.member}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event QuorumChanged(quorum uint256)',
+        alertId: 'LIDO-ORACLE-QUORUM-CHANGED',
+        name: 'Lido Oracle: Quorum Changed',
+        description: (args: any) => `Quorum size was set to ${args.quorum.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+]
+
+export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event DepositsPaused(guardian address)',
+        alertId: 'LIDO-DEPOSITOR-PAUSED',
+        name: 'Deposit Security: Deposits paused',
+        description: (args: any) => `Deposits were paused by ${args.guardian}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event DepositsUnpaused()',
+        alertId: 'LIDO-DEPOSITOR-UNPAUSED',
+        name: 'Deposit Security: Deposits resumed',
+        description: (args: any) => `Deposits were resumed`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event GuardianAdded(guardian address)',
+        alertId: 'LIDO-DEPOSITOR-GUARDIAN-ADDED',
+        name: 'Deposit Security: Guardian added',
+        description: (args: any) => `New guardian added ${args.guardian}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event GuardianRemoved(guardian address)',
+        alertId: 'LIDO-DEPOSITOR-GUARDIAN-REMOVED',
+        name: 'Deposit Security: Guardian removed',
+        description: (args: any) => `Guardian ${args.guardian} was removed`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event GuardianQuorumChanged(newValue uint256)',
+        alertId: 'LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED',
+        name: 'Deposit Security: Guardian quorum changed',
+        description: (args: any) => `New quorum size ${args.newValue.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event MaxDepositsChanged(newValue uint256)',
+        alertId: 'LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED',
+        name: 'Deposit Security: Max deposits changed',
+        description: (args: any) => `New value ${args.newValue.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event MinDepositBlockDistanceChanged(newValue uint256)',
+        alertId: 'LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED',
+        name: 'Deposit Security: Min deposit block distance changed',
+        description: (args: any) => `New value ${args.newValue.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event NodeOperatorsRegistryChanged(newValue address)',
+        alertId: 'LIDO-DEPOSITOR-NO-REGISTRY-CHANGED',
+        name: 'Deposit Security: Node operators registry changed',
+        description: (args: any) => `New node operators registry ${args.newValue}`,
+        severity: FindingSeverity.Critical,
+    },
+    {
+        address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+        event: 'event OwnerChanged(newValue address)',
+        alertId: 'LIDO-DEPOSITOR-OWNER-CHANGED',
+        name: 'Deposit Security: Owner changed',
+        description: (args: any) => `New owner ${args.newValue}`,
+        severity: FindingSeverity.Critical,
+    },
+]
 
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5

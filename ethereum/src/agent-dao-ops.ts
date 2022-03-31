@@ -26,6 +26,7 @@ import {
   MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
   MIN_DEPOSIT_EXECUTOR_BALANCE,
+  DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
 } from "./constants";
 
 export const name = "DaoOps";
@@ -183,4 +184,21 @@ function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
   if (txEvent.to == LIDO_DEPOSIT_SECURITY_ADDRESS) {
     lastDepositorTxTime = txEvent.timestamp
   }
+  DEPOSIT_SECURITY_EVENTS_OF_NOTICE.forEach((eventInfo) => {
+    if (eventInfo.address in txEvent.addresses) {
+      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      if (event) {
+        findings.push(
+          Finding.fromObject({
+            name: eventInfo.name,
+            description: eventInfo.description(event.args),
+            alertId: eventInfo.alertId,
+            severity: eventInfo.severity,
+            type: FindingType.Info,
+            metadata: { args: String(event.args) },
+          })
+        );
+      }
+    }
+  });
 }
