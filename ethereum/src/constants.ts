@@ -156,6 +156,56 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     },
 ]
 
+export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event AllowedBeaconBalanceAnnualRelativeIncreaseSet(value uint256)',
+        alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-INCREASE-SET',
+        name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change',
+        description: (args: any) => `Allowed beacon balance annual relative increase was set to ${args.value.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event AllowedBeaconBalanceRelativeDecreaseSet(value uint256)',
+        alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-DECREASE-SET',
+        name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change',
+        description: (args: any) => `Allowed beacon balance annual relative decrease was set to ${args.value.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event BeaconReportReceiverSet(callback address)',
+        alertId: 'LIDO-ORACLE-BEACON-REPORT-RECEIVER-SET',
+        name: 'Lido Oracle: Beacon Report Receiver Change',
+        description: (args: any) => `New beacon report receiver was set to ${args.callback}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event MemberAdded(member address)',
+        alertId: 'LIDO-ORACLE-MEMBER-ADDED',
+        name: 'Lido Oracle: Member Added',
+        description: (args: any) => `New oracle member added - ${args.member}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event MemberRemoved(member address)',
+        alertId: 'LIDO-ORACLE-MEMBER-REMOVED',
+        name: 'Lido Oracle: Member Removed',
+        description: (args: any) => `New oracle member removed - ${args.member}`,
+        severity: FindingSeverity.High,
+    },
+    {
+        address: LIDO_ORACLE_ADDRESS,
+        event: 'event QuorumChanged(quorum uint256)',
+        alertId: 'LIDO-ORACLE-QUORUM-CHANGED',
+        name: 'Lido Oracle: Quorum Changed',
+        description: (args: any) => `Quorum size was set to ${args.quorum.toFixed()}`,
+        severity: FindingSeverity.High,
+    },
+]
 
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5
