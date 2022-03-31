@@ -29,6 +29,7 @@ export const MONITORED_ERC20_ADDRESSES = new Map<string, string>([
   ["0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0", "wstETH"],
   ["0x707f9118e33a9b8998bea41dd0d46f38bb963fc8", "bETH"],
   ["0x1982b2f5814301d4e9a8b0201555376e62f82428", "astETH"],
+  ["0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599", "stMATIC"],
 ]);
 
 export const WHITE_LIST_ADDRESSES = {
