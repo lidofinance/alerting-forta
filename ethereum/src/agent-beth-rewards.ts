@@ -228,7 +228,7 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   const now = txEvent.block.timestamp;
   // increase sell alert severity if there were recent overdue alerts
-  const severity = now - lastOverdueTriggeredAt < ONE_HOUR ? FindingSeverity.Info : FindingSeverity.Medium;
+  const severity = now - lastOverdueTriggeredAt < ONE_HOUR ? FindingSeverity.Medium : FindingSeverity.Info;
 
   findings.push(Finding.fromObject({
     name: 'Anchor rewards collected',
