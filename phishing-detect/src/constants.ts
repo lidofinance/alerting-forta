@@ -60,7 +60,8 @@ export const WHITE_LIST_ADDRESSES = {
   curveRETHtoWstETH: "0x447ddd4960d9fdbf6af9a790560d0af76795cb08",
   zapperZap: "0x8e52522e6a77578904ddd7f528a22521dc4154f5",
   wormholeTokenBridge: "0x3ee18b2214aff97000d974cf647e7c347e8fa585",
-  ribbonFinanceStETHCoveredCallVault: "0x53773e034d9784153471813dacaff53dbbb78e8c",
+  ribbonFinanceStETHCoveredCallVault:
+    "0x53773e034d9784153471813dacaff53dbbb78e8c",
   DODOApproveV2: "0xcb859ea579b28e02b87a1fde08d087ab9dbe5149",
   mooniswap: "0x1f629794b34ffb3b29ff206be5478a52678b47ae",
   sensePeriphery: "0x9a8fbc2548da808e6cbc853fee7e18fb06d52f18",
@@ -70,7 +71,5 @@ export const WHITE_LIST_ADDRESSES = {
   tokenlonAllowanceTarget: "0x8a42d311d282bfcaa5133b2de0a8bcdbecea3073",
 };
 
-export const APPROVE_FUNCTION_ABI =
-  "function approve(address spender, uint256 amount)";
-export const INCREASE_ALLOWANCE_ABI =
-  "function increaseAllowance(address spender, uint256 addedValue)";
+export const APPROVE_EVENT_ABI =
+  "event Approval (address indexed owner, address indexed spender, uint256 value)";

@@ -9,6 +9,7 @@ import {
   Finding,
   FindingType,
   FindingSeverity,
+  LogDescription,
 } from "forta-agent";
 
 import { etherscanLink, makeTopSummary } from "./utils/formatting";
@@ -19,8 +20,7 @@ import {
   UNIQ_DELEGATES_THRESHOLD,
   UNIQ_DELEGATES_CHANGE_THRESHOLD,
   UNIQ_TOKENS_CHANGE_THRESHOLD,
-  APPROVE_FUNCTION_ABI,
-  INCREASE_ALLOWANCE_ABI,
+  APPROVE_EVENT_ABI,
   MONITORED_ERC20_ADDRESSES,
   WHITE_LIST_ADDRESSES,
 } from "./constants";
@@ -131,79 +131,49 @@ export async function handleBlock(blockEvent: BlockEvent) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (!txEvent.receipt.status || !txEvent.to) {
+  if (!txEvent.receipt.status) {
     return findings;
   }
 
-  const token = txEvent.to.toLowerCase();
-
-  // do not analyze non-Lido ERC20 tokens
-  if (!Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(token)) {
-    return findings;
-  }
-
-  const from = txEvent.from.toLowerCase();
-
-  const approvals = txEvent.filterFunction(APPROVE_FUNCTION_ABI);
-  const increase_allowance = txEvent.filterFunction(INCREASE_ALLOWANCE_ABI);
-  const now = txEvent.block.timestamp;
+  const approvalEvents = txEvent
+    .filterLog(APPROVE_EVENT_ABI)
+    .filter((event: LogDescription) =>
+      Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(event.address)
+    );
 
   await Promise.all(
-    approvals.map((event: ethers.utils.TransactionDescription) => {
-      handleERC20FuncCall(
-        event,
-        "approve",
-        from,
-        token,
-        txEvent.hash,
-        now,
-        findings
-      );
-    })
-  );
-
-  await Promise.all(
-    increase_allowance.map((event: ethers.utils.TransactionDescription) => {
-      handleERC20FuncCall(
-        event,
-        "increase_allowance",
-        from,
-        token,
-        txEvent.hash,
-        now,
-        findings
-      );
+    approvalEvents.map((event: LogDescription) => {
+      handleERC20Approval(event, txEvent, findings);
     })
   );
 
   return findings;
 }
 
-async function handleERC20FuncCall(
-  event: ethers.utils.TransactionDescription,
-  func: string,
-  from: string,
-  token: string,
-  txHash: string,
-  now: number,
+async function handleERC20Approval(
+  event: LogDescription,
+  txEvent: TransactionEvent,
   findings: Finding[]
 ) {
+  const from = txEvent.from.toLowerCase();
+  const now = txEvent.block.timestamp;
+  const token = event.address;
   const spender = event.args.spender.toLowerCase();
-  const amount = new BigNumber(String(event.args.amount)).div(ETH_DECIMALS);
+  const amount = new BigNumber(String(event.args.value)).div(ETH_DECIMALS);
   // handle only non-whitelisted addresses
   if (!Object.values(WHITE_LIST_ADDRESSES).includes(spender)) {
     let spenderInfo = spenders.get(spender);
 
     console.log(
-      `New ${func} of ${MONITORED_ERC20_ADDRESSES.get(token)} ` +
+      `New approval of ${MONITORED_ERC20_ADDRESSES.get(token)} ` +
         `from ${from} to ${spender} for ${
           amount.isGreaterThan(uintMaxValue) ? "infinite" : amount.toFixed(4)
         } ${MONITORED_ERC20_ADDRESSES.get(token)}` +
-        `\ntx:${txHash}`
+        `\ntxHash: ${txEvent.hash}`
     );
 
     // call of approve with 0 amount equals to approve removal
-    if (func == "approve" && amount.eq(bigZero)) {
+    if (amount.eq(bigZero)) {
       if (spenderInfo) {
         let spenderToken = spenderInfo.approvers.get(token);
         if (spenderToken) {
