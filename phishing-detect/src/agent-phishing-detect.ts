@@ -184,6 +184,9 @@ async function handleERC20Approval(
             spenderInfo.approvers.delete(token);
           }
         }
+        if (spenderInfo.approvers.size == 0) {
+          spenders.delete(spender);
+        }
       }
     } else {
       if (spenderInfo) {

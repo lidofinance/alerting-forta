@@ -12,6 +12,7 @@ export function etherscanLink(address: string): string {
 }
 
 export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
+  let summary = "--------------------------------------------\n";
   let topSpenders: ISpenderSummary[] = [];
   spenders.forEach((spenderInfo: ISpenderInfo, spenderAddress: string) => {
     let spenderSummary: ISpenderSummary = {
@@ -32,7 +33,7 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
     0,
     topSpenders.length > 10 ? 9 : topSpenders.length
   );
-  let summary =
+  summary +=
     "[Top Spenders by Approvals count]\nspender | spender type | approvals total\n";
   topSpendersByApprovals.forEach((spenderSummary: ISpenderSummary) => {
     summary +=
@@ -51,5 +52,5 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
       `${spenderSummary.spender} | ${spenderSummary.spenderType} ` +
       `| ${spenderSummary.totalTypes}\n`;
   });
-  return summary;
+  return summary + "--------------------------------------------";
 }
