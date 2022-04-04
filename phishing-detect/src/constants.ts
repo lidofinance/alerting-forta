@@ -69,6 +69,8 @@ export const WHITE_LIST_ADDRESSES = {
   OlympusV2ZapIn: "0x6f5cc3edea92ab52b75bad50bcf4c6daa781b87e",
   curveRouter: "0xfa9a30350048b2bf66865ee20363067c66f67e58",
   tokenlonAllowanceTarget: "0x8a42d311d282bfcaa5133b2de0a8bcdbecea3073",
+  alchemixFinanceAlETHAlchemistV2: "0x062bf725dc4cdf947aa79ca2aaccd4f385b13b5c",
+  ftxExchange: "0x2faf487a4414fe77e2327f0bf4ae2a264a776ad2",
 };
 
 export const APPROVE_EVENT_ABI =
