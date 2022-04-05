@@ -79,11 +79,11 @@ export async function initialize(
         const callData = await topUpRewards.functions.decodeEVMScriptCallData(
           creationEvent.args._evmScriptCallData
         );
-        let sum_amount = new BigNumber(0);
+        let sumAmount = new BigNumber(0);
         callData._amounts.map((value: any) => {
-          sum_amount = sum_amount.plus(new BigNumber(String(value)));
+          sumAmount = sumAmount.plus(new BigNumber(String(value)));
         });
-        enactedTopUpMotions.set(id, sum_amount);
+        enactedTopUpMotions.set(id, sumAmount);
       }
     })
   );
@@ -109,11 +109,11 @@ export async function initialize(
         const callData = await topUpRewards.functions.decodeEVMScriptCallData(
           value.args._evmScriptCallData
         );
-        let sum_amount = new BigNumber(0);
+        let sumAmount = new BigNumber(0);
         callData._amounts.map((value: any) => {
-          sum_amount = sum_amount.plus(new BigNumber(String(value)));
+          sumAmount = sumAmount.plus(new BigNumber(String(value)));
         });
-        pendingTopUpMotions.set(id, sum_amount);
+        pendingTopUpMotions.set(id, sumAmount);
       }
     })
   );
@@ -199,11 +199,11 @@ async function handleEasyTrackTransaction(
         const callData = await topUpRewards.functions.decodeEVMScriptCallData(
           eventCreated.args._evmScriptCallData
         );
-        let sum_amount = new BigNumber(0);
+        let sumAmount = new BigNumber(0);
         callData._amounts.map((value: any) => {
-          sum_amount = sum_amount.plus(new BigNumber(String(value)));
+          sumAmount = sumAmount.plus(new BigNumber(String(value)));
         });
-        pendingTopUpMotions.set(id, sum_amount);
+        pendingTopUpMotions.set(id, sumAmount);
         const spent = sumMapValues(enactedTopUpMotions);
         const pending = sumMapValues(pendingTopUpMotions);
         const left = LDO_THRESHOLD_MONTH.minus(
@@ -213,7 +213,7 @@ async function handleEasyTrackTransaction(
           Finding.fromObject({
             name: "Rewards Top Up Motion created",
             description:
-              `${formatLdo(sum_amount, 0)} LDO was added to pending ` +
+              `${formatLdo(sumAmount, 0)} LDO was added to pending ` +
               `due to Motion ${id} creation. ` +
               `Spent LDO so far this month: ${formatLdo(spent, 0)} LDO\n` +
               `Pending LDO in motions: ${formatLdo(pending, 0)} LDO\n` +
@@ -223,7 +223,7 @@ async function handleEasyTrackTransaction(
             type: FindingType.Info,
             metadata: {
               motionId: id.toFixed(),
-              amountPending: formatLdo(sum_amount, 0),
+              amountPending: formatLdo(sumAmount, 0),
               spentTotal: formatLdo(spent, 0),
               pendingTotal: formatLdo(pending, 0),
               left: formatLdo(left, 0),
