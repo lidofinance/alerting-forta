@@ -71,6 +71,14 @@ export const WHITE_LIST_ADDRESSES = {
   tokenlonAllowanceTarget: "0x8a42d311d282bfcaa5133b2de0a8bcdbecea3073",
   alchemixFinanceAlETHAlchemistV2: "0x062bf725dc4cdf947aa79ca2aaccd4f385b13b5c",
   ftxExchange: "0x2faf487a4414fe77e2327f0bf4ae2a264a776ad2",
+  setProtocolDebtIssuanceModuleV2: "0x69a592d2129415a4a1d1b1e309c17051b7f28d57",
+  newUniswapV2ExchangeRouter: "0xf9234cb08edb93c0d4a4d4c70cc3ffd070e78e07",
+  senseDivider: "0x86ba3e96be68563e41c2f5769f1af9faf758e6e0",
+  idolNftMain: "0x439cac149b935ae1d726569800972e1669d17094",
+  idleLidoStETHAABBPerpTranche: "0x34dcd573c5de4672c8248cd12a99f875ca112ad8",
+  instaEthStrategy: "0xc383a3833a87009fd9597f8184979af5edfad019",
+  curveZapInGeneralV5: "0x5ce9b49b7a1be9f2c3dc2b2a5bacea56fa21fbee",
+  oneInchLimitOrdersProtocolV2: "0x119c71d3bbac22029622cbaec24854d3d32d2828",
 };
 
 export const APPROVE_EVENT_ABI =
