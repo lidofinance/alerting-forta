@@ -5,6 +5,8 @@ import BigNumber from 'bignumber.js'
 
 // 1 LDO
 export const LDO_DECIMALS = new BigNumber(10).pow(18)
+// 1 ETH
+export const ETH_DECIMALS = new BigNumber(10).pow(18)
 
 
 // ADDRESSES AND EVENTS
