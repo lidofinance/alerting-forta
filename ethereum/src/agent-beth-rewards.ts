@@ -49,6 +49,8 @@ let lastOverdueTriggeredAt = 0
 let lastLowBalanceTriggeredAt = 0
 let lastOracleReportTime = 0
 
+const ONE_HOUR = 60 * 60;
+
 
 export const name = 'AgentBethRewards'
 
@@ -224,12 +226,16 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
   const stethUstDispPrice = formatEth(stethUstPrice, 1)
   const slippageDispPercent = slippagePercent.toFixed(2)
 
+  const now = txEvent.block.timestamp;
+  // increase sell alert severity if there were recent overdue alerts
+  const severity = now - lastOverdueTriggeredAt < ONE_HOUR ? FindingSeverity.Medium : FindingSeverity.Info;
+
   findings.push(Finding.fromObject({
     name: 'Anchor rewards collected',
     description: `Sold ${stethDispAmount} stETH to ${ustDispAmount} UST, ` +
       `feed price ${stethUstDispPrice} UST per stETH, slippage ${slippageDispPercent}%`,
     alertId: 'BETH-REWARDS-COLLECTED',
-    severity: FindingSeverity.Info,
+    severity: severity,
     type: FindingType.Info,
     metadata: {
       stethAmount: `${stethAmount}`,

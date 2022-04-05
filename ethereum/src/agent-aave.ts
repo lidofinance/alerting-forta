@@ -15,7 +15,11 @@ import LIDO_DAO_ABI from "./abi/LidoDAO.json";
 import ASTETH_ABI from "./abi/astETH.json";
 import STABLE_DEBT_STETH_ABI from "./abi/stableDebtStETH.json";
 import VARIABLE_DEBT_STETH_ABI from "./abi/variableDebtStETH.json";
-import { AAVE_LANDING_POOL_ADDRESS, ETH_DECIMALS, MAX_ASTETH_MINT_AMOUNT } from "./constants";
+import {
+  AAVE_LANDING_POOL_ADDRESS,
+  ETH_DECIMALS,
+  MAX_ASTETH_MINT_AMOUNT,
+} from "./constants";
 
 import {
   LIDO_DAO_ADDRESS,
@@ -71,13 +75,15 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
     const astEthBalance = new BigNumber(
       String(
         await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS, {
-          blockTag: blockEvent.blockNumber,
+          blockTag: blockEvent.blockNumber - 1,
         })
       )
     );
     const astEthTotalSupply = new BigNumber(
       String(
-        await astETH.functions.totalSupply({ blockTag: blockEvent.blockNumber })
+        await astETH.functions.totalSupply({
+          blockTag: blockEvent.blockNumber - 1,
+        })
       )
     );
 
@@ -87,15 +93,15 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
       findings.push(
         Finding.fromObject({
           name: "astETH balance and totalSupply difference",
-          description: `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})=${astEthBalance
-            .div(GWEI_DECIMALS)
-            .toFixed(
-              0
-            )} gwei differs from astETH.totalSupply = ${astEthTotalSupply
-            .div(GWEI_DECIMALS)
-            .toFixed(0)} gwei by ${difference
-            .div(GWEI_DECIMALS)
-            .toFixed(0)} gwei`,
+          description:
+            `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})` +
+            `=${astEthBalance.div(GWEI_DECIMALS).toFixed(0)}` +
+            `gwei differs from astETH.totalSupply = ${astEthTotalSupply
+              .div(GWEI_DECIMALS)
+              .toFixed(0)} gwei by ` +
+            `${difference.div(GWEI_DECIMALS).toFixed(0)} gwei.\n` +
+            `NOTE: This difference occurred at block ` +
+            `${blockEvent.blockNumber - 1}`,
           alertId: "ASTETH-BALANCE-AND-SUPPLY-DIFFERENCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,

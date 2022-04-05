@@ -25,7 +25,6 @@ import SUSHI_REWARDS_ABI from './abi/SushiRewards.json'
 import CURVE_MANAGER_ABI from './abi/CurveManager.json'
 import CURVE_REWARDS_ABI from './abi/CurveRewards.json'
 import BALANCER_MANAGER_ABI from './abi/BalancerManager.json'
-import ONE_INCH_MANAGER_ABI from './abi/OneInchManager.json'
 const rewardContractAbis = {
   Sushi: {
     manager: SUSHI_MANAGER_ABI,
@@ -37,9 +36,6 @@ const rewardContractAbis = {
   },
   Balancer: {
     manager: BALANCER_MANAGER_ABI,
-  },
-  OneInch: {
-    manager: ONE_INCH_MANAGER_ABI
   },
 } as any
 
