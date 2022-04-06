@@ -1,3 +1,4 @@
+import { MONITORED_ERC20_ADDRESSES } from "../constants";
 import { ISpenderInfo } from "./interfaces";
 
 interface ISpenderSummary {
@@ -18,11 +19,11 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
     let spenderSummary: ISpenderSummary = {
       spender: spenderAddress,
       spenderType: spenderInfo.isContract ? "contract" : "EOA",
-      totalTypes: spenderInfo.approvers.size,
+      totalTypes: spenderInfo.tokens.size,
       totalApprovers: 0,
     };
     let totalApprovers = 0;
-    spenderInfo.approvers.forEach((approvers: Set<string>, token: string) => {
+    spenderInfo.tokens.forEach((approvers: Set<string>, token: string) => {
       totalApprovers += approvers.size;
     });
     spenderSummary.totalApprovers = totalApprovers;
@@ -53,4 +54,12 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
       `| ${spenderSummary.totalTypes}\n`;
   });
   return summary + "--------------------------------------------";
+}
+
+export function formatTokensWithApprovers(spenderInfo: ISpenderInfo) {
+  let tokens: string[] = [];
+  spenderInfo.tokens.forEach((approvers: Set<string>, token: string)=>{
+    tokens.push(`${MONITORED_ERC20_ADDRESSES.get(token)}: [${Array.from(approvers).join(",")}]`)
+  })
+  return `{${tokens.join(",")}}`
 }

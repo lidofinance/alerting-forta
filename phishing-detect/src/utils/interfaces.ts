@@ -10,5 +10,5 @@ export interface ILastAlerted {
   
   export interface ISpenderInfo {
     isContract: boolean;
-    approvers: Map<string, Set<string>>;
+    tokens: Map<string, Set<string>>;
   }
