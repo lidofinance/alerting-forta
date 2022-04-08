@@ -399,6 +399,12 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
         ) {
           eventInfo.severity = FindingSeverity.Medium;
         }
+        if (
+          eventInfo.alertId == "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED" &&
+          now - lastReportedBufferedMatic < REPORT_WINDOW_BUFFERED_MATIC
+        ) {
+          eventInfo.severity = FindingSeverity.Medium;
+        }
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
