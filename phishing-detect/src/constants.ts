@@ -84,6 +84,7 @@ export const WHITE_LIST_ADDRESSES = {
   DisperseApp: "0xd152f549545093347a162dce210e7293f1452150",
   zkSync: "0xabea9132b05a70803a4e85094fd0e1800777fbef",
   deversiFiBridge: "0x5d22045daceab03b158031ecb7d9d06fad24609b",
+  someIdleFinanceContract: "0x0cac674ebd77bbd899f6079932768f6d59da089a",
 };
 
 export const APPROVE_EVENT_ABI =
