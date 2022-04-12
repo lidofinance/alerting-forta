@@ -79,6 +79,11 @@ export const WHITE_LIST_ADDRESSES = {
   instaEthStrategy: "0xc383a3833a87009fd9597f8184979af5edfad019",
   curveZapInGeneralV5: "0x5ce9b49b7a1be9f2c3dc2b2a5bacea56fa21fbee",
   oneInchLimitOrdersProtocolV2: "0x119c71d3bbac22029622cbaec24854d3d32d2828",
+  polygonERC20Bridge: "0x40ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf",
+  aPWineController: "0x4ba30fa240047c17fc557b8628799068d4396790",
+  DisperseApp: "0xd152f549545093347a162dce210e7293f1452150",
+  zkSync: "0xabea9132b05a70803a4e85094fd0e1800777fbef",
+  deversiFiBridge: "0x5d22045daceab03b158031ecb7d9d06fad24609b",
 };
 
 export const APPROVE_EVENT_ABI =
