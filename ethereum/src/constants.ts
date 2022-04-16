@@ -156,7 +156,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
 export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event AllowedBeaconBalanceAnnualRelativeIncreaseSet(value uint256)',
+        event: 'event AllowedBeaconBalanceAnnualRelativeIncreaseSet(uint256 value)',
         alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-INCREASE-SET',
         name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change',
         description: (args: any) => `Allowed beacon balance annual relative increase was set to ${args.value.toFixed()}`,
@@ -164,7 +164,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event AllowedBeaconBalanceRelativeDecreaseSet(value uint256)',
+        event: 'event AllowedBeaconBalanceRelativeDecreaseSet(uint256 value)',
         alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-DECREASE-SET',
         name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change',
         description: (args: any) => `Allowed beacon balance annual relative decrease was set to ${args.value.toFixed()}`,
@@ -172,7 +172,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event BeaconReportReceiverSet(callback address)',
+        event: 'event BeaconReportReceiverSet(address callback)',
         alertId: 'LIDO-ORACLE-BEACON-REPORT-RECEIVER-SET',
         name: 'Lido Oracle: Beacon Report Receiver Change',
         description: (args: any) => `New beacon report receiver was set to ${args.callback}`,
@@ -180,7 +180,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event MemberAdded(member address)',
+        event: 'event MemberAdded(address member)',
         alertId: 'LIDO-ORACLE-MEMBER-ADDED',
         name: 'Lido Oracle: Member Added',
         description: (args: any) => `New oracle member added - ${args.member}`,
@@ -188,7 +188,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event MemberRemoved(member address)',
+        event: 'event MemberRemoved(address member)',
         alertId: 'LIDO-ORACLE-MEMBER-REMOVED',
         name: 'Lido Oracle: Member Removed',
         description: (args: any) => `New oracle member removed - ${args.member}`,
@@ -196,7 +196,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event QuorumChanged(quorum uint256)',
+        event: 'event QuorumChanged(uint256 quorum)',
         alertId: 'LIDO-ORACLE-QUORUM-CHANGED',
         name: 'Lido Oracle: Quorum Changed',
         description: (args: any) => `Quorum size was set to ${args.quorum.toFixed()}`,
@@ -207,7 +207,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
 export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event DepositsPaused(guardian address)',
+        event: 'event DepositsPaused(address guardian)',
         alertId: 'LIDO-DEPOSITOR-PAUSED',
         name: 'Deposit Security: Deposits paused',
         description: (args: any) => `Deposits were paused by ${args.guardian}`,
@@ -223,7 +223,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event GuardianAdded(guardian address)',
+        event: 'event GuardianAdded(address guardian)',
         alertId: 'LIDO-DEPOSITOR-GUARDIAN-ADDED',
         name: 'Deposit Security: Guardian added',
         description: (args: any) => `New guardian added ${args.guardian}`,
@@ -231,7 +231,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event GuardianRemoved(guardian address)',
+        event: 'event GuardianRemoved(address guardian)',
         alertId: 'LIDO-DEPOSITOR-GUARDIAN-REMOVED',
         name: 'Deposit Security: Guardian removed',
         description: (args: any) => `Guardian ${args.guardian} was removed`,
@@ -239,7 +239,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event GuardianQuorumChanged(newValue uint256)',
+        event: 'event GuardianQuorumChanged(uint256 newValue)',
         alertId: 'LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED',
         name: 'Deposit Security: Guardian quorum changed',
         description: (args: any) => `New quorum size ${args.newValue.toFixed()}`,
@@ -247,7 +247,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event MaxDepositsChanged(newValue uint256)',
+        event: 'event MaxDepositsChanged(uint256 newValue)',
         alertId: 'LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED',
         name: 'Deposit Security: Max deposits changed',
         description: (args: any) => `New value ${args.newValue.toFixed()}`,
@@ -255,7 +255,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event MinDepositBlockDistanceChanged(newValue uint256)',
+        event: 'event MinDepositBlockDistanceChanged(uint256 newValue)',
         alertId: 'LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED',
         name: 'Deposit Security: Min deposit block distance changed',
         description: (args: any) => `New value ${args.newValue.toFixed()}`,
@@ -263,7 +263,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event NodeOperatorsRegistryChanged(newValue address)',
+        event: 'event NodeOperatorsRegistryChanged(address newValue)',
         alertId: 'LIDO-DEPOSITOR-NO-REGISTRY-CHANGED',
         name: 'Deposit Security: Node operators registry changed',
         description: (args: any) => `New node operators registry ${args.newValue}`,
@@ -271,7 +271,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event OwnerChanged(newValue address)',
+        event: 'event OwnerChanged(address newValue)',
         alertId: 'LIDO-DEPOSITOR-OWNER-CHANGED',
         name: 'Deposit Security: Owner changed',
         description: (args: any) => `New owner ${args.newValue}`,
