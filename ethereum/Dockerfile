@@ -3,7 +3,7 @@ FROM node:12-alpine AS builder
 WORKDIR /app
 COPY package*.json .yarnrc.yml yarn.lock ./
 COPY .yarn/releases ./.yarn/releases/
-RUN yarn install
+RUN yarn install && yarn cache clean
 COPY . .
 RUN yarn run build
 
