@@ -18,7 +18,7 @@ jobs:
         id: get_df
       - uses: lidofinance/linters/.github/actions/lint-docker@master
         with:
-          dockerfile: ethereum/Dokerfile
+          dockerfile: ethereum/Dockerfile
       - uses: lidofinance/linters/.github/actions/lint-docker@master
         with:
           dockerfile: ${{ steps.get_df.outputs.dockerfiles }}
