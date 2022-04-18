@@ -8,17 +8,4 @@ jobs:
     uses: lidofinance/linters/.github/workflows/security.yml@master
   
   docker:
-    name: Check docker issues
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Find all Dockerfiles
-        shell: bash
-        run: echo "::set-output name=dockerfiles::$(find . -name "Dockerfile" | xargs echo | sed 's/\.\///g')"
-        id: get_df
-      - uses: hadolint/hadolint-action@v2.0.0
-        with:
-          recursive: true
-      - uses: lidofinance/linters/.github/actions/lint-docker@master
-        with:
-          dockerfile: ${{ steps.get_df.outputs.dockerfiles }}
+    uses: lidofinance/linters/.github/workflows/docker.yml@master
