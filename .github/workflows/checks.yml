@@ -17,4 +17,4 @@ jobs:
         run: echo "##[set-output name=dockerfiles;]$(find . -name "Dockerfile" | xargs echo)"
       - uses: lidofinance/linters/.github/actions/lint-docker@master
         with:
-          dockerfile: {{dockerfiles}}
+          dockerfile: ${{dockerfiles}}
