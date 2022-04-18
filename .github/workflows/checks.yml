@@ -14,7 +14,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Find all Dockerfiles
         shell: bash
-        run: echo "##[set-output name=dockerfiles;]$(find . -name "Dockerfile" | xargs echo)"
+        run: echo "::set-output name=dockerfiles::$(find . -name "Dockerfile" | xargs echo)"
+        id: get_df
       - uses: lidofinance/linters/.github/actions/lint-docker@master
         with:
-          dockerfile: ${{ steps.extract_branch.outputs.dockerfiles }}
+          dockerfile: ${{ steps.get_df.outputs.dockerfiles }}
