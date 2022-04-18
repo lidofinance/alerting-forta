@@ -392,25 +392,26 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
     if (txEvent.to === eventInfo.address) {
       const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
       if (event) {
+        let severity = eventInfo.severity
         // Bump alert severity if there was delay alert
         if (
           eventInfo.alertId == "STMATIC-CONTRACT-REWARDS-DISTRIBUTED" &&
           now - lastReportedRewards < REPORT_WINDOW_REWARDS_DISTRIBUTION
         ) {
-          eventInfo.severity = FindingSeverity.Medium;
+          severity = FindingSeverity.Medium;
         }
         if (
           eventInfo.alertId == "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED" &&
           now - lastReportedBufferedMatic < REPORT_WINDOW_BUFFERED_MATIC
         ) {
-          eventInfo.severity = FindingSeverity.Medium;
+          severity = FindingSeverity.Medium;
         }
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
             description: eventInfo.description(event.args),
             alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
+            severity: severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
           })
