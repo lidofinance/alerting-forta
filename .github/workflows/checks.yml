@@ -16,7 +16,7 @@ jobs:
         shell: bash
         run: echo "::set-output name=dockerfiles::$(find . -name "Dockerfile" | xargs echo | sed 's/\.\///g')"
         id: get_df
-      - uses: lidofinance/linters/.github/actions/lint-docker@master
+      - uses: hadolint/hadolint-action@v2.0.0
         with:
           recursive: true
       - uses: lidofinance/linters/.github/actions/lint-docker@master
