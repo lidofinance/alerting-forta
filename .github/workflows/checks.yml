@@ -1,0 +1,20 @@
+name: Checks and Linters
+
+on: 
+  push:
+
+jobs:
+  security:
+    uses: lidofinance/linters/.github/workflows/security.yml@master
+  
+  docker:
+    name: Check docker issues
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Find all Dockerfiles
+        shell: bash
+        run: echo "##[set-output name=dockerfiles;]$(find . -name "Dockerfile" | xargs echo)"
+      - uses: lidofinance/linters/.github/actions/lint-docker@master
+        with:
+          dockerfile: {{dockerfiles}}
