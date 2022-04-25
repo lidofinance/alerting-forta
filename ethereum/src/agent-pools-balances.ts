@@ -12,25 +12,20 @@ import {
 import { ethersProvider } from "./ethers";
 
 import {
-  POOLS_PARAMS,
+  POOLS_PARAMS_BALANCES,
   WSTETH_TOKEN_ADDRESS,
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
   POOL_SIZE_CHANGE_TOLERANCE_INFO,
   POOL_SIZE_CHANGE_TOLERANCE_HIGH,
   POOLS_BALANCES_REPORT_WINDOW,
-  CHAINLINK_STETH_USD_PRICE_ADDRESS,
-  PRICE_DIFFERENCE_THRESHOLD,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
 
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
-import SUSHI_POOL_ABI from "./abi/SushiPool.json";
-import SUSHI_ROUTER_ABI from "./abi/SushiRouter.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
-import CHAINLINK_STETH_USD_ABI from "./abi/ChainlinkStEthUsd.json";
 
 export const name = "PoolsBalances";
 
@@ -65,15 +60,6 @@ let poolsParams: { [name: string]: IPoolParams } = {
       poolSizeToken2: new BigNumber(0),
     }
   },
-  Sushi: {
-    lastReported: 0,
-    lastReportedImbalance: 0,
-    poolSize: {
-      poolSizeTotal: new BigNumber(0),
-      poolSizeToken1: new BigNumber(0),
-      poolSizeToken2: new BigNumber(0),
-    }
-  },
 };
 
 export async function initialize(
@@ -91,9 +77,6 @@ export async function initialize(
   // get initial Curve Pool size
   const curvePoolTokens = await getCurvePoolTokens(currentBlock);
   poolsParams.Curve.poolSize.poolSizeTotal = BigNumber.sum.apply(null, curvePoolTokens);
-
-  //get Sushi pool size
-  [poolsParams.Sushi.poolSize.poolSizeToken1, poolsParams.Sushi.poolSize.poolSizeToken2] = await getSushiTokens(currentBlock);
 
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   poolsParams.Balancer.lastReportedImbalance =
@@ -157,8 +140,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBalancerPoolImbalance(blockEvent, findings),
     handleBalancerPoolSize(blockEvent, findings),
     handleCurvePoolSize(blockEvent, findings),
-    handleSushiPrice(blockEvent, findings),
-    handleSushiPoolSize(blockEvent, findings),
   ]);
 
   return findings;
@@ -222,7 +203,7 @@ async function handleCurvePoolImbalance(
 
 async function getCurvePoolTokens(blockNumber?: number) {
   const curveStableSwap = new ethers.Contract(
-    POOLS_PARAMS.Curve.poolContractAddress,
+    POOLS_PARAMS_BALANCES.Curve.poolContractAddress,
     CURVE_POOL_ABI,
     ethersProvider
   );
@@ -341,7 +322,7 @@ async function handleBalancerPoolImbalance(
 
 async function getBalancerPoolTokens(blockNumber?: number) {
   const balancerVault = new ethers.Contract(
-    POOLS_PARAMS.Balancer.vaultContractAddress,
+    POOLS_PARAMS_BALANCES.Balancer.vaultContractAddress,
     BALANCER_POOL_ABI,
     ethersProvider
   );
@@ -350,7 +331,7 @@ async function getBalancerPoolTokens(blockNumber?: number) {
     overrides.blockTag = blockNumber;
   }
   const poolTokens = await balancerVault.functions.getPoolTokens(
-    POOLS_PARAMS.Balancer.poolId,
+    POOLS_PARAMS_BALANCES.Balancer.poolId,
     overrides
   );
   return poolTokens.balances.map((el: any) => new BigNumber(String(el)));
@@ -414,144 +395,4 @@ async function handleBalancerPoolSize(
     );
   }
   poolParams.poolSize.poolSizeTotal = poolSize;
-}
-
-async function getSushiTokens(blockNumber?: number) {
-  const sushiPool = new ethers.Contract(
-    POOLS_PARAMS.Sushi.poolContractAddress,
-    SUSHI_POOL_ABI,
-    ethersProvider
-  );
-
-  let overrides = {} as any;
-  if (blockNumber) {
-    overrides.blockTag = blockNumber;
-  }
-
-  const reserves = await sushiPool.functions.getReserves(overrides);
-  const daiReserve = new BigNumber(String(reserves[0]));
-  const wstEthReserve = new BigNumber(String(reserves[1]));
-
-  return [daiReserve, wstEthReserve];
-}
-
-async function handleSushiPrice(blockEvent: BlockEvent, findings: Finding[]) {
-  const now = blockEvent.block.timestamp;
-  let poolParams = poolsParams.Sushi;
-  if (!alreadyReported(poolParams, now)) {
-    const [daiReserve, wstEthReserve] = await getSushiTokens(blockEvent.blockNumber);
-
-    // 0.1% of token supply in pool
-    const wstEthTestAmount = wstEthReserve.idiv(1000);
-
-    const sushiRouter = new ethers.Contract(
-      POOLS_PARAMS.Sushi.routerContractAddress,
-      SUSHI_ROUTER_ABI,
-      ethersProvider
-    );
-
-    const daiTestAmount = new BigNumber(
-      String(
-        await sushiRouter.functions.getAmountIn(
-          wstEthTestAmount.toFixed(),
-          daiReserve.toFixed(),
-          wstEthReserve.toFixed(),
-          {blockTag: blockEvent.blockNumber}
-        )
-      )
-    );
-
-    const wstETH = new ethers.Contract(
-      WSTETH_TOKEN_ADDRESS,
-      WSTETH_TOKEN_ABI,
-      ethersProvider
-    );
-    const stEthTestBalance = new BigNumber(
-      String(
-        await wstETH.functions.getStETHByWstETH(wstEthTestAmount.toFixed(), {blockTag: blockEvent.blockNumber})
-      )
-    );
-
-    const wstEthPricePool = daiTestAmount.div(wstEthTestAmount);
-
-    const chainlink = new ethers.Contract(
-      CHAINLINK_STETH_USD_PRICE_ADDRESS,
-      CHAINLINK_STETH_USD_ABI,
-      ethersProvider
-    );
-
-    const stEthPrice = new BigNumber(
-      String((await chainlink.functions.latestRoundData({blockTag: blockEvent.blockNumber}))[1])
-    );
-    const decimals = parseInt(String(await chainlink.functions.decimals({blockTag: blockEvent.blockNumber})));
-
-    const wstEthPriceFeed = stEthPrice.div(10 ** decimals).times(stEthTestBalance).div(wstEthTestAmount);
-
-    const priceDifference = wstEthPricePool
-      .div(wstEthPriceFeed)
-      .times(100)
-      .minus(100)
-      .toNumber();
-
-    if (Math.abs(priceDifference) > PRICE_DIFFERENCE_THRESHOLD) {
-      findings.push(
-        Finding.fromObject({
-          name: "Significant wstETH price difference between Sushi pool and chainlink feed",
-          description: `wstETH price in pool (${wstEthPricePool.toFixed(2)}) is ${priceDifference.toFixed(2)}% ${priceDifference > 0 ? 'higher' : 'lower'} than chainlink feed (${wstEthPriceFeed.toFixed(2)})`,
-          alertId: "BAD-SUSHI-PRICE",
-          severity: FindingSeverity.Medium,
-          type: FindingType.Suspicious,
-        })
-      );
-      poolParams.lastReported = now;
-    }
-  }
-}
-
-
-async function handleSushiPoolSize(blockEvent: BlockEvent, findings: Finding[]) {
-  let poolParams = poolsParams.Sushi;
-  const [daiReserve, wstEthReserve] = await getSushiTokens(blockEvent.blockNumber);
-  const poolSizeChangeDai = calcChange(poolParams.poolSize.poolSizeToken1, daiReserve);
-  const poolSizeChangeWstEth = calcChange(poolParams.poolSize.poolSizeToken2, wstEthReserve);
-  if (Math.abs(poolSizeChangeDai) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
-    findings.push(
-      Finding.fromObject({
-        name: "Significant Sushi Pool size change",
-        description: `Sushi Pool size (DAI part) has ${
-          poolSizeChangeDai > 0
-            ? "increased by " + poolSizeChangeDai.toFixed(2).toString()
-            : "decreased by " + -poolSizeChangeDai.toFixed(2).toString()
-        }% since the last block`,
-        alertId: "SUSHI-POOL-SIZE-CHANGE",
-        severity: FindingSeverity.High,
-        type: FindingType.Info,
-        metadata:{
-          sizeDAIBefore: poolParams.poolSize.poolSizeToken2.toFixed(),
-          sizeDAIAfter: daiReserve.toFixed()
-        }
-      })
-    );
-  }
-  if (Math.abs(poolSizeChangeWstEth) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
-    findings.push(
-      Finding.fromObject({
-        name: "Significant Sushi Pool size change",
-        description: `Sushi Pool size (wstETH part) has ${
-          poolSizeChangeWstEth > 0
-            ? "increased by " + poolSizeChangeWstEth.toFixed(2).toString()
-            : "decreased by " + -poolSizeChangeWstEth.toFixed(2).toString()
-        }% since the last block`,
-        alertId: "SUSHI-POOL-SIZE-CHANGE",
-        severity: FindingSeverity.High,
-        type: FindingType.Info,
-        metadata:{
-          sizeWstETHBefore: poolParams.poolSize.poolSizeToken2.toFixed(),
-          sizeWstETHAfter: wstEthReserve.toFixed()
-        }
-      })
-    );
-  }
-  poolParams.poolSize.poolSizeToken1 = daiReserve;
-  poolParams.poolSize.poolSizeToken2 = wstEthReserve;
 }

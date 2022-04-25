@@ -45,7 +45,7 @@ const REPORT_WINDOW_REWARDS_DISTRIBUTION = 60 * 60 * 4;
 // 15 min
 const REPORT_WINDOW_PROXY_ALERTS = 15 * 60;
 // 6 hours
-const REPORT_WINDOW_EXECUTOR_BALANCE =  60 * 60 * 6;
+const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 6;
 
 let lastReportedBufferedMatic = 0;
 let timeHighPooledMaticStart = 0;
@@ -84,7 +84,9 @@ export async function initialize(
       );
     }
   }
-  console.log(`[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`)
+  console.log(
+    `[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`
+  );
   return {
     lastRewardsDistributeTime: `${lastRewardsDistributeTime}`,
   };
@@ -281,22 +283,29 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
   }
 }
 
-async function handleDepositExecutorBalance(blockEvent: BlockEvent, findings: Finding[]) {
+async function handleDepositExecutorBalance(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
-    const executorBalanceRaw = new BigNumber(String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS)))
+    const executorBalanceRaw = new BigNumber(
+      String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS))
+    );
     const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
       findings.push(
         Finding.fromObject({
           name: "Low deposit executor balance (Lido on Polygon)",
-          description: `Balance of deposit executor (${LIDO_DEPOSIT_EXECUTOR_ADDRESS}) is ${executorBalance.toFixed(4)} ETH. This is extremely low!`,
+          description:
+            `Balance of deposit executor (${LIDO_DEPOSIT_EXECUTOR_ADDRESS}) ` +
+            `is ${executorBalance.toFixed(4)} ETH. This is extremely low!`,
           alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
         })
       );
-      lastReportedExecutorBalance = now
+      lastReportedExecutorBalance = now;
     }
   }
 }
@@ -378,16 +387,31 @@ function handleProxyAdminEvents(
 }
 
 function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
+  const now = txEvent.block.timestamp;
   ST_MATIC_ADMIN_EVENTS.forEach((eventInfo) => {
     if (txEvent.to === eventInfo.address) {
       const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
       if (event) {
+        let severity = eventInfo.severity
+        // Bump alert severity if there was delay alert
+        if (
+          eventInfo.alertId == "STMATIC-CONTRACT-REWARDS-DISTRIBUTED" &&
+          now - lastReportedRewards < REPORT_WINDOW_REWARDS_DISTRIBUTION
+        ) {
+          severity = FindingSeverity.Medium;
+        }
+        if (
+          eventInfo.alertId == "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED" &&
+          now - lastReportedBufferedMatic < REPORT_WINDOW_BUFFERED_MATIC
+        ) {
+          severity = FindingSeverity.Medium;
+        }
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
             description: eventInfo.description(event.args),
             alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
+            severity: severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
           })

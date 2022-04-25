@@ -44,9 +44,6 @@ export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = "0xf82ac5937a20dc862f9bc0668779031e
 export const NODE_OPERATORS_REGISTRY_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5"
 
 export const WSTETH_TOKEN_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
-export const DAI_TOKEN_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f"
-
-export const CHAINLINK_STETH_USD_PRICE_ADDRESS = '0xcfe54b5cd566ab89272946f602d76ea879cab4a8'
 
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
@@ -159,7 +156,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
 export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event AllowedBeaconBalanceAnnualRelativeIncreaseSet(value uint256)',
+        event: 'event AllowedBeaconBalanceAnnualRelativeIncreaseSet(uint256 value)',
         alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-INCREASE-SET',
         name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change',
         description: (args: any) => `Allowed beacon balance annual relative increase was set to ${args.value.toFixed()}`,
@@ -167,7 +164,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event AllowedBeaconBalanceRelativeDecreaseSet(value uint256)',
+        event: 'event AllowedBeaconBalanceRelativeDecreaseSet(uint256 value)',
         alertId: 'LIDO-ORACLE-BALANCE-RELATIVE-DECREASE-SET',
         name: 'Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change',
         description: (args: any) => `Allowed beacon balance annual relative decrease was set to ${args.value.toFixed()}`,
@@ -175,7 +172,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event BeaconReportReceiverSet(callback address)',
+        event: 'event BeaconReportReceiverSet(address callback)',
         alertId: 'LIDO-ORACLE-BEACON-REPORT-RECEIVER-SET',
         name: 'Lido Oracle: Beacon Report Receiver Change',
         description: (args: any) => `New beacon report receiver was set to ${args.callback}`,
@@ -183,7 +180,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event MemberAdded(member address)',
+        event: 'event MemberAdded(address member)',
         alertId: 'LIDO-ORACLE-MEMBER-ADDED',
         name: 'Lido Oracle: Member Added',
         description: (args: any) => `New oracle member added - ${args.member}`,
@@ -191,7 +188,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event MemberRemoved(member address)',
+        event: 'event MemberRemoved(address member)',
         alertId: 'LIDO-ORACLE-MEMBER-REMOVED',
         name: 'Lido Oracle: Member Removed',
         description: (args: any) => `New oracle member removed - ${args.member}`,
@@ -199,7 +196,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_ORACLE_ADDRESS,
-        event: 'event QuorumChanged(quorum uint256)',
+        event: 'event QuorumChanged(uint256 quorum)',
         alertId: 'LIDO-ORACLE-QUORUM-CHANGED',
         name: 'Lido Oracle: Quorum Changed',
         description: (args: any) => `Quorum size was set to ${args.quorum.toFixed()}`,
@@ -210,7 +207,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
 export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event DepositsPaused(guardian address)',
+        event: 'event DepositsPaused(address guardian)',
         alertId: 'LIDO-DEPOSITOR-PAUSED',
         name: 'Deposit Security: Deposits paused',
         description: (args: any) => `Deposits were paused by ${args.guardian}`,
@@ -226,7 +223,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event GuardianAdded(guardian address)',
+        event: 'event GuardianAdded(address guardian)',
         alertId: 'LIDO-DEPOSITOR-GUARDIAN-ADDED',
         name: 'Deposit Security: Guardian added',
         description: (args: any) => `New guardian added ${args.guardian}`,
@@ -234,7 +231,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event GuardianRemoved(guardian address)',
+        event: 'event GuardianRemoved(address guardian)',
         alertId: 'LIDO-DEPOSITOR-GUARDIAN-REMOVED',
         name: 'Deposit Security: Guardian removed',
         description: (args: any) => `Guardian ${args.guardian} was removed`,
@@ -242,7 +239,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event GuardianQuorumChanged(newValue uint256)',
+        event: 'event GuardianQuorumChanged(uint256 newValue)',
         alertId: 'LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED',
         name: 'Deposit Security: Guardian quorum changed',
         description: (args: any) => `New quorum size ${args.newValue.toFixed()}`,
@@ -250,7 +247,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event MaxDepositsChanged(newValue uint256)',
+        event: 'event MaxDepositsChanged(uint256 newValue)',
         alertId: 'LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED',
         name: 'Deposit Security: Max deposits changed',
         description: (args: any) => `New value ${args.newValue.toFixed()}`,
@@ -258,7 +255,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event MinDepositBlockDistanceChanged(newValue uint256)',
+        event: 'event MinDepositBlockDistanceChanged(uint256 newValue)',
         alertId: 'LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED',
         name: 'Deposit Security: Min deposit block distance changed',
         description: (args: any) => `New value ${args.newValue.toFixed()}`,
@@ -266,7 +263,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event NodeOperatorsRegistryChanged(newValue address)',
+        event: 'event NodeOperatorsRegistryChanged(address newValue)',
         alertId: 'LIDO-DEPOSITOR-NO-REGISTRY-CHANGED',
         name: 'Deposit Security: Node operators registry changed',
         description: (args: any) => `New node operators registry ${args.newValue}`,
@@ -274,7 +271,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
     {
         address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-        event: 'event OwnerChanged(newValue address)',
+        event: 'event OwnerChanged(address newValue)',
         alertId: 'LIDO-DEPOSITOR-OWNER-CHANGED',
         name: 'Deposit Security: Owner changed',
         description: (args: any) => `New owner ${args.newValue}`,
@@ -303,12 +300,14 @@ export const MAX_DELAY_OF_POOL_REWARDS_PERIOD_PROLONGATION = 10 * 60 // 10 mins
 
 // rewardsAddress is needed only if manager contract doesn't have `period_finish` function
 export const POOLS_PARAMS = {
-    Sushi: {
-        managerAddress: '0xe5576eb1dd4aa524d67cf9a32c8742540252b6f4',
-        rewardsAddress: '',
-        poolContractAddress: '0xc5578194d457dcce3f272538d1ad52c68d1ce849',
-        routerContractAddress: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f'
+    Curve: {
+        managerAddress: '0x753d5167c31fbeb5b49624314d74a957eb271709',
+        rewardsAddress: '0x99ac10631f69c753ddb595d074422a0922d9056b',
+        poolContractAddress: '0xdc24316b9ae028f1497c275eb9192a3ea0f67022',
     },
+}
+
+export const POOLS_PARAMS_BALANCES = {
     Curve: {
         managerAddress: '0x753d5167c31fbeb5b49624314d74a957eb271709',
         rewardsAddress: '0x99ac10631f69c753ddb595d074422a0922d9056b',
@@ -322,9 +321,6 @@ export const POOLS_PARAMS = {
     },
 }
 
-// threshold for price difference between LP and Chainlink feed in percents
-export const PRICE_DIFFERENCE_THRESHOLD = 10
-
 const period10days = 10 * 24 * 60 * 60
 const period5days = 5 * 24 * 60 * 60
 const period3days = 3 * 24 * 60 * 60
@@ -337,28 +333,28 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
         minManagerLdoBalance: '10000',
         description: (poolName: string) => `${poolName} rewards period expires in 2 days and LDO balance is under 10,000 LDO`,
         severity: FindingSeverity.High,
-        pools: ['Sushi', 'Curve', 'Balancer'],
+        pools: ['Curve'],
     },
     {
         period: period3days,
         minManagerLdoBalance: '0',
         description: (poolName: string) => `${poolName} rewards period expires in 3 days`,
         severity: FindingSeverity.High,
-        pools: ['Sushi', 'Curve', 'Balancer'],
+        pools: ['Curve'],
     },
     {
         period: period5days,
         minManagerLdoBalance: null,
         description: (poolName: string) => `${poolName} rewards period expires in 5 days`,
         severity: FindingSeverity.Info,
-        pools: ['Sushi', 'Curve', 'Balancer'],
+        pools: ['Curve'],
     },
     {
         period: period10days,
         minManagerLdoBalance: null,
         description: (poolName: string) => `${poolName} rewards period expires in 10 days`,
         severity: FindingSeverity.Info,
-        pools: ['Sushi', 'Curve', 'Balancer'],
+        pools: ['Curve'],
     },
 ]
 
