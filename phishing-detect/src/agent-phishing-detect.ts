@@ -174,7 +174,7 @@ async function handleERC20Approval(
         } ${MONITORED_ERC20_ADDRESSES.get(token)}` +
         `\ntxHash: ${txEvent.hash}`
     );
-    
+
     let spenderInfo = spenders.get(spender);
     // call of approve with 0 amount equals to approve removal
     if (amount.eq(bigZero)) {
