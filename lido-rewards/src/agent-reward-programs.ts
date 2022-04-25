@@ -27,8 +27,8 @@ let enactedTopUpMotions = new Map<number, BigNumber>();
 let pendingTopUpMotions = new Map<number, BigNumber>();
 let dayOfMonth = 0;
 
-// 6 000 000 LDO
-const LDO_THRESHOLD_MONTH = new BigNumber(6 * 10 ** 6).times(LDO_DECIMALS);
+// 15 000 000 LDO
+const LDO_THRESHOLD_MONTH = new BigNumber(15 * 10 ** 6).times(LDO_DECIMALS);
 
 // 10 days
 const MOTION_LIFETIME_THRESHOLD = 60 * 60 * 24 * 10;
