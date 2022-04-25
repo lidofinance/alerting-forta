@@ -62,7 +62,7 @@ export const WHITE_LIST_ADDRESSES = {
   wormholeTokenBridge: "0x3ee18b2214aff97000d974cf647e7c347e8fa585",
   ribbonFinanceStETHCoveredCallVault:
     "0x53773e034d9784153471813dacaff53dbbb78e8c",
-  DODOApproveV2: "0xcb859ea579b28e02b87a1fde08d087ab9dbe5149",
+  dODOApproveV2: "0xcb859ea579b28e02b87a1fde08d087ab9dbe5149",
   mooniswap: "0x1f629794b34ffb3b29ff206be5478a52678b47ae",
   sensePeriphery: "0x9a8fbc2548da808e6cbc853fee7e18fb06d52f18",
   dForceWstETH: "0xbfd291da8a403daaf7e5e9dc1ec0aceacd4848b9",
@@ -81,11 +81,15 @@ export const WHITE_LIST_ADDRESSES = {
   oneInchLimitOrdersProtocolV2: "0x119c71d3bbac22029622cbaec24854d3d32d2828",
   polygonERC20Bridge: "0x40ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf",
   aPWineController: "0x4ba30fa240047c17fc557b8628799068d4396790",
-  DisperseApp: "0xd152f549545093347a162dce210e7293f1452150",
+  disperseApp: "0xd152f549545093347a162dce210e7293f1452150",
   zkSync: "0xabea9132b05a70803a4e85094fd0e1800777fbef",
   deversiFiBridge: "0x5d22045daceab03b158031ecb7d9d06fad24609b",
   someIdleFinanceContract: "0x0cac674ebd77bbd899f6079932768f6d59da089a",
   oasisMultiply: "0xb5eb8cb6ced6b6f8e13bcd502fb489db4a726c7b",
+  gldmGenesisRewardPool: "0x32707372b88bef099dd2ae190804e519831eedf4",
+  сurveRegistryExchange: "0xf8b8db73db0c3f4ff0d633836e939db23847ca1e",
+  сurveRegistryExchange2: "0x81c46feca27b31f3adc2b91ee4be9717d1cd3dd7",
+  dSProxy175787: "0xcd9595a4da4a0268217845d7fc8f576b75596e70",
 };
 
 export const APPROVE_EVENT_ABI =
