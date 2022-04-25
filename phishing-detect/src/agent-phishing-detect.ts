@@ -167,8 +167,6 @@ async function handleERC20Approval(
   const amount = new BigNumber(String(event.args.value)).div(ETH_DECIMALS);
   // handle only non-whitelisted addresses
   if (!Object.values(WHITE_LIST_ADDRESSES).includes(spender)) {
-    let spenderInfo = spenders.get(spender);
-
     console.log(
       `New approval of ${MONITORED_ERC20_ADDRESSES.get(token)} ` +
         `from ${from} to ${spender} for ${
@@ -176,7 +174,8 @@ async function handleERC20Approval(
         } ${MONITORED_ERC20_ADDRESSES.get(token)}` +
         `\ntxHash: ${txEvent.hash}`
     );
-
+    
+    let spenderInfo = spenders.get(spender);
     // call of approve with 0 amount equals to approve removal
     if (amount.eq(bigZero)) {
       if (spenderInfo) {
