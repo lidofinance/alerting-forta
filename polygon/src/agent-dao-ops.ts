@@ -33,6 +33,7 @@ import {
   MIN_DEPOSIT_EXECUTOR_BALANCE,
   ETH_DECIMALS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
+  ONE_HOUR,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
 
@@ -47,8 +48,9 @@ const REPORT_WINDOW_PROXY_ALERTS = 15 * 60;
 // 6 hours
 const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 6;
 
+let highPooledMaticStart = 0;
+let hugePooledMaticStart = 0;
 let lastReportedBufferedMatic = 0;
-let timeHighPooledMaticStart = 0;
 let lastReportedInvalidProxyOwner = 0;
 let lastReportedInvalidProxyAdmin = 0;
 let lastRewardsDistributeTime = 0;
@@ -89,6 +91,7 @@ export async function initialize(
   );
   return {
     lastRewardsDistributeTime: `${lastRewardsDistributeTime}`,
+    lastRewardsAmount: `${lastRewardsAmount}`,
   };
 }
 
@@ -145,28 +148,38 @@ async function handleBufferedMatic(
       )
     );
 
+    const bufferedMaticPercent = bufferedMatic.div(totalPooledMatic).times(100);
+
     if (
-      bufferedMatic.isGreaterThanOrEqualTo(
-        totalPooledMatic.div(100).times(MAX_BUFFERED_MATIC_DAILY_PERCENT)
+      bufferedMaticPercent.isGreaterThanOrEqualTo(
+        MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT
       )
     ) {
-      timeHighPooledMaticStart =
-        timeHighPooledMaticStart != 0 ? timeHighPooledMaticStart : now;
+      hugePooledMaticStart =
+        hugePooledMaticStart != 0 ? hugePooledMaticStart : now;
     } else {
-      timeHighPooledMaticStart = 0;
+      hugePooledMaticStart = 0;
     }
 
     if (
-      bufferedMatic.isGreaterThanOrEqualTo(
-        totalPooledMatic.div(100).times(MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT)
+      bufferedMaticPercent.isGreaterThanOrEqualTo(
+        MAX_BUFFERED_MATIC_DAILY_PERCENT
       )
     ) {
+      highPooledMaticStart =
+        highPooledMaticStart != 0 ? highPooledMaticStart : now;
+    } else {
+      highPooledMaticStart = 0;
+    }
+
+    if (hugePooledMaticStart != 0 && now - hugePooledMaticStart > ONE_HOUR) {
       findings.push(
         Finding.fromObject({
           name: "Huge buffered MATIC amount",
-          description: `There are ${bufferedMatic.toFixed(
-            4
-          )} (more than ${MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract`,
+          description:
+            `There are ${bufferedMatic.toFixed(4)} ` +
+            `(more than ${MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ` +
+            `${Math.floor((now - hugePooledMaticStart) / ONE_HOUR)} hours`,
           alertId: "HUGE-BUFFERED-MATIC",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
@@ -174,17 +187,16 @@ async function handleBufferedMatic(
       );
       lastReportedBufferedMatic = now;
     } else if (
-      timeHighPooledMaticStart != 0 &&
-      now - timeHighPooledMaticStart > FULL_24_HOURS
+      highPooledMaticStart != 0 &&
+      now - highPooledMaticStart > FULL_24_HOURS
     ) {
       findings.push(
         Finding.fromObject({
           name: "High buffered MATIC amount",
-          description: `There are ${bufferedMatic.toFixed(
-            4
-          )} (more than ${MAX_BUFFERED_MATIC_DAILY_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ${Math.floor(
-            (now - timeHighPooledMaticStart) / (60 * 60)
-          )} hours`,
+          description:
+            `There are ${bufferedMatic.toFixed(4)} ` +
+            `(more than ${MAX_BUFFERED_MATIC_DAILY_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ` +
+            `${Math.floor((now - highPooledMaticStart) / ONE_HOUR)} hours`,
           alertId: "HIGH-BUFFERED-MATIC",
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
@@ -207,9 +219,10 @@ async function handleRewardsDistribution(
     rewardsDistributionDelay > MAX_REWARDS_DISTRIBUTION_INTERVAL
   ) {
     if (lastRewardsDistributeTime == 0) {
-      description = `Far more that ${Math.floor(
-        MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60)
-      )} hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`;
+      description =
+        `Far more that ` +
+        `${Math.floor(MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60))} ` +
+        `hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`;
     } else {
       description = `More that ${Math.floor(
         rewardsDistributionDelay / (60 * 60)
@@ -392,7 +405,7 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
     if (txEvent.to === eventInfo.address) {
       const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
       if (event) {
-        let severity = eventInfo.severity
+        let severity = eventInfo.severity;
         // Bump alert severity if there was delay alert
         if (
           eventInfo.alertId == "STMATIC-CONTRACT-REWARDS-DISTRIBUTED" &&
