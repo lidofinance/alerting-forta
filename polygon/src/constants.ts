@@ -5,6 +5,8 @@ import { FindingSeverity, FindingType } from "forta-agent";
 export const MATIC_DECIMALS = new BigNumber(10 ** 18);
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
+// 1 hour
+export const ONE_HOUR = 60 * 60;
 // 24 hours
 export const FULL_24_HOURS = 24 * 60 * 60;
 
