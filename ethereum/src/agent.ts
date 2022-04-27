@@ -22,6 +22,7 @@ import * as agentPoolsBalances from './agent-pools-balances'
 import * as agentEasyTrack from './agent-easy-track'
 import * as agentDaoOps from './agent-dao-ops'
 import * as agentAave from './agent-aave'
+import * as agentProxy from './agent-proxy-watcher'
 
 import VERSION from './version'
 
@@ -44,6 +45,7 @@ const subAgents: SubAgent[] = [
   agentDaoOps,
   agentPoolsBalances,
   agentAave,
+  agentProxy,
 ]
 
 // block or tx handling should take no more than 10 sec. If not all processing is done it will be done later in background
