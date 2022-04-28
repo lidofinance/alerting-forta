@@ -520,3 +520,5 @@ export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
 export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO = Math.floor(60 * 60 * 24 * 7 / 13) // 1 week
 export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM = Math.floor(60 * 60 * 24 * 14 / 13) // 2 weeks
 export const BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
+
+export const MIN_ORACLE_BALANCE = 0.3; // 0.3 ETH

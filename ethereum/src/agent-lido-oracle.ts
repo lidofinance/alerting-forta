@@ -26,9 +26,11 @@ import {
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
   MAX_ORACLE_REPORT_DELAY,
+  MIN_ORACLE_BALANCE,
   TRIGGER_PERIOD,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
+import { ETH_DECIMALS } from "./constants";
 
 export interface OracleReport {
   timestamp: number;
@@ -43,20 +45,32 @@ const ZERO = new BigNumber(0);
 let lastReport: OracleReport | null = null;
 let lastTriggeredAt = 0;
 
+const THREE_DAYS = 60 * 60 * 24 * 3;
 const ONE_WEEK = 60 * 60 * 24 * 7;
 const TWO_WEEKS = 60 * 60 * 24 * 14;
 
-let lastBlockHash: string;
 let lastTxHash: string;
 let oraclesLastVotes: Map<string, number> = new Map();
 let oraclesVotesLastAlert: Map<string, number> = new Map();
+let oraclesBalanceLastAlert: Map<string, number> = new Map();
 let agentStartTime = 0;
 
-export const name = "AgentLidoOracle";
+export const name = "LidoOracle";
+
+async function getOracles() {
+  const lidoOracle = new ethers.Contract(
+    LIDO_ORACLE_ADDRESS,
+    LIDO_ORACLE_ABI,
+    ethersProvider
+  );
+
+  return String(await lidoOracle.functions.getOracleMembers()).split(",");
+}
 
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
+  console.log(`[${name}]`);
   agentStartTime = (await ethersProvider.getBlock(currentBlock)).timestamp;
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
@@ -64,9 +78,7 @@ export async function initialize(
     ethersProvider
   );
 
-  const oracles = String(await lidoOracle.functions.getOracleMembers()).split(
-    ","
-  );
+  const oracles = await getOracles();
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
   // ~2 days ago
   const beaconReportStartBlock =
@@ -108,8 +120,8 @@ export async function initialize(
     prevReport
   );
 
-  console.log(`[AgentLidoOracle] prevReport: ${printReport(prevReport)}`);
-  console.log(`[AgentLidoOracle] lastReport: ${printReport(lastReport)}`);
+  console.log(`[${name}] prevReport: ${printReport(prevReport)}`);
+  console.log(`[${name}] lastReport: ${printReport(lastReport)}`);
 
   return {
     lastReportTimestamp: lastReport ? `${lastReport.timestamp}` : "unknown",
@@ -192,46 +204,19 @@ function printReport(report: OracleReport | null) {
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
-  lastBlockHash = blockEvent.blockHash;
-
   const findings: Finding[] = [];
+
+  await Promise.all([
+    handleOracleVotes(blockEvent, findings),
+    handleOracleReportDelay(blockEvent, findings),
+    handleOraclesBalances(blockEvent, findings),
+  ]);
+
+  return findings;
+}
+
+function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const reportDelay = now - (lastReport ? lastReport.timestamp : 0);
-
-  if (reportDelay > 24 * 60 * 60) {
-    console.log(`[AgentLidoOracle] reportDelay: ${reportDelay}`);
-  }
-
-  if (
-    reportDelay > MAX_ORACLE_REPORT_DELAY &&
-    now - lastTriggeredAt >= TRIGGER_PERIOD
-  ) {
-    // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
-    // needed to handle situation with the missed TX with pres report
-    lastReport = await getOracleReport(
-      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 13),
-      blockEvent.blockNumber - 1,
-      lastReport
-    );
-    const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
-    if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
-      findings.push(
-        Finding.fromObject({
-          name: "Lido Oracle report overdue",
-          description: `Time since last report: ${formatDelay(
-            reportDelayUpdated
-          )}`,
-          alertId: "LIDO-ORACLE-OVERDUE",
-          severity: FindingSeverity.High,
-          type: FindingType.Degraded,
-          metadata: {
-            delay: `${reportDelayUpdated}`,
-          },
-        })
-      );
-      lastTriggeredAt = now;
-    }
-  }
   oraclesLastVotes.forEach((lastRepBlock, oracle) => {
     let lastAlert = oraclesVotesLastAlert.get(oracle);
     if (
@@ -271,8 +256,91 @@ export async function handleBlock(blockEvent: BlockEvent) {
       }
     }
   });
+}
 
-  return findings;
+async function handleOracleReportDelay(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  const reportDelay = now - (lastReport ? lastReport.timestamp : 0);
+
+  if (reportDelay > 24 * 60 * 60) {
+    console.log(`[AgentLidoOracle] reportDelay: ${reportDelay}`);
+  }
+
+  if (
+    reportDelay > MAX_ORACLE_REPORT_DELAY &&
+    now - lastTriggeredAt >= TRIGGER_PERIOD
+  ) {
+    // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
+    // needed to handle situation with the missed TX with prev report
+    lastReport = await getOracleReport(
+      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 13),
+      blockEvent.blockNumber - 1,
+      lastReport
+    );
+    const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
+    if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
+      findings.push(
+        Finding.fromObject({
+          name: "Lido Oracle report overdue",
+          description: `Time since last report: ${formatDelay(
+            reportDelayUpdated
+          )}`,
+          alertId: "LIDO-ORACLE-OVERDUE",
+          severity: FindingSeverity.High,
+          type: FindingType.Degraded,
+          metadata: {
+            delay: `${reportDelayUpdated}`,
+          },
+        })
+      );
+      lastTriggeredAt = now;
+    }
+  }
+}
+
+async function handleOraclesBalances(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const oracles = await getOracles();
+  await Promise.all(
+    oracles.map((oracle) => handleOracleBalance(oracle, blockEvent, findings))
+  );
+}
+
+async function handleOracleBalance(
+  oracle: string,
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  const lastAlert = oraclesBalanceLastAlert.get(oracle) || 0;
+  if (now > lastAlert + THREE_DAYS) {
+    const balance = new BigNumber(
+      String(await ethersProvider.getBalance(oracle))
+    ).div(ETH_DECIMALS);
+    if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE)) {
+      findings.push(
+        Finding.fromObject({
+          name: "Low balance of Lido Oracle",
+          description:
+            `Balance of ${oracle} is ` +
+            `${balance.toFixed(4)} ETH. This is extremely low!`,
+          alertId: "LIDO-ORACLE-LOW-BALANCE",
+          severity: FindingSeverity.High,
+          type: FindingType.Degraded,
+          metadata: {
+            oracle: oracle,
+            balance: `${balance}`,
+          },
+        })
+      );
+      oraclesBalanceLastAlert.set(oracle, now);
+    }
+  }
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
