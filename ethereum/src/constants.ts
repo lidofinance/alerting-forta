@@ -48,6 +48,9 @@ export const WSTETH_TOKEN_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5
 
+export const LIDO_ARAGON_VOTING_ADDRESS = '0x2e59a20f205bb85a89c53f1936454680651e618e'
+export const CAST_VOTE_EVENT = 'event CastVote(uint256 indexed voteId, address indexed voter, bool supports, uint256 stake)'
+
 export const EASY_TRACK_ADDRESS = '0xf0211b7660680b49de1a7e9f25c65660f0a13fea'
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = '0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977'
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS = '0x3129c041b372ee93a5a8756dc4ec6f154d85bc9a'
