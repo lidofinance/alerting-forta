@@ -14,7 +14,11 @@ import {
 import { ethersProvider } from "./ethers";
 
 import ARAGON_VOTING_ABI from "./abi/AragonVoting.json";
-import { LIDO_ARAGON_VOTING_ADDRESS, CAST_VOTE_EVENT } from "./constants";
+import {
+  LIDO_ARAGON_VOTING_ADDRESS,
+  CAST_VOTE_EVENT,
+  ETH_DECIMALS,
+} from "./constants";
 
 export const name = "Aragon Voting Watcher";
 
@@ -33,12 +37,13 @@ interface IVoteInfo {
   yea: BigNumber;
   nay: BigNumber;
   votingPower: BigNumber;
+  supportRequired: number;
+  minAcceptQuorum: number;
 }
 
-enum SupportState {
-  Undefined = "Undefined",
-  For = "For",
-  Against = "Against",
+enum Outcomes {
+  Pass = "Pass",
+  Fail = "Fail",
 }
 
 let votes = new Map<number, IVoteInfo>();
@@ -108,6 +113,12 @@ async function getVoteInfo(
     yea: new BigNumber(String(voteInfoRaw.yea)),
     nay: new BigNumber(String(voteInfoRaw.nay)),
     votingPower: new BigNumber(String(voteInfoRaw.votingPower)),
+    supportRequired: new BigNumber(String(voteInfoRaw.supportRequired))
+      .div(ETH_DECIMALS)
+      .toNumber(),
+    minAcceptQuorum: new BigNumber(String(voteInfoRaw.minAcceptQuorum))
+      .div(ETH_DECIMALS)
+      .toNumber(),
   };
 }
 
@@ -124,21 +135,20 @@ async function handleNewVoteInfo(
   }
   if (oldVoteInfo) {
     const now = block.timestamp;
-    const oldSupportState = getVoteSupportState(oldVoteInfo);
-    const newSupportState = getVoteSupportState(newVoteInfo);
+    const oldOutcome = getVoteOutcome(oldVoteInfo);
+    const newOutcome = getVoteOutcome(newVoteInfo);
     if (
-      oldSupportState != newSupportState &&
-      oldSupportState != SupportState.Undefined &&
+      oldOutcome != newOutcome &&
       newVoteInfo.startDate + HALF_VOTING_TIME < now
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Vote support state has changed",
+          name: "Expected vote outcome has changed",
           description:
-            `Aragon vote ${voteId} support has changed from '${oldSupportState}' to '${newSupportState}' and there is more than ` +
+            `Expected aragon vote ${voteId} outcome changed from '${oldOutcome}' to '${newOutcome}' and there is more than ` +
             `${Math.floor(HALF_VOTING_TIME / (60 * 60))} hours ` +
             `past since vote start`,
-          alertId: "ARAGON-VOTE-SUPPORT-STATE-CHANGED",
+          alertId: "ARAGON-VOTE-OUTCOME-CHANGED",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
         })
@@ -149,13 +159,24 @@ async function handleNewVoteInfo(
   votes.set(voteId, newVoteInfo);
 }
 
-function getVoteSupportState(voteInfo: IVoteInfo): SupportState {
-  if (voteInfo.nay.isEqualTo(voteInfo.yea)) return SupportState.Undefined;
-  if (voteInfo.nay.isGreaterThan(voteInfo.yea)) {
-    return SupportState.Against;
-  } else {
-    return SupportState.For;
+function getVoteOutcome(voteInfo: IVoteInfo): Outcomes {
+  // quorum not reached
+  if (
+    voteInfo.yea.isLessThan(
+      voteInfo.votingPower.times(voteInfo.minAcceptQuorum)
+    )
+  ) {
+    return Outcomes.Fail;
   }
+  // it should be more than 50% yea votes
+  if (
+    voteInfo.yea.isLessThanOrEqualTo(
+      voteInfo.nay.plus(voteInfo.yea).times(voteInfo.supportRequired)
+    )
+  ) {
+    return Outcomes.Fail;
+  }
+  return Outcomes.Pass;
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
@@ -176,7 +197,11 @@ async function handleEasyTrackTransaction(
       LIDO_ARAGON_VOTING_ADDRESS
     );
     if (event && event.args.voteId) {
-      await handleNewVoteInfo(event.args.voteId.toNumber(), txEvent.block, findings);
+      await handleNewVoteInfo(
+        event.args.voteId.toNumber(),
+        txEvent.block,
+        findings
+      );
     }
   }
 }
