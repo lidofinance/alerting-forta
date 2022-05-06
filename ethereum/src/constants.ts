@@ -282,10 +282,60 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     },
 ]
 
+export const LIDO_DAO_EVENTS_OF_NOTICE = [
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event Stopped()",
+    alertId: "LIDO-DAO-STOPPED",
+    name: "Lido DAO: Stopped",
+    description: (args: any) => `Lido DAO contract was stopped`,
+    severity: FindingSeverity.Critical,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event Resumed()",
+    alertId: "LIDO-DAO-RESUMED",
+    name: "Lido DAO: Resumed",
+    description: (args: any) => `Lido DAO contract was resumed`,
+    severity: FindingSeverity.Critical,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event FeeSet(uint16 feeBasisPoints)",
+    alertId: "LIDO-DAO-FEE-SET",
+    name: "Lido DAO: Fee set",
+    description: (args: any) =>
+      `Lido DAO fee was set to ${args.feeBasisPoints}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event FeeDistributionSet(uint16 treasuryFeeBasisPoints, uint16 insuranceFeeBasisPoints, uint16 operatorsFeeBasisPoints)",
+    alertId: "LIDO-DAO-FEE-DISTRIBUTION-SET",
+    name: "Lido DAO: Fee distribution set",
+    description: (args: any) =>
+      `Lido DAO fee distribution was set to\n` +
+      `treasuryFeeBasisPoints:${args.treasuryFeeBasisPoints}\n` +
+      `insuranceFeeBasisPoints:${args.insuranceFeeBasisPoints}\n` +
+      `operatorsFeeBasisPoints:${args.operatorsFeeBasisPoints}\n`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event WithdrawalCredentialsSet(bytes32 withdrawalCredentials)",
+    alertId: "LIDO-DAO-WD-CREDS-SET",
+    name: "Lido DAO: Withdrawal Credentials Set",
+    description: (args: any) =>
+      `Lido DAO withdrawal credentials was set to ${args.withdrawalCredentials}`,
+    severity: FindingSeverity.High,
+  },
+];
+
+
+
 // Proxy-watcher consts
-
 export const implementationFuncShortABI = '[{"constant":true,"inputs":[],"name":"implementation","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}]';
-
 export interface IProxyContractData {
     name: string;
     shortABI: string;
