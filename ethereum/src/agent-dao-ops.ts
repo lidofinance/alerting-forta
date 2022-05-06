@@ -47,13 +47,19 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   let provider = new ethers.providers.EtherscanProvider();
-  let history = await provider.getHistory(LIDO_DEPOSIT_SECURITY_ADDRESS, currentBlock - Math.floor(60 * 60 * 72 / 13), currentBlock - 1);
-  const depositorTxTimestamps = history.map(x => x.timestamp ? x.timestamp : 0);
+  let history = await provider.getHistory(
+    LIDO_DEPOSIT_SECURITY_ADDRESS,
+    currentBlock - Math.floor((60 * 60 * 72) / 13),
+    currentBlock - 1
+  );
+  const depositorTxTimestamps = history.map((x) =>
+    x.timestamp ? x.timestamp : 0
+  );
   if (depositorTxTimestamps.length > 0) {
-    depositorTxTimestamps.sort((a,b) => b - a)
-    lastDepositorTxTime = depositorTxTimestamps[0]
+    depositorTxTimestamps.sort((a, b) => b - a);
+    lastDepositorTxTime = depositorTxTimestamps[0];
   }
-  console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`)
+  console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`);
   return {};
 }
 
@@ -115,76 +121,103 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     ethersProvider
   );
   const bufferedEthRaw = new BigNumber(
-    String(await lidoDao.functions.getBufferedEther({blockTag:blockEvent.block.number}))
+    String(
+      await lidoDao.functions.getBufferedEther({
+        blockTag: blockEvent.block.number,
+      })
+    )
   );
   const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
   // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
   if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
-    criticalBufferAmountFrom = criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now
+    criticalBufferAmountFrom =
+      criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now;
   } else {
     // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
     criticalBufferAmountFrom = 0;
   }
   if (lastReportedBufferedEth + REPORT_WINDOW < now) {
-    if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL && criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME) {
+    if (
+      bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL &&
+      criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME
+    ) {
       findings.push(
         Finding.fromObject({
           name: "Huge buffered ETH amount",
-          description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO for more than ${Math.floor(MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / ( 60 * 60 ))} hour(s)`,
+          description:
+            `There are ${bufferedEth.toFixed(4)} ` +
+            `buffered ETH in DAO for more than ` +
+            `${Math.floor(
+              MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
+            )} hour(s)`,
           alertId: "HUGE-BUFFERED-ETH",
           severity: FindingSeverity.High,
           type: FindingType.Degraded,
         })
       );
-      lastReportedBufferedEth = now
-    } else if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM && lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY && lastDepositorTxTime !== 0) {
+      lastReportedBufferedEth = now;
+    } else if (
+      bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM &&
+      lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY &&
+      lastDepositorTxTime !== 0
+    ) {
       findings.push(
         Finding.fromObject({
           name: "High buffered ETH amount",
-          description: `There are ${bufferedEth.toFixed(4)} buffered ETH in DAO and there are more than ${Math.floor(MAX_DEPOSITOR_TX_DELAY / ( 60 * 60 ))} hours since last Depositor TX`,
+          description:
+            `There are ${bufferedEth.toFixed(4)} ` +
+            `buffered ETH in DAO and there are more than ` +
+            `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
+            `hours since last Depositor TX`,
           alertId: "HIGH-BUFFERED-ETH",
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
         })
       );
-      lastReportedBufferedEth = now
+      lastReportedBufferedEth = now;
     }
   }
 }
 
-
-async function handleDepositExecutorBalance(blockEvent: BlockEvent, findings: Finding[]) {
+async function handleDepositExecutorBalance(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
-    const executorBalanceRaw = new BigNumber(String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS)))
+    const executorBalanceRaw = new BigNumber(
+      String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS))
+    );
     const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
       findings.push(
         Finding.fromObject({
           name: "Low deposit executor balance",
-          description: `Balance of deposit executor is ${executorBalance.toFixed(4)}. This is extremely low!`,
+          description:
+            `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` +
+            `This is extremely low!`,
           alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
         })
       );
-      lastReportedExecutorBalance = now
+      lastReportedExecutorBalance = now;
     }
   }
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
-  const findings: Finding[] = []
+  const findings: Finding[] = [];
 
-  handleDepositorTx(txEvent, findings)
-  handleLidoDAOTx(txEvent, findings)
+  handleDepositorTx(txEvent, findings);
+  handleLidoDAOTx(txEvent, findings);
 
-  return findings
+  return findings;
 }
 
 function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
   if (txEvent.to == LIDO_DEPOSIT_SECURITY_ADDRESS) {
-    lastDepositorTxTime = txEvent.timestamp
+    lastDepositorTxTime = txEvent.timestamp;
   }
   DEPOSIT_SECURITY_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
