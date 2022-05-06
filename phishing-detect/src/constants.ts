@@ -90,6 +90,11 @@ export const WHITE_LIST_ADDRESSES = {
   сurveRegistryExchange: "0xf8b8db73db0c3f4ff0d633836e939db23847ca1e",
   сurveRegistryExchange2: "0x81c46feca27b31f3adc2b91ee4be9717d1cd3dd7",
   dSProxy175787: "0xcd9595a4da4a0268217845d7fc8f576b75596e70",
+  dSProxy212804: "0xc319bcfd24e50fcf932c98b43bf7ab10460f7ab2",
+  deFiSaverTEProxy: "0xc319bcfd24e50fcf932c98b43bf7ab10460f7ab2",
+  paraSwapP4: "0x1bd435f3c054b6e901b7b108a0ab7617c808677b",
+  paraswapRepayAdapter: "0x80aca0c645fedabaa20fd2bf0daf57885a309fe6",
+  senseWstETHAdapter: "0x36c744dd2916e9e04173bee9d93d554f955a999d",
 };
 
 export const APPROVE_EVENT_ABI =
