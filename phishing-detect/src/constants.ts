@@ -12,10 +12,16 @@ export const LDO_DECIMALS = new BigNumber(10).pow(18);
 export const UNIQ_TOKENS_THRESHOLD = 2;
 // alert again if more than 1 additional token type added to delegated to non-whitelist address
 export const UNIQ_TOKENS_CHANGE_THRESHOLD = 1;
+
+// alert if more than 2 addresses delegated their tokens to non-whitelist address
+export const UNIQ_DELEGATES_THRESHOLD_EOA = 2;
+// alert again if more than 2 additional addresses delegated their tokens to non-whitelist address
+export const UNIQ_DELEGATES_CHANGE_THRESHOLD_EOA = 2;
+
 // alert if more than 10 addresses delegated their tokens to non-whitelist address
-export const UNIQ_DELEGATES_THRESHOLD = 10;
+export const UNIQ_DELEGATES_THRESHOLD_CONTRACT = 10;
 // alert again if more than 10 additional addresses delegated their tokens to non-whitelist address
-export const UNIQ_DELEGATES_CHANGE_THRESHOLD = 10;
+export const UNIQ_DELEGATES_CHANGE_THRESHOLD_CONTRACT = 10;
 
 // set alert reproduction frequency to 7 days
 // alert can be produced earlier only if UNIQ_TOKENS_CHANGE_THRESHOLD and UNIQ_DELEGATES_CHANGE_THRESHOLD thresholds are reached

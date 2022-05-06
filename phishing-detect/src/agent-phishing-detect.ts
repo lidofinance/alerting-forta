@@ -21,8 +21,10 @@ import {
 import {
   ETH_DECIMALS,
   ALERT_SILENCE_PERIOD,
-  UNIQ_DELEGATES_THRESHOLD,
-  UNIQ_DELEGATES_CHANGE_THRESHOLD,
+  UNIQ_DELEGATES_THRESHOLD_EOA,
+  UNIQ_DELEGATES_CHANGE_THRESHOLD_EOA,
+  UNIQ_DELEGATES_THRESHOLD_CONTRACT,
+  UNIQ_DELEGATES_CHANGE_THRESHOLD_CONTRACT,
   UNIQ_TOKENS_THRESHOLD,
   UNIQ_TOKENS_CHANGE_THRESHOLD,
   APPROVE_EVENT_ABI,
@@ -198,7 +200,20 @@ async function handleERC20Approval(
         const severity = spenderInfo.isContract
           ? FindingSeverity.High
           : FindingSeverity.Critical;
-        const addressType = spenderInfo.isContract ? "contract" : "EOA";
+
+        let addressType = "undefined";
+        let delegatesThreshold = 1;
+        let delegatesChangeThreshold = 1;
+
+        if (spenderInfo.isContract) {
+          addressType = "contract";
+          delegatesThreshold = UNIQ_DELEGATES_THRESHOLD_CONTRACT;
+          delegatesChangeThreshold = UNIQ_DELEGATES_CHANGE_THRESHOLD_CONTRACT;
+        } else {
+          addressType = "EOA";
+          delegatesThreshold = UNIQ_DELEGATES_THRESHOLD_EOA;
+          delegatesChangeThreshold = UNIQ_DELEGATES_CHANGE_THRESHOLD_EOA;
+        }
 
         let tokenApprovers = spenderInfo.tokens.get(token);
         if (tokenApprovers) {
@@ -208,10 +223,10 @@ async function handleERC20Approval(
             token
           );
           if (
-            (tokenApprovers.size >= UNIQ_DELEGATES_THRESHOLD &&
+            (tokenApprovers.size >= delegatesThreshold &&
               now - lastAlertedApprovals.lastAlerted > ALERT_SILENCE_PERIOD) ||
             tokenApprovers.size - lastAlertedApprovals.count >
-              UNIQ_DELEGATES_CHANGE_THRESHOLD
+            delegatesChangeThreshold
           ) {
             findings.push(
               Finding.fromObject({
