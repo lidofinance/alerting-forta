@@ -1,11 +1,11 @@
-# Lido Agents for Forta
+# Lido Detection bots for Forta
 
-## Agents list
+## Bots list
 
-/ethereum - Lido Agent fot stETH protocol
+/ethereum - Lido Detection bot fot stETH protocol
 
-/polygon - Lido Agent for stMATIC protocol
+/polygon - Lido Detection bot for stMATIC protocol
 
-/phishing-detect - Phishing detection for the Lido ERC20 tokens
+/phishing-detect - Phishing detection bot for the Lido ERC20 tokens
 
 /lido-rewards - Lido reWARDS committee bot
