@@ -37,6 +37,57 @@ DAO operations related alerts
 - LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
 - Alerts on the admin events in Lido DAO contracts
 
+### Easy-track
+
+Notifications about EasyTrack events
+
+**Alerts:**
+
+- Alerts on the events in EasyTrack contracts
+
+### Lido-oracle
+
+ETH2 Oracles monitoring
+
+**Alerts:**
+
+- SLOPPY-LIDO-ORACLE - Detect oracles than has not participated in quorum for a long time
+- LIDO-ORACLE-OVERDUE - Delay in Oracles report
+- LIDO-ORACLE-LOW-BALANCE - Low balance of the Lido Oracle
+- LIDO-ORACLE-REPORT - Details about the latest oracle report
+- LIDO-ORACLE-REWARDS-DECREASED - Beacon chain rewards decreased compared to the previous period
+- Alerts on the admin events in Lido Oracle contract
+
+### Pools-balances
+
+Monitoring and alerting about balances of the main stETH LPs
+
+**Alerts:**
+
+- \[CURVE|BALANCER\]-POOL-IMBALANCE - Curve Pool is imbalanced
+- \[CURVE|BALANCER\]-POOL-IMBALANCE-RAPID-CHANGE - Curve Pool rapid imbalance change
+- \[CURVE|BALANCER|CURVE-WETH\]-POOL-SIZE-CHANGE - significant changes in pool size
+
+### Pools-rewards
+
+Monitoring and alerting about rewards for the main stETH LPs
+
+**Alerts:**
+
+- LDO-\[CURVE|BALANCER\]-REWARDS-PROLONGED - Rewards for the pool prolonged
+- LDO-\[CURVE|BALANCER\]-REWARDS-STILL-NOT-PROLONGED - Period is about to end but rewards not prolonged
+- LDO-\[CURVE|BALANCER\]-REWARDS-EXPIRED-NO-LDO - Rewards period expired but no LDO left for the new period
+- LDO-\[CURVE|BALANCER\]-REWARDS-EXPIRATION - Rewards will expire soon
+
+### Proxy-watcher
+
+Alerting for the proxy implementation changes
+
+**Alerts:**
+
+- PROXY-IMPL-CHANGED - Implementation of one of the Lido proxies has changed
+
+
 ## Development
 
 Edit `~/.forta/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
