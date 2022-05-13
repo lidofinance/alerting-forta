@@ -628,3 +628,8 @@ export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM = Math.floor(
 export const BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
 
 export const MIN_ORACLE_BALANCE = 0.3; // 0.3 ETH
+
+export const PEG_REPORT_INTERVAL = 60 * 60 * 24; // 24 hours
+export const PEG_STEP_ALERT_MIN_VALUE = 0.98;
+export const PEG_STEP = 0.01;
+export const PEG_THRESHOLD = 0.9;
