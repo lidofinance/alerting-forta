@@ -578,7 +578,7 @@ async function getCurvePeg(blockNumber: number) {
     ethersProvider
   );
   // 1000 stETH
-  const amountStEth = new BigNumber(10000).times(ETH_DECIMALS);
+  const amountStEth = new BigNumber(1000).times(ETH_DECIMALS);
   const amountEth = new BigNumber(
     String(
       await curveStableSwap.functions.get_dy(1, 0, amountStEth.toFixed(), {
