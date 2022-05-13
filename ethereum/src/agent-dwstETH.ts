@@ -23,7 +23,7 @@ type IMintRecord = {
 };
 
 // 1 hour
-const REPORT_WINDOW_TO_MANY_MINTS = 60 * 60;
+const REPORT_WINDOW_TOO_MANY_MINTS = 60 * 60;
 // 1 hour
 const MINTS_MONITORING_WINDOW = 60 * 60;
 
@@ -33,7 +33,7 @@ const MAX_MINTS_SUM = new BigNumber(2000).times(ETH_DECIMALS);
 // 1000 dwstETH
 const MAX_SINGLE_TX_MINT = new BigNumber(1000).times(ETH_DECIMALS);
 
-let lastReportedToManyMints = 0;
+let lastReportedTooManyMints = 0;
 let mintsCache: IMintRecord[] = [];
 
 export async function initialize(
@@ -46,19 +46,19 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleToManyMints(blockEvent, findings)]);
+  await Promise.all([handleTooManyMints(blockEvent, findings)]);
 
   console.log(mintsCache);
   return findings;
 }
 
-async function handleToManyMints(blockEvent: BlockEvent, findings: Finding[]) {
+async function handleTooManyMints(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   // remove old withdrawals records
   mintsCache = mintsCache.filter(
     (x: IMintRecord) => x.time > now - MINTS_MONITORING_WINDOW
   );
-  if (lastReportedToManyMints + REPORT_WINDOW_TO_MANY_MINTS < now) {
+  if (lastReportedTooManyMints + REPORT_WINDOW_TOO_MANY_MINTS < now) {
     let mintsSum = new BigNumber(0);
     mintsCache.forEach(
       (x: IMintRecord) => (mintsSum = mintsSum.plus(x.amount))
@@ -77,7 +77,7 @@ async function handleToManyMints(blockEvent: BlockEvent, findings: Finding[]) {
           type: FindingType.Suspicious,
         })
       );
-      lastReportedToManyMints = now;
+      lastReportedTooManyMints = now;
     }
   }
 }
