@@ -40,6 +40,9 @@ export const AAVE_ATOKEN_MINT_EVENT =
 export const AAVE_LANDING_POOL_ADDRESS =
   "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9";
 
+export const DWSTETH_TOKEN_ADDRESS = "0x436548baab5ec4d79f669d1b9506d67e98927af7";
+export const TRANSFER_EVENT = "event Transfer(address indexed _from, address indexed _to, uint256 _value)"
+
 export const LIDO_DAO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
 export const LDO_TOKEN_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
 export const LIDO_ORACLE_ADDRESS = "0x442af784a788a5bd6f42a01ebe9f287a871243fb";
