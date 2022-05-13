@@ -45,6 +45,7 @@ export const WHITE_LIST_ADDRESSES = {
   oneInchPool: "0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431",
   sushiPool: "0xc5578194d457dcce3f272538d1ad52c68d1ce849",
   wstETH: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+  curveStEthWEthPool: "0x828b154032950c8ff7cf8085d841723db2696056",
   // externally owned
   aaveLandingPoolV2: "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
   oneInchV4Router: "0x1111111254fb6c44bac0bed2854e76f90643097d",
@@ -101,6 +102,7 @@ export const WHITE_LIST_ADDRESSES = {
   paraSwapP4: "0x1bd435f3c054b6e901b7b108a0ab7617c808677b",
   paraswapRepayAdapter: "0x80aca0c645fedabaa20fd2bf0daf57885a309fe6",
   senseWstETHAdapter: "0x36c744dd2916e9e04173bee9d93d554f955a999d",
+  euler: "0x27182842e098f60e3d576794a5bffb0777e025d3",
 };
 
 export const APPROVE_EVENT_ABI =
