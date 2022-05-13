@@ -25,6 +25,7 @@ import {
 import { capitalizeFirstLetter } from "./utils/tools";
 
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
+import CURVE_WETH_POOL_ABI from "./abi/CurveWethPool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
 import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
 
@@ -44,6 +45,15 @@ interface IPoolSize {
 
 let poolsParams: { [name: string]: IPoolParams } = {
   Curve: {
+    lastReported: 0,
+    lastReportedImbalance: 0,
+    poolSize: {
+      poolSizeTotal: new BigNumber(0),
+      poolSizeToken1: new BigNumber(0),
+      poolSizeToken2: new BigNumber(0),
+    },
+  },
+  CurveWeth: {
     lastReported: 0,
     lastReportedImbalance: 0,
     poolSize: {
@@ -85,6 +95,13 @@ export async function initialize(
     curvePoolTokens
   );
 
+  // get initial CurveWETH Pool size
+  const curveWethPoolTokens = await getCurveWETHPoolTokens(currentBlock);
+  poolsParams.CurveWeth.poolSize.poolSizeTotal = BigNumber.sum.apply(
+    null,
+    curveWethPoolTokens
+  );
+
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   [
     poolsParams.Balancer.lastReportedImbalance,
@@ -113,6 +130,7 @@ export async function initialize(
 
   return {
     curvePoolSize: poolsParams.Curve.poolSize.poolSizeTotal.toString(),
+    curveWethPoolSize: poolsParams.CurveWeth.poolSize.poolSizeTotal.toString(),
     balancerPoolSize: poolsParams.Balancer.poolSize.poolSizeTotal.toString(),
     curvePoolImbalance: poolsParams.Curve.lastReportedImbalance.toString(),
     balancerPoolImbalance:
@@ -169,6 +187,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBalancerPoolImbalance(blockEvent, findings),
     handleBalancerPoolSize(blockEvent, findings),
     handleCurvePoolSize(blockEvent, findings),
+    handleCurveWethPoolSize(blockEvent, findings),
   ]);
 
   return findings;
@@ -438,6 +457,59 @@ async function handleBalancerPoolSize(
             : "decreased by " + -poolSizeChange.toFixed(2).toString()
         }% since the last block`,
         alertId: "BALANCER-POOL-SIZE-CHANGE",
+        severity: severity,
+        type: FindingType.Info,
+        metadata: {
+          sizeBefore: poolParams.poolSize.poolSizeTotal.toFixed(),
+          sizeAfter: poolSize.toFixed(),
+        },
+      })
+    );
+  }
+  poolParams.poolSize.poolSizeTotal = poolSize;
+}
+
+async function getCurveWETHPoolTokens(blockNumber?: number) {
+  const curvePool = new ethers.Contract(
+    POOLS_PARAMS_BALANCES.CurveWethStEth.poolContractAddress,
+    CURVE_WETH_POOL_ABI,
+    ethersProvider
+  );
+  let overrides = {} as any;
+  if (blockNumber) {
+    overrides.blockTag = blockNumber;
+  }
+  const poolTokens = await curvePool.functions.get_balances(
+    overrides
+  );
+  return poolTokens[0].map((el: any) => new BigNumber(String(el)));
+}
+
+async function handleCurveWethPoolSize(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  let poolParams = poolsParams.CurveWeth;
+  const poolTokens = await getCurveWETHPoolTokens(blockEvent.blockNumber);
+  const poolSize = BigNumber.sum.apply(null, poolTokens);
+  const poolSizeChange = calcChange(
+    poolParams.poolSize.poolSizeTotal,
+    poolSize
+  );
+  if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
+    const severity =
+      Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
+        ? FindingSeverity.High
+        : FindingSeverity.Info;
+    findings.push(
+      Finding.fromObject({
+        name: "Significant Curve WETH/stETH Pool size change",
+        description: `Curve WETH/stETH Pool size has ${
+          poolSizeChange > 0
+            ? "increased by " + poolSizeChange.toFixed(2).toString()
+            : "decreased by " + -poolSizeChange.toFixed(2).toString()
+        }% since the last block`,
+        alertId: "CURVE-WETH-POOL-SIZE-CHANGE",
         severity: severity,
         type: FindingType.Info,
         metadata: {

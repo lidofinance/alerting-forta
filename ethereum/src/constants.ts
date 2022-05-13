@@ -533,6 +533,10 @@ export const POOLS_PARAMS_BALANCES = {
     rewardsAddress: "0x99ac10631f69c753ddb595d074422a0922d9056b",
     poolContractAddress: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
   },
+  CurveWethStEth: {
+    rewardsAddress: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
+    poolContractAddress: "0x828b154032950c8ff7cf8085d841723db2696056",
+  },
   Balancer: {
     managerAddress: "0x1220cccdc9bba5cf626a84586c74d6f940932342",
     rewardsAddress: "",
