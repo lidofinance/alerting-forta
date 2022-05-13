@@ -20,6 +20,10 @@ import {
   POOL_SIZE_CHANGE_TOLERANCE_HIGH,
   POOLS_BALANCES_REPORT_WINDOW,
   ETH_DECIMALS,
+  PEG_REPORT_INTERVAL,
+  PEG_STEP,
+  PEG_THRESHOLD,
+  PEG_STEP_ALERT_MIN_VALUE,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
@@ -73,6 +77,9 @@ let poolsParams: { [name: string]: IPoolParams } = {
   },
 };
 
+let lastReportedCurvePegTime = 0;
+let lastReportedCurvePegVal: BigNumber;
+
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
@@ -121,14 +128,15 @@ export async function initialize(
     poolsParams.Curve.lastReportedImbalance,
     poolsParams.Curve.poolSize.poolSizeToken1,
     poolsParams.Curve.poolSize.poolSizeToken2,
-  ]  = await curvePoolImbalancePercent(
-    currentBlock - Math.ceil((5 * 60) / 13)
-  );
+  ] = await curvePoolImbalancePercent(currentBlock - Math.ceil((5 * 60) / 13));
   if (Math.abs(poolsParams.Curve.lastReportedImbalance) > IMBALANCE_TOLERANCE) {
     poolsParams.Curve.lastReported = now;
   }
 
+  lastReportedCurvePegVal = await getCurvePeg(currentBlock);
+
   return {
+    curveStEthPeg: lastReportedCurvePegVal.toFixed(4),
     curvePoolSize: poolsParams.Curve.poolSize.poolSizeTotal.toString(),
     curveWethPoolSize: poolsParams.CurveWeth.poolSize.poolSizeTotal.toString(),
     balancerPoolSize: poolsParams.Balancer.poolSize.poolSizeTotal.toString(),
@@ -188,6 +196,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBalancerPoolSize(blockEvent, findings),
     handleCurvePoolSize(blockEvent, findings),
     handleCurveWethPoolSize(blockEvent, findings),
+    handleCurvePeg(blockEvent, findings),
   ]);
 
   return findings;
@@ -479,9 +488,7 @@ async function getCurveWETHPoolTokens(blockNumber?: number) {
   if (blockNumber) {
     overrides.blockTag = blockNumber;
   }
-  const poolTokens = await curvePool.functions.get_balances(
-    overrides
-  );
+  const poolTokens = await curvePool.functions.get_balances(overrides);
   return poolTokens[0].map((el: any) => new BigNumber(String(el)));
 }
 
@@ -520,4 +527,64 @@ async function handleCurveWethPoolSize(
     );
   }
   poolParams.poolSize.poolSizeTotal = poolSize;
+}
+
+async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  const peg: BigNumber = await getCurvePeg(blockEvent.blockNumber);
+  // info on PEG decrease
+  if (peg.plus(PEG_STEP).isLessThanOrEqualTo(lastReportedCurvePegVal) && peg.isLessThan(PEG_STEP_ALERT_MIN_VALUE)) {
+    findings.push(
+      Finding.fromObject({
+        name: "stETH PEG on Curve decreased",
+        description:
+          `stETH PEG on Curve decreased from ` +
+          `${lastReportedCurvePegVal.toFixed(4)} to ${peg.toFixed(4)}`,
+        alertId: "STETH-CURVE-PEG-DECREASE",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata: {
+          peg: peg.toFixed(4),
+        },
+      })
+    );
+    lastReportedCurvePegVal = peg;
+  }
+  // ALERT on PEG lower threshold
+  if (
+    peg.isLessThanOrEqualTo(PEG_THRESHOLD) &&
+    now > lastReportedCurvePegTime + PEG_REPORT_INTERVAL
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "Super low stETH PEG on Curve",
+        description: `Current stETH PEG on Curve - ${peg.toFixed(4)}`,
+        alertId: "LOW-STETH-CURVE-PEG",
+        severity: FindingSeverity.Critical,
+        type: FindingType.Degraded,
+        metadata: {
+          peg: peg.toFixed(4),
+        },
+      })
+    );
+    lastReportedCurvePegTime = now;
+  }
+}
+
+async function getCurvePeg(blockNumber: number) {
+  const curveStableSwap = new ethers.Contract(
+    POOLS_PARAMS_BALANCES.Curve.poolContractAddress,
+    CURVE_POOL_ABI,
+    ethersProvider
+  );
+  // 1000 stETH
+  const amountStEth = new BigNumber(1000).times(ETH_DECIMALS);
+  const amountEth = new BigNumber(
+    String(
+      await curveStableSwap.functions.get_dy(1, 0, amountStEth.toFixed(), {
+        blockTag: blockNumber,
+      })
+    )
+  );
+  return amountEth.div(amountStEth);
 }
