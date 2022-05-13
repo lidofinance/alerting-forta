@@ -1,28 +1,41 @@
-# Lido Agent for Forta
+# Lido Detection Bot for Forta
 
 ## Supported chains
 
 * Ethereum mainnet
 
 
-## Alerts
+## Sub-bots
 
-General:
+### AAVE
 
-* LIDO-AGENT-LAUNCHED: Agent launched (INFO)
-* LIDO-AGENT-ERROR: An error occured while initializing, handling tx or block (HIGH)
+General alerts about health of the Lido to AAVE integration.
 
-Lido Oracle:
+**Alerts:**
 
-* LIDO-ORACLE-REPORT: Lido oracles quorum reached (INFO)
-* LIDO-ORACLE-OVERDUE: No Lido Oracle report within the expected timeframe (HIGH)
-* LIDO-ORACLE-REWARDS-DECREASED: Lido staking rewards decreased compared to the previous report (MEDUIM)
+- ASTETH-BALANCE-AND-SUPPLY-DIFFERENCE - There is a difference between astETH balance and totalSupply
+- STABLE-DEBT-STETH-SUPPLY - stableDebtStETH totalSupply is not 0
+- VARIABLE-DEBT-STETH-SUPPLY - variableDebtStETH totalSupply is not 0
+- HUGE-ASTETH-MINT-SINGLE-TX - Huge number of astETH minted in a single TX
 
-Anchor/bETH integration:
+### Aragon-voting
 
-* ANCHOR-REWARDS-OVERDUE: Anchor rewards sell overdue (MAJOR)
-* ANCHOR-REWARDS-COLLECTED: Anchor rewards sold (INFO)
+Alerts on the Aragon votings
 
+**Alerts:**
+
+- ARAGON-VOTE-OUTCOME-CHANGED - Expected vote outcome has changed close to the voting end
+
+### DAO-OPS
+
+DAO operations related alerts
+
+**Alerts:**
+
+- LOW-OPERATORS-AVAILABLE-KEYS-NUM - Few available keys left
+- HUGE-BUFFERED-ETH - Too many ETH in the buffer
+- LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
+- Alerts on the admin events in Lido DAO contracts
 
 ## Development
 
