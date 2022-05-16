@@ -1,4 +1,4 @@
-# Lido Agent for Rewards programs
+# Lido Detection Bot for Rewards programs
 
 ## Supported chains
 
@@ -6,8 +6,6 @@
 
 
 ## Alerts
-
-General:
 
 * REWARD-PROGRAM-TOP-UP-MOTION-CREATED: EasyTrack Top Up Motion was created (INFO)
 * REWARD-PROGRAM-TOP-UP-MOTION-ENACTED: EasyTrack Top Up Motion was enacted (INFO)

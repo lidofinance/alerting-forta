@@ -1,4 +1,4 @@
-# Lido Agent for Phishing detection
+# Lido Detection Bot for Phishing detection
 
 ## Supported chains
 
@@ -6,6 +6,9 @@
 
 
 ## Alerts
+
+* HIGH-ERC20-APPROVALS: Many approvals of single Lido ERC20 token to single non WL address 
+* HIGH-ERC20-TOKENS: Many approvals of the different Lido ERC20 tokens to single non WL address 
 
 
 ## Development
