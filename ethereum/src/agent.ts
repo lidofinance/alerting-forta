@@ -24,6 +24,7 @@ import * as agentDaoOps from './agent-dao-ops'
 import * as agentAave from './agent-aave'
 import * as agentProxy from './agent-proxy-watcher'
 import * as agentAragon from './agent-aragon-voting'
+import * as agentDwstETH from './agent-dwstETH'
 
 import VERSION from './version'
 
@@ -48,6 +49,7 @@ const subAgents: SubAgent[] = [
   agentAave,
   agentProxy,
   agentAragon,
+  agentDwstETH,
 ]
 
 // block or tx handling should take no more than 10 sec. If not all processing is done it will be done later in background
