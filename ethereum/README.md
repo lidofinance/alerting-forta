@@ -25,6 +25,7 @@ Alerts on the Aragon votings
 **Alerts:**
 
 - ARAGON-VOTE-OUTCOME-CHANGED - Expected vote outcome has changed close to the voting end
+- Aragon votes common lifecycle alerts
 
 ### DAO-OPS
 
