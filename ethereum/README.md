@@ -37,6 +37,15 @@ DAO operations related alerts
 - LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
 - Alerts on the admin events in Lido DAO contracts
 
+### dwstETH
+
+Alerts about huge mints of leveraged stETH debt on Euler
+
+**Alerts:**
+
+- HIGH-DWSTETH-MINTS-SUM - High amount of dwstETH minted in a short period
+- HIGH-DWSTETH-MINT-SINGLE-TX - High amount of dwstETH minted in a single TX
+
 ### Easy-track
 
 Notifications about EasyTrack events
@@ -67,6 +76,8 @@ Monitoring and alerting about balances of the main stETH LPs
 - \[CURVE|BALANCER\]-POOL-IMBALANCE - Curve Pool is imbalanced
 - \[CURVE|BALANCER\]-POOL-IMBALANCE-RAPID-CHANGE - Curve Pool rapid imbalance change
 - \[CURVE|BALANCER|CURVE-WETH\]-POOL-SIZE-CHANGE - significant changes in pool size
+- LOW-STETH-CURVE-PEG - stETH PEG in Curve pool is too low
+- STETH-CURVE-PEG-DECREASE - stETH PEG in Curve pool decreased below safe threshold
 
 ### Pools-rewards
 
