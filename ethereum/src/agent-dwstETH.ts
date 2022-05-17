@@ -48,7 +48,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   await Promise.all([handleTooManyMints(blockEvent, findings)]);
 
-  console.log(mintsCache);
   return findings;
 }
 
