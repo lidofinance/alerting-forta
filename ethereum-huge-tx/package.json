@@ -1,5 +1,5 @@
 {
-  "name": "lido-on-polygon-forta-agent",
+  "name": "lido-huge-tx-detection-bot",
   "version": "0.0.1",
   "description": "Forta Agent for Lido on Polygon protocol",
   "scripts": {
