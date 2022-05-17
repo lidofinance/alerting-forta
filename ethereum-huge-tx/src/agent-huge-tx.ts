@@ -16,10 +16,6 @@ import {
   TX_AMOUNT_THRESHOLD,
 } from "./constants";
 
-import ABI from "./abi/ABI.json";
-
-import { ethersProvider } from "./ethers";
-
 export const name = "Huge TX detector";
 
 export async function initialize(
