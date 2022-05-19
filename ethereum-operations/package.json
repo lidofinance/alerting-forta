@@ -1,7 +1,7 @@
 {
-  "name": "lido-forta-agent",
+  "name": "lido-operations-forta-bot",
   "version": "0.0.1",
-  "description": "Forta Agent for Lido protocol",
+  "description": "Forta Bot for Lido protocol operations",
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
