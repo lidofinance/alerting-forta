@@ -14,7 +14,10 @@ import {
   SET_PERMISSION_PARAMS_EVENT,
   LIDO_APPS,
   CHANGE_PERMISSION_MANAGER_EVENT,
+  ORDINARY_ENTITIES,
 } from "./constants";
+
+import { isContract } from "./utils/tools";
 
 interface IPermission {
   app: string;
@@ -37,13 +40,16 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleSetPermission(txEvent, findings);
+  await handleSetPermission(txEvent, findings);
   handleChangePermissionManager(txEvent, findings);
 
   return findings;
 }
 
-function handleSetPermission(txEvent: TransactionEvent, findings: Finding[]) {
+async function handleSetPermission(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
   if (LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
     let permissions = new Map<string, IPermission>();
     const setEvents = txEvent.filterLog(
@@ -78,26 +84,46 @@ function handleSetPermission(txEvent: TransactionEvent, findings: Finding[]) {
         permissions.set(permissionKey, permissionObjOld);
       }
     });
-
-    permissions.forEach((permission) => {
-      const sortState = permission.state
-        .replace(" from", "")
-        .replace(" to", "");
-      const role = LIDO_ROLES.get(permission.role) || "unknown";
-      const app = LIDO_APPS.get(permission.app.toLowerCase()) || "unknown";
-      const entity =
-        LIDO_APPS.get(permission.entity.toLowerCase()) || "unknown";
-      findings.push(
-        Finding.fromObject({
-          name: `Aragon ACL: Permission ${sortState}`,
-          description: `Role ${permission.role} (${role}) on the app ${permission.app} (${app}) was ${permission.state} ${permission.entity} (${entity})`,
-          alertId: "ARAGON-ACL-PERMISSION-CHANGED",
-          severity: FindingSeverity.High,
-          type: FindingType.Info,
-        })
-      );
-    });
+    await Promise.all(
+      Array.from(permissions.values()).map(async (permission: IPermission) => {
+        await handlePermissionChange(permission, findings);
+      })
+    );
   }
+}
+
+async function handlePermissionChange(
+  permission: IPermission,
+  findings: Finding[]
+) {
+  const shortState = permission.state.replace(" from", "").replace(" to", "");
+  const role = LIDO_ROLES.get(permission.role) || "unknown";
+  const app = LIDO_APPS.get(permission.app.toLowerCase()) || "unknown";
+  const entityRaw = permission.entity.toLowerCase();
+  let severity = FindingSeverity.Info;
+  let entity = ORDINARY_ENTITIES.get(entityRaw);
+  if (!entity) {
+    severity = FindingSeverity.Medium;
+    entity = LIDO_APPS.get(entityRaw);
+    if (!entity) {
+      if (await isContract(entityRaw)) {
+        severity = FindingSeverity.High;
+        entity = "unknown contract";
+      } else {
+        severity = FindingSeverity.Critical;
+        entity = "unknown EOA";
+      }
+    }
+  }
+  findings.push(
+    Finding.fromObject({
+      name: `Aragon ACL: Permission ${shortState}`,
+      description: `Role ${permission.role} (${role}) on the app ${permission.app} (${app}) was ${permission.state} ${permission.entity} (${entity})`,
+      alertId: "ARAGON-ACL-PERMISSION-CHANGED",
+      severity: severity,
+      type: FindingType.Info,
+    })
+  );
 }
 
 function eventToPermissionKey(event: any) {
