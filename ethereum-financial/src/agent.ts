@@ -1,5 +1,3 @@
-import BigNumber from 'bignumber.js'
-
 import {
   Initialize,
   BlockEvent,
@@ -15,17 +13,11 @@ import {ethersProvider} from './ethers'
 
 import { argv } from 'process';
 
-import * as agentLidoOracle from './agent-lido-oracle'
 import * as agentBethRewards from './agent-beth-rewards'
 import * as agentPoolsRewards from './agent-pools-rewards'
 import * as agentPoolsBalances from './agent-pools-balances'
-import * as agentEasyTrack from './agent-easy-track'
-import * as agentDaoOps from './agent-dao-ops'
 import * as agentAave from './agent-aave'
-import * as agentProxy from './agent-proxy-watcher'
-import * as agentAragon from './agent-aragon-voting'
 import * as agentDwstETH from './agent-dwstETH'
-import * as agentACL from './agent-acl-changes'
 
 import VERSION from './version'
 
@@ -41,17 +33,11 @@ interface SubAgent {
 
 
 const subAgents: SubAgent[] = [
-  agentLidoOracle,
   agentBethRewards,
   agentPoolsRewards,
-  agentEasyTrack,
-  agentDaoOps,
   agentPoolsBalances,
   agentAave,
-  agentProxy,
-  agentAragon,
   agentDwstETH,
-  agentACL,
 ]
 
 // block or tx handling should take no more than 10 sec. If not all processing is done it will be done later in background
