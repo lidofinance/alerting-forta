@@ -66,6 +66,7 @@ export const WHITE_LIST_ADDRESSES = {
   coWProtocolGPv2VaultRelayer: "0xc92e8bdf79f0507f65a392b0ab4667716bfe0110",
   curveRETHtoWstETH: "0x447ddd4960d9fdbf6af9a790560d0af76795cb08",
   zapperZap: "0x8e52522e6a77578904ddd7f528a22521dc4154f5",
+  zapperUniswap: "0x6d9893fa101cd2b1f8d1a12de3189ff7b80fdc10",
   wormholeTokenBridge: "0x3ee18b2214aff97000d974cf647e7c347e8fa585",
   ribbonFinanceStETHCoveredCallVault:
     "0x53773e034d9784153471813dacaff53dbbb78e8c",
@@ -98,11 +99,14 @@ export const WHITE_LIST_ADDRESSES = {
   сurveRegistryExchange2: "0x81c46feca27b31f3adc2b91ee4be9717d1cd3dd7",
   dSProxy175787: "0xcd9595a4da4a0268217845d7fc8f576b75596e70",
   dSProxy212804: "0xc319bcfd24e50fcf932c98b43bf7ab10460f7ab2",
+  dsProxy9774: "0x414ff9b9aaf625593c9015ffed35e2cdbf310384",
+  dsProxy208421: "0xb9d5132f9bc799b3af59016aebbac8e32099ba46",
   deFiSaverTEProxy: "0xc319bcfd24e50fcf932c98b43bf7ab10460f7ab2",
   paraSwapP4: "0x1bd435f3c054b6e901b7b108a0ab7617c808677b",
   paraswapRepayAdapter: "0x80aca0c645fedabaa20fd2bf0daf57885a309fe6",
   senseWstETHAdapter: "0x36c744dd2916e9e04173bee9d93d554f955a999d",
   euler: "0x27182842e098f60e3d576794a5bffb0777e025d3",
+  dustSweeper: "0x78106f7db3ebcee3d2cfac647f0e4c9b06683b39",
 };
 
 export const APPROVE_EVENT_ABI =
