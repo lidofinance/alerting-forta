@@ -10,6 +10,7 @@ import {
   FindingType,
   FindingSeverity,
   LogDescription,
+  getTransactionReceipt,
 } from "forta-agent";
 
 import {
@@ -138,7 +139,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (!txEvent.receipt.status) {
+
+  if (!(await getTransactionReceipt(txEvent.hash)).status) {
     return findings;
   }
 
