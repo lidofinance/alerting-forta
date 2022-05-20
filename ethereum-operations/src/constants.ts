@@ -22,6 +22,66 @@ export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
+export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event NodeOperatorAdded(uint256 id, string name, address rewardAddress, uint64 stakingLimit)",
+    alertId: "NODE-OPERATOR-ADDED",
+    name: "NO Registry: Node operator added",
+    description: (args: any) =>
+      `Node operator ${args.id} added\n` +
+      `Name: ${args.name}\n` +
+      `Reward address: ${args.rewardAddress}\n` +
+      `StakingLimit: ${args.stakingLimit}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event NodeOperatorActiveSet(uint256 indexed id, bool active)",
+    alertId: "NODE-OPERATOR-ACTIVE-SET",
+    name: "NO Registry: Node operator active set",
+    description: (args: any) =>
+      `Node operator ${args.id} active status set to ${args.active}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event NodeOperatorRewardAddressSet(uint256 indexed id, address rewardAddress)",
+    alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
+    name: "NO Registry: Node operator reward address set",
+    description: (args: any) =>
+      `Node operator ${args.id} reward address set to ${args.rewardAddress}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event NodeOperatorTotalStoppedValidatorsReported(uint256 indexed id, uint64 totalStopped)",
+    alertId: "NODE-OPERATOR-STOPPED-VALIDATORS",
+    name: "NO Registry: Node operator total stopped validators reported",
+    description: (args: any) =>
+      `Node operator ${args.id} total stooped validators ${args.totalStopped}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event NodeOperatorTotalKeysTrimmed(uint256 indexed id, uint64 totalKeysTrimmed)",
+    alertId: "NODE-OPERATOR-KEYS-TRIMMED",
+    name: "NO Registry: Node operator total keys trimmed",
+    description: (args: any) =>
+      `Node operator ${args.id} total keys trimmed ${args.totalKeysTrimmed}`,
+    severity: FindingSeverity.Info,
+  },
+];
+
+export const SIGNING_KEY_REMOVED_EVENT =
+  "event SigningKeyRemoved(uint256 indexed operatorId, bytes pubkey)";
+export const NODE_OPERATOR_STAKING_LIMIT_SET_EVENT =
+  "event NodeOperatorStakingLimitSet(uint256 indexed id, uint64 stakingLimit)";
+
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
 export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 0.5;
 
@@ -491,7 +551,6 @@ export const TRIGGER_PERIOD = 60 * 5;
 
 // max delay between two oracle reports
 export const MAX_ORACLE_REPORT_DELAY = 24 * 60 * 60 + 10 * 60; // 24h 10m
-
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000;
 
