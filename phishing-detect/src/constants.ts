@@ -103,6 +103,7 @@ export const WHITE_LIST_ADDRESSES = {
   paraswapRepayAdapter: "0x80aca0c645fedabaa20fd2bf0daf57885a309fe6",
   senseWstETHAdapter: "0x36c744dd2916e9e04173bee9d93d554f955a999d",
   euler: "0x27182842e098f60e3d576794a5bffb0777e025d3",
+  dustSweeper: "0x78106f7db3ebcee3d2cfac647f0e4c9b06683b39",
 };
 
 export const APPROVE_EVENT_ABI =
