@@ -7,6 +7,15 @@
 
 ## Sub-bots
 
+### ACL-changes
+
+General alerts about Aragon ACL changes.
+
+**Alerts:**
+
+- ARAGON-ACL-PERMISSION-CHANGED - Aragon ACl permission granted / revoked
+- ARAGON-ACL-PERMISSION-MANAGER-CHANGED - Aragon ACl permission manager changed
+
 ### AAVE
 
 General alerts about health of the Lido to AAVE integration.
