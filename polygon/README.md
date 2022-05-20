@@ -1,14 +1,13 @@
-# Lido Detection Bot for Rewards programs
+# Lido Detection Bot for apps on polygon
 
 ## Supported chains
 
-* Ethereum mainnet
+* Polygon mainnet
 
 
 ## Alerts
 
-* REWARD-PROGRAM-TOP-UP-MOTION-CREATED: EasyTrack Top Up Motion was created (INFO)
-* REWARD-PROGRAM-TOP-UP-MOTION-ENACTED: EasyTrack Top Up Motion was enacted (INFO)
+* LOW-LIDO-GRAPH-BALANCE - Low balance of Lido vault for The Graph
 
 ## Development
 
