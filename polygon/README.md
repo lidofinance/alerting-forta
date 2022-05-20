@@ -1,44 +1,13 @@
-# Lido on Polygon Detection Bot for Forta
+# Lido Detection Bot for apps on polygon
 
 ## Supported chains
 
-* Ethereum mainnet
+* Polygon mainnet
 
 
-## Sub-bots
+## Alerts
 
-### DAO-OPS
-
-DAO operations related alerts
-
-**Alerts:**
-
-- \[HUGE|HIGH\]-BUFFERED-MATIC - Too many MATIC in the buffer
-- STMATIC-REWARDS-DISTRIBUTION-DELAY - stMATIC rewards distribution delay (more than 24h)
-- INVALID-PROXY-ADMIN-OWNER - Invalid proxy admin owner
-- INVALID-PROXY-ADMIN-ADDR - Invalid proxy admin address
-- LOW-DEPOSIT-EXECUTOR-BALANCE - Low balance of depositor bot
-- STMATIC-REWARDS-DECREASED - Decrease in stMATIC rewards
-- PROXY-ADMIN-OWNER-CHANGE - Proxy admin address changed
-- Alerts on the admin events in Lido on Polygon contracts
-
-### Node-operators
-
-Node Operators related alerts
-
-**Alerts:**
-
-- NO-ACTIVE-NODE-OPERATORS-POLYGON - No Active Node Operators
-- BAD-OPERATOR-STATUS-POLYGON - There are operators with the bad state
-- BAD-OPERATOR-NFT-OWNER-POLYGON - Bad Node Operator proxy NFT owner
-
-### Withdrawals-monitoring
-
-Withdrawals monitoring
-
-**Alerts:**
-
-- HUGE-WITHDRAWALS-REQUESTS-MATIC - Huge withdrawals during last {period}
+* LOW-LIDO-GRAPH-BALANCE - Low balance of Lido vault for The Graph
 
 ## Development
 

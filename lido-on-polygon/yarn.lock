@@ -4106,9 +4106,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lido-polygon-bot@workspace:.":
+"lido-on-polygon-protocol-forta-bot@workspace:.":
   version: 0.0.0-use.local
-  resolution: "lido-polygon-bot@workspace:."
+  resolution: "lido-on-polygon-protocol-forta-bot@workspace:."
   dependencies:
     "@types/jest": ^27.0.1
     "@types/nodemon": ^1.19.0

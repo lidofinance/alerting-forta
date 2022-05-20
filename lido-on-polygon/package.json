@@ -1,7 +1,7 @@
 {
-  "name": "lido-polygon-bot",
+  "name": "lido-on-polygon-protocol-forta-bot",
   "version": "0.0.1",
-  "description": "Forta Bot for Lido Apps on Polygon network",
+  "description": "Forta Agent for Lido on Polygon protocol",
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
