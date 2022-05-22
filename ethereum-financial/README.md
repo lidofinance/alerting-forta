@@ -16,7 +16,6 @@ General alerts about health of the Lido to AAVE integration.
 - ASTETH-BALANCE-AND-SUPPLY-DIFFERENCE - There is a difference between astETH balance and totalSupply
 - STABLE-DEBT-STETH-SUPPLY - stableDebtStETH totalSupply is not 0
 - VARIABLE-DEBT-STETH-SUPPLY - variableDebtStETH totalSupply is not 0
-- HUGE-ASTETH-MINT-SINGLE-TX - Huge number of astETH minted in a single TX
 
 ### dwstETH
 
@@ -25,7 +24,6 @@ Alerts about huge mints of leveraged stETH debt on Euler
 **Alerts:**
 
 - HIGH-DWSTETH-MINTS-SUM - High amount of dwstETH minted in a short period
-- HIGH-DWSTETH-MINT-SINGLE-TX - High amount of dwstETH minted in a single TX
 
 ### Pools-balances
 
