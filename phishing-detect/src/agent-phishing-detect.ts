@@ -176,7 +176,7 @@ async function handleERC20Approval(
   const spender = event.args.spender.toLowerCase();
   const amount = new BigNumber(String(event.args.value)).div(ETH_DECIMALS);
   // handle only non-whitelisted addresses
-  if (!Object.values(WHITE_LIST_ADDRESSES).includes(spender)) {
+  if (!WHITE_LIST_ADDRESSES.includes(spender)) {
     console.log(
       `New approval of ${MONITORED_ERC20_ADDRESSES.get(token)} ` +
         `from ${from} to ${spender} for ${
