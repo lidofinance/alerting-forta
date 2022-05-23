@@ -59,6 +59,10 @@ export const POOLS_PARAMS = {
     rewardsAddress: "0x99ac10631f69c753ddb595d074422a0922d9056b",
     poolContractAddress: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
   },
+  Balancer: {
+    managerAddress: "0x86f6c353a0965eb069cd7f4f91c1afef8c725551",
+    rewardsAddress: "",
+  },
 };
 
 export const POOLS_PARAMS_BALANCES = {
@@ -72,7 +76,7 @@ export const POOLS_PARAMS_BALANCES = {
     poolContractAddress: "0x828b154032950c8ff7cf8085d841723db2696056",
   },
   Balancer: {
-    managerAddress: "0x1220cccdc9bba5cf626a84586c74d6f940932342",
+    managerAddress: "0x86f6c353a0965eb069cd7f4f91c1afef8c725551",
     rewardsAddress: "",
     vaultContractAddress: "0xba12222222228d8ba445958a75a0704d566bf2c8",
     poolId:

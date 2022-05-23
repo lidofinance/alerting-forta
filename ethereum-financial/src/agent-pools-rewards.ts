@@ -22,10 +22,14 @@ import {
 import LDO_TOKEN_ABI from './abi/LdoToken.json'
 import CURVE_MANAGER_ABI from './abi/CurveManager.json'
 import CURVE_REWARDS_ABI from './abi/CurveRewards.json'
+import BALANCER_MANAGER_ABI from './abi/BalancerManager.json'
 const rewardContractAbis = {
   Curve: {
     manager: CURVE_MANAGER_ABI,
     rewards: CURVE_REWARDS_ABI,
+  },
+  Balancer: {
+    manager: BALANCER_MANAGER_ABI,
   },
 } as any
 
