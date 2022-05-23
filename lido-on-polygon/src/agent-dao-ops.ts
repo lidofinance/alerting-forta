@@ -403,8 +403,8 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
   const now = txEvent.block.timestamp;
   ST_MATIC_ADMIN_EVENTS.forEach((eventInfo) => {
     if (txEvent.to === eventInfo.address) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
         let severity = eventInfo.severity;
         // Bump alert severity if there was delay alert
         if (
@@ -429,7 +429,7 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
             metadata: { args: String(event.args) },
           })
         );
-      }
+      });
     }
   });
 }

@@ -221,8 +221,8 @@ function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
   }
   DEPOSIT_SECURITY_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
@@ -233,7 +233,7 @@ function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
             metadata: { args: String(event.args) },
           })
         );
-      }
+      });
     }
   });
 }
@@ -241,8 +241,8 @@ function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
 function handleLidoDAOTx(txEvent: TransactionEvent, findings: Finding[]) {
   LIDO_DAO_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
@@ -253,7 +253,7 @@ function handleLidoDAOTx(txEvent: TransactionEvent, findings: Finding[]) {
             metadata: { args: String(event.args) },
           })
         );
-      }
+      });
     }
   });
 }
