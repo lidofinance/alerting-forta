@@ -27,11 +27,8 @@ const REPORT_WINDOW_TOO_MANY_MINTS = 60 * 60;
 // 1 hour
 const MINTS_MONITORING_WINDOW = 60 * 60;
 
-// 2000 dwstETH
-const MAX_MINTS_SUM = new BigNumber(2000).times(ETH_DECIMALS);
-
-// 1000 dwstETH
-const MAX_SINGLE_TX_MINT = new BigNumber(1000).times(ETH_DECIMALS);
+// 10000 dwstETH
+const MAX_MINTS_SUM = new BigNumber(10000).times(ETH_DECIMALS);
 
 let lastReportedTooManyMints = 0;
 let mintsCache: IMintRecord[] = [];
@@ -84,12 +81,12 @@ async function handleTooManyMints(blockEvent: BlockEvent, findings: Finding[]) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleWithdrawalEvent(txEvent, findings);
+  handleEulerTx(txEvent, findings);
 
   return findings;
 }
 
-function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
+function handleEulerTx(txEvent: TransactionEvent, findings: Finding[]) {
   if (DWSTETH_TOKEN_ADDRESS in txEvent.addresses) {
     const [event] = txEvent.filterLog(TRANSFER_EVENT, DWSTETH_TOKEN_ADDRESS);
     if (
@@ -97,20 +94,6 @@ function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
       event.args._from == "0x0000000000000000000000000000000000000000"
     ) {
       const amount = new BigNumber(String(event.args._value));
-      console.log(`Minted: ${amount.toFixed()}`);
-      if (amount.isGreaterThanOrEqualTo(MAX_SINGLE_TX_MINT)) {
-        findings.push(
-          Finding.fromObject({
-            name: "High amount of dwstETH minted in single TX",
-            description:
-              `There were ${amount.div(ETH_DECIMALS).toFixed(2)} ` +
-              `dwstETH minted in single TX`,
-            alertId: "HIGH-DWSTETH-MINT-SINGLE-TX",
-            severity: FindingSeverity.Info,
-            type: FindingType.Suspicious,
-          })
-        );
-      }
       mintsCache.push({
         time: txEvent.timestamp,
         amount: amount,

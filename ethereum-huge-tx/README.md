@@ -7,7 +7,7 @@
 
 ## Alerts
 
-- HUGE-{TOKEN}-TX - Huge {TOKEN} TX detected
+- HUGE-TOKEN-TRANSFERS-IN-SINGLE-TX - Huge token transfers detected in the TX
 
 
 ## Development

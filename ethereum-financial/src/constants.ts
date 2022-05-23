@@ -11,18 +11,10 @@ export const GWEI_DECIMALS = new BigNumber(10).pow(9);
 // ADDRESSES AND EVENTS
 export const ANCHOR_VAULT_ADDRESS =
   "0xa2f987a546d4cd1c607ee8141276876c26b72bdf";
-export const ANCHOR_DEPOSIT_EVENT =
-  "event Deposited (address indexed sender, uint256 amount, bytes32 terra_address, uint256 beth_amount_received)";
-export const ANCHOR_WITHDRAW_EVENT =
-  "event Withdrawn (address indexed recipient, uint256 amount, uint256 steth_amount_received)";
 export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT =
   "event RewardsCollected(uint256 steth_amount, uint256 ust_amount)";
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT =
   "event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)";
-// 1000 stETH/bETH
-export const MAX_ANCHOR_DEPOSIT_WITHDRAW_AMOUNT = new BigNumber(1000).times(
-  ETH_DECIMALS
-);
 // 0.3 ETH
 export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.3).times(
   ETH_DECIMALS
@@ -35,10 +27,6 @@ export const AAVE_STABLE_DEBT_STETH_ADDRESS =
   "0x66457616dd8489df5d0afd8678f4a260088aaf55";
 export const AAVE_VARIABLE_DEBT_STETH_ADDRESS =
   "0xa9deac9f00dc4310c35603fcd9d34d1a750f81db";
-export const AAVE_ATOKEN_MINT_EVENT =
-  "event Mint(address indexed from, uint256 value, uint256 index)";
-export const AAVE_LANDING_POOL_ADDRESS =
-  "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9";
 
 export const DWSTETH_TOKEN_ADDRESS =
   "0x436548baab5ec4d79f669d1b9506d67e98927af7";
@@ -136,9 +124,6 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
 
 // 1 gwe1
 export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1);
-
-// 10000 astETH
-export const MAX_ASTETH_MINT_AMOUNT = 10000;
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
