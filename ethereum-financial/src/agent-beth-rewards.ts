@@ -115,7 +115,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleSellOverdue(blockEvent, findings),
+    //handleSellOverdue(blockEvent, findings),
     handleAdminBalance(blockEvent, findings),
   ]);
 
