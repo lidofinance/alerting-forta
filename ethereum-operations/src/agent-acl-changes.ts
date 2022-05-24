@@ -43,6 +43,8 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   await handleSetPermission(txEvent, findings);
   handleChangePermissionManager(txEvent, findings);
 
+  await handleOwnerChange(txEvent, findings);
+
   return findings;
 }
 
@@ -163,5 +165,45 @@ function handleChangePermissionManager(
         })
       );
     });
+  }
+}
+
+// TODO: move to consts
+const OWNER_CHANGE_EVENT = "event ownerChanged(address indexed newOwner)";
+const WHITELISTED_OWNERS = ["0xdb149235b6f40dc08810aa69869783be101790e7"];
+const OWNABLE_CONTRACTS = ["0x442af784a788a5bd6f42a01ebe9f287a871243fb"];
+
+async function handleOwnerChange(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  for (const contract of OWNABLE_CONTRACTS) {
+    if (contract in txEvent.addresses) {
+      const events = txEvent.filterLog(OWNER_CHANGE_EVENT, contract);
+      for (const event of events) {
+        const newOwner = event.args.newOwner;
+        if (!WHITELISTED_OWNERS.includes(newOwner)) {
+          const newOwnerIsContract = await isContract(newOwner);
+          const severity = newOwnerIsContract
+            ? FindingSeverity.High
+            : FindingSeverity.Critical;
+          findings.push(
+            Finding.fromObject({
+              name: "Contract owner has been changed",
+              description: `Contract ${contract} owner changed to ${
+                newOwnerIsContract ? "contract" : "EOA"
+              } address ${newOwner}`,
+              alertId: "CONTRACT-OWNER-CHANGED",
+              type: FindingType.Info,
+              severity,
+              metadata: {
+                contract,
+                newOwner,
+              },
+            })
+          );
+        }
+      }
+    }
   }
 }
