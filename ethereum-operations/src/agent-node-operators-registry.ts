@@ -59,29 +59,31 @@ function handleSigningKeysRemoved(
 
 function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
-    const [event] = txEvent.filterLog(
+    const events = txEvent.filterLog(
       NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
       NODE_OPERATORS_REGISTRY_ADDRESS
     );
-    if (event && txEvent.to != EASY_TRACK_ADDRESS) {
-      findings.push(
-        Finding.fromObject({
-          name: "NO Stake limit set by NON-EasyTrack action",
-          description: `Staking limit for node operator ${event.args.id} was set to ${event.args.stakingLimit} by NON-EasyTrack motion!`,
-          alertId: "NODE-OPERATORS-STAKING-LIMIT-SET",
-          severity: FindingSeverity.High,
-          type: FindingType.Info,
-        })
-      );
-    }
+    events.forEach((event) => {
+      if (txEvent.to != EASY_TRACK_ADDRESS) {
+        findings.push(
+          Finding.fromObject({
+            name: "NO Stake limit set by NON-EasyTrack action",
+            description: `Staking limit for node operator ${event.args.id} was set to ${event.args.stakingLimit} by NON-EasyTrack motion!`,
+            alertId: "NODE-OPERATORS-STAKING-LIMIT-SET",
+            severity: FindingSeverity.High,
+            type: FindingType.Info,
+          })
+        );
+      }
+    });
   }
 }
 
 function handleEventsOfNotice(txEvent: TransactionEvent, findings: Finding[]) {
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
@@ -92,7 +94,7 @@ function handleEventsOfNotice(txEvent: TransactionEvent, findings: Finding[]) {
             metadata: { args: String(event.args) },
           })
         );
-      }
+      });
     }
   });
 }

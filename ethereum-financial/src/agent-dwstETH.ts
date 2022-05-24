@@ -88,16 +88,15 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleEulerTx(txEvent: TransactionEvent, findings: Finding[]) {
   if (DWSTETH_TOKEN_ADDRESS in txEvent.addresses) {
-    const [event] = txEvent.filterLog(TRANSFER_EVENT, DWSTETH_TOKEN_ADDRESS);
-    if (
-      event &&
-      event.args._from == "0x0000000000000000000000000000000000000000"
-    ) {
-      const amount = new BigNumber(String(event.args._value));
-      mintsCache.push({
-        time: txEvent.timestamp,
-        amount: amount,
-      });
-    }
+    const events = txEvent.filterLog(TRANSFER_EVENT, DWSTETH_TOKEN_ADDRESS);
+    events.forEach((event) => {
+      if (event.args._from == "0x0000000000000000000000000000000000000000") {
+        const amount = new BigNumber(String(event.args._value));
+        mintsCache.push({
+          time: txEvent.timestamp,
+          amount: amount,
+        });
+      }
+    });
   }
 }

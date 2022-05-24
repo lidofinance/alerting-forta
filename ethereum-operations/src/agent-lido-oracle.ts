@@ -468,8 +468,8 @@ function handleLidoOracleTransaction(
 ) {
   LIDO_ORACLE_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
@@ -480,7 +480,7 @@ function handleLidoOracleTransaction(
             metadata: { args: String(event.args) },
           })
         );
-      }
+      });
     }
   });
 }
