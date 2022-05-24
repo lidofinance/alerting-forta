@@ -36,10 +36,13 @@ export class TransferEventInfo {
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
 export const TX_AMOUNT_THRESHOLD = 10000;
+export const TX_AMOUNT_THRESHOLD_LDO = 1000000; // 1 000 000 LDO
 
 export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // ADDRESSES
+export const LDO_TOKEN_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+
 export const MONITORED_TOKENS = new Map<string, string>(
   [
     ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH"],

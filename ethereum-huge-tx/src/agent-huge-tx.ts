@@ -12,10 +12,12 @@ import {
   MONITORED_TOKENS,
   TRANSFER_EVENT,
   TX_AMOUNT_THRESHOLD,
+  TX_AMOUNT_THRESHOLD_LDO,
   TransferEventInfo,
   SPECIAL_TRANSFERS,
   SpecialTransferPattern,
   PARTIALLY_MONITORED_TOKENS,
+  LDO_TOKEN_ADDRESS,
 } from "./constants";
 
 export const name = "Huge TX detector";
@@ -65,7 +67,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
 
 function prepareTransferEventText(transferEvent: LogDescription) {
   const transferInfo = new TransferEventInfo(transferEvent);
-  if (transferInfo.amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)) {
+  if (applicableAmount(transferInfo)) {
     for (const transferPattern of SPECIAL_TRANSFERS) {
       if (match(transferPattern, transferInfo)) {
         return transferPattern.description(transferInfo);
@@ -106,4 +108,11 @@ function match(
     return false;
   }
   return true;
+}
+
+function applicableAmount(transferInfo: TransferEventInfo) {
+  if (transferInfo.token == LDO_TOKEN_ADDRESS) {
+    return transferInfo.amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD_LDO);
+  }
+  return transferInfo.amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD);
 }
