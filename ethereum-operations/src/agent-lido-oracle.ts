@@ -109,16 +109,27 @@ export async function initialize(
 
   const block24HoursAgo = currentBlock - Math.ceil((24 * 60 * 60) / 13);
   const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 13);
-  const prevReport = await getOracleReport(
+
+  const oracleReports = await getOracleReports(
     block48HoursAgo,
-    block24HoursAgo - 1,
-    null
+    currentBlock - 1
   );
-  lastReport = await getOracleReport(
-    block24HoursAgo,
-    currentBlock - 1,
-    prevReport
-  );
+  let prevReport = null;
+  let lastReport = null;
+  if (oracleReports.length > 1) {
+    prevReport = processReportEvent(
+      oracleReports[1].args,
+      (await oracleReports[1].getBlock()).timestamp,
+      null
+    );
+  }
+  if (oracleReports.length > 0) {
+    lastReport = processReportEvent(
+      oracleReports[0].args,
+      (await oracleReports[0].getBlock()).timestamp,
+      prevReport
+    );
+  }
 
   console.log(`[${name}] prevReport: ${printReport(prevReport)}`);
   console.log(`[${name}] lastReport: ${printReport(lastReport)}`);
@@ -129,11 +140,7 @@ export async function initialize(
   };
 }
 
-async function getOracleReport(
-  blockFrom: number,
-  blockTo: number,
-  prevReport: OracleReport | null = null
-) {
+async function getOracleReports(blockFrom: number, blockTo: number) {
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
@@ -149,18 +156,7 @@ async function getOracleReport(
   );
 
   reportEvents.sort(byBlockNumberDesc);
-
-  const reportBlocks = await Promise.all(reportEvents.map((e) => e.getBlock()));
-
-  if (reportEvents.length > 0) {
-    return processReportEvent(
-      reportEvents[0].args,
-      reportBlocks[0].timestamp,
-      prevReport
-    );
-  } else {
-    return null;
-  }
+  return reportEvents;
 }
 
 function processReportEvent(
@@ -275,11 +271,17 @@ async function handleOracleReportDelay(
   ) {
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with prev report
-    lastReport = await getOracleReport(
+    const oracleReports = await getOracleReports(
       blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 13),
-      blockEvent.blockNumber - 1,
-      lastReport
+      blockEvent.blockNumber - 1
     );
+    if (oracleReports.length > 0) {
+      lastReport = processReportEvent(
+        oracleReports[0].args,
+        (await oracleReports[0].getBlock()).timestamp,
+        lastReport
+      );
+    }
     const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
     if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
       findings.push(
