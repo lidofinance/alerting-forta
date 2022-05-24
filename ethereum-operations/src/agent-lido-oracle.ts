@@ -115,7 +115,6 @@ export async function initialize(
     currentBlock - 1
   );
   let prevReport = null;
-  let lastReport = null;
   if (oracleReports.length > 1) {
     prevReport = processReportEvent(
       oracleReports[1].args,
