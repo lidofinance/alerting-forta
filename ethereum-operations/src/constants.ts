@@ -418,6 +418,87 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
       `Lido DAO withdrawal credentials was set to ${args.withdrawalCredentials}`,
     severity: FindingSeverity.High,
   },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event StakingPaused()",
+    alertId: "LIDO-DAO-STAKING-PAUSED",
+    name: "Lido DAO: Staking paused",
+    description: (args: any) => `Staking was paused!`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event StakingResumed()",
+    alertId: "LIDO-DAO-STAKING-RESUMED",
+    name: "Lido DAO: Staking resumed",
+    description: (args: any) => `Staking was resumed!`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)",
+    alertId: "LIDO-DAO-STAKING-LIMIT-SET",
+    name: "Lido DAO: Staking limit set",
+    description: (args: any) =>
+      `Staking limit was set with:\n` +
+      `Max staking limit: ${args.maxStakeLimit.toFixed()}\n` +
+      `Stake limit increase per block: ${args.stakeLimitIncreasePerBlock.toFixed()}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event StakingLimitRemoved()",
+    alertId: "LIDO-DAO-STAKING-LIMIT-REMOVED",
+    name: "Lido DAO: Staking limit removed",
+    description: (args: any) =>
+      `Staking limit was removed`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event ProtocolContactsSet(address oracle, address treasury, address insuranceFund)",
+    alertId: "LIDO-DAO-PROTOCOL-CONTRACT-SET",
+    name: "Lido DAO: Protocol contracts set",
+    description: (args: any) =>
+      `Protocol contracts were set to:\n` +
+      `Oracle: ${args.oracle}\n` +
+      `Treasury: ${args.treasury}\n` +
+      `Insurance fund: ${args.insuranceFund}\n`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event ELRewardsReceived(uint256 amount)",
+    alertId: "LIDO-DAO-EL-REWARDS-RECEIVED",
+    name: "Lido DAO: EL rewards received",
+    description: (args: any) =>
+      `Rewards amount: ${new BigNumber(String(args.amount)).div(ETH_DECIMALS).toFixed(2)} ETH`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event ELRewardsWithdrawalLimitSet(uint256 limitPoints)",
+    alertId: "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
+    name: "Lido DAO: EL rewards withdrawal limit set",
+    description: (args: any) =>
+      `Limit: ${new BigNumber(String(args.limitPoints)).div(ETH_DECIMALS).toFixed(2)} ETH`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event ELRewardsVaultSet(address executionLayerRewardsVault)",
+    alertId: "LIDO-DAO-EL-REWARDS-VAULT-SET",
+    name: "Lido DAO: EL rewards vault set",
+    description: (args: any) =>
+      `Vault: ${args.executionLayerRewardsVault} ETH`,
+    severity: FindingSeverity.Info,
+  },
 ];
 
 // Proxy-watcher consts
@@ -746,6 +827,30 @@ export const LIDO_ROLES = new Map([
   [
     "0x44adaee26c92733e57241cb0b26ffaa2d182ed7120ba3ecd7e0dce3635c01dc1",
     "SET_REPORT_BOUNDARIES",
+  ],
+  [
+    "0x2fc10cc8ae19568712f7a176fb4978616a610650813c9d05326c34abb62749c7",
+    "RESUME_ROLE",
+  ],
+  [
+    "0x84ea57490227bc2be925c684e2a367071d69890b629590198f4125a018eb1de8",
+    "STAKING_PAUSE_ROLE",
+  ],
+  [
+    "0xa42eee1333c0758ba72be38e728b6dadb32ea767de5b4ddbaea1dae85b1b051f",
+    "STAKING_CONTROL_ROLE",
+  ],
+  [
+    "0xeb7bfce47948ec1179e2358171d5ee7c821994c911519349b95313b685109031",
+    "MANAGE_PROTOCOL_CONTRACTS_ROLE",
+  ],
+  [
+    "0x9d68ad53a92b6f44b2e8fb18d211bf8ccb1114f6fafd56aa364515dfdf23c44f",
+    "SET_EL_REWARDS_VAULT_ROLE",
+  ],
+  [
+    "0xca7d176c2da2028ed06be7e3b9457e6419ae0744dc311989e9b29f6a1ceb1003",
+    "SET_EL_REWARDS_WITHDRAWAL_LIMIT_ROLE",
   ],
 ]);
 
