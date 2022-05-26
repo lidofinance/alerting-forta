@@ -8,6 +8,9 @@ export const ETH_DECIMALS = new BigNumber(10).pow(18);
 // 1 gwei
 export const GWEI_DECIMALS = new BigNumber(10).pow(9);
 
+// 1 hour
+export const ONE_HOUR = 60 * 60;
+
 // ADDRESSES AND EVENTS
 export const ANCHOR_VAULT_ADDRESS =
   "0xa2f987a546d4cd1c607ee8141276876c26b72bdf";
@@ -133,7 +136,8 @@ export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1);
 export const IMBALANCE_TOLERANCE = 10;
 export const IMBALANCE_CHANGE_TOLERANCE = 5;
 export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 3;
-export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 7;
+export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 10;
+export const TOTAL_UNSTAKED_STETH_TOLERANCE = 10;
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
