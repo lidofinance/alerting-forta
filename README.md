@@ -6,6 +6,8 @@
 
 /ethereum-finance - Lido Detection bot fot stETH protocol finance activity
 
+/ethereum-huge-tx - Lido Detection bot fot huge tx of the Lido tokens of interest detection
+
 /lido-on-polygon - Lido Detection bot for stMATIC protocol (should be launched against Ethereum mainnet)
 
 /polygon - Detection bot for Lido Apps on the Polygon network (should be launched against Polygon mainnet)
