@@ -24,6 +24,8 @@ import {
   PEG_STEP,
   PEG_THRESHOLD,
   PEG_STEP_ALERT_MIN_VALUE,
+  TOTAL_UNSATKED_STETH_TOLERANCE,
+  ONE_HOUR,
 } from "./constants";
 
 import { capitalizeFirstLetter } from "./utils/tools";
@@ -79,6 +81,8 @@ let poolsParams: { [name: string]: IPoolParams } = {
 
 let lastReportedCurvePegTime = 0;
 let lastReportedCurvePegVal: BigNumber;
+let lastReportedUnstakedStEth = new BigNumber(0);
+let lastReportedUnstakedStEthTime = 0;
 
 export async function initialize(
   currentBlock: number
@@ -134,16 +138,29 @@ export async function initialize(
   }
 
   lastReportedCurvePegVal = await getCurvePeg(currentBlock);
+  lastReportedUnstakedStEth = getTotalUnstakedStEth();
+  lastReportedUnstakedStEthTime = now;
 
   return {
     curveStEthPeg: lastReportedCurvePegVal.toFixed(4),
-    curvePoolSize: poolsParams.Curve.poolSize.poolSizeTotal.toString(),
-    curveWethPoolSize: poolsParams.CurveWeth.poolSize.poolSizeTotal.toString(),
-    balancerPoolSize: poolsParams.Balancer.poolSize.poolSizeTotal.toString(),
-    curvePoolImbalance: poolsParams.Curve.lastReportedImbalance.toString(),
-    balancerPoolImbalance:
-      poolsParams.Balancer.lastReportedImbalance.toString(),
+    curvePoolSize: poolsParams.Curve.poolSize.poolSizeTotal.toFixed(),
+    curveWethPoolSize: poolsParams.CurveWeth.poolSize.poolSizeTotal.toFixed(),
+    balancerPoolSize: poolsParams.Balancer.poolSize.poolSizeTotal.toFixed(),
+    curvePoolImbalance: poolsParams.Curve.lastReportedImbalance.toFixed(),
+    balancerPoolImbalance: poolsParams.Balancer.lastReportedImbalance.toFixed(),
+    totalUnstakedStEth: lastReportedUnstakedStEth.toFixed(),
   };
+}
+
+function getTotalUnstakedStEth() {
+  const unstakedStEthCurve = poolsParams.Curve.poolSize.poolSizeToken2.minus(
+    poolsParams.Curve.poolSize.poolSizeToken1
+  );
+  const unstakedStEthBalancer =
+    poolsParams.Balancer.poolSize.poolSizeToken2.minus(
+      poolsParams.Balancer.poolSize.poolSizeToken1
+    );
+  return unstakedStEthCurve.plus(unstakedStEthBalancer);
 }
 
 function calcChange(balancePrev: BigNumber, balanceCur: BigNumber) {
@@ -197,6 +214,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleCurvePoolSize(blockEvent, findings),
     handleCurveWethPoolSize(blockEvent, findings),
     handleCurvePeg(blockEvent, findings),
+    handleUnstakedStEth(blockEvent, findings),
   ]);
 
   return findings;
@@ -533,7 +551,10 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   const peg: BigNumber = await getCurvePeg(blockEvent.blockNumber);
   // info on PEG decrease
-  if (peg.plus(PEG_STEP).isLessThanOrEqualTo(lastReportedCurvePegVal) && peg.isLessThan(PEG_STEP_ALERT_MIN_VALUE)) {
+  if (
+    peg.plus(PEG_STEP).isLessThanOrEqualTo(lastReportedCurvePegVal) &&
+    peg.isLessThan(PEG_STEP_ALERT_MIN_VALUE)
+  ) {
     findings.push(
       Finding.fromObject({
         name: "stETH PEG on Curve decreased",
@@ -587,4 +608,56 @@ async function getCurvePeg(blockNumber: number) {
     )
   );
   return amountEth.div(amountStEth);
+}
+
+function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  const newUnstakedStEth = getTotalUnstakedStEth();
+  if (newUnstakedStEth.isGreaterThan(0)) {
+    // if totalUnstakedStEth decreased by more than TOTAL_UNSATKED_STETH_TOLERANCE% update last reported value
+    if (
+      newUnstakedStEth.isLessThan(
+        lastReportedUnstakedStEth.times(
+          1 - TOTAL_UNSATKED_STETH_TOLERANCE / 100
+        )
+      )
+    ) {
+      lastReportedUnstakedStEth = newUnstakedStEth;
+      lastReportedUnstakedStEthTime = now;
+    }
+    if (
+      newUnstakedStEth.isGreaterThanOrEqualTo(
+        lastReportedUnstakedStEth.times(
+          1 + TOTAL_UNSATKED_STETH_TOLERANCE / 100
+        )
+      )
+    ) {
+      const severity =
+        now - lastReportedUnstakedStEthTime > ONE_HOUR
+          ? FindingSeverity.Info
+          : FindingSeverity.High;
+      const time = Math.floor((now - lastReportedUnstakedStEthTime) / ONE_HOUR);
+      findings.push(
+        Finding.fromObject({
+          name: "Total 'unsaked' stETH increased",
+          description:
+            `Total unstaked stETH increased from ` +
+            `${lastReportedUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
+            `to ${newUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
+            `over the last ${time} hours.\n` +
+            `Note: Unstaked = difference of stETH(wstETH) and ETH amount in Curve and Balancer pools`,
+          alertId: "TOTAL-UNSTAKED-STETH-INCREASED",
+          severity: severity,
+          type: FindingType.Info,
+          metadata: {
+            prevTotalUnstaked: lastReportedUnstakedStEth.toFixed(2),
+            currentTotalUnstaked: newUnstakedStEth.toFixed(2),
+            timePeriod: time.toFixed(),
+          },
+        })
+      );
+      lastReportedUnstakedStEth = newUnstakedStEth;
+      lastReportedUnstakedStEthTime = now;
+    }
+  }
 }
