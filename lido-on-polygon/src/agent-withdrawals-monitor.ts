@@ -28,9 +28,6 @@ type IWithdrawalRecord = {
   amount: BigNumber;
 };
 
-// 2 hour
-const REPORT_WINDOW_TO_MANY_WITHDRAWALS = 60 * 60 * 2;
-
 let lastReportedToManyWithdrawals = 0;
 let withdrawalsCache: IWithdrawalRecord[] = [];
 
@@ -84,7 +81,7 @@ async function handleToManyWithdrawals(
   withdrawalsCache = withdrawalsCache.filter(
     (x: IWithdrawalRecord) => x.time > now - WITHDRAWALS_MONITORING_WINDOW
   );
-  if (lastReportedToManyWithdrawals + REPORT_WINDOW_TO_MANY_WITHDRAWALS < now) {
+  if (lastReportedToManyWithdrawals + WITHDRAWALS_MONITORING_WINDOW < now) {
     const stMatic = new ethers.Contract(
       ST_MATIC_TOKEN_ADDRESS,
       ST_MATIC_ABI,
