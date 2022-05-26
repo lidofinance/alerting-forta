@@ -614,11 +614,11 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   const newUnstakedStEth = getTotalUnstakedStEth();
   if (newUnstakedStEth.isGreaterThan(0)) {
-    // if totalUnstakedStEth decreased by more than TOTAL_UNSATKED_STETH_TOLERANCE% update last reported value
+    // if totalUnstakedStEth decreased by more than TOTAL_UNSTAKED_STETH_TOLERANCE% update last reported value
     if (
       newUnstakedStEth.isLessThan(
         lastReportedUnstakedStEth.times(
-          1 - TOTAL_UNSATKED_STETH_TOLERANCE / 100
+          1 - TOTAL_UNSTAKED_STETH_TOLERANCE / 100
         )
       )
     ) {
@@ -628,7 +628,7 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     if (
       newUnstakedStEth.isGreaterThanOrEqualTo(
         lastReportedUnstakedStEth.times(
-          1 + TOTAL_UNSATKED_STETH_TOLERANCE / 100
+          1 + TOTAL_UNSTAKED_STETH_TOLERANCE / 100
         )
       )
     ) {
