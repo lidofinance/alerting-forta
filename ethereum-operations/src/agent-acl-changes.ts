@@ -7,6 +7,8 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
+import { ethersProvider } from "./ethers";
+
 import {
   LIDO_ARAGON_ACL_ADDRESS,
   LIDO_ROLES,
@@ -15,6 +17,8 @@ import {
   LIDO_APPS,
   CHANGE_PERMISSION_MANAGER_EVENT,
   ORDINARY_ENTITIES,
+  WHITELISTED_OWNERS,
+  OWNABLE_CONTRACTS,
 } from "./constants";
 
 import { isContract } from "./utils/tools";
@@ -43,7 +47,13 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   await handleSetPermission(txEvent, findings);
   handleChangePermissionManager(txEvent, findings);
 
-  await handleOwnerChange(txEvent, findings);
+  return findings;
+}
+
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+
+  await Promise.all([handleOwnerChange(blockEvent, findings)]);
 
   return findings;
 }
@@ -168,42 +178,50 @@ function handleChangePermissionManager(
   }
 }
 
-// TODO: move to consts
-const OWNER_CHANGE_EVENT = "event ownerChanged(address indexed newOwner)";
-const WHITELISTED_OWNERS = ["0xdb149235b6f40dc08810aa69869783be101790e7"];
-const OWNABLE_CONTRACTS = ["0x442af784a788a5bd6f42a01ebe9f287a871243fb"];
 
-async function handleOwnerChange(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
-  for (const contract of OWNABLE_CONTRACTS) {
-    if (contract in txEvent.addresses) {
-      const events = txEvent.filterLog(OWNER_CHANGE_EVENT, contract);
-      for (const event of events) {
-        const newOwner = event.args.newOwner;
-        if (!WHITELISTED_OWNERS.includes(newOwner)) {
-          const newOwnerIsContract = await isContract(newOwner);
-          const severity = newOwnerIsContract
-            ? FindingSeverity.High
-            : FindingSeverity.Critical;
-          findings.push(
-            Finding.fromObject({
-              name: "Contract owner has been changed",
-              description: `Contract ${contract} owner changed to ${
-                newOwnerIsContract ? "contract" : "EOA"
-              } address ${newOwner}`,
-              alertId: "CONTRACT-OWNER-CHANGED",
-              type: FindingType.Info,
-              severity,
-              metadata: {
-                contract,
-                newOwner,
-              },
-            })
-          );
-        }
-      }
+async function getOwner(
+  address: string,
+  method: string,
+  currentBlock: number
+): Promise<any> {
+  const abi = [`function ${method}() view returns (address)`];
+  const contract = new ethers.Contract(address, abi, ethersProvider);
+  return await contract.functions[method]({ blockTag: currentBlock });
+}
+
+async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
+  const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(
+    async (address: string) => {
+      const data = OWNABLE_CONTRACTS.get(address);
+      if (!data) return;
+
+      const curOwner = String(
+        await getOwner(address, data.ownershipMethod, blockEvent.blockNumber)
+      );
+      if (WHITELISTED_OWNERS.includes(curOwner)) return;
+
+      const curOwnerIsContract = await isContract(curOwner);
+      const severity = curOwnerIsContract
+        ? FindingSeverity.High
+        : FindingSeverity.Critical;
+      findings.push(
+        Finding.fromObject({
+          name: "Suspicious contract owner",
+          description: `${data.name} contract (${address}) owner is set to ${
+            curOwnerIsContract ? "contract" : "EOA"
+          } address ${curOwner}`,
+          alertId: "SUSPICIOUS-CONTRACT-OWNER",
+          type: FindingType.Info,
+          severity: severity,
+          metadata: {
+            contract: address,
+            name: data.name,
+            owner: curOwner,
+          },
+        })
+      );
     }
-  }
+  );
+
+  await Promise.all(promises);
 }
