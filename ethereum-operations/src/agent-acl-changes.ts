@@ -19,6 +19,8 @@ import {
   ORDINARY_ENTITIES,
   WHITELISTED_OWNERS,
   OWNABLE_CONTRACTS,
+  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
+  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
 } from "./constants";
 
 import { isContract } from "./utils/tools";
@@ -178,7 +180,6 @@ function handleChangePermissionManager(
   }
 }
 
-
 async function getOwner(
   address: string,
   method: string,
@@ -188,6 +189,8 @@ async function getOwner(
   const contract = new ethers.Contract(address, abi, ethersProvider);
   return await contract.functions[method]({ blockTag: currentBlock });
 }
+
+const findingsTimestamps = new Map<string, number>();
 
 async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
   const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(
@@ -201,18 +204,29 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
       if (WHITELISTED_OWNERS.includes(curOwner)) return;
 
       const curOwnerIsContract = await isContract(curOwner);
-      const severity = curOwnerIsContract
-        ? FindingSeverity.High
-        : FindingSeverity.Critical;
+
+      const key = `${address}+${curOwner}`;
+      const now = blockEvent.block.timestamp;
+      // skip if reported recently
+      const lastReportTimestamp = findingsTimestamps.get(key);
+      const interval = curOwnerIsContract
+        ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
+        : NEW_OWNER_IS_EOA_REPORT_INTERVAL;
+      if (lastReportTimestamp && interval > now - lastReportTimestamp) return;
+
       findings.push(
         Finding.fromObject({
-          name: "Suspicious contract owner",
+          name: curOwnerIsContract
+            ? "Contract owner set to address not in whitelist"
+            : "Contract owner set to EOA",
           description: `${data.name} contract (${address}) owner is set to ${
             curOwnerIsContract ? "contract" : "EOA"
           } address ${curOwner}`,
           alertId: "SUSPICIOUS-CONTRACT-OWNER",
-          type: FindingType.Info,
-          severity: severity,
+          type: FindingType.Suspicious,
+          severity: curOwnerIsContract
+            ? FindingSeverity.High
+            : FindingSeverity.Critical,
           metadata: {
             contract: address,
             name: data.name,
@@ -220,6 +234,8 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
           },
         })
       );
+
+      findingsTimestamps.set(key, now);
     }
   );
 

@@ -844,3 +844,7 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
 ]);
+
+
+export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60  // 24h
+export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60  // 1h
