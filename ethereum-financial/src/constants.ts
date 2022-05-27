@@ -42,9 +42,6 @@ export const LIDO_ORACLE_ADDRESS = "0x442af784a788a5bd6f42a01ebe9f287a871243fb";
 export const LIDO_ORACLE_COMPLETED_EVENT =
   "event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)";
 
-export const WSTETH_TOKEN_ADDRESS =
-  "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
-
 
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5;
@@ -134,8 +131,8 @@ export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1);
 
 // all consts in the block bellow are in percents
 export const IMBALANCE_TOLERANCE = 10;
-export const IMBALANCE_CHANGE_TOLERANCE = 5;
-export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 3;
+export const IMBALANCE_CHANGE_TOLERANCE = 10;
+export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 5;
 export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 10;
 export const TOTAL_UNSTAKED_STETH_TOLERANCE = 10;
 

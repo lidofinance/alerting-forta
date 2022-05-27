@@ -13,7 +13,6 @@ import { ethersProvider } from "./ethers";
 
 import {
   POOLS_PARAMS_BALANCES,
-  WSTETH_TOKEN_ADDRESS,
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
   POOL_SIZE_CHANGE_TOLERANCE_INFO,
@@ -33,48 +32,70 @@ import { capitalizeFirstLetter } from "./utils/tools";
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import CURVE_WETH_POOL_ABI from "./abi/CurveWethPool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
-import WSTETH_TOKEN_ABI from "./abi/wstEthToken.json";
 
 export const name = "PoolsBalances";
 
-interface IPoolParams {
-  lastReported: number;
+interface PoolParams {
+  poolSize: BigNumber;
   lastReportedImbalance: number;
-  poolSize: IPoolSize;
+  lastReportedImbalanceTime: number;
+  poolDetails: PoolDetails;
 }
 
-interface IPoolSize {
-  poolSizeTotal: BigNumber;
-  poolSizeToken1: BigNumber;
-  poolSizeToken2: BigNumber;
+interface PoolDetails {
+  token1: PoolToken;
+  token2: PoolToken;
 }
 
-let poolsParams: { [name: string]: IPoolParams } = {
+interface PoolToken {
+  name: string;
+  amount: BigNumber;
+}
+
+let poolsParams: { [name: string]: PoolParams } = {
   Curve: {
-    lastReported: 0,
+    poolSize: new BigNumber(0),
     lastReportedImbalance: 0,
-    poolSize: {
-      poolSizeTotal: new BigNumber(0),
-      poolSizeToken1: new BigNumber(0),
-      poolSizeToken2: new BigNumber(0),
+    lastReportedImbalanceTime: 0,
+    poolDetails: {
+      token1: {
+        name: "ETH",
+        amount: new BigNumber(0),
+      },
+      token2: {
+        name: "stETH",
+        amount: new BigNumber(0),
+      },
     },
   },
   CurveWeth: {
-    lastReported: 0,
+    poolSize: new BigNumber(0),
     lastReportedImbalance: 0,
-    poolSize: {
-      poolSizeTotal: new BigNumber(0),
-      poolSizeToken1: new BigNumber(0),
-      poolSizeToken2: new BigNumber(0),
+    lastReportedImbalanceTime: 0,
+    poolDetails: {
+      token1: {
+        name: "WETH",
+        amount: new BigNumber(0),
+      },
+      token2: {
+        name: "stETH",
+        amount: new BigNumber(0),
+      },
     },
   },
   Balancer: {
-    lastReported: 0,
+    poolSize: new BigNumber(0),
     lastReportedImbalance: 0,
-    poolSize: {
-      poolSizeTotal: new BigNumber(0),
-      poolSizeToken1: new BigNumber(0),
-      poolSizeToken2: new BigNumber(0),
+    lastReportedImbalanceTime: 0,
+    poolDetails: {
+      token1: {
+        name: "ETH",
+        amount: new BigNumber(0),
+      },
+      token2: {
+        name: "wstETH",
+        amount: new BigNumber(0),
+      },
     },
   },
 };
@@ -92,49 +113,52 @@ export async function initialize(
   const block = await ethersProvider.getBlock(currentBlock);
   const now = block.timestamp;
 
-  // get initial Balancer Pool size
+  // get initial Balancer Pool tokens amount
   const balancerPoolTokens = await getBalancerPoolTokens(currentBlock);
-  poolsParams.Balancer.poolSize.poolSizeTotal = BigNumber.sum.apply(
-    null,
-    balancerPoolTokens
+  poolsParams.Balancer.poolDetails.token1.amount = balancerPoolTokens[0];
+  poolsParams.Balancer.poolDetails.token2.amount = balancerPoolTokens[1];
+  poolsParams.Balancer.poolSize = balancerPoolTokens[0].plus(
+    balancerPoolTokens[1]
   );
 
-  // get initial Curve Pool size
+  // get initial Curve Pool tokens amount
   const curvePoolTokens = await getCurvePoolTokens(currentBlock);
-  poolsParams.Curve.poolSize.poolSizeTotal = BigNumber.sum.apply(
-    null,
-    curvePoolTokens
-  );
+  poolsParams.Curve.poolDetails.token1.amount = curvePoolTokens[0];
+  poolsParams.Curve.poolDetails.token2.amount = curvePoolTokens[1];
+  poolsParams.Curve.poolSize = curvePoolTokens[0].plus(curvePoolTokens[1]);
 
   // get initial CurveWETH Pool size
   const curveWethPoolTokens = await getCurveWETHPoolTokens(currentBlock);
-  poolsParams.CurveWeth.poolSize.poolSizeTotal = BigNumber.sum.apply(
-    null,
-    curveWethPoolTokens
+  poolsParams.CurveWeth.poolDetails.token1.amount = curveWethPoolTokens[0];
+  poolsParams.CurveWeth.poolDetails.token2.amount = curveWethPoolTokens[1];
+  poolsParams.CurveWeth.poolSize = curveWethPoolTokens[0].plus(
+    curveWethPoolTokens[1]
   );
 
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
-  [
-    poolsParams.Balancer.lastReportedImbalance,
-    poolsParams.Balancer.poolSize.poolSizeToken1,
-    poolsParams.Balancer.poolSize.poolSizeToken2,
-  ] = await balancerPoolImbalancePercent(
+  const balancerPoolTokensPrev = await getBalancerPoolTokens(
     currentBlock - Math.ceil((5 * 60) / 13)
+  );
+  poolsParams.Balancer.lastReportedImbalance = calcImbalance(
+    balancerPoolTokensPrev[0],
+    balancerPoolTokensPrev[1]
   );
   if (
     Math.abs(poolsParams.Balancer.lastReportedImbalance) > IMBALANCE_TOLERANCE
   ) {
-    poolsParams.Balancer.lastReported = now;
+    poolsParams.Balancer.lastReportedImbalanceTime = now;
   }
 
   // get Curve Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
-  [
-    poolsParams.Curve.lastReportedImbalance,
-    poolsParams.Curve.poolSize.poolSizeToken1,
-    poolsParams.Curve.poolSize.poolSizeToken2,
-  ] = await curvePoolImbalancePercent(currentBlock - Math.ceil((5 * 60) / 13));
+  const curvePoolTokensPrev = await getCurvePoolTokens(
+    currentBlock - Math.ceil((5 * 60) / 13)
+  );
+  poolsParams.Curve.lastReportedImbalance = calcImbalance(
+    curvePoolTokensPrev[0],
+    curvePoolTokensPrev[1]
+  );
   if (Math.abs(poolsParams.Curve.lastReportedImbalance) > IMBALANCE_TOLERANCE) {
-    poolsParams.Curve.lastReported = now;
+    poolsParams.Curve.lastReportedImbalanceTime = now;
   }
 
   lastReportedCurvePegVal = await getCurvePeg(currentBlock);
@@ -143,22 +167,22 @@ export async function initialize(
 
   return {
     curveStEthPeg: lastReportedCurvePegVal.toFixed(4),
-    curvePoolSize: poolsParams.Curve.poolSize.poolSizeTotal.toFixed(),
-    curveWethPoolSize: poolsParams.CurveWeth.poolSize.poolSizeTotal.toFixed(),
-    balancerPoolSize: poolsParams.Balancer.poolSize.poolSizeTotal.toFixed(),
-    curvePoolImbalance: poolsParams.Curve.lastReportedImbalance.toFixed(),
-    balancerPoolImbalance: poolsParams.Balancer.lastReportedImbalance.toFixed(),
+    curvePoolImbalance: poolsParams.Curve.lastReportedImbalance.toString(),
+    curvePoolSize: poolsParams.Curve.poolSize.toFixed(),
+    balancerPoolImbalance:
+      poolsParams.Balancer.lastReportedImbalance.toString(),
+    balancerPoolSize: poolsParams.Balancer.poolSize.toFixed(),
     totalUnstakedStEth: lastReportedUnstakedStEth.toFixed(),
   };
 }
 
 function getTotalUnstakedStEth() {
-  const unstakedStEthCurve = poolsParams.Curve.poolSize.poolSizeToken2.minus(
-    poolsParams.Curve.poolSize.poolSizeToken1
+  const unstakedStEthCurve = poolsParams.Curve.poolDetails.token2.amount.minus(
+    poolsParams.Curve.poolDetails.token1.amount
   );
   const unstakedStEthBalancer =
-    poolsParams.Balancer.poolSize.poolSizeToken2.minus(
-      poolsParams.Balancer.poolSize.poolSizeToken1
+    poolsParams.Balancer.poolDetails.token2.amount.minus(
+      poolsParams.Balancer.poolDetails.token1.amount
     );
   return unstakedStEthCurve.plus(unstakedStEthBalancer);
 }
@@ -168,40 +192,28 @@ function calcChange(balancePrev: BigNumber, balanceCur: BigNumber) {
 }
 
 function calcImbalance(balance1: BigNumber, balance2: BigNumber) {
-  if (balance2 >= balance1) {
-    return (balance2.div(balance1).toNumber() - 1) * 100;
-  } else {
-    return -(balance1.div(balance2).toNumber() - 1) * 100;
-  }
+  const totalSize = balance1.plus(balance2);
+  const percent1 = balance1.div(totalSize).times(100);
+  const percent2 = balance2.div(totalSize).times(100);
+  return percent1.minus(percent2).toNumber();
 }
 
-function imbalanceMessage(imbalance: number, token1: string, token2: string) {
-  if (imbalance > 0) {
-    return `there are ${imbalance.toFixed(
-      2
-    )}% more of ${token1} than ${token2} in the pool`;
-  } else {
-    return `there are ${-imbalance.toFixed(
-      2
-    )}% more of ${token2} than ${token1} in the pool`;
-  }
-}
-
-function poolDetails(params: IPoolParams, token1: string, token2: string) {
-  const token1Size = params.poolSize.poolSizeToken1.div(ETH_DECIMALS);
-  const token2Size = params.poolSize.poolSizeToken2.div(ETH_DECIMALS);
-  const totalSize = token1Size.plus(token2Size);
+function poolDetails(params: PoolParams) {
+  const token1Amount = params.poolDetails.token1.amount.div(ETH_DECIMALS);
+  const token2Amount = params.poolDetails.token2.amount.div(ETH_DECIMALS);
+  const totalSize = token1Amount.plus(token2Amount);
   return (
-    `\n**Current state:**\n` +
-    `${token1} - ${token1Size.toFixed(2)} ` +
-    `(${token1Size.div(totalSize).times(100).toFixed(2)}%)\n` +
-    `${token2} - ${token2Size.toFixed(2)} ` +
-    `(${token2Size.div(totalSize).times(100).toFixed(2)}%)`
+    `${params.poolDetails.token1.name} - ${token1Amount.toFixed(2)} ` +
+    `(${token1Amount.div(totalSize).times(100).toFixed(2)}%)\n` +
+    `${params.poolDetails.token2.name} - ${token2Amount.toFixed(2)} ` +
+    `(${token2Amount.div(totalSize).times(100).toFixed(2)}%)`
   );
 }
 
-function alreadyReported(poolParams: IPoolParams, now: number) {
-  return poolParams.lastReported + POOLS_BALANCES_REPORT_WINDOW >= now;
+function alreadyReportedImbalance(poolParams: PoolParams, now: number) {
+  return (
+    poolParams.lastReportedImbalanceTime + POOLS_BALANCES_REPORT_WINDOW >= now
+  );
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
@@ -220,68 +232,9 @@ export async function handleBlock(blockEvent: BlockEvent) {
   return findings;
 }
 
-async function handleCurvePoolImbalance(
-  blockEvent: BlockEvent,
-  findings: Finding[]
-) {
-  const now = blockEvent.block.timestamp;
-  let poolParams = poolsParams.Curve;
-  const [curveImbalance, ethBalance, stethBalance] =
-    await curvePoolImbalancePercent();
-  poolParams.poolSize.poolSizeToken1 = ethBalance;
-  poolParams.poolSize.poolSizeToken2 = stethBalance;
-  if (!alreadyReported(poolParams, now)) {
-    if (
-      curveImbalance > IMBALANCE_TOLERANCE ||
-      curveImbalance < -IMBALANCE_TOLERANCE
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: "Curve Pool is imbalanced",
-          description: `${capitalizeFirstLetter(
-            imbalanceMessage(curveImbalance, "stETH", "ETH")
-          )} ${poolDetails(poolParams, "ETH", "stETH")}`,
-          alertId: "CURVE-POOL-IMBALANCE",
-          severity: FindingSeverity.High,
-          type: FindingType.Suspicious,
-        })
-      );
-      poolParams.lastReported = now;
-      poolParams.lastReportedImbalance = curveImbalance;
-    }
-  }
-  let changeInt = [
-    -1 * Math.sign(poolParams.lastReportedImbalance) * IMBALANCE_TOLERANCE,
-    poolParams.lastReportedImbalance +
-      IMBALANCE_CHANGE_TOLERANCE * Math.sign(poolParams.lastReportedImbalance),
-  ];
-  changeInt.sort((a, b) => a - b);
-  if (curveImbalance < changeInt[0] || curveImbalance > changeInt[1]) {
-    findings.push(
-      Finding.fromObject({
-        name: "Curve Pool rapid imbalance change",
-        description:
-          `Curve Pool imbalance has changed from ${imbalanceMessage(
-            poolParams.lastReportedImbalance,
-            "stETH",
-            "ETH"
-          )} to ${imbalanceMessage(
-            curveImbalance,
-            "stETH",
-            "ETH"
-          )} since the last alert! ` +
-          `${poolDetails(poolParams, "ETH", "stETH")}`,
-        alertId: "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
-        severity: FindingSeverity.High,
-        type: FindingType.Suspicious,
-      })
-    );
-    poolParams.lastReported = now;
-    poolParams.lastReportedImbalance = curveImbalance;
-  }
-}
+///////// CURVE ////////////
 
-async function getCurvePoolTokens(blockNumber?: number) {
+async function getCurvePoolTokens(blockNumber?: number): Promise<BigNumber[]> {
   const curveStableSwap = new ethers.Contract(
     POOLS_PARAMS_BALANCES.Curve.poolContractAddress,
     CURVE_POOL_ABI,
@@ -300,14 +253,58 @@ async function getCurvePoolTokens(blockNumber?: number) {
   return [ethBalance, stethBalance];
 }
 
-async function curvePoolImbalancePercent(blockNumber?: number) {
-  // Value between -100 (only ETH in pool) to 100 (only stETH in pool).
-  const [ethBalance, stethBalance] = await getCurvePoolTokens(blockNumber);
-  return [
-    calcImbalance(ethBalance, stethBalance),
-    ethBalance,
-    stethBalance,
-  ] as const;
+async function handleCurvePoolImbalance(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  let poolParams = poolsParams.Curve;
+  const [ethBalance, stEthBalance] = await getCurvePoolTokens(
+    blockEvent.blockNumber
+  );
+  const curveImbalance = calcImbalance(ethBalance, stEthBalance);
+  const prevPoolStateText = poolDetails(poolParams);
+  poolParams.poolDetails.token1.amount = ethBalance;
+  poolParams.poolDetails.token2.amount = stEthBalance;
+  if (!alreadyReportedImbalance(poolParams, now)) {
+    if (
+      curveImbalance > IMBALANCE_TOLERANCE ||
+      curveImbalance < -IMBALANCE_TOLERANCE
+    ) {
+      findings.push(
+        Finding.fromObject({
+          name: "Curve Pool is imbalanced",
+          description: `Current pool state:\n${poolDetails(poolParams)}`,
+          alertId: "CURVE-POOL-IMBALANCE",
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
+        })
+      );
+      poolParams.lastReportedImbalanceTime = now;
+      poolParams.lastReportedImbalance = curveImbalance;
+    }
+  }
+  let changeInt = [
+    -1 * Math.sign(poolParams.lastReportedImbalance) * IMBALANCE_TOLERANCE,
+    poolParams.lastReportedImbalance +
+      IMBALANCE_CHANGE_TOLERANCE * Math.sign(poolParams.lastReportedImbalance),
+  ];
+  changeInt.sort((a, b) => a - b);
+  if (curveImbalance < changeInt[0] || curveImbalance > changeInt[1]) {
+    findings.push(
+      Finding.fromObject({
+        name: "Curve Pool rapid imbalance change",
+        description:
+          `Prev pool sate:\n${prevPoolStateText}\n` +
+          `Current pool state:\n${poolDetails(poolParams)}`,
+        alertId: "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+      })
+    );
+    poolParams.lastReportedImbalanceTime = now;
+    poolParams.lastReportedImbalance = curveImbalance;
+  }
 }
 
 async function handleCurvePoolSize(
@@ -316,11 +313,8 @@ async function handleCurvePoolSize(
 ) {
   let poolParams = poolsParams.Curve;
   const poolTokens = await getCurvePoolTokens(blockEvent.blockNumber);
-  const poolSize = BigNumber.sum.apply(null, poolTokens);
-  const poolSizeChange = calcChange(
-    poolParams.poolSize.poolSizeTotal,
-    poolSize
-  );
+  const poolSize = poolTokens[0].plus(poolTokens[1]);
+  const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
     const severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
@@ -338,13 +332,37 @@ async function handleCurvePoolSize(
         severity: severity,
         type: FindingType.Info,
         metadata: {
-          sizeBefore: poolParams.poolSize.poolSizeTotal.toFixed(),
+          sizeBefore: poolParams.poolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
       })
     );
   }
-  poolParams.poolSize.poolSizeTotal = poolSize;
+  poolParams.poolSize = poolSize;
+}
+
+///////// BALANCER ////////////
+
+async function getBalancerPoolTokens(
+  blockNumber?: number
+): Promise<BigNumber[]> {
+  const balancerVault = new ethers.Contract(
+    POOLS_PARAMS_BALANCES.Balancer.vaultContractAddress,
+    BALANCER_POOL_ABI,
+    ethersProvider
+  );
+  let overrides = {} as any;
+  if (blockNumber) {
+    overrides.blockTag = blockNumber;
+  }
+  const poolTokens = await balancerVault.functions.getPoolTokens(
+    POOLS_PARAMS_BALANCES.Balancer.poolId,
+    overrides
+  );
+  return [
+    new BigNumber(String(poolTokens.balances[1])),
+    new BigNumber(String(poolTokens.balances[0])),
+  ];
 }
 
 async function handleBalancerPoolImbalance(
@@ -353,11 +371,15 @@ async function handleBalancerPoolImbalance(
 ) {
   const now = blockEvent.block.timestamp;
   let poolParams = poolsParams.Balancer;
-  const [balancerImbalance, ethBalance, wstethBalance] =
-    await balancerPoolImbalancePercent();
-  poolParams.poolSize.poolSizeToken1 = ethBalance;
-  poolParams.poolSize.poolSizeToken2 = wstethBalance;
-  if (!alreadyReported(poolParams, now)) {
+
+  const [ethBalance, wstethBalance] = await getBalancerPoolTokens(
+    blockEvent.blockNumber
+  );
+  const balancerImbalance = calcImbalance(ethBalance, wstethBalance);
+  const prevPoolStateText = poolDetails(poolParams);
+  poolParams.poolDetails.token1.amount = ethBalance;
+  poolParams.poolDetails.token2.amount = wstethBalance;
+  if (!alreadyReportedImbalance(poolParams, now)) {
     if (
       balancerImbalance > IMBALANCE_TOLERANCE ||
       balancerImbalance < -IMBALANCE_TOLERANCE
@@ -365,19 +387,13 @@ async function handleBalancerPoolImbalance(
       findings.push(
         Finding.fromObject({
           name: "Balancer Pool is imbalanced",
-          description: `${capitalizeFirstLetter(
-            imbalanceMessage(
-              balancerImbalance,
-              "wstETH (recounted to stETH)",
-              "ETH"
-            )
-          )} ${poolDetails(poolParams, "ETH", "wstETH")}`,
+          description: `Current pool state:\n${poolDetails(poolParams)}`,
           alertId: "BALANCER-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
         })
       );
-      poolParams.lastReported = now;
+      poolParams.lastReportedImbalanceTime = now;
       poolParams.lastReportedImbalance = balancerImbalance;
     }
   }
@@ -392,71 +408,16 @@ async function handleBalancerPoolImbalance(
       Finding.fromObject({
         name: "Balancer Pool rapid imbalance change",
         description:
-          `Balancer Pool imbalance has changed from ${imbalanceMessage(
-            poolParams.lastReportedImbalance,
-            "wstETH (recounted to stETH)",
-            "ETH"
-          )} to ${imbalanceMessage(
-            balancerImbalance,
-            "wstETH (recounted to stETH)",
-            "ETH"
-          )} since the last alert!` +
-          `${poolDetails(poolParams, "ETH", "wstETH")}`,
+          `Prev pool sate:\n${prevPoolStateText}\n` +
+          `Current pool state:\n${poolDetails(poolParams)}`,
         alertId: "BALANCER-POOL-IMBALANCE-RAPID-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
       })
     );
-    poolParams.lastReported = now;
+    poolParams.lastReportedImbalanceTime = now;
     poolParams.lastReportedImbalance = balancerImbalance;
   }
-}
-
-async function getBalancerPoolTokens(blockNumber?: number) {
-  const balancerVault = new ethers.Contract(
-    POOLS_PARAMS_BALANCES.Balancer.vaultContractAddress,
-    BALANCER_POOL_ABI,
-    ethersProvider
-  );
-  let overrides = {} as any;
-  if (blockNumber) {
-    overrides.blockTag = blockNumber;
-  }
-  const poolTokens = await balancerVault.functions.getPoolTokens(
-    POOLS_PARAMS_BALANCES.Balancer.poolId,
-    overrides
-  );
-  return poolTokens.balances.map((el: any) => new BigNumber(String(el)));
-}
-
-async function balancerPoolImbalancePercent(blockNumber?: number) {
-  // Value between -100 (only ETH in pool) to 100 (only wstETH in pool).
-  // Note wstETH is not rebasable so it is not bounded to ETH 1:1
-  // to count imbalance we acquire current wstETH to stETH relation
-  const [wstethBalance, ethBalance] = await getBalancerPoolTokens(blockNumber);
-
-  const wstETH = new ethers.Contract(
-    WSTETH_TOKEN_ADDRESS,
-    WSTETH_TOKEN_ABI,
-    ethersProvider
-  );
-  let overrides = {} as any;
-  if (blockNumber) {
-    overrides.blockTag = blockNumber;
-  }
-  const stethBalance = new BigNumber(
-    String(
-      await wstETH.functions.getStETHByWstETH(
-        wstethBalance.toFixed(),
-        overrides
-      )
-    )
-  );
-  return [
-    calcImbalance(ethBalance, stethBalance),
-    ethBalance,
-    wstethBalance,
-  ] as const;
 }
 
 async function handleBalancerPoolSize(
@@ -465,11 +426,8 @@ async function handleBalancerPoolSize(
 ) {
   let poolParams = poolsParams.Balancer;
   const poolTokens = await getBalancerPoolTokens(blockEvent.blockNumber);
-  const poolSize = BigNumber.sum.apply(null, poolTokens);
-  const poolSizeChange = calcChange(
-    poolParams.poolSize.poolSizeTotal,
-    poolSize
-  );
+  const poolSize = poolTokens[0].plus(poolTokens[1]);
+  const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
     const severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
@@ -487,16 +445,20 @@ async function handleBalancerPoolSize(
         severity: severity,
         type: FindingType.Info,
         metadata: {
-          sizeBefore: poolParams.poolSize.poolSizeTotal.toFixed(),
+          sizeBefore: poolParams.poolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
       })
     );
   }
-  poolParams.poolSize.poolSizeTotal = poolSize;
+  poolParams.poolSize = poolSize;
 }
 
-async function getCurveWETHPoolTokens(blockNumber?: number) {
+///////// CURVE WETH ////////////
+
+async function getCurveWETHPoolTokens(
+  blockNumber?: number
+): Promise<BigNumber[]> {
   const curvePool = new ethers.Contract(
     POOLS_PARAMS_BALANCES.CurveWethStEth.poolContractAddress,
     CURVE_WETH_POOL_ABI,
@@ -516,11 +478,8 @@ async function handleCurveWethPoolSize(
 ) {
   let poolParams = poolsParams.CurveWeth;
   const poolTokens = await getCurveWETHPoolTokens(blockEvent.blockNumber);
-  const poolSize = BigNumber.sum.apply(null, poolTokens);
-  const poolSizeChange = calcChange(
-    poolParams.poolSize.poolSizeTotal,
-    poolSize
-  );
+  const poolSize = poolTokens[0].plus(poolTokens[1]);
+  const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
     const severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
@@ -538,14 +497,16 @@ async function handleCurveWethPoolSize(
         severity: severity,
         type: FindingType.Info,
         metadata: {
-          sizeBefore: poolParams.poolSize.poolSizeTotal.toFixed(),
+          sizeBefore: poolParams.poolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
       })
     );
   }
-  poolParams.poolSize.poolSizeTotal = poolSize;
+  poolParams.poolSize = poolSize;
 }
+
+///////// CURVE PEG ////////////
 
 async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
@@ -609,6 +570,8 @@ async function getCurvePeg(blockNumber: number) {
   );
   return amountEth.div(amountStEth);
 }
+
+///////// "UNSTAKED" stETH ////////////
 
 function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
