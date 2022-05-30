@@ -860,3 +860,96 @@ export const SET_PERMISSION_PARAMS_EVENT =
   "event SetPermissionParams (address indexed entity, address indexed app, bytes32 indexed role, bytes32 paramsHash)";
 export const CHANGE_PERMISSION_MANAGER_EVENT =
   "event ChangePermissionManager(address indexed app, bytes32 indexed role, address indexed manager)";
+
+interface IOwnable {
+  name: string;
+  ownershipMethod: string;
+}
+
+// Rewards contracts allowed owners
+export const WHITELISTED_OWNERS = [
+  "0x2e59A20f205bB85a89C53f1936454680651E618e",
+  "0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c",
+  // multisigs
+  "0x73b047fe6337183A454c5217241D780a932777bD",
+  "0x3cd9F71F80AB08ea5a7Dca348B5e94BC595f26A0",
+];
+
+// List of contracts to monitor for owner
+export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
+  [
+    // will be changed soon
+    "0xDb149235B6F40dC08810AA69869783Be101790e7",
+    {
+      name: "Deposit Security module",
+      ownershipMethod: "getOwner",
+    },
+  ],
+  [
+    "0x753D5167C31fBEB5b49624314d74A957Eb271709",
+    {
+      name: "Curve Liquidity Farming Manager",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0x6140182B2536AE7B6Cfcfb2d2bAB0f6Fe0D7b58E",
+    {
+      name: "ARCx Manager",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0xE5576eB1dD4aA524D67Cf9a32C8742540252b6F4",
+    {
+      name: "SushiSwap LP Manager",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0x75ff3dd673Ef9fC459A52E1054db5dF2A1101212",
+    {
+      name: "SushiSwap LP Reward",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0x1220ccCDc9BBA5CF626a84586C74D6f940932342",
+    {
+      name: "Balancer LP v2 Manager",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0x86F6c353A0965eB069cD7f4f91C1aFEf8C725551",
+    {
+      name: "Balancer LP v3 Manager",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0xf5436129Cf9d8fa2a1cb6e591347155276550635",
+    {
+      name: "1inch LP Reward Manager",
+      ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0xA2F987A546D4CD1c607Ee8141276876C26b72Bdf",
+    {
+      name: "AnchorVault",
+      ownershipMethod: "admin",
+    },
+  ],
+  [
+    "0xFE5986E06210aC1eCC1aDCafc0cc7f8D63B3F977",
+    {
+      name: "Easy Track EVMScriptExecutor",
+      ownershipMethod: "owner",
+    },
+  ],
+]);
+
+
+export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60  // 24h
+export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60  // 1h
