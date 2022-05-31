@@ -17,3 +17,24 @@
 /lido-rewards - Lido reWARDS committee bot
 
 /template - Template for bot creation
+
+## Contribute
+
+See bots README plus
+
+### We use prettier
+
+From the repository root run
+
+```
+npm install prettier
+npx prettier --check .
+```
+
+in case of \[warn\]s run:
+
+```
+npx prettier --write .
+```
+
+and commit changes

@@ -448,12 +448,10 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event:
-      "event StakingLimitRemoved()",
+    event: "event StakingLimitRemoved()",
     alertId: "LIDO-DAO-STAKING-LIMIT-REMOVED",
     name: "Lido DAO: Staking limit removed",
-    description: (args: any) =>
-      `Staking limit was removed`,
+    description: (args: any) => `Staking limit was removed`,
     severity: FindingSeverity.High,
   },
   {
@@ -471,32 +469,32 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event:
-      "event ELRewardsReceived(uint256 amount)",
+    event: "event ELRewardsReceived(uint256 amount)",
     alertId: "LIDO-DAO-EL-REWARDS-RECEIVED",
     name: "Lido DAO: EL rewards received",
     description: (args: any) =>
-      `Rewards amount: ${new BigNumber(String(args.amount)).div(ETH_DECIMALS).toFixed(2)} ETH`,
+      `Rewards amount: ${new BigNumber(String(args.amount))
+        .div(ETH_DECIMALS)
+        .toFixed(2)} ETH`,
     severity: FindingSeverity.Info,
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event:
-      "event ELRewardsWithdrawalLimitSet(uint256 limitPoints)",
+    event: "event ELRewardsWithdrawalLimitSet(uint256 limitPoints)",
     alertId: "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
     name: "Lido DAO: EL rewards withdrawal limit set",
     description: (args: any) =>
-      `Limit: ${new BigNumber(String(args.limitPoints)).div(ETH_DECIMALS).toFixed(2)} ETH`,
+      `Limit: ${new BigNumber(String(args.limitPoints))
+        .div(ETH_DECIMALS)
+        .toFixed(2)} ETH`,
     severity: FindingSeverity.High,
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event:
-      "event ELRewardsVaultSet(address executionLayerRewardsVault)",
+    event: "event ELRewardsVaultSet(address executionLayerRewardsVault)",
     alertId: "LIDO-DAO-EL-REWARDS-VAULT-SET",
     name: "Lido DAO: EL rewards vault set",
-    description: (args: any) =>
-      `Vault: ${args.executionLayerRewardsVault} ETH`,
+    description: (args: any) => `Vault: ${args.executionLayerRewardsVault} ETH`,
     severity: FindingSeverity.Info,
   },
 ];
@@ -676,7 +674,7 @@ export const LIDO_APPS = new Map([
   ["0xdb149235b6f40dc08810aa69869783be101790e7", "Deposit Security module"],
   ["0x55032650b14df07b85bf18a3a3ec8e0af2e028d5", "Node Operators registry"],
   ["0x442af784a788a5bd6f42a01ebe9f287a871243fb", "Oracle"],
-  ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH token"]
+  ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH token"],
 ]);
 
 export const ORDINARY_ENTITIES = new Map([
@@ -951,6 +949,5 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
   ],
 ]);
 
-
-export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60  // 24h
-export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60  // 1h
+export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
+export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h

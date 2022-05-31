@@ -42,7 +42,6 @@ export const LIDO_ORACLE_ADDRESS = "0x442af784a788a5bd6f42a01ebe9f287a871243fb";
 export const LIDO_ORACLE_COMPLETED_EVENT =
   "event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)";
 
-
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5;
 
@@ -124,7 +123,6 @@ export const POOL_REWARDS_ALERTS_PERIODS_PARAMS = [
     pools: ["Curve"],
   },
 ];
-
 
 // 1 gwe1
 export const ASTETH_GWEI_DIFFERENCE_THRESHOLD = GWEI_DECIMALS.times(1);
