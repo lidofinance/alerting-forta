@@ -9,7 +9,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider, etherscanProvider } from "./ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "./abi/NodeOperatorsRegistry.json";
 import LIDO_DAO_ABI from "./abi/LidoDAO.json";
@@ -46,8 +46,7 @@ export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-  let provider = new ethers.providers.EtherscanProvider();
-  let history = await provider.getHistory(
+  let history = await etherscanProvider.getHistory(
     LIDO_DEPOSIT_SECURITY_ADDRESS,
     currentBlock - Math.floor((60 * 60 * 72) / 13),
     currentBlock - 1
