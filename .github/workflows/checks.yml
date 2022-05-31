@@ -26,4 +26,4 @@ jobs:
       run: npm install prettier
 
     - name: Check formatting with prettier
-      run: npx prettier --check .
+      run: npx prettier --check **/*.ts
