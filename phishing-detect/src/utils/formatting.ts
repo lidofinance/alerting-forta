@@ -58,8 +58,12 @@ export function makeTopSummary(spenders: Map<string, ISpenderInfo>) {
 
 export function formatTokensWithApprovers(spenderInfo: ISpenderInfo) {
   let tokens: string[] = [];
-  spenderInfo.tokens.forEach((approvers: Set<string>, token: string)=>{
-    tokens.push(`${MONITORED_ERC20_ADDRESSES.get(token)}: [${Array.from(approvers).join(",")}]`)
-  })
-  return `{${tokens.join(",")}}`
+  spenderInfo.tokens.forEach((approvers: Set<string>, token: string) => {
+    tokens.push(
+      `${MONITORED_ERC20_ADDRESSES.get(token)}: [${Array.from(approvers).join(
+        ","
+      )}]`
+    );
+  });
+  return `{${tokens.join(",")}}`;
 }

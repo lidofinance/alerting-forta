@@ -1,11 +1,29 @@
 name: Checks and Linters
 
-on: 
+on:
   push:
 
 jobs:
   security:
     uses: lidofinance/linters/.github/workflows/security.yml@master
-  
+
   docker:
     uses: lidofinance/linters/.github/workflows/docker.yml@master
+
+  formatting:
+    name: Check code formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 12.x
+
+      - name: Setup prettier
+        run: npm install prettier
+
+      - name: Check formatting with prettier
+        run: npx prettier --check .

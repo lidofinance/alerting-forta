@@ -35,7 +35,7 @@ export const MONITORED_ERC20_ADDRESSES = new Map<string, string>([
   ["0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599", "stMATIC"],
 ]);
 
-const WHITE_LIST_ADDRESSES_RAW: string [] = [
+const WHITE_LIST_ADDRESSES_RAW: string[] = [
   // owned by Lido
   "0xdc24316b9ae028f1497c275eb9192a3ea0f67022", // curvePool
   "0x32296969ef14eb0c6d29669c550d4a0449130230", // balancerPool
@@ -105,7 +105,9 @@ const WHITE_LIST_ADDRESSES_RAW: string [] = [
   "0x95e6f48254609a6ee006f7d493c8e5fb97094cef", // 0x: ERC20 Proxy
 ];
 
-export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(address => address.toLowerCase())
+export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
+  (address) => address.toLowerCase()
+);
 
 export const APPROVE_EVENT_ABI =
   "event Approval (address indexed owner, address indexed spender, uint256 value)";
