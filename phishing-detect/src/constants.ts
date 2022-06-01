@@ -103,6 +103,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x27182842e098f60e3d576794a5bffb0777e025d3", // euler
   "0x78106f7db3ebcee3d2cfac647f0e4c9b06683b39", // dustSweeper
   "0x95e6f48254609a6ee006f7d493c8e5fb97094cef", // 0x: ERC20 Proxy
+  "0x9d3a1c83cb5ad71fb66fc7d94f11fbe7eaa3054b", // DeFi saver automated proxy
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
