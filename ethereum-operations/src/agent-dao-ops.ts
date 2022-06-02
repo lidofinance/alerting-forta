@@ -254,7 +254,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
         name: "Staking limit below 30%",
         description:
           `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
-          `this is lower than 10% of max staking limit ` +
+          `this is lower than 30% of max staking limit ` +
           `${maxStakingLimit.toFixed(2)} ETH`,
         alertId: "LOW-STAKING-LIMIT",
         severity: FindingSeverity.Info,
