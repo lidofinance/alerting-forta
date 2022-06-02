@@ -36,11 +36,17 @@ export const name = "DaoOps";
 const REPORT_WINDOW = 60 * 60 * 24;
 // 4 hours
 const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
+// 12 hours
+const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12;
+// 12 hours
+const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12;
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
 let lastDepositorTxTime = 0;
 let criticalBufferAmountFrom = 0;
 let lastReportedExecutorBalance = 0;
+let lastReportedStakingLimit10 = 0;
+let lastReportedStakingLimit30 = 0;
 
 export async function initialize(
   currentBlock: number
@@ -69,6 +75,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleNodeOperatorsKeys(blockEvent, findings),
     handleBufferedEth(blockEvent, findings),
     handleDepositExecutorBalance(blockEvent, findings),
+    handleStakingLimit(blockEvent, findings),
   ]);
 
   return findings;
@@ -202,6 +209,59 @@ async function handleDepositExecutorBalance(
       );
       lastReportedExecutorBalance = now;
     }
+  }
+}
+
+async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  const lidoDao = new ethers.Contract(
+    LIDO_DAO_ADDRESS,
+    LIDO_DAO_ABI,
+    ethersProvider
+  );
+  const stakingLimitInfo = await lidoDao.functions.getStakeLimitFullInfo({
+    blockTag: blockEvent.block.number,
+  });
+  const currentStakingLimit = new BigNumber(
+    String(stakingLimitInfo.currentStakeLimit)
+  ).div(ETH_DECIMALS);
+  const maxStakingLimit = new BigNumber(
+    String(stakingLimitInfo.maxStakeLimit)
+  ).div(ETH_DECIMALS);
+  if (
+    lastReportedStakingLimit10 + REPORT_WINDOW_STAKING_LIMIT_10 < now &&
+    currentStakingLimit.isLessThan(maxStakingLimit.times(0.1))
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "Staking limit below 10%",
+        description:
+          `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
+          `this is lower than 10% of max staking limit ` +
+          `${maxStakingLimit.toFixed(2)} ETH`,
+        alertId: "LOW-STAKING-LIMIT",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
+    lastReportedStakingLimit10 = now;
+  } else if (
+    lastReportedStakingLimit30 + REPORT_WINDOW_STAKING_LIMIT_30 < now &&
+    currentStakingLimit.isLessThan(maxStakingLimit.times(0.3))
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "Staking limit below 30%",
+        description:
+          `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
+          `this is lower than 30% of max staking limit ` +
+          `${maxStakingLimit.toFixed(2)} ETH`,
+        alertId: "LOW-STAKING-LIMIT",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
+    lastReportedStakingLimit30 = now;
   }
 }
 
