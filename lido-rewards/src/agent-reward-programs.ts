@@ -186,11 +186,12 @@ async function handleEasyTrackTransaction(
       TOP_UP_REWARDS_ABI,
       ethersProvider
     );
-    const [eventCreated] = txEvent.filterLog(
+    const eventsCreated = txEvent.filterLog(
       MOTION_CREATED_EVENT,
       EASY_TRACK_ADDRESS
     );
-    if (eventCreated) {
+    for (let i = 0; i < eventsCreated.length; i++) {
+      let eventCreated = eventsCreated[i];
       const id = parseInt(String(eventCreated.args._motionId));
       if (
         eventCreated.args._evmScriptFactory.toLowerCase() ==
@@ -214,7 +215,7 @@ async function handleEasyTrackTransaction(
             name: "Rewards Top Up Motion created",
             description:
               `${formatLdo(sumAmount, 0)} LDO was added to pending ` +
-              `due to Motion ${id} creation. ` +
+              `due to Motion ${id} creation.\n` +
               `Spent LDO so far this month: ${formatLdo(spent, 0)} LDO\n` +
               `Pending LDO in motions: ${formatLdo(pending, 0)} LDO\n` +
               `Left LDO this month (inc pending): ${formatLdo(left, 0)} LDO`,
@@ -238,11 +239,12 @@ async function handleEasyTrackTransaction(
         );
       }
     }
-    const [eventEnacted] = txEvent.filterLog(
+    const eventsEnacted = txEvent.filterLog(
       MOTION_ENACTED_EVENT,
       EASY_TRACK_ADDRESS
     );
-    if (eventEnacted) {
+    for (let i = 0; i < eventsEnacted.length; i++) {
+      let eventEnacted = eventsEnacted[i];
       const id = parseInt(String(eventEnacted.args._motionId));
       const amount = pendingTopUpMotions.get(id);
       pendingTopUpMotions.delete(id);
@@ -261,7 +263,7 @@ async function handleEasyTrackTransaction(
           name: "Rewards Top Up Motion enacted",
           description:
             `${formatLdo(amount, 0)} LDO was spent ` +
-            `due to Motion ${id} execution. ` +
+            `due to Motion ${id} execution.\n` +
             `Spent LDO so far this month: ${formatLdo(spent, 0)} LDO\n` +
             `Pending LDO in motions: ${formatLdo(pending, 0)} LDO\n` +
             `Left LDO this month (inc pending): ${formatLdo(left, 0)} LDO`,
