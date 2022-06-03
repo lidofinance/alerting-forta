@@ -484,7 +484,8 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     alertId: "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
     name: "Lido DAO: EL rewards withdrawal limit set",
     description: (args: any) =>
-      `Limit: ${args.limitPoints.toNumber()} BP (${args.limitPoints.toNumber()/ 100}%)`,
+      `Limit: ${args.limitPoints.toNumber()} BP ` +
+      `(${args.limitPoints.toNumber() / 100}%)`,
     severity: FindingSeverity.High,
   },
   {
