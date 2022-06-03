@@ -190,8 +190,7 @@ async function handleEasyTrackTransaction(
       MOTION_CREATED_EVENT,
       EASY_TRACK_ADDRESS
     );
-    for (let i = 0; i < eventsCreated.length; i++) {
-      let eventCreated = eventsCreated[i];
+    for (const eventCreated of eventsCreated) {
       const id = parseInt(String(eventCreated.args._motionId));
       if (
         eventCreated.args._evmScriptFactory.toLowerCase() ==
@@ -243,8 +242,7 @@ async function handleEasyTrackTransaction(
       MOTION_ENACTED_EVENT,
       EASY_TRACK_ADDRESS
     );
-    for (let i = 0; i < eventsEnacted.length; i++) {
-      let eventEnacted = eventsEnacted[i];
+    for (const eventEnacted of eventsEnacted) {
       const id = parseInt(String(eventEnacted.args._motionId));
       const amount = pendingTopUpMotions.get(id);
       pendingTopUpMotions.delete(id);
