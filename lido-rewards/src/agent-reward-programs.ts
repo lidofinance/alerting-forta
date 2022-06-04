@@ -50,8 +50,7 @@ export async function initialize(
     ethersProvider
   );
   dayOfMonth = new Date().getDate();
-  const pastBlockEnacted =
-    currentBlock - Math.floor((60 * 60 * 24 * dayOfMonth) / 13);
+  const pastBlockEnacted = await getFirstBlockOfMonthNumber(currentBlock);
   const pastBlockCreated =
     currentBlock - Math.floor(MOTION_LIFETIME_THRESHOLD / 13);
   const pastBlockCreatedEventSearch =
@@ -134,6 +133,28 @@ export async function initialize(
     pendingMotions: `[${Array.from(pendingTopUpMotions.keys()).join(",")}]`,
     enactedMotions: `[${Array.from(enactedTopUpMotions.keys()).join(",")}]`,
   };
+}
+
+async function getFirstBlockOfMonthNumber(currentBlock: number) {
+  const now = new Date();
+  const timestampNow = Math.floor(now.getTime() / 1000);
+  const timestampFirstDay = Math.floor(
+    new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000
+  );
+  const timeDiff = timestampNow - timestampFirstDay;
+  let blockNumber = Math.floor(currentBlock - timeDiff / 13);
+  let block = await ethersProvider.getBlock(blockNumber);
+  while (Math.abs(block.timestamp - timestampFirstDay) > 13) {
+    if (block.timestamp > timestampFirstDay) {
+      blockNumber =
+        block.number - Math.floor((block.timestamp - timestampFirstDay) / 13);
+    } else {
+      blockNumber =
+        block.number + Math.floor((timestampFirstDay - block.timestamp) / 13);
+    }
+    block = await ethersProvider.getBlock(blockNumber);
+  }
+  return blockNumber;
 }
 
 function sumMapValues(mapping: Map<number, BigNumber>) {
