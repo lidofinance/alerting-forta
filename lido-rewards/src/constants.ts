@@ -6,6 +6,8 @@ import BigNumber from "bignumber.js";
 export const LDO_DECIMALS = new BigNumber(10).pow(18);
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
+// 13 seconds
+export const APPROX_BLOCK_INTERVAL = 13;
 
 // ADDRESSES AND EVENTS
 

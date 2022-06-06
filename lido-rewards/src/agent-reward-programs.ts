@@ -18,6 +18,7 @@ import {
   TOP_UP_REWARDS_ADDRESS,
   MOTION_CREATED_EVENT,
   MOTION_ENACTED_EVENT,
+  APPROX_BLOCK_INTERVAL,
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
@@ -50,12 +51,13 @@ export async function initialize(
     ethersProvider
   );
   dayOfMonth = new Date().getDate();
-  const pastBlockEnacted =
-    currentBlock - Math.floor((60 * 60 * 24 * dayOfMonth) / 13);
+  const pastBlockEnacted = await getFirstBlockOfMonthNumber(currentBlock);
   const pastBlockCreated =
-    currentBlock - Math.floor(MOTION_LIFETIME_THRESHOLD / 13);
+    currentBlock -
+    Math.floor(MOTION_LIFETIME_THRESHOLD / APPROX_BLOCK_INTERVAL);
   const pastBlockCreatedEventSearch =
-    pastBlockEnacted - Math.floor(MOTION_LIFETIME_THRESHOLD / 13);
+    pastBlockEnacted -
+    Math.floor(MOTION_LIFETIME_THRESHOLD / APPROX_BLOCK_INTERVAL);
   const filterEnacted = easyTrack.filters.MotionEnacted();
   const filterCreated = easyTrack.filters.MotionCreated();
 
@@ -134,6 +136,36 @@ export async function initialize(
     pendingMotions: `[${Array.from(pendingTopUpMotions.keys()).join(",")}]`,
     enactedMotions: `[${Array.from(enactedTopUpMotions.keys()).join(",")}]`,
   };
+}
+
+async function getFirstBlockOfMonthNumber(currentBlock: number) {
+  const now = new Date();
+  const timestampNow = Math.floor(now.getTime() / 1000);
+  const timestampFirstDay = Math.floor(
+    new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000
+  );
+  const timeDiff = timestampNow - timestampFirstDay;
+  let blockNumber = Math.floor(currentBlock - timeDiff / APPROX_BLOCK_INTERVAL);
+  let block = await ethersProvider.getBlock(blockNumber);
+  while (
+    Math.abs(block.timestamp - timestampFirstDay) > APPROX_BLOCK_INTERVAL
+  ) {
+    if (block.timestamp > timestampFirstDay) {
+      blockNumber =
+        block.number -
+        Math.floor(
+          (block.timestamp - timestampFirstDay) / APPROX_BLOCK_INTERVAL
+        );
+    } else {
+      blockNumber =
+        block.number +
+        Math.floor(
+          (timestampFirstDay - block.timestamp) / APPROX_BLOCK_INTERVAL
+        );
+    }
+    block = await ethersProvider.getBlock(blockNumber);
+  }
+  return blockNumber;
 }
 
 function sumMapValues(mapping: Map<number, BigNumber>) {
