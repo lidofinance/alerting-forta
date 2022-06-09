@@ -602,7 +602,7 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
       const time = Math.floor((now - lastReportedUnstakedStEthTime) / ONE_HOUR);
       findings.push(
         Finding.fromObject({
-          name: "Total 'unsaked' stETH increased",
+          name: "Total 'unstaked' stETH increased",
           description:
             `Total unstaked stETH increased from ` +
             `${lastReportedUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
