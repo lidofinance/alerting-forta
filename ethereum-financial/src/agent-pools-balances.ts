@@ -58,7 +58,7 @@ let poolsParams: { [name: string]: PoolParams } = {
     poolSize: new BigNumber(0),
     lastReportedImbalance: 0,
     lastReportedImbalanceTime: 0,
-    lastReportedImbalancePoolDetails:{
+    lastReportedImbalancePoolDetails: {
       token1: {
         name: "ETH",
         amount: new BigNumber(0),
@@ -83,7 +83,7 @@ let poolsParams: { [name: string]: PoolParams } = {
     poolSize: new BigNumber(0),
     lastReportedImbalance: 0,
     lastReportedImbalanceTime: 0,
-    lastReportedImbalancePoolDetails:{
+    lastReportedImbalancePoolDetails: {
       token1: {
         name: "ETH",
         amount: new BigNumber(0),
@@ -108,7 +108,7 @@ let poolsParams: { [name: string]: PoolParams } = {
     poolSize: new BigNumber(0),
     lastReportedImbalance: 0,
     lastReportedImbalanceTime: 0,
-    lastReportedImbalancePoolDetails:{
+    lastReportedImbalancePoolDetails: {
       token1: {
         name: "ETH",
         amount: new BigNumber(0),
@@ -148,8 +148,10 @@ export async function initialize(
   const balancerPoolTokens = await getBalancerPoolTokens(currentBlock);
   poolsParams.Balancer.poolDetails.token1.amount = balancerPoolTokens[0];
   poolsParams.Balancer.poolDetails.token2.amount = balancerPoolTokens[1];
-  poolsParams.Balancer.lastReportedImbalancePoolDetails.token1.amount = balancerPoolTokens[0];
-  poolsParams.Balancer.lastReportedImbalancePoolDetails.token2.amount = balancerPoolTokens[1];
+  poolsParams.Balancer.lastReportedImbalancePoolDetails.token1.amount =
+    balancerPoolTokens[0];
+  poolsParams.Balancer.lastReportedImbalancePoolDetails.token2.amount =
+    balancerPoolTokens[1];
   poolsParams.Balancer.poolSize = balancerPoolTokens[0].plus(
     balancerPoolTokens[1]
   );
@@ -158,8 +160,10 @@ export async function initialize(
   const curvePoolTokens = await getCurvePoolTokens(currentBlock);
   poolsParams.Curve.poolDetails.token1.amount = curvePoolTokens[0];
   poolsParams.Curve.poolDetails.token2.amount = curvePoolTokens[1];
-  poolsParams.Curve.lastReportedImbalancePoolDetails.token1.amount = curvePoolTokens[0];
-  poolsParams.Curve.lastReportedImbalancePoolDetails.token2.amount = curvePoolTokens[1];
+  poolsParams.Curve.lastReportedImbalancePoolDetails.token1.amount =
+    curvePoolTokens[0];
+  poolsParams.Curve.lastReportedImbalancePoolDetails.token2.amount =
+    curvePoolTokens[1];
   poolsParams.Curve.poolSize = curvePoolTokens[0].plus(curvePoolTokens[1]);
 
   // get initial CurveWETH Pool size
@@ -298,7 +302,9 @@ async function handleCurvePoolImbalance(
     blockEvent.blockNumber
   );
   const curveImbalance = calcImbalance(ethBalance, stEthBalance);
-  const prevPoolStateText = poolDetails(poolParams.lastReportedImbalancePoolDetails);
+  const prevPoolStateText = poolDetails(
+    poolParams.lastReportedImbalancePoolDetails
+  );
   poolParams.poolDetails.token1.amount = ethBalance;
   poolParams.poolDetails.token2.amount = stEthBalance;
   if (!alreadyReportedImbalance(poolParams, now)) {
@@ -309,7 +315,9 @@ async function handleCurvePoolImbalance(
       findings.push(
         Finding.fromObject({
           name: "Curve Pool is imbalanced",
-          description: `Current pool state:\n${poolDetails(poolParams.poolDetails)}`,
+          description: `Current pool state:\n${poolDetails(
+            poolParams.poolDetails
+          )}`,
           alertId: "CURVE-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
@@ -413,7 +421,9 @@ async function handleBalancerPoolImbalance(
     blockEvent.blockNumber
   );
   const balancerImbalance = calcImbalance(ethBalance, wstethBalance);
-  const prevPoolStateText = poolDetails(poolParams.lastReportedImbalancePoolDetails);
+  const prevPoolStateText = poolDetails(
+    poolParams.lastReportedImbalancePoolDetails
+  );
   poolParams.poolDetails.token1.amount = ethBalance;
   poolParams.poolDetails.token2.amount = wstethBalance;
   if (!alreadyReportedImbalance(poolParams, now)) {
@@ -424,7 +434,9 @@ async function handleBalancerPoolImbalance(
       findings.push(
         Finding.fromObject({
           name: "Balancer Pool is imbalanced",
-          description: `Current pool state:\n${poolDetails(poolParams.poolDetails)}`,
+          description: `Current pool state:\n${poolDetails(
+            poolParams.poolDetails
+          )}`,
           alertId: "BALANCER-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
