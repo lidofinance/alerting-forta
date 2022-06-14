@@ -9,6 +9,20 @@ export interface SpecialTransferPattern {
   description: any;
 }
 
+export interface TransferPattern {
+  contract?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface ComplexTransferPattern {
+  transferPatterns: {
+    mainTransfer: TransferPattern;
+    additionalTransfers: TransferPattern[];
+  };
+  description: any;
+}
+
 export class TransferEventInfo {
   token: string;
   tokenName: string;
@@ -343,7 +357,7 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
 );
 
-export const SPECIAL_TRANSFERS: SpecialTransferPattern[] = [
+export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
   {
     from: NULL_ADDRESS,
     description: (info: TransferEventInfo) =>
@@ -357,166 +371,6 @@ export const SPECIAL_TRANSFERS: SpecialTransferPattern[] = [
       `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
       `were burned.\n` +
       `From: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
-    from: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from AAVE\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
-    to: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were supplied to AAVE\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
-    from: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Anchor\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
-    to: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were supplied to Anchor\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-    to: "0x828b154032950c8ff7cf8085d841723db2696056",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were added to Curve concentrated LP\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
-    to: "0x828b154032950c8ff7cf8085d841723db2696056",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were added to Curve concentrated LP\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-    from: "0x828b154032950c8ff7cf8085d841723db2696056",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Curve concentrated LP\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
-    from: "0x828b154032950c8ff7cf8085d841723db2696056",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Curve concentrated LP\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0x828b154032950c8ff7cf8085d841723db2696056",
-    to: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were deposited to Curve Gauge\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0x828b154032950c8ff7cf8085d841723db2696056",
-    from: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Curve Gauge\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0x828b154032950c8ff7cf8085d841723db2696056",
-    to: "0x5faF6a2D186448Dfa667c51CB3D695c7A6E52d8E",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were deposited to Yearn stETH-WETH Pool yVault\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0x828b154032950c8ff7cf8085d841723db2696056",
-    from: "0x5faF6a2D186448Dfa667c51CB3D695c7A6E52d8E",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Yearn stETH-WETH Pool yVault\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
-    from: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Curve LP\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
-    to: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were added to Curve LP\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0x06325440d014e39736583c165c2963ba99faf14e",
-    to: "0x182b723a58739a9c974cfdb385ceadb237453c28",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were deposited to Yearn stETH-WETH Pool yVault\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0x06325440d014e39736583c165c2963ba99faf14e",
-    from: "0x182b723a58739a9c974cfdb385ceadb237453c28",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Yearn stETH-WETH Pool yVault\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    to: "0xba12222222228d8ba445958a75a0704d566bf2c8",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were added to Balancer LP\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    from: "0xba12222222228d8ba445958a75a0704d566bf2c8",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Balancer LP\n` +
-      `by: ${info.to} (${info.toName})`,
-  },
-  {
-    contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
-    to: "0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were deposited to Balancer Gauge\n` +
-      `by: ${info.from} (${info.fromName})`,
-  },
-  {
-    contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
-    from: "0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae",
-    description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Balancer Gauge\n` +
-      `by: ${info.to} (${info.toName})`,
   },
   {
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
@@ -584,24 +438,515 @@ export const SPECIAL_TRANSFERS: SpecialTransferPattern[] = [
       `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
       `was opened.\n`,
   },
+];
+
+// EVENT ABIs
+export const TRANSFER_EVENT =
+  "event Transfer(address indexed _from, address indexed _to, uint256 _value)";
+
+export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
   {
-    contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    to: "0x27182842e098f60e3d576794a5bffb0777e025d3",
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        from: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from AAVE\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        to: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were supplied to AAVE\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        from: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x707f9118e33a9b8998bea41dd0d46f38bb963fc8",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Anchor\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        to: "0xa2f987a546d4cd1c607ee8141276876c26b72bdf",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x707f9118e33a9b8998bea41dd0d46f38bb963fc8",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were supplied to Anchor\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        to: "0x828b154032950c8ff7cf8085d841723db2696056",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x828b154032950c8ff7cf8085d841723db2696056",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Curve concentrated LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        to: "0x828b154032950c8ff7cf8085d841723db2696056",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x828b154032950c8ff7cf8085d841723db2696056",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Curve concentrated LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        from: "0x828b154032950c8ff7cf8085d841723db2696056",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x828b154032950c8ff7cf8085d841723db2696056",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Curve concentrated LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        from: "0x828b154032950c8ff7cf8085d841723db2696056",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x828b154032950c8ff7cf8085d841723db2696056",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Curve concentrated LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x828b154032950C8ff7CF8085D841723Db2696056",
+        from: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Curve Gauge\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x828b154032950C8ff7CF8085D841723Db2696056",
+        to: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were deposited to Curve Gauge\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x828b154032950C8ff7CF8085D841723Db2696056",
+        from: "0x5faf6a2d186448dfa667c51cb3d695c7a6e52d8e",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x5faf6a2d186448dfa667c51cb3d695c7a6e52d8e",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Yearn stETH-WETH Pool yVault\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x828b154032950C8ff7CF8085D841723Db2696056",
+        to: "0x5faf6a2d186448dfa667c51cb3d695c7a6e52d8e",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x5faf6a2d186448dfa667c51cb3d695c7a6e52d8e",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were deposited to Yearn stETH-WETH Pool yVault\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        from: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x06325440D014e39736583c165C2963BA99fAf14E",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Curve LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        to: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x06325440D014e39736583c165C2963BA99fAf14E",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Curve LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+        from: "0x182b723a58739a9c974cfdb385ceadb237453c28",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x182b723a58739a9c974cfdb385ceadb237453c28",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Curve Gauge\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+        to: "0x182b723a58739a9c974cfdb385ceadb237453c28",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x182b723a58739a9c974cfdb385ceadb237453c28",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Curve Gauge\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Balancer LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Balancer LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        from: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Balancer LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        to: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Balancer LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          from: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `was swapped for WETH in Balancer LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        to: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          from: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `was swapped for wstETH in Balancer LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        from: "0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Balancer Gauge\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        to: "0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were deposited to Balancer Gauge\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x27182842e098f60e3d576794a5bffb0777e025d3",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xbd1bd5c956684f7eb79da40f582cbe1373a1d593",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Euler\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0x27182842e098f60e3d576794a5bffb0777e025d3",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xbd1bd5c956684f7eb79da40f582cbe1373a1d593",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
     description: (info: TransferEventInfo) =>
       `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
       `were supplied to Euler\n` +
       `by: ${info.from} (${info.fromName})`,
   },
   {
-    contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    from: "0x27182842e098f60e3d576794a5bffb0777e025d3",
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        from: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
     description: (info: TransferEventInfo) =>
       `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
-      `were withdrawn from Euler\n` +
+      `were unwrapped from wstETH\n` +
       `by: ${info.to} (${info.toName})`,
   },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        to: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were wrapped to wstETH\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
 ];
-
-// EVENT ABIs
-export const TRANSFER_EVENT =
-  "event Transfer(address indexed _from, address indexed _to, uint256 _value)";

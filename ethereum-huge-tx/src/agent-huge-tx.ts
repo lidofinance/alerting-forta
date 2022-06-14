@@ -14,11 +14,12 @@ import {
   TX_AMOUNT_THRESHOLD,
   TX_AMOUNT_THRESHOLD_LDO,
   TransferEventInfo,
-  SPECIAL_TRANSFERS,
-  SpecialTransferPattern,
+  SIMPLE_TRANSFERS,
   PARTIALLY_MONITORED_TOKENS,
   LDO_TOKEN_ADDRESS,
+  COMPLEX_TRANSFERS_TEMPLATES,
 } from "./constants";
+import { handle_complex_transfers, matchPattern } from "./helpers";
 
 export const name = "Huge TX detector";
 
@@ -44,8 +45,18 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
         MONITORED_TOKENS.get(event.address.toLowerCase()) ||
         PARTIALLY_MONITORED_TOKENS.get(event.address.toLowerCase())
     );
-  transferEvents.forEach((event) => {
-    const transferText = prepareTransferEventText(event);
+
+  let transferInfos = transferEvents.map(
+    (event) => new TransferEventInfo(event)
+  );
+  COMPLEX_TRANSFERS_TEMPLATES.forEach((template) => {
+    let texts: string[] = [];
+    [transferInfos, texts] = handle_complex_transfers(transferInfos, template);
+    transfersTexts = transfersTexts.concat(texts);
+  });
+
+  transferInfos.forEach((transfer) => {
+    const transferText = prepareTransferEventText(transfer);
     if (transferText) {
       transfersTexts.push(transferText);
     }
@@ -65,11 +76,10 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   }
 }
 
-function prepareTransferEventText(transferEvent: LogDescription) {
-  const transferInfo = new TransferEventInfo(transferEvent);
+function prepareTransferEventText(transferInfo: TransferEventInfo) {
   if (applicableAmount(transferInfo)) {
-    for (const transferPattern of SPECIAL_TRANSFERS) {
-      if (match(transferPattern, transferInfo)) {
+    for (const transferPattern of SIMPLE_TRANSFERS) {
+      if (matchPattern(transferPattern, transferInfo)) {
         return transferPattern.description(transferInfo);
       }
     }
@@ -83,31 +93,6 @@ function prepareTransferEventText(transferEvent: LogDescription) {
       );
     }
   }
-}
-
-function match(
-  transferPattern: SpecialTransferPattern,
-  transferInfo: TransferEventInfo
-): boolean {
-  if (
-    transferPattern.contract &&
-    transferInfo.token != transferPattern.contract.toLowerCase()
-  ) {
-    return false;
-  }
-  if (
-    transferPattern.from &&
-    transferInfo.from != transferPattern.from.toLowerCase()
-  ) {
-    return false;
-  }
-  if (
-    transferPattern.to &&
-    transferInfo.to != transferPattern.to.toLowerCase()
-  ) {
-    return false;
-  }
-  return true;
 }
 
 function applicableAmount(transferInfo: TransferEventInfo) {
