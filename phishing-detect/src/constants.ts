@@ -104,6 +104,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x78106f7db3ebcee3d2cfac647f0e4c9b06683b39", // dustSweeper
   "0x95e6f48254609a6ee006f7d493c8e5fb97094cef", // 0x: ERC20 Proxy
   "0x9d3a1c83cb5ad71fb66fc7d94f11fbe7eaa3054b", // DeFi saver automated proxy
+  "0x6352a56caadc4f1e25cd6c75970fa768a3304e64", // OpenOcean: Exchange V2
+  "0x3e66be3e817a283c7ee01f5057d99660e7a01974", // DSProxy #212,449
+  "0x362fa9d0bca5d19f743db50738345ce2b40ec99f", // LiFiDiamond
+  "0xd8ef3cace8b4907117a45b0b125c68560532f94d", // Set: Basic Issuance Module
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
