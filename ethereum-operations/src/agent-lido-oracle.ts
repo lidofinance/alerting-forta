@@ -46,8 +46,6 @@ let lastReport: OracleReport | null = null;
 let lastTriggeredAt = 0;
 
 const THREE_DAYS = 60 * 60 * 24 * 3;
-const ONE_WEEK = 60 * 60 * 24 * 7;
-const TWO_WEEKS = 60 * 60 * 24 * 14;
 
 let lastTxHash: string;
 let oraclesLastVotes: Map<string, number> = new Map();
@@ -80,9 +78,9 @@ export async function initialize(
 
   const oracles = await getOracles();
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
-  // ~2 days ago
+  // ~14 days ago
   const beaconReportStartBlock =
-    currentBlock - Math.ceil((2 * 24 * 60 * 60) / 13);
+    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 13);
   const reportBeaconEvents = await lidoOracle.queryFilter(
     oracleReportBeaconFilter,
     beaconReportStartBlock,
@@ -107,7 +105,6 @@ export async function initialize(
     oraclesVotesLastAlert.set(element, 0);
   });
 
-  const block24HoursAgo = currentBlock - Math.ceil((24 * 60 * 60) / 13);
   const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 13);
 
   const oracleReports = await getOracleReports(
@@ -213,15 +210,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
 function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   oraclesLastVotes.forEach((lastRepBlock, oracle) => {
-    let lastAlert = oraclesVotesLastAlert.get(oracle);
-    if (
-      lastAlert == undefined ||
-      lastAlert < now - BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW
-    ) {
+    let lastAlert = oraclesVotesLastAlert.get(oracle) || 0;
+    if (lastAlert < now - BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW) {
       if (
-        (lastRepBlock != 0 || agentStartTime + TWO_WEEKS < now) &&
         lastRepBlock <
-          blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM
+        blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM
       ) {
         findings.push(
           Finding.fromObject({
@@ -234,9 +227,8 @@ function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
         );
         oraclesVotesLastAlert.set(oracle, now);
       } else if (
-        (lastRepBlock != 0 || agentStartTime + ONE_WEEK < now) &&
         lastRepBlock <
-          blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO
+        blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO
       ) {
         findings.push(
           Finding.fromObject({
