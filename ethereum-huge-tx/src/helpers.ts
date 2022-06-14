@@ -2,18 +2,22 @@ import {
   TransferEventInfo,
   ComplexTransferPattern,
   TransferPattern,
+  TransferText,
 } from "./constants";
 
 export function handle_complex_transfers(
   transfers: TransferEventInfo[],
   transferPattern: ComplexTransferPattern
-) {
+): [TransferEventInfo[], TransferText[]] {
   const mainEvents = transfers.filter((transfer) =>
     matchPattern(transferPattern.transferPatterns.mainTransfer, transfer)
   );
-  const mainEventsTexts = mainEvents.map((transfer) =>
-    transferPattern.description(transfer)
-  );
+  const mainEventsTexts: TransferText[] = mainEvents.map((transfer) => {
+    return {
+      text: transferPattern.description(transfer),
+      logIndex: transfer.logIndex,
+    };
+  });
   let additionalPatterns = Array.from(
     transferPattern.transferPatterns.additionalTransfers
   );
@@ -22,6 +26,12 @@ export function handle_complex_transfers(
       additionalPatterns = additionalPatterns.map((pattern) => {
         let updatedPattern = pattern;
         updatedPattern.from = mainEvent.to;
+        return updatedPattern;
+      });
+    } else {
+      additionalPatterns = additionalPatterns.map((pattern) => {
+        let updatedPattern = pattern;
+        updatedPattern.to = mainEvent.from;
         return updatedPattern;
       });
     }
