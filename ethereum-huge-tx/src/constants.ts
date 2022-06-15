@@ -31,6 +31,7 @@ export class TransferEventInfo {
   to: string;
   toName: string;
   amount: BigNumber;
+  logIndex: number;
 
   constructor(event: LogDescription) {
     this.from = event.args._from.toLowerCase();
@@ -43,7 +44,13 @@ export class TransferEventInfo {
       PARTIALLY_MONITORED_TOKENS.get(this.token) ||
       "unknown";
     this.amount = new BigNumber(String(event.args._value)).div(ETH_DECIMALS);
+    this.logIndex = event.logIndex;
   }
+}
+
+export interface TransferText {
+  text: string;
+  logIndex: number;
 }
 
 // COMMON CONSTS
