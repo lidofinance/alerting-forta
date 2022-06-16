@@ -10,6 +10,7 @@
 - HIGH-ERC20-TOKENS: Many approvals of the different Lido ERC20 tokens to single non WL address
 
 ## Deployment
+
 1. Make sure that all your changes in `main` branch
 2. Run `yarn publish`
 3. Copy Docker Image ID
