@@ -23,6 +23,22 @@ export interface ComplexTransferPattern {
   description: any;
 }
 
+// Made for TS capability. Actual structure is
+// {
+//   timestamp: string;
+//   from: string;
+//   fromName: string;
+//   to: string;
+//   toName: string;
+//   amount: string;
+//   token: string;
+//   comment: string;
+//   link: string;
+// }
+export interface TransferEventMetadata {
+  [key: string]: string;
+}
+
 export class TransferEventInfo {
   token: string;
   tokenName: string;
