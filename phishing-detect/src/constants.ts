@@ -108,6 +108,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x3e66be3e817a283c7ee01f5057d99660e7a01974", // DSProxy #212,449
   "0x362fa9d0bca5d19f743db50738345ce2b40ec99f", // LiFiDiamond
   "0xd8ef3cace8b4907117a45b0b125c68560532f94d", // Set: Basic Issuance Module
+  "0xa0a33f0cc7c655015ce50ff998b95eead0fa41ca", // DSProxy #212,569
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
