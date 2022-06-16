@@ -97,7 +97,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   }
   transfersMetadata.forEach((meta) => {
     const text = meta.comment;
-    meta.comment = meta.comment.split("\n")[0];
+    meta.comment = meta.comment.split("\n")[0].replaceAll("**","");
     findings.push(
       Finding.fromObject({
         name: "Huge token transfer of Lido interest (tech)",
