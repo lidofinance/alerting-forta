@@ -12,9 +12,9 @@
 ## Deployment
 
 1. Make sure that all your changes in `main` branch
-2. Run `yarn publish`
+2. Run `yarn push`
 3. Copy Docker Image ID
-4. Go to `https://app.forta.network/my-agents` and authorize through wallet from 1Password
+4. Go to `https://app.forta.network/my-agents` and authorize through wallet
 5. Click on 'Edit' option for `lido-phishing-detect` bot
 6. Paste new Docker Image ID and upload README
 7. Click to 'Sign to proceed' and confirm transaction
