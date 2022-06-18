@@ -881,15 +881,6 @@ export const WHITELISTED_OWNERS = [
 // List of contracts to monitor for owner
 export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
   [
-    // will be outdated 17.06.2022
-    "0xDb149235B6F40dC08810AA69869783Be101790e7",
-    {
-      name: "Deposit Security module",
-      ownershipMethod: "getOwner",
-    },
-  ],
-  [
-    // currently proposed implementation for ^^^
     "0x710B3303fB508a84F10793c1106e32bE873C24cd",
     {
       name: "Deposit Security module",
