@@ -670,7 +670,7 @@ export const LIDO_APPS = new Map([
   ["0x0d97e876ad14db2b183cfeeb8aa1a5c788eb1831", "NO registry Repo"],
   ["0x4ee3118e3858e8d7164a634825bfe0f73d99c792", "Voting Repo"],
   ["0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977", "EVMScriptExecutor"],
-  ["0xdb149235b6f40dc08810aa69869783be101790e7", "Deposit Security module"],
+  ["0x710b3303fb508a84f10793c1106e32be873c24cd", "Deposit Security module"],
   ["0x55032650b14df07b85bf18a3a3ec8e0af2e028d5", "Node Operators registry"],
   ["0x442af784a788a5bd6f42a01ebe9f287a871243fb", "Oracle"],
   ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH token"],
