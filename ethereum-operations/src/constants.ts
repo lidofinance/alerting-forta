@@ -681,6 +681,7 @@ export const ORDINARY_ENTITIES = new Map([
   ["0x3e40d73eb977dc6a537af587d48316fee66e9c8c", "Aragon Agent"],
 ]);
 
+// i.e. keccak256("APP_MANAGER_ROLE")
 export const LIDO_ROLES = new Map([
   [
     "0xb6d92708f3d4817afc106147d969e229ced5c46e65e0a5002a0d391287762bd0",
@@ -849,6 +850,10 @@ export const LIDO_ROLES = new Map([
   [
     "0xca7d176c2da2028ed06be7e3b9457e6419ae0744dc311989e9b29f6a1ceb1003",
     "SET EL REWARDS WITHDRAWAL LIMIT ROLE",
+  ],
+  [
+    "0x2561bf26f818282a3be40719542054d2173eb0d38539e8a8d3cff22f29fd2384",
+    "DEPOSIT ROLE",
   ],
 ]);
 
