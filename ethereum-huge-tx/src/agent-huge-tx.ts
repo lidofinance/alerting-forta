@@ -11,22 +11,21 @@ import {
 import {
   MONITORED_TOKENS,
   TRANSFER_EVENT,
-  TX_AMOUNT_THRESHOLD,
-  TX_AMOUNT_THRESHOLD_LDO,
   TransferEventInfo,
-  SIMPLE_TRANSFERS,
   PARTIALLY_MONITORED_TOKENS,
-  LDO_TOKEN_ADDRESS,
   COMPLEX_TRANSFERS_TEMPLATES,
   TransferText,
+  TransferEventMetadata,
 } from "./constants";
+
 import {
   handle_complex_transfers,
-  matchPattern,
   etherscanLink,
   prepareTransferMetadata,
+  applicableAmount,
+  handleCurveExchange,
+  prepareTransferEventText,
 } from "./helpers";
-import { TransferEventMetadata } from "./constants";
 
 export const name = "Huge TX detector";
 
@@ -60,6 +59,13 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   transferInfos = transferInfos.filter((transfer) =>
     applicableAmount(transfer)
   );
+
+  let texts: TransferText[] = [];
+  let metas: TransferEventMetadata[] = [];
+  [transferInfos, texts, metas] = handleCurveExchange(transferInfos, txEvent);
+  transfersTexts = transfersTexts.concat(texts);
+  transfersMetadata = transfersMetadata.concat(metas);
+
   COMPLEX_TRANSFERS_TEMPLATES.forEach((template) => {
     let texts: TransferText[] = [];
     let metas: TransferEventMetadata[] = [];
@@ -104,7 +110,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
         description:
           text +
           `\n${etherscanLink(txEvent.hash)}` +
-          "\nNOTE: THis is tech alert. Do not route it to the alerts channel!",
+          "\nNOTE: This is tech alert. Do not route it to the alerts channel!",
         alertId: "HUGE-TOKEN-TRANSFERS-TECH",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -112,33 +118,4 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
       })
     );
   });
-}
-
-function prepareTransferEventText(transferInfo: TransferEventInfo) {
-  let transferText: TransferText = {
-    text: "",
-    logIndex: transferInfo.logIndex,
-  };
-  for (const transferPattern of SIMPLE_TRANSFERS) {
-    if (matchPattern(transferPattern, transferInfo)) {
-      transferText.text = transferPattern.description(transferInfo);
-      return transferText;
-    }
-  }
-  // Do not report on common transfers of PARTIALLY_MONITORED_TOKENS
-  if (!PARTIALLY_MONITORED_TOKENS.get(transferInfo.token)) {
-    transferText.text =
-      `**${transferInfo.amount.toFixed(2)} ${transferInfo.tokenName}** ` +
-      `were transferred.\n` +
-      `From: ${transferInfo.from} (${transferInfo.fromName})\n` +
-      `To: ${transferInfo.to} (${transferInfo.toName})`;
-    return transferText;
-  }
-}
-
-function applicableAmount(transferInfo: TransferEventInfo) {
-  if (transferInfo.token == LDO_TOKEN_ADDRESS) {
-    return transferInfo.amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD_LDO);
-  }
-  return transferInfo.amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD);
 }
