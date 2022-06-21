@@ -20,7 +20,13 @@ import {
   COMPLEX_TRANSFERS_TEMPLATES,
   TransferText,
 } from "./constants";
-import { handle_complex_transfers, matchPattern } from "./helpers";
+import {
+  handle_complex_transfers,
+  matchPattern,
+  etherscanLink,
+  prepareTransferMetadata,
+} from "./helpers";
+import { TransferEventMetadata } from "./constants";
 
 export const name = "Huge TX detector";
 
@@ -39,6 +45,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   let transfersTexts: TransferText[] = [];
+  let transfersMetadata: TransferEventMetadata[] = [];
   const transferEvents = txEvent
     .filterLog(TRANSFER_EVENT)
     .filter(
@@ -53,33 +60,58 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   transferInfos = transferInfos.filter((transfer) =>
     applicableAmount(transfer)
   );
-  console.log(transferInfos);
   COMPLEX_TRANSFERS_TEMPLATES.forEach((template) => {
     let texts: TransferText[] = [];
-    [transferInfos, texts] = handle_complex_transfers(transferInfos, template);
+    let metas: TransferEventMetadata[] = [];
+    [transferInfos, texts, metas] = handle_complex_transfers(
+      transferInfos,
+      template,
+      txEvent
+    );
     transfersTexts = transfersTexts.concat(texts);
+    transfersMetadata = transfersMetadata.concat(metas);
   });
 
   transferInfos.forEach((transfer) => {
     const transferText = prepareTransferEventText(transfer);
     if (transferText) {
       transfersTexts.push(transferText);
+      transfersMetadata.push(
+        prepareTransferMetadata(transfer, txEvent, transferText.text)
+      );
     }
   });
   transfersTexts.sort((a, b) => a.logIndex - b.logIndex);
   if (transfersTexts.length > 0) {
     findings.push(
       Finding.fromObject({
-        name: "Huge token(s) of Lido interest in a single TX",
+        name: "Huge token(s) transfer of Lido interest in a single TX",
         description:
           transfersTexts.map((tt) => tt.text).join("\n") +
-          `\nhttps://etherscan.io/tx/${txEvent.hash}`,
+          `\n${etherscanLink(txEvent.hash)}`,
         alertId: "HUGE-TOKEN-TRANSFERS-IN-SINGLE-TX",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
       })
     );
   }
+  transfersMetadata.forEach((meta) => {
+    const text = meta.comment;
+    meta.comment = meta.comment.split("\n")[0].split("*").join("");
+    findings.push(
+      Finding.fromObject({
+        name: "Huge token transfer of Lido interest (tech)",
+        description:
+          text +
+          `\n${etherscanLink(txEvent.hash)}` +
+          "\nNOTE: THis is tech alert. Do not route it to the alerts channel!",
+        alertId: "HUGE-TOKEN-TRANSFERS-TECH",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata: meta,
+      })
+    );
+  });
 }
 
 function prepareTransferEventText(transferInfo: TransferEventInfo) {
