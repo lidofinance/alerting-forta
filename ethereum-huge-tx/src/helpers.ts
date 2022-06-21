@@ -129,7 +129,7 @@ export function etherscanLink(txHash: string): string {
   return `https://etherscan.io/tx/${txHash}`;
 }
 
-export function handle_curve_exchange(
+export function handleCurveExchange(
   transferInfos: TransferEventInfo[],
   txEvent: TransactionEvent
 ): [TransferEventInfo[], TransferText[], TransferEventMetadata[]] {

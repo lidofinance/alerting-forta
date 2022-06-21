@@ -23,7 +23,7 @@ import {
   etherscanLink,
   prepareTransferMetadata,
   applicableAmount,
-  handle_curve_exchange,
+  handleCurveExchange,
   prepareTransferEventText,
 } from "./helpers";
 
@@ -62,7 +62,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   let texts: TransferText[] = [];
   let metas: TransferEventMetadata[] = [];
-  [transferInfos, texts, metas] = handle_curve_exchange(transferInfos, txEvent);
+  [transferInfos, texts, metas] = handleCurveExchange(transferInfos, txEvent);
   transfersTexts = transfersTexts.concat(texts);
   transfersMetadata = transfersMetadata.concat(metas);
 
