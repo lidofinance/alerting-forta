@@ -79,6 +79,7 @@ export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // ADDRESSES
 export const LDO_TOKEN_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+export const CURVE_POOL_ADDRESS = "0xdc24316b9ae028f1497c275eb9192a3ea0f67022";
 
 export const MONITORED_TOKENS = new Map<string, string>(
   [
@@ -462,10 +463,6 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
       `was opened.\n`,
   },
 ];
-
-// EVENT ABIs
-export const TRANSFER_EVENT =
-  "event Transfer(address indexed _from, address indexed _to, uint256 _value)";
 
 export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
   {
@@ -972,4 +969,57 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `were wrapped to wstETH\n` +
       `by: ${info.from} (${info.fromName})`,
   },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+        to: "0x828b154032950c8ff7cf8085d841723db2696056",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          from: "0x828b154032950c8ff7cf8085d841723db2696056",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `was swapped for WETH in Curve concentrated LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        to: "0x828b154032950c8ff7cf8085d841723db2696056",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+          from: "0x828b154032950c8ff7cf8085d841723db2696056",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `was swapped for stETH in Curve concentrated LP\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
 ];
+
+export const EXCHANGE_STETH_TO_ETH_CURVE_PATTERN: TransferPattern = {
+  contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+  to: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
+};
+
+export const EXCHANGE_ETH_TO_STETH_CURVE_PATTERN: TransferPattern = {
+  contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+  from: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
+};
+
+// EVENT ABIs
+export const TRANSFER_EVENT =
+  "event Transfer(address indexed _from, address indexed _to, uint256 _value)";
+
+export const CURVE_EXCHANGE_EVENT =
+  "event TokenExchange(address indexed buyer, int128 sold_id, uint256 tokens_sold, int128 bought_id, uint256 tokens_bought)";
