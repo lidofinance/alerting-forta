@@ -19,7 +19,7 @@ import {
 } from "./constants";
 
 import {
-  handle_complex_transfers,
+  handleComplexTransfers,
   etherscanLink,
   prepareTransferMetadata,
   applicableAmount,
@@ -69,7 +69,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   COMPLEX_TRANSFERS_TEMPLATES.forEach((template) => {
     let texts: TransferText[] = [];
     let metas: TransferEventMetadata[] = [];
-    [transferInfos, texts, metas] = handle_complex_transfers(
+    [transferInfos, texts, metas] = handleComplexTransfers(
       transferInfos,
       template,
       txEvent

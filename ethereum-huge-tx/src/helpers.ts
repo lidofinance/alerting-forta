@@ -19,7 +19,7 @@ import {
   CURVE_POOL_ADDRESS,
 } from "./constants";
 
-export function handle_complex_transfers(
+export function handleComplexTransfers(
   transfers: TransferEventInfo[],
   transferPattern: ComplexTransferPattern,
   txEvent: TransactionEvent
@@ -29,7 +29,6 @@ export function handle_complex_transfers(
   );
   const mainTransfersTexts: TransferText[] = [];
   const mainTransfersMetadata: TransferEventMetadata[] = [];
-
   mainTransfers.forEach((mainTransfer) => {
     const mainPattern: TransferPattern = {
       contract: mainTransfer.token,

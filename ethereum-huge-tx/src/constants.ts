@@ -689,7 +689,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       },
       additionalTransfers: [
         {
-          contract: "0x06325440D014e39736583c165C2963BA99fAf14E",
+          contract: "0x06325440d014e39736583c165c2963ba99faf14e",
           to: NULL_ADDRESS,
         },
       ],
@@ -707,7 +707,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       },
       additionalTransfers: [
         {
-          contract: "0x06325440D014e39736583c165C2963BA99fAf14E",
+          contract: "0x06325440d014e39736583c165c2963ba99faf14e",
           from: NULL_ADDRESS,
         },
       ],
