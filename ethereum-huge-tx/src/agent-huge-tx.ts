@@ -16,6 +16,7 @@ import {
   COMPLEX_TRANSFERS_TEMPLATES,
   TransferText,
   TransferEventMetadata,
+  LDO_TOKEN_ADDRESS,
 } from "./constants";
 
 import {
@@ -82,9 +83,10 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
     const transferText = prepareTransferEventText(transfer);
     if (transferText) {
       transfersTexts.push(transferText);
-      transfersMetadata.push(
-        prepareTransferMetadata(transfer, txEvent, transferText.text)
-      );
+      if (transfer.token != LDO_TOKEN_ADDRESS)
+        transfersMetadata.push(
+          prepareTransferMetadata(transfer, txEvent, transferText.text)
+        );
     }
   });
   transfersTexts.sort((a, b) => a.logIndex - b.logIndex);
