@@ -30,7 +30,7 @@ const BLOCK_WINDOW = 1000;
 // Number of blocks for the whole 5 days
 const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 13);
 
-// 47 hours
+// 46 hours
 const TRIGGER_AFTER = 46 * ONE_HOUR;
 
 // 48 hours
