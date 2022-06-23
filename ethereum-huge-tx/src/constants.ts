@@ -73,7 +73,7 @@ export interface TransferText {
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
 export const TX_AMOUNT_THRESHOLD = 10000;
-export const TX_AMOUNT_THRESHOLD_LDO = 1000000; // 1 000 000 LDO
+export const TX_AMOUNT_THRESHOLD_LDO = 5000000; // 5 000 000 LDO
 
 export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -752,6 +752,42 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
       `were added to Curve Gauge\n` +
       `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+        to: "0xdcd90c7f6324cfa40d7169ef80b12031770b4325",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xdcd90c7f6324cfa40d7169ef80b12031770b4325",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were added to Yearn: yCRV/stETH Vault\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+        from: "0xdcd90c7f6324cfa40d7169ef80b12031770b4325",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xdcd90c7f6324cfa40d7169ef80b12031770b4325",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `were withdrawn from Yearn: yCRV/stETH Vault\n` +
+      `by: ${info.to} (${info.toName})`,
   },
   {
     transferPatterns: {
