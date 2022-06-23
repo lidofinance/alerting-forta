@@ -84,9 +84,9 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
     if (transferText) {
       transfersTexts.push(transferText);
       if (transfer.token != LDO_TOKEN_ADDRESS)
-      transfersMetadata.push(
-        prepareTransferMetadata(transfer, txEvent, transferText.text)
-      );
+        transfersMetadata.push(
+          prepareTransferMetadata(transfer, txEvent, transferText.text)
+        );
     }
   });
   transfersTexts.sort((a, b) => a.logIndex - b.logIndex);
