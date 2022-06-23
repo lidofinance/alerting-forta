@@ -50,11 +50,11 @@ async function handleLidoGraphBalance(
       BILLING_ABI,
       ethersProvider
     );
-  
+
     const balance = new BigNumber(
       String(await billing.functions.userBalances(LIDO_VAULT_ADDRESS))
     ).div(MATIC_DECIMALS);
-  
+
     if (balance.isLessThanOrEqualTo(GRAPH_BALANCE_THRESHOLD)) {
       findings.push(
         Finding.fromObject({
@@ -69,7 +69,7 @@ async function handleLidoGraphBalance(
           },
         })
       );
-      lastReportedGraphBalance = now
+      lastReportedGraphBalance = now;
     }
   }
 }
