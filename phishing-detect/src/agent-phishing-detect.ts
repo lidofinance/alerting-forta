@@ -187,6 +187,10 @@ async function handleERC20Approval(
     );
 
     let spenderInfo = spenders.get(spender);
+    // update isContract to handle case when EOA is now contract
+    if (spenderInfo) {
+      spenderInfo.isContract = await isContract(spender);
+    }
     // call of approve with 0 amount equals to approve removal
     if (amount.eq(bigZero)) {
       if (spenderInfo) {
