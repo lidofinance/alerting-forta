@@ -17,7 +17,7 @@ import {
   ST_MATIC_TOKEN_ADDRESS,
   MATIC_DECIMALS,
   ST_MATIC_REQUEST_WITHDRAWAL_EVENT,
-  WITHDRAWALS_MONITORING_WINDOW,
+  MAX_WITHDRAWALS_WINDOW,
   MAX_WITHDRAWALS_SUM_PERCENT,
 } from "./constants";
 
@@ -43,8 +43,7 @@ export async function initialize(
   );
   const requestWithdrawFilter = stMATIC.filters.RequestWithdrawEvent();
 
-  const pastBlock =
-    currentBlock - Math.ceil(WITHDRAWALS_MONITORING_WINDOW / 13);
+  const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 13);
   const withdrawEvents = await stMATIC.queryFilter(
     requestWithdrawFilter,
     pastBlock,
@@ -77,49 +76,53 @@ async function handleToManyWithdrawals(
   findings: Finding[]
 ) {
   const now = blockEvent.block.timestamp;
-  // remove old withdrawals records
+  // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
   withdrawalsCache = withdrawalsCache.filter(
-    (x: IWithdrawalRecord) => x.time > now - WITHDRAWALS_MONITORING_WINDOW
+    (x: IWithdrawalRecord) => x.time > now - MAX_WITHDRAWALS_WINDOW
   );
-  if (lastReportedToManyWithdrawals + WITHDRAWALS_MONITORING_WINDOW < now) {
-    const stMatic = new ethers.Contract(
-      ST_MATIC_TOKEN_ADDRESS,
-      ST_MATIC_ABI,
-      ethersProvider
-    );
+  const stMatic = new ethers.Contract(
+    ST_MATIC_TOKEN_ADDRESS,
+    ST_MATIC_ABI,
+    ethersProvider
+  );
 
-    const totalPooledMatic = new BigNumber(
-      String(
-        await stMatic.functions
-          .getTotalPooledMatic({
-            blockTag: blockEvent.block.number,
-          })
-          .then((value) => new BigNumber(String(value)))
-      )
-    );
-    let withdrawalsSum = new BigNumber(0);
-    withdrawalsCache.forEach(
-      (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount))
-    );
-    const withdrawalsPercent = withdrawalsSum.div(totalPooledMatic).times(100);
-    if (
-      withdrawalsPercent.isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM_PERCENT)
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: `Huge withdrawals during last ${Math.floor(
-            WITHDRAWALS_MONITORING_WINDOW / (60 * 60)
-          )} hours`,
-          description: `There were withdrawals requests for the ${withdrawalsSum
-            .div(MATIC_DECIMALS)
-            .toFixed(4)} MATIC in total`,
-          alertId: "HUGE-WITHDRAWALS-REQUESTS-MATIC",
-          severity: FindingSeverity.High,
-          type: FindingType.Suspicious,
+  const totalPooledMatic = new BigNumber(
+    String(
+      await stMatic.functions
+        .getTotalPooledMatic({
+          blockTag: blockEvent.block.number,
         })
-      );
-      lastReportedToManyWithdrawals = now;
-    }
+        .then((value) => new BigNumber(String(value)))
+    )
+  );
+  let withdrawalsSum = new BigNumber(0);
+  withdrawalsCache.forEach(
+    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount))
+  );
+  const withdrawalsPercent = withdrawalsSum.div(totalPooledMatic).times(100);
+  const period =
+    now - lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
+      ? now - lastReportedToManyWithdrawals
+      : MAX_WITHDRAWALS_WINDOW;
+  if (withdrawalsPercent.isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM_PERCENT)) {
+    findings.push(
+      Finding.fromObject({
+        name:
+          `Huge withdrawals during the last ` +
+          `${Math.floor(period / (60 * 60))} hour(s)`,
+        description:
+          `There were withdrawals requests for the ` +
+          `${withdrawalsSum.div(MATIC_DECIMALS).toFixed(4)} MATIC in total`,
+        alertId: "HUGE-WITHDRAWALS-REQUESTS-MATIC",
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+      })
+    );
+    lastReportedToManyWithdrawals = now;
+    // remove reported withdrawals records
+    withdrawalsCache = withdrawalsCache.filter(
+      (x: IWithdrawalRecord) => x.time > lastReportedToManyWithdrawals
+    );
   }
 }
 

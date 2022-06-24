@@ -165,7 +165,7 @@ export const MAX_REWARDS_DISTRIBUTION_INTERVAL = 25 * 60 * 60;
 export const MAX_REWARDS_DECREASE = 5;
 
 // 48 hours
-export const WITHDRAWALS_MONITORING_WINDOW = 60 * 60 * 24 * 2;
+export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2;
 export const MAX_WITHDRAWALS_SUM_PERCENT = 5;
 
 // 0.5 ETH
