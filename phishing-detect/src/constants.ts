@@ -109,6 +109,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x362fa9d0bca5d19f743db50738345ce2b40ec99f", // LiFiDiamond
   "0xd8ef3cace8b4907117a45b0b125c68560532f94d", // Set: Basic Issuance Module
   "0xa0a33f0cc7c655015ce50ff998b95eead0fa41ca", // DSProxy #212,569
+  "0x77b1e5d58247bc3300a8e646b018fcebfee5a59c", // Integral: Delay
+  "0xaa8adbdd94824e5c381ca4a262762945b353359f", // 1inch Liquidity Protocol (Ethereum) ETH/STETH
+  "0x9DDb2da7Dd76612e0df237B89AF2CF4413733212", // BribeVault
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
