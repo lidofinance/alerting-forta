@@ -125,7 +125,7 @@ async function getVoteInfo(
     minAcceptQuorum: new BigNumber(String(voteInfoRaw.minAcceptQuorum))
       .div(ETH_DECIMALS)
       .toNumber(),
-    phase: voteInfoRaw.phase.toNumber(),
+    phase: voteInfoRaw.phase,
   };
 }
 
