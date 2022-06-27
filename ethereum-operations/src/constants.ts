@@ -3,6 +3,10 @@ import { FindingSeverity } from "forta-agent";
 
 // COMMON CONSTS
 
+// 1 hour
+
+export const ONE_HOUR = 60 * 60;
+
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 

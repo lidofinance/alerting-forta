@@ -19,6 +19,7 @@ import {
   CAST_VOTE_EVENT,
   ETH_DECIMALS,
   ARAGON_VOTING_EVENTS_OF_NOTICE,
+  ONE_HOUR,
 } from "./constants";
 
 export const name = "Aragon Voting Watcher";
@@ -27,10 +28,13 @@ export const name = "Aragon Voting Watcher";
 const BLOCK_WINDOW = 1000;
 
 // Number of blocks for the whole 5 days
-const FIVE_DAYS_BLOCKS = Math.floor((60 * 60 * 24 * 5) / 13);
+const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 13);
 
-// 36 hours
-const HALF_VOTING_TIME = 60 * 60 * 36;
+// 46 hours
+const TRIGGER_AFTER = 46 * ONE_HOUR;
+
+// 48 hours
+const PHASE_ONE_DURATION = 48 * ONE_HOUR;
 
 interface IVoteInfo {
   startDate: number;
@@ -40,6 +44,7 @@ interface IVoteInfo {
   votingPower: BigNumber;
   supportRequired: number;
   minAcceptQuorum: number;
+  phase: number;
 }
 
 enum Outcomes {
@@ -120,6 +125,7 @@ async function getVoteInfo(
     minAcceptQuorum: new BigNumber(String(voteInfoRaw.minAcceptQuorum))
       .div(ETH_DECIMALS)
       .toNumber(),
+    phase: voteInfoRaw.phase,
   };
 }
 
@@ -140,15 +146,16 @@ async function handleNewVoteInfo(
     const newOutcome = getVoteOutcome(newVoteInfo);
     if (
       oldOutcome != newOutcome &&
-      newVoteInfo.startDate + HALF_VOTING_TIME < now
+      newVoteInfo.startDate + TRIGGER_AFTER < now &&
+      newVoteInfo.phase == 0
     ) {
       findings.push(
         Finding.fromObject({
           name: "Expected vote outcome has changed",
           description:
-            `Expected aragon vote ${voteId} outcome changed from '${oldOutcome}' to '${newOutcome}' and there is more than ` +
-            `${Math.floor(HALF_VOTING_TIME / (60 * 60))} hours ` +
-            `past since vote start`,
+            `Expected aragon vote ${voteId} outcome changed from '${oldOutcome}' to '${newOutcome}' and there is less than ` +
+            `${Math.floor((PHASE_ONE_DURATION - TRIGGER_AFTER) / ONE_HOUR)}` +
+            ` hour(s) left till the end of the first voting phase.`,
           alertId: "ARAGON-VOTE-OUTCOME-CHANGED",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
