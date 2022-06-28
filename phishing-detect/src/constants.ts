@@ -112,6 +112,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x77b1e5d58247bc3300a8e646b018fcebfee5a59c", // Integral: Delay
   "0xaa8adbdd94824e5c381ca4a262762945b353359f", // 1inch Liquidity Protocol (Ethereum) ETH/STETH
   "0x9DDb2da7Dd76612e0df237B89AF2CF4413733212", // BribeVault
+  "0x1ef7a557cfa8436ee08790e3f2b190b8937fda0e", // HolyHeld: Central Transfer Proxy
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
