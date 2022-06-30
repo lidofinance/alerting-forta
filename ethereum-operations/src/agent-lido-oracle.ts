@@ -402,8 +402,11 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     reportDelay: `${reportDelay == null ? "null" : reportDelay}`,
   };
 
-  const now = txEvent.block.timestamp
-  const severity = now > lastReportedOverdue + TRIGGER_PERIOD ? FindingSeverity.Info : FindingSeverity.Medium
+  const now = txEvent.block.timestamp;
+  const severity =
+    now > lastReportedOverdue + TRIGGER_PERIOD
+      ? FindingSeverity.Info
+      : FindingSeverity.Medium;
 
   findings.push(
     Finding.fromObject({
