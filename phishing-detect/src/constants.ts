@@ -113,6 +113,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xaa8adbdd94824e5c381ca4a262762945b353359f", // 1inch Liquidity Protocol (Ethereum) ETH/STETH
   "0x9DDb2da7Dd76612e0df237B89AF2CF4413733212", // BribeVault
   "0x1ef7a557cfa8436ee08790e3f2b190b8937fda0e", // HolyHeld: Central Transfer Proxy
+  "0x248ccbf4864221fc0e840f29bb042ad5bfc89b5c", // Maker(wstETH-B)
+  "0xfff11417a58781d3c72083cb45ef54d79cd02437", // sense-finance periphery
+  "0xb188b1cb84fb0ba13cb9ee1292769f903a9fec59", // aurafinance RewardDepositWrapper
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
