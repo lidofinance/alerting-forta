@@ -43,7 +43,7 @@ const ZERO = new BigNumber(0);
 
 // re-fetched from history on startup
 let lastReport: OracleReport | null = null;
-let lastTriggeredAt = 0;
+let lastReportedOverdue = 0;
 
 const THREE_DAYS = 60 * 60 * 24 * 3;
 
@@ -258,7 +258,7 @@ async function handleOracleReportDelay(
 
   if (
     reportDelay > MAX_ORACLE_REPORT_DELAY &&
-    now - lastTriggeredAt >= TRIGGER_PERIOD
+    now - lastReportedOverdue >= TRIGGER_PERIOD
   ) {
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with prev report
@@ -289,7 +289,7 @@ async function handleOracleReportDelay(
           },
         })
       );
-      lastTriggeredAt = now;
+      lastReportedOverdue = now;
     }
   }
 }
@@ -402,6 +402,12 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     reportDelay: `${reportDelay == null ? "null" : reportDelay}`,
   };
 
+  const now = txEvent.block.timestamp;
+  const severity =
+    now > lastReportedOverdue + TRIGGER_PERIOD
+      ? FindingSeverity.Info
+      : FindingSeverity.Medium;
+
   findings.push(
     Finding.fromObject({
       name: "Lido Oracle report",
@@ -411,7 +417,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
         `rewards: ${rewardsEth} ETH (${rewardsDiffDesc}), ` +
         `time since last report: ${reportDelayDesc}`,
       alertId: "LIDO-ORACLE-REPORT",
-      severity: FindingSeverity.Info,
+      severity: severity,
       type: FindingType.Info,
       metadata: metadata,
     })
