@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import { LogDescription } from "forta-agent";
+import { abbreviateNumber } from "./helpers";
 
 // INTERFACES and CLASSES
 export interface SpecialTransferPattern {
@@ -47,6 +48,7 @@ export class TransferEventInfo {
   to: string;
   toName: string;
   amount: BigNumber;
+  amountPretty: string;
   logIndex: number;
 
   constructor(event: LogDescription) {
@@ -60,6 +62,7 @@ export class TransferEventInfo {
       PARTIALLY_MONITORED_TOKENS.get(this.token) ||
       "unknown";
     this.amount = new BigNumber(String(event.args._value)).div(ETH_DECIMALS);
+    this.amountPretty = abbreviateNumber(this.amount.toNumber());
     this.logIndex = event.logIndex;
   }
 }
@@ -385,14 +388,14 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
   {
     from: NULL_ADDRESS,
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were minted.\n` +
       `To: ${info.to} (${info.toName})`,
   },
   {
     to: NULL_ADDRESS,
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were burned.\n` +
       `From: ${info.from} (${info.fromName})`,
   },
@@ -400,7 +403,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
     to: "0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2",
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to Maker(wstETH-A)\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -408,7 +411,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
     from: "0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2",
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Maker(wstETH-A)\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -416,7 +419,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
     to: "0x248ccbf4864221fc0e840f29bb042ad5bfc89b5c",
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to Maker(wstETH-B)\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -424,7 +427,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
     from: "0x248ccbf4864221fc0e840f29bb042ad5bfc89b5c",
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Maker(wstETH-B)\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -432,7 +435,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
     to: "0x53773e034d9784153471813dacaff53dbbb78e8c",
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to Ribbon Vault\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -440,7 +443,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
     from: "0x53773e034d9784153471813dacaff53dbbb78e8c",
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Ribbon Vault\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -450,7 +453,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     to: "0x53773e034d9784153471813dacaff53dbbb78e8c",
     description: (info: TransferEventInfo) =>
       `Ribbon's short position of ` +
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `was closed.\n`,
   },
   {
@@ -459,7 +462,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     to: "0x5934807cc0654d46755ebd2848840b616256c6ef",
     description: (info: TransferEventInfo) =>
       `Ribbon's short position of ` +
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `was opened.\n`,
   },
 ];
@@ -479,7 +482,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from AAVE\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -497,7 +500,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to AAVE\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -515,7 +518,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Anchor\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -533,7 +536,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to Anchor\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -551,7 +554,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Curve concentrated LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -569,7 +572,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Curve concentrated LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -587,7 +590,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Curve concentrated LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -605,7 +608,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Curve concentrated LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -623,7 +626,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Curve Gauge\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -641,7 +644,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were deposited to Curve Gauge\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -659,7 +662,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Yearn stETH-WETH Pool yVault\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -677,7 +680,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were deposited to Yearn stETH-WETH Pool yVault\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -695,7 +698,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Curve LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -713,7 +716,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Curve LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -731,7 +734,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Curve Gauge\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -749,7 +752,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Curve Gauge\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -767,7 +770,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Yearn: yCRV/stETH Vault\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -785,7 +788,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Yearn: yCRV/stETH Vault\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -803,7 +806,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Balancer LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -821,7 +824,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Balancer LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -839,7 +842,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Balancer LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -857,7 +860,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Balancer LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -875,7 +878,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `was swapped for WETH in Balancer LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -893,7 +896,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `was swapped for wstETH in Balancer LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -911,7 +914,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Balancer Gauge\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -929,7 +932,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were deposited to Balancer Gauge\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -947,7 +950,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Euler\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -965,7 +968,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to Euler\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -983,7 +986,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were unwrapped from wstETH\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -1001,7 +1004,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `were wrapped to wstETH\n` +
       `by: ${info.from} (${info.fromName})`,
   },
@@ -1019,7 +1022,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `was swapped for WETH in Curve concentrated LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
@@ -1037,7 +1040,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       ],
     },
     description: (info: TransferEventInfo) =>
-      `**${info.amount.toFixed(2)} ${info.tokenName}** ` +
+      `**${info.amountPretty} ${info.tokenName}** ` +
       `was swapped for stETH in Curve concentrated LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
