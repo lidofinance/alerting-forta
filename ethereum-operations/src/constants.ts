@@ -118,6 +118,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
 ];
 
 export const EASY_TRACK_ADDRESS = "0xf0211b7660680b49de1a7e9f25c65660f0a13fea";
+export const MOTION_ENACTED_EVENT = "event MotionEnacted(uint256 indexed _motionId)";
 export const EVM_SCRIPT_EXECUTOR_ADDRESS =
   "0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977";
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS =
@@ -174,7 +175,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
   },
   {
     address: EASY_TRACK_ADDRESS,
-    event: "event MotionEnacted(uint256 indexed _motionId)",
+    event: MOTION_ENACTED_EVENT,
     alertId: "EASY-TRACK-MOTION-ENACTED",
     name: "EasyTrack: Motion executed",
     description: (args: any) =>
