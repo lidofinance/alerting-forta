@@ -13,6 +13,7 @@ import {
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
   NODE_OPERATORS_REGISTRY_ADDRESS,
   SIGNING_KEY_REMOVED_EVENT,
+  MOTION_ENACTED_EVENT,
 } from "./constants";
 
 export const name = "NodeOperatorsRegistry";
@@ -59,12 +60,16 @@ function handleSigningKeysRemoved(
 
 function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
-    const events = txEvent.filterLog(
+    const noLimitEvents = txEvent.filterLog(
       NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
       NODE_OPERATORS_REGISTRY_ADDRESS
     );
-    events.forEach((event) => {
-      if (txEvent.to != EASY_TRACK_ADDRESS) {
+    const motionEnactedEvents = txEvent.filterLog(
+      MOTION_ENACTED_EVENT,
+      EASY_TRACK_ADDRESS
+    );
+    noLimitEvents.forEach((event) => {
+      if (motionEnactedEvents.length < 1) {
         findings.push(
           Finding.fromObject({
             name: "NO Stake limit set by NON-EasyTrack action",
