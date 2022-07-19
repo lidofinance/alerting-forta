@@ -139,9 +139,16 @@ export async function handleBlock(blockEvent: BlockEvent) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  // https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#gettransactionreceipt
-  const receipt = await getTransactionReceipt(txEvent.hash);
-  if (receipt === null || !receipt.status) return findings;
+  let status;
+  try {
+    status = (await getTransactionReceipt(txEvent.hash)).status;
+  } catch (err) {
+    // https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#gettransactionreceipt
+    // avoid dropped and replaced transactions https://info.etherscan.com/transaction-dropped-replaced/
+    // try/catch used because error thrown in getTransactionReceipt func, not own code
+    return findings;
+  }
+  if (!status) return findings;
 
   const approvalEvents = txEvent
     .filterLog(APPROVE_EVENT_ABI)
