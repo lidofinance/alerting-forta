@@ -139,17 +139,9 @@ export async function handleBlock(blockEvent: BlockEvent) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  let status;
-  try {
-    status = (await getTransactionReceipt(txEvent.hash)).status;
-  } catch (err) {
-    // https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#gettransactionreceipt
-    console.log(
-      `Receipt for tx ${txEvent.hash} isn't available. Probably tx is a pending at the moment`
-    );
-    return findings;
-  }
-  if (!status) return findings;
+  // https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#gettransactionreceipt
+  const receipt = await getTransactionReceipt(txEvent.hash);
+  if (receipt === null || !receipt.status) return findings;
 
   const approvalEvents = txEvent
     .filterLog(APPROVE_EVENT_ABI)
