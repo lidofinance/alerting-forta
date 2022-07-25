@@ -105,7 +105,10 @@ async function handleToManyWithdrawals(
       ? now - lastReportedToManyWithdrawals
       : MAX_WITHDRAWALS_WINDOW;
   // block number condition is meant to "sync" agents alerts
-  if (withdrawalsPercent.isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM_PERCENT) && blockEvent.blockNumber % 10 == 0) {
+  if (
+    withdrawalsPercent.isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM_PERCENT) &&
+    blockEvent.blockNumber % 10 == 0
+  ) {
     findings.push(
       Finding.fromObject({
         name:
