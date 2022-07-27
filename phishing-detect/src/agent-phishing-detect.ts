@@ -203,8 +203,6 @@ async function handleERC20Approval(
       }
     } else {
       if (spenderInfo) {
-        // update isContract to handle case when EOA is now contract
-        spenderInfo.isContract = await isContract(spender);
         // alert should be critical if spender is not contract
         const severity = spenderInfo.isContract
           ? FindingSeverity.High
