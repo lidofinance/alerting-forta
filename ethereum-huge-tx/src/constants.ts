@@ -82,12 +82,18 @@ export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // ADDRESSES
 export const LDO_TOKEN_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+export const STETH_TOKEN_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
+export const WSTETH_TOKEN_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+
+export const AAVE_VAULT_ADDRESS = "0x1982b2f5814301d4e9a8b0201555376e62f82428";
+export const WSTETH_A_VAULT_ADDRESS = "0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2";
+export const WSTETH_B_VAULT_ADDRESS = "0x248cCBf4864221fC0E840F29BB042ad5bFC89B5c";
 export const CURVE_POOL_ADDRESS = "0xdc24316b9ae028f1497c275eb9192a3ea0f67022";
 
 export const MONITORED_TOKENS = new Map<string, string>(
   [
-    ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH"],
-    ["0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0", "wstETH"],
+    [STETH_TOKEN_ADDRESS, "stETH"],
+    [WSTETH_TOKEN_ADDRESS, "wstETH"],
     ["0x707f9118e33a9b8998bea41dd0d46f38bb963fc8", "bETH"],
     ["0x06325440d014e39736583c165c2963ba99faf14e", "steCRV"],
     ["0x182b723a58739a9c974cfdb385ceadb237453c28", "steCRV_gauge"],
@@ -117,7 +123,7 @@ export const MONITORED_TOKENS = new Map<string, string>(
     ["0xec18ffea29dacc0f47525529fd1fd1d4a40fe65c", "istablex"],
     ["0xbd1bd5c956684f7eb79da40f582cbe1373a1d593", "ewstETH"],
     ["0x436548baab5ec4d79f669d1b9506d67e98927af7", "dwstETH"],
-    ["0x5a98fcbea516cf06857215779fd812ca3bef1b32", "LDO"],
+    [LDO_TOKEN_ADDRESS, "LDO"],
     ["0x828b154032950c8ff7cf8085d841723db2696056", "STETHETH_C-f"],
     ["0x32296969ef14eb0c6d29669c550d4a0449130230", "B-stETH-STABLE"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
@@ -234,7 +240,8 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
     ["0x27756755dc1b50e85f0ae250a5052283e1c76902", "Gnosis safe"],
     ["0x13bd738dabd43b667fa206d4cb201de857c1c495", "Agent"],
     ["0x5181d5d56af4f823b96fe05f062d7a09761a5a53", "Gnosis safe"],
-    ["0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2", "Makerdao"],
+    [WSTETH_A_VAULT_ADDRESS, "Makerdao wstETH-A"],
+    [WSTETH_B_VAULT_ADDRESS, "Makerdao wstETH-B"],
     ["0xba12222222228d8ba445958a75a0704d566bf2c8", "Balancer_v2"],
     ["0x5934807cc0654d46755ebd2848840b616256c6ef", "opynfinance_v2"],
     ["0x34dcd573c5de4672c8248cd12a99f875ca112ad8", "idle"],
@@ -401,7 +408,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
   },
   {
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    to: "0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2",
+    to: WSTETH_A_VAULT_ADDRESS,
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to Maker(wstETH-A)\n` +
@@ -409,7 +416,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
   },
   {
     contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    from: "0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2",
+    from: WSTETH_A_VAULT_ADDRESS,
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Maker(wstETH-A)\n` +

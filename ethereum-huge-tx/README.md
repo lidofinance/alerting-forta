@@ -8,6 +8,7 @@
 
 - HUGE-TOKEN-TRANSFERS-IN-SINGLE-TX - Huge token transfers detected in the TX
 - HUGE-TOKEN-TRANSFERS-TECH - Detailed transfer info for tech purposes. Do not route it to alerts channel!
+- HUGE-VAULT-BALANCE-CHANGE - Huge change in the AAVE or Maker vaults balance during last 15 min
 
 ## Development
 
