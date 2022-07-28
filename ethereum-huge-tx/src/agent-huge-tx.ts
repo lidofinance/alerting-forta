@@ -50,7 +50,7 @@ let lastMakerAVaultBalance = 0;
 let lastMakerBVaultBalance = 0;
 
 // 15%
-const balanceChangeThreshold = 0.15;
+const balanceChangeThreshold = 15;
 
 export async function initialize(
   currentBlock: number
@@ -117,7 +117,7 @@ async function getVaultsBalances(blockNumber: number) {
 }
 
 function getDiffPercents(before: number, after: number): number {
-  return ((before - after) / before) * 100;
+  return ((after - before) / before) * 100;
 }
 
 async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
