@@ -1,3 +1,5 @@
+import BigNumber from "bignumber.js";
+
 import {
   ethers,
   BlockEvent,
@@ -8,6 +10,8 @@ import {
   LogDescription,
 } from "forta-agent";
 
+import { ethersProvider } from "./ethers";
+
 import {
   MONITORED_TOKENS,
   TRANSFER_EVENT,
@@ -17,6 +21,11 @@ import {
   TransferText,
   TransferEventMetadata,
   LDO_TOKEN_ADDRESS,
+  STETH_TOKEN_ADDRESS,
+  WSTETH_TOKEN_ADDRESS,
+  AAVE_VAULT_ADDRESS,
+  WSTETH_A_VAULT_ADDRESS,
+  WSTETH_B_VAULT_ADDRESS,
 } from "./constants";
 
 import {
@@ -28,13 +37,162 @@ import {
   prepareTransferEventText,
 } from "./helpers";
 
+import ERC20_SHORT_TOKEN_ABI from "./abi/ERC20balance.json";
+import { ETH_DECIMALS } from "./constants";
+
 export const name = "Huge TX detector";
+
+const poolMinutesWindow = 15;
+const poolBlockWindow = Math.round((60 * poolMinutesWindow) / 13);
+let lastVaultBalanceBlock = 0;
+let lastAaveVaultBalance = 0;
+let lastMakerAVaultBalance = 0;
+let lastMakerBVaultBalance = 0;
+
+// 15%
+const balanceChangeThreshold = 15;
 
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-  return {};
+  [lastAaveVaultBalance, lastMakerAVaultBalance, lastMakerBVaultBalance] =
+    await getVaultsBalances(currentBlock);
+  lastVaultBalanceBlock = currentBlock;
+  return {
+    aaveVaultBalance: lastAaveVaultBalance.toFixed(),
+    makerAVaultBalance: lastMakerAVaultBalance.toFixed(),
+    makerBVaultBalance: lastMakerBVaultBalance.toFixed(),
+    poolBlockWindow: poolBlockWindow.toFixed(),
+  };
+}
+
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+  await Promise.all([handleVaultBalance(blockEvent, findings)]);
+  return findings;
+}
+
+async function getVaultsBalances(blockNumber: number) {
+  const stETH = new ethers.Contract(
+    STETH_TOKEN_ADDRESS,
+    ERC20_SHORT_TOKEN_ABI,
+    ethersProvider
+  );
+  const wstETH = new ethers.Contract(
+    WSTETH_TOKEN_ADDRESS,
+    ERC20_SHORT_TOKEN_ABI,
+    ethersProvider
+  );
+
+  const aaveVaultBalance = new BigNumber(
+    String(
+      await stETH.functions.balanceOf(AAVE_VAULT_ADDRESS, {
+        blockTag: blockNumber,
+      })
+    )
+  )
+    .div(ETH_DECIMALS)
+    .toNumber();
+  const makerAVaultBalance = new BigNumber(
+    String(
+      await wstETH.functions.balanceOf(WSTETH_A_VAULT_ADDRESS, {
+        blockTag: blockNumber,
+      })
+    )
+  )
+    .div(ETH_DECIMALS)
+    .toNumber();
+  const makerBVaultBalance = new BigNumber(
+    String(
+      await wstETH.functions.balanceOf(WSTETH_B_VAULT_ADDRESS, {
+        blockTag: blockNumber,
+      })
+    )
+  )
+    .div(ETH_DECIMALS)
+    .toNumber();
+
+  return [aaveVaultBalance, makerAVaultBalance, makerBVaultBalance];
+}
+
+function getDiffPercents(before: number, after: number): number {
+  return ((after - before) / before) * 100;
+}
+
+async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
+  if (blockEvent.blockNumber - lastVaultBalanceBlock > poolBlockWindow) {
+    const [aaveVaultBalance, makerAVaultBalance, makerBVaultBalance] =
+      await getVaultsBalances(blockEvent.blockNumber);
+
+    const aaveDiff = getDiffPercents(lastAaveVaultBalance, aaveVaultBalance);
+    const makerADiff = getDiffPercents(
+      lastMakerAVaultBalance,
+      makerAVaultBalance
+    );
+    const makerBDiff = getDiffPercents(
+      lastMakerBVaultBalance,
+      makerBVaultBalance
+    );
+
+    if (Math.abs(aaveDiff) > balanceChangeThreshold) {
+      const aaveChangeText = aaveDiff > 0 ? "increased" : "decreased";
+      findings.push(
+        Finding.fromObject({
+          name: "Huge change in AAVE vault balance",
+          description:
+            "AAVE vault balance has " +
+            `${aaveChangeText} by ${Math.abs(aaveDiff).toFixed(2)}% ` +
+            `during last ${poolMinutesWindow} min.\n` +
+            `Previous balance: ${lastAaveVaultBalance.toFixed(2)} stETH\n` +
+            `Current balance: ${aaveVaultBalance.toFixed(2)} stETH\n`,
+          alertId: "HUGE-VAULT-BALANCE-CHANGE",
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
+      );
+    }
+
+    if (Math.abs(makerADiff) > balanceChangeThreshold) {
+      const makerAChangeText = makerADiff > 0 ? "increased" : "decreased";
+      findings.push(
+        Finding.fromObject({
+          name: "Huge change in Maker wstETH-A vault balance",
+          description:
+            "Maker wstETH-A vault balance has " +
+            `${makerAChangeText} by ${Math.abs(makerADiff).toFixed(2)}% ` +
+            `during last ${poolMinutesWindow} min.\n` +
+            `Previous balance: ${lastMakerAVaultBalance.toFixed(2)} wstETH\n` +
+            `Current balance: ${makerAVaultBalance.toFixed(2)} wstETH\n`,
+          alertId: "HUGE-VAULT-BALANCE-CHANGE",
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
+      );
+    }
+
+    if (Math.abs(makerBDiff) > balanceChangeThreshold) {
+      const makerBChangeText = makerBDiff > 0 ? "increased" : "decreased";
+      findings.push(
+        Finding.fromObject({
+          name: "Huge change in Maker wstETH-B vault balance",
+          description:
+            "Maker wstETH-A vault balance has " +
+            `${makerBChangeText} by ${Math.abs(makerBDiff).toFixed(2)}% ` +
+            `during last ${poolMinutesWindow} min.\n` +
+            `Previous balance: ${lastMakerBVaultBalance.toFixed(2)} wstETH\n` +
+            `Current balance: ${makerBVaultBalance.toFixed(2)} wstETH\n`,
+          alertId: "HUGE-VAULT-BALANCE-CHANGE",
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
+      );
+    }
+    lastAaveVaultBalance = aaveVaultBalance;
+    lastMakerAVaultBalance = makerAVaultBalance;
+    lastMakerBVaultBalance = makerBVaultBalance;
+    lastVaultBalanceBlock = blockEvent.blockNumber;
+  }
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
