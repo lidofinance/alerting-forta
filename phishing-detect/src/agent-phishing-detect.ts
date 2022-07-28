@@ -48,7 +48,6 @@ const notAlerted: ILastAlerted = {
 let spenders = new Map<string, ISpenderInfo>();
 let spendersLastAlerted = new Map<string, ILastAlertedSummary>();
 
-const bigZero = new BigNumber(0);
 const uintMaxValue = new BigNumber(10).pow(59);
 
 export const name = "PhishingDetect";
@@ -186,12 +185,8 @@ async function handleERC20Approval(
     );
 
     let spenderInfo = spenders.get(spender);
-    // update isContract to handle case when EOA is now contract
-    if (spenderInfo) {
-      spenderInfo.isContract = await isContract(spender);
-    }
     // call of approve with 0 amount equals to approve removal
-    if (amount.eq(bigZero)) {
+    if (amount.eq(0)) {
       if (spenderInfo) {
         let tokenApprovers = spenderInfo.tokens.get(token);
         if (tokenApprovers) {
