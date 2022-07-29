@@ -229,7 +229,8 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
   },
   {
     address: ST_MATIC_TOKEN_ADDRESS,
-    event: "event SetFxStateRootTunnel(address oldFxStateRootTunnel, address newFxStateRootTunnel)",
+    event:
+      "event SetFxStateRootTunnel(address oldFxStateRootTunnel, address newFxStateRootTunnel)",
     alertId: "STMATIC-SET-FX-STATE-ROOT",
     name: "stMATIC: FX state root tunnel address changed",
     description: (args: any) =>
@@ -265,7 +266,8 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
   },
   {
     address: ST_MATIC_TOKEN_ADDRESS,
-    event: "event SetFees(uint256 daoFee, uint256 operatorsFee, uint256 insuranceFee)",
+    event:
+      "event SetFees(uint256 daoFee, uint256 operatorsFee, uint256 insuranceFee)",
     alertId: "STMATIC-SET-PROTOCOL-FEES",
     name: "stMATIC: Protocol fee distribution changed",
     description: (args: any) =>
@@ -273,6 +275,128 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
       `daoFee: ${args.daoFee}%\n` +
       `operatorsFee: ${args.operatorsFee}%\n` +
       `insuranceFee: ${args.insuranceFee}%`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+];
+
+export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event AddNodeOperator(uint256 validatorId, address rewardAddress)",
+    alertId: "NO-OPERATOR-ADDED",
+    name: "NOR: Node operator added",
+    description: (args: any) =>
+      `New node operator added with id ${args.validatorId} and reward address ${args.rewardAddress}`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event RemoveNodeOperator(uint256 validatorId, address rewardAddress)",
+    alertId: "NO-OPERATOR-REMOVED",
+    name: "NOR: Node operator removed",
+    description: (args: any) =>
+      `Node operator ${args.validatorId} with reward address ${args.rewardAddress} was removed`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event RemoveInvalidNodeOperator(uint256 validatorId, address rewardAddress)",
+    alertId: "NO-INVALID-OPERATOR-REMOVED",
+    name: "NOR: Invalid node operator removed",
+    description: (args: any) =>
+      `Invalid node operator ${args.validatorId} with reward address ${args.rewardAddress} was removed`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event ExitNodeOperator(uint256 validatorId, address rewardAddress)",
+    alertId: "NO-OPERATOR-EXITED",
+    name: "NOR: Node operator exited",
+    description: (args: any) =>
+      `Node operator ${args.validatorId} with reward address ${args.rewardAddress} exited registry`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event SetStMaticAddress(address oldStMatic, address newStMatic)",
+    alertId: "NO-SET-STMATIC-ADDRESS",
+    name: "NOR: stMATIC address changed",
+    description: (args: any) =>
+      `stMATIC address was changed from ` +
+      `${args.oldStMatic} to ` +
+      `${args.newStMatic}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event SetRewardAddress(uint256 validatorId, address oldRewardAddress, address newRewardAddress)",
+    alertId: "NO-SET-REWARD-ADDRESS",
+    name: "NOR: Reward address for NO changed",
+    description: (args: any) =>
+      `Reward address for NO ${args.validatorId} was changed from ` +
+      `${args.oldRewardAddress} to ` +
+      `${args.newRewardAddress}`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event SetCommissionRate(uint256 oldCommissionRate, uint256 newCommissionRate)",
+    alertId: "NO-SET-COMMISSION-RATE",
+    name: "NOR: Default commission rate changed",
+    description: (args: any) =>
+      `Default commission rate was changed from ` +
+      `${args.oldCommissionRate}% to ` +
+      `${args.newCommissionRate}%`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event SetDistanceThreshold(uint256 oldDistanceThreshold, uint256 newDistanceThreshold)",
+    alertId: "NO-SET-DISTANCE-THRESHOLD",
+    name: "NOR: Rebalance distance threshold changed",
+    description: (args: any) =>
+      `Rebalance distance threshold was changed from ` +
+      `${args.oldDistanceThreshold}% to ` +
+      `${args.newDistanceThreshold}%`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event SetMinRequestWithdrawRange(uint8 oldMinRequestWithdrawRange, uint8 newMinRequestWithdrawRange)",
+    alertId: "NO-SET-MIN-REQ-WD-RANGE",
+    name: "NOR: Rebalance min request withdraw range changed",
+    description: (args: any) =>
+      `Rebalance min request withdraw range changed was changed from ` +
+      `${args.oldMinRequestWithdrawRange}% to ` +
+      `${args.newMinRequestWithdrawRange}%`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event SetMaxWithdrawPercentagePerRebalance(uint256 oldMaxWithdrawPercentagePerRebalance, uint256 newMaxWithdrawPercentagePerRebalance)",
+    alertId: "NO-SET-MAX-WD-PER",
+    name: "NOR: Max withdraw percentage per rebalance changed",
+    description: (args: any) =>
+      `Max withdraw percentage per rebalance changed was changed from ` +
+      `${args.oldMaxWithdrawPercentagePerRebalance}% to ` +
+      `${args.newMaxWithdrawPercentagePerRebalance}%`,
     severity: FindingSeverity.High,
     type: FindingType.Suspicious,
   },
