@@ -130,9 +130,8 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     alertId: "STMATIC-CONTRACT-REWARDS-DISTRIBUTED",
     name: "stMATIC: stMATIC Rewards distributed",
     description: (args: any) =>
-      `Rewards for stMATIC was distributed. Rewards amount ${
-        args._amount / MATIC_DECIMALS.toNumber()
-      }`,
+      `Rewards for stMATIC was distributed. Rewards amount ` +
+      `${new BigNumber(String(args._amount)).div(MATIC_DECIMALS).toFixed(2)}`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
   },
@@ -143,11 +142,139 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     alertId: "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED",
     name: "stMATIC: stMATIC Pooled MATIC delegated",
     description: (args: any) =>
-      `Pooled MATIC was delegated to validators. Delegated amount ${
-        args._amountDelegated / MATIC_DECIMALS.toNumber()
-      }. MATIC remained pooled ${args._remainder / MATIC_DECIMALS.toNumber()}`,
+      `Pooled MATIC was delegated to validators. Delegated amount ` +
+      `${new BigNumber(String(args._amountDelegated))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)}` +
+      ` MATIC remained pooled ${args._remainder} wei`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event:
+      "event WithdrawTotalDelegatedEvent(address indexed _from, uint256 indexed _amount)",
+    alertId: "STMATIC-WITHDRAW-TOTAL",
+    name: "Full withdrawal requested for validator",
+    description: (args: any) =>
+      `Full withdrawal requested for validator ` +
+      `${args._from}. Amount ` +
+      `${new BigNumber(String(args._amount)).div(MATIC_DECIMALS).toFixed(2)}`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event: "event SetInsuranceAddress(address indexed _newInsuranceAddress)",
+    alertId: "STMATIC-SET-INSURANCE",
+    name: "stMATIC: Insurance address changed",
+    description: (args: any) =>
+      `Insurance address was changed to ${args._newInsuranceAddress}`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event:
+      "event SetNodeOperatorRegistryAddress(address indexed _newNodeOperatorRegistryAddress)",
+    alertId: "STMATIC-SET-NO-ADDRESS",
+    name: "stMATIC: Node operator registry address changed",
+    description: (args: any) =>
+      `Node operator registry address was changed to ${args._newNodeOperatorRegistryAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event:
+      "event SetDelegationLowerBound(uint256 indexed _delegationLowerBound)",
+    alertId: "STMATIC-SET-DELEGATION-LOWER-BOUND",
+    name: "stMATIC: Delegation lower bound changed",
+    description: (args: any) =>
+      `Delegation lower bound was changed to ` +
+      `${new BigNumber(String(args._delegationLowerBound))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)} MATIC`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event:
+      "event SetRewardDistributionLowerBound(uint256 oldRewardDistributionLowerBound, uint256 newRewardDistributionLowerBound)",
+    alertId: "STMATIC-SET-REWARD-DISTRIBUTION-LOWER-BOUND",
+    name: "stMATIC: Reward distribution lower bound changed",
+    description: (args: any) =>
+      `Reward distribution lower bound was changed from ` +
+      `${new BigNumber(String(args.oldRewardDistributionLowerBound))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)} MATIC to ` +
+      `${new BigNumber(String(args.newRewardDistributionLowerBound))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)} MATIC`,
+    severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event: "event SetLidoNFT(address oldLidoNFT, address newLidoNFT)",
+    alertId: "STMATIC-SET-LIDO-NFT",
+    name: "stMATIC: Lido NFT address changed",
+    description: (args: any) =>
+      `Lido NFT address was changed from ` +
+      `${args.oldLidoNFT} to ` +
+      `${args.newLidoNFT}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event: "event SetFxStateRootTunnel(address oldFxStateRootTunnel, address newFxStateRootTunnel)",
+    alertId: "STMATIC-SET-FX-STATE-ROOT",
+    name: "stMATIC: FX state root tunnel address changed",
+    description: (args: any) =>
+      `FX state root tunnel address was changed from ` +
+      `${args.oldFxStateRootTunnel} to ` +
+      `${args.newFxStateRootTunnel}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event: "event SetDaoAddress(address oldDaoAddress, address newDaoAddress)",
+    alertId: "STMATIC-SET-DAO-ADDRESS",
+    name: "stMATIC: DAO address changed",
+    description: (args: any) =>
+      `DAO address was changed from ` +
+      `${args.oldDaoAddress} to ` +
+      `${args.newDaoAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event: "event SetProtocolFee(uint8 oldProtocolFee, uint8 newProtocolFee)",
+    alertId: "STMATIC-SET-PROTOCOL-FEE",
+    name: "stMATIC: Protocol fee changed",
+    description: (args: any) =>
+      `Protocol fee was changed from ` +
+      `${args.oldProtocolFee}% to ` +
+      `${args.newProtocolFee}%`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
+  },
+  {
+    address: ST_MATIC_TOKEN_ADDRESS,
+    event: "event SetFees(uint256 daoFee, uint256 operatorsFee, uint256 insuranceFee)",
+    alertId: "STMATIC-SET-PROTOCOL-FEES",
+    name: "stMATIC: Protocol fee distribution changed",
+    description: (args: any) =>
+      `Protocol fee distribution set to:\n` +
+      `daoFee: ${args.daoFee}%\n` +
+      `operatorsFee: ${args.operatorsFee}%\n` +
+      `insuranceFee: ${args.insuranceFee}%`,
+    severity: FindingSeverity.High,
+    type: FindingType.Suspicious,
   },
 ];
 
