@@ -121,7 +121,7 @@ function getDiffPercents(before: number, after: number): number {
 }
 
 async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
-  if (blockEvent.blockNumber - lastVaultBalanceBlock > poolBlockWindow) {
+  if (blockEvent.blockNumber % poolBlockWindow == 0) {
     const [aaveVaultBalance, makerAVaultBalance, makerBVaultBalance] =
       await getVaultsBalances(blockEvent.blockNumber);
 
