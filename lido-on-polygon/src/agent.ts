@@ -108,6 +108,7 @@ const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent
 ): Promise<Finding[]> => {
   let responseResolve: (value: Finding[]) => void;
+  let wasResolved = false;
 
   const response = new Promise<Finding[]>((resolve, reject) => {
     responseResolve = resolve;
@@ -116,7 +117,9 @@ const handleBlock: HandleBlock = async (
   // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers have finished execution we will leave them working in background
   const blockHandlingTimeout = setTimeout(function () {
+    console.log("handleBlock call interrupted due to timeout");
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
+    wasResolved = true;
   }, handlerResolveTimeout);
 
   // report findings from init. Will be done only for the first block report.
@@ -152,9 +155,11 @@ const handleBlock: HandleBlock = async (
       }
     })
   ).then(() => {
+    if (wasResolved) return;
     // if all handlers have finished execution drop timeout and resolve promise
     clearTimeout(blockHandlingTimeout);
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
+    wasResolved = true; // should not be reached, but to make sure
   });
 
   return response;
