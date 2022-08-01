@@ -276,7 +276,10 @@ async function handleOracleReportDelay(
     }
     const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
     if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
-      const severity = reportedOverdueCount % 5 == 0 ? FindingSeverity.Critical : FindingSeverity.High
+      const severity =
+        reportedOverdueCount % 5 == 0
+          ? FindingSeverity.Critical
+          : FindingSeverity.High;
       findings.push(
         Finding.fromObject({
           name: "Lido Oracle report overdue",
