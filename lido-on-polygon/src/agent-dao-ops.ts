@@ -10,7 +10,6 @@ import {
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
-import { Event } from "ethers";
 
 import MATIC_ABI from "./abi/MaticToken.json";
 import ST_MATIC_ABI from "./abi/stMaticToken.json";
@@ -271,7 +270,7 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
 
   if (lastReportedInvalidProxyAdmin + REPORT_WINDOW_PROXY_ALERTS < now) {
     let proxyAdminFor = "";
-    await Object.entries(LIDO_ON_POLYGON_PROXIES).forEach(
+    const promises = Object.entries(LIDO_ON_POLYGON_PROXIES).map(
       async ([contractName, contractAddr]) => {
         proxyAdminFor = String(
           await proxyAdmin.functions.getProxyAdmin(contractAddr, {
@@ -293,6 +292,8 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
         }
       }
     );
+
+    await Promise.all(promises);
   }
 }
 
