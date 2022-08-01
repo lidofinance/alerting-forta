@@ -120,7 +120,7 @@ const handleBlock: HandleBlock = async (
   }, handlerResolveTimeout);
 
   // report findings from init. Will be done only for the first block report.
-  if (findingsOnInit) {
+  if (findingsOnInit.length) {
     blockFindingsCache = findingsOnInit;
     findingsOnInit = [];
   }
