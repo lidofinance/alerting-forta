@@ -169,6 +169,7 @@ const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent
 ) => {
   let responseResolve: (value: Finding[]) => void;
+  let wasResolved = false;
 
   const response = new Promise<Finding[]>((resolve, reject) => {
     responseResolve = resolve;
@@ -177,7 +178,9 @@ const handleTransaction: HandleTransaction = async (
   // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers has finished execution we will left them working in background
   const txHandlingTimeout = setTimeout(function () {
+    console.log("handleTransaction was interrupted due to timeout");
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
+    wasResolved = true;
   }, handlerResolveTimeout);
 
   // run agents handlers
@@ -207,9 +210,11 @@ const handleTransaction: HandleTransaction = async (
       }
     })
   ).then(() => {
+    if (wasResolved) return;
     // if all handlers have finished execution drop timeout and resolve promise
     clearTimeout(txHandlingTimeout);
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
+    wasResolved = true; // should not be reached, but to make sure
   });
 
   return response;
