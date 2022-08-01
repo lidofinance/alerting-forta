@@ -14,6 +14,7 @@ DAO operations related alerts
 
 - \[HUGE|HIGH\]-BUFFERED-MATIC - Too many MATIC in the buffer
 - STMATIC-REWARDS-DISTRIBUTION-DELAY - stMATIC rewards distribution delay (more than 24h)
+- STMATIC-CHEKPOINT-REWARD-UPDATE - Protocol checkpoint reward changed
 - INVALID-PROXY-ADMIN-OWNER - Invalid proxy admin owner
 - INVALID-PROXY-ADMIN-ADDR - Invalid proxy admin address
 - LOW-DEPOSIT-EXECUTOR-BALANCE - Low balance of depositor bot

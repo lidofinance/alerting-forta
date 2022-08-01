@@ -41,6 +41,9 @@ export const ST_MATIC_DISTRIBUTE_REWARDS_EVENT =
 export const ST_MATIC_REQUEST_WITHDRAWAL_EVENT =
   "event RequestWithdrawEvent(address indexed _from, uint256 indexed _amount)";
 
+export const CHEKPOINT_REWARD_UPDATED_EVENT =
+  "event RewardUpdate(uint256 newReward, uint256 oldReward)";
+
 type StMaticAdminEvent = {
   address: string;
   event: string;
