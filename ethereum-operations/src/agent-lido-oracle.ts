@@ -52,6 +52,7 @@ let oraclesLastVotes: Map<string, number> = new Map();
 let oraclesVotesLastAlert: Map<string, number> = new Map();
 let oraclesBalanceLastAlert: Map<string, number> = new Map();
 let agentStartTime = 0;
+let reportedOverdueCount = 0;
 
 export const name = "LidoOracle";
 
@@ -275,6 +276,7 @@ async function handleOracleReportDelay(
     }
     const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
     if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
+      const severity = reportedOverdueCount % 5 == 0 ? FindingSeverity.Critical : FindingSeverity.High
       findings.push(
         Finding.fromObject({
           name: "Lido Oracle report overdue",
@@ -282,7 +284,7 @@ async function handleOracleReportDelay(
             reportDelayUpdated
           )}`,
           alertId: "LIDO-ORACLE-OVERDUE",
-          severity: FindingSeverity.High,
+          severity: severity,
           type: FindingType.Degraded,
           metadata: {
             delay: `${reportDelayUpdated}`,
@@ -290,6 +292,7 @@ async function handleOracleReportDelay(
         })
       );
       lastReportedOverdue = now;
+      reportedOverdueCount += 1;
     }
   }
 }
@@ -422,6 +425,8 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
       metadata: metadata,
     })
   );
+
+  reportedOverdueCount = 0;
 
   if (
     lastReport != null &&

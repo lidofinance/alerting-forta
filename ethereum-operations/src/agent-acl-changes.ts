@@ -172,7 +172,7 @@ function handleChangePermissionManager(
           name: `Aragon ACL: Permission manager changed`,
           description: `Permission manager for the role ${event.args.role} (${role}) on the app ${event.args.app} (${app}) was set to ${event.args.manager} (${manager})`,
           alertId: "ARAGON-ACL-PERMISSION-MANAGER-CHANGED",
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Critical,
           type: FindingType.Info,
         })
       );

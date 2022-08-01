@@ -59,7 +59,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     name: "stMATIC: stMATIC contract was paused",
     description: (args: any) =>
       `stMATIC contract was paused by ${args.account}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },
   {
@@ -102,7 +102,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     name: "stMATIC: stMATIC RoleAdminChanged",
     description: (args: any) =>
       `Admin role ${args.role} was changed form ${args.previousAdminRole} to ${args.newAdminRole}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Suspicious,
   },
   {
@@ -111,7 +111,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     alertId: "STMATIC-CONTRACT-ADMIN-CHANGED",
     name: "stMATIC: stMATIC AdminChanged",
     description: (args: any) => `Proxy admin was changed to ${args.newAdmin}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Suspicious,
   },
   {
@@ -181,7 +181,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     name: "stMATIC: Node operator registry address changed",
     description: (args: any) =>
       `Node operator registry address was changed to ${args._newNodeOperatorRegistryAddress}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },
   {
@@ -224,7 +224,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
       `Lido NFT address was changed from ` +
       `${args.oldLidoNFT} to ` +
       `${args.newLidoNFT}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },
   {
@@ -237,7 +237,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
       `FX state root tunnel address was changed from ` +
       `${args.oldFxStateRootTunnel} to ` +
       `${args.newFxStateRootTunnel}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },
   {
@@ -249,7 +249,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
       `DAO address was changed from ` +
       `${args.oldDaoAddress} to ` +
       `${args.newDaoAddress}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Suspicious,
   },
   {
@@ -332,7 +332,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
       `stMATIC address was changed from ` +
       `${args.oldStMatic} to ` +
       `${args.newStMatic}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
     type: FindingType.Suspicious,
   },
   {

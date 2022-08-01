@@ -133,7 +133,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "EasyTrack: EasyTrack contract was paused",
     description: (args: any) =>
       `EasyTrack contract was paused by ${args.account}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EASY_TRACK_ADDRESS,
@@ -152,7 +152,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "EasyTrack: Role was granted on EasyTrack contract",
     description: (args: any) =>
       `Role ${args.role} was granted to ${args.account} on EasyTrack contract by ${args.sender}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EASY_TRACK_ADDRESS,
@@ -211,7 +211,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "EasyTrack: Role was granted on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was granted by ${args.account} on RewardProgramsRegistry by ${args.sender}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: REWARD_PROGRAMS_REGISTRY_ADDRESS,
@@ -232,7 +232,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "EasyTrack: EVMScriptExecutor's EasyTrack address changed",
     description: (args: any) =>
       `EVMScriptExecutor's EasyTrack address changed from ${args._previousEasyTrack} to ${args._newEasyTrack}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EVM_SCRIPT_EXECUTOR_ADDRESS,
@@ -242,7 +242,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "EasyTrack: EVMScriptExecutor's ownership transferred",
     description: (args: any) =>
       `EVMScriptExecutor's ownership transferred from ${args.previousOwner} to ${args.newOwner}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
 ];
 
@@ -308,7 +308,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     alertId: "LIDO-DEPOSITOR-PAUSED",
     name: "Deposit Security: Deposits paused",
     description: (args: any) => `Deposits were paused by ${args.guardian}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
@@ -391,7 +391,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     alertId: "LIDO-DAO-RESUMED",
     name: "Lido DAO: Resumed",
     description: (args: any) => `Lido DAO contract was resumed`,
-    severity: FindingSeverity.Critical,
+    severity: FindingSeverity.High,
   },
   {
     address: LIDO_DAO_ADDRESS,
@@ -422,7 +422,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     name: "Lido DAO: Withdrawal Credentials Set",
     description: (args: any) =>
       `Lido DAO withdrawal credentials was set to ${args.withdrawalCredentials}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_DAO_ADDRESS,
@@ -430,7 +430,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     alertId: "LIDO-DAO-STAKING-PAUSED",
     name: "Lido DAO: Staking paused",
     description: (args: any) => `Staking was paused!`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_DAO_ADDRESS,
