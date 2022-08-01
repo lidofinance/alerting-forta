@@ -33,6 +33,7 @@ import {
   ETH_DECIMALS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
   ONE_HOUR,
+  CHEKPOINT_REWARD_UPDATED_EVENT,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
 
@@ -329,6 +330,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   await Promise.all([
     handleProxyAdminEvents(txEvent, findings),
     handleRewardDistributionEvent(txEvent, findings),
+    handleChekpointRewardUpdateEvent(txEvent, findings),
     handleStMaticTx(txEvent, findings),
   ]);
   return findings;
@@ -433,4 +435,34 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
       });
     }
   });
+}
+
+function handleChekpointRewardUpdateEvent(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  const fmtReward = (v: any) => new BigNumber(v.toString()).div(MATIC_DECIMALS);
+  // looks like there is no guaranteed contract to check a transaction against
+  const events = txEvent.filterLog(CHEKPOINT_REWARD_UPDATED_EVENT);
+  for (const event of events) {
+    const [oldReward, newReward] = [
+      fmtReward(event.args.oldReward),
+      fmtReward(event.args.newReward),
+    ];
+    const delta = newReward
+      .minus(oldReward)
+      .div(oldReward)
+      .times(100)
+      .toFixed(2);
+
+    findings.push(
+      Finding.fromObject({
+        name: "Polygon checkpoint reward was changed",
+        description: `Change ${delta}%, \nnew reward: ${newReward}, \nold reward: ${oldReward}`,
+        alertId: "STMATIC-CHEKPOINT-REWARD-UPDATE",
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+      })
+    );
+  }
 }
