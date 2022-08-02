@@ -102,6 +102,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBufferedMatic(blockEvent, findings),
     handleRewardsDistribution(blockEvent, findings),
     handleProxyAdmin(blockEvent, findings),
+    handleProxyOwner(blockEvent, findings),
     handleDepositExecutorBalance(blockEvent, findings),
   ]);
 
@@ -126,27 +127,19 @@ async function handleBufferedMatic(
       ethersProvider
     );
 
-    const bufferedMatic = new BigNumber(
-      String(
-        await matic.functions
-          .balanceOf(ST_MATIC_TOKEN_ADDRESS, {
-            blockTag: blockEvent.block.number,
-          })
-          .then((value) => new BigNumber(String(value)))
-          .then((value) => value.div(MATIC_DECIMALS))
-      )
-    );
+    const bufferedMatic = await matic.functions
+      .balanceOf(ST_MATIC_TOKEN_ADDRESS, {
+        blockTag: blockEvent.block.number,
+      })
+      .then((value) => new BigNumber(String(value)))
+      .then((value) => value.div(MATIC_DECIMALS));
 
-    const totalPooledMatic = new BigNumber(
-      String(
-        await stMatic.functions
-          .getTotalPooledMatic({
-            blockTag: blockEvent.block.number,
-          })
-          .then((value) => new BigNumber(String(value)))
-          .then((value) => value.div(MATIC_DECIMALS))
-      )
-    );
+    const totalPooledMatic = await stMatic.functions
+      .getTotalPooledMatic({
+        blockTag: blockEvent.block.number,
+      })
+      .then((value) => new BigNumber(String(value)))
+      .then((value) => value.div(MATIC_DECIMALS));
 
     const bufferedMaticPercent = bufferedMatic.div(totalPooledMatic).times(100);
 
@@ -250,25 +243,6 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
     ethersProvider
   );
 
-  if (lastReportedInvalidProxyOwner + REPORT_WINDOW_PROXY_ALERTS < now) {
-    const proxyOwner = String(
-      await proxyAdmin.functions.owner({ blockTag: blockEvent.block.number })
-    ).toLowerCase();
-
-    if (proxyOwner != OWNER_MULTISIG_ADDRESS) {
-      findings.push(
-        Finding.fromObject({
-          name: "Invalid proxy admin owner (detected by method call)",
-          description: `Owner of proxy admin is ${proxyOwner} but should be ${OWNER_MULTISIG_ADDRESS}`,
-          alertId: "INVALID-PROXY-ADMIN-OWNER",
-          severity: FindingSeverity.Critical,
-          type: FindingType.Exploit,
-        })
-      );
-      lastReportedInvalidProxyOwner = now;
-    }
-  }
-
   if (lastReportedInvalidProxyAdmin + REPORT_WINDOW_PROXY_ALERTS < now) {
     let proxyAdminFor = "";
     const promises = Object.entries(LIDO_ON_POLYGON_PROXIES).map(
@@ -298,16 +272,45 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
   }
 }
 
+async function handleProxyOwner(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+
+  const proxyAdmin = new ethers.Contract(
+    PROXY_ADMIN_ADDRESS,
+    PROXY_ADMIN_ABI,
+    ethersProvider
+  );
+
+  if (lastReportedInvalidProxyOwner + REPORT_WINDOW_PROXY_ALERTS < now) {
+    const proxyOwner = String(
+      await proxyAdmin.functions.owner({ blockTag: blockEvent.block.number })
+    ).toLowerCase();
+
+    if (proxyOwner != OWNER_MULTISIG_ADDRESS) {
+      findings.push(
+        Finding.fromObject({
+          name: "Invalid proxy admin owner (detected by method call)",
+          description: `Owner of proxy admin is ${proxyOwner} but should be ${OWNER_MULTISIG_ADDRESS}`,
+          alertId: "INVALID-PROXY-ADMIN-OWNER",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Exploit,
+        })
+      );
+      lastReportedInvalidProxyOwner = now;
+    }
+  }
+}
+
 async function handleDepositExecutorBalance(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
-    const executorBalanceRaw = new BigNumber(
-      String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS))
-    );
-    const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
+    const executorBalance = await ethersProvider
+      .getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS)
+      .then((value) => new BigNumber(String(value)))
+      .then((value) => value.div(ETH_DECIMALS).toNumber());
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
       findings.push(
         Finding.fromObject({
