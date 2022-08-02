@@ -123,10 +123,10 @@ async function handleNodeOperatorsNftOwners(
       blockTag: blockEvent.blockNumber,
     });
 
-    const operatorInfos = await Promise.all(
-      operatorIds.map((e: any) =>
-        nodeOperators.functions
-          .getNodeOperator(parseInt(String(e)), {
+    await Promise.all(
+      operatorIds.map(async (id: any) => {
+        let info = await nodeOperators.functions
+          .getNodeOperator(parseInt(String(id)), {
             blockTag: blockEvent.blockNumber,
           })
           .then((value) => {
@@ -135,22 +135,17 @@ async function handleNodeOperatorsNftOwners(
               validatorId: parseInt(String(value[0].validatorId)),
               validatorName: value[0].name,
             };
-          })
-      )
-    );
-
-    await Promise.all(
-      operatorInfos.map((e: any) =>
+          });
         stackingNFT.functions
-          .ownerOf(e.validatorId, {
+          .ownerOf(info.validatorId, {
             blockTag: blockEvent.blockNumber,
           })
           .then((value) => {
-            if (value != e.validatorProxy) {
+            if (value != info.validatorProxy) {
               findings.push(
                 Finding.fromObject({
                   name: "Bad Node Operator proxy NFT owner",
-                  description: `Staking NFT related to the node operator ${e.validatorName} should be owned by ${e.validatorProxy} but actually owned by ${value}`,
+                  description: `Staking NFT related to the node operator ${info.validatorName} should be owned by ${info.validatorProxy} but actually owned by ${value}`,
                   alertId: "BAD-OPERATOR-NFT-OWNER-POLYGON",
                   severity: FindingSeverity.Critical,
                   type: FindingType.Suspicious,
@@ -158,8 +153,8 @@ async function handleNodeOperatorsNftOwners(
               );
               lastReportedBadNftOwner = now;
             }
-          })
-      )
+          });
+      })
     );
   }
 }
