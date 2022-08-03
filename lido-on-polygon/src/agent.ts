@@ -1,5 +1,4 @@
 import {
-  Initialize,
   BlockEvent,
   TransactionEvent,
   HandleBlock,
@@ -73,7 +72,7 @@ const initialize = async () => {
   }
 
   await Promise.all(
-    subAgents.map(async (agent, index) => {
+    subAgents.map(async (agent, _) => {
       if (agent.initialize) {
         try {
           const agentMeta = await agent.initialize(blockNumber);
@@ -111,14 +110,16 @@ const handleBlock: HandleBlock = async (
   let responseResolve: (value: Finding[]) => void;
   let wasResolved = false;
 
-  const response = new Promise<Finding[]>((resolve, reject) => {
+  const response = new Promise<Finding[]>((resolve, _) => {
     responseResolve = resolve;
   });
 
   // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers have finished execution we will leave them working in background
   const blockHandlingTimeout = setTimeout(function () {
-    console.log("handleBlock call interrupted due to timeout");
+    console.log(
+      `block ${blockEvent.blockNumber} processing moved to the background due to timeout`
+    );
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
     wasResolved = true;
   }, handlerResolveTimeout);
@@ -172,14 +173,16 @@ const handleTransaction: HandleTransaction = async (
   let responseResolve: (value: Finding[]) => void;
   let wasResolved = false;
 
-  const response = new Promise<Finding[]>((resolve, reject) => {
+  const response = new Promise<Finding[]>((resolve, _) => {
     responseResolve = resolve;
   });
 
   // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers has finished execution we will left them working in background
   const txHandlingTimeout = setTimeout(function () {
-    console.log("handleTransaction was interrupted due to timeout");
+    console.log(
+      `transaction ${txEvent.transaction.hash} processing moved to the background due to timeout`
+    );
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
     wasResolved = true;
   }, handlerResolveTimeout);
