@@ -116,6 +116,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x248ccbf4864221fc0e840f29bb042ad5bfc89b5c", // Maker(wstETH-B)
   "0xfff11417a58781d3c72083cb45ef54d79cd02437", // sense-finance periphery
   "0xb188b1cb84fb0ba13cb9ee1292769f903a9fec59", // aurafinance RewardDepositWrapper
+  "0x00000000009726632680fb29d3f7a9734e3010e2", // rainbow swap aggregator
+  "0xbab1e772d70300422312dff12daddcb60864bd41", // pods-yield stETH vault
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
