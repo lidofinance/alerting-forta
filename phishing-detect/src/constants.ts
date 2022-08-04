@@ -118,6 +118,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xb188b1cb84fb0ba13cb9ee1292769f903a9fec59", // aurafinance RewardDepositWrapper
   "0x00000000009726632680fb29d3f7a9734e3010e2", // rainbow swap aggregator
   "0xbab1e772d70300422312dff12daddcb60864bd41", // pods-yield stETH vault
+  "0x6fc4843aac4786b4420e954a2271be16f225a482", // sense.finance WstETHAdapter
+  "0x617dee16b86534a5d792a4d7a62fb491b544111e", // kyber.network MetaAggregationRouter
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
