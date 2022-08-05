@@ -129,6 +129,10 @@ export const MONITORED_TOKENS = new Map<string, string>(
     [LDO_TOKEN_ADDRESS, "LDO"],
     ["0x828b154032950c8ff7cf8085d841723db2696056", "STETHETH_C-f"],
     ["0x32296969ef14eb0c6d29669c550d4a0449130230", "B-stETH-STABLE"],
+    ["0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae", "B-stETH-STABLE-gauge"],
+    ["0x5faf6a2d186448dfa667c51cb3d695c7a6e52d8e", "yvCurve-stETH-WETH"],
+    ["0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0", "STETHETH_C-f-gauge"],
+    ["0xdcd90c7f6324cfa40d7169ef80b12031770b4325", "yvCurve-stETH"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
 );
 
@@ -140,6 +144,18 @@ export const PARTIALLY_MONITORED_TOKENS = new Map<string, string>(
 
 export const ADDRESS_TO_NAME = new Map<string, string>(
   [
+    [STETH_TOKEN_ADDRESS, "stETH"],
+    [WSTETH_TOKEN_ADDRESS, "wstETH"],
+    ["0x707f9118e33a9b8998bea41dd0d46f38bb963fc8", "bETH"],
+    ["0x06325440d014e39736583c165c2963ba99faf14e", "steCRV"],
+    ["0x182b723a58739a9c974cfdb385ceadb237453c28", "steCRV_gauge"],
+    ["0xc27bfe32e0a934a12681c1b35acf0dba0e7460ba", "fsteCRV"],
+    ["0xbd1bd5c956684f7eb79da40f582cbe1373a1d593", "ewstETH"],
+    ["0x436548baab5ec4d79f669d1b9506d67e98927af7", "dwstETH"],
+    [LDO_TOKEN_ADDRESS, "LDO"],
+    ["0x828b154032950c8ff7cf8085d841723db2696056", "STETHETH_C-f"],
+    ["0x32296969ef14eb0c6d29669c550d4a0449130230", "B-stETH-STABLE"],
+    ["0xdcd90c7f6324cfa40d7169ef80b12031770b4325", "yvCurve-stETH"],
     ["0xdc24316b9ae028f1497c275eb9192a3ea0f67022", "Curve.fi"],
     ["0x1982b2f5814301d4e9a8b0201555376e62f82428", "AAVE_v2"],
     ["0xa2f987a546d4cd1c607ee8141276876c26b72bdf", "Anchor"],
@@ -215,7 +231,6 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
     ["0x547147fd4f69bae198574b17b023d3a68a5fcfb8", "Agent"],
     ["0x33a2b3fe75d76f85d8ec9b77042be9b29b3fb8d0", "Gnosis safe"],
     ["0x963c94e660acc8fb3d4314b95003450426b903da", "Gnosis safe"],
-    ["0x53773e034d9784153471813dacaff53dbbb78e8c", "Ribbon"],
     ["0xe97dc81245e7558aaab12aa54567676559fda783", "Gnosis safe"],
     ["0x9bcefc2c9f19e30b68343858cdbc1e27ea62e1fb", "Gnosis safe"],
     ["0xc393fa98109b91fb8c5043d36abaad061e68a4f2", "Gnosis safe"],
@@ -272,7 +287,6 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
       "Ribbon finance: multisig (Gnosis safe)",
     ],
     ["0xce88686553686da562ce7cea497ce749da109f9f", "Balancer_v2"],
-    ["0x53773e034d9784153471813dacaff53dbbb78e8c", "Ribbon"],
     ["0xcd91538b91b4ba7797d39a2f66e63810b50a33d0", "ARCx"],
     ["0x99ac10631f69c753ddb595d074422a0922d9056b", "stecrv deposit"],
     ["0xba12222222228d8ba445958a75a0704d566bf2c8", "Balancer_v2"],
@@ -391,6 +405,8 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
     ["0x9d94ef33e7f8087117f85b3ff7b1d8f27e4053d5", "Gnosis safe"],
     ["0xa976ea51b9ba3232706af125a92e32788dc08ddc", "Gnosis safe"],
     ["0x650f9607f1371a4b8f80d2949162aedb3a4a839e", "Gnosis safe"],
+    ["0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2", "Aura: Voter Proxy"],
+    ["0x7818a1da7bd1e64c199029e86ba244a9798eee10", "Aura: Booster"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
 );
 
@@ -949,6 +965,38 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
   {
     transferPatterns: {
       mainTransfer: {
+        contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        from: "0x7818a1da7bd1e64c199029e86ba244a9798eee10",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+          to: "0x7818a1da7bd1e64c199029e86ba244a9798eee10",
+          from: "0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Aura Finance\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        to: "0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2",
+      },
+      additionalTransfers: [],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were deposited to Aura Finance\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
         contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
         from: "0x27182842e098f60e3d576794a5bffb0777e025d3",
       },
@@ -990,7 +1038,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       },
       additionalTransfers: [
         {
-          contract: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
           to: NULL_ADDRESS,
         },
       ],
