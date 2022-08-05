@@ -43,13 +43,17 @@ export function handleComplexTransfers(
     if (transferPattern.transferPatterns.mainTransfer.from) {
       additionalPatterns = additionalPatterns.map((pattern) => {
         let updatedPattern = pattern;
-        updatedPattern.from = mainTransfer.to;
+        if (!pattern.from) {
+          updatedPattern.from = mainTransfer.to;
+        }
         return updatedPattern;
       });
     } else {
       additionalPatterns = additionalPatterns.map((pattern) => {
         let updatedPattern = pattern;
-        updatedPattern.to = mainTransfer.from;
+        if (!pattern.to) {
+          updatedPattern.to = mainTransfer.from;
+        }
         return updatedPattern;
       });
     }

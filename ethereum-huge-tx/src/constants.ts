@@ -129,6 +129,7 @@ export const MONITORED_TOKENS = new Map<string, string>(
     [LDO_TOKEN_ADDRESS, "LDO"],
     ["0x828b154032950c8ff7cf8085d841723db2696056", "STETHETH_C-f"],
     ["0x32296969ef14eb0c6d29669c550d4a0449130230", "B-stETH-STABLE"],
+    ["0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae", "B-stETH-STABLE-gauge"]
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
 );
 
@@ -391,6 +392,8 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
     ["0x9d94ef33e7f8087117f85b3ff7b1d8f27e4053d5", "Gnosis safe"],
     ["0xa976ea51b9ba3232706af125a92e32788dc08ddc", "Gnosis safe"],
     ["0x650f9607f1371a4b8f80d2949162aedb3a4a839e", "Gnosis safe"],
+    ["0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2", "Aura: Voter Proxy"],
+    ["0x7818a1da7bd1e64c199029e86ba244a9798eee10", "Aura: Booster"]
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
 );
 
@@ -944,6 +947,39 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were deposited to Balancer Gauge\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        from: "0x7818a1da7bd1e64c199029e86ba244a9798eee10",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+          to: "0x7818a1da7bd1e64c199029e86ba244a9798eee10",
+          from: "0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Aura Finance\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        to: "0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2",
+      },
+      additionalTransfers: [
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were deposited to Aura Finance\n` +
       `by: ${info.from} (${info.fromName})`,
   },
   {
