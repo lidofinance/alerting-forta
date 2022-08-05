@@ -131,7 +131,7 @@ let poolsParams: { [name: string]: PoolParams } = {
 
 let lastReportedCurvePegTime = 0;
 let lastReportedCurvePegVal = 0;
-let lastReportedCurvePegStep = 0;
+let lastReportedCurvePegLevel = 0;
 let lastReportedUnstakedStEth = new BigNumber(0);
 let lastReportedUnstakedStEthTime = 0;
 
@@ -200,9 +200,10 @@ export async function initialize(
   }
 
   lastReportedCurvePegVal = await getCurvePeg(currentBlock);
-  lastReportedCurvePegStep =
+  // Division by 100 is required to normalize lastReportedCurvePegLevel to PEG_STEP
+  lastReportedCurvePegLevel =
     Math.ceil(lastReportedCurvePegVal / PEG_STEP) / 100;
-  console.log({ lastReportedCurvePegVal, lastReportedCurvePegStep });
+  console.log({ lastReportedCurvePegVal, lastReportedCurvePegLevel });
   lastReportedUnstakedStEth = getTotalUnstakedStEth();
   lastReportedUnstakedStEthTime = now;
 
@@ -564,10 +565,11 @@ async function handleCurveWethPoolSize(
 async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   const peg = await getCurvePeg(blockEvent.blockNumber);
-  const pegStep = Math.ceil(peg / PEG_STEP) / 100;
-  console.log({ peg, pegStep });
+  // Division by 100 is required to normalize pegLevel to PEG_STEP
+  const pegLevel = Math.ceil(peg / PEG_STEP) / 100;
+  console.log({ peg, pegLevel });
   // info on PEG decrease
-  if (pegStep < lastReportedCurvePegStep && peg < PEG_STEP_ALERT_MIN_VALUE) {
+  if (pegLevel < lastReportedCurvePegLevel && peg < PEG_STEP_ALERT_MIN_VALUE) {
     findings.push(
       Finding.fromObject({
         name: "stETH PEG on Curve decreased",
@@ -581,7 +583,7 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
     lastReportedCurvePegVal = peg;
-    lastReportedCurvePegStep = pegStep;
+    lastReportedCurvePegLevel = pegLevel;
   }
   // ALERT on PEG lower threshold
   if (
@@ -603,9 +605,9 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
     lastReportedCurvePegTime = now;
   }
   // update PEG vals if PEG goes way back
-  if (lastReportedCurvePegStep + PEG_STEP * 2 < pegStep) {
+  if (lastReportedCurvePegLevel + PEG_STEP * 2 < pegLevel) {
     lastReportedCurvePegVal = peg;
-    lastReportedCurvePegStep = pegStep;
+    lastReportedCurvePegLevel = pegLevel;
   }
 }
 
