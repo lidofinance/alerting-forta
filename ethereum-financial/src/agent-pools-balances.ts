@@ -27,8 +27,6 @@ import {
   ONE_HOUR,
 } from "./constants";
 
-import { capitalizeFirstLetter } from "./utils/tools";
-
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
 import CURVE_WETH_POOL_ABI from "./abi/CurveWethPool.json";
 import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
@@ -132,7 +130,8 @@ let poolsParams: { [name: string]: PoolParams } = {
 };
 
 let lastReportedCurvePegTime = 0;
-let lastReportedCurvePegVal: BigNumber;
+let lastReportedCurvePegVal = 0;
+let lastReportedCurvePegLevel = 0;
 let lastReportedUnstakedStEth = new BigNumber(0);
 let lastReportedUnstakedStEthTime = 0;
 
@@ -201,6 +200,10 @@ export async function initialize(
   }
 
   lastReportedCurvePegVal = await getCurvePeg(currentBlock);
+  // Division by 100 is required to normalize lastReportedCurvePegLevel to PEG_STEP
+  lastReportedCurvePegLevel =
+    Math.ceil(lastReportedCurvePegVal / PEG_STEP) / 100;
+  console.log({ lastReportedCurvePegVal, lastReportedCurvePegLevel });
   lastReportedUnstakedStEth = getTotalUnstakedStEth();
   lastReportedUnstakedStEthTime = now;
 
@@ -561,18 +564,16 @@ async function handleCurveWethPoolSize(
 
 async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const peg: BigNumber = await getCurvePeg(blockEvent.blockNumber);
+  const peg = await getCurvePeg(blockEvent.blockNumber);
+  // Division by 100 is required to normalize pegLevel to PEG_STEP
+  const pegLevel = Math.ceil(peg / PEG_STEP) / 100;
+  console.log({ peg, pegLevel });
   // info on PEG decrease
-  if (
-    peg.plus(PEG_STEP).isLessThanOrEqualTo(lastReportedCurvePegVal) &&
-    peg.isLessThan(PEG_STEP_ALERT_MIN_VALUE)
-  ) {
+  if (pegLevel < lastReportedCurvePegLevel && peg < PEG_STEP_ALERT_MIN_VALUE) {
     findings.push(
       Finding.fromObject({
         name: "stETH PEG on Curve decreased",
-        description:
-          `stETH PEG on Curve decreased from ` +
-          `${lastReportedCurvePegVal.toFixed(4)} to ${peg.toFixed(4)}`,
+        description: `stETH PEG on Curve decreased to ${peg.toFixed(4)}`,
         alertId: "STETH-CURVE-PEG-DECREASE",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -582,10 +583,11 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
     lastReportedCurvePegVal = peg;
+    lastReportedCurvePegLevel = pegLevel;
   }
   // ALERT on PEG lower threshold
   if (
-    peg.isLessThanOrEqualTo(PEG_THRESHOLD) &&
+    peg <= PEG_THRESHOLD &&
     now > lastReportedCurvePegTime + PEG_REPORT_INTERVAL
   ) {
     findings.push(
@@ -601,6 +603,11 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
     lastReportedCurvePegTime = now;
+  }
+  // update PEG vals if PEG goes way back
+  if (lastReportedCurvePegLevel + PEG_STEP * 2 < pegLevel) {
+    lastReportedCurvePegVal = peg;
+    lastReportedCurvePegLevel = pegLevel;
   }
 }
 
@@ -619,7 +626,7 @@ async function getCurvePeg(blockNumber: number) {
       })
     )
   );
-  return amountEth.div(amountStEth);
+  return amountEth.div(amountStEth).toNumber();
 }
 
 ///////// "UNSTAKED" stETH ////////////
