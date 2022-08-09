@@ -1,7 +1,10 @@
 {
   "name": "lido-bot-template",
   "version": "0.0.1",
-  "description": "Forta Agent for Lido reward programs",
+  "description": "Lido Forta bot template",
+  "chainIds": [
+    1
+  ],
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
@@ -21,7 +24,7 @@
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.6"
+    "forta-agent": "^0.1.9"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
