@@ -101,19 +101,24 @@ const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent
 ): Promise<Finding[]> => {
   let responseResolve: (value: Finding[]) => void;
+  let wasResolved = false;
 
-  const response = new Promise<Finding[]>((resolve, reject) => {
+  const response = new Promise<Finding[]>((resolve, _) => {
     responseResolve = resolve;
   });
 
   // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers have finished execution we will leave them working in background
   const blockHandlingTimeout = setTimeout(function () {
+    console.log(
+      `block ${blockEvent.blockNumber} processing moved to the background due to timeout`
+    );
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
+    wasResolved = true;
   }, handlerResolveTimeout);
 
   // report findings from init. Will be done only for the first block report.
-  if (findingsOnInit) {
+  if (findingsOnInit.length) {
     blockFindingsCache = findingsOnInit;
     findingsOnInit = [];
   }
@@ -145,9 +150,11 @@ const handleBlock: HandleBlock = async (
       }
     })
   ).then(() => {
+    if (wasResolved) return;
     // if all handlers have finished execution drop timeout and resolve promise
     clearTimeout(blockHandlingTimeout);
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
+    wasResolved = true; // should not be reached, but to make sure
   });
 
   return response;
@@ -157,15 +164,20 @@ const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent
 ) => {
   let responseResolve: (value: Finding[]) => void;
+  let wasResolved = false;
 
-  const response = new Promise<Finding[]>((resolve, reject) => {
+  const response = new Promise<Finding[]>((resolve, _) => {
     responseResolve = resolve;
   });
 
   // we need to resolve Promise in handlerResolveTimeout maximum.
   // If not all handlers has finished execution we will left them working in background
   const txHandlingTimeout = setTimeout(function () {
+    console.log(
+      `transaction ${txEvent.transaction.hash} processing moved to the background due to timeout`
+    );
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
+    wasResolved = true;
   }, handlerResolveTimeout);
 
   // run agents handlers
@@ -195,9 +207,11 @@ const handleTransaction: HandleTransaction = async (
       }
     })
   ).then(() => {
+    if (wasResolved) return;
     // if all handlers have finished execution drop timeout and resolve promise
     clearTimeout(txHandlingTimeout);
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
+    wasResolved = true; // should not be reached, but to make sure
   });
 
   return response;
