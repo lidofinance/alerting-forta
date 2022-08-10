@@ -42,12 +42,12 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleGovBridgeEvents(txEvent, findings);
+  handleProxyAdminEvents(txEvent, findings);
 
   return findings;
 }
 
-function handleGovBridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
+function handleProxyAdminEvents(txEvent: TransactionEvent, findings: Finding[]) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);

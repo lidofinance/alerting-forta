@@ -52,7 +52,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     alertId: "GOV-BRIDGE-DELAY-UPDATED",
     name: "Arbitrum Gov Bridge: Delay Updated",
     description: (args: any) =>
-      `Ethereum Governance Delay was updated from ` +
+      `Delay was updated from ` +
       `${args.oldDelay} to ${args.newDelay}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -64,7 +64,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     alertId: "GOV-BRIDGE-GRACE-PERIOD-UPDATED",
     name: "Arbitrum Gov Bridge: Grace Period Updated",
     description: (args: any) =>
-      `Ethereum Governance Grace Period was updated from ` +
+      `Grace Period was updated from ` +
       `${args.oldGracePeriod} to ${args.newGracePeriod}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -76,7 +76,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     alertId: "GOV-BRIDGE-MIN-DELAY-UPDATED",
     name: "Arbitrum Gov Bridge: Min Delay Updated",
     description: (args: any) =>
-      `Ethereum Governance Executor was updated from ` +
+      `Min Delay was updated from ` +
       `${args.oldMinimumDelay} to ${args.newMinimumDelay}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -88,7 +88,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     alertId: "GOV-BRIDGE-MAX-DELAY-UPDATED",
     name: "Arbitrum Gov Bridge: Max Delay Updated",
     description: (args: any) =>
-      `Ethereum Governance Executor was updated from ` +
+      `Max Delay was updated from ` +
       `${args.oldMaximumDelay} to ${args.newMaximumDelay}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
