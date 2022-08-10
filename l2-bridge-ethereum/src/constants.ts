@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { FindingSeverity, FindingType } from "forta-agent";
 
-import proxyShortABI from "./abi/ProxyShortABI.json"
+import proxyShortABI from "./abi/ProxyShortABI.json";
 
 // COMMON CONSTS
 
@@ -24,7 +24,7 @@ export interface LidoProxy {
   name: string;
   address: string;
   shortABI: string;
-  functions: Map<string,string>;
+  functions: Map<string, string>;
 }
 
 export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
@@ -32,19 +32,19 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
     name: "L1ERC20TokenGateway to Arbitrum",
     address: "0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a",
     shortABI: JSON.stringify(proxyShortABI),
-    functions: new Map<string,string>([
+    functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
-      ["implementation","proxy__getImplementation"],
-    ])
+      ["implementation", "proxy__getImplementation"],
+    ]),
   },
   {
     name: "L1ERC20TokenGateway to Optimism",
     address: "0x76943c0d61395d8f2edf9060e1533529cae05de6",
     shortABI: JSON.stringify(proxyShortABI),
-    functions: new Map<string,string>([
+    functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
-      ["implementation","proxy__getImplementation"],
-    ])
+      ["implementation", "proxy__getImplementation"],
+    ]),
   },
 ];
 

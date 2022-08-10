@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { FindingSeverity, FindingType } from "forta-agent";
 
-import proxyShortABI from "./abi/ProxyShortABI.json"
+import proxyShortABI from "./abi/ProxyShortABI.json";
 
 // COMMON CONSTS
 
@@ -128,7 +128,7 @@ export interface LidoProxy {
   name: string;
   address: string;
   shortABI: string;
-  functions: Map<string,string>;
+  functions: Map<string, string>;
 }
 
 export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
@@ -136,19 +136,19 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
     name: "WstETH ERC20Bridged",
     address: "0x1f32b1c2345538c0c6f582fcb022739c4a194ebb",
     shortABI: JSON.stringify(proxyShortABI),
-    functions: new Map<string,string>([
+    functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
-      ["implementation","proxy__getImplementation"],
-    ])
+      ["implementation", "proxy__getImplementation"],
+    ]),
   },
   {
     name: "L2ERC20TokenGateway",
     address: "0x8e01013243a96601a86eb3153f0d9fa4fbfb6957",
     shortABI: JSON.stringify(proxyShortABI),
-    functions: new Map<string,string>([
+    functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
-      ["implementation","proxy__getImplementation"],
-    ])
+      ["implementation", "proxy__getImplementation"],
+    ]),
   },
 ];
 

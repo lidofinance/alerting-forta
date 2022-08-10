@@ -1,4 +1,4 @@
-# Lido Detection Bot for Optimism part of L2 bridge 
+# Lido Detection Bot for Optimism part of L2 bridge
 
 ## Supported chains
 
