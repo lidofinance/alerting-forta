@@ -12,7 +12,6 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentGov from "./agent-governance";
 import * as agentProxy from "./agent-proxy-watcher";
 
 import VERSION from "./version";
@@ -26,7 +25,7 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [agentGov, agentProxy];
+const subAgents: SubAgent[] = [agentProxy];
 
 // block or tx handling should take no more than 10 sec. If not all processing is done it will be done later in background
 const handlerResolveTimeout = 10000;
