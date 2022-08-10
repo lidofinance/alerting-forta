@@ -44,7 +44,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   return findings;
 }
 
-function handleProxyAdminEvents(txEvent: TransactionEvent, findings: Finding[]) {
+function handleProxyAdminEvents(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);

@@ -52,8 +52,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     alertId: "GOV-BRIDGE-DELAY-UPDATED",
     name: "Optimism Gov Bridge: Delay Updated",
     description: (args: any) =>
-      `Delay was updated from ` +
-      `${args.oldDelay} to ${args.newDelay}`,
+      `Delay was updated from ` + `${args.oldDelay} to ${args.newDelay}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
