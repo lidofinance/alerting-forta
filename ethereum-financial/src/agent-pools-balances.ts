@@ -203,7 +203,6 @@ export async function initialize(
   // Division by 100 is required to normalize lastReportedCurvePegLevel to PEG_STEP
   lastReportedCurvePegLevel =
     Math.ceil(lastReportedCurvePegVal / PEG_STEP) / 100;
-  console.log({ lastReportedCurvePegVal, lastReportedCurvePegLevel });
   lastReportedUnstakedStEth = getTotalUnstakedStEth();
   lastReportedUnstakedStEthTime = now;
 
@@ -567,7 +566,6 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   const peg = await getCurvePeg(blockEvent.blockNumber);
   // Division by 100 is required to normalize pegLevel to PEG_STEP
   const pegLevel = Math.ceil(peg / PEG_STEP) / 100;
-  console.log({ peg, pegLevel });
   // info on PEG decrease
   if (pegLevel < lastReportedCurvePegLevel && peg < PEG_STEP_ALERT_MIN_VALUE) {
     findings.push(
