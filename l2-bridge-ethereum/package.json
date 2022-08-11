@@ -1,7 +1,7 @@
 {
-  "name": "lido-bot-template",
+  "name": "lido-l2-bridge-ethereum-bot",
   "version": "0.0.1",
-  "description": "Lido Forta bot template",
+  "description": "Lido Detection Bot for Ethereum part of L2 bridges",
   "chainIds": [
     1
   ],
