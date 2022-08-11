@@ -8,9 +8,34 @@ import proxyShortABI from "./abi/ProxyShortABI.json";
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
+export const ROLES = new Map<string, string>([
+  [
+    "0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6",
+    "DEPOSITS_DISABLER_ROLE",
+  ],
+  [
+    "0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a",
+    "DEPOSITS_ENABLER_ROLE",
+  ],
+  [
+    "0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c",
+    "WITHDRAWALS_DISABLER_ROLE",
+  ],
+  [
+    "0x9ab8816a3dc0b3849ec1ac00483f6ec815b07eee2fd766a353311c823ad59d0d",
+    "WITHDRAWALS_ENABLER_ROLE",
+  ],
+  [
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "DEFAULT_ADMIN_ROLE",
+  ],
+]);
+
 // ADDRESSES AND EVENTS
 
 export const GOV_BRIDGE_ADDRESS = "0xefa0db536d2c8089685630fafe88cf7805966fc3";
+export const L2_ERC20_TOKEN_GATEWAY =
+  "0x8e01013243a96601a86eb3153f0d9fa4fbfb6957";
 
 type EventOfNotice = {
   address: string;
@@ -158,7 +183,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event ProxyOssified()",
         alertId: "PROXY-OSSIFIED",
-        name: "Arbitrum: Proxy ossified",
+        name: "Optimism: Proxy ossified",
         description: (args: any) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) was ossified` +
           `\n(detected by event)`,
@@ -169,7 +194,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event AdminChanged(address previousAdmin, address newAdmin)",
         alertId: "PROXY-ADMIN-CHANGED",
-        name: "Arbitrum: Proxy admin changed",
+        name: "Optimism: Proxy admin changed",
         description: (args: any) =>
           `Proxy admin for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
@@ -181,7 +206,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event Upgraded(address indexed implementation)",
         alertId: "PROXY-UPGRADED",
-        name: "Arbitrum: Proxy upgraded",
+        name: "Optimism: Proxy upgraded",
         description: (args: any) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was updated to ${args.implementation}` +
@@ -193,7 +218,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event BeaconUpgraded(address indexed beacon)",
         alertId: "PROXY-BEACON-UPGRADED",
-        name: "Arbitrum: Proxy beacon upgraded",
+        name: "Optimism: Proxy beacon upgraded",
         description: (args: any) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `beacon was updated to ${args.beacon}` +
@@ -205,3 +230,92 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
     return eventsDesc;
   }
 ).reduce((a, b) => [...a, ...b]);
+
+export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event:
+      "event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)",
+    alertId: "L2-BRIDGE-ROLE-ADMIN-CHANGED",
+    name: "Optimism L2 Bridge: Role Admin changed",
+    description: (args: any) =>
+      `Role Admin for role ${args.role}(${
+        ROLES.get(args.role) || "unknown"
+      }) ` +
+      `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event:
+      "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
+    alertId: "L2-BRIDGE-ROLE-GRANTED",
+    name: "Optimism L2 Bridge: Role granted",
+    description: (args: any) =>
+      `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
+      `was granted to ${args.account} by ${args.sender}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event:
+      "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
+    alertId: "L2-BRIDGE-ROLE-REVOKED",
+    name: "Optimism L2 Bridge: Role revoked",
+    description: (args: any) =>
+      `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
+      `was revoked to ${args.account} by ${args.sender}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event: "event DepositsEnabled(address indexed enabler)",
+    alertId: "L2-BRIDGE-DEPOSITS-ENABLED",
+    name: "Optimism L2 Bridge: Deposits Enabled",
+    description: (args: any) => `Deposits were enabled by ${args.enabler}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event: "event DepositsDisabled(address indexed disabler)",
+    alertId: "L2-BRIDGE-DEPOSITS-DISABLED",
+    name: "Optimism L2 Bridge: Deposits Disabled",
+    description: (args: any) => `Deposits were disabled by ${args.disabler}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event: "event WithdrawalsEnabled(address indexed enabler)",
+    alertId: "L2-BRIDGE-WITHDRAWALS-ENABLED",
+    name: "Optimism L2 Bridge: Withdrawals Enabled",
+    description: (args: any) => `Withdrawals were enabled by ${args.enabler}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event: "event WithdrawalsDisabled(address indexed disabler)",
+    alertId: "L2-BRIDGE-WITHDRAWALS-DISABLED",
+    name: "Optimism L2 Bridge: Withdrawals Disabled",
+    description: (args: any) => `Withdrawals were disabled by ${args.enabler}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: L2_ERC20_TOKEN_GATEWAY,
+    event: "event Initialized(address indexed admin)",
+    alertId: "L2-BRIDGE-IMPLEMENTATION-INITIALIZED",
+    name: "Optimism L2 Bridge: Implementation initialized",
+    description: (args: any) =>
+      `Implementation of the Optimism L2 Bridge was initialized by ${args.admin}\n` +
+      `NOTE: This is not the thing that should be left unacted! ` +
+      `Make sure that this call was made by Lido!`,
+    severity: FindingSeverity.Critical,
+    type: FindingType.Info,
+  },
+];
