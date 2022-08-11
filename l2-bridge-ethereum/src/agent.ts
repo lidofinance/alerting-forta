@@ -26,10 +26,7 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [
-  //agentProxy,
-  agentBridge,
-];
+const subAgents: SubAgent[] = [agentProxy, agentBridge];
 
 // block or tx handling should take no more than 10 sec. If not all processing is done it will be done later in background
 const handlerResolveTimeout = 10000;
