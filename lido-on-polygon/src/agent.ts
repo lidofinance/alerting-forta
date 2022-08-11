@@ -33,9 +33,9 @@ const subAgents: SubAgent[] = [
   agentWithdrawalsMonitor,
 ];
 
-// Block or tx handling should take no more than 10 sec.
-// If not all processing is done it will be done later in background.
-const handlerResolveTimeout = 10_000;
+// block or tx handling should take no more than 60 sec.
+// If not all processing is done it will be done later in background
+const handlerResolveTimeout = 60_000;
 
 const maxHandlerRetries = 5;
 
