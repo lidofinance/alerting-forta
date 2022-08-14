@@ -4,9 +4,41 @@
 
 - Arbitrum
 
-## Alerts
+## Sub-bots
 
-Describe alerts here
+### Bridge-watcher
+
+Alerts about events on the L2-bridge (Arbitrum side)
+
+**Alerts:**
+
+- Alerts on the admin events in L2-bridge (Arbitrum side)
+
+### Governance
+
+Alerts about events on the gov-bridge (Arbitrum side)
+
+**Alerts:**
+
+- Alerts on all events in gov-bridge (Arbitrum side)
+
+### Proxy-watcher
+
+Alert on proxy state changes
+
+**Alerts:**
+
+- PROXY-UPGRADED - One of the proxies on the Arbitrum side was upgraded
+- PROXY-ADMIN-CHANGED - Admin for of the proxies on the Arbitrum side was changed
+- Alerts on the admin events in L2-bridge (Arbitrum side)
+
+### Withdrawals
+
+Alert on huge withdrawals
+
+**Alerts:**
+
+- HUGE-WITHDRAWALS-FROM-L2 - There were more than 10k wstETH withdrawal requests over the last 48h or less
 
 ## Development
 

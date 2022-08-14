@@ -4,9 +4,25 @@
 
 - Ethereum:mainnet
 
-## Alerts
+## Sub-bots
 
-Describe alerts here
+### Bridge-watcher
+
+Alerts about events on the L2-bridge (ethereum side)
+
+**Alerts:**
+
+- Alerts on the admin events in L1-bridge (ethereum side)
+
+### Proxy-watcher
+
+Alert on proxy state changes
+
+**Alerts:**
+
+- PROXY-UPGRADED - One of the proxies on the ethereum side was upgraded
+- PROXY-ADMIN-CHANGED - Admin for of the proxies on the ethereum side was changed
+- Alerts on the admin events in L2-bridge (ethereum side)
 
 ## Development
 
