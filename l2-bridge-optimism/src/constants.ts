@@ -36,14 +36,14 @@ export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2;
 // 10k wstETH
 export const MAX_WITHDRAWALS_SUM = 10000;
 
-
 // ADDRESSES AND EVENTS
 
 export const GOV_BRIDGE_ADDRESS = "0xefa0db536d2c8089685630fafe88cf7805966fc3";
 export const L2_ERC20_TOKEN_GATEWAY =
   "0x8e01013243a96601a86eb3153f0d9fa4fbfb6957";
 
-  export const WITHDRAWAL_INITIATED_EVENT = "event WithdrawalInitiated(address l1Token, address indexed from, address indexed to, uint256 indexed l2ToL1Id, uint256 exitNum, uint256 amount)"
+export const WITHDRAWAL_INITIATED_EVENT =
+  "event WithdrawalInitiated(address l1Token, address indexed from, address indexed to, uint256 indexed l2ToL1Id, uint256 exitNum, uint256 amount)";
 
 type EventOfNotice = {
   address: string;

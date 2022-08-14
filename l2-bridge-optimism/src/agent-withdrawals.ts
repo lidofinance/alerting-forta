@@ -65,7 +65,7 @@ export async function initialize(
     (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount))
   );
   return {
-    currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2)
+    currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
   };
 }
 
@@ -96,7 +96,9 @@ async function handleToManyWithdrawals(
       : MAX_WITHDRAWALS_WINDOW;
   // block number condition is meant to "sync" agents alerts
   if (
-    withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) &&
+    withdrawalsSum
+      .div(ETH_DECIMALS)
+      .isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) &&
     blockEvent.blockNumber % 10 == 0
   ) {
     findings.push(
