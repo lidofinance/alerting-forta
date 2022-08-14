@@ -37,7 +37,7 @@ export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2;
 export const MAX_WITHDRAWALS_SUM = 10000;
 
 // 10k blocks
-export const SAFE_BLOCK_INT = 10_000;
+export const SAFE_BLOCK_INT = 2_000;
 
 // ADDRESSES AND EVENTS
 
