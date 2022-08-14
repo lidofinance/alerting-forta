@@ -36,6 +36,9 @@ export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2;
 // 10k wstETH
 export const MAX_WITHDRAWALS_SUM = 10000;
 
+// 10k blocks
+export const SAFE_BLOCK_INT = 10_000;
+
 // ADDRESSES AND EVENTS
 
 export const GOV_BRIDGE_ADDRESS = "0x1dca41859cd23b526cbe74da8f48ac96e14b1a29";

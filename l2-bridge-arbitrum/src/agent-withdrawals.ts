@@ -19,6 +19,7 @@ import {
   MAX_WITHDRAWALS_SUM,
   ETH_DECIMALS,
   WITHDRAWAL_INITIATED_EVENT,
+  SAFE_BLOCK_INT,
 } from "./constants";
 
 export const name = "WithdrawalsMonitor";
@@ -44,7 +45,8 @@ export async function initialize(
   const withdrawalInitiatedFilter = l2Bridge.filters.WithdrawalInitiated();
 
   const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 13);
-  const withdrawEvents = await l2Bridge.queryFilter(
+  const withdrawEvents = await getEventsByChunks(
+    l2Bridge,
     withdrawalInitiatedFilter,
     pastBlock,
     currentBlock - 1
@@ -67,6 +69,29 @@ export async function initialize(
   return {
     currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
   };
+}
+
+async function getEventsByChunks(
+  contract: ethers.Contract,
+  filter: ethers.EventFilter,
+  blockFrom: number,
+  blockTo: number
+) {
+  let blockPairs = [];
+  if (blockTo - blockFrom <= SAFE_BLOCK_INT) {
+    blockPairs = [[blockFrom, blockTo]];
+  } else {
+    for (let i = blockFrom; i < blockTo; i += SAFE_BLOCK_INT) {
+      blockPairs.push([i, i + SAFE_BLOCK_INT - 1]);
+    }
+    blockPairs[blockPairs.length - 1][1] = blockTo;
+  }
+  const events = await Promise.all(
+    blockPairs.map(async (pair) => {
+      return await contract.queryFilter(filter, pair[0], pair[1]);
+    })
+  );
+  return events.reduce((a, b) => [...a, ...b]);
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
