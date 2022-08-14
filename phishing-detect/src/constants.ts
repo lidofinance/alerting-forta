@@ -121,6 +121,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x6fc4843aac4786b4420e954a2271be16f225a482", // sense.finance WstETHAdapter
   "0x617dee16b86534a5d792a4d7a62fb491b544111e", // kyber.network MetaAggregationRouter
   "0x83C8F28c26bF6aaca652Df1DbBE0e1b56F8baBa2", // GemSwap
+  "0xe92b586627ccA7a83dC919cc7127196d70f55a06", // paraswap.io
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
