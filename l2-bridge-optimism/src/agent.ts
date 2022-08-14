@@ -15,6 +15,7 @@ import { argv } from "process";
 import * as agentGov from "./agent-governance";
 import * as agentProxy from "./agent-proxy-watcher";
 import * as agentBridge from "./agent-bridge-watcher";
+import * as agentWithdrawals from "./agent-withdrawals";
 
 import VERSION from "./version";
 
@@ -27,7 +28,12 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [agentGov, agentProxy, agentBridge];
+const subAgents: SubAgent[] = [
+  agentGov,
+  agentProxy,
+  agentBridge,
+  agentWithdrawals,
+];
 
 // block or tx handling should take no more than 60 sec.
 // If not all processing is done it will be done later in background
