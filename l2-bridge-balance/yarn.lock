@@ -4125,9 +4125,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lido-l2-bridge-arbitrum-bot@workspace:.":
+"lido-l2-bridge-balance-bot@workspace:.":
   version: 0.0.0-use.local
-  resolution: "lido-l2-bridge-arbitrum-bot@workspace:."
+  resolution: "lido-l2-bridge-balance-bot@workspace:."
   dependencies:
     "@types/jest": ^27.0.1
     "@types/nodemon": ^1.19.0
