@@ -14,7 +14,6 @@ Alerts about balance mismatch
 
 - BRIDGE-BALANCE-MISMATCH - totalSupply of the bridged wstETH is greater than balance of L1 bridge side
 
-
 ## Development
 
 Edit `~/.forta/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:

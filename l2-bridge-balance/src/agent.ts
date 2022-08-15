@@ -25,9 +25,7 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [
-  agentBalance,
-];
+const subAgents: SubAgent[] = [agentBalance];
 
 // block or tx handling should take no more than 60 sec.
 // If not all processing is done it will be done later in background

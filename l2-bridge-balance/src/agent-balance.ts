@@ -7,9 +7,14 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
-import { BRIDGE_PARAMS, WSTETH_ADDRESS, ETH_DECIMALS, BridgeParam } from "./constants";
-import ERC20_SHORT_ABI from "./abi/ERC20Short.json"
-import { ethersProvider } from './ethers';
+import {
+  BRIDGE_PARAMS,
+  WSTETH_ADDRESS,
+  ETH_DECIMALS,
+  BridgeParam,
+} from "./constants";
+import ERC20_SHORT_ABI from "./abi/ERC20Short.json";
+import { ethersProvider } from "./ethers";
 
 export const name = "BridgeWatcher";
 
@@ -26,25 +31,33 @@ export async function handleBlock(blockEvent: BlockEvent) {
   await Promise.all([
     handleBridgeBalance(blockEvent, findings, BRIDGE_PARAMS.Arbitrum),
     handleBridgeBalance(blockEvent, findings, BRIDGE_PARAMS.Optimism),
-  ])
+  ]);
 
   return findings;
 }
 
-async function handleBridgeBalance(blockEvent: BlockEvent, findings: Finding[], networkParams: BridgeParam) {
+async function handleBridgeBalance(
+  blockEvent: BlockEvent,
+  findings: Finding[],
+  networkParams: BridgeParam
+) {
   const wstETH = new ethers.Contract(
     WSTETH_ADDRESS,
     ERC20_SHORT_ABI,
     ethersProvider
-  )
-  const l1Balance = new BigNumber(String(await wstETH.functions.balanceOf(networkParams.l1Gateway)))
+  );
+  const l1Balance = new BigNumber(
+    String(await wstETH.functions.balanceOf(networkParams.l1Gateway))
+  );
   const l2Provider = new ethers.providers.JsonRpcProvider(networkParams.rpcUrl);
   const bridgedWstETH = new ethers.Contract(
     networkParams.wstEthBridged,
     ERC20_SHORT_ABI,
     l2Provider
-  )
-  const l2TotalSupply = new BigNumber(String(await bridgedWstETH.functions.totalSupply()))
+  );
+  const l2TotalSupply = new BigNumber(
+    String(await bridgedWstETH.functions.totalSupply())
+  );
   if (l2TotalSupply.isGreaterThan(l1Balance)) {
     findings.push(
       Finding.fromObject({

@@ -8,18 +8,18 @@ export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
 // ADDRESSES AND EVENTS
 
-export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
 
 export interface BridgeParam {
-  name: string
-  l2Gateway: string
-  l1Gateway: string
-  wstEthBridged: string
-  rpcUrl: string
+  name: string;
+  l2Gateway: string;
+  l1Gateway: string;
+  wstEthBridged: string;
+  rpcUrl: string;
 }
 export interface BridgeParams {
-  Arbitrum: BridgeParam
-  Optimism: BridgeParam
+  Arbitrum: BridgeParam;
+  Optimism: BridgeParam;
 }
 
 export const BRIDGE_PARAMS: BridgeParams = {
