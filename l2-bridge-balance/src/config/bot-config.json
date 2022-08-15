@@ -1,0 +1,8 @@
+{
+    "Arbitrum": {
+        "RpcUrl": "https://arb1.arbitrum.io/rpc"
+    },
+    "Optimism": {
+        "RpcUrl": "https://mainnet.optimism.io"
+    }
+}
