@@ -74,6 +74,7 @@ async function handleBridgeBalance(
           l1Balance: l1Balance.toFixed(),
           l1Address: networkParams.l1Gateway,
           l2Token: networkParams.wstEthBridged,
+          network: networkParams.name,
         },
       })
     );
