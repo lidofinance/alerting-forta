@@ -94,7 +94,10 @@ function handleThirdPartyProxyAdminEvents(
     }
   });
   if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
-    const events = txEvent.filterLog(GATEWAY_SET_EVENT, ARBITRUM_L1_GATEWAY_ROUTER);
+    const events = txEvent.filterLog(
+      GATEWAY_SET_EVENT,
+      ARBITRUM_L1_GATEWAY_ROUTER
+    );
     events.forEach((event) => {
       if (event.args.l1Token == WSTETH_ADDRESS) {
         findings.push(

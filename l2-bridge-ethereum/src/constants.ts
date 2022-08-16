@@ -35,9 +35,11 @@ export const ROLES = new Map<string, string>([
 
 export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
 
-export const ARBITRUM_L1_GATEWAY_ROUTER = "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef";
+export const ARBITRUM_L1_GATEWAY_ROUTER =
+  "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef";
 
-export const GATEWAY_SET_EVENT = "event GatewaySet(address indexed l1Token, address indexed gateway)";
+export const GATEWAY_SET_EVENT =
+  "event GatewaySet(address indexed l1Token, address indexed gateway)";
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
@@ -168,7 +170,8 @@ export const THIRD_PARTY_PROXY_EVENTS = [
   },
   {
     address: "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1", // Optimism: Proxy OVM L1 Cross Domain Messenger
-    event: "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+    event:
+      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "Optimism Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
     description: (args: any) =>
@@ -179,7 +182,8 @@ export const THIRD_PARTY_PROXY_EVENTS = [
   },
   {
     address: "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1", // Optimism: Proxy OVM L1 Cross Domain Messenger
-    event: "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
+    event:
+      "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "Optimism Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
     description: (args: any) =>
