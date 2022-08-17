@@ -10,8 +10,12 @@ import {
   PROXY_ADMIN_EVENTS,
   LIDO_PROXY_CONTRACTS,
   LidoProxy,
+  ARBITRUM_L1_GATEWAY_ROUTER,
+  GATEWAY_SET_EVENT,
+  WSTETH_ADDRESS,
 } from "./constants";
 import { ethersProvider } from "./ethers";
+import { THIRD_PARTY_PROXY_EVENTS } from "./constants";
 
 const lastImpls = new Map<string, string>();
 const lastAdmins = new Map<string, string>();
@@ -40,6 +44,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   handleProxyAdminEvents(txEvent, findings);
+  handleThirdPartyProxyAdminEvents(txEvent, findings);
 
   return findings;
 }
@@ -65,6 +70,49 @@ function handleProxyAdminEvents(
       });
     }
   });
+}
+
+function handleThirdPartyProxyAdminEvents(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  THIRD_PARTY_PROXY_EVENTS.forEach((eventInfo) => {
+    if (eventInfo.address in txEvent.addresses) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
+        findings.push(
+          Finding.fromObject({
+            name: eventInfo.name,
+            description: eventInfo.description(event.args),
+            alertId: eventInfo.alertId,
+            severity: eventInfo.severity,
+            type: eventInfo.type,
+            metadata: { args: String(event.args) },
+          })
+        );
+      });
+    }
+  });
+  if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
+    const events = txEvent.filterLog(
+      GATEWAY_SET_EVENT,
+      ARBITRUM_L1_GATEWAY_ROUTER
+    );
+    events.forEach((event) => {
+      if (event.args.l1Token == WSTETH_ADDRESS) {
+        findings.push(
+          Finding.fromObject({
+            name: "Arbitrum: Token GAteway changed",
+            description: `Arbitrum native bridge gateway for wstETH changed to: ${event.args.gateway}`,
+            alertId: "ARBITRUM-TOKEN-GATEWAY-CHANGED",
+            severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+            metadata: { args: String(event.args) },
+          })
+        );
+      }
+    });
+  }
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {

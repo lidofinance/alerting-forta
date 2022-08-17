@@ -33,6 +33,14 @@ export const ROLES = new Map<string, string>([
 
 // ADDRESSES AND EVENTS
 
+export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+
+export const ARBITRUM_L1_GATEWAY_ROUTER =
+  "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef";
+
+export const GATEWAY_SET_EVENT =
+  "event GatewaySet(address indexed l1Token, address indexed gateway)";
+
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
     name: "Arbitrum",
@@ -136,6 +144,55 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
     return eventsDesc;
   }
 ).reduce((a, b) => [...a, ...b]);
+
+export const THIRD_PARTY_PROXY_EVENTS = [
+  {
+    address: "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef", // Arbitrum One: L1 Gateway Router
+    event: "event AdminChanged(address previousAdmin, address newAdmin)",
+    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
+    name: "Arbitrum Native Bridge: L1 Gateway Router proxy admin changed",
+    description: (args: any) =>
+      `Proxy admin for Arbitrum One: L1 Gateway Router ` +
+      `was changed\nfrom: ${args.previousAdmin}\nto: ${args.newAdmin}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef", // Arbitrum One: L1 Gateway Router
+    event: "event Upgraded(address indexed implementation)",
+    alertId: "THIRD-PARTY-PROXY-UPGRADED",
+    name: "Arbitrum Native Bridge: L1 Gateway Router proxy upgraded",
+    description: (args: any) =>
+      `Proxy for Arbitrum One: L1 Gateway Router ` +
+      `was upgraded to ${args.implementation}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1", // Optimism: Proxy OVM L1 Cross Domain Messenger
+    event:
+      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
+    name: "Optimism Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
+    description: (args: any) =>
+      `Proxy admin for Optimism: OVM L1 Cross Domain Messenger ` +
+      `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1", // Optimism: Proxy OVM L1 Cross Domain Messenger
+    event:
+      "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
+    alertId: "THIRD-PARTY-PROXY-UPGRADED",
+    name: "Optimism Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
+    description: (args: any) =>
+      `Proxy for Optimism: Proxy OVM L1 Cross Domain Messenger ` +
+      `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+];
 
 export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
   (gw) => {
