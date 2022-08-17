@@ -167,7 +167,9 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     description: (args: any) =>
       `Full withdrawal requested for validator ` +
       `${args._from}. Amount ` +
-      `${new BigNumber(String(args._amount)).div(MATIC_DECIMALS).toFixed(2)} MATIC`,
+      `${new BigNumber(String(args._amount))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)} MATIC`,
     severity: FindingSeverity.Medium,
     type: FindingType.Info,
   },
