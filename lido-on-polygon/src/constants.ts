@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import { FindingSeverity, FindingType } from "forta-agent";
+import { abbreviateNumber } from "./helpers";
 
 // COMMON CONSTS
 export const MATIC_DECIMALS = new BigNumber(10 ** 18);
@@ -134,7 +135,9 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     name: "stMATIC: stMATIC Rewards distributed",
     description: (args: any) =>
       `Rewards for stMATIC was distributed. Rewards amount ` +
-      `${new BigNumber(String(args._amount)).div(MATIC_DECIMALS).toFixed(2)}`,
+      `${new BigNumber(String(args._amount))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)} MATIC`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
   },
@@ -146,9 +149,11 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     name: "stMATIC: stMATIC Pooled MATIC delegated",
     description: (args: any) =>
       `Pooled MATIC was delegated to validators. Delegated amount ` +
-      `${new BigNumber(String(args._amountDelegated))
-        .div(MATIC_DECIMALS)
-        .toFixed(2)}` +
+      `${abbreviateNumber(
+        new BigNumber(String(args._amountDelegated))
+          .div(MATIC_DECIMALS)
+          .toNumber()
+      )}` +
       ` MATIC remained pooled ${args._remainder} wei`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
@@ -162,7 +167,9 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     description: (args: any) =>
       `Full withdrawal requested for validator ` +
       `${args._from}. Amount ` +
-      `${new BigNumber(String(args._amount)).div(MATIC_DECIMALS).toFixed(2)}`,
+      `${new BigNumber(String(args._amount))
+        .div(MATIC_DECIMALS)
+        .toFixed(2)} MATIC`,
     severity: FindingSeverity.Medium,
     type: FindingType.Info,
   },
