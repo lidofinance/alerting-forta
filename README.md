@@ -2,11 +2,11 @@
 
 ## Bots list
 
-/ethereum-operations - Lido Detection bot fot stETH protocol operations
+/ethereum-operations - Lido Detection bot for stETH protocol operations
 
-/ethereum-finance - Lido Detection bot fot stETH protocol finance activity
+/ethereum-finance - Lido Detection bot for stETH protocol finance activity
 
-/ethereum-huge-tx - Lido Detection bot fot huge tx of the Lido tokens of interest detection
+/ethereum-huge-tx - Lido Detection bot for huge tx of the Lido tokens of interest detection
 
 /lido-on-polygon - Lido Detection bot for stMATIC protocol (should be launched against Ethereum mainnet)
 
