@@ -680,6 +680,8 @@ export const LIDO_APPS = new Map([
   ["0x55032650b14df07b85bf18a3a3ec8e0af2e028d5", "Node Operators registry"],
   ["0x442af784a788a5bd6f42a01ebe9f287a871243fb", "Oracle"],
   ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH token"],
+  ["0xa9b2f5ce3aae7374a62313473a74c98baa7fa70e", "LDO purchase executor"],
+  ["0xb280e33812c0b09353180e92e27b8ad399b07f26", "SelfOwnedStETHBurner"],
 ]);
 
 export const ORDINARY_ENTITIES = new Map([
