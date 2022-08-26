@@ -327,7 +327,7 @@ async function handleOracleBalance(
           name: "Low balance of Lido Oracle",
           description:
             `Balance of ${oracle} is ` +
-            `${balance.toFixed(4)} ETH. This is extremely low!`,
+            `${balance.toFixed(4)} ETH. This is rather low!`,
           alertId: "LIDO-ORACLE-LOW-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Degraded,
