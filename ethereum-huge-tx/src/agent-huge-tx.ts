@@ -141,8 +141,8 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "Huge change in AAVE vault balance",
           description:
-            "AAVE vault balance has " +
-            `${aaveChangeText} by ${Math.abs(aaveDiff).toFixed(2)}% ` +
+            "**AAVE** vault balance has " +
+            `**${aaveChangeText} by ${Math.abs(aaveDiff).toFixed(2)}%** ` +
             `during last ${poolMinutesWindow} min.\n` +
             `Previous balance: ${lastAaveVaultBalance.toFixed(2)} stETH\n` +
             `Current balance: ${aaveVaultBalance.toFixed(2)} stETH\n`,
@@ -159,8 +159,8 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "Huge change in Maker wstETH-A vault balance",
           description:
-            "Maker wstETH-A vault balance has " +
-            `${makerAChangeText} by ${Math.abs(makerADiff).toFixed(2)}% ` +
+            "**Maker wstETH-A** vault balance has " +
+            `**${makerAChangeText} by ${Math.abs(makerADiff).toFixed(2)}%** ` +
             `during last ${poolMinutesWindow} min.\n` +
             `Previous balance: ${lastMakerAVaultBalance.toFixed(2)} wstETH\n` +
             `Current balance: ${makerAVaultBalance.toFixed(2)} wstETH\n`,
@@ -177,8 +177,8 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "Huge change in Maker wstETH-B vault balance",
           description:
-            "Maker wstETH-A vault balance has " +
-            `${makerBChangeText} by ${Math.abs(makerBDiff).toFixed(2)}% ` +
+            "**Maker wstETH-B** vault balance has " +
+            `**${makerBChangeText} by ${Math.abs(makerBDiff).toFixed(2)}%** ` +
             `during last ${poolMinutesWindow} min.\n` +
             `Previous balance: ${lastMakerBVaultBalance.toFixed(2)} wstETH\n` +
             `Current balance: ${makerBVaultBalance.toFixed(2)} wstETH\n`,
