@@ -7,6 +7,7 @@ import {
   Finding,
   FindingType,
   FindingSeverity,
+  TxEventBlock,
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
@@ -14,6 +15,7 @@ import { ethersProvider } from "./ethers";
 import MATIC_ABI from "./abi/MaticToken.json";
 import ST_MATIC_ABI from "./abi/stMaticToken.json";
 import PROXY_ADMIN_ABI from "./abi/ProxyAdmin.json";
+import POLYGON_ROOT_CHAIN_ABI from "./abi/RootChain.json";
 import {
   MATIC_TOKEN_ADDRESS,
   ST_MATIC_TOKEN_ADDRESS,
@@ -34,8 +36,12 @@ import {
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
   ONE_HOUR,
   CHEKPOINT_REWARD_UPDATED_EVENT,
+  POLYGON_ROOT_CHAIN_PROXY,
+  SECS_PER_BLOCK,
+  REWARDS_ESTIMATE_TO_ACTUAL_DIFF,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
+import { Event } from "ethers";
 
 export const name = "DaoOps";
 
@@ -54,6 +60,8 @@ let lastReportedBufferedMatic = 0;
 let lastReportedInvalidProxyOwner = 0;
 let lastReportedInvalidProxyAdmin = 0;
 let lastRewardsDistributeTime = 0;
+let lastRewardsDistributeBlock: TxEventBlock;
+let checkpointsInLastInterval = 0;
 let lastReportedRewards = 0;
 let lastRewardsAmount = new BigNumber(0);
 let lastReportedExecutorBalance = 0;
@@ -62,37 +70,81 @@ export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
+
+  const latestDistributeEvent = await getPrevDistributeEvent(currentBlock);
+
+  if (latestDistributeEvent) {
+    lastRewardsDistributeBlock = await latestDistributeEvent.getBlock();
+    lastRewardsDistributeTime = lastRewardsDistributeBlock.timestamp;
+    if (latestDistributeEvent.args) {
+      lastRewardsAmount = new BigNumber(
+        String(latestDistributeEvent.args._amount)
+      );
+    }
+
+    const prevToLatestDistributeEvent = await getPrevDistributeEvent(
+      lastRewardsDistributeBlock.number
+    );
+    if (prevToLatestDistributeEvent) {
+      checkpointsInLastInterval = await getCheckpointsCount(
+        prevToLatestDistributeEvent.blockNumber,
+        lastRewardsDistributeBlock.number
+      );
+
+      console.log(
+        `[${name}] checkpointsInLastInterval: ${checkpointsInLastInterval}`
+      );
+    }
+  }
+
+  console.log(
+    `[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`
+  );
+
+  return {
+    lastRewardsDistributeTime: `${lastRewardsDistributeTime}`,
+    lastRewardsAmount: `${lastRewardsAmount}`,
+  };
+}
+
+async function getPrevDistributeEvent(
+  lastBlock: number
+): Promise<Event | undefined> {
   const stMATIC = new ethers.Contract(
     ST_MATIC_TOKEN_ADDRESS,
     ST_MATIC_ABI,
     ethersProvider
   );
-  const rewardsDistributedFilter = stMATIC.filters.DistributeRewardsEvent();
 
+  const rewardsDistributedFilter = stMATIC.filters.DistributeRewardsEvent();
   // ~25 hours ago
-  const pastBlock = currentBlock - Math.ceil((25 * 60 * 60) / 13);
+  const pastBlock = lastBlock - Math.ceil((25 * ONE_HOUR) / SECS_PER_BLOCK);
   const distributeEvents = await stMATIC.queryFilter(
     rewardsDistributedFilter,
     pastBlock,
-    currentBlock - 1
+    lastBlock - 1
   );
-  if (distributeEvents.length > 0) {
-    distributeEvents.sort(byBlockNumberDesc);
-    lastRewardsDistributeTime = (await distributeEvents[0].getBlock())
-      .timestamp;
-    if (distributeEvents[0].args) {
-      lastRewardsAmount = new BigNumber(
-        String(distributeEvents[0].args._amount)
-      );
-    }
-  }
-  console.log(
-    `[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`
+
+  distributeEvents.sort(byBlockNumberDesc);
+  return distributeEvents.at(0);
+}
+
+async function getCheckpointsCount(
+  fromBlock: number,
+  toBlock: number
+): Promise<number> {
+  const rootChain = new ethers.Contract(
+    POLYGON_ROOT_CHAIN_PROXY,
+    POLYGON_ROOT_CHAIN_ABI,
+    ethersProvider
   );
-  return {
-    lastRewardsDistributeTime: `${lastRewardsDistributeTime}`,
-    lastRewardsAmount: `${lastRewardsAmount}`,
-  };
+  const checkpoints = await rootChain.queryFilter(
+    rootChain.filters.NewHeaderBlock(),
+    fromBlock,
+    toBlock - 1
+  );
+
+  return checkpoints.length;
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
@@ -339,47 +391,77 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   return findings;
 }
 
-function handleRewardDistributionEvent(
+async function handleRewardDistributionEvent(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (txEvent.to == ST_MATIC_TOKEN_ADDRESS) {
-    const [event] = txEvent.filterLog(
-      ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
-      ST_MATIC_TOKEN_ADDRESS
-    );
-    if (event) {
-      lastRewardsDistributeTime = txEvent.timestamp;
-      const rewardsAmount = new BigNumber(String(event.args._amount));
-      if (lastRewardsAmount.isGreaterThan(0)) {
-        const rewardsChangePercent = rewardsAmount
-          .div(lastRewardsAmount)
-          .minus(1)
-          .times(100);
-        if (rewardsChangePercent.isLessThanOrEqualTo(-MAX_REWARDS_DECREASE)) {
-          findings.push(
-            Finding.fromObject({
-              name: `stMATIC rewards decreased`,
-              description: `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
-                2
-              )}% from ${lastRewardsAmount
-                .div(MATIC_DECIMALS)
-                .toFixed(4)} MATIC to ${rewardsAmount
-                .div(MATIC_DECIMALS)
-                .toFixed(4)} MATIC (${rewardsAmount
-                .minus(lastRewardsAmount)
-                .div(MATIC_DECIMALS)
-                .toFixed(4)} MATIC)`,
-              alertId: "STMATIC-REWARDS-DECREASED",
-              severity: FindingSeverity.High,
-              type: FindingType.Suspicious,
-            })
-          );
-        }
-      }
-      lastRewardsAmount = rewardsAmount;
-    }
+  if (txEvent.to !== ST_MATIC_TOKEN_ADDRESS) {
+    return;
   }
+
+  const [event] = txEvent.filterLog(
+    ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
+    ST_MATIC_TOKEN_ADDRESS
+  );
+
+  if (!event) {
+    return;
+  }
+
+  // last distribution event was not found on init
+  if (!lastRewardsDistributeBlock) {
+    lastRewardsDistributeBlock = txEvent.block;
+    lastRewardsDistributeTime = txEvent.timestamp;
+    lastRewardsAmount = new BigNumber(String(event.args._amount));
+
+    return;
+  }
+
+  const rewardsAmount = new BigNumber(String(event.args._amount));
+  const rewardsChangePercent = rewardsAmount
+    .div(lastRewardsAmount)
+    .minus(1)
+    .times(100);
+
+  // estimate change on checkpoints count
+  const checkpointsCount = await getCheckpointsCount(
+    lastRewardsDistributeBlock.number,
+    txEvent.blockNumber
+  );
+
+  const estimatedChangePercent =
+    checkpointsInLastInterval > 0
+      ? 100 * (checkpointsCount / checkpointsInLastInterval - 1)
+      : 0;
+
+  if (
+    rewardsChangePercent.isLessThanOrEqualTo(-MAX_REWARDS_DECREASE) &&
+    rewardsChangePercent
+      .minus(estimatedChangePercent)
+      .isLessThanOrEqualTo(-REWARDS_ESTIMATE_TO_ACTUAL_DIFF)
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: `stMATIC rewards decreased`,
+        description: `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
+          2
+        )}% from ${lastRewardsAmount
+          .div(MATIC_DECIMALS)
+          .toFixed(4)} MATIC to ${rewardsAmount
+          .div(MATIC_DECIMALS)
+          .toFixed(4)} MATIC (${rewardsAmount
+          .minus(lastRewardsAmount)
+          .div(MATIC_DECIMALS)
+          .toFixed(4)} MATIC)`,
+        alertId: "STMATIC-REWARDS-DECREASED",
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+      })
+    );
+  }
+  lastRewardsDistributeBlock = txEvent.block;
+  lastRewardsDistributeTime = txEvent.timestamp;
+  lastRewardsAmount = rewardsAmount;
 }
 
 function handleProxyAdminEvents(
