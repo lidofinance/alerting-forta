@@ -6,6 +6,8 @@ import { abbreviateNumber } from "./helpers";
 export const MATIC_DECIMALS = new BigNumber(10 ** 18);
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
+export const SECS_PER_BLOCK = 13;
+
 // 1 hour
 export const ONE_HOUR = 60 * 60;
 // 24 hours
@@ -22,6 +24,8 @@ export const NODE_OPERATORS_REGISTRY_ADDRESS =
 export const PROXY_ADMIN_ADDRESS = "0x0833f5bd45803e05ef54e119a77e463ce6b1a963";
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
   "0xa22d223e732a5dcf4ff4529aa9a135293b7258fe";
+export const POLYGON_ROOT_CHAIN_PROXY =
+  "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287";
 
 export const OWNER_MULTISIG_ADDRESS =
   "0xd65fa54f8df43064dfd8ddf223a446fc638800a9";
@@ -422,8 +426,10 @@ export const MAX_BUFFERED_MATIC_DAILY_PERCENT = 1.1;
 // 25 hours (rewards should be distributed each 24 hours but there is a possible delay due to the gas optimization)
 export const MAX_REWARDS_DISTRIBUTION_INTERVAL = 25 * 60 * 60;
 
-// report if curent rewards are less than 95% of previous rewards
+// report if curent rewards are less than 90% of previous rewards
 export const MAX_REWARDS_DECREASE = 10;
+// allowed diff between estimated reward change and the actual one
+export const REWARDS_ESTIMATE_TO_ACTUAL_DIFF = 2;
 
 // 48 hours
 export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2;
