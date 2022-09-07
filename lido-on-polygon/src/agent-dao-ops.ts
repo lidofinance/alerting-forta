@@ -126,7 +126,7 @@ async function getPrevDistributeEvent(
   );
 
   distributeEvents.sort(byBlockNumberDesc);
-  return distributeEvents.at(0);
+  return distributeEvents[0];
 }
 
 async function getCheckpointsCount(
