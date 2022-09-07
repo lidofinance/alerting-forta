@@ -133,6 +133,7 @@ export const MONITORED_TOKENS = new Map<string, string>(
     ["0x5faf6a2d186448dfa667c51cb3d695c7a6e52d8e", "yvCurve-stETH-WETH"],
     ["0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0", "STETHETH_C-f-gauge"],
     ["0xdcd90c7f6324cfa40d7169ef80b12031770b4325", "yvCurve-stETH"],
+    ["0x9518c9063eb0262d791f38d8d6eb0aca33c63ed0", "cvxsteCRV"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
 );
 
@@ -1101,6 +1102,64 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `was swapped for stETH in Curve concentrated LP\n` +
       `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+        to: "0x989aeb4d175e16225e39e87d0d97a3360524ad80",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x9518c9063eb0262d791f38d8d6eb0aca33c63ed0",
+          to: "0xf403c135812408bfbe8713b5a23a04b3d48aae31",
+          from: NULL_ADDRESS,
+        },
+        {
+          contract: "0x9518c9063eb0262d791f38d8d6eb0aca33c63ed0",
+          to: "0x0a760466e1b4621579a82a39cb56dda2f4e70f03",
+          from: "0xf403c135812408bfbe8713b5a23a04b3d48aae31",
+        },
+        {
+          contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+          to: "0x99ac10631f69c753ddb595d074422a0922d9056b",
+          from: "0x182b723a58739a9c974cfdb385ceadb237453c28",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were added to Curve.fi ETH/stETH Convex Deposit\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+        from: "0xf403c135812408bfbe8713b5a23a04b3d48aae31",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x9518c9063eb0262d791f38d8d6eb0aca33c63ed0",
+          from: "0x0a760466e1b4621579a82a39cb56dda2f4e70f03",
+          to: NULL_ADDRESS,
+        },
+        {
+          contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+          to: "0x182b723a58739a9c974cfdb385ceadb237453c28",
+          from: "0x99ac10631f69c753ddb595d074422a0922d9056b",
+        },
+        {
+          contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+          to: "0xf403c135812408bfbe8713b5a23a04b3d48aae31",
+          from: "0x989aeb4d175e16225e39e87d0d97a3360524ad80",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `steCRV were withdrawn from Curve.fi ETH/stETH Convex Deposit\n` +
+      `by: ${info.to} (${info.toName})`,
   },
 ];
 
