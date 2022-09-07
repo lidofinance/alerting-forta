@@ -443,16 +443,19 @@ async function handleRewardDistributionEvent(
     findings.push(
       Finding.fromObject({
         name: `stMATIC rewards decreased`,
-        description: `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
-          2
-        )}% from ${lastRewardsAmount
-          .div(MATIC_DECIMALS)
-          .toFixed(4)} MATIC to ${rewardsAmount
-          .div(MATIC_DECIMALS)
-          .toFixed(4)} MATIC (${rewardsAmount
-          .minus(lastRewardsAmount)
-          .div(MATIC_DECIMALS)
-          .toFixed(4)} MATIC)`,
+        description:
+          `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
+            2
+          )}% from ${lastRewardsAmount
+            .div(MATIC_DECIMALS)
+            .toFixed(4)} MATIC to ${rewardsAmount
+            .div(MATIC_DECIMALS)
+            .toFixed(4)} MATIC (${rewardsAmount
+            .minus(lastRewardsAmount)
+            .div(MATIC_DECIMALS)
+            .toFixed(4)} MATIC). ` +
+          `The decrease is deeper than network ` +
+          `expectation (${estimatedChangePercent.toFixed(2)}%)`,
         alertId: "STMATIC-REWARDS-DECREASED",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
