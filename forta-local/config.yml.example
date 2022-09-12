@@ -1,0 +1,19 @@
+# The chainId is the chainId of the network that is analyzed (1=mainnet)
+# Have no influence ob bot operation. Leave as is
+chainId: 9090
+
+# The scan settings are used to retrieve the transactions that are analyzed
+scan:
+  jsonRpc:
+    url: <rpc-url>
+
+trace:
+  enabled: false
+
+localMode:
+  enable: true
+  webhookUrl: forta-discord:9090/hook/<slug>
+  botImages:
+    - <bot1 image>
+    - <bot2 image>
+    - <etc>
