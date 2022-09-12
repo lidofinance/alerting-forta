@@ -127,6 +127,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xd3E6e3646a6397144CbD0741dc3EFba93D0332f4", // DSProxy #197,122
   "0x674bdf20a0f284d710bc40872100128e2d66bd3f", // loopring.org
   "0x0e3eb2eab0e524b69c79e24910f4318db46baa9c", // rango.exchange
+  "0xc9f5296eb3ac266c94568d790b6e91eba7d76a11", // CEX.IO
+  "0xc2c171bd6fc3b5885b589ed8b4d135f31085e973", // YearnPartnerPortalIn app.portals.fi
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
