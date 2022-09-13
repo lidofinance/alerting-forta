@@ -19,6 +19,7 @@ export const LIDO_ORACLE_BEACON_REPORTED_EVENT =
   "event BeaconReported(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators, address caller)";
 export const LIDO_EL_REWARDS_VAULT_ADDRESS =
   "0x388c818ca8b9251b393131c08a736a67ccb19297";
+export const MEV_ALLOWED_LIST_ADDRESS = ""; // TODO Add actual address
 
 export const LIDO_DEPOSIT_SECURITY_ADDRESS =
   "0xdb149235b6f40dc08810aa69869783be101790e7";
@@ -503,6 +504,73 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     name: "Lido DAO: EL rewards vault set",
     description: (args: any) => `Vault: ${args.executionLayerRewardsVault} ETH`,
     severity: FindingSeverity.Info,
+  },
+];
+
+export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
+  {
+    address: MEV_ALLOWED_LIST_ADDRESS,
+    event:
+      "event RelayAdded (string indexed uri_hash, (string uri, string operator, bool is_mandatory, string description) relay)",
+    alertId: "MEV-RELAY-ADDED",
+    name: "MEV Allowed list: Relay added",
+    description: (args: any) =>
+      `New MEV relay added.\n` +
+      `URI: ${args.relay.uri}\n` +
+      `Operator: ${args.relay.operator}\n` +
+      `Mandatory: ${args.relay.is_mandatory}\n` +
+      `Description: ${args.relay.description}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: MEV_ALLOWED_LIST_ADDRESS,
+    event: "event RelayRemoved (string indexed uri_hash, string uri)",
+    alertId: "MEV-RELAY-REMOVED",
+    name: "MEV Allowed list: Relay removed",
+    description: (args: any) => `MEV relay removed.\nURI: ${args.uri}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: MEV_ALLOWED_LIST_ADDRESS,
+    event: "event AllowedListUpdated (uint256 indexed allowed_list_version)",
+    alertId: "MEV-LIST-VERSION-UPDATED",
+    name: "MEV Allowed list: Version updated",
+    description: (args: any) =>
+      `MEV allowed list version updated.\n` +
+      `New version: ${args.allowed_list_version}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: MEV_ALLOWED_LIST_ADDRESS,
+    event:
+      "event ERC20Recovered (address indexed token, uint256 amount, address indexed recipient)",
+    alertId: "MEV-ERC20-RECOVERED",
+    name: "MEV Allowed list: ERC20 Recovered",
+    description: (args: any) =>
+      `ERC20 tokens were recovered from MEV allowed list contract.\n` +
+      `Token: ${args.token}\n` +
+      `Amount: ${args.amount.toFixed(0)}\n` +
+      `Recipient: ${args.recipient}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: MEV_ALLOWED_LIST_ADDRESS,
+    event: "event OwnerChanged (uint256 indexed new_owner)",
+    alertId: "MEV-LIST-OWNER-CHANGED",
+    name: "MEV Allowed list: Owner changed",
+    description: (args: any) =>
+      `MEV allowed list owner has changed.\nNew owner: ${args.new_owner}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: MEV_ALLOWED_LIST_ADDRESS,
+    event: "event ManagerChanged (uint256 indexed new_manager)",
+    alertId: "MEV-LIST-MANAGER-CHANGED",
+    name: "MEV Allowed list: Manager changed",
+    description: (args: any) =>
+      `MEV allowed list manager has changed.\n` +
+      `New manager: ${args.new_manager}`,
+    severity: FindingSeverity.High,
   },
 ];
 
