@@ -17,6 +17,8 @@ export const LIDO_ORACLE_COMPLETED_EVENT =
   "event Completed(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators)";
 export const LIDO_ORACLE_BEACON_REPORTED_EVENT =
   "event BeaconReported(uint256 epochId, uint128 beaconBalance, uint128 beaconValidators, address caller)";
+export const LIDO_EL_REWARDS_VAULT_ADDRESS =
+  "0x388c818ca8b9251b393131c08a736a67ccb19297";
 
 export const LIDO_DEPOSIT_SECURITY_ADDRESS =
   "0xdb149235b6f40dc08810aa69869783be101790e7";

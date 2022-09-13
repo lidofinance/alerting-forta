@@ -13,7 +13,6 @@ import { ethersProvider, etherscanProvider } from "./ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "./abi/NodeOperatorsRegistry.json";
 import LIDO_DAO_ABI from "./abi/LidoDAO.json";
-
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   LIDO_DAO_ADDRESS,
@@ -28,6 +27,7 @@ import {
   MIN_DEPOSIT_EXECUTOR_BALANCE,
   DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
   LIDO_DAO_EVENTS_OF_NOTICE,
+  LIDO_EL_REWARDS_VAULT_ADDRESS,
 } from "./constants";
 
 export const name = "DaoOps";
@@ -40,6 +40,13 @@ const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
 const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12;
 // 12 hours
 const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12;
+// 24 hours
+const REPORT_WINDOW_EL_REWARDS_BALANCE = 60 * 60 * 24;
+// 110%
+const EL_REWARDS_BALANCE_OVERFILL_INFO = 1.1;
+// 300%
+const EL_REWARDS_BALANCE_OVERFILL_HIGH = 3;
+
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
 let lastDepositorTxTime = 0;
@@ -47,6 +54,8 @@ let criticalBufferAmountFrom = 0;
 let lastReportedExecutorBalance = 0;
 let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
+let lastReportedElRewardsBalanceInfo = 0;
+let lastReportedElRewardsBalanceHigh = 0;
 
 export async function initialize(
   currentBlock: number
@@ -76,6 +85,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBufferedEth(blockEvent, findings),
     handleDepositExecutorBalance(blockEvent, findings),
     handleStakingLimit(blockEvent, findings),
+    handleElRewardsBalance(blockEvent, findings),
   ]);
 
   return findings;
@@ -262,6 +272,87 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
     lastReportedStakingLimit30 = now;
+  }
+}
+
+async function handleElRewardsBalance(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  if (blockEvent.blockNumber % 1 == 0) {
+    const now = blockEvent.block.timestamp;
+    const lidoDao = new ethers.Contract(
+      LIDO_DAO_ADDRESS,
+      LIDO_DAO_ABI,
+      ethersProvider
+    );
+    const totalSupply = new BigNumber(
+      String(
+        await lidoDao.functions.totalSupply({
+          blockTag: blockEvent.block.number,
+        })
+      )
+    );
+
+    const elRewardsLimit =
+      (await lidoDao.functions.getELRewardsWithdrawalLimit({
+        blockTag: blockEvent.block.number,
+      })) / 10000;
+
+    const elBalance = new BigNumber(
+      String(await ethersProvider.getBalance(LIDO_EL_REWARDS_VAULT_ADDRESS))
+    );
+
+    if (
+      lastReportedElRewardsBalanceHigh + REPORT_WINDOW_EL_REWARDS_BALANCE <
+        now &&
+      elBalance.isGreaterThan(
+        totalSupply
+          .times(elRewardsLimit)
+          .times(EL_REWARDS_BALANCE_OVERFILL_HIGH)
+      )
+    ) {
+      findings.push(
+        Finding.fromObject({
+          name: "Significant EL Rewards vault overfill",
+          description:
+            `Current EL Rewards vault balance is ${elBalance
+              .div(ETH_DECIMALS)
+              .toFixed(2)} ETH ` +
+            `this is more than ${EL_REWARDS_BALANCE_OVERFILL_HIGH} times higher ` +
+            `than maximum possible single withdraw.`,
+          alertId: "EL-REWARDS-VAULT-OVERFILL",
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        })
+      );
+      lastReportedElRewardsBalanceHigh = now;
+      lastReportedElRewardsBalanceInfo = now;
+    } else if (
+      lastReportedElRewardsBalanceInfo + REPORT_WINDOW_EL_REWARDS_BALANCE <
+        now &&
+      elBalance.isGreaterThan(
+        totalSupply
+          .times(elRewardsLimit)
+          .times(EL_REWARDS_BALANCE_OVERFILL_INFO)
+      )
+    ) {
+      findings.push(
+        Finding.fromObject({
+          name: "EL Rewards vault overfill",
+          description:
+            `Current EL Rewards vault balance is ${elBalance
+              .div(ETH_DECIMALS)
+              .toFixed(2)} ETH ` +
+            `this is more than ${EL_REWARDS_BALANCE_OVERFILL_INFO} times higher ` +
+            `than maximum possible single withdraw.`,
+          alertId: "EL-REWARDS-VAULT-OVERFILL",
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
+      );
+      lastReportedElRewardsBalanceInfo = now;
+    }
   }
 }
 
