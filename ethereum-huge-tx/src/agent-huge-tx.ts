@@ -317,7 +317,7 @@ function handleCurveLiquidityRemove(
           };
           findings.push(
             Finding.fromObject({
-              name: "Significant token amount added to Curve",
+              name: "Significant token amount removed from Curve",
               description:
                 descriptionShort + `\n${etherscanLink(txEvent.hash)}`,
               alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
@@ -389,7 +389,7 @@ function handleCurveLiquidityRemoveOne(
         };
         findings.push(
           Finding.fromObject({
-            name: "Significant token amount added to Curve",
+            name: "Significant token amount removed from Curve",
             description: descriptionShort + `\n${etherscanLink(txEvent.hash)}`,
             alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
             severity: FindingSeverity.Info,
