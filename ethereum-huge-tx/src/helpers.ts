@@ -72,14 +72,16 @@ export function handleComplexTransfers(
     });
     // Overall pattern is not matched if not all additional patterns matched
     if (additionalMatched == additionalPatterns.length) {
-      const mainEventText = transferPattern.description(mainTransfer);
-      mainTransfersTexts.push({
-        text: mainEventText,
-        logIndex: mainTransfer.logIndex,
-      });
-      mainTransfersMetadata.push(
-        prepareTransferMetadata(mainTransfer, txEvent, mainEventText)
-      );
+      if (!transferPattern.omit) {
+        const mainEventText = transferPattern.description(mainTransfer);
+        mainTransfersTexts.push({
+          text: mainEventText,
+          logIndex: mainTransfer.logIndex,
+        });
+        mainTransfersMetadata.push(
+          prepareTransferMetadata(mainTransfer, txEvent, mainEventText)
+        );
+      }
       transfers = Array.from(transfersNew);
     }
   });

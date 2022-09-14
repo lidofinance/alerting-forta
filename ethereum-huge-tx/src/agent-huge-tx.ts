@@ -26,6 +26,14 @@ import {
   AAVE_VAULT_ADDRESS,
   WSTETH_A_VAULT_ADDRESS,
   WSTETH_B_VAULT_ADDRESS,
+  CURVE_ADD_LIQUIDITY_EVENT,
+  CURVE_POOL_ADDRESS,
+  TX_AMOUNT_THRESHOLD,
+  ADDRESS_TO_NAME,
+  CURVE_REMOVE_LIQUIDITY_IMBALANCE_EVENT,
+  CURVE_REMOVE_LIQUIDITY_EVENT,
+  CURVE_REMOVE_LIQUIDITY_ONE_EVENT,
+  REMOVE_ONE_STETH_CURVE_PATTERN,
 } from "./constants";
 
 import {
@@ -35,6 +43,8 @@ import {
   applicableAmount,
   handleCurveExchange,
   prepareTransferEventText,
+  abbreviateNumber,
+  matchPattern,
 } from "./helpers";
 
 import ERC20_SHORT_TOKEN_ABI from "./abi/ERC20balance.json";
@@ -197,8 +207,211 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
-  await Promise.all([handleHugeTx(txEvent, findings)]);
+  await Promise.all([
+    handleHugeTx(txEvent, findings),
+    handleCurveLiquidityAdd(txEvent, findings),
+    handleCurveLiquidityRemove(txEvent, findings),
+    handleCurveLiquidityRemoveOne(txEvent, findings),
+  ]);
   return findings;
+}
+
+function handleCurveLiquidityAdd(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  if (CURVE_POOL_ADDRESS in txEvent.addresses) {
+    const addLiquidityEvents = txEvent.filterLog(CURVE_ADD_LIQUIDITY_EVENT);
+    addLiquidityEvents.forEach((event) => {
+      const ethAmount = new BigNumber(String(event.args.token_amounts[0])).div(
+        ETH_DECIMALS
+      );
+      const stEthAmount = new BigNumber(
+        String(event.args.token_amounts[1])
+      ).div(ETH_DECIMALS);
+      if (
+        ethAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD) ||
+        stEthAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)
+      ) {
+        const descriptionShort =
+          `**${abbreviateNumber(ethAmount.toNumber())} ETH** and ` +
+          `**${abbreviateNumber(
+            stEthAmount.toNumber()
+          )} stETH** were added to the Curve LP`;
+        const metadata = {
+          timestamp: txEvent.block.timestamp.toString(),
+          from: event.args.provider.toLowerCase(),
+          fromName: ADDRESS_TO_NAME.get(event.args.provider) || "",
+          to: CURVE_POOL_ADDRESS,
+          toName: "Curve.fi",
+          amount: stEthAmount.toFixed(2),
+          token: "stETH",
+          comment: descriptionShort,
+          link: etherscanLink(txEvent.hash),
+        };
+        findings.push(
+          Finding.fromObject({
+            name: "Significant token amount added to Curve",
+            description: descriptionShort + `\n${etherscanLink(txEvent.hash)}`,
+            alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+          })
+        );
+        findings.push(
+          Finding.fromObject({
+            name: "Huge token transfer of Lido interest (tech)",
+            description:
+              descriptionShort +
+              `\n${etherscanLink(txEvent.hash)}` +
+              "\nNOTE: This is tech alert. Do not route it to the alerts channel!",
+            alertId: "HUGE-TOKEN-TRANSFERS-TECH",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+            metadata: metadata,
+          })
+        );
+      }
+    });
+  }
+}
+
+function handleCurveLiquidityRemove(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  if (CURVE_POOL_ADDRESS in txEvent.addresses) {
+    const removeLiquidityEvents = txEvent.filterLog(
+      CURVE_REMOVE_LIQUIDITY_EVENT
+    );
+    const removeLiquidityImbalanceEvents = txEvent.filterLog(
+      CURVE_REMOVE_LIQUIDITY_IMBALANCE_EVENT
+    );
+    [...removeLiquidityEvents, ...removeLiquidityImbalanceEvents].forEach(
+      (event) => {
+        const ethAmount = new BigNumber(
+          String(event.args.token_amounts[0])
+        ).div(ETH_DECIMALS);
+        const stEthAmount = new BigNumber(
+          String(event.args.token_amounts[1])
+        ).div(ETH_DECIMALS);
+        if (
+          ethAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD) ||
+          stEthAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)
+        ) {
+          const descriptionShort =
+            `**${abbreviateNumber(ethAmount.toNumber())} ETH** and ` +
+            `**${abbreviateNumber(
+              stEthAmount.toNumber()
+            )} stETH** were removed from the Curve LP`;
+          const metadata = {
+            timestamp: txEvent.block.timestamp.toString(),
+            from: CURVE_POOL_ADDRESS,
+            fromName: "Curve.fi",
+            to: event.args.provider.toLowerCase(),
+            toName: ADDRESS_TO_NAME.get(event.args.provider) || "",
+            amount: stEthAmount.toFixed(2),
+            token: "stETH",
+            comment: descriptionShort,
+            link: etherscanLink(txEvent.hash),
+          };
+          findings.push(
+            Finding.fromObject({
+              name: "Significant token amount added to Curve",
+              description:
+                descriptionShort + `\n${etherscanLink(txEvent.hash)}`,
+              alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
+              severity: FindingSeverity.Info,
+              type: FindingType.Info,
+            })
+          );
+          findings.push(
+            Finding.fromObject({
+              name: "Huge token transfer of Lido interest (tech)",
+              description:
+                descriptionShort +
+                `\n${etherscanLink(txEvent.hash)}` +
+                "\nNOTE: This is tech alert. Do not route it to the alerts channel!",
+              alertId: "HUGE-TOKEN-TRANSFERS-TECH",
+              severity: FindingSeverity.Info,
+              type: FindingType.Info,
+              metadata: metadata,
+            })
+          );
+        }
+      }
+    );
+  }
+}
+
+function handleCurveLiquidityRemoveOne(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  if (CURVE_POOL_ADDRESS in txEvent.addresses) {
+    const transferEvents = txEvent.filterLog(TRANSFER_EVENT);
+    let transferInfos = transferEvents.map(
+      (event) => new TransferEventInfo(event)
+    );
+    const removeLiquidityEvents = txEvent.filterLog(
+      CURVE_REMOVE_LIQUIDITY_ONE_EVENT
+    );
+    removeLiquidityEvents.forEach((event) => {
+      const amount = new BigNumber(String(event.args.coin_amount)).div(
+        ETH_DECIMALS
+      );
+
+      if (amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)) {
+        let rmTransferInfos: TransferEventInfo[] = [];
+        transferInfos = transferInfos.filter((info) => {
+          if (matchPattern(REMOVE_ONE_STETH_CURVE_PATTERN, info)) {
+            rmTransferInfos.push(info);
+            return false;
+          }
+          return true;
+        });
+        const token = rmTransferInfos.length > 0 ? "stETH" : "ETH";
+
+        const descriptionShort =
+          `**${abbreviateNumber(amount.toNumber())} ${token}** ` +
+          `were removed from the Curve LP`;
+
+        const metadata = {
+          timestamp: txEvent.block.timestamp.toString(),
+          from: CURVE_POOL_ADDRESS,
+          fromName: "Curve.fi",
+          to: event.args.provider.toLowerCase(),
+          toName: ADDRESS_TO_NAME.get(event.args.provider) || "",
+          amount: amount.toFixed(2),
+          token: token,
+          comment: descriptionShort,
+          link: etherscanLink(txEvent.hash),
+        };
+        findings.push(
+          Finding.fromObject({
+            name: "Significant token amount added to Curve",
+            description: descriptionShort + `\n${etherscanLink(txEvent.hash)}`,
+            alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+          })
+        );
+        findings.push(
+          Finding.fromObject({
+            name: "Huge token transfer of Lido interest (tech)",
+            description:
+              descriptionShort +
+              `\n${etherscanLink(txEvent.hash)}` +
+              "\nNOTE: This is tech alert. Do not route it to the alerts channel!",
+            alertId: "HUGE-TOKEN-TRANSFERS-TECH",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+            metadata: metadata,
+          })
+        );
+      }
+    });
+  }
 }
 
 async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
