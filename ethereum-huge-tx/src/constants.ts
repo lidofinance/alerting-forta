@@ -22,6 +22,7 @@ export interface ComplexTransferPattern {
     additionalTransfers: TransferPattern[];
   };
   description: any;
+  omit?: boolean;
 }
 
 // Made for TS capability. Actual structure is
@@ -728,6 +729,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Curve LP\n` +
       `by: ${info.to} (${info.toName})`,
+    omit: true,
   },
   {
     transferPatterns: {
@@ -746,6 +748,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were added to Curve LP\n` +
       `by: ${info.from} (${info.fromName})`,
+    omit: true,
   },
   {
     transferPatterns: {
@@ -1173,9 +1176,26 @@ export const EXCHANGE_ETH_TO_STETH_CURVE_PATTERN: TransferPattern = {
   from: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
 };
 
+export const REMOVE_ONE_STETH_CURVE_PATTERN: TransferPattern = {
+  contract: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+  from: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
+};
+
 // EVENT ABIs
 export const TRANSFER_EVENT =
   "event Transfer(address indexed _from, address indexed _to, uint256 _value)";
 
 export const CURVE_EXCHANGE_EVENT =
   "event TokenExchange(address indexed buyer, int128 sold_id, uint256 tokens_sold, int128 bought_id, uint256 tokens_bought)";
+
+export const CURVE_ADD_LIQUIDITY_EVENT =
+  "event AddLiquidity(address indexed provider, uint256[2] token_amounts, uint256[2] fees, uint256 invariant, uint256 token_supply)";
+
+export const CURVE_REMOVE_LIQUIDITY_EVENT =
+  "event RemoveLiquidity(address indexed provider, uint256[2] token_amounts, uint256[2] fees, uint256 token_supply)";
+
+export const CURVE_REMOVE_LIQUIDITY_ONE_EVENT =
+  "event RemoveLiquidityOne(address indexed provider, uint256 token_amount, uint256 coin_amount)";
+
+export const CURVE_REMOVE_LIQUIDITY_IMBALANCE_EVENT =
+  "event RemoveLiquidityImbalance(address indexed provider, uint256[2] token_amounts, uint256[2] fees, uint256 invariant, uint256 token_supply)";
