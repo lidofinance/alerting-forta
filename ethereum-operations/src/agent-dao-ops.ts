@@ -97,7 +97,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleDepositExecutorBalance(blockEvent, findings),
     handleStakingLimit(blockEvent, findings),
     handleElRewardsBalance(blockEvent, findings),
-    handleMevRelayCount(blockEvent, findings),
+    // This handler is disabled until we will have actual relays in the contract
+    //handleMevRelayCount(blockEvent, findings),
   ]);
 
   return findings;
