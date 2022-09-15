@@ -13,6 +13,8 @@ import { ethersProvider, etherscanProvider } from "./ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "./abi/NodeOperatorsRegistry.json";
 import LIDO_DAO_ABI from "./abi/LidoDAO.json";
+import MEV_ALLOW_LIST_ABI from "./abi/MEVBoostRelayAllowedList.json";
+
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   LIDO_DAO_ADDRESS,
@@ -28,6 +30,8 @@ import {
   DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
   LIDO_DAO_EVENTS_OF_NOTICE,
   LIDO_EL_REWARDS_VAULT_ADDRESS,
+  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
+  MEV_ALLOWED_LIST_ADDRESS,
 } from "./constants";
 
 export const name = "DaoOps";
@@ -47,6 +51,11 @@ const EL_REWARDS_BALANCE_OVERFILL_INFO = 1.1;
 // 300%
 const EL_REWARDS_BALANCE_OVERFILL_HIGH = 3;
 
+const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
+const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
+// 24 hours
+const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
 let lastDepositorTxTime = 0;
@@ -56,6 +65,8 @@ let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
 let lastReportedElRewardsBalanceInfo = 0;
 let lastReportedElRewardsBalanceHigh = 0;
+let lastReportedMevCountInfo = 0;
+let lastReportedMevCountHigh = 0;
 
 export async function initialize(
   currentBlock: number
@@ -86,6 +97,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleDepositExecutorBalance(blockEvent, findings),
     handleStakingLimit(blockEvent, findings),
     handleElRewardsBalance(blockEvent, findings),
+    // This handler is disabled until we will have actual relays in the contract
+    //handleMevRelayCount(blockEvent, findings),
   ]);
 
   return findings;
@@ -356,11 +369,58 @@ async function handleElRewardsBalance(
   }
 }
 
+async function handleMevRelayCount(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  const mevAllowList = new ethers.Contract(
+    MEV_ALLOWED_LIST_ADDRESS,
+    MEV_ALLOW_LIST_ABI,
+    ethersProvider
+  );
+  const mevRelays = await mevAllowList.functions.get_relays({
+    blockTag: blockEvent.block.number,
+  });
+  const mevRelaysLength = mevRelays.length;
+  if (
+    mevRelaysLength < MEV_RELAY_COUNT_THRESHOLD_HIGH &&
+    lastReportedMevCountHigh + MEV_RELAY_COUNT_REPORT_WINDOW < now
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "MEV Allow list: Super low relay count",
+        description: `There are only ${mevRelaysLength} relays in the allowed list.`,
+        alertId: "MEV-LOW-RELAY-COUNT",
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      })
+    );
+    lastReportedMevCountInfo = now;
+    lastReportedMevCountHigh = now;
+  } else if (
+    mevRelaysLength < MEV_RELAY_COUNT_THRESHOLD_INFO &&
+    lastReportedMevCountInfo + MEV_RELAY_COUNT_REPORT_WINDOW < now
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "MEV Allow list: Low relay count",
+        description: `There are only ${mevRelaysLength} relays in the allowed list.`,
+        alertId: "MEV-LOW-RELAY-COUNT",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
+    lastReportedMevCountInfo = now;
+  }
+}
+
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   handleDepositorTx(txEvent, findings);
   handleLidoDAOTx(txEvent, findings);
+  handleMevListTx(txEvent, findings);
 
   return findings;
 }
@@ -390,6 +450,26 @@ function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
 
 function handleLidoDAOTx(txEvent: TransactionEvent, findings: Finding[]) {
   LIDO_DAO_EVENTS_OF_NOTICE.forEach((eventInfo) => {
+    if (eventInfo.address in txEvent.addresses) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
+        findings.push(
+          Finding.fromObject({
+            name: eventInfo.name,
+            description: eventInfo.description(event.args),
+            alertId: eventInfo.alertId,
+            severity: eventInfo.severity,
+            type: FindingType.Info,
+            metadata: { args: String(event.args) },
+          })
+        );
+      });
+    }
+  });
+}
+
+function handleMevListTx(txEvent: TransactionEvent, findings: Finding[]) {
+  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
