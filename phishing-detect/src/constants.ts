@@ -129,6 +129,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x0e3eb2eab0e524b69c79e24910f4318db46baa9c", // rango.exchange
   "0xc9f5296eb3ac266c94568d790b6e91eba7d76a11", // CEX.IO
   "0xc2c171bd6fc3b5885b589ed8b4d135f31085e973", // YearnPartnerPortalIn app.portals.fi
+  "0x29fbd00940df70cfc5dad3f2370686991e2bbf5c", // bebop.xyz
+  "0xb2be281e8b11b47fec825973fc8bb95332022a54", // Zerion: DeFi SDK v1.0
+  "0xc7caff035261df3d55c8c1b023642511e69172cd", // DSProxy #216,409
+  "0xbb443d6740322293fcee4414d03978c7e4bf5d55", // ERC4626Gate https://www.gate.io/blog_detail/920/What-is-ERC-4626
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
