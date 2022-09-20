@@ -1,5 +1,5 @@
 # Build stage: compile Typescript to Javascript
-FROM node:16-alpine AS builder
+FROM node:18.9-alpine AS builder
 WORKDIR /app
 COPY package*.json .yarnrc.yml yarn.lock ./
 COPY .yarn/releases ./.yarn/releases/
@@ -8,7 +8,7 @@ COPY . .
 RUN yarn run build
 
 # Final stage: copy compiled Javascript from previous stage and install production dependencies
-FROM node:16-alpine
+FROM node:18.9-alpine
 LABEL "network.forta.settings.agent-logs.enable"="true"
 ENV NODE_ENV=production
 WORKDIR /app
