@@ -19,7 +19,7 @@ export const ANCHOR_VAULT_REWARDS_COLLECTED_EVENT =
 export const ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT =
   "event SoldStethToUST(uint256 steth_amount, uint256 eth_amount, uint256 usdc_amount, uint256 ust_amount, uint256 steth_eth_price, uint256 eth_usdc_price, uint256 usdc_ust_price)";
 // 0.3 ETH
-export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.1).times(
+export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.05).times(
   ETH_DECIMALS
 );
 // 4 hours
