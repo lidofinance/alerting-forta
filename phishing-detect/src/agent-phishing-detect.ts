@@ -45,8 +45,8 @@ const notAlerted: ILastAlerted = {
   lastAlerted: 0,
 };
 
-let spenders = new Map<string, ISpenderInfo>();
-let spendersLastAlerted = new Map<string, ILastAlertedSummary>();
+export const spenders = new Map<string, ISpenderInfo>();
+export const spendersLastAlerted = new Map<string, ILastAlertedSummary>();
 
 const uintMaxValue = new BigNumber(10).pow(59);
 

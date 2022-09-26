@@ -1,0 +1,14 @@
+---
+name: Tests @ phishing-detect
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "phishing-detect/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./phishing-detect

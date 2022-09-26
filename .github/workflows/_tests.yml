@@ -1,0 +1,36 @@
+---
+name: Tests runner
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: path to the project to run tests against
+        required: true
+        type: string
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    name: JS tests
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.path }}
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: "${{ inputs.path }}/.nvmrc"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run tests
+        run: yarn test
