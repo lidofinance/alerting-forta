@@ -134,6 +134,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xc7caff035261df3d55c8c1b023642511e69172cd", // DSProxy #216,409
   "0xbb443d6740322293fcee4414d03978c7e4bf5d55", // ERC4626Gate https://www.gate.io/blog_detail/920/What-is-ERC-4626
   "0x76f4eed9fe41262669d0250b2a97db79712ad855", // app.odos.xyz
+  "0xa3a7b6f88361f48403514059f1f16c8e78d60eec", // Arbitrum One: L1 ERC20 Gateway
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
