@@ -19,13 +19,11 @@ WORKDIR /app
 
 RUN apk add --no-cache tini=0.19.0-r0
 
-COPY package*.json .yarnrc.yml ./
+COPY package*.json .yarnrc.yml yarn.lock ./
 COPY .yarn/releases ./.yarn/releases/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./src
 COPY version.json ./
-
-USER node
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["yarn", "run", "start:prod"]
