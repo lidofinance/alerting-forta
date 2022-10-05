@@ -639,9 +639,9 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
       };
       return `${new BigNumber(String(args._amount))
         .div(10 ** tokenInfo.decimals)
-        .toFixed(2)} of ${args._token}(${tokenInfo.name}) were transferred from insurance fund to ${
-        args._recipient
-      }`;
+        .toFixed(2)} of ${args._token}(${
+        tokenInfo.name
+      }) were transferred from insurance fund to ${args._recipient}`;
     },
     severity: FindingSeverity.High,
   },
