@@ -490,7 +490,10 @@ function handleMevListTx(txEvent: TransactionEvent, findings: Finding[]) {
   });
 }
 
-function handleInsuranceFundEvents(txEvent: TransactionEvent, findings: Finding[]) {
+function handleInsuranceFundEvents(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
   INSURANCE_FUND_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
