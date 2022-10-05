@@ -1,6 +1,11 @@
 import BigNumber from "bignumber.js";
 import { FindingSeverity } from "forta-agent";
 
+export interface ERC20 {
+  decimals: number;
+  name: string;
+}
+
 // COMMON CONSTS
 
 // 1 hour
@@ -27,8 +32,29 @@ export const LIDO_DEPOSIT_SECURITY_ADDRESS =
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
   "0xf82ac5937a20dc862f9bc0668779031e06000f17";
 
+export const LIDO_INSURANCE_FUND_ADDRESS =
+  "0x8b3f33234abd88493c0cd28de33d583b70bede35";
+
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
+
+export const KNOWN_ERC20 = new Map<string, ERC20>([
+  [
+    "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+    { decimals: 18, name: "stETH" },
+  ],
+  [
+    "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+    { decimals: 18, name: "wstETH" },
+  ],
+  ["0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32", { decimals: 18, name: "LDO" }],
+  ["0x6B175474E89094C44Da98b954EedeAC495271d0F", { decimals: 18, name: "DAI" }],
+  ["0xdAC17F958D2ee523a2206206994597C13D831ec7", { decimals: 6, name: "USDT" }],
+  [
+    "0xb9e31a22e3a1c743c6720f3b723923e91f3c0f8b",
+    { decimals: 18, name: "USDC" },
+  ],
+]);
 
 export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   {
@@ -572,6 +598,72 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
       `MEV allowed list manager has changed.\n` +
       `New manager: ${args.new_manager}`,
     severity: FindingSeverity.High,
+  },
+];
+
+export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
+  {
+    address: LIDO_INSURANCE_FUND_ADDRESS,
+    event:
+      "event EtherTransferred(address indexed _recipient, uint256 _amount)",
+    alertId: "INS-FUND-ETH-TRANSFERRED",
+    name: "Insurance fund: ETH transferred",
+    description: (args: any) =>
+      `${new BigNumber(String(args._amount))
+        .div(ETH_DECIMALS)
+        .toFixed(2)} ETH were transferred from insurance fund to ${
+        args._recipient
+      }`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_INSURANCE_FUND_ADDRESS,
+    event:
+      "event ERC721Transferred(address indexed _token, address indexed _recipient, uint256 _tokenId, bytes _data)",
+    alertId: "INS-FUND-ERC721-TRANSFERRED",
+    name: "Insurance fund: ERC721 transferred",
+    description: (args: any) =>
+      `ERC721 token (address: ${args._token}, id: ${args._tokenId}) was transferred form insurance fund to ${args._recipient}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_INSURANCE_FUND_ADDRESS,
+    event:
+      "event ERC20Transferred(address indexed _token, address indexed _recipient, uint256 _amount)",
+    alertId: "INS-FUND-ERC20-TRANSFERRED",
+    name: "Insurance fund: ERC20 transferred",
+    description: (args: any) => {
+      const tokenInfo = KNOWN_ERC20.get(args._token.toLowerCase()) || {
+        decimals: 18,
+        name: "unknown",
+      };
+      return `${new BigNumber(String(args._amount))
+        .div(10 ** tokenInfo.decimals)
+        .toFixed(2)} of ${args._token}(${
+        tokenInfo.name
+      }) were transferred from insurance fund to ${args._recipient}`;
+    },
+    severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_INSURANCE_FUND_ADDRESS,
+    event:
+      "event ERC1155Transferred(address indexed _token, address indexed _recipient, uint256 _tokenId, uint256 _amount, bytes _data)",
+    alertId: "INS-FUND-ERC1155-TRANSFERRED",
+    name: "Insurance fund: ERC1155 transferred",
+    description: (args: any) =>
+      `${args._amount} of ERC1155 token (address: ${args._token}, id: ${args._tokenId}) was transferred form insurance fund to ${args._recipient}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_INSURANCE_FUND_ADDRESS,
+    event:
+      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+    alertId: "INS-FUND-OWNERSHIP-TRANSFERRED",
+    name: "Insurance fund: Ownership transferred",
+    description: (args: any) =>
+      `Owner of the insurance fund was transferred from ${args.previousOwner} to ${args.newOwner}`,
+    severity: FindingSeverity.Critical,
   },
 ];
 
