@@ -73,10 +73,8 @@ export async function initialize(
         currentBlock
       );
       if (
-        creationEvent &&
-        creationEvent.args &&
-        creationEvent.args._evmScriptFactory.toLowerCase() ==
-          TOP_UP_REWARDS_ADDRESS
+        creationEvent?.args?._evmScriptFactory.toLowerCase() ==
+        TOP_UP_REWARDS_ADDRESS
       ) {
         const callData = await topUpRewards.functions.decodeEVMScriptCallData(
           creationEvent.args._evmScriptCallData
@@ -147,30 +145,25 @@ async function getFirstBlockOfMonthNumber(currentBlock: number) {
   const timeDiff = timestampNow - timestampFirstDay;
   let blockNumber = Math.floor(currentBlock - timeDiff / APPROX_BLOCK_INTERVAL);
   let block = await ethersProvider.getBlock(blockNumber);
-  while (
-    Math.abs(block.timestamp - timestampFirstDay) > APPROX_BLOCK_INTERVAL
-  ) {
+  let timestampsDiff = Math.abs(block.timestamp - timestampFirstDay);
+  while (timestampsDiff > APPROX_BLOCK_INTERVAL) {
+    const blocksDiff = Math.floor(timestampsDiff / APPROX_BLOCK_INTERVAL);
+
     if (block.timestamp > timestampFirstDay) {
-      blockNumber =
-        block.number -
-        Math.floor(
-          (block.timestamp - timestampFirstDay) / APPROX_BLOCK_INTERVAL
-        );
+      blockNumber = block.number - blocksDiff;
     } else {
-      blockNumber =
-        block.number +
-        Math.floor(
-          (timestampFirstDay - block.timestamp) / APPROX_BLOCK_INTERVAL
-        );
+      blockNumber = block.number + blocksDiff;
     }
+
     block = await ethersProvider.getBlock(blockNumber);
+    timestampsDiff = Math.abs(block.timestamp - timestampFirstDay);
   }
   return blockNumber;
 }
 
 function sumMapValues(mapping: Map<number, BigNumber>) {
   let sum = new BigNumber(0);
-  mapping.forEach((value, key, map) => {
+  mapping.forEach((value) => {
     sum = sum.plus(value);
   });
   return sum;
