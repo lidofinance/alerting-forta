@@ -213,11 +213,6 @@ async function handleEasyTrackTransaction(
   findings: Finding[]
 ) {
   if (EASY_TRACK_ADDRESS in txEvent.addresses) {
-    const topUpRewards = new ethers.Contract(
-      TOP_UP_REWARDS_ADDRESS,
-      TOP_UP_REWARDS_ABI,
-      ethersProvider
-    );
     const eventsCreated = txEvent.filterLog(
       MOTION_CREATED_EVENT,
       EASY_TRACK_ADDRESS
@@ -228,7 +223,8 @@ async function handleEasyTrackTransaction(
         eventCreated.args._evmScriptFactory.toLowerCase() ==
         TOP_UP_REWARDS_ADDRESS
       ) {
-        const callData = await topUpRewards.functions.decodeEVMScriptCallData(
+        const callData = ethers.utils.defaultAbiCoder.decode(
+          ["address[]", "uint256[] _amounts"],
           eventCreated.args._evmScriptCallData
         );
         let sumAmount = new BigNumber(0);
@@ -278,9 +274,9 @@ async function handleEasyTrackTransaction(
       const id = parseInt(String(eventEnacted.args._motionId));
       const amount = pendingTopUpMotions.get(id);
       pendingTopUpMotions.delete(id);
-      // return since this is not a top-up motion
+      // skip since this is not a top-up motion
       if (!amount) {
-        return;
+        continue;
       }
       enactedTopUpMotions.set(id, amount);
       const spent = sumMapValues(enactedTopUpMotions);
