@@ -1,0 +1,14 @@
+---
+name: Tests @ polygon
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "polygon/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./polygon
