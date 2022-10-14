@@ -24,8 +24,8 @@ import {
 import { ethersProvider } from "./ethers";
 import { formatLdo } from "./utils";
 
-let enactedTopUpMotions = new Map<number, BigNumber>();
-let pendingTopUpMotions = new Map<number, BigNumber>();
+export const enactedTopUpMotions = new Map<number, BigNumber>();
+export const pendingTopUpMotions = new Map<number, BigNumber>();
 let dayOfMonth = 0;
 
 // 6 000 000 LDO
