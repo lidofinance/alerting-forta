@@ -1,0 +1,14 @@
+---
+name: Tests @ lido-on-polygon
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lido-on-polygon/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./lido-on-polygon
