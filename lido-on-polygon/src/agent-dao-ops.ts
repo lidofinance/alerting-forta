@@ -161,7 +161,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   return findings;
 }
 
-async function handleBufferedMatic(
+export async function handleBufferedMatic(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
@@ -252,7 +252,7 @@ async function handleBufferedMatic(
   }
 }
 
-async function handleRewardsDistribution(
+export async function handleRewardsDistribution(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
@@ -286,7 +286,10 @@ async function handleRewardsDistribution(
   }
 }
 
-async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
+export async function handleProxyAdmin(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
   const now = blockEvent.block.timestamp;
 
   const proxyAdmin = new ethers.Contract(
@@ -324,7 +327,10 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
   }
 }
 
-async function handleProxyOwner(blockEvent: BlockEvent, findings: Finding[]) {
+export async function handleProxyOwner(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
   const now = blockEvent.block.timestamp;
 
   const proxyAdmin = new ethers.Contract(
@@ -353,7 +359,7 @@ async function handleProxyOwner(blockEvent: BlockEvent, findings: Finding[]) {
   }
 }
 
-async function handleDepositExecutorBalance(
+export async function handleDepositExecutorBalance(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
@@ -391,7 +397,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   return findings;
 }
 
-async function handleRewardDistributionEvent(
+export async function handleRewardDistributionEvent(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
@@ -399,11 +405,12 @@ async function handleRewardDistributionEvent(
     return;
   }
 
-  const [event] = txEvent.filterLog(
+  const events = txEvent.filterLog(
     ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
     ST_MATIC_TOKEN_ADDRESS
   );
 
+  const event = events.at(0);
   if (!event) {
     return;
   }
@@ -467,16 +474,16 @@ async function handleRewardDistributionEvent(
   lastRewardsAmount = rewardsAmount;
 }
 
-function handleProxyAdminEvents(
+export function handleProxyAdminEvents(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
   if (txEvent.to == PROXY_ADMIN_ADDRESS) {
-    const [event] = txEvent.filterLog(
+    const events = txEvent.filterLog(
       PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT,
       PROXY_ADMIN_ADDRESS
     );
-    if (event) {
+    for (const event of events) {
       findings.push(
         Finding.fromObject({
           name: "🚨 Proxy admin owner has changed (detected by event)",
@@ -525,7 +532,7 @@ function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
   });
 }
 
-function handleChekpointRewardUpdateEvent(
+export function handleChekpointRewardUpdateEvent(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
