@@ -57,7 +57,7 @@ async function handleProxyImplementations(
         if (prevImpl != currentImpl) {
           findings.push(
             Finding.fromObject({
-              name: `Proxy implementation changed`,
+              name: `🚨 Proxy implementation changed`,
               description: `Implementation of ${data.name} (${address}) changed from ${prevImpl} to ${currentImpl}`,
               alertId: `PROXY-IMPL-CHANGED`,
               severity: FindingSeverity.Critical,

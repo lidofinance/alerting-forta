@@ -47,7 +47,7 @@ function handleSigningKeysRemoved(
     if (events.length > 0) {
       findings.push(
         Finding.fromObject({
-          name: "NO Registry: Signing keys removed",
+          name: "🚨 NO Registry: Signing keys removed",
           description: `${events.length} signing keys removed`,
           alertId: "NODE-OPERATORS-KEYS-REMOVED",
           severity: FindingSeverity.High,
@@ -72,7 +72,7 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
       if (motionEnactedEvents.length < 1) {
         findings.push(
           Finding.fromObject({
-            name: "NO Stake limit set by NON-EasyTrack action",
+            name: "🚨 NO Stake limit set by NON-EasyTrack action",
             description: `Staking limit for node operator ${event.args.id} was set to ${event.args.stakingLimit} by NON-EasyTrack motion!`,
             alertId: "NODE-OPERATORS-STAKING-LIMIT-SET",
             severity: FindingSeverity.High,

@@ -131,7 +131,7 @@ async function handleNodeOperatorsKeys(
     if (availableKeysCount < MIN_AVAILABLE_KEYS_COUNT) {
       findings.push(
         Finding.fromObject({
-          name: "Few available keys count",
+          name: "⚠️ Few available keys count",
           description: `There are only ${availableKeysCount} available keys left`,
           alertId: "LOW-OPERATORS-AVAILABLE-KEYS-NUM",
           severity: FindingSeverity.Medium,
@@ -173,7 +173,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Huge buffered ETH amount",
+          name: "🚨 Huge buffered ETH amount",
           description:
             `There are ${bufferedEth.toFixed(4)} ` +
             `buffered ETH in DAO for more than ` +
@@ -193,7 +193,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       findings.push(
         Finding.fromObject({
-          name: "High buffered ETH amount",
+          name: "⚠️ High buffered ETH amount",
           description:
             `There are ${bufferedEth.toFixed(4)} ` +
             `buffered ETH in DAO and there are more than ` +
@@ -222,10 +222,10 @@ async function handleDepositExecutorBalance(
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
       findings.push(
         Finding.fromObject({
-          name: "Low deposit executor balance",
+          name: "⚠️ Low deposit executor balance",
           description:
             `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` +
-            `This is extremely low!`,
+            `This is extremely low! 😱`,
           alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
@@ -258,7 +258,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   ) {
     findings.push(
       Finding.fromObject({
-        name: "Staking limit below 10%",
+        name: "⚠️ Staking limit below 10%",
         description:
           `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
           `this is lower than 10% of max staking limit ` +
@@ -275,7 +275,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   ) {
     findings.push(
       Finding.fromObject({
-        name: "Staking limit below 30%",
+        name: "📉 Staking limit below 30%",
         description:
           `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
           `this is lower than 30% of max staking limit ` +
@@ -328,7 +328,7 @@ async function handleElRewardsBalance(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Significant EL Rewards vault overfill",
+          name: "⚠️ Significant EL Rewards vault overfill",
           description:
             `Current EL Rewards vault balance is ${elBalance
               .div(ETH_DECIMALS)
@@ -353,7 +353,7 @@ async function handleElRewardsBalance(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "EL Rewards vault overfill",
+          name: "⚠️ EL Rewards vault overfill",
           description:
             `Current EL Rewards vault balance is ${elBalance
               .div(ETH_DECIMALS)
@@ -390,7 +390,7 @@ async function handleMevRelayCount(
   ) {
     findings.push(
       Finding.fromObject({
-        name: "MEV Allow list: Super low relay count",
+        name: "🚨 MEV Allow list: Super low relay count",
         description: `There are only ${mevRelaysLength} relays in the allowed list.`,
         alertId: "MEV-LOW-RELAY-COUNT",
         severity: FindingSeverity.High,
@@ -405,7 +405,7 @@ async function handleMevRelayCount(
   ) {
     findings.push(
       Finding.fromObject({
-        name: "MEV Allow list: Low relay count",
+        name: "⚠️ MEV Allow list: Low relay count",
         description: `There are only ${mevRelaysLength} relays in the allowed list.`,
         alertId: "MEV-LOW-RELAY-COUNT",
         severity: FindingSeverity.Info,

@@ -151,7 +151,7 @@ async function handleNewVoteInfo(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Expected vote outcome has changed",
+          name: "⚠️ Expected vote outcome has changed",
           description:
             `Expected aragon vote ${voteId} outcome changed from '${oldOutcome}' to '${newOutcome}' and there is less than ` +
             `${Math.floor((PHASE_ONE_DURATION - TRIGGER_AFTER) / ONE_HOUR)}` +

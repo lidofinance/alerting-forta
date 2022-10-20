@@ -56,6 +56,8 @@ let reportedOverdueCount = 0;
 
 export const name = "LidoOracle";
 
+const log = (text: string) => console.log(`[${name}] ${text}`);
+
 async function getOracles() {
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
@@ -128,8 +130,8 @@ export async function initialize(
     );
   }
 
-  console.log(`[${name}] prevReport: ${printReport(prevReport)}`);
-  console.log(`[${name}] lastReport: ${printReport(lastReport)}`);
+  log(`prevReport: ${printReport(prevReport)}`);
+  log(`lastReport: ${printReport(lastReport)}`);
 
   return {
     lastReportTimestamp: lastReport ? `${lastReport.timestamp}` : "unknown",
@@ -219,7 +221,7 @@ function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
       ) {
         findings.push(
           Finding.fromObject({
-            name: "Super sloppy Lido Oracle",
+            name: "⚠️ Super sloppy Lido Oracle",
             description: `Oracle ${oracle} has not reported before the quorum for more than 2 week`,
             alertId: "SLOPPY-LIDO-ORACLE",
             severity: FindingSeverity.Medium,
@@ -233,7 +235,7 @@ function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
       ) {
         findings.push(
           Finding.fromObject({
-            name: "Sloppy Lido Oracle",
+            name: "🤔 Sloppy Lido Oracle",
             description: `Oracle ${oracle} has not reported before the quorum for more than 1 week`,
             alertId: "SLOPPY-LIDO-ORACLE",
             severity: FindingSeverity.Info,
@@ -254,7 +256,7 @@ async function handleOracleReportDelay(
   const reportDelay = now - (lastReport ? lastReport.timestamp : 0);
 
   if (reportDelay > 24 * 60 * 60) {
-    console.log(`[AgentLidoOracle] reportDelay: ${reportDelay}`);
+    log(`reportDelay: ${reportDelay}`);
   }
 
   if (
@@ -282,7 +284,7 @@ async function handleOracleReportDelay(
           : FindingSeverity.High;
       findings.push(
         Finding.fromObject({
-          name: "Lido Oracle report overdue",
+          name: "🚨 Lido Oracle report overdue",
           description: `Time since last report: ${formatDelay(
             reportDelayUpdated
           )}`,
@@ -324,7 +326,7 @@ async function handleOracleBalance(
     if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE)) {
       findings.push(
         Finding.fromObject({
-          name: "Low balance of Lido Oracle",
+          name: "⚠️ Low balance of Lido Oracle",
           description:
             `Balance of ${oracle} is ` +
             `${balance.toFixed(4)} ETH. This is rather low!`,
@@ -416,7 +418,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   findings.push(
     Finding.fromObject({
-      name: "Lido Oracle report",
+      name: "✅ Lido Oracle report",
       description:
         `Total balance: ${beaconBalanceEth} ETH, ` +
         `total validators: ${newReport.beaconValidators}, ` +
@@ -439,7 +441,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
     const prevRewardsEth = formatEth(lastReport.rewards, 3);
     findings.push(
       Finding.fromObject({
-        name: "Lido Beacon rewards decreased",
+        name: "🚨 Lido Beacon rewards decreased",
         description:
           `Rewards decreased from ${prevRewardsEth} ETH to ${rewardsEth} ` +
           `by ${rewardsDiffEth} ETH (${rewardsDiffPercent?.toFixed(2)}%)`,
