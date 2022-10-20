@@ -61,7 +61,7 @@ async function handleLidoGraphBalance(
     if (balance.isLessThanOrEqualTo(GRAPH_BALANCE_THRESHOLD)) {
       findings.push(
         Finding.fromObject({
-          name: "Low balance of Lido account on The Graph",
+          name: "🚨 Low balance of Lido account on The Graph",
           description: `Balance is ${balance.toFixed(2)} GRT. It is too low!`,
           alertId: "LOW-LIDO-GRAPH-BALANCE",
           severity: FindingSeverity.High,
