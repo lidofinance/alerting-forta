@@ -47,9 +47,12 @@ const ONE_HOUR = 60 * 60;
 
 export const name = "AgentBethRewards";
 
+const log = (text: string) => console.log(`[${name}] ${text}`);
+
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
+  console.log(`[${name}]`);
   // ~2 hours ago
   const pastBlockOracleReport = currentBlock - Math.ceil((2 * 60 * 60) / 13);
   lastOracleReportTime = await getLastOracleReportTime(
@@ -92,17 +95,13 @@ export async function initialize(
   rewardsLiquidatorAddress = await anchorVault.rewards_liquidator();
   rewardsLiquidatorAdminAddress = await anchorVault.liquidations_admin();
 
-  console.log(`[AgentBethRewards] lastRewardsSell: {
+  log(`lastRewardsSell: {
     timestamp: ${lastRewardsSell.timestamp},
     stethAmount: ${formatEth(lastRewardsSell.stethAmount, 5)},
     ustAmount: ${formatEth(lastRewardsSell.ustAmount, 3)}\n}`);
 
-  console.log(
-    `[AgentBethRewards] rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`
-  );
-  console.log(
-    `[AgentBethRewards] rewardsLiquidatorAdminAddress: ${rewardsLiquidatorAdminAddress}`
-  );
+  log(`rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`);
+  log(`rewardsLiquidatorAdminAddress: ${rewardsLiquidatorAdminAddress}`);
 
   return {
     rewardsLiquidatorAddress: `${rewardsLiquidatorAddress}`,
@@ -190,7 +189,7 @@ async function handleAdminBalance(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Low anchor rewards liquidator admin balance",
+          name: "📉 Low anchor rewards liquidator admin balance",
           description: `Anchor rewards liquidator admin balance is ${accountBalance
             .div(ETH_DECIMALS)
             .toFixed(4)}`,
@@ -273,7 +272,7 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   findings.push(
     Finding.fromObject({
-      name: "Anchor rewards collected",
+      name: "✅ Anchor rewards collected",
       description:
         `Sold ${stethDispAmount} stETH to ${ustDispAmount} UST, ` +
         `feed price ${stethUstDispPrice} UST per stETH, slippage ${slippageDispPercent}%`,

@@ -64,7 +64,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event Paused(address account)",
     alertId: "STMATIC-CONTRACT-PAUSED",
-    name: "stMATIC: stMATIC contract was paused",
+    name: "❌ stMATIC: Contract was paused",
     description: (args: any) =>
       `stMATIC contract was paused by ${args.account}`,
     severity: FindingSeverity.Critical,
@@ -74,7 +74,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event Unpaused(address account)",
     alertId: "STMATIC-CONTRACT-UNPAUSED",
-    name: "stMATIC: stMATIC contract was unpaused",
+    name: "✅ stMATIC: Contract was unpaused",
     description: (args: any) =>
       `stMATIC contract was unpaused by ${args.account}`,
     severity: FindingSeverity.High,
@@ -85,7 +85,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "STMATIC-CONTRACT-ROLE-GRANTED",
-    name: "stMATIC: stMATIC RoleGranted",
+    name: "⚠️ stMATIC: RoleGranted",
     description: (args: any) =>
       `Role ${args.role} was granted to ${args.account} by ${args.sender}`,
     severity: FindingSeverity.High,
@@ -96,7 +96,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "STMATIC-CONTRACT-ROLE-REVOKED",
-    name: "stMATIC: stMATIC RoleRevoked",
+    name: "⚠️ stMATIC: RoleRevoked",
     description: (args: any) =>
       `Role ${args.role} was revoked from ${args.account} by ${args.sender}`,
     severity: FindingSeverity.High,
@@ -107,7 +107,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)",
     alertId: "STMATIC-CONTRACT-ROLE-ADMIN-CHANGED",
-    name: "stMATIC: stMATIC RoleAdminChanged",
+    name: "🚨 stMATIC: RoleAdminChanged",
     description: (args: any) =>
       `Admin role ${args.role} was changed form ${args.previousAdminRole} to ${args.newAdminRole}`,
     severity: FindingSeverity.Critical,
@@ -117,7 +117,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event AdminChanged(address newAdmin)",
     alertId: "STMATIC-CONTRACT-ADMIN-CHANGED",
-    name: "stMATIC: stMATIC AdminChanged",
+    name: "🚨 stMATIC: AdminChanged",
     description: (args: any) => `Proxy admin was changed to ${args.newAdmin}`,
     severity: FindingSeverity.Critical,
     type: FindingType.Suspicious,
@@ -126,7 +126,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event Upgraded(address indexed implementation)",
     alertId: "STMATIC-CONTRACT-UPGRADED",
-    name: "stMATIC: stMATIC Upgraded",
+    name: "🚨 stMATIC: Upgraded",
     description: (args: any) =>
       `Implementation for stMATIC contract was changed to ${args.implementation}`,
     severity: FindingSeverity.High,
@@ -136,7 +136,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
     alertId: "STMATIC-CONTRACT-REWARDS-DISTRIBUTED",
-    name: "stMATIC: stMATIC Rewards distributed",
+    name: "✅ stMATIC: Rewards distributed",
     description: (args: any) =>
       `Rewards for stMATIC was distributed. Rewards amount ` +
       `${new BigNumber(String(args._amount))
@@ -150,7 +150,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event DelegateEvent(uint256 indexed _amountDelegated, uint256 indexed _remainder)",
     alertId: "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED",
-    name: "stMATIC: stMATIC Pooled MATIC delegated",
+    name: "✅ stMATIC: Pooled MATIC delegated",
     description: (args: any) =>
       `Pooled MATIC was delegated to validators. Delegated amount ` +
       `${abbreviateNumber(
@@ -167,7 +167,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event WithdrawTotalDelegatedEvent(address indexed _from, uint256 indexed _amount)",
     alertId: "STMATIC-WITHDRAW-TOTAL",
-    name: "Full withdrawal requested for validator",
+    name: "⚠️ Full withdrawal requested for validator",
     description: (args: any) =>
       `Full withdrawal requested for validator ` +
       `${args._from}. Amount ` +
@@ -181,7 +181,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event SetInsuranceAddress(address indexed _newInsuranceAddress)",
     alertId: "STMATIC-SET-INSURANCE",
-    name: "stMATIC: Insurance address changed",
+    name: "⚠️ stMATIC: Insurance address changed",
     description: (args: any) =>
       `Insurance address was changed to ${args._newInsuranceAddress}`,
     severity: FindingSeverity.Medium,
@@ -192,7 +192,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetNodeOperatorRegistryAddress(address indexed _newNodeOperatorRegistryAddress)",
     alertId: "STMATIC-SET-NO-ADDRESS",
-    name: "stMATIC: Node operator registry address changed",
+    name: "⚠️ stMATIC: Node operator registry address changed",
     description: (args: any) =>
       `Node operator registry address was changed to ${args._newNodeOperatorRegistryAddress}`,
     severity: FindingSeverity.Critical,
@@ -203,7 +203,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetDelegationLowerBound(uint256 indexed _delegationLowerBound)",
     alertId: "STMATIC-SET-DELEGATION-LOWER-BOUND",
-    name: "stMATIC: Delegation lower bound changed",
+    name: "⚠️ stMATIC: Delegation lower bound changed",
     description: (args: any) =>
       `Delegation lower bound was changed to ` +
       `${new BigNumber(String(args._delegationLowerBound))
@@ -217,7 +217,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetRewardDistributionLowerBound(uint256 oldRewardDistributionLowerBound, uint256 newRewardDistributionLowerBound)",
     alertId: "STMATIC-SET-REWARD-DISTRIBUTION-LOWER-BOUND",
-    name: "stMATIC: Reward distribution lower bound changed",
+    name: "⚠️ stMATIC: Reward distribution lower bound changed",
     description: (args: any) =>
       `Reward distribution lower bound was changed from ` +
       `${new BigNumber(String(args.oldRewardDistributionLowerBound))
@@ -233,7 +233,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event SetLidoNFT(address oldLidoNFT, address newLidoNFT)",
     alertId: "STMATIC-SET-LIDO-NFT",
-    name: "stMATIC: Lido NFT address changed",
+    name: "🚨 stMATIC: Lido NFT address changed",
     description: (args: any) =>
       `Lido NFT address was changed from ` +
       `${args.oldLidoNFT} to ` +
@@ -246,7 +246,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetFxStateRootTunnel(address oldFxStateRootTunnel, address newFxStateRootTunnel)",
     alertId: "STMATIC-SET-FX-STATE-ROOT",
-    name: "stMATIC: FX state root tunnel address changed",
+    name: "⚠️ stMATIC: FX state root tunnel address changed",
     description: (args: any) =>
       `FX state root tunnel address was changed from ` +
       `${args.oldFxStateRootTunnel} to ` +
@@ -258,7 +258,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event SetDaoAddress(address oldDaoAddress, address newDaoAddress)",
     alertId: "STMATIC-SET-DAO-ADDRESS",
-    name: "stMATIC: DAO address changed",
+    name: "🚨 stMATIC: DAO address changed",
     description: (args: any) =>
       `DAO address was changed from ` +
       `${args.oldDaoAddress} to ` +
@@ -270,7 +270,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: ST_MATIC_TOKEN_ADDRESS,
     event: "event SetProtocolFee(uint8 oldProtocolFee, uint8 newProtocolFee)",
     alertId: "STMATIC-SET-PROTOCOL-FEE",
-    name: "stMATIC: Protocol fee changed",
+    name: "⚠️ stMATIC: Protocol fee changed",
     description: (args: any) =>
       `Protocol fee was changed from ` +
       `${args.oldProtocolFee}% to ` +
@@ -283,7 +283,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetFees(uint256 daoFee, uint256 operatorsFee, uint256 insuranceFee)",
     alertId: "STMATIC-SET-PROTOCOL-FEES",
-    name: "stMATIC: Protocol fee distribution changed",
+    name: "⚠️ stMATIC: Protocol fee distribution changed",
     description: (args: any) =>
       `Protocol fee distribution set to:\n` +
       `daoFee: ${args.daoFee}%\n` +
@@ -299,7 +299,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event: "event AddNodeOperator(uint256 validatorId, address rewardAddress)",
     alertId: "NO-OPERATOR-ADDED",
-    name: "NOR: Node operator added",
+    name: "ℹ NOR: Node operator added",
     description: (args: any) =>
       `New node operator added with id ${args.validatorId} and reward address ${args.rewardAddress}`,
     severity: FindingSeverity.Medium,
@@ -310,7 +310,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event RemoveNodeOperator(uint256 validatorId, address rewardAddress)",
     alertId: "NO-OPERATOR-REMOVED",
-    name: "NOR: Node operator removed",
+    name: "❌ NOR: Node operator removed",
     description: (args: any) =>
       `Node operator ${args.validatorId} with reward address ${args.rewardAddress} was removed`,
     severity: FindingSeverity.Medium,
@@ -321,7 +321,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event RemoveInvalidNodeOperator(uint256 validatorId, address rewardAddress)",
     alertId: "NO-INVALID-OPERATOR-REMOVED",
-    name: "NOR: Invalid node operator removed",
+    name: "❌ NOR: Invalid node operator removed",
     description: (args: any) =>
       `Invalid node operator ${args.validatorId} with reward address ${args.rewardAddress} was removed`,
     severity: FindingSeverity.Medium,
@@ -331,7 +331,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event: "event ExitNodeOperator(uint256 validatorId, address rewardAddress)",
     alertId: "NO-OPERATOR-EXITED",
-    name: "NOR: Node operator exited",
+    name: "❌ NOR: Node operator exited",
     description: (args: any) =>
       `Node operator ${args.validatorId} with reward address ${args.rewardAddress} exited registry`,
     severity: FindingSeverity.Medium,
@@ -341,7 +341,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event: "event SetStMaticAddress(address oldStMatic, address newStMatic)",
     alertId: "NO-SET-STMATIC-ADDRESS",
-    name: "NOR: stMATIC address changed",
+    name: "🚨 NOR: stMATIC address changed",
     description: (args: any) =>
       `stMATIC address was changed from ` +
       `${args.oldStMatic} to ` +
@@ -354,7 +354,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetRewardAddress(uint256 validatorId, address oldRewardAddress, address newRewardAddress)",
     alertId: "NO-SET-REWARD-ADDRESS",
-    name: "NOR: Reward address for NO changed",
+    name: "🚨 NOR: Reward address for NO changed",
     description: (args: any) =>
       `Reward address for NO ${args.validatorId} was changed from ` +
       `${args.oldRewardAddress} to ` +
@@ -367,7 +367,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetCommissionRate(uint256 oldCommissionRate, uint256 newCommissionRate)",
     alertId: "NO-SET-COMMISSION-RATE",
-    name: "NOR: Default commission rate changed",
+    name: "⚠️ NOR: Default commission rate changed",
     description: (args: any) =>
       `Default commission rate was changed from ` +
       `${args.oldCommissionRate}% to ` +
@@ -380,7 +380,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetDistanceThreshold(uint256 oldDistanceThreshold, uint256 newDistanceThreshold)",
     alertId: "NO-SET-DISTANCE-THRESHOLD",
-    name: "NOR: Rebalance distance threshold changed",
+    name: "⚠️ NOR: Rebalance distance threshold changed",
     description: (args: any) =>
       `Rebalance distance threshold was changed from ` +
       `${args.oldDistanceThreshold}% to ` +
@@ -393,7 +393,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetMinRequestWithdrawRange(uint8 oldMinRequestWithdrawRange, uint8 newMinRequestWithdrawRange)",
     alertId: "NO-SET-MIN-REQ-WD-RANGE",
-    name: "NOR: Rebalance min request withdraw range changed",
+    name: "⚠️NOR: Rebalance min request withdraw range changed",
     description: (args: any) =>
       `Rebalance min request withdraw range changed was changed from ` +
       `${args.oldMinRequestWithdrawRange}% to ` +
@@ -406,7 +406,7 @@ export const NODE_OPERATORS_ADMIN_EVENTS: StMaticAdminEvent[] = [
     event:
       "event SetMaxWithdrawPercentagePerRebalance(uint256 oldMaxWithdrawPercentagePerRebalance, uint256 newMaxWithdrawPercentagePerRebalance)",
     alertId: "NO-SET-MAX-WD-PER",
-    name: "NOR: Max withdraw percentage per rebalance changed",
+    name: "⚠️ NOR: Max withdraw percentage per rebalance changed",
     description: (args: any) =>
       `Max withdraw percentage per rebalance changed was changed from ` +
       `${args.oldMaxWithdrawPercentagePerRebalance}% to ` +

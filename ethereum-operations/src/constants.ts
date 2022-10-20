@@ -59,7 +59,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     event:
       "event NodeOperatorAdded(uint256 id, string name, address rewardAddress, uint64 stakingLimit)",
     alertId: "NODE-OPERATOR-ADDED",
-    name: "NO Registry: Node operator added",
+    name: "ℹ NO Registry: Node operator added",
     description: (args: any) =>
       `Node operator ${args.id} added\n` +
       `Name: ${args.name}\n` +
@@ -71,7 +71,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event: "event NodeOperatorActiveSet(uint256 indexed id, bool active)",
     alertId: "NODE-OPERATOR-ACTIVE-SET",
-    name: "NO Registry: Node operator active set",
+    name: "ℹ NO Registry: Node operator active set",
     description: (args: any) =>
       `Node operator ${args.id} active status set to ${args.active}`,
     severity: FindingSeverity.Info,
@@ -81,7 +81,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     event:
       "event NodeOperatorRewardAddressSet(uint256 indexed id, address rewardAddress)",
     alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
-    name: "NO Registry: Node operator reward address set",
+    name: "ℹ NO Registry: Node operator reward address set",
     description: (args: any) =>
       `Node operator ${args.id} reward address set to ${args.rewardAddress}`,
     severity: FindingSeverity.Info,
@@ -91,7 +91,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     event:
       "event NodeOperatorTotalStoppedValidatorsReported(uint256 indexed id, uint64 totalStopped)",
     alertId: "NODE-OPERATOR-STOPPED-VALIDATORS",
-    name: "NO Registry: Node operator total stopped validators reported",
+    name: "ℹ NO Registry: Node operator total stopped validators reported",
     description: (args: any) =>
       `Node operator ${args.id} total stooped validators ${args.totalStopped}`,
     severity: FindingSeverity.Info,
@@ -101,7 +101,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     event:
       "event NodeOperatorTotalKeysTrimmed(uint256 indexed id, uint64 totalKeysTrimmed)",
     alertId: "NODE-OPERATOR-KEYS-TRIMMED",
-    name: "NO Registry: Node operator total keys trimmed",
+    name: "⚠️ NO Registry: Node operator total keys trimmed",
     description: (args: any) =>
       `Node operator ${args.id} total keys trimmed ${args.totalKeysTrimmed}`,
     severity: FindingSeverity.Info,
@@ -129,7 +129,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     event:
       "event StartVote(uint256 indexed voteId, address indexed creator, string metadata)",
     alertId: "ARAGON-VOTE-STARTED",
-    name: "Aragon: Vote started",
+    name: "🚀 Aragon: Vote started",
     description: (args: any) =>
       `Aragon vote ${args.voteId} was started by ${args.creator}\nDetails:\n${args.metadata}`,
     severity: FindingSeverity.Info,
@@ -138,7 +138,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     address: LIDO_ARAGON_VOTING_ADDRESS,
     event: "event ExecuteVote(uint256 indexed voteId)",
     alertId: "ARAGON-VOTE-EXECUTED",
-    name: "Aragon: Vote executed",
+    name: "✅ Aragon: Vote executed",
     description: (args: any) => `Aragon vote ${args.voteId} was executed`,
     severity: FindingSeverity.Info,
   },
@@ -157,7 +157,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     address: EASY_TRACK_ADDRESS,
     event: "event Paused(address account)",
     alertId: "EASY-TRACK-PAUSED",
-    name: "EasyTrack: EasyTrack contract was paused",
+    name: "🚨 EasyTrack: EasyTrack contract was paused",
     description: (args: any) =>
       `EasyTrack contract was paused by ${args.account}`,
     severity: FindingSeverity.Critical,
@@ -166,7 +166,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     address: EASY_TRACK_ADDRESS,
     event: "event Unpaused(address account)",
     alertId: "EASY-TRACK-UNPAUSED",
-    name: "EasyTrack: EasyTrack contract was unpaused",
+    name: "✅ EasyTrack: EasyTrack contract was unpaused",
     description: (args: any) =>
       `EasyTrack contract was unpaused by ${args.account}`,
     severity: FindingSeverity.High,
@@ -176,7 +176,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "EASY-TRACK-ROLE-GRANTED",
-    name: "EasyTrack: Role was granted on EasyTrack contract",
+    name: "🚨 EasyTrack: Role was granted on EasyTrack contract",
     description: (args: any) =>
       `Role ${args.role} was granted to ${args.account} on EasyTrack contract by ${args.sender}`,
     severity: FindingSeverity.Critical,
@@ -186,7 +186,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "EASY-TRACK-ROLE-REVOKED",
-    name: "EasyTrack: Role was revoked on EasyTrack contract",
+    name: "🚨 EasyTrack: Role was revoked on EasyTrack contract",
     description: (args: any) =>
       `Role ${args.role} was revoked from ${args.account} on EasyTrack contract by ${args.sender}`,
     severity: FindingSeverity.High,
@@ -196,7 +196,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event MotionCreated(uint256 indexed _motionId, address _creator, address indexed _evmScriptFactory, bytes _evmScriptCallData, bytes _evmScript)",
     alertId: "EASY-TRACK-MOTION-CREATED",
-    name: "EasyTrack: New motion created",
+    name: "ℹ EasyTrack: New motion created",
     description: (args: any) =>
       `EasyTrack new motion ${args._motionId} created by ${args._creator}`,
     severity: FindingSeverity.Info,
@@ -205,7 +205,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     address: EASY_TRACK_ADDRESS,
     event: MOTION_ENACTED_EVENT,
     alertId: "EASY-TRACK-MOTION-ENACTED",
-    name: "EasyTrack: Motion executed",
+    name: "✅ EasyTrack: Motion executed",
     description: (args: any) =>
       `EasyTrack motion ${args._motionId} was enacted`,
     severity: FindingSeverity.Info,
@@ -215,7 +215,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event MotionObjected(uint256 indexed _motionId, address indexed _objector, uint256 _weight, uint256 _newObjectionsAmount, uint256 _newObjectionsAmountPct)",
     alertId: "EASY-TRACK-MOTION-OBJECTED",
-    name: "EasyTrack: Motion objected",
+    name: "ℹ️ EasyTrack: Motion objected",
     description: (args: any) =>
       `EasyTrack motion ${args._motionId} was objected by ${args._objector}`,
     severity: FindingSeverity.Info,
@@ -224,7 +224,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     address: EASY_TRACK_ADDRESS,
     event: "event MotionRejected(uint256 indexed _motionId)",
     alertId: "EASY-TRACK-MOTION-REJECTED",
-    name: "EasyTrack: Motion rejected",
+    name: "❌ EasyTrack: Motion rejected",
     description: (args: any) =>
       `EasyTrack motion ${args._motionId} was rejected`,
     severity: FindingSeverity.Info,
@@ -235,7 +235,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event RoleGranted (bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "REWARD-PROGRAMS-REGISTRY-ROLE-GRANTED",
-    name: "EasyTrack: Role was granted on RewardProgramsRegistry",
+    name: "🚨 EasyTrack: Role was granted on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was granted by ${args.account} on RewardProgramsRegistry by ${args.sender}`,
     severity: FindingSeverity.Critical,
@@ -245,7 +245,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event RoleRevoked (bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "REWARD-PROGRAMS-REGISTRY-ROLE-REVOKED",
-    name: "EasyTrack: Role was revoked on RewardProgramsRegistry",
+    name: "🚨 EasyTrack: Role was revoked on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was revoked from ${args.account} on RewardProgramsRegistry by ${args.sender}`,
     severity: FindingSeverity.High,
@@ -256,7 +256,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event EasyTrackChanged(address indexed _previousEasyTrack, address indexed _newEasyTrack)",
     alertId: "EVM-SCRIPT-EXECUTOR-EASY-TRACK-CHANGED",
-    name: "EasyTrack: EVMScriptExecutor's EasyTrack address changed",
+    name: "🚨 EasyTrack: EVMScriptExecutor's EasyTrack address changed",
     description: (args: any) =>
       `EVMScriptExecutor's EasyTrack address changed from ${args._previousEasyTrack} to ${args._newEasyTrack}`,
     severity: FindingSeverity.Critical,
@@ -266,7 +266,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "EVM-SCRIPT-EXECUTOR-OWNERSHIP-TRANSFERRED",
-    name: "EasyTrack: EVMScriptExecutor's ownership transferred",
+    name: "🚨 EasyTrack: EVMScriptExecutor's ownership transferred",
     description: (args: any) =>
       `EVMScriptExecutor's ownership transferred from ${args.previousOwner} to ${args.newOwner}`,
     severity: FindingSeverity.Critical,
@@ -278,7 +278,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event AllowedBeaconBalanceAnnualRelativeIncreaseSet(uint256 value)",
     alertId: "LIDO-ORACLE-BALANCE-RELATIVE-INCREASE-SET",
-    name: "Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change",
+    name: "⚠️ Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change",
     description: (args: any) =>
       `Allowed beacon balance annual relative increase was set to ${args.value.toFixed()}`,
     severity: FindingSeverity.High,
@@ -287,7 +287,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event AllowedBeaconBalanceRelativeDecreaseSet(uint256 value)",
     alertId: "LIDO-ORACLE-BALANCE-RELATIVE-DECREASE-SET",
-    name: "Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change",
+    name: "⚠️ Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change",
     description: (args: any) =>
       `Allowed beacon balance annual relative decrease was set to ${args.value.toFixed()}`,
     severity: FindingSeverity.High,
@@ -296,7 +296,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event BeaconReportReceiverSet(address callback)",
     alertId: "LIDO-ORACLE-BEACON-REPORT-RECEIVER-SET",
-    name: "Lido Oracle: Beacon Report Receiver Change",
+    name: "⚠️ Lido Oracle: Beacon Report Receiver Change",
     description: (args: any) =>
       `New beacon report receiver was set to ${args.callback}`,
     severity: FindingSeverity.High,
@@ -305,7 +305,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event MemberAdded(address member)",
     alertId: "LIDO-ORACLE-MEMBER-ADDED",
-    name: "Lido Oracle: Member Added",
+    name: "ℹ️ Lido Oracle: Member Added",
     description: (args: any) => `New oracle member added - ${args.member}`,
     severity: FindingSeverity.High,
   },
@@ -313,7 +313,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event MemberRemoved(address member)",
     alertId: "LIDO-ORACLE-MEMBER-REMOVED",
-    name: "Lido Oracle: Member Removed",
+    name: "⚠️ Lido Oracle: Member Removed",
     description: (args: any) => `New oracle member removed - ${args.member}`,
     severity: FindingSeverity.High,
   },
@@ -321,7 +321,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event QuorumChanged(uint256 quorum)",
     alertId: "LIDO-ORACLE-QUORUM-CHANGED",
-    name: "Lido Oracle: Quorum Changed",
+    name: "🚨 Lido Oracle: Quorum Changed",
     description: (args: any) =>
       `Quorum size was set to ${args.quorum.toFixed()}`,
     severity: FindingSeverity.High,
@@ -333,7 +333,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event DepositsPaused(address guardian)",
     alertId: "LIDO-DEPOSITOR-PAUSED",
-    name: "Deposit Security: Deposits paused",
+    name: "🚨 Deposit Security: Deposits paused",
     description: (args: any) => `Deposits were paused by ${args.guardian}`,
     severity: FindingSeverity.Critical,
   },
@@ -341,7 +341,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event DepositsUnpaused()",
     alertId: "LIDO-DEPOSITOR-UNPAUSED",
-    name: "Deposit Security: Deposits resumed",
+    name: "✅ Deposit Security: Deposits resumed",
     description: (args: any) => `Deposits were resumed`,
     severity: FindingSeverity.High,
   },
@@ -349,7 +349,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event GuardianAdded(address guardian)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-ADDED",
-    name: "Deposit Security: Guardian added",
+    name: "⚠️ Deposit Security: Guardian added",
     description: (args: any) => `New guardian added ${args.guardian}`,
     severity: FindingSeverity.High,
   },
@@ -357,7 +357,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event GuardianRemoved(address guardian)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-REMOVED",
-    name: "Deposit Security: Guardian removed",
+    name: "⚠️ Deposit Security: Guardian removed",
     description: (args: any) => `Guardian ${args.guardian} was removed`,
     severity: FindingSeverity.High,
   },
@@ -365,7 +365,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event GuardianQuorumChanged(uint256 newValue)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED",
-    name: "Deposit Security: Guardian quorum changed",
+    name: "🚨 Deposit Security: Guardian quorum changed",
     description: (args: any) => `New quorum size ${args.newValue.toFixed()}`,
     severity: FindingSeverity.High,
   },
@@ -373,7 +373,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event MaxDepositsChanged(uint256 newValue)",
     alertId: "LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED",
-    name: "Deposit Security: Max deposits changed",
+    name: "⚠️ Deposit Security: Max deposits changed",
     description: (args: any) => `New value ${args.newValue.toFixed()}`,
     severity: FindingSeverity.High,
   },
@@ -381,7 +381,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event MinDepositBlockDistanceChanged(uint256 newValue)",
     alertId: "LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED",
-    name: "Deposit Security: Min deposit block distance changed",
+    name: "⚠️ Deposit Security: Min deposit block distance changed",
     description: (args: any) => `New value ${args.newValue.toFixed()}`,
     severity: FindingSeverity.High,
   },
@@ -389,7 +389,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event NodeOperatorsRegistryChanged(address newValue)",
     alertId: "LIDO-DEPOSITOR-NO-REGISTRY-CHANGED",
-    name: "Deposit Security: Node operators registry changed",
+    name: "⚠️ Deposit Security: Node operators registry changed",
     description: (args: any) => `New node operators registry ${args.newValue}`,
     severity: FindingSeverity.Critical,
   },
@@ -397,7 +397,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
     event: "event OwnerChanged(address newValue)",
     alertId: "LIDO-DEPOSITOR-OWNER-CHANGED",
-    name: "Deposit Security: Owner changed",
+    name: "🚨 Deposit Security: Owner changed",
     description: (args: any) => `New owner ${args.newValue}`,
     severity: FindingSeverity.Critical,
   },
@@ -408,7 +408,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event Stopped()",
     alertId: "LIDO-DAO-STOPPED",
-    name: "Lido DAO: Stopped",
+    name: "🚨🚨🚨 Lido DAO: Stopped 🚨🚨🚨",
     description: (args: any) => `Lido DAO contract was stopped`,
     severity: FindingSeverity.Critical,
   },
@@ -416,7 +416,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event Resumed()",
     alertId: "LIDO-DAO-RESUMED",
-    name: "Lido DAO: Resumed",
+    name: "✅ Lido DAO: Resumed",
     description: (args: any) => `Lido DAO contract was resumed`,
     severity: FindingSeverity.High,
   },
@@ -424,7 +424,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event FeeSet(uint16 feeBasisPoints)",
     alertId: "LIDO-DAO-FEE-SET",
-    name: "Lido DAO: Fee set",
+    name: "⚠️ Lido DAO: Fee set",
     description: (args: any) =>
       `Lido DAO fee was set to ${args.feeBasisPoints}`,
     severity: FindingSeverity.High,
@@ -434,7 +434,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     event:
       "event FeeDistributionSet(uint16 treasuryFeeBasisPoints, uint16 insuranceFeeBasisPoints, uint16 operatorsFeeBasisPoints)",
     alertId: "LIDO-DAO-FEE-DISTRIBUTION-SET",
-    name: "Lido DAO: Fee distribution set",
+    name: "⚠️ Lido DAO: Fee distribution set",
     description: (args: any) =>
       `Lido DAO fee distribution was set to\n` +
       `treasuryFeeBasisPoints:${args.treasuryFeeBasisPoints}\n` +
@@ -446,7 +446,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event WithdrawalCredentialsSet(bytes32 withdrawalCredentials)",
     alertId: "LIDO-DAO-WD-CREDS-SET",
-    name: "Lido DAO: Withdrawal Credentials Set",
+    name: "🚨🚨🚨 Lido DAO: Withdrawal Credentials Set",
     description: (args: any) =>
       `Lido DAO withdrawal credentials was set to ${args.withdrawalCredentials}`,
     severity: FindingSeverity.Critical,
@@ -455,7 +455,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event StakingPaused()",
     alertId: "LIDO-DAO-STAKING-PAUSED",
-    name: "Lido DAO: Staking paused",
+    name: "🚨 Lido DAO: Staking paused",
     description: (args: any) => `Staking was paused!`,
     severity: FindingSeverity.Critical,
   },
@@ -463,7 +463,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event StakingResumed()",
     alertId: "LIDO-DAO-STAKING-RESUMED",
-    name: "Lido DAO: Staking resumed",
+    name: "✅ Lido DAO: Staking resumed",
     description: (args: any) => `Staking was resumed!`,
     severity: FindingSeverity.High,
   },
@@ -472,7 +472,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     event:
       "event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)",
     alertId: "LIDO-DAO-STAKING-LIMIT-SET",
-    name: "Lido DAO: Staking limit set",
+    name: "⚠️ Lido DAO: Staking limit set",
     description: (args: any) =>
       `Staking limit was set with:\n` +
       `Max staking limit: ${args.maxStakeLimit.toFixed()}\n` +
@@ -483,7 +483,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event StakingLimitRemoved()",
     alertId: "LIDO-DAO-STAKING-LIMIT-REMOVED",
-    name: "Lido DAO: Staking limit removed",
+    name: "🚨 Lido DAO: Staking limit removed",
     description: (args: any) => `Staking limit was removed`,
     severity: FindingSeverity.High,
   },
@@ -492,7 +492,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     event:
       "event ProtocolContactsSet(address oracle, address treasury, address insuranceFund)",
     alertId: "LIDO-DAO-PROTOCOL-CONTRACT-SET",
-    name: "Lido DAO: Protocol contracts set",
+    name: "🚨 Lido DAO: Protocol contracts set",
     description: (args: any) =>
       `Protocol contracts were set to:\n` +
       `Oracle: ${args.oracle}\n` +
@@ -504,7 +504,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event ELRewardsReceived(uint256 amount)",
     alertId: "LIDO-DAO-EL-REWARDS-RECEIVED",
-    name: "Lido DAO: EL rewards received",
+    name: "✅ Lido DAO: EL rewards received",
     description: (args: any) =>
       `Rewards amount: ${new BigNumber(String(args.amount))
         .div(ETH_DECIMALS)
@@ -515,7 +515,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event ELRewardsWithdrawalLimitSet(uint256 limitPoints)",
     alertId: "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
-    name: "Lido DAO: EL rewards withdrawal limit set",
+    name: "⚠️ Lido DAO: EL rewards withdrawal limit set",
     description: (args: any) =>
       `Limit: ${args.limitPoints.toNumber()} BP ` +
       `(${args.limitPoints.toNumber() / 100}%)`,
@@ -525,7 +525,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     address: LIDO_DAO_ADDRESS,
     event: "event ELRewardsVaultSet(address executionLayerRewardsVault)",
     alertId: "LIDO-DAO-EL-REWARDS-VAULT-SET",
-    name: "Lido DAO: EL rewards vault set",
+    name: "🚨 Lido DAO: EL rewards vault set",
     description: (args: any) => `Vault: ${args.executionLayerRewardsVault} ETH`,
     severity: FindingSeverity.Info,
   },
@@ -537,7 +537,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     event:
       "event RelayAdded (string indexed uri_hash, (string uri, string operator, bool is_mandatory, string description) relay)",
     alertId: "MEV-RELAY-ADDED",
-    name: "MEV Allowed list: Relay added",
+    name: "ℹ️ MEV Allowed list: Relay added",
     description: (args: any) =>
       `New MEV relay added.\n` +
       `URI: ${args.relay.uri}\n` +
@@ -550,7 +550,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     address: MEV_ALLOWED_LIST_ADDRESS,
     event: "event RelayRemoved (string indexed uri_hash, string uri)",
     alertId: "MEV-RELAY-REMOVED",
-    name: "MEV Allowed list: Relay removed",
+    name: "⚠️ MEV Allowed list: Relay removed",
     description: (args: any) => `MEV relay removed.\nURI: ${args.uri}`,
     severity: FindingSeverity.Info,
   },
@@ -558,7 +558,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     address: MEV_ALLOWED_LIST_ADDRESS,
     event: "event AllowedListUpdated (uint256 indexed allowed_list_version)",
     alertId: "MEV-LIST-VERSION-UPDATED",
-    name: "MEV Allowed list: Version updated",
+    name: "ℹ️ MEV Allowed list: Version updated",
     description: (args: any) =>
       `MEV allowed list version updated.\n` +
       `New version: ${args.allowed_list_version}`,
@@ -569,7 +569,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     event:
       "event ERC20Recovered (address indexed token, uint256 amount, address indexed recipient)",
     alertId: "MEV-ERC20-RECOVERED",
-    name: "MEV Allowed list: ERC20 Recovered",
+    name: "⚠️ MEV Allowed list: ERC20 Recovered",
     description: (args: any) =>
       `ERC20 tokens were recovered from MEV allowed list contract.\n` +
       `Token: ${args.token}\n` +
@@ -581,7 +581,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     address: MEV_ALLOWED_LIST_ADDRESS,
     event: "event OwnerChanged (uint256 indexed new_owner)",
     alertId: "MEV-LIST-OWNER-CHANGED",
-    name: "MEV Allowed list: Owner changed",
+    name: "🚨 MEV Allowed list: Owner changed",
     description: (args: any) =>
       `MEV allowed list owner has changed.\nNew owner: ${args.new_owner}`,
     severity: FindingSeverity.High,
@@ -590,7 +590,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     address: MEV_ALLOWED_LIST_ADDRESS,
     event: "event ManagerChanged (uint256 indexed new_manager)",
     alertId: "MEV-LIST-MANAGER-CHANGED",
-    name: "MEV Allowed list: Manager changed",
+    name: "🚨 MEV Allowed list: Manager changed",
     description: (args: any) =>
       `MEV allowed list manager has changed.\n` +
       `New manager: ${args.new_manager}`,
@@ -604,7 +604,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     event:
       "event EtherTransferred(address indexed _recipient, uint256 _amount)",
     alertId: "INS-FUND-ETH-TRANSFERRED",
-    name: "Insurance fund: ETH transferred",
+    name: "⚠️ Insurance fund: ETH transferred",
     description: (args: any) =>
       `${new BigNumber(String(args._amount))
         .div(ETH_DECIMALS)
@@ -618,7 +618,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     event:
       "event ERC721Transferred(address indexed _token, address indexed _recipient, uint256 _tokenId, bytes _data)",
     alertId: "INS-FUND-ERC721-TRANSFERRED",
-    name: "Insurance fund: ERC721 transferred",
+    name: "⚠️ Insurance fund: ERC721 transferred",
     description: (args: any) =>
       `ERC721 token (address: ${args._token}, id: ${args._tokenId}) was transferred form insurance fund to ${args._recipient}`,
     severity: FindingSeverity.Info,
@@ -628,7 +628,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     event:
       "event ERC20Transferred(address indexed _token, address indexed _recipient, uint256 _amount)",
     alertId: "INS-FUND-ERC20-TRANSFERRED",
-    name: "Insurance fund: ERC20 transferred",
+    name: "🚨 Insurance fund: ERC20 transferred",
     description: (args: any) => {
       const tokenInfo = KNOWN_ERC20.get(args._token.toLowerCase()) || {
         decimals: 18,
@@ -647,7 +647,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     event:
       "event ERC1155Transferred(address indexed _token, address indexed _recipient, uint256 _tokenId, uint256 _amount, bytes _data)",
     alertId: "INS-FUND-ERC1155-TRANSFERRED",
-    name: "Insurance fund: ERC1155 transferred",
+    name: "⚠️ Insurance fund: ERC1155 transferred",
     description: (args: any) =>
       `${args._amount} of ERC1155 token (address: ${args._token}, id: ${args._tokenId}) was transferred form insurance fund to ${args._recipient}`,
     severity: FindingSeverity.Info,
@@ -657,7 +657,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "INS-FUND-OWNERSHIP-TRANSFERRED",
-    name: "Insurance fund: Ownership transferred",
+    name: "🚨 Insurance fund: Ownership transferred",
     description: (args: any) =>
       `Owner of the insurance fund was transferred from ${args.previousOwner} to ${args.newOwner}`,
     severity: FindingSeverity.Critical,

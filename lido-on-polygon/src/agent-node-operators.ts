@@ -76,7 +76,7 @@ async function handleNodeOperatorsStatus(
         if (key == "_totalActiveNodeOperator" && parsedValue == 0) {
           findings.push(
             Finding.fromObject({
-              name: "No Active Node Operators",
+              name: "🚨 No Active Node Operators",
               description: `There are ${parsedValue} active node operators!`,
               alertId: "NO-ACTIVE-NODE-OPERATORS-POLYGON",
               severity: FindingSeverity.Critical,
@@ -89,7 +89,7 @@ async function handleNodeOperatorsStatus(
     if (error !== "") {
       findings.push(
         Finding.fromObject({
-          name: "Bad Node Operators state",
+          name: "🚨 Bad Node Operators state",
           description: `There are node operators with ${error} among Polygon Node Operators`,
           alertId: "BAD-OPERATOR-STATUS-POLYGON",
           severity: FindingSeverity.Medium,
@@ -144,7 +144,7 @@ async function handleNodeOperatorsNftOwners(
             if (value != info.validatorProxy) {
               findings.push(
                 Finding.fromObject({
-                  name: "Bad Node Operator proxy NFT owner",
+                  name: "🚨 Bad Node Operator proxy NFT owner",
                   description: `Staking NFT related to the node operator ${info.validatorName} should be owned by ${info.validatorProxy} but actually owned by ${value}`,
                   alertId: "BAD-OPERATOR-NFT-OWNER-POLYGON",
                   severity: FindingSeverity.Critical,

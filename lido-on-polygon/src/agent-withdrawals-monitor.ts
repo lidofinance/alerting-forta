@@ -112,7 +112,7 @@ async function handleToManyWithdrawals(
     findings.push(
       Finding.fromObject({
         name:
-          `Huge withdrawals during the last ` +
+          `⚠️ Huge withdrawals during the last ` +
           `${Math.floor(period / (60 * 60))} hour(s)`,
         description:
           `There were withdrawals requests for the ` +

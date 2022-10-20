@@ -220,7 +220,7 @@ async function handleBufferedMatic(
     if (hugePooledMaticStart != 0 && now - hugePooledMaticStart > ONE_HOUR) {
       findings.push(
         Finding.fromObject({
-          name: "Huge buffered MATIC amount",
+          name: "🚨 Huge buffered MATIC amount",
           description:
             `There are ${bufferedMatic.toFixed(4)} ` +
             `(more than ${MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ` +
@@ -237,7 +237,7 @@ async function handleBufferedMatic(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "High buffered MATIC amount",
+          name: "⚠️ High buffered MATIC amount",
           description:
             `There are ${bufferedMatic.toFixed(4)} ` +
             `(more than ${MAX_BUFFERED_MATIC_DAILY_PERCENT}% of total pooled MATIC) buffered MATIC in stMATIC contract for more than ` +
@@ -275,7 +275,7 @@ async function handleRewardsDistribution(
     }
     findings.push(
       Finding.fromObject({
-        name: "stMATIC rewards distribution delay",
+        name: "⚠️ stMATIC rewards distribution delay",
         description: description,
         alertId: "STMATIC-REWARDS-DISTRIBUTION-DELAY",
         severity: FindingSeverity.High,
@@ -308,7 +308,7 @@ async function handleProxyAdmin(blockEvent: BlockEvent, findings: Finding[]) {
         if (proxyAdminFor != PROXY_ADMIN_ADDRESS) {
           findings.push(
             Finding.fromObject({
-              name: `Invalid proxy admin for ${contractName}`,
+              name: `🚨 Invalid proxy admin for ${contractName}`,
               description: `Proxy admin address for ${contractName}[${contractAddr}] is ${proxyAdminFor} but should be ${PROXY_ADMIN_ADDRESS}`,
               alertId: "INVALID-PROXY-ADMIN-ADDR",
               severity: FindingSeverity.Critical,
@@ -341,7 +341,7 @@ async function handleProxyOwner(blockEvent: BlockEvent, findings: Finding[]) {
     if (proxyOwner != OWNER_MULTISIG_ADDRESS) {
       findings.push(
         Finding.fromObject({
-          name: "Invalid proxy admin owner (detected by method call)",
+          name: "🚨 Invalid proxy admin owner (detected by method call)",
           description: `Owner of proxy admin is ${proxyOwner} but should be ${OWNER_MULTISIG_ADDRESS}`,
           alertId: "INVALID-PROXY-ADMIN-OWNER",
           severity: FindingSeverity.Critical,
@@ -366,7 +366,7 @@ async function handleDepositExecutorBalance(
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
       findings.push(
         Finding.fromObject({
-          name: "Low deposit executor balance (Lido on Polygon)",
+          name: "⚠️ Low deposit executor balance (Lido on Polygon)",
           description:
             `Balance of deposit executor (${LIDO_DEPOSIT_EXECUTOR_ADDRESS}) ` +
             `is ${executorBalance.toFixed(4)} ETH. This is extremely low!`,
@@ -442,7 +442,7 @@ async function handleRewardDistributionEvent(
   ) {
     findings.push(
       Finding.fromObject({
-        name: `stMATIC rewards decreased`,
+        name: `⚠️ stMATIC rewards decreased`,
         description:
           `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
             2
@@ -479,7 +479,7 @@ function handleProxyAdminEvents(
     if (event) {
       findings.push(
         Finding.fromObject({
-          name: "Proxy admin owner has changed (detected by event)",
+          name: "🚨 Proxy admin owner has changed (detected by event)",
           description: `New owner of proxy admin is ${event.args[1]}`,
           alertId: "PROXY-ADMIN-OWNER-CHANGE",
           severity: FindingSeverity.Critical,
@@ -545,7 +545,7 @@ function handleChekpointRewardUpdateEvent(
 
     findings.push(
       Finding.fromObject({
-        name: "Polygon checkpoint reward was changed",
+        name: "ℹ Polygon checkpoint reward was changed",
         description: `Change ${delta}%, \nnew reward: ${newReward}, \nold reward: ${oldReward}`,
         alertId: "STMATIC-CHEKPOINT-REWARD-UPDATE",
         severity: FindingSeverity.High,

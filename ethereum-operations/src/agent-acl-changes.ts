@@ -131,7 +131,7 @@ async function handlePermissionChange(
   }
   findings.push(
     Finding.fromObject({
-      name: `Aragon ACL: Permission ${shortState}`,
+      name: `🚨 Aragon ACL: Permission ${shortState}`,
       description: `Role ${permission.role} (${role}) on the app ${permission.app} (${app}) was ${permission.state} ${permission.entity} (${entity})`,
       alertId: "ARAGON-ACL-PERMISSION-CHANGED",
       severity: severity,
@@ -169,7 +169,7 @@ function handleChangePermissionManager(
         LIDO_APPS.get(event.args.manager.toLowerCase()) || "unknown";
       findings.push(
         Finding.fromObject({
-          name: `Aragon ACL: Permission manager changed`,
+          name: `🚨 Aragon ACL: Permission manager changed`,
           description: `Permission manager for the role ${event.args.role} (${role}) on the app ${event.args.app} (${app}) was set to ${event.args.manager} (${manager})`,
           alertId: "ARAGON-ACL-PERMISSION-MANAGER-CHANGED",
           severity: FindingSeverity.Critical,
@@ -217,8 +217,8 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
       findings.push(
         Finding.fromObject({
           name: curOwnerIsContract
-            ? "Contract owner set to address not in whitelist"
-            : "Contract owner set to EOA",
+            ? "🚨 Contract owner set to address not in whitelist"
+            : "🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨",
           description: `${data.name} contract (${address}) owner is set to ${
             curOwnerIsContract ? "contract" : "EOA"
           } address ${curOwner}`,

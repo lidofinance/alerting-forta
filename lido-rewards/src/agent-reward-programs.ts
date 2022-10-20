@@ -232,7 +232,7 @@ async function handleEasyTrackTransaction(
         ).minus(sumMapValues(pendingTopUpMotions));
         findings.push(
           Finding.fromObject({
-            name: "Rewards Top Up Motion created",
+            name: "ℹ️ Rewards Top Up Motion created",
             description:
               `${formatLdo(sumAmount, 0)} LDO was added to pending ` +
               `due to Motion ${id} creation.\n` +
@@ -279,7 +279,7 @@ async function handleEasyTrackTransaction(
       ).minus(sumMapValues(pendingTopUpMotions));
       findings.push(
         Finding.fromObject({
-          name: "Rewards Top Up Motion enacted",
+          name: "✅ Rewards Top Up Motion enacted",
           description:
             `${formatLdo(amount, 0)} LDO was spent ` +
             `due to Motion ${id} execution.\n` +

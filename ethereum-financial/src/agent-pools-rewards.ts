@@ -39,6 +39,8 @@ const LDO_NUM_DECIMALS = 18;
 
 export const name = "AgentPoolsRewards";
 
+const log = (text: string) => console.log(`[${name}] ${text}`);
+
 const ldoToken = new ethers.Contract(
   LDO_TOKEN_ADDRESS,
   LDO_TOKEN_ABI,
@@ -104,7 +106,7 @@ export async function initialize(
 
     const periodFinish = await readPeriodFinish(poolName);
     g_pools[poolName]["periodFinish"] = periodFinish;
-    console.log(
+    log(
       `${poolName} reward expiration date is initialized to ${periodFinish}  (${formatTimestamp(
         periodFinish
       )})`
@@ -122,13 +124,13 @@ async function handlePeriodFinishChange(
   newPeriodFinish: number,
   findings: Finding[]
 ) {
-  console.log(`Rewards prolonged`);
+  log(`Rewards prolonged`);
   g_pools[poolName].periodFinish = newPeriodFinish;
   g_pools[poolName].periodExpired = false;
 
   findings.push(
     Finding.fromObject({
-      name: `${poolName} rewards prolonged`,
+      name: `ℹ️ ${poolName} rewards prolonged`,
       description: `${poolName} rewards successfully prolonged till ${formatTimestamp(
         g_pools[poolName].periodFinish
       )}`,
@@ -150,7 +152,7 @@ async function handleRewardExpire(
   const handleStillNotProlonged = function () {
     findings.push(
       Finding.fromObject({
-        name: `${poolName} rewards are still not prolonged`,
+        name: `⚠️ ${poolName} rewards are still not prolonged`,
         description: `${poolName} rewards are still not prolonged 10 min past expiration`,
         alertId: `LDO-${poolName.toUpperCase()}-REWARDS-STILL-NOT-PROLONGED`,
         severity: FindingSeverity.Critical,
@@ -165,7 +167,7 @@ async function handleRewardExpire(
     if (rewardsBalance === 0) {
       findings.push(
         Finding.fromObject({
-          name: `${poolName} rewards expired but no LDO`,
+          name: `⚠️ ${poolName} rewards expired but no LDO`,
           description: `${poolName} rewards expired but no LDO on manager balance`,
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRED-NO-LDO`,
           severity: FindingSeverity.Critical,
@@ -208,7 +210,7 @@ async function handleRewardExpire(
       poolInfo.lastNotification = now;
       findings.push(
         Finding.fromObject({
-          name: `${poolName} rewards period expiriation`,
+          name: `⚠️ ${poolName} rewards period expiriation`,
           description: description(poolName),
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRATION`,
           severity: severity,

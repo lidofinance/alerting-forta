@@ -11,23 +11,23 @@ export const ETH_DECIMALS = new BigNumber(10).pow(18);
 export const ROLES = new Map<string, string>([
   [
     "0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6",
-    "DEPOSITS_DISABLER_ROLE",
+    "DEPOSITS DISABLER ROLE",
   ],
   [
     "0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a",
-    "DEPOSITS_ENABLER_ROLE",
+    "DEPOSITS ENABLER ROLE",
   ],
   [
     "0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c",
-    "WITHDRAWALS_DISABLER_ROLE",
+    "WITHDRAWALS DISABLER ROLE",
   ],
   [
     "0x9ab8816a3dc0b3849ec1ac00483f6ec815b07eee2fd766a353311c823ad59d0d",
-    "WITHDRAWALS_ENABLER_ROLE",
+    "WITHDRAWALS ENABLER ROLE",
   ],
   [
     "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "DEFAULT_ADMIN_ROLE",
+    "DEFAULT ADMIN ROLE",
   ],
 ]);
 
@@ -61,7 +61,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event EthereumGovernanceExecutorUpdate(address oldEthereumGovernanceExecutor, address newEthereumGovernanceExecutor)",
     alertId: "GOV-BRIDGE-EXEC-UPDATED",
-    name: "Optimism Gov Bridge: Ethereum Governance Executor Updated",
+    name: "🚨 Optimism Gov Bridge: Ethereum Governance Executor Updated",
     description: (args: any) =>
       `Ethereum Governance Executor was updated from ` +
       `${args.oldEthereumGovernanceExecutor} to ${args.newEthereumGovernanceExecutor}`,
@@ -72,7 +72,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     address: GOV_BRIDGE_ADDRESS,
     event: "event GuardianUpdate(address oldGuardian, address newGuardian)",
     alertId: "GOV-BRIDGE-GUARDIAN-UPDATED",
-    name: "Optimism Gov Bridge: Guardian Updated",
+    name: "🚨 Optimism Gov Bridge: Guardian Updated",
     description: (args: any) =>
       `Guardian was updated from ` +
       `${args.oldGuardian} to ${args.newGuardian}`,
@@ -83,7 +83,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     address: GOV_BRIDGE_ADDRESS,
     event: "event DelayUpdate(uint256 oldDelay, uint256 newDelay)",
     alertId: "GOV-BRIDGE-DELAY-UPDATED",
-    name: "Optimism Gov Bridge: Delay Updated",
+    name: "⚠️ Optimism Gov Bridge: Delay Updated",
     description: (args: any) =>
       `Delay was updated from ` + `${args.oldDelay} to ${args.newDelay}`,
     severity: FindingSeverity.High,
@@ -94,7 +94,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event GracePeriodUpdate(uint256 oldGracePeriod, uint256 newGracePeriod)",
     alertId: "GOV-BRIDGE-GRACE-PERIOD-UPDATED",
-    name: "Optimism Gov Bridge: Grace Period Updated",
+    name: "⚠️ Optimism Gov Bridge: Grace Period Updated",
     description: (args: any) =>
       `Grace Period was updated from ` +
       `${args.oldGracePeriod} to ${args.newGracePeriod}`,
@@ -106,7 +106,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event MinimumDelayUpdate(uint256 oldMinimumDelay, uint256 newMinimumDelay)",
     alertId: "GOV-BRIDGE-MIN-DELAY-UPDATED",
-    name: "Optimism Gov Bridge: Min Delay Updated",
+    name: "⚠️ Optimism Gov Bridge: Min Delay Updated",
     description: (args: any) =>
       `Min Delay was updated from ` +
       `${args.oldMinimumDelay} to ${args.newMinimumDelay}`,
@@ -118,7 +118,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event MaximumDelayUpdate(uint256 oldMaximumDelay, uint256 newMaximumDelay)",
     alertId: "GOV-BRIDGE-MAX-DELAY-UPDATED",
-    name: "Optimism Gov Bridge: Max Delay Updated",
+    name: "⚠️ Optimism Gov Bridge: Max Delay Updated",
     description: (args: any) =>
       `Max Delay was updated from ` +
       `${args.oldMaximumDelay} to ${args.newMaximumDelay}`,
@@ -130,7 +130,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event ActionsSetQueued(uint256 indexed id, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, bool[] withDelegatecalls, uint256 executionTime)",
     alertId: "GOV-BRIDGE-ACTION-SET-QUEUED",
-    name: "Optimism Gov Bridge: Action set queued",
+    name: "ℹ Optimism Gov Bridge: Action set queued",
     description: (args: any) => `Action set ${args.id} was queued`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
@@ -140,7 +140,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event ActionsSetExecuted(uint256 indexed id, address indexed initiatorExecution, bytes[] returnedData)",
     alertId: "GOV-BRIDGE-ACTION-SET-EXECUTED",
-    name: "Optimism Gov Bridge: Action set executed",
+    name: "ℹ Optimism Gov Bridge: Action set executed",
     description: (args: any) => `Action set ${args.id} was executed`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
@@ -149,7 +149,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     address: GOV_BRIDGE_ADDRESS,
     event: "event ActionsSetCanceled(uint256 indexed id)",
     alertId: "GOV-BRIDGE-ACTION-SET-CANCELED",
-    name: "Optimism Gov Bridge: Action set canceled",
+    name: "ℹ Optimism Gov Bridge: Action set canceled",
     description: (args: any) => `Action set ${args.id} was canceled`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
@@ -191,7 +191,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event ProxyOssified()",
         alertId: "PROXY-OSSIFIED",
-        name: "Optimism: Proxy ossified",
+        name: "🚨 Optimism: Proxy ossified",
         description: (args: any) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) was ossified` +
           `\n(detected by event)`,
@@ -202,7 +202,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event AdminChanged(address previousAdmin, address newAdmin)",
         alertId: "PROXY-ADMIN-CHANGED",
-        name: "Optimism: Proxy admin changed",
+        name: "🚨 Optimism: Proxy admin changed",
         description: (args: any) =>
           `Proxy admin for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
@@ -214,7 +214,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event Upgraded(address indexed implementation)",
         alertId: "PROXY-UPGRADED",
-        name: "Optimism: Proxy upgraded",
+        name: "🚨 Optimism: Proxy upgraded",
         description: (args: any) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was updated to ${args.implementation}` +
@@ -226,7 +226,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         address: proxyInfo.address,
         event: "event BeaconUpgraded(address indexed beacon)",
         alertId: "PROXY-BEACON-UPGRADED",
-        name: "Optimism: Proxy beacon upgraded",
+        name: "🚨 Optimism: Proxy beacon upgraded",
         description: (args: any) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `beacon was updated to ${args.beacon}` +
@@ -245,7 +245,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)",
     alertId: "L2-BRIDGE-ROLE-ADMIN-CHANGED",
-    name: "Optimism L2 Bridge: Role Admin changed",
+    name: "🚨 Optimism L2 Bridge: Role Admin changed",
     description: (args: any) =>
       `Role Admin for role ${args.role}(${
         ROLES.get(args.role) || "unknown"
@@ -259,7 +259,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "L2-BRIDGE-ROLE-GRANTED",
-    name: "Optimism L2 Bridge: Role granted",
+    name: "⚠️ Optimism L2 Bridge: Role granted",
     description: (args: any) =>
       `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
       `was granted to ${args.account} by ${args.sender}`,
@@ -271,7 +271,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     event:
       "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "L2-BRIDGE-ROLE-REVOKED",
-    name: "Optimism L2 Bridge: Role revoked",
+    name: "⚠️ Optimism L2 Bridge: Role revoked",
     description: (args: any) =>
       `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
       `was revoked to ${args.account} by ${args.sender}`,
@@ -282,7 +282,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     address: L2_ERC20_TOKEN_GATEWAY,
     event: "event DepositsEnabled(address indexed enabler)",
     alertId: "L2-BRIDGE-DEPOSITS-ENABLED",
-    name: "Optimism L2 Bridge: Deposits Enabled",
+    name: "✅ Optimism L2 Bridge: Deposits Enabled",
     description: (args: any) => `Deposits were enabled by ${args.enabler}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -291,7 +291,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     address: L2_ERC20_TOKEN_GATEWAY,
     event: "event DepositsDisabled(address indexed disabler)",
     alertId: "L2-BRIDGE-DEPOSITS-DISABLED",
-    name: "Optimism L2 Bridge: Deposits Disabled",
+    name: "❌ Optimism L2 Bridge: Deposits Disabled",
     description: (args: any) => `Deposits were disabled by ${args.disabler}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -300,7 +300,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     address: L2_ERC20_TOKEN_GATEWAY,
     event: "event WithdrawalsEnabled(address indexed enabler)",
     alertId: "L2-BRIDGE-WITHDRAWALS-ENABLED",
-    name: "Optimism L2 Bridge: Withdrawals Enabled",
+    name: "✅ Optimism L2 Bridge: Withdrawals Enabled",
     description: (args: any) => `Withdrawals were enabled by ${args.enabler}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -309,7 +309,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     address: L2_ERC20_TOKEN_GATEWAY,
     event: "event WithdrawalsDisabled(address indexed disabler)",
     alertId: "L2-BRIDGE-WITHDRAWALS-DISABLED",
-    name: "Optimism L2 Bridge: Withdrawals Disabled",
+    name: "❌ Optimism L2 Bridge: Withdrawals Disabled",
     description: (args: any) => `Withdrawals were disabled by ${args.enabler}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -318,7 +318,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     address: L2_ERC20_TOKEN_GATEWAY,
     event: "event Initialized(address indexed admin)",
     alertId: "L2-BRIDGE-IMPLEMENTATION-INITIALIZED",
-    name: "Optimism L2 Bridge: Implementation initialized",
+    name: "🚨 Optimism L2 Bridge: Implementation initialized",
     description: (args: any) =>
       `Implementation of the Optimism L2 Bridge was initialized by ${args.admin}\n` +
       `NOTE: This is not the thing that should be left unacted! ` +

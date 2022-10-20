@@ -316,7 +316,7 @@ async function handleCurvePoolImbalance(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Curve Pool is imbalanced",
+          name: "⚠️ Curve Pool is imbalanced",
           description: `Current pool state:\n${poolDetails(
             poolParams.poolDetails
           )}`,
@@ -338,7 +338,7 @@ async function handleCurvePoolImbalance(
   if (curveImbalance < changeInt[0] || curveImbalance > changeInt[1]) {
     findings.push(
       Finding.fromObject({
-        name: "Curve Pool rapid imbalance change",
+        name: "🚨 Curve Pool rapid imbalance change",
         description:
           `Prev reported pool sate:\n${prevPoolStateText}\n` +
           `Current pool state:\n${poolDetails(poolParams.poolDetails)}`,
@@ -369,7 +369,7 @@ async function handleCurvePoolSize(
         : FindingSeverity.Info;
     findings.push(
       Finding.fromObject({
-        name: "Significant Curve Pool size change",
+        name: "⚠️ Significant Curve Pool size change",
         description: `Curve Pool size has ${
           poolSizeChange > 0
             ? "increased by " + poolSizeChange.toFixed(2).toString()
@@ -435,7 +435,7 @@ async function handleBalancerPoolImbalance(
     ) {
       findings.push(
         Finding.fromObject({
-          name: "Balancer Pool is imbalanced",
+          name: "⚠️ Balancer Pool is imbalanced",
           description: `Current pool state:\n${poolDetails(
             poolParams.poolDetails
           )}`,
@@ -457,7 +457,7 @@ async function handleBalancerPoolImbalance(
   if (balancerImbalance < changeInt[0] || balancerImbalance > changeInt[1]) {
     findings.push(
       Finding.fromObject({
-        name: "Balancer Pool rapid imbalance change",
+        name: "🚨 Balancer Pool rapid imbalance change",
         description:
           `Prev reported pool sate:\n${prevPoolStateText}\n` +
           `Current pool state:\n${poolDetails(poolParams.poolDetails)}`,
@@ -488,7 +488,7 @@ async function handleBalancerPoolSize(
         : FindingSeverity.Info;
     findings.push(
       Finding.fromObject({
-        name: "Significant Balancer Pool size change",
+        name: "⚠️ Significant Balancer Pool size change",
         description: `Balancer Pool size has ${
           poolSizeChange > 0
             ? "increased by " + poolSizeChange.toFixed(2).toString()
@@ -540,7 +540,7 @@ async function handleCurveWethPoolSize(
         : FindingSeverity.Info;
     findings.push(
       Finding.fromObject({
-        name: "Significant Curve WETH/stETH Pool size change",
+        name: "⚠️ Significant Curve WETH/stETH Pool size change",
         description: `Curve WETH/stETH Pool size has ${
           poolSizeChange > 0
             ? "increased by " + poolSizeChange.toFixed(2).toString()
@@ -570,7 +570,7 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   if (pegLevel < lastReportedCurvePegLevel && peg < PEG_STEP_ALERT_MIN_VALUE) {
     findings.push(
       Finding.fromObject({
-        name: "stETH PEG on Curve decreased",
+        name: "⚠️ stETH PEG on Curve decreased",
         description: `stETH PEG on Curve decreased to ${peg.toFixed(4)}`,
         alertId: "STETH-CURVE-PEG-DECREASE",
         severity: FindingSeverity.Info,
@@ -590,7 +590,7 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
   ) {
     findings.push(
       Finding.fromObject({
-        name: "Super low stETH PEG on Curve",
+        name: "🚨🚨🚨 Super low stETH PEG on Curve",
         description: `Current stETH PEG on Curve - ${peg.toFixed(4)}`,
         alertId: "LOW-STETH-CURVE-PEG",
         severity: FindingSeverity.Critical,
@@ -658,7 +658,7 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
       const time = Math.floor((now - lastReportedUnstakedStEthTime) / ONE_HOUR);
       findings.push(
         Finding.fromObject({
-          name: "Total 'unstaked' stETH increased",
+          name: "⚠️ Total 'unstaked' stETH increased",
           description:
             `Total unstaked stETH increased from ` +
             `${lastReportedUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
