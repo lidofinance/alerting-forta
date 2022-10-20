@@ -106,7 +106,7 @@ async function handleProxyImplementationChanges(
         if (newImpl != lastImpl) {
           findings.push(
             Finding.fromObject({
-              name: "Arbitrum: Proxy implementation changed",
+              name: "🚨 Optimism: Proxy implementation changed",
               description:
                 `Proxy implementation for ${proxyInfo.name}(${proxyInfo.address}) ` +
                 `was changed form ${lastImpl} to ${newImpl}` +
@@ -149,7 +149,7 @@ async function handleProxyAdminChanges(
         if (newAdmin != lastAdmin) {
           findings.push(
             Finding.fromObject({
-              name: "Arbitrum: Proxy admin changed",
+              name: "🚨 Optimism: Proxy admin changed",
               description:
                 `Proxy admin for ${proxyInfo.name}(${proxyInfo.address}) ` +
                 `was changed from ${lastAdmin} to ${newAdmin}` +
