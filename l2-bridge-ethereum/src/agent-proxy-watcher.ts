@@ -102,7 +102,7 @@ function handleThirdPartyProxyAdminEvents(
       if (event.args.l1Token == WSTETH_ADDRESS) {
         findings.push(
           Finding.fromObject({
-            name: "Arbitrum: Token GAteway changed",
+            name: "🚨 Arbitrum: Token Gateway changed",
             description: `Arbitrum native bridge gateway for wstETH changed to: ${event.args.gateway}`,
             alertId: "ARBITRUM-TOKEN-GATEWAY-CHANGED",
             severity: FindingSeverity.Critical,
@@ -150,7 +150,7 @@ async function handleProxyImplementationChanges(
       if (newImpl != lastImpl) {
         findings.push(
           Finding.fromObject({
-            name: "Arbitrum: Proxy implementation changed",
+            name: "🚨 L2 bridge (L1 side): Proxy implementation changed",
             description:
               `Proxy implementation for ${proxyInfo.name}(${proxyInfo.address}) ` +
               `was changed form ${lastImpl} to ${newImpl}` +
@@ -191,7 +191,7 @@ async function handleProxyAdminChanges(
       if (newAdmin != lastAdmin) {
         findings.push(
           Finding.fromObject({
-            name: "Arbitrum: Proxy admin changed",
+            name: "🚨 L2 bridge (L1 side): Proxy admin changed",
             description:
               `Proxy admin for ${proxyInfo.name}(${proxyInfo.address}) ` +
               `was changed from ${lastAdmin} to ${newAdmin}` +
