@@ -128,7 +128,7 @@ async function handlePeriodFinishChange(
 
   findings.push(
     Finding.fromObject({
-      name: `${poolName} rewards prolonged`,
+      name: `ℹ️ ${poolName} rewards prolonged`,
       description: `${poolName} rewards successfully prolonged till ${formatTimestamp(
         g_pools[poolName].periodFinish
       )}`,
@@ -150,7 +150,7 @@ async function handleRewardExpire(
   const handleStillNotProlonged = function () {
     findings.push(
       Finding.fromObject({
-        name: `${poolName} rewards are still not prolonged`,
+        name: `⚠️ ${poolName} rewards are still not prolonged`,
         description: `${poolName} rewards are still not prolonged 10 min past expiration`,
         alertId: `LDO-${poolName.toUpperCase()}-REWARDS-STILL-NOT-PROLONGED`,
         severity: FindingSeverity.Critical,
@@ -165,7 +165,7 @@ async function handleRewardExpire(
     if (rewardsBalance === 0) {
       findings.push(
         Finding.fromObject({
-          name: `${poolName} rewards expired but no LDO`,
+          name: `⚠️ ${poolName} rewards expired but no LDO`,
           description: `${poolName} rewards expired but no LDO on manager balance`,
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRED-NO-LDO`,
           severity: FindingSeverity.Critical,
@@ -208,7 +208,7 @@ async function handleRewardExpire(
       poolInfo.lastNotification = now;
       findings.push(
         Finding.fromObject({
-          name: `${poolName} rewards period expiriation`,
+          name: `⚠️ ${poolName} rewards period expiriation`,
           description: description(poolName),
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRATION`,
           severity: severity,

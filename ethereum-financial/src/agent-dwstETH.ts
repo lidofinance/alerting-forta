@@ -62,7 +62,7 @@ async function handleTooManyMints(blockEvent: BlockEvent, findings: Finding[]) {
     if (mintsSum.isGreaterThanOrEqualTo(MAX_MINTS_SUM)) {
       findings.push(
         Finding.fromObject({
-          name: "High amount of dwstETH minted",
+          name: "😱 High amount of dwstETH minted",
           description:
             `There were ${mintsSum.div(ETH_DECIMALS).toFixed(2)} ` +
             `dwstETH minted during the last ${Math.floor(

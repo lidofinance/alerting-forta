@@ -86,7 +86,7 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
     if (difference.isGreaterThan(ASTETH_GWEI_DIFFERENCE_THRESHOLD)) {
       findings.push(
         Finding.fromObject({
-          name: "astETH balance and totalSupply difference",
+          name: "🚨 astETH balance and totalSupply difference",
           description:
             `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})` +
             `=${astEthBalance.div(GWEI_DECIMALS).toFixed(0)}` +
@@ -125,7 +125,7 @@ async function handleStableStEthSupply(
     if (stableDebtStEthTotalSupply.isGreaterThan(0)) {
       findings.push(
         Finding.fromObject({
-          name: "stableDebtStETH totalSupply is not 0",
+          name: "🚨 stableDebtStETH totalSupply is not 0",
           description: `stableDebtStETH totalSupply is ${stableDebtStEthTotalSupply.toFixed()}`,
           alertId: "STABLE-DEBT-STETH-SUPPLY",
           severity: FindingSeverity.High,
@@ -156,7 +156,7 @@ async function handleVariableStEthSupply(
     if (variableDebtStEthTotalSupply.isGreaterThan(0)) {
       findings.push(
         Finding.fromObject({
-          name: "variableDebtStETH totalSupply is not 0",
+          name: "🚨 variableDebtStETH totalSupply is not 0",
           description: `variableDebtStETH totalSupply is ${variableDebtStEthTotalSupply.toFixed()}`,
           alertId: "VARIABLE-DEBT-STETH-SUPPLY",
           severity: FindingSeverity.High,
