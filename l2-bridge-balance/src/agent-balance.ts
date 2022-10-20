@@ -61,7 +61,7 @@ async function handleBridgeBalance(
   if (l2TotalSupply.isGreaterThan(l1Balance)) {
     findings.push(
       Finding.fromObject({
-        name: `${networkParams.name} bridge balance mismatch`,
+        name: `🚨🚨🚨 ${networkParams.name} bridge balance mismatch 🚨🚨🚨`,
         description:
           `Total supply of bridged wstETH is greater than balanceOf L1 bridge side!\n` +
           `L2 total supply: ${l2TotalSupply.div(ETH_DECIMALS).toFixed(2)}\n` +
