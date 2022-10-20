@@ -52,6 +52,7 @@ const log = (text: string) => console.log(`[${name}] ${text}`);
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
+  console.log(`[${name}]`);
   // ~2 hours ago
   const pastBlockOracleReport = currentBlock - Math.ceil((2 * 60 * 60) / 13);
   lastOracleReportTime = await getLastOracleReportTime(
@@ -99,12 +100,8 @@ export async function initialize(
     stethAmount: ${formatEth(lastRewardsSell.stethAmount, 5)},
     ustAmount: ${formatEth(lastRewardsSell.ustAmount, 3)}\n}`);
 
-  console.log(
-    `rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`
-  );
-  console.log(
-    `rewardsLiquidatorAdminAddress: ${rewardsLiquidatorAdminAddress}`
-  );
+  log(`rewardsLiquidatorAddress: ${rewardsLiquidatorAddress}`);
+  log(`rewardsLiquidatorAdminAddress: ${rewardsLiquidatorAdminAddress}`);
 
   return {
     rewardsLiquidatorAddress: `${rewardsLiquidatorAddress}`,

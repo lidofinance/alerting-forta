@@ -39,6 +39,8 @@ const LDO_NUM_DECIMALS = 18;
 
 export const name = "AgentPoolsRewards";
 
+const log = (text: string) => console.log(`[${name}] ${text}`);
+
 const ldoToken = new ethers.Contract(
   LDO_TOKEN_ADDRESS,
   LDO_TOKEN_ABI,
@@ -104,7 +106,7 @@ export async function initialize(
 
     const periodFinish = await readPeriodFinish(poolName);
     g_pools[poolName]["periodFinish"] = periodFinish;
-    console.log(
+    log(
       `${poolName} reward expiration date is initialized to ${periodFinish}  (${formatTimestamp(
         periodFinish
       )})`
@@ -122,7 +124,7 @@ async function handlePeriodFinishChange(
   newPeriodFinish: number,
   findings: Finding[]
 ) {
-  console.log(`Rewards prolonged`);
+  log(`Rewards prolonged`);
   g_pools[poolName].periodFinish = newPeriodFinish;
   g_pools[poolName].periodExpired = false;
 
