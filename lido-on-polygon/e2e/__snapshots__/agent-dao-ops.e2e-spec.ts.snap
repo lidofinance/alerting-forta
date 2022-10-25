@@ -1,18 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`agent-dao-ops e2e tests should process block with delay in MATIC rewards distribution 1`] = `
-Finding {
-  "addresses": [],
-  "alertId": "STMATIC-REWARDS-DISTRIBUTION-DELAY",
-  "description": "More than 2211 hours passed since last stMATIC rewards distribution",
-  "metadata": {},
-  "name": "⚠️ stMATIC rewards distribution delay",
-  "protocol": "ethereum",
-  "severity": 4,
-  "type": 3,
-}
-`;
-
 exports[`agent-dao-ops e2e tests should process block with low deposit executor balance 1`] = `
 Finding {
   "addresses": [],
@@ -23,19 +10,6 @@ Finding {
   "protocol": "ethereum",
   "severity": 4,
   "type": 2,
-}
-`;
-
-exports[`agent-dao-ops e2e tests should process block with reward lower than expected 1`] = `
-Finding {
-  "addresses": [],
-  "alertId": "STMATIC-REWARDS-DISTRIBUTION-DELAY",
-  "description": "More than 120 hours passed since last stMATIC rewards distribution",
-  "metadata": {},
-  "name": "⚠️ stMATIC rewards distribution delay",
-  "protocol": "ethereum",
-  "severity": 4,
-  "type": 3,
 }
 `;
 

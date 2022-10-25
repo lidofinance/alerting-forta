@@ -51,27 +51,9 @@ describe("agent-dao-ops e2e tests", () => {
   });
 
   it(
-    "should process block with reward lower than expected",
-    async () => {
-      const findings = await runBlock(15184811);
-      expect(findings.at(0)).toMatchSnapshot();
-    },
-    BLOCK_PROCESSING_TIMEOUT
-  );
-
-  it(
     "should process block with low deposit executor balance",
     async () => {
       const findings = await runBlock(15150957);
-      expect(findings.at(0)).toMatchSnapshot();
-    },
-    BLOCK_PROCESSING_TIMEOUT
-  );
-
-  it(
-    "should process block with delay in MATIC rewards distribution",
-    async () => {
-      const findings = await runBlock(15796363);
       expect(findings.at(0)).toMatchSnapshot();
     },
     BLOCK_PROCESSING_TIMEOUT
