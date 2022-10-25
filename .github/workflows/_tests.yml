@@ -32,5 +32,16 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run tests
+      - name: Run unit tests
         run: yarn test
+
+      - name: Check if test:e2e script is presented
+        run: >-
+          jq '.scripts | has("test:e2e")' package.json |
+          xargs -I% echo "HAS_E2E=%" |
+          tee $GITHUB_OUTPUT
+        id: check_scripts
+
+      - name: Run e2e tests
+        run: yarn test:e2e
+        if: steps.check_scripts.outputs.has_e2e
