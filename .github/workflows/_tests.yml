@@ -44,4 +44,6 @@ jobs:
 
       - name: Run e2e tests
         run: yarn test:e2e
-        if: steps.check_scripts.outputs.has_e2e
+        env:
+          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
+        if: ${{ steps.check_scripts.outputs.has_e2e }}

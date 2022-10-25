@@ -1,5 +1,5 @@
 import { configureContainer, Finding } from "forta-agent";
-import { AwilixContainer, asFunction } from "awilix";
+import { AwilixContainer, asFunction, asValue } from "awilix";
 import { provideAgentPath } from "./utils";
 
 const BLOCK_PROCESSING_TIMEOUT = 60_000; // ms
@@ -21,6 +21,7 @@ describe("agent-dao-ops e2e tests", () => {
     scope = container.createScope();
     scope.register({
       agentPath: asFunction(provideAgentPath("agent-dao-ops")),
+      jsonRpcUrl: asValue(process.env["ETHEREUM_RPC_URL"]),
     });
 
     // https://docs.forta.network/en/latest/cli/#invoke-commands-programmatically
