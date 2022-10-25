@@ -1,0 +1,85 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-dao-ops e2e tests should process block with delay in MATIC rewards distribution 1`] = `
+Finding {
+  "addresses": [],
+  "alertId": "STMATIC-REWARDS-DISTRIBUTION-DELAY",
+  "description": "More than 2211 hours passed since last stMATIC rewards distribution",
+  "metadata": {},
+  "name": "stMATIC rewards distribution delay",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 3,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process block with low deposit executor balance 1`] = `
+Finding {
+  "addresses": [],
+  "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
+  "description": "Balance of deposit executor (0xa22d223e732a5dcf4ff4529aa9a135293b7258fe) is 0.4662 ETH. This is extremely low!",
+  "metadata": {},
+  "name": "Low deposit executor balance (Lido on Polygon)",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 2,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process block with reward lower than expected 1`] = `
+Finding {
+  "addresses": [],
+  "alertId": "STMATIC-REWARDS-DISTRIBUTION-DELAY",
+  "description": "More than 120 hours passed since last stMATIC rewards distribution",
+  "metadata": {},
+  "name": "stMATIC rewards distribution delay",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 3,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with polygon checkpoint reward change 1`] = `
+Finding {
+  "addresses": [],
+  "alertId": "STMATIC-CHEKPOINT-REWARD-UPDATE",
+  "description": "Change 41.50%, 
+new reward: 71795, 
+old reward: 50739",
+  "metadata": {},
+  "name": "Polygon checkpoint reward was changed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 2,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with pooled MATIC delegation 1`] = `
+Finding {
+  "addresses": [],
+  "alertId": "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED",
+  "description": "Pooled MATIC was delegated to validators. Delegated amount 679.9k MATIC remained pooled 0 wei",
+  "metadata": {
+    "args": "679886151216827958837108,0",
+  },
+  "name": "stMATIC: stMATIC Pooled MATIC delegated",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with rewards distribution 1`] = `
+Finding {
+  "addresses": [],
+  "alertId": "STMATIC-CONTRACT-REWARDS-DISTRIBUTED",
+  "description": "Rewards for stMATIC was distributed. Rewards amount 571.50 MATIC",
+  "metadata": {
+    "args": "571502046258362721768",
+  },
+  "name": "stMATIC: stMATIC Rewards distributed",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;

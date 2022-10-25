@@ -265,11 +265,11 @@ export async function handleRewardsDistribution(
   ) {
     if (lastRewardsDistributeTime == 0) {
       description =
-        `Far more that ` +
+        `Far more than ` +
         `${Math.floor(MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60))} ` +
-        `hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`;
+        `hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means than there is a huge delay in rewards distribution!`;
     } else {
-      description = `More that ${Math.floor(
+      description = `More than ${Math.floor(
         rewardsDistributionDelay / (60 * 60)
       )} hours passed since last stMATIC rewards distribution`;
     }
@@ -561,3 +561,10 @@ export function handleChekpointRewardUpdateEvent(
     );
   }
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  handleTransaction,
+  initialize,
+};
