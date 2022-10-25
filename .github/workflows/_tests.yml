@@ -41,9 +41,16 @@ jobs:
           xargs -I% echo "HAS_E2E=%" |
           tee $GITHUB_OUTPUT
         id: check_scripts
+        if: ${{ always() }}
+
+      - name: Generate forta.config.json
+        run: >-
+          mkdir -p $HOME/.forta &&
+          echo "{'jsonRpcUrl':'$URL'}" >> $HOME/.forta/forta.config.json
+        env:
+          URL: ${{ secrets.ETHEREUM_RPC_URL }}
+        if: ${{ steps.check_scripts.outputs.has_e2e }}
 
       - name: Run e2e tests
         run: yarn test:e2e
-        env:
-          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
         if: ${{ steps.check_scripts.outputs.has_e2e }}
