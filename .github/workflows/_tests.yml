@@ -43,7 +43,6 @@ jobs:
           xargs -I% echo "HAS_E2E=%" |
           tee $GITHUB_OUTPUT
         id: check_scripts
-        if: ${{ always() }}
 
       - name: Generate forta.config.json
         run: >-
