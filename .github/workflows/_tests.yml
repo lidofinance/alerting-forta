@@ -47,8 +47,8 @@ jobs:
 
       - name: Generate forta.config.json
         run: >-
-          mkdir -p $HOME/.forta &&
-          echo "{'jsonRpcUrl':'$URL'}" >> $HOME/.forta/forta.config.json
+          mkdir -p $HOME/.forta && printf '{"jsonRpcUrl":"%s"}' "$URL" >>
+          $HOME/.forta/forta.config.json
         env:
           URL: ${{ secrets.ETHEREUM_RPC_URL }}
         if: ${{ steps.check_scripts.outputs.has_e2e }}
