@@ -273,7 +273,7 @@ export async function handleRewardsDistribution(
       description =
         `Far more than ` +
         `${Math.floor(MAX_REWARDS_DISTRIBUTION_INTERVAL / (60 * 60))} ` +
-        `hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means than there is a huge delay in rewards distribution!`;
+        `hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`;
     } else {
       description = `More than ${Math.floor(
         rewardsDistributionDelay / (60 * 60)

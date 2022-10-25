@@ -39,7 +39,7 @@ jobs:
       - name: Run unit tests
         run: yarn test
 
-      - name: Check if test:e2e script is presented
+      - name: Check if test:e2e script is present
         run: >-
           jq '.scripts | has("test:e2e")' package.json |
           xargs -I% echo "HAS_E2E=%" |
