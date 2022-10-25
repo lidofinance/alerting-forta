@@ -12,3 +12,4 @@ jobs:
     uses: ./.github/workflows/_tests.yml
     with:
       path: ./lido-rewards
+    secrets: inherit
