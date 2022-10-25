@@ -25,6 +25,7 @@ import {
   PEG_STEP_ALERT_MIN_VALUE,
   TOTAL_UNSTAKED_STETH_TOLERANCE,
   ONE_HOUR,
+  TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE,
 } from "./constants";
 
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
@@ -651,30 +652,40 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
         )
       )
     ) {
-      const severity =
-        now - lastReportedUnstakedStEthTime > ONE_HOUR
-          ? FindingSeverity.Info
-          : FindingSeverity.High;
-      const time = Math.floor((now - lastReportedUnstakedStEthTime) / ONE_HOUR);
-      findings.push(
-        Finding.fromObject({
-          name: "⚠️ Total 'unstaked' stETH increased",
-          description:
-            `Total unstaked stETH increased from ` +
-            `${lastReportedUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
-            `to ${newUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
-            `over the last ${time} hours.\n` +
-            `Note: Unstaked = difference of stETH(wstETH) and ETH amount in Curve and Balancer pools`,
-          alertId: "TOTAL-UNSTAKED-STETH-INCREASED",
-          severity: severity,
-          type: FindingType.Info,
-          metadata: {
-            prevTotalUnstaked: lastReportedUnstakedStEth.toFixed(2),
-            currentTotalUnstaked: newUnstakedStEth.toFixed(2),
-            timePeriod: time.toFixed(),
-          },
-        })
-      );
+      if (
+        newUnstakedStEth.isGreaterThanOrEqualTo(
+          TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE
+        )
+      ) {
+        const severity =
+          now - lastReportedUnstakedStEthTime > ONE_HOUR
+            ? FindingSeverity.Info
+            : FindingSeverity.High;
+        const time = Math.floor(
+          (now - lastReportedUnstakedStEthTime) / ONE_HOUR
+        );
+        findings.push(
+          Finding.fromObject({
+            name: "⚠️ Total 'unstaked' stETH increased",
+            description:
+              `Total unstaked stETH increased from ` +
+              `${lastReportedUnstakedStEth
+                .div(ETH_DECIMALS)
+                .toFixed(2)} stETH ` +
+              `to ${newUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
+              `over the last ${time} hours.\n` +
+              `Note: Unstaked = difference of stETH(wstETH) and ETH amount in Curve and Balancer pools`,
+            alertId: "TOTAL-UNSTAKED-STETH-INCREASED",
+            severity: severity,
+            type: FindingType.Info,
+            metadata: {
+              prevTotalUnstaked: lastReportedUnstakedStEth.toFixed(2),
+              currentTotalUnstaked: newUnstakedStEth.toFixed(2),
+              timePeriod: time.toFixed(),
+            },
+          })
+        );
+      }
       lastReportedUnstakedStEth = newUnstakedStEth;
       lastReportedUnstakedStEthTime = now;
     }

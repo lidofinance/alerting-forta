@@ -133,6 +133,9 @@ export const IMBALANCE_CHANGE_TOLERANCE = 10;
 export const POOL_SIZE_CHANGE_TOLERANCE_INFO = 5;
 export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 10;
 export const TOTAL_UNSTAKED_STETH_TOLERANCE = 10;
+export const TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE = new BigNumber(
+  50_000
+).times(ETH_DECIMALS);
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
