@@ -1,5 +1,5 @@
 import { configureContainer, Finding } from "forta-agent";
-import { AwilixContainer, asFunction, asValue } from "awilix";
+import { AwilixContainer, asFunction } from "awilix";
 import { provideAgentPath } from "./utils";
 
 const BLOCK_PROCESSING_TIMEOUT = 60_000; // ms
@@ -8,7 +8,6 @@ describe("agent-dao-ops e2e tests", () => {
   let runBlock: (blockHashOrNumber: string | number) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
-  let scope: AwilixContainer;
 
   beforeAll(() => {
     logSpy = jest.spyOn(console, "log");
@@ -16,17 +15,14 @@ describe("agent-dao-ops e2e tests", () => {
   });
 
   beforeEach(async () => {
-    // https://github.com/jeffijoe/awilix/blob/ed0d3327292e9844503fbdd30acbf83ff1635ba9/src/__tests__/container.test.ts#L361-L379
     const container = configureContainer() as AwilixContainer;
-    scope = container.createScope();
-    scope.register({
+    container.register({
       agentPath: asFunction(provideAgentPath("agent-dao-ops")),
-      jsonRpcUrl: asValue(process.env["ETHEREUM_RPC_URL"]),
     });
 
     // https://docs.forta.network/en/latest/cli/#invoke-commands-programmatically
-    runTransaction = scope.resolve("runHandlersOnTransaction");
-    runBlock = scope.resolve("runHandlersOnBlock");
+    runTransaction = container.resolve("runHandlersOnTransaction");
+    runBlock = container.resolve("runHandlersOnBlock");
   });
 
   afterAll(() => {
