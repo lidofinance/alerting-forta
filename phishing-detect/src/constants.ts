@@ -137,6 +137,12 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xbb443d6740322293fcee4414d03978c7e4bf5d55", // ERC4626Gate https://www.gate.io/blog_detail/920/What-is-ERC-4626
   "0x76f4eed9fe41262669d0250b2a97db79712ad855", // app.odos.xyz
   "0xa3a7b6f88361f48403514059f1f16c8e78d60eec", // Arbitrum One: L1 ERC20 Gateway
+  "0x76943C0D61395d8F2edF9060e1533529cAe05dE6", // Optimism: L1 ERC20 Token Bridge
+  "0xb8cf3ed326bb0e51454361fb37e9e8df6dc5c286", // Gearbox protocol wstETH pool
+  "0x5a97e3e43dcbfe620ccf7865739075f92e93f5e4", // Gearbox protocol stEthPoolWrapper
+  "0xa6f222a2ea6a1cfafa48ff0014ee4fe277580aa0", // Portals Dapp CurvePortalIn
+  "0x33388CF69e032C6f60A420b37E44b1F5443d3333", // RubicProxy https://rubic.exchange/
+  "0x921FE3dF4F2073f0d4d0B839B6068460397a04f9", // Bank-of-Chain ExchangeAggregator
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
