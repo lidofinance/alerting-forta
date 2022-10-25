@@ -366,7 +366,7 @@ export async function handleDepositExecutorBalance(
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
     const executorBalance = await ethersProvider
-      .getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS)
+      .getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS, blockEvent.blockNumber)
       .then((value) => new BigNumber(String(value)))
       .then((value) => value.div(ETH_DECIMALS).toNumber());
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
