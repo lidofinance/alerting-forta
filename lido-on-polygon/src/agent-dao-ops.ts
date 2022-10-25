@@ -71,6 +71,10 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
+  if (!currentBlock) {
+    throw Error(`No block identifier provided to ${name} agent initialize function`);
+  }
+
   const latestDistributeEvent = await getPrevDistributeEvent(currentBlock);
 
   if (latestDistributeEvent) {
@@ -566,5 +570,5 @@ export function handleChekpointRewardUpdateEvent(
 exports.default = {
   handleBlock,
   handleTransaction,
-  initialize,
+  // initialize, // sdk won't provide any arguments to the function
 };
