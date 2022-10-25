@@ -2,6 +2,9 @@
   "name": "lido-on-polygon-protocol-forta-bot",
   "version": "0.0.1",
   "description": "Forta Agent for Lido on Polygon protocol",
+  "chainIds": [
+    1
+  ],
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
@@ -17,11 +20,12 @@
     "disable": "forta-agent disable",
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:e2e": "yarn build && jest --config ./e2e/jest.config-e2e.json --passWithNoTests"
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.6"
+    "forta-agent": "^0.1.13"
   },
   "devDependencies": {
     "@types/jest": "^29.1.2",
