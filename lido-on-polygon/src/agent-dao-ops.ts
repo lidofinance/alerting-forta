@@ -71,7 +71,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  if (!currentBlock) {
+  if (currentBlock === undefined) {
     throw Error(`No block identifier provided to ${name} agent initialize function`);
   }
 
