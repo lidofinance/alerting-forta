@@ -72,7 +72,9 @@ export async function initialize(
   console.log(`[${name}]`);
 
   if (currentBlock === undefined) {
-    throw Error(`No block identifier provided to ${name} agent initialize function`);
+    throw Error(
+      `No block identifier provided to ${name} agent initialize function`
+    );
   }
 
   const latestDistributeEvent = await getPrevDistributeEvent(currentBlock);
