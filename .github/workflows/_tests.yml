@@ -52,8 +52,8 @@ jobs:
           $HOME/.forta/forta.config.json
         env:
           URL: ${{ secrets.ETHEREUM_RPC_URL }}
-        if: ${{ steps.check_scripts.outputs.has_e2e }}
+        if: ${{ steps.check_scripts.outputs.has_e2e == 'true' }}
 
       - name: Run e2e tests
         run: yarn test:e2e
-        if: ${{ steps.check_scripts.outputs.has_e2e }}
+        if: ${{ steps.check_scripts.outputs.has_e2e == 'true' }}
