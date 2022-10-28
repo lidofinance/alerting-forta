@@ -1,9 +1,6 @@
-import BigNumber from "bignumber.js";
-
 import {
   ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
   FindingType,
   FindingSeverity,
@@ -16,7 +13,6 @@ import MATIC_STAKING_NFT_ABI from "./abi/MaticStakingNFT.json";
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   MATIC_STAKING_NFT_ADDRESS,
-  NODE_OPERATORS_ADMIN_EVENTS,
 } from "./constants";
 
 // 2 hours
@@ -29,9 +25,7 @@ let lastReportedBadNftOwner = 0;
 
 export const name = "NodeOperators";
 
-export async function initialize(
-  currentBlock: number
-): Promise<{ [key: string]: string }> {
+export async function initialize(): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
 }
@@ -157,32 +151,4 @@ async function handleNodeOperatorsNftOwners(
       })
     );
   }
-}
-
-export async function handleTransaction(txEvent: TransactionEvent) {
-  const findings: Finding[] = [];
-  await Promise.all([handleNodeOperatorsTx(txEvent, findings)]);
-  return findings;
-}
-
-function handleNodeOperatorsTx(txEvent: TransactionEvent, findings: Finding[]) {
-  const now = txEvent.block.timestamp;
-  NODE_OPERATORS_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (txEvent.to === eventInfo.address) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        let severity = eventInfo.severity;
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: severity,
-            type: eventInfo.type,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
 }

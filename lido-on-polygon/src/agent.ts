@@ -14,6 +14,7 @@ import { argv } from "process";
 
 import * as agentDaoOps from "./agent-dao-ops";
 import * as agentNodeOperators from "./agent-node-operators";
+import * as agentNodeOperatorsV2 from "./agent-node-operators-v2";
 import * as agentWithdrawalsMonitor from "./agent-withdrawals-monitor";
 
 import VERSION from "./version";
@@ -30,6 +31,7 @@ interface SubAgent {
 const subAgents: SubAgent[] = [
   agentDaoOps,
   agentNodeOperators,
+  agentNodeOperatorsV2,
   agentWithdrawalsMonitor,
 ];
 
