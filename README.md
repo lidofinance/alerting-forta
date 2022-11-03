@@ -16,6 +16,8 @@
 
 /lido-rewards - Lido reWARDS committee bot
 
+/storage-watcher - Detection bot that monitors critical storage changes
+
 /template - Template for bot creation
 
 ## Contribute
