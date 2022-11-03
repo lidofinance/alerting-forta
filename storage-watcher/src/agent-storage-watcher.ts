@@ -12,7 +12,7 @@ import {
 import { STORAGE_SLOTS, ContractStorageMap, StorageSlot } from "./constants";
 import { getStorageValue } from "./helpers";
 
-export const name = "DaoOps";
+export const name = "StorageWatched";
 
 let contractsStorageValues: Map<string, Map<string, string>> = new Map();
 
