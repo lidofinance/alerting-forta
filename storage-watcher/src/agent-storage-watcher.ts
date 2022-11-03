@@ -53,7 +53,7 @@ async function handleStorageSlots(
           );
           if (checkValues) {
             const prevValue = contractInfo.get(slot.name);
-            if (value != prevValue && prevValue) {
+            if (prevValue && prevValue != value) {
               findings.push(
                 Finding.fromObject({
                   name: `🚨 Critical storage slot value changed`,
