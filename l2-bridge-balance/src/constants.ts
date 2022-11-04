@@ -12,7 +12,7 @@ export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
 
 export interface BridgeParamWstETH {
   name: string;
-//  l2Gateway: string;
+  //  l2Gateway: string;
   l1Gateway: string;
   wstEthBridged: string;
   rpcUrl: string;
