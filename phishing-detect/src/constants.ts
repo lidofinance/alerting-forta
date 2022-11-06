@@ -146,7 +146,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x9865eebdd1ce65f45b6247aeed2fa2252eca7a08", // Transit Finance: Swap Router
   "0xEf0D72C594b28252BF7Ea2bfbF098792430815b1", // Gearbox Curve steCRV WETH Gateway
   "0x55b916ce078ea594c10a874ba67ecc3d62e29822", // CurveFi related contract
-  "0x271fbE8aB7f1fB262f81C77Ea5303F03DA9d3d6A", // CurveFi related contract
+  "0x271fbe8ab7f1fb262f81c77ea5303f03da9d3d6a", // CurveFi related contract
+  "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1", // Optimism: Gateway
+  "0xf892fef9da200d9e84c9b0647ecff0f34633abe8", // Thorswap token proxy
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
