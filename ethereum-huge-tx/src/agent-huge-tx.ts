@@ -233,15 +233,16 @@ function handleCurveLiquidityAdd(
         ethAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD) ||
         stEthAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)
       ) {
+        const provider = event.args.provider.toLowerCase();
+        const providerName = ADDRESS_TO_NAME.get(provider) || "unknown";
         const descriptionShort =
           `**${abbreviateNumber(ethAmount.toNumber())} ETH** and ` +
-          `**${abbreviateNumber(
-            stEthAmount.toNumber()
-          )} stETH** were added to the Curve LP`;
+          `**${abbreviateNumber(stEthAmount.toNumber())} stETH** ` +
+          `were added to the Curve LP\nBy: ${provider} (${providerName})`;
         const metadata = {
           timestamp: txEvent.block.timestamp.toString(),
-          from: event.args.provider.toLowerCase(),
-          fromName: ADDRESS_TO_NAME.get(event.args.provider) || "",
+          from: provider,
+          fromName: providerName,
           to: CURVE_POOL_ADDRESS,
           toName: "Curve.fi",
           amount: stEthAmount.toFixed(2),
@@ -299,17 +300,20 @@ function handleCurveLiquidityRemove(
           ethAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD) ||
           stEthAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)
         ) {
+          const provider = event.args.provider.toLowerCase();
+          const providerName = ADDRESS_TO_NAME.get(provider) || "unknown";
           const descriptionShort =
             `**${abbreviateNumber(ethAmount.toNumber())} ETH** and ` +
             `**${abbreviateNumber(
               stEthAmount.toNumber()
-            )} stETH** were removed from the Curve LP`;
+            )} stETH** were removed from the Curve LP` +
+            `\nBy: ${provider} {${providerName}}`;
           const metadata = {
             timestamp: txEvent.block.timestamp.toString(),
             from: CURVE_POOL_ADDRESS,
             fromName: "Curve.fi",
-            to: event.args.provider.toLowerCase(),
-            toName: ADDRESS_TO_NAME.get(event.args.provider) || "",
+            to: provider,
+            toName: providerName,
             amount: stEthAmount.toFixed(2),
             token: "stETH",
             comment: descriptionShort,
@@ -371,17 +375,20 @@ function handleCurveLiquidityRemoveOne(
           return true;
         });
         const token = rmTransferInfos.length > 0 ? "stETH" : "ETH";
+        const provider = event.args.provider.toLowerCase();
+        const providerName = ADDRESS_TO_NAME.get(provider) || "unknown";
 
         const descriptionShort =
           `**${abbreviateNumber(amount.toNumber())} ${token}** ` +
-          `were removed from the Curve LP`;
+          `were removed from the Curve LP` +
+          `\nBy: ${provider} (${providerName})`;
 
         const metadata = {
           timestamp: txEvent.block.timestamp.toString(),
           from: CURVE_POOL_ADDRESS,
           fromName: "Curve.fi",
-          to: event.args.provider.toLowerCase(),
-          toName: ADDRESS_TO_NAME.get(event.args.provider) || "",
+          to: provider,
+          toName: providerName,
           amount: amount.toFixed(2),
           token: token,
           comment: descriptionShort,
