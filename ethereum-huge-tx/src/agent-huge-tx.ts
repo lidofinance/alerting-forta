@@ -307,7 +307,7 @@ function handleCurveLiquidityRemove(
             `**${abbreviateNumber(
               stEthAmount.toNumber()
             )} stETH** were removed from the Curve LP` +
-            `\nBy: ${provider} {${providerName}}`;
+            `\nBy: ${provider} (${providerName})`;
           const metadata = {
             timestamp: txEvent.block.timestamp.toString(),
             from: CURVE_POOL_ADDRESS,
