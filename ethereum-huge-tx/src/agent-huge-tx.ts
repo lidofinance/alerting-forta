@@ -221,7 +221,10 @@ function handleCurveLiquidityAdd(
   findings: Finding[]
 ) {
   if (CURVE_POOL_ADDRESS in txEvent.addresses) {
-    const addLiquidityEvents = txEvent.filterLog(CURVE_ADD_LIQUIDITY_EVENT);
+    const addLiquidityEvents = txEvent.filterLog(
+      CURVE_ADD_LIQUIDITY_EVENT,
+      CURVE_POOL_ADDRESS
+    );
     addLiquidityEvents.forEach((event) => {
       const ethAmount = new BigNumber(String(event.args.token_amounts[0])).div(
         ETH_DECIMALS
@@ -283,10 +286,12 @@ function handleCurveLiquidityRemove(
 ) {
   if (CURVE_POOL_ADDRESS in txEvent.addresses) {
     const removeLiquidityEvents = txEvent.filterLog(
-      CURVE_REMOVE_LIQUIDITY_EVENT
+      CURVE_REMOVE_LIQUIDITY_EVENT,
+      CURVE_POOL_ADDRESS
     );
     const removeLiquidityImbalanceEvents = txEvent.filterLog(
-      CURVE_REMOVE_LIQUIDITY_IMBALANCE_EVENT
+      CURVE_REMOVE_LIQUIDITY_IMBALANCE_EVENT,
+      CURVE_POOL_ADDRESS
     );
     [...removeLiquidityEvents, ...removeLiquidityImbalanceEvents].forEach(
       (event) => {
@@ -358,7 +363,8 @@ function handleCurveLiquidityRemoveOne(
       (event) => new TransferEventInfo(event)
     );
     const removeLiquidityEvents = txEvent.filterLog(
-      CURVE_REMOVE_LIQUIDITY_ONE_EVENT
+      CURVE_REMOVE_LIQUIDITY_ONE_EVENT,
+      CURVE_POOL_ADDRESS
     );
     removeLiquidityEvents.forEach((event) => {
       const amount = new BigNumber(String(event.args.coin_amount)).div(
