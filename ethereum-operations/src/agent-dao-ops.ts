@@ -330,11 +330,10 @@ async function handleElRewardsBalance(
         Finding.fromObject({
           name: "⚠️ Significant EL Rewards vault overfill",
           description:
-            `Current EL Rewards vault balance is ${elBalance
-              .div(ETH_DECIMALS)
-              .toFixed(2)} ETH ` +
-            `this is more than ${EL_REWARDS_BALANCE_OVERFILL_HIGH} times higher ` +
-            `than maximum possible single withdraw.`,
+            `The current EL rewards vault balance ` +
+            `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
+            `exceeds the daily re-staking limit by more than ` +
+            `${((EL_REWARDS_BALANCE_OVERFILL_HIGH - 1) * 100).toFixed(0)}%`,
           alertId: "EL-REWARDS-VAULT-OVERFILL",
           severity: FindingSeverity.High,
           type: FindingType.Info,
@@ -355,11 +354,10 @@ async function handleElRewardsBalance(
         Finding.fromObject({
           name: "⚠️ EL Rewards vault overfill",
           description:
-            `Current EL Rewards vault balance is ${elBalance
-              .div(ETH_DECIMALS)
-              .toFixed(2)} ETH ` +
-            `this is more than ${EL_REWARDS_BALANCE_OVERFILL_INFO} times higher ` +
-            `than maximum possible single withdraw.`,
+            `The current EL rewards vault balance ` +
+            `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
+            `exceeds the daily re-staking limit by more than ` +
+            `${((EL_REWARDS_BALANCE_OVERFILL_INFO - 1) * 100).toFixed(0)}%`,
           alertId: "EL-REWARDS-VAULT-OVERFILL",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
