@@ -149,6 +149,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x271fbe8ab7f1fb262f81c77ea5303f03da9d3d6a", // CurveFi related contract
   "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1", // Optimism: Gateway
   "0xf892fef9da200d9e84c9b0647ecff0f34633abe8", // Thorswap token proxy
+  "0x04e69556415604B5f4E4EbEa2b5C9800967bde7b", // DSProxy #192,931
+  "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE", // LiFiDiamond https://li.fi/
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
