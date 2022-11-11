@@ -116,7 +116,6 @@ export const MONITORED_TOKENS = new Map<string, string>(
     ["0x0fe20e0fa9c78278702b05c333cc000034bb69e2", "ETHmaxy"],
     //["0x439cac149b935ae1d726569800972e1669d17094", "IDOL"],
     ["0x4028daac072e492d34a3afdbef0ba7e35d8b55c4", "uni_v2_stETH_2"],
-    ["0xfa61d61db727573c9bd8e447122b2350ccef9d61", "enzf_p10x"],
     ["0xbfd291da8a403daaf7e5e9dc1ec0aceacd4848b9", "iwstETH"],
     ["0x49da42a1eca4ac6ca0c6943d9e5dc64e4641e0e3", "fwstETH_146"],
     ["0x48143538590587df4de00a77c2dd52f689088335", "enzf"],
