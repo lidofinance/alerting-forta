@@ -53,8 +53,16 @@ describe("agent-dao-ops e2e tests", () => {
   it(
     "should process block with low deposit executor balance",
     async () => {
-      const findings = await runBlock(15150957);
-      expect(findings.at(0)).toMatchSnapshot();
+      const findings = await runBlock(16011700);
+      expect(findings.at(1)).toMatchSnapshot();
+    },
+    BLOCK_PROCESSING_TIMEOUT
+  );
+  it(
+    "should alert on low deposit executor balance only for 100th blocks",
+    async () => {
+      const findings = await runBlock(16011701);
+      expect(findings.length).toEqual(0);
     },
     BLOCK_PROCESSING_TIMEOUT
   );
