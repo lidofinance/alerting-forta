@@ -201,6 +201,7 @@ describe("lido-on-polygon", () => {
 
   it("should process handleDepositExecutorBalance", async () => {
     const bEvent = {
+      blockNumber: 100000,
       block: {
         timestamp: now,
       },

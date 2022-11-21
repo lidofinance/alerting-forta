@@ -370,7 +370,10 @@ export async function handleDepositExecutorBalance(
   findings: Finding[]
 ) {
   const now = blockEvent.block.timestamp;
-  if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
+  if (
+    lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now &&
+    blockEvent.blockNumber % 100 == 0
+  ) {
     const executorBalance = await ethersProvider
       .getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS, blockEvent.blockNumber)
       .then((value) => new BigNumber(String(value)))
