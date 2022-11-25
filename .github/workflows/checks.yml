@@ -15,6 +15,10 @@ jobs:
 
       - uses: lidofinance/linters/.github/actions/lint-security@fix-codeql
         with:
+          skip-codeql: true
+
+      - uses: lidofinance/linters/.github/actions/lint-security@fix-codeql
+        with:
           skip-codeql: false
 
   docker:
