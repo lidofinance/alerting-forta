@@ -5,7 +5,7 @@ on:
 
 jobs:
   security:
-    uses: lidofinance/linters/.github/workflows/security.yml@master
+    uses: lidofinance/linters/.github/workflows/security.yml@fix-codeql
 
   docker:
     uses: lidofinance/linters/.github/workflows/docker.yml@master
