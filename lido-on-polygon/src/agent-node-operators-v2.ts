@@ -6,10 +6,8 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
+import { BigNumber } from "ethers";
 
-import { ethersProvider } from "./ethers";
-
-import NODE_OPERATORS_V1_ABI from "./abi/NodeOperators.json";
 import NODE_OPERATORS_V2_ABI from "./abi/NodeOperatorsV2.json";
 import MATIC_STAKING_NFT_ABI from "./abi/MaticStakingNFT.json";
 import {
@@ -17,7 +15,8 @@ import {
   MATIC_STAKING_NFT_ADDRESS,
   NODE_OPERATORS_ADMIN_EVENTS,
 } from "./constants";
-import { BigNumber } from "ethers";
+import { ethersProvider } from "./ethers";
+import { getNORVersion } from "./helpers";
 
 // 2 hours
 const REPORT_WINDOW_BAD_OPERATORS_STATE = 60 * 60 * 2;
@@ -34,32 +33,12 @@ export async function initialize(): Promise<{ [key: string]: string }> {
   return {};
 }
 
-// TODO remove after transition
-async function isV1(blockTag: number | string) {
-  const nodeOperatorsV1 = new ethers.Contract(
-    NODE_OPERATORS_REGISTRY_ADDRESS,
-    NODE_OPERATORS_V1_ABI,
-    ethersProvider
-  );
-
-  try {
-    await nodeOperatorsV1.functions.version({ blockTag });
-  } catch (error: any) {
-    console.log(JSON.stringify(error));
-    if (error.code === ethers.utils.Logger.errors.CALL_EXCEPTION) {
-      return false;
-    }
-    throw error;
-  }
-
-  return true;
-}
-
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  if (await isV1(blockEvent.blockNumber)) {
-    return findings; // nothing to do
+  const version = await getNORVersion(blockEvent.blockNumber);
+  if (!version.startsWith("2.")) {
+    return findings; // do nothing
   }
 
   await Promise.all([
@@ -136,18 +115,15 @@ async function handleNodeOperatorsNftOwners(
       ethersProvider
     );
 
-    const vIds = await nodeOperators.functions.getValidatorIds({
+    const vIds = await nodeOperators.getValidatorIds({
       blockTag: blockEvent.blockNumber,
     });
 
     await Promise.all(
       vIds.map(async (id: BigNumber) => {
-        let info = await nodeOperators.functions.getNodeOperator(
-          id.toNumber(),
-          {
-            blockTag: blockEvent.blockNumber,
-          }
-        );
+        let info = await nodeOperators.getNodeOperator(id.toNumber(), {
+          blockTag: blockEvent.blockNumber,
+        });
         stackingNFT.functions
           .ownerOf(info.validatorId, {
             blockTag: blockEvent.blockNumber,

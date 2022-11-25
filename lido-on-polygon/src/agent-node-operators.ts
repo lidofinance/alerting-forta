@@ -6,14 +6,14 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
-
 import NODE_OPERATORS_ABI from "./abi/NodeOperators.json";
 import MATIC_STAKING_NFT_ABI from "./abi/MaticStakingNFT.json";
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   MATIC_STAKING_NFT_ADDRESS,
 } from "./constants";
+import { ethersProvider } from "./ethers";
+import { getNORVersion } from "./helpers";
 
 // 2 hours
 const REPORT_WINDOW_BAD_OPERATORS_STATE = 60 * 60 * 2;
@@ -32,6 +32,11 @@ export async function initialize(): Promise<{ [key: string]: string }> {
 
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
+
+  const version = await getNORVersion(blockEvent.blockNumber);
+  if (!version.startsWith("1.")) {
+    return findings; // do nothing
+  }
 
   await Promise.all([
     handleNodeOperatorsStatus(blockEvent, findings),

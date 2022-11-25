@@ -1,3 +1,7 @@
+import { ethers } from "ethers";
+import { NODE_OPERATORS_REGISTRY_ADDRESS } from "./constants";
+import { ethersProvider } from "./ethers";
+
 const SI_SYMBOL = ["", "k", "M", "G", "T", "P", "E"];
 
 export function abbreviateNumber(number: number): string {
@@ -16,4 +20,19 @@ export function abbreviateNumber(number: number): string {
 
   // format number and add suffix
   return scaled.toFixed(1) + suffix;
+}
+
+/**
+ * Get version of NodeOperatorsRegistry contract
+ */
+export async function getNORVersion(
+  blockTag: number | string
+): Promise<string> {
+  const contract = new ethers.Contract(
+    NODE_OPERATORS_REGISTRY_ADDRESS,
+    ["function version() view returns (string)"],
+    ethersProvider
+  );
+
+  return await contract.version({ blockTag });
 }
