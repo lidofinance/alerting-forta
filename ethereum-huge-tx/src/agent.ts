@@ -53,12 +53,13 @@ const initialize = async () => {
   } else if (argv.includes("--range")) {
     blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")));
   } else if (argv.includes("--tx")) {
-    const tx = await ethersProvider.getTransaction(argv[4]);
+    const txHash = argv[4];
+    const tx = await ethersProvider.getTransaction(txHash);
     if (!tx) {
-      throw new Error(`Can't find transaction ${argv[4]}`);
+      throw new Error(`Can't find transaction ${txHash}`);
     }
     if (!tx.blockNumber) {
-      throw new Error(`Transaction ${argv[4]} was not yet included into block`);
+      throw new Error(`Transaction ${txHash} was not yet included into block`);
     }
     blockNumber = tx.blockNumber;
   }
