@@ -68,8 +68,7 @@ const initialize = async () => {
     if (!tx.blockNumber) {
       throw new Error(`Transaction ${argv[4]} was not yet included into block`);
     }
-    blockNumber =
-      (await ethersProvider.getTransaction(argv[4])).blockNumber || -1;
+    blockNumber = tx.blockNumber;
   }
 
   if (blockNumber == -1) {
