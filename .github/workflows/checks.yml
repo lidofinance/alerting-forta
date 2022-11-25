@@ -5,7 +5,17 @@ on:
 
 jobs:
   security:
-    uses: lidofinance/linters/.github/workflows/security.yml@fix-codeql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: lidofinance/linters/.github/actions/lint-security@fix-codeql
+        with:
+          skip-codeql: false
 
   docker:
     uses: lidofinance/linters/.github/workflows/docker.yml@master
