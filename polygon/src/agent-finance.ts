@@ -38,7 +38,7 @@ export async function initialize(
   balancerPoolSize = balancerTokens[0].plus(balancerTokens[1]);
   return {
     curvePoolSize: curvePoolSize.toFixed(),
-    balancerPoolSize: balancerPoolSize.toFixed()
+    balancerPoolSize: balancerPoolSize.toFixed(),
   };
 }
 
