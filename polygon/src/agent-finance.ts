@@ -23,6 +23,8 @@ import { ethersProvider } from "./ethers";
 
 export const name = "Finance";
 
+const BLOCK_INTERVAL = 10;
+
 let curvePoolSize = new BigNumber(0);
 let balancerPoolSize = new BigNumber(0);
 
