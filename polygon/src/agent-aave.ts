@@ -34,19 +34,18 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   return findings;
 }
 
-function handleAaveTransaction(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
+function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
   if (APOLSTMATIC_ADDRES in txEvent.addresses) {
     const mint_events = txEvent.filterLog(AAVE_MINT_EVENT, APOLSTMATIC_ADDRES);
     mint_events.forEach((event) => {
-      const value  = new BigNumber(String(event.args.value)).div(MATIC_DECIMALS)
+      const value = new BigNumber(String(event.args.value)).div(MATIC_DECIMALS);
       if (value.gte(AAVE_MINT_BURN_THRESHOLD)) {
         findings.push(
           Finding.fromObject({
             name: "Huge amount supplied to AAVE",
-            description: `**${value.toFixed(2)} stMATIC** were supplied to AAVE`,
+            description: `**${value.toFixed(
+              2
+            )} stMATIC** were supplied to AAVE`,
             alertId: "HUGE-AAVE-TX",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -57,12 +56,14 @@ function handleAaveTransaction(
     });
     const burn_events = txEvent.filterLog(AAVE_BURN_EVENT, APOLSTMATIC_ADDRES);
     burn_events.forEach((event) => {
-      const value  = new BigNumber(String(event.args.value)).div(MATIC_DECIMALS)
+      const value = new BigNumber(String(event.args.value)).div(MATIC_DECIMALS);
       if (value.gte(AAVE_MINT_BURN_THRESHOLD)) {
         findings.push(
           Finding.fromObject({
             name: "Huge amount withdrawn from AAVE",
-            description: `**${value.toFixed(2)} stMATIC** were withdrawn from AAVE`,
+            description: `**${value.toFixed(
+              2
+            )} stMATIC** were withdrawn from AAVE`,
             alertId: "HUGE-AAVE-TX",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
