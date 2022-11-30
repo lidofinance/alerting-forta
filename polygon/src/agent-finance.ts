@@ -44,10 +44,12 @@ export async function initialize(
 
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
-  await Promise.all([
-    handleCurvePoolSize(blockEvent, findings),
-    handleBalancerPoolSize(blockEvent, findings),
-  ]);
+  if (blockEvent.blockNumber % 100 == 0) {
+    await Promise.all([
+      handleCurvePoolSize(blockEvent, findings),
+      handleBalancerPoolSize(blockEvent, findings),
+    ]);
+  }
   return findings;
 }
 
@@ -129,7 +131,6 @@ async function handleBalancerPoolSize(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
-  let poolParams = balancerPoolSize;
   const poolTokens = await getBalancerPoolTokens(blockEvent.blockNumber);
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(balancerPoolSize, poolSize);
