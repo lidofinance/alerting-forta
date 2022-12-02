@@ -152,6 +152,12 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x04e69556415604b5f4e4ebea2b5c9800967bde7b", // DSProxy #192,931
   "0x1231deb6f5749ef6ce6943a275a1d3e7486f4eae", // LiFiDiamond https://li.fi/
   "0x628ef4a1660505d4fa43b6bfee48565607a48fb2", // DSProxy #146,747
+  "0X2B1C7B41F6A8F2B2BC45C3233A5D5FB3CD6DC9A8", // KyberSwap: Anti Snipping Attack Position Manager
+  "0xe46e8996a7bfd82ca059ceccbf99df153c199e64", // DSProxy #216,046
+  "0xcbc72d92b2dc8187414f6734718563898740c0bc", // PendleWstEthSY
+  "0x4ec8f76d7fbb59015419c074f7f1e01087a76f01", // yCRVPortalIn
+  "0x41FAD93F225b5C1C95f2445A5d7fcB85bA46713f", // PendleRouter
+  "0xC1e7dFE73E1598E3910EF4C7845B68A9Ab6F4c83", // KyberSwap: Elastic Router
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
