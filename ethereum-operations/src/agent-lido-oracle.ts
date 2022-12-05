@@ -46,6 +46,7 @@ let lastReport: OracleReport | null = null;
 let lastReportedOverdue = 0;
 
 const THREE_DAYS = 60 * 60 * 24 * 3;
+const SLOPPY_ORACLE_BLOCK_INTERVAL = 1000;
 
 let lastTxHash: string;
 let oraclesLastVotes: Map<string, number> = new Map();
@@ -211,41 +212,43 @@ export async function handleBlock(blockEvent: BlockEvent) {
 }
 
 function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
-  const now = blockEvent.block.timestamp;
-  oraclesLastVotes.forEach((lastRepBlock, oracle) => {
-    let lastAlert = oraclesVotesLastAlert.get(oracle) || 0;
-    if (lastAlert < now - BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW) {
-      if (
-        lastRepBlock <
-        blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM
-      ) {
-        findings.push(
-          Finding.fromObject({
-            name: "⚠️ Super sloppy Lido Oracle",
-            description: `Oracle ${oracle} has not reported before the quorum for more than 2 week`,
-            alertId: "SLOPPY-LIDO-ORACLE",
-            severity: FindingSeverity.Medium,
-            type: FindingType.Suspicious,
-          })
-        );
-        oraclesVotesLastAlert.set(oracle, now);
-      } else if (
-        lastRepBlock <
-        blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO
-      ) {
-        findings.push(
-          Finding.fromObject({
-            name: "🤔 Sloppy Lido Oracle",
-            description: `Oracle ${oracle} has not reported before the quorum for more than 1 week`,
-            alertId: "SLOPPY-LIDO-ORACLE",
-            severity: FindingSeverity.Info,
-            type: FindingType.Suspicious,
-          })
-        );
-        oraclesVotesLastAlert.set(oracle, now);
+  if (blockEvent.blockNumber % SLOPPY_ORACLE_BLOCK_INTERVAL == 0) {
+    const now = blockEvent.block.timestamp;
+    oraclesLastVotes.forEach((lastRepBlock, oracle) => {
+      let lastAlert = oraclesVotesLastAlert.get(oracle) || 0;
+      if (lastAlert < now - BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW) {
+        if (
+          lastRepBlock <
+          blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM
+        ) {
+          findings.push(
+            Finding.fromObject({
+              name: "⚠️ Super sloppy Lido Oracle",
+              description: `Oracle ${oracle} has not reported before the quorum for more than 2 week`,
+              alertId: "SLOPPY-LIDO-ORACLE",
+              severity: FindingSeverity.Medium,
+              type: FindingType.Suspicious,
+            })
+          );
+          oraclesVotesLastAlert.set(oracle, now);
+        } else if (
+          lastRepBlock <
+          blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO
+        ) {
+          findings.push(
+            Finding.fromObject({
+              name: "🤔 Sloppy Lido Oracle",
+              description: `Oracle ${oracle} has not reported before the quorum for more than 1 week`,
+              alertId: "SLOPPY-LIDO-ORACLE",
+              severity: FindingSeverity.Info,
+              type: FindingType.Suspicious,
+            })
+          );
+          oraclesVotesLastAlert.set(oracle, now);
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 async function handleOracleReportDelay(

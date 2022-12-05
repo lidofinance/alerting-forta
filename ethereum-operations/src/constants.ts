@@ -794,7 +794,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
 export const TRIGGER_PERIOD = 60 * 5;
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_DELAY = 24 * 60 * 60 + 10 * 60; // 24h 10m
+export const MAX_ORACLE_REPORT_DELAY = 24 * 60 * 60 + 15 * 60; // 24h 15m
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000;
 
