@@ -26,11 +26,12 @@ import {
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
   MAX_ORACLE_REPORT_DELAY,
-  MIN_ORACLE_BALANCE,
+  MIN_ORACLE_BALANCE_INFO,
   TRIGGER_PERIOD,
+  ETH_DECIMALS,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
-import { ETH_DECIMALS } from "./constants";
+import { MIN_ORACLE_BALANCE_HIGH } from "./constants";
 
 export interface OracleReport {
   timestamp: number;
@@ -45,7 +46,7 @@ const ZERO = new BigNumber(0);
 let lastReport: OracleReport | null = null;
 let lastReportedOverdue = 0;
 
-const THREE_DAYS = 60 * 60 * 24 * 3;
+const WEEK = 60 * 60 * 24 * 7;
 const SLOPPY_ORACLE_BLOCK_INTERVAL = 1000;
 
 let lastTxHash: string;
@@ -322,11 +323,14 @@ async function handleOracleBalance(
 ) {
   const now = blockEvent.block.timestamp;
   const lastAlert = oraclesBalanceLastAlert.get(oracle) || 0;
-  if (now > lastAlert + THREE_DAYS) {
+  if (now > lastAlert + WEEK) {
     const balance = new BigNumber(
       String(await ethersProvider.getBalance(oracle))
     ).div(ETH_DECIMALS);
-    if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE)) {
+    if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_INFO)) {
+      const severity = balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_HIGH)
+        ? FindingSeverity.High
+        : FindingSeverity.Info;
       findings.push(
         Finding.fromObject({
           name: "⚠️ Low balance of Lido Oracle",
@@ -334,7 +338,7 @@ async function handleOracleBalance(
             `Balance of ${oracle} is ` +
             `${balance.toFixed(4)} ETH. This is rather low!`,
           alertId: "LIDO-ORACLE-LOW-BALANCE",
-          severity: FindingSeverity.High,
+          severity: severity,
           type: FindingType.Degraded,
           metadata: {
             oracle: oracle,

@@ -815,7 +815,9 @@ export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM = Math.floor(
 ); // 2 weeks
 export const BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
 
-export const MIN_ORACLE_BALANCE = 0.3; // 0.3 ETH
+export const MIN_ORACLE_BALANCE_INFO = 0.3; // 0.3 ETH
+
+export const MIN_ORACLE_BALANCE_HIGH = 0.15; // 0.15 ETH
 
 export const LIDO_APPS = new Map([
   ["0xb8ffc3cd6e7cf5a098a1c92f48009765b24088dc", "Lido DAO"],
