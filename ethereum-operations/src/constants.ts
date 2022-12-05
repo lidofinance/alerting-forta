@@ -808,10 +808,10 @@ export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72;
 export const MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME = 60 * 60;
 
 export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO = Math.floor(
-  (60 * 60 * 24 * 7) / 13
+  (60 * 60 * 24 * 7) / 12
 ); // 1 week
 export const MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (60 * 60 * 24 * 14) / 13
+  (60 * 60 * 24 * 14) / 12
 ); // 2 weeks
 
 export const MIN_ORACLE_BALANCE_INFO = 0.3; // 0.3 ETH

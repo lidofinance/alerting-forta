@@ -79,7 +79,7 @@ export async function initialize(
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
   // ~14 days ago
   const beaconReportStartBlock =
-    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 13);
+    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 12);
   const reportBeaconEvents = await lidoOracle.queryFilter(
     oracleReportBeaconFilter,
     beaconReportStartBlock,
@@ -103,7 +103,7 @@ export async function initialize(
     }
   });
 
-  const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 13);
+  const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 12);
 
   const oracleReports = await getOracleReports(
     block48HoursAgo,
@@ -222,7 +222,7 @@ async function handleOracleReportDelay(
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with prev report
     const oracleReports = await getOracleReports(
-      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 13),
+      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 12),
       blockEvent.blockNumber - 1
     );
     if (oracleReports.length > 0) {
@@ -438,7 +438,7 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
     const block = txEvent.blockNumber;
     oraclesLastVotes.forEach((lastRepBlock, oracle) => {
       const reportDist = block - lastRepBlock;
-      const reportDistDays = Math.floor((reportDist * 13) / (60 * 60 * 24));
+      const reportDistDays = Math.floor((reportDist * 12) / (60 * 60 * 24));
       if (reportDist > MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
         findings.push(
           Finding.fromObject({
