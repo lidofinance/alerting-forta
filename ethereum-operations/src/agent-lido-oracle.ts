@@ -17,7 +17,6 @@ import { ethersProvider } from "./ethers";
 import LIDO_ORACLE_ABI from "./abi/LidoOracle.json";
 
 import {
-  BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW,
   LIDO_ORACLE_ADDRESS,
   LIDO_ORACLE_BEACON_REPORTED_EVENT,
   LIDO_ORACLE_COMPLETED_EVENT,
@@ -47,13 +46,9 @@ let lastReport: OracleReport | null = null;
 let lastReportedOverdue = 0;
 
 const WEEK = 60 * 60 * 24 * 7;
-const SLOPPY_ORACLE_BLOCK_INTERVAL = 1000;
 
-let lastTxHash: string;
 let oraclesLastVotes: Map<string, number> = new Map();
-let oraclesVotesLastAlert: Map<string, number> = new Map();
 let oraclesBalanceLastAlert: Map<string, number> = new Map();
-let agentStartTime = 0;
 let reportedOverdueCount = 0;
 
 export const name = "LidoOracle";
@@ -74,7 +69,6 @@ export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-  agentStartTime = (await ethersProvider.getBlock(currentBlock)).timestamp;
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
@@ -85,7 +79,7 @@ export async function initialize(
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
   // ~14 days ago
   const beaconReportStartBlock =
-    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 13);
+    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 12);
   const reportBeaconEvents = await lidoOracle.queryFilter(
     oracleReportBeaconFilter,
     beaconReportStartBlock,
@@ -107,10 +101,9 @@ export async function initialize(
     } else {
       oraclesLastVotes.set(element, 0);
     }
-    oraclesVotesLastAlert.set(element, 0);
   });
 
-  const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 13);
+  const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 12);
 
   const oracleReports = await getOracleReports(
     block48HoursAgo,
@@ -204,52 +197,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleOracleVotes(blockEvent, findings),
     handleOracleReportDelay(blockEvent, findings),
     handleOraclesBalances(blockEvent, findings),
   ]);
 
   return findings;
-}
-
-function handleOracleVotes(blockEvent: BlockEvent, findings: Finding[]) {
-  if (blockEvent.blockNumber % SLOPPY_ORACLE_BLOCK_INTERVAL == 0) {
-    const now = blockEvent.block.timestamp;
-    oraclesLastVotes.forEach((lastRepBlock, oracle) => {
-      let lastAlert = oraclesVotesLastAlert.get(oracle) || 0;
-      if (lastAlert < now - BEACON_REPORT_QUORUM_SKIP_REPORT_WINDOW) {
-        if (
-          lastRepBlock <
-          blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM
-        ) {
-          findings.push(
-            Finding.fromObject({
-              name: "⚠️ Super sloppy Lido Oracle",
-              description: `Oracle ${oracle} has not reported before the quorum for more than 2 week`,
-              alertId: "SLOPPY-LIDO-ORACLE",
-              severity: FindingSeverity.Medium,
-              type: FindingType.Suspicious,
-            })
-          );
-          oraclesVotesLastAlert.set(oracle, now);
-        } else if (
-          lastRepBlock <
-          blockEvent.blockNumber - MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO
-        ) {
-          findings.push(
-            Finding.fromObject({
-              name: "🤔 Sloppy Lido Oracle",
-              description: `Oracle ${oracle} has not reported before the quorum for more than 1 week`,
-              alertId: "SLOPPY-LIDO-ORACLE",
-              severity: FindingSeverity.Info,
-              type: FindingType.Suspicious,
-            })
-          );
-          oraclesVotesLastAlert.set(oracle, now);
-        }
-      }
-    });
-  }
 }
 
 async function handleOracleReportDelay(
@@ -270,7 +222,7 @@ async function handleOracleReportDelay(
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with prev report
     const oracleReports = await getOracleReports(
-      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 13),
+      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 12),
       blockEvent.blockNumber - 1
     );
     if (oracleReports.length > 0) {
@@ -352,14 +304,13 @@ async function handleOracleBalance(
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
-  lastTxHash = txEvent.hash;
-
   const findings: Finding[] = [];
 
   if (txEvent.to === LIDO_ORACLE_ADDRESS) {
     handleOracleTx(txEvent, findings);
     handleReportBeacon(txEvent);
     handleLidoOracleTransaction(txEvent, findings);
+    handleBeaconCompleted(txEvent, findings);
   }
 
   return findings;
@@ -476,6 +427,41 @@ function handleReportBeacon(txEvent: TransactionEvent) {
       oraclesLastVotes.set(event.args.caller, txEvent.blockNumber);
     }
   });
+}
+
+function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
+  const [completed] = txEvent.filterLog(
+    LIDO_ORACLE_COMPLETED_EVENT,
+    LIDO_ORACLE_ADDRESS
+  );
+  if (completed) {
+    const block = txEvent.blockNumber;
+    oraclesLastVotes.forEach((lastRepBlock, oracle) => {
+      const reportDist = block - lastRepBlock;
+      const reportDistDays = Math.floor((reportDist * 12) / (60 * 60 * 24));
+      if (reportDist > MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
+        findings.push(
+          Finding.fromObject({
+            name: "⚠️ Super sloppy Lido Oracle",
+            description: `Oracle ${oracle} has not reported before the quorum for more than 2 weeks`,
+            alertId: "SLOPPY-LIDO-ORACLE",
+            severity: FindingSeverity.Medium,
+            type: FindingType.Suspicious,
+          })
+        );
+      } else if (reportDist > MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO) {
+        findings.push(
+          Finding.fromObject({
+            name: "🤔 Sloppy Lido Oracle",
+            description: `Oracle ${oracle} has not reported before the quorum for more than ${reportDistDays} days`,
+            alertId: "SLOPPY-LIDO-ORACLE",
+            severity: FindingSeverity.Info,
+            type: FindingType.Suspicious,
+          })
+        );
+      }
+    });
+  }
 }
 
 function handleLidoOracleTransaction(
