@@ -158,6 +158,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x4ec8f76d7fbb59015419c074f7f1e01087a76f01", // yCRVPortalIn
   "0x41FAD93F225b5C1C95f2445A5d7fcB85bA46713f", // PendleRouter
   "0xC1e7dFE73E1598E3910EF4C7845B68A9Ab6F4c83", // KyberSwap: Elastic Router
+  "0x1111111254eeb25477b68fb85ed929f73a960582", // 1inch v5: Aggregation Router
+  "0x7273d1671fcd37ef5b949ebf88234aa9c3e43957", // Harpie: Transferer
+  "0xaa17633AA5A3Cb56698838561161bdb16Cebb8E3", // Sense: Periphery
+  "0xCE5513474E077F5336cf1B33c1347FDD8D48aE8c", // Ribbon Finance: ETH Put-Selling Vault V2
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
