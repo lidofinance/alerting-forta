@@ -438,7 +438,7 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
     const block = txEvent.blockNumber;
     oraclesLastVotes.forEach((lastRepBlock, oracle) => {
       const reportDist = block - lastRepBlock;
-      const reportDistDays = Math.floor(reportDist * 13 / (60 * 60 * 24))
+      const reportDistDays = Math.floor((reportDist * 13) / (60 * 60 * 24));
       if (reportDist > MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
         findings.push(
           Finding.fromObject({
