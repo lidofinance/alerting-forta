@@ -1,5 +1,5 @@
 export function formatLink(name: string, url: string): string {
-  return `[${name}](<${url}>)`;
+  return `[${name}](${url})`;
 }
 
 export function getResultStr(quorumDistance: number, passed: boolean) {
