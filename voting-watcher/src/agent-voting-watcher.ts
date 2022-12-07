@@ -154,10 +154,8 @@ async function handlePinger(blockEvent: BlockEvent, findings: Finding[]) {
   Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
     if (vote) {
-      console.log(blockEvent.block.timestamp);
       PINGER_SCHEDULE.forEach((time) => {
         const pingTime = vote.startDate + voteLength - objectionsTime - time * 3600;
-        console.log(pingTime);
         if (
           pingTime <= blockEvent.block.timestamp &&
           pingTime > prevBlock.timestamp
