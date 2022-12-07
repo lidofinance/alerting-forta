@@ -62,6 +62,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
+  await updateVotingDurations(currentBlock);
   activeVotes = await getActiveVotes(currentBlock, true);
 
   return {
@@ -150,11 +151,13 @@ async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
 
 async function handlePinger(blockEvent: BlockEvent, findings: Finding[]) {
   const prevBlock = await ethersProvider.getBlock(blockEvent.blockNumber - 1);
-  Array.from(activeVotes.keys()).forEach(async (key) => {
+  Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
     if (vote) {
-      PINGER_SCHEDULE.forEach(async (time) => {
-        const pingTime = vote.startDate + voteLength - time * 3600;
+      console.log(blockEvent.block.timestamp);
+      PINGER_SCHEDULE.forEach((time) => {
+        const pingTime = vote.startDate + voteLength - objectionsTime - time * 3600;
+        console.log(pingTime);
         if (
           pingTime <= blockEvent.block.timestamp &&
           pingTime > prevBlock.timestamp
@@ -204,21 +207,17 @@ async function updateVotingDurations(block: number) {
     VOTING_ABI,
     ethersProvider
   );
-  await Promise.all([
-    async () => {
-      voteLength = await voting.functions.voteTime(blockTag);
-    },
-    async () => {
-      objectionsTime = await voting.functions.objectionPhaseTime(blockTag);
-    },
-  ]);
+
+  voteLength = new BigNumber(String(await voting.functions.voteTime(blockTag))).toNumber();
+  objectionsTime = new BigNumber(String(await voting.functions.objectionPhaseTime(blockTag))).toNumber();
 }
 
 async function getActiveVotes(
-  block: number,
+  blockNumber: number,
   init: boolean = false
 ): Promise<Map<number, VoteInfo>> {
-  const blockTag = { blockTag: block };
+  const blockTag = { blockTag: blockNumber };
+  const block = await ethersProvider.getBlock(blockNumber);
   const voting = new ethers.Contract(
     LIDO_VOTING_ADDRESS,
     VOTING_ABI,
@@ -250,7 +249,7 @@ async function getActiveVotes(
     const passed =
       yea.gte(votingPower.times(minAcceptQuorum).div(ETH_DECIMALS)) &&
       yea.gte(total.times(supportRequired).div(ETH_DECIMALS));
-    const timeLeft = vote.startDate.toNumber() + voteLength - block;
+    const timeLeft = vote.startDate.toNumber() + voteLength - block.timestamp;
     const resultsStr = getResultStr(quorumDistance, passed);
     const voteInfo: VoteInfo = {
       open: vote.open,
