@@ -45,7 +45,7 @@ export function secondsToDaysAndHours(seconds: number): string {
   }
   seconds %= 3600
   const minutes = Math.floor(seconds / 60)
-  if (timeStrings.length == 1) {
+  if (timeStrings.length == 1 && minutes > 0) {
       timeStrings.push(`${minutes.toFixed(0)} ${minutes > 1 ? 'mins' : 'min'}`)
   }
   if (timeStrings.length == 0) {
