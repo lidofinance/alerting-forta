@@ -153,7 +153,7 @@ async function handlePinger(blockEvent: BlockEvent, findings: Finding[]) {
   const prevBlock = await ethersProvider.getBlock(blockEvent.blockNumber - 1);
   Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
-    if (vote) {
+    if (vote && !vote.passed) {
       PINGER_SCHEDULE.forEach((time) => {
         const pingTime = vote.startDate + voteLength - objectionsTime - time * 3600;
         if (
@@ -339,8 +339,8 @@ function votePing(id: number, vote: VoteInfo, blockNumber: number, findings: Fin
   const total = vote.total.div(ETH_DECIMALS).toNumber()
   const timeLeftStr = secondsToDaysAndHours(vote.timeLeft - objectionsTime) + " left"
   const texts = [
-    `Please, send the votes to ${formatLink(`#${id}`, vote.url)} — ${vote.quorumDistance}% more required to get a minimum approval! 🙏`,
-    `🗳 ${vote.quorumDistance}% more required to get a minimum approval, please, send the votes to ${formatLink(`#${id}`, vote.url)}!`,
+    `Please, send the votes to ${formatLink(`#${id}`, vote.url)} — ${vote.quorumDistance}% more required to reach a quorum, ${timeLeftStr} to go!! 🙏`,
+    `🗳 ${vote.quorumDistance}% more required to gather a quorum, ${timeLeftStr} left, please, send the votes to ${formatLink(`#${id}`, vote.url)}!`,
     `Please, send votes to ${formatLink(`#${id}`, vote.url)}, ${
         total == 0 ? `it doesn't have any votes yet` : `it has only ${abbreviateNumber(total)} LDO voted`
     }, ${timeLeftStr.startsWith('less') ? '' : 'less than '}${timeLeftStr}!`,
