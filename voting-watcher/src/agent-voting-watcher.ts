@@ -92,19 +92,21 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
     if (updated && old) {
       let keep = true;
       const { passed, url, pro, contra, resultsStr, timeLeft } = updated;
+      const proStr = pro.toFixed(2) + " pro"
+      const contraStr = contra.toFixed(2) + " contra"
       const alertLevel = old.alertLevel || 0;
       if (alertLevel < 3 && !updated.open) {
         const text =
           `${formatLink(`Voting #${key}`, url)} is over 🏁 ${
             passed ? "and passed, phew! 👍" : "but rejected 😔"
-          } ` + `(${pro} pro, ${contra} contra, ${resultsStr})`;
+          } ` + `(${proStr}, ${contraStr}, ${resultsStr})`;
         voteStateChanged(text, findings);
         keep = false;
       } else if (alertLevel < 2 && timeLeft < 3600 * 4 && updated.phase == 1) {
         const text =
           `Final note 🔔, less than 4 hours left till the end of the objection phase for ` +
           `${formatLink(`voting #${key}`, url)} ` +
-          `(${pro} pro, ${contra} contra, ${resultsStr})`;
+          `(${proStr}, ${contraStr}, ${resultsStr})`;
         updated.alertLevel = 2;
         voteStateChanged(text, findings);
       } else if (old.phase == 1 && updated.phase == 2) {
