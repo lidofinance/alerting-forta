@@ -155,7 +155,8 @@ async function handlePinger(blockEvent: BlockEvent, findings: Finding[]) {
     const vote = activeVotes.get(key);
     if (vote && !vote.passed) {
       PINGER_SCHEDULE.forEach((time) => {
-        const pingTime = vote.startDate + voteLength - objectionsTime - time * 3600;
+        const pingTime =
+          vote.startDate + voteLength - objectionsTime - time * 3600;
         if (
           pingTime <= blockEvent.block.timestamp &&
           pingTime > prevBlock.timestamp
@@ -206,8 +207,12 @@ async function updateVotingDurations(block: number) {
     ethersProvider
   );
 
-  voteLength = new BigNumber(String(await voting.functions.voteTime(blockTag))).toNumber();
-  objectionsTime = new BigNumber(String(await voting.functions.objectionPhaseTime(blockTag))).toNumber();
+  voteLength = new BigNumber(
+    String(await voting.functions.voteTime(blockTag))
+  ).toNumber();
+  objectionsTime = new BigNumber(
+    String(await voting.functions.objectionPhaseTime(blockTag))
+  ).toNumber();
 }
 
 async function getActiveVotes(
@@ -335,22 +340,46 @@ function hugeVotesWithQuorum(
   );
 }
 
-function votePing(id: number, vote: VoteInfo, blockNumber: number, findings: Finding[]) {
-  const total = vote.total.div(ETH_DECIMALS).toNumber()
-  const timeLeftStr = secondsToDaysAndHours(vote.timeLeft - objectionsTime) + " left"
+function votePing(
+  id: number,
+  vote: VoteInfo,
+  blockNumber: number,
+  findings: Finding[]
+) {
+  const total = vote.total.div(ETH_DECIMALS).toNumber();
+  const timeLeftStr =
+    secondsToDaysAndHours(vote.timeLeft - objectionsTime) + " left";
   const texts = [
-    `Please, send the votes to ${formatLink(`#${id}`, vote.url)} — ${vote.quorumDistance}% more required to reach a quorum, ${timeLeftStr} to go!! 🙏`,
-    `🗳 ${vote.quorumDistance}% more required to gather a quorum, ${timeLeftStr} left, please, send the votes to ${formatLink(`#${id}`, vote.url)}!`,
+    `Please, send the votes to ${formatLink(`#${id}`, vote.url)} — ${
+      vote.quorumDistance
+    }% more required to reach a quorum, ${timeLeftStr} to go!! 🙏`,
+    `🗳 ${
+      vote.quorumDistance
+    }% more required to gather a quorum, ${timeLeftStr} left, please, send the votes to ${formatLink(
+      `#${id}`,
+      vote.url
+    )}!`,
     `Please, send votes to ${formatLink(`#${id}`, vote.url)}, ${
-        total == 0 ? `it doesn't have any votes yet` : `it has only ${abbreviateNumber(total)} LDO voted`
-    }, ${timeLeftStr.startsWith('less') ? '' : 'less than '}${timeLeftStr}!`,
-    `⚡️ ${vote.quorumDistance}% more required to obtain a minimum approval ${formatLink(
-        `#${id}`,
-        vote.url
+      total == 0
+        ? `it doesn't have any votes yet`
+        : `it has only ${abbreviateNumber(total)} LDO voted`
+    }, ${timeLeftStr.startsWith("less") ? "" : "less than "}${timeLeftStr}!`,
+    `⚡️ ${
+      vote.quorumDistance
+    }% more required to obtain a minimum approval ${formatLink(
+      `#${id}`,
+      vote.url
     )}, ${timeLeftStr} — please, make sure to vote!`,
-    `Please, vote on ${formatLink(`#${id}`, vote.url)} 🙏 ${vote.quorumDistance}% required for a minimum approval still, ${timeLeftStr}.`,
-    `🔥 ${vote.quorumDistance}% still required, ${timeLeftStr} — please send your votes to ${formatLink(`#${id}`, vote.url)} 🙏`,
-]
+    `Please, vote on ${formatLink(`#${id}`, vote.url)} 🙏 ${
+      vote.quorumDistance
+    }% required for a minimum approval still, ${timeLeftStr}.`,
+    `🔥 ${
+      vote.quorumDistance
+    }% still required, ${timeLeftStr} — please send your votes to ${formatLink(
+      `#${id}`,
+      vote.url
+    )} 🙏`,
+  ];
   findings.push(
     Finding.fromObject({
       name: "Time to vote",
