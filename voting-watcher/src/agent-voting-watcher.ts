@@ -92,8 +92,8 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
     if (updated && old) {
       let keep = true;
       const { passed, url, pro, contra, resultsStr, timeLeft } = updated;
-      const proStr = pro.toFixed(2) + " pro"
-      const contraStr = contra.toFixed(2) + " contra"
+      const proStr = pro.toFixed(2) + " pro";
+      const contraStr = contra.toFixed(2) + " contra";
       const alertLevel = old.alertLevel || 0;
       if (alertLevel < 3 && !updated.open) {
         const text =
