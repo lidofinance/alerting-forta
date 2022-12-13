@@ -90,19 +90,11 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
     const updated = newActiveVotes.get(key);
     const old = activeVotes.get(key);
     if (updated && old) {
-      let keep = true;
-      const { passed, url, pro, contra, resultsStr, timeLeft } = updated;
+      const { url, pro, contra, resultsStr, timeLeft } = updated;
       const proStr = pro.toFixed(2) + "% pro";
       const contraStr = contra.toFixed(2) + "% contra";
       const alertLevel = old.alertLevel || 0;
-      if (alertLevel < 3 && !updated.open) {
-        const text =
-          `${formatLink(`Voting #${key}`, url)} is over 🏁 ${
-            passed ? "and passed, phew! 👍" : "but rejected 😔"
-          } ` + `(${proStr}, ${contraStr}, ${resultsStr})`;
-        voteStateChanged(text, findings);
-        keep = false;
-      } else if (alertLevel < 2 && timeLeft < 3600 * 4 && updated.phase == 1) {
+      if (alertLevel < 2 && timeLeft < 3600 * 4 && updated.phase == 1) {
         const text =
           `Final note 🔔, less than 4 hours left till the end of the objection phase for ` +
           `${formatLink(`voting #${key}`, url)} ` +
@@ -117,13 +109,19 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
         voteStateChanged(text, findings);
         updated.alertLevel = 1;
       }
-      if (keep) {
-        activeVotes.set(key, mergeVotesInfo(old, updated));
-      } else {
-        activeVotes.delete(key);
-      }
-    } else if (updated) {
+      activeVotes.set(key, mergeVotesInfo(old, updated));
+    } else if (updated && !old) {
       activeVotes.set(key, updated);
+    } else if (old && !updated) {
+      const { url, passed, pro, contra, resultsStr } = old;
+      const proStr = pro.toFixed(2) + "% pro";
+      const contraStr = contra.toFixed(2) + "% contra";
+      const text =
+        `${formatLink(`Voting #${key}`, url)} is over 🏁 ${
+          passed ? "and passed, phew! 👍" : "but rejected 😔"
+        } ` + `(${proStr}, ${contraStr}, ${resultsStr})`;
+      voteStateChanged(text, findings);
+      activeVotes.delete(key);
     } else {
       activeVotes.delete(key);
     }
