@@ -70,7 +70,7 @@ async function handleEasyTrackMotionCreated(
     await Promise.all(
       events.map(async (event) => {
         const args = event.args;
-        let alertName = "EasyTrack: New motion created";
+        let alertName = "ℹ EasyTrack: New motion created";
         let description = `EasyTrack new motion ${args._motionId} created by ${args._creator}`;
         if (
           args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS
@@ -94,13 +94,12 @@ async function handleEasyTrackMotionCreated(
             1
           );
           if (totalSigningKeys.toNumber() < _stakingLimit.toNumber()) {
-            alertName = "⚠️ " + alertName;
+            alertName = alertName.replace("ℹ", "⚠️");
             description +=
               `\nBut operator ${name} has not enough keys uploaded! ⚠️` +
               `\nRequired: ${_stakingLimit.toNumber()}` +
               `\nAvailable: ${totalSigningKeys.toNumber()}`;
           } else {
-            alertName = "ℹ " + alertName;
             description += `\nOperator ${name} has enough keys uploaded ✅`;
           }
         }
