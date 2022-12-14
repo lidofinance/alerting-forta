@@ -5,7 +5,7 @@ import { handleBlock } from "./agent-the-graph";
 
 jest.mock("ethers");
 
-describe("polygon", () => {
+describe("the graph", () => {
   let logSpy: jest.SpyInstance;
 
   beforeEach(async () => {

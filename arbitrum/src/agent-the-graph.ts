@@ -15,7 +15,7 @@ import {
   BILLING_ADDRESS,
   GRAPH_BALANCE_THRESHOLD,
   LIDO_VAULT_ADDRESS,
-  MATIC_DECIMALS,
+  ETH_DECIMALS,
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
@@ -56,7 +56,9 @@ async function handleLidoGraphBalance(
 
     const balance = new BigNumber(
       String(await billing.functions.userBalances(LIDO_VAULT_ADDRESS))
-    ).div(MATIC_DECIMALS);
+    ).div(ETH_DECIMALS);
+
+    console.log(balance);
 
     if (balance.isLessThanOrEqualTo(GRAPH_BALANCE_THRESHOLD)) {
       findings.push(

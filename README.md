@@ -12,6 +12,8 @@
 
 /polygon - Detection bot for Lido Apps on the Polygon network (should be launched against Polygon mainnet)
 
+/arbitrum - Detection bot for Lido Apps on the Arbitrum network (should be launched against Arbitrum mainnet)
+
 /phishing-detect - Phishing detection bot for the Lido ERC20 tokens
 
 /lido-rewards - Lido reWARDS committee bot

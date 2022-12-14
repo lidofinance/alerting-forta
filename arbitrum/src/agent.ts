@@ -13,8 +13,7 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentAave from "./agent-aave";
-import * as agentFinance from "./agent-finance";
+import * as agentTheGraph from "./agent-the-graph";
 
 import VERSION from "./version";
 
@@ -27,7 +26,7 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [agentAave, agentFinance];
+const subAgents: SubAgent[] = [agentTheGraph];
 
 // block or tx handling should take no more than 60 sec.
 // If not all processing is done it will be done later in background
