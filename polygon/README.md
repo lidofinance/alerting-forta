@@ -6,7 +6,9 @@
 
 ## Alerts
 
-- LOW-LIDO-GRAPH-BALANCE - Low balance of Lido vault for The Graph
+- CURVE-POOL-SIZE-CHANGE - Significant change in Curve stMATIC/MATIC pool balance
+- BALANCER-POOL-SIZE-CHANGE - Significant change in Balancer stMATIC/WMATIC pool balance
+- HUGE-AAVE-TX - Huge deposit/withdrawal form AAVE stMATIC pool
 
 ## Development
 
