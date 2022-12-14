@@ -58,8 +58,6 @@ async function handleLidoGraphBalance(
       String(await billing.functions.userBalances(LIDO_VAULT_ADDRESS))
     ).div(ETH_DECIMALS);
 
-    console.log(balance);
-
     if (balance.isLessThanOrEqualTo(GRAPH_BALANCE_THRESHOLD)) {
       findings.push(
         Finding.fromObject({
