@@ -94,14 +94,14 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
       const proStr = pro.toFixed(2) + "% pro";
       const contraStr = contra.toFixed(2) + "% contra";
       const alertLevel = old.alertLevel || 0;
-      if (alertLevel < 2 && timeLeft < 3600 * 4 && updated.phase == 1) {
+      if (alertLevel < 2 && timeLeft < 3600 * 4) {
         const text =
           `Final note 🔔, less than 4 hours left till the end of the objection phase for ` +
           `${formatLink(`voting #${key}`, url)} ` +
           `(${proStr}, ${contraStr}, ${resultsStr})`;
         updated.alertLevel = 2;
         voteStateChanged(text, findings);
-      } else if (old.phase == 1 && updated.phase == 2) {
+      } else if (old.phase == 0 && updated.phase == 1) {
         const text =
           `Hi there 👋, objection phase 🙅‍♂️ started for ` +
           `${formatLink(`voting #${key}`, url)} ` +
@@ -122,8 +122,6 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
         } ` + `(${proStr}, ${contraStr}, ${resultsStr})`;
       voteStateChanged(text, findings);
       activeVotes.delete(key);
-    } else {
-      activeVotes.delete(key);
     }
   });
 }
@@ -137,10 +135,15 @@ async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
       const url = `${VOTING_BASE_URL}${key}`;
       if (total.gte(lastTotal.plus(HUGE_VOTE_DISTANCE)) && !vote.noMorePing) {
         if (vote.passed) {
-          hugeVotesWithQuorum(total.minus(lastTotal), key, vote, findings);
+          reportHugeVotesWithQuorum(
+            total.minus(lastTotal),
+            key,
+            vote,
+            findings
+          );
           vote.noMorePing = true;
         } else {
-          hugeVotes(total.minus(lastTotal), key, vote, findings);
+          reportHugeVotes(total.minus(lastTotal), key, vote, findings);
         }
         vote.lastReportedTotal = total;
         activeVotes.set(key, vote);
@@ -182,8 +185,8 @@ function handleAragonEventsOfNoticeTransaction(
 ) {
   ARAGON_VOTING_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
@@ -194,7 +197,7 @@ function handleAragonEventsOfNoticeTransaction(
             metadata: { args: String(event.args) },
           })
         );
-      }
+      });
     }
   });
 }
@@ -300,7 +303,7 @@ function voteStateChanged(text: string, findings: Finding[]) {
   );
 }
 
-function hugeVotes(
+function reportHugeVotes(
   votesDiff: BigNumber,
   id: number,
   vote: VoteInfo,
@@ -320,7 +323,7 @@ function hugeVotes(
   );
 }
 
-function hugeVotesWithQuorum(
+function reportHugeVotesWithQuorum(
   votesDiff: BigNumber,
   id: number,
   vote: VoteInfo,
