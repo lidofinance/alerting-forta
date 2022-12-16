@@ -223,6 +223,15 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
       `EasyTrack motion ${args._motionId} was rejected`,
     severity: FindingSeverity.Info,
   },
+  {
+    address: EASY_TRACK_ADDRESS,
+    event: "event MotionCanceled(uint256 indexed _motionId)",
+    alertId: "EASY-TRACK-MOTION-CANCELED",
+    name: "❌ EasyTrack: Motion canceled",
+    description: (args: any) =>
+      `EasyTrack motion ${args._motionId} was canceled`,
+    severity: FindingSeverity.Info,
+  },
 
   {
     address: REWARD_PROGRAMS_REGISTRY_ADDRESS,
