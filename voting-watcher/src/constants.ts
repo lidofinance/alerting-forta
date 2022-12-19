@@ -40,7 +40,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     name: "✅ Aragon: Vote executed",
     description: (args: any) =>
       `${formatLink(
-        `Voting #${args.voteId}}`,
+        `Voting #${args.voteId}`,
         `${VOTING_BASE_URL}${args.voteId}`
       )} was executed`,
     severity: FindingSeverity.Info,
