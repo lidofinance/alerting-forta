@@ -1,0 +1,15 @@
+---
+name: Tests @ voting-watcher
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "voting-watcher/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./voting-watcher
+    secrets: inherit
