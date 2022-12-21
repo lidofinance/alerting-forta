@@ -12,7 +12,7 @@ import {
 import { STORAGE_SLOTS, ContractStorageMap, StorageSlot } from "./constants";
 import { getStorageValue } from "./helpers";
 
-export const name = "StorageWatched";
+export const name = "StorageWatcher";
 
 let contractsStorageValues: Map<string, Map<string, string>> = new Map();
 

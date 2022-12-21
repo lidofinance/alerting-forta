@@ -2,6 +2,9 @@
   "name": "lido-reward-programs-forta-agent",
   "version": "0.0.1",
   "description": "Forta Agent for Lido reward programs",
+  "chainIds": [
+    1
+  ],
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",

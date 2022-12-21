@@ -2,6 +2,9 @@
   "name": "lido-financial-forta-bot",
   "version": "0.0.1",
   "description": "Forta Bot for Lido protocol financial operations",
+  "chainIds": [
+    1
+  ],
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",

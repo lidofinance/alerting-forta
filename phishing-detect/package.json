@@ -2,6 +2,9 @@
   "name": "lido-phishing-detection-forta-agent",
   "version": "0.0.1",
   "description": "Forta Agent for phishing detection",
+  "chainIds": [
+    1
+  ],
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
