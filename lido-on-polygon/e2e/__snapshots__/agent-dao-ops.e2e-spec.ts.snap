@@ -5,6 +5,7 @@ Finding {
   "addresses": [],
   "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
   "description": "Balance of deposit executor (0xa22d223e732a5dcf4ff4529aa9a135293b7258fe) is 0.1339 ETH. This is extremely low!",
+  "labels": [],
   "metadata": {},
   "name": "⚠️ Low deposit executor balance (Lido on Polygon)",
   "protocol": "ethereum",
@@ -20,6 +21,7 @@ Finding {
   "description": "Change 41.50%, 
 new reward: 71795, 
 old reward: 50739",
+  "labels": [],
   "metadata": {},
   "name": "ℹ Polygon checkpoint reward was changed",
   "protocol": "ethereum",
@@ -33,6 +35,7 @@ Finding {
   "addresses": [],
   "alertId": "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED",
   "description": "Pooled MATIC was delegated to validators. Delegated amount 679.9k MATIC remained pooled 0 wei",
+  "labels": [],
   "metadata": {
     "args": "679886151216827958837108,0",
   },
@@ -48,6 +51,7 @@ Finding {
   "addresses": [],
   "alertId": "STMATIC-CONTRACT-REWARDS-DISTRIBUTED",
   "description": "Rewards for stMATIC was distributed. Rewards amount 571.50 MATIC",
+  "labels": [],
   "metadata": {
     "args": "571502046258362721768",
   },
