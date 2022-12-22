@@ -2,6 +2,9 @@
   "name": "lido-polygon-bot",
   "version": "0.0.1",
   "description": "Forta Bot for Lido Apps on Polygon network",
+  "chainIds": [
+    137
+  ],
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
