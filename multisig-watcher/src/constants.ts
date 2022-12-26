@@ -7,7 +7,7 @@ import { FindingSeverity } from "forta-agent";
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
-export const NON_ETH_FETCH_INTERVAL = 1
+export const NON_ETH_FETCH_INTERVAL = 1;
 
 // ADDRESSES AND EVENTS
 
@@ -44,10 +44,7 @@ export const SAFES_ETH = [
 ];
 
 export const SAFES_POLYGON = [
-  [
-    "0x87d93d9b2c672bf9c9642d853a8682546a5012b5",
-    "reWARDS Committee (Polygon)",
-  ],
+  ["0x87d93d9b2c672bf9c9642d853a8682546a5012b5", "reWARDS Committee (Polygon)"],
 ];
 
 export const SAFES_ARBITRUM = [
