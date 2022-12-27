@@ -1,0 +1,17 @@
+{
+    "Arbitrum": {
+        "RpcUrl": "https://arb1.arbitrum.io/rpc"
+    },
+    "Optimism": {
+        "RpcUrl": "https://mainnet.optimism.io"
+    },
+    "Polygon": {
+        "RpcUrl": "https://polygon-rpc.com"
+    },
+    "Moonriver": {
+        "RpcUrl": "https://moonriver.api.onfinality.io/public"
+    },
+    "Moonbeam": {
+        "RpcUrl": "https://moonbeam.api.onfinality.io/public"
+    }
+}
