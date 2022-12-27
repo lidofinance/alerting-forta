@@ -28,8 +28,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 function handleSafeEvents(txEvent: TransactionEvent, findings: Finding[]) {
-  SAFES_ETH.forEach((safeInfo) => {
-    const [safeAddress, safeName] = safeInfo;
+  SAFES_ETH.forEach(([safeAddress, safeName]) => {
     if (safeAddress in txEvent.addresses) {
       GNOSIS_SAFE_EVENTS_OF_NOTICE.forEach((eventInfo) => {
         const events = txEvent.filterLog(eventInfo.event, safeAddress);
