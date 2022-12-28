@@ -1,12 +1,12 @@
 {
     "Arbitrum": {
-        "RpcUrl": "https://arb1.arbitrum.io/rpc"
+        "RpcUrl": "https://arb-mainnet.g.alchemy.com/v2/N3Gs6VtPShTfaG9EvR8LSh4EEGagLunq"
     },
     "Optimism": {
-        "RpcUrl": "https://mainnet.optimism.io"
+        "RpcUrl": "https://opt-mainnet.g.alchemy.com/v2/N3Gs6VtPShTfaG9EvR8LSh4EEGagLunq"
     },
     "Polygon": {
-        "RpcUrl": "https://polygon-rpc.com"
+        "RpcUrl": "https://polygon-mainnet.g.alchemy.com/v2/N3Gs6VtPShTfaG9EvR8LSh4EEGagLunq"
     },
     "Moonriver": {
         "RpcUrl": "https://moonriver.api.onfinality.io/public"
