@@ -7,7 +7,7 @@ import { FindingSeverity } from "forta-agent";
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
-export const NON_ETH_FETCH_INTERVAL = 1;
+export const NON_ETH_FETCH_INTERVAL = 10;
 
 // ADDRESSES AND EVENTS
 
