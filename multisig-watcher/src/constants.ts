@@ -40,22 +40,22 @@ export const BLOCKCHAIN_INFO: { [key in Blockchain]: BlockchainInfo } = {
   [Blockchain.ETH]: {
     addressUrlPrefix: "https://etherscan.io/address/",
     txUrlPrefix: "https://etherscan.io/tx/",
-    safeTxUrlPrefix: "https://gnosis-safe.io/app/eth:",
+    safeTxUrlPrefix: "https://app.safe.global/eth:",
   },
   [Blockchain.POLYGON]: {
     addressUrlPrefix: "https://polygonscan.com/address/",
     txUrlPrefix: "https://polygonscan.com/tx/",
-    safeTxUrlPrefix: "https://gnosis-safe.io/app/matic:",
+    safeTxUrlPrefix: "https://app.safe.global/matic:",
   },
   [Blockchain.ARBITRUM]: {
     addressUrlPrefix: "https://arbiscan.io/address/",
     txUrlPrefix: "https://arbiscan.io/tx/",
-    safeTxUrlPrefix: "https://gnosis-safe.io/app/arb1:",
+    safeTxUrlPrefix: "https://app.safe.global/arb1:",
   },
   [Blockchain.OPTIMISM]: {
     addressUrlPrefix: "https://optimistic.etherscan.io/address/",
     txUrlPrefix: "https://optimistic.etherscan.io/tx/",
-    safeTxUrlPrefix: "https://gnosis-safe.io/app/oeth:",
+    safeTxUrlPrefix: "https://app.safe.global/oeth:",
   },
   [Blockchain.MOONBEAM]: {
     addressUrlPrefix: "https://moonbeam.moonscan.io/address/",
