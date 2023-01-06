@@ -248,7 +248,7 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     name: "✅ Gnosis Safe: TX Executed",
     description: (safeTx: SafeTX, args: any) =>
       `[TX](${getSafeTxLink(safeTx)}) executed by ${getSafeLink(safeTx)}\n` +
-      `[See in explorer](${getTxLink(safeTx)})`,
+      `[TX in blockchain explorer](${getTxLink(safeTx)})`,
     severity: FindingSeverity.Info,
   },
   {
@@ -284,5 +284,5 @@ function getSafeTxLink(safeTx: SafeTX): string {
 }
 
 function getTxLink(safeTx: SafeTX): string {
-  return `${BLOCKCHAIN_INFO[safeTx.blockchain].txUrlPrefix}${safeTx.tx})`;
+  return `${BLOCKCHAIN_INFO[safeTx.blockchain].txUrlPrefix}${safeTx.tx}`;
 }
