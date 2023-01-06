@@ -1,5 +1,9 @@
 import { BlockEvent, Finding } from "forta-agent";
-import { Blockchain, NON_ETH_FETCH_INTERVAL, SAFES as safesGlobal } from "./constants";
+import {
+  Blockchain,
+  NON_ETH_FETCH_INTERVAL,
+  SAFES as safesGlobal,
+} from "./constants";
 import { moonbeamProvider as provider } from "./providers";
 import { handleSafeEvents } from "./handlers";
 

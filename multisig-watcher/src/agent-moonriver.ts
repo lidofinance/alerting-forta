@@ -1,10 +1,13 @@
 import { BlockEvent, Finding } from "forta-agent";
-import { Blockchain, NON_ETH_FETCH_INTERVAL, SAFES as safesGlobal } from "./constants";
+import {
+  Blockchain,
+  NON_ETH_FETCH_INTERVAL,
+  SAFES as safesGlobal,
+} from "./constants";
 import { moonriverProvider as provider } from "./providers";
 import { handleSafeEvents } from "./handlers";
 
 export const name = "Moonriver-multisig-watcher";
-
 
 const blockchain = Blockchain.MOONRIVER;
 const safes = safesGlobal[blockchain];
