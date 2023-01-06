@@ -2,21 +2,21 @@ import config from "./config/bot-config.json";
 import { ethers } from "forta-agent";
 
 export const polygonProvider = new ethers.providers.JsonRpcProvider(
-  config.Polygon.RpcUrl
+  Buffer.from(config.Polygon.RpcUrl, "base64").toString("utf-8")
 );
 
 export const arbitrumProvider = new ethers.providers.JsonRpcProvider(
-  config.Arbitrum.RpcUrl
+  Buffer.from(config.Arbitrum.RpcUrl, "base64").toString("utf-8")
 );
 
 export const optimismProvider = new ethers.providers.JsonRpcProvider(
-  config.Optimism.RpcUrl
+  Buffer.from(config.Optimism.RpcUrl, "base64").toString("utf-8")
 );
 
 export const moonbeamProvider = new ethers.providers.JsonRpcProvider(
-  config.Moonbeam.RpcUrl
+  Buffer.from(config.Moonbeam.RpcUrl, "base64").toString("utf-8")
 );
 
 export const moonriverProvider = new ethers.providers.JsonRpcProvider(
-  config.Moonriver.RpcUrl
+  Buffer.from(config.Moonriver.RpcUrl, "base64").toString("utf-8")
 );
