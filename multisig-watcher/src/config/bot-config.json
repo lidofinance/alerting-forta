@@ -1,17 +1,17 @@
 {
     "Arbitrum": {
-        "RpcUrl": "aHR0cHM6Ly9hcmItbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
+        "RpcUrlBase64": "aHR0cHM6Ly9hcmItbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
     },
     "Optimism": {
-        "RpcUrl": "aHR0cHM6Ly9vcHQtbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
+        "RpcUrlBase64": "aHR0cHM6Ly9vcHQtbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
     },
     "Polygon": {
-        "RpcUrl": "aHR0cHM6Ly9wb2x5Z29uLW1haW5uZXQuZy5hbGNoZW15LmNvbS92Mi9OM0dzNlZ0UFNoVGZhRzlFdlI4TFNoNEVFR2FnTHVucQ"
+        "RpcUrlBase64": "aHR0cHM6Ly9wb2x5Z29uLW1haW5uZXQuZy5hbGNoZW15LmNvbS92Mi9OM0dzNlZ0UFNoVGZhRzlFdlI4TFNoNEVFR2FnTHVucQ"
     },
     "Moonriver": {
-        "RpcUrl": "aHR0cHM6Ly9tb29ucml2ZXIuYXBpLm9uZmluYWxpdHkuaW8vcHVibGlj"
+        "RpcUrlBase64": "aHR0cHM6Ly9tb29ucml2ZXIuYXBpLm9uZmluYWxpdHkuaW8vcHVibGlj"
     },
     "Moonbeam": {
-        "RpcUrl": "aHR0cHM6Ly9tb29uYmVhbS5hcGkub25maW5hbGl0eS5pby9wdWJsaWM="
+        "RpcUrlBase64": "aHR0cHM6Ly9tb29uYmVhbS5hcGkub25maW5hbGl0eS5pby9wdWJsaWM="
     }
 }
