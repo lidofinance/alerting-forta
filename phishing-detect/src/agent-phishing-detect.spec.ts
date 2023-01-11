@@ -3,23 +3,24 @@ import * as forta from "forta-agent";
 
 import {
   spenders,
-  spendersLastAlerted,
   handleTransaction,
+  handleBlock,
 } from "./agent-phishing-detect";
 import {
   MONITORED_ERC20_ADDRESSES,
   UNIQ_DELEGATES_THRESHOLD_CONTRACT,
   UNIQ_DELEGATES_THRESHOLD_EOA,
+  BLOCKS_PER_HOUR,
 } from "./constants";
 
-function randromAddress(): string {
+function randomAddress(): string {
   return "0x" + crypto.randomBytes(20).toString("hex");
 }
 
 describe("phishing-detect", () => {
   const token = MONITORED_ERC20_ADDRESSES.keys().next().value;
-  const approver = randromAddress();
-  const spender = randromAddress();
+  const approver = randomAddress();
+  const spender = randomAddress();
 
   let logSpy: jest.SpyInstance;
 
@@ -43,20 +44,17 @@ describe("phishing-detect", () => {
     },
   } as any;
 
-  beforeEach(async () => {
-    jest
-      .spyOn(forta, "getTransactionReceipt")
-      .mockImplementation(async (_: string) => {
-        return { status: true } as any;
-      }); // successful always
+  const dummyBlock = {
+    blockNumber: BLOCKS_PER_HOUR * 10,
+  } as any;
 
+  beforeEach(async () => {
     logSpy = jest.spyOn(console, "log");
     logSpy.mockImplementation(() => {});
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    spendersLastAlerted.clear();
     spenders.clear();
   });
 
@@ -65,6 +63,8 @@ describe("phishing-detect", () => {
     spenders.set(spender.toLowerCase(), {
       isContract: true,
       tokens: new Map(),
+      reportedApproversCount: 0,
+      reportedTokenTypesCount: 0,
     });
 
     // add hits
@@ -74,25 +74,27 @@ describe("phishing-detect", () => {
         token,
         new Set(
           Array.from({ length: UNIQ_DELEGATES_THRESHOLD_CONTRACT - 1 }, () =>
-            randromAddress()
+            randomAddress()
           )
         )
       );
 
-    const findings = await handleTransaction(txEventWithHighApproval);
+    handleTransaction(txEventWithHighApproval);
+    const findings = await handleBlock(dummyBlock);
 
     expect(findings.length).toEqual(1);
     expect(findings.at(0)).toEqual(
       expect.objectContaining({
-        alertId: "HIGH-ERC20-APPROVALS",
+        alertId: "PHISHING-CONTRACT-DETECTED",
         severity: forta.FindingSeverity.High,
         type: forta.FindingType.Suspicious,
-        metadata: expect.objectContaining({
-          spender,
-          token,
-        }),
+        metadata: {spender: spender.toLowerCase()},
       })
     );
+
+    const findingsSecond = await handleBlock(dummyBlock);
+
+    expect(findingsSecond.length).toEqual(0);
   });
 
   it("should process a suspicious transaction to EOA", async () => {
@@ -100,6 +102,8 @@ describe("phishing-detect", () => {
     spenders.set(spender.toLowerCase(), {
       isContract: false,
       tokens: new Map(),
+      reportedApproversCount: 0,
+      reportedTokenTypesCount: 0,
     });
 
     // add hits
@@ -109,24 +113,26 @@ describe("phishing-detect", () => {
         token,
         new Set(
           Array.from({ length: UNIQ_DELEGATES_THRESHOLD_EOA - 1 }, () =>
-            randromAddress()
+            randomAddress()
           )
         )
       );
 
-    const findings = await handleTransaction(txEventWithHighApproval);
+    handleTransaction(txEventWithHighApproval);
+    const findings = await handleBlock(dummyBlock);
 
     expect(findings.length).toEqual(1);
     expect(findings.at(0)).toEqual(
       expect.objectContaining({
-        alertId: "HIGH-ERC20-APPROVALS",
+        alertId: "PHISHING-EOA-DETECTED",
         severity: forta.FindingSeverity.Critical,
         type: forta.FindingType.Suspicious,
-        metadata: expect.objectContaining({
-          spender,
-          token,
-        }),
+        metadata: {spender: spender.toLowerCase()},
       })
     );
+
+    const findingsSecond = await handleBlock(dummyBlock);
+
+    expect(findingsSecond.length).toEqual(0);
   });
 });
