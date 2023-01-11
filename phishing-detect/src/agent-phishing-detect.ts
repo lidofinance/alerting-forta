@@ -123,8 +123,8 @@ async function handleSpenders(findings: Finding[]) {
               `${etherscanLink(spender)}(${addressType})`,
             alertId: `PHISHING-${addressType}-DETECTED`,
             severity: spenderInfo.isContract
-              ? FindingSeverity.High
-              : FindingSeverity.Critical,
+              ? FindingSeverity.Medium
+              : FindingSeverity.High,
             type: FindingType.Suspicious,
             metadata: { spender },
           })

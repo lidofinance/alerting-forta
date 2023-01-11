@@ -5,14 +5,13 @@ import BigNumber from "bignumber.js";
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
-export const BLOCKS_PER_HOUR = 60 * 60 / 12;
+export const BLOCKS_PER_HOUR = (60 * 60) / 12;
 
 // alert if more than 5 addresses delegated their tokens to non-whitelist address
 export const UNIQ_DELEGATES_THRESHOLD_EOA = 5;
 
 // alert if more than 10 addresses delegated their tokens to non-whitelist address
 export const UNIQ_DELEGATES_THRESHOLD_CONTRACT = 10;
-
 
 // ADDRESSES, EVENTS, ABIs
 

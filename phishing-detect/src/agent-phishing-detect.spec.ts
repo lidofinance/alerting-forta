@@ -86,9 +86,9 @@ describe("phishing-detect", () => {
     expect(findings.at(0)).toEqual(
       expect.objectContaining({
         alertId: "PHISHING-CONTRACT-DETECTED",
-        severity: forta.FindingSeverity.High,
+        severity: forta.FindingSeverity.Medium,
         type: forta.FindingType.Suspicious,
-        metadata: {spender: spender.toLowerCase()},
+        metadata: { spender: spender.toLowerCase() },
       })
     );
 
@@ -125,9 +125,9 @@ describe("phishing-detect", () => {
     expect(findings.at(0)).toEqual(
       expect.objectContaining({
         alertId: "PHISHING-EOA-DETECTED",
-        severity: forta.FindingSeverity.Critical,
+        severity: forta.FindingSeverity.High,
         type: forta.FindingType.Suspicious,
-        metadata: {spender: spender.toLowerCase()},
+        metadata: { spender: spender.toLowerCase() },
       })
     );
 
