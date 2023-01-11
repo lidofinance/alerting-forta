@@ -7,9 +7,17 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { GNOSIS_SAFE_EVENTS_OF_NOTICE, SAFES_ETH } from "./constants";
+import {
+  Blockchain,
+  GNOSIS_SAFE_EVENTS_OF_NOTICE,
+  SAFES,
+  SafeTX,
+} from "./constants";
 
 export const name = "Ethereum-multisig-watcher";
+
+const blockchain = Blockchain.ETH;
+const safes = SAFES[blockchain];
 
 export async function initialize(
   currentBlock: number
@@ -28,18 +36,22 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 function handleSafeEvents(txEvent: TransactionEvent, findings: Finding[]) {
-  SAFES_ETH.forEach(([safeAddress, safeName]) => {
+  safes.forEach(([safeAddress, safeName]) => {
     if (safeAddress in txEvent.addresses) {
       GNOSIS_SAFE_EVENTS_OF_NOTICE.forEach((eventInfo) => {
         const events = txEvent.filterLog(eventInfo.event, safeAddress);
         events.forEach((event) => {
+          const safeTx: SafeTX = {
+            tx: txEvent.transaction.hash,
+            safeAddress: safeAddress,
+            safeName: safeName,
+            safeTx: event.args.txHash || "",
+            blockchain: blockchain,
+          };
           findings.push(
             Finding.fromObject({
               name: eventInfo.name,
-              description: eventInfo.description(
-                `${safeName} (${safeAddress})`,
-                event.args
-              ),
+              description: eventInfo.description(safeTx, event.args),
               alertId: eventInfo.alertId,
               severity: eventInfo.severity,
               type: FindingType.Info,

@@ -3,11 +3,12 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 import { utils } from "ethers";
 
 import { eventSig } from "./helpers";
-import { GNOSIS_SAFE_EVENTS_OF_NOTICE } from "./constants";
+import { Blockchain, GNOSIS_SAFE_EVENTS_OF_NOTICE, SafeTX } from "./constants";
 
 export async function handleSafeEvents(
   findings: Finding[],
   provider: JsonRpcProvider,
+  blockchain: Blockchain,
   safes: string[][],
   fromBlock: number,
   toBlock: number
@@ -27,13 +28,17 @@ export async function handleSafeEvents(
         );
         events.forEach((event) => {
           const parsedEvent = iface.parseLog(event);
+          const safeTx: SafeTX = {
+            tx: event.transactionHash,
+            safeAddress: safeAddress,
+            safeName: safeName,
+            safeTx: parsedEvent.args.txHash || "",
+            blockchain: blockchain,
+          };
           findings.push(
             Finding.fromObject({
               name: eventInfo.name,
-              description: eventInfo.description(
-                `${safeName} (${safeAddress})`,
-                parsedEvent.args
-              ),
+              description: eventInfo.description(safeTx, parsedEvent.args),
               alertId: eventInfo.alertId,
               severity: eventInfo.severity,
               type: FindingType.Info,
