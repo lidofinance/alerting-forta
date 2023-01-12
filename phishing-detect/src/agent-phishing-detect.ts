@@ -100,7 +100,6 @@ async function handleSpenders(findings: Finding[]) {
       if (spenderInfo.isContract == undefined) {
         spenderInfo.isContract = await isContract(spender);
       }
-      const uniqTokenTypes = spenderInfo.tokens.size;
       const uniqApprovers = Array.from(spenderInfo.tokens.values()).reduce(
         (tmpSum, tokenApprovers) => tmpSum + tokenApprovers.size,
         0
