@@ -80,6 +80,33 @@ describe("phishing-detect", () => {
       );
 
     handleTransaction(txEventWithHighApproval);
+
+    expect(
+      spenders.get(spender.toLowerCase())?.tokens.get(token)?.size
+    ).toEqual(UNIQ_DELEGATES_THRESHOLD_CONTRACT);
+  });
+
+  it("should produce alert on a suspicious approvals to contract", async () => {
+    // init cache
+    spenders.set(spender.toLowerCase(), {
+      isContract: true,
+      tokens: new Map(),
+      reportedApproversCount: 0,
+      reportedTokenTypesCount: 0,
+    });
+
+    // add hits
+    spenders
+      .get(spender.toLowerCase())
+      ?.tokens.set(
+        token,
+        new Set(
+          Array.from({ length: UNIQ_DELEGATES_THRESHOLD_CONTRACT }, () =>
+            randomAddress()
+          )
+        )
+      );
+
     const findings = await handleBlock(dummyBlock);
 
     expect(findings.length).toEqual(1);
@@ -119,6 +146,32 @@ describe("phishing-detect", () => {
       );
 
     handleTransaction(txEventWithHighApproval);
+
+    expect(
+      spenders.get(spender.toLowerCase())?.tokens.get(token)?.size
+    ).toEqual(UNIQ_DELEGATES_THRESHOLD_EOA);
+  });
+
+  it("should produce alert on a suspicious approvals to EOA", async () => {
+    // init cache
+    spenders.set(spender.toLowerCase(), {
+      isContract: false,
+      tokens: new Map(),
+      reportedApproversCount: 0,
+      reportedTokenTypesCount: 0,
+    });
+
+    // add hits
+    spenders
+      .get(spender.toLowerCase())
+      ?.tokens.set(
+        token,
+        new Set(
+          Array.from({ length: UNIQ_DELEGATES_THRESHOLD_EOA }, () =>
+            randomAddress()
+          )
+        )
+      );
     const findings = await handleBlock(dummyBlock);
 
     expect(findings.length).toEqual(1);

@@ -116,7 +116,7 @@ async function handleSpenders(findings: Finding[]) {
       ) {
         findings.push(
           Finding.fromObject({
-            name: "Phishing detected",
+            name: `Phishing ${addressType.toLocaleLowerCase()} ${spender} detected`,
             description:
               `Significant amount of address has approved Lido tokens to ` +
               `${etherscanLink(spender)}(${addressType})`,
