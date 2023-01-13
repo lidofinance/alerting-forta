@@ -46,7 +46,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   return findings;
 }
 
-export function handleTransaction(txEvent: TransactionEvent) {
+export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   const approvalEvents = txEvent
