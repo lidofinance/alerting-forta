@@ -119,7 +119,7 @@ async function handleSpenders(findings: Finding[]) {
             name: `Phishing ${addressType.toLocaleLowerCase()} ${spender} detected`,
             description:
               `Significant amount of address has approved Lido tokens to ` +
-              `${etherscanLink(spender)}(${addressType})`,
+              `${etherscanLink(spender)} (${addressType})`,
             alertId: `PHISHING-${addressType}-DETECTED`,
             severity: spenderInfo.isContract
               ? FindingSeverity.Medium
