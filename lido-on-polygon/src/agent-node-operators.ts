@@ -34,7 +34,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   const version = await getNORVersion(blockEvent.blockNumber);
-  if (!version.startsWith("1.")) {
+  if (!version.replace(/("|')/, '').startsWith("1.")) {
     return findings; // do nothing
   }
 
