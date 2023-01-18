@@ -14,6 +14,8 @@ import {
   MATIC_STAKING_NFT_ADDRESS,
   POLYGON_STAKE_MANAGER_PROXY,
   LIDO_VALIDATORS_IDS,
+  FULL_24_HOURS,
+  SECS_PER_BLOCK,
 } from "./constants";
 import { ethersProvider } from "./ethers";
 import { getNORVersion } from "./helpers";
@@ -203,10 +205,10 @@ async function handleNodeOperatorsActiveSet(
     })
   );
 
-  // first time or every 100 blocks i.e. ~ 20 min otherwise
+  // first time or every ~ 24 hours otherwise
   const mayFire = (r: IsValidatorResult) =>
     !lidoValidatorGoesInactiveReport.has(r.vId) ||
-    blockEvent.blockNumber % 100 == 0;
+    blockEvent.blockNumber % (FULL_24_HOURS / SECS_PER_BLOCK) == 0;
 
   rows
     .filter(isNotActive)
@@ -220,7 +222,7 @@ async function handleNodeOperatorsActiveSet(
             r.vId
           } is not in the active set`,
           alertId: "LIDO-VALIDATOR-NOT-IN-ACTIVE-SET",
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         })
       );
@@ -231,7 +233,7 @@ async function handleNodeOperatorsActiveSet(
     if (reported) {
       findings.push(
         Finding.fromObject({
-          name: "🚨 Lido validator is back in the active set",
+          name: "✅ Lido validator is back in the active set",
           description: `Lido validator ${LIDO_VALIDATORS_IDS[r.vId]} of NFT ${
             r.vId
           } is back in the active set`,

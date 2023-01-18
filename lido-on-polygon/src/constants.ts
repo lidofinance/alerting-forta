@@ -6,7 +6,7 @@ import { abbreviateNumber } from "./helpers";
 export const MATIC_DECIMALS = new BigNumber(10 ** 18);
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
-export const SECS_PER_BLOCK = 13;
+export const SECS_PER_BLOCK = 12;
 
 // 1 hour
 export const ONE_HOUR = 60 * 60;
