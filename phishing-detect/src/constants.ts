@@ -150,6 +150,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x7273d1671fcd37ef5b949ebf88234aa9c3e43957", // Harpie: Transferer
   "0xaa17633AA5A3Cb56698838561161bdb16Cebb8E3", // Sense: Periphery
   "0xCE5513474E077F5336cf1B33c1347FDD8D48aE8c", // Ribbon Finance: ETH Put-Selling Vault V2
+  "0x99a58482bd75cbab83b27ec03ca68ff489b5788f", // Curve Registry Exchange Contract
+  "0x6131b5fae19ea4f9d964eac0408e4408b66337b5", // KyberSwap: Meta Aggregation Router v2
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
