@@ -8,9 +8,12 @@ import {
 
 import NODE_OPERATORS_ABI from "./abi/NodeOperators.json";
 import MATIC_STAKING_NFT_ABI from "./abi/MaticStakingNFT.json";
+import STAKE_MANAGER_ABI from "./abi/StakeManager.json";
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   MATIC_STAKING_NFT_ADDRESS,
+  POLYGON_STAKE_MANAGER_PROXY,
+  LIDO_VALIDATORS_IDS,
 } from "./constants";
 import { ethersProvider } from "./ethers";
 import { getNORVersion } from "./helpers";
@@ -19,6 +22,8 @@ import { getNORVersion } from "./helpers";
 const REPORT_WINDOW_BAD_OPERATORS_STATE = 60 * 60 * 2;
 // 2 hours
 const REPORT_WINDOW_NO_NFT_OWNER = 60 * 60 * 2;
+
+const lidoValidatorGoesInactiveReport: Set<string> = new Set();
 
 let lastReportedBadOperatorsState = 0;
 let lastReportedBadNftOwner = 0;
@@ -33,15 +38,16 @@ export async function initialize(): Promise<{ [key: string]: string }> {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
+  const handlers: { (b: BlockEvent, f: Finding[]): Promise<void> }[] = [];
+  handlers.push(handleNodeOperatorsActiveSet); // should be checked always
+
   const version = await getNORVersion(blockEvent.blockNumber);
-  if (!version.replace(/("|')/, '').startsWith("1.")) {
-    return findings; // do nothing
+  if (version.replace(/("|')/, "").startsWith("1.")) {
+    handlers.push(handleNodeOperatorsNftOwners);
+    handlers.push(handleNodeOperatorsStatus);
   }
 
-  await Promise.all([
-    handleNodeOperatorsStatus(blockEvent, findings),
-    handleNodeOperatorsNftOwners(blockEvent, findings),
-  ]);
+  await Promise.all(handlers.map((h) => h(blockEvent, findings)));
 
   return findings;
 }
@@ -156,4 +162,84 @@ async function handleNodeOperatorsNftOwners(
       })
     );
   }
+}
+
+async function handleNodeOperatorsActiveSet(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  interface IsValidatorResult {
+    isValidator: boolean;
+    vId: string;
+  }
+
+  // just aliases for readability
+  const isNotActive = (r: IsValidatorResult) => !r.isValidator;
+  const isActive = (r: IsValidatorResult) => !!r.isValidator;
+
+  const popFromReported = (r: IsValidatorResult) => {
+    return (lidoValidatorGoesInactiveReport.delete(r.vId) && r) || undefined;
+  };
+  const addToReported = (r: IsValidatorResult) => {
+    lidoValidatorGoesInactiveReport.add(r.vId);
+  };
+
+  const stakeManager = new ethers.Contract(
+    POLYGON_STAKE_MANAGER_PROXY,
+    STAKE_MANAGER_ABI,
+    ethersProvider
+  );
+
+  const rows: IsValidatorResult[] = await Promise.all(
+    Object.keys(LIDO_VALIDATORS_IDS).map(async (vId) => {
+      const request: [boolean] = await stakeManager.functions.isValidator(vId, {
+        blockTag: blockEvent.blockNumber,
+      });
+
+      return {
+        isValidator: request[0], // why its an array?
+        vId,
+      };
+    })
+  );
+
+  // first time or every 100 blocks i.e. ~ 20 min otherwise
+  const mayFire = (r: IsValidatorResult) =>
+    !lidoValidatorGoesInactiveReport.has(r.vId) ||
+    blockEvent.blockNumber % 100 == 0;
+
+  rows
+    .filter(isNotActive)
+    .filter(mayFire)
+    .forEach((r) => {
+      addToReported(r);
+      findings.push(
+        Finding.fromObject({
+          name: "🚨 Lido validator is not in the active set",
+          description: `Lido validator ${LIDO_VALIDATORS_IDS[r.vId]} of NFT ${
+            r.vId
+          } is not in the active set`,
+          alertId: "LIDO-VALIDATOR-NOT-IN-ACTIVE-SET",
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
+        })
+      );
+    });
+
+  rows.filter(isActive).forEach((r) => {
+    const reported = popFromReported(r);
+    if (reported) {
+      findings.push(
+        Finding.fromObject({
+          name: "🚨 Lido validator is back in the active set",
+          description: `Lido validator ${LIDO_VALIDATORS_IDS[r.vId]} of NFT ${
+            r.vId
+          } is back in the active set`,
+          alertId: "LIDO-VALIDATOR-BACK-IN-ACTIVE-SET",
+          severity: FindingSeverity.Low,
+          type: FindingType.Info,
+        })
+      );
+    }
+  });
 }

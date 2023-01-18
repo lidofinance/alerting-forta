@@ -26,6 +26,8 @@ export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
   "0xa22d223e732a5dcf4ff4529aa9a135293b7258fe";
 export const POLYGON_ROOT_CHAIN_PROXY =
   "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287";
+export const POLYGON_STAKE_MANAGER_PROXY =
+  "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908";
 
 export const OWNER_MULTISIG_ADDRESS =
   "0xd65fa54f8df43064dfd8ddf223a446fc638800a9";
@@ -34,6 +36,16 @@ export const LIDO_ON_POLYGON_PROXIES = {
   stMATIC_proxy: "0x9ee91F9f426fA633d227f7a9b000E28b9dfd8599",
   validator_factory_proxy: "0x0a6C933495a7BB768d95f4667B074Dd5b95b78eB",
   node_operator_registry_proxy: "0x797C1369e578172112526dfcD0D5f9182067c928",
+};
+
+// Lido of validators ids from Lido Node Operators Registry in order of apperance
+export const LIDO_VALIDATORS_IDS: { [k: string]: string } = {
+  54: "ShardLabs",
+  64: "DSRV",
+  117: "Girnaar Nodes",
+  34: "HashQuark",
+  75: "kytzu",
+  79: "Matrix Stake",
 };
 
 // EVENT ABIs
