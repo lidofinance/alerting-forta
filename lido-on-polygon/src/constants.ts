@@ -13,6 +13,9 @@ export const ONE_HOUR = 60 * 60;
 // 24 hours
 export const FULL_24_HOURS = 24 * 60 * 60;
 
+export const BLOCKS_PER_DAY = FULL_24_HOURS / SECS_PER_BLOCK;
+export const BLOCK_AT_11_59_59_UTC = 16433550;
+
 // ADDRESSES
 export const MATIC_TOKEN_ADDRESS = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0";
 export const MATIC_STAKING_NFT_ADDRESS =

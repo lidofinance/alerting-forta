@@ -16,6 +16,9 @@ import {
   LIDO_VALIDATORS_IDS,
   FULL_24_HOURS,
   SECS_PER_BLOCK,
+  ONE_HOUR,
+  BLOCK_AT_11_59_59_UTC,
+  BLOCKS_PER_DAY,
 } from "./constants";
 import { ethersProvider } from "./ethers";
 import { getNORVersion } from "./helpers";
@@ -208,7 +211,7 @@ async function handleNodeOperatorsActiveSet(
   // first time or every ~ 24 hours otherwise
   const mayFire = (r: IsValidatorResult) =>
     !lidoValidatorGoesInactiveReport.has(r.vId) ||
-    blockEvent.blockNumber % (FULL_24_HOURS / SECS_PER_BLOCK) == 0;
+    (blockEvent.blockNumber - BLOCK_AT_11_59_59_UTC) % BLOCKS_PER_DAY === 0;
 
   rows
     .filter(isNotActive)
