@@ -444,8 +444,11 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
         findings.push(
           Finding.fromObject({
             name: "⚠️ Super sloppy Lido Oracle",
-            description: `Oracle ${oracle} has not reported before the quorum for more than 2 weeks` +
-            ` or have never reported yet`,,
+            description:
+              `Oracle ${oracle} ` +
+              `(${getOracleName(oracle.toLocaleLowerCase())}) ` +
+              `has not reported before the quorum for more than 2 weeks` +
+              ` or have never reported yet`,
             alertId: "SLOPPY-LIDO-ORACLE",
             severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
