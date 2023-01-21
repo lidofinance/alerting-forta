@@ -11,4 +11,4 @@ export const byBlockNumberDesc = (e1: Event, e2: Event) =>
 
 export const getOracleName = (oracleAddress: string) => {
   return LIDO_ORACLES.get(oracleAddress) || "Unknown";
-}
+};
