@@ -19,6 +19,7 @@ import {
 
 import INCREASE_STAKING_LIMIT_ABI from "./abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "./abi/NodeOperatorsRegistry.json";
+import { getMotionLink, getMotionType } from "./utils/tools";
 
 export const name = "EasyTrack";
 
@@ -71,7 +72,9 @@ async function handleEasyTrackMotionCreated(
       events.map(async (event) => {
         const args = event.args;
         let alertName = "ℹ EasyTrack: New motion created";
-        let description = `EasyTrack new motion ${args._motionId} created by ${args._creator}`;
+        let description =
+          `${getMotionType(args._evmScriptFactory)} ` +
+          `motion ${getMotionLink(args._motionId)} created by ${args._creator}`;
         if (
           args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS
         ) {
@@ -93,14 +96,15 @@ async function handleEasyTrackMotionCreated(
             _nodeOperatorId,
             1
           );
+          description += `\nOperator ${name} wants to increase staking limit to **${_stakingLimit.toNumber()}**.`;
           if (totalSigningKeys.toNumber() < _stakingLimit.toNumber()) {
             alertName = alertName.replace("ℹ", "⚠️");
             description +=
-              `\nBut operator ${name} has not enough keys uploaded! ⚠️` +
+              `\nBut operator has not enough keys uploaded! ⚠️` +
               `\nRequired: ${_stakingLimit.toNumber()}` +
               `\nAvailable: ${totalSigningKeys.toNumber()}`;
           } else {
-            description += `\nOperator ${name} has enough keys uploaded ✅`;
+            description += `\nNo issues with keys! ✅`;
           }
         }
         findings.push(
