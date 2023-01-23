@@ -29,7 +29,7 @@ import {
   TRIGGER_PERIOD,
   ETH_DECIMALS,
 } from "./constants";
-import { byBlockNumberDesc } from "./utils/tools";
+import { byBlockNumberDesc, getOracleName } from "./utils/tools";
 import { MIN_ORACLE_BALANCE_HIGH } from "./constants";
 
 export interface OracleReport {
@@ -287,7 +287,8 @@ async function handleOracleBalance(
         Finding.fromObject({
           name: "⚠️ Low balance of Lido Oracle",
           description:
-            `Balance of ${oracle} is ` +
+            `Balance of ${oracle} ` +
+            `(${getOracleName(oracle.toLocaleLowerCase())}) is ` +
             `${balance.toFixed(4)} ETH. This is rather low!`,
           alertId: "LIDO-ORACLE-LOW-BALANCE",
           severity: severity,
@@ -444,7 +445,9 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
           Finding.fromObject({
             name: "⚠️ Super sloppy Lido Oracle",
             description:
-              `Oracle ${oracle} has not reported before the quorum for more than 2 weeks` +
+              `Oracle ${oracle} ` +
+              `(${getOracleName(oracle.toLocaleLowerCase())}) ` +
+              `has not reported before the quorum for more than 2 weeks` +
               ` or have never reported yet`,
             alertId: "SLOPPY-LIDO-ORACLE",
             severity: FindingSeverity.Medium,
@@ -455,7 +458,10 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
         findings.push(
           Finding.fromObject({
             name: "🤔 Sloppy Lido Oracle",
-            description: `Oracle ${oracle} has not reported before the quorum for more than ${reportDistDays} days`,
+            description:
+              `Oracle ${oracle} ` +
+              `(${getOracleName(oracle.toLocaleLowerCase())}) ` +
+              `has not reported before the quorum for more than ${reportDistDays} days`,
             alertId: "SLOPPY-LIDO-ORACLE",
             severity: FindingSeverity.Info,
             type: FindingType.Suspicious,
