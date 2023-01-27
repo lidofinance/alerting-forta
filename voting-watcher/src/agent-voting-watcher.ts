@@ -294,7 +294,7 @@ function mergeVotesInfo(target: VoteInfo, source: VoteInfo): VoteInfo {
 function voteStateChanged(text: string, findings: Finding[]) {
   findings.push(
     Finding.fromObject({
-      name: "Vote state changed",
+      name: "🔁 Vote state changed",
       description: text,
       alertId: "VOTE-STATE-CHANGED",
       severity: FindingSeverity.Info,
@@ -311,7 +311,7 @@ function reportHugeVotes(
 ) {
   findings.push(
     Finding.fromObject({
-      name: "Huge votes",
+      name: "💪 Huge votes",
       description:
         `${abbreviateNumber(votesDiff.div(ETH_DECIMALS).toNumber())} ` +
         `voted on ${formatLink(`#${id}`, vote.url)}. ` +
@@ -331,7 +331,7 @@ function reportHugeVotesWithQuorum(
 ) {
   findings.push(
     Finding.fromObject({
-      name: "Huge votes",
+      name: "💪 Huge votes",
       description:
         `${abbreviateNumber(votesDiff.div(ETH_DECIMALS).toNumber())} ` +
         `voted on ${formatLink(`#${id}`, vote.url)}. ` +
@@ -385,7 +385,7 @@ function votePing(
   ];
   findings.push(
     Finding.fromObject({
-      name: "Time to vote",
+      name: "⏰ Time to vote",
       description: texts[blockNumber % texts.length],
       alertId: "VOTE-PING",
       severity: FindingSeverity.Info,
