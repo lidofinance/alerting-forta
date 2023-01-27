@@ -156,6 +156,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x777777c9898d384f785ee44acfe945efdff5f3e0", // ​Morpho-AaveV2 Proxy
   "0xa397a8c2086c554b531c02e29f3291c9704b00c7", // Compound's Bulker contract for Ethereum mainnet
   "0x9409280dc1e6d33ab7a8c6ec03e5763fb61772b5", // Curve pool LDOETH-f
+  "0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2", // AAVE v3
+  "0xb748952c7bc638f31775245964707bcc5ddfabfc", // AAVE v3 Migration Helper
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
