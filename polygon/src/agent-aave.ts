@@ -42,7 +42,7 @@ function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
       if (value.gte(AAVE_MINT_BURN_THRESHOLD)) {
         findings.push(
           Finding.fromObject({
-            name: "Huge amount supplied to AAVE",
+            name: "😱 Huge amount supplied to AAVE",
             description: `**${value.toFixed(
               2
             )} stMATIC** were supplied to AAVE`,
@@ -60,7 +60,7 @@ function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
       if (value.gte(AAVE_MINT_BURN_THRESHOLD)) {
         findings.push(
           Finding.fromObject({
-            name: "Huge amount withdrawn from AAVE",
+            name: "🤔 Huge amount withdrawn from AAVE",
             description: `**${value.toFixed(
               2
             )} stMATIC** were withdrawn from AAVE`,
