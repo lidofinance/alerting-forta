@@ -195,9 +195,8 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     alertId: "SAFE-HANDLER-CHANGED",
     name: "🚨 Gnosis Safe: Fallback handler changed",
     description: (safeTx: SafeTX, args: any) =>
-      `Fallback handler for ${getSafeLink(safeTx)} was changed to ${
-        args.handler
-      }`,
+      `Fallback handler for ${getSafeLink(safeTx)} ` +
+      `was changed to ${args.handler}`,
     severity: FindingSeverity.Medium,
   },
   {
@@ -237,9 +236,9 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     alertId: "SAFE-EXECUTION-FAILURE",
     name: "❌ Gnosis Safe: TX Execution failed",
     description: (safeTx: SafeTX, args: any) =>
-      `[TX](${getSafeTxLink(safeTx)}) execution failed for ${getSafeLink(
-        safeTx
-      )}\n` + `[See in explorer](${getTxLink(safeTx)})`,
+      `TX (${safeTx.safeTx}) execution failed for ` +
+      `${getSafeLink(safeTx)}\n` +
+      `[blockchain explorer](${getTxLink(safeTx)})`,
     severity: FindingSeverity.Info,
   },
   {
@@ -247,8 +246,8 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     alertId: "SAFE-EXECUTION-SUCCESS",
     name: "✅ Gnosis Safe: TX Executed",
     description: (safeTx: SafeTX, args: any) =>
-      `[TX](${getSafeTxLink(safeTx)}) executed by ${getSafeLink(safeTx)}\n` +
-      `[TX in blockchain explorer](${getTxLink(safeTx)})`,
+      `TX (${safeTx.safeTx}) executed by ${getSafeLink(safeTx)}\n` +
+      `[blockchain explorer](${getTxLink(safeTx)})`,
     severity: FindingSeverity.Info,
   },
   {
@@ -256,9 +255,8 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     alertId: "SAFE-EXECUTION-FAILURE-FROM-MODULE",
     name: "❌ Gnosis Safe: Execution failed from module",
     description: (safeTx: SafeTX, args: any) =>
-      `TX execution failed for ${getSafeLink(safeTx)} from module ${
-        args.module
-      }`,
+      `TX execution failed for ${getSafeLink(safeTx)} ` +
+      `from module ${args.module}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -275,12 +273,6 @@ function getSafeLink(safeTx: SafeTX): string {
   return `[${safeTx.safeName}](${
     BLOCKCHAIN_INFO[safeTx.blockchain].safeTxUrlPrefix
   }${safeTx.safeAddress})`;
-}
-
-function getSafeTxLink(safeTx: SafeTX): string {
-  return `${BLOCKCHAIN_INFO[safeTx.blockchain].safeTxUrlPrefix}${
-    safeTx.safeAddress
-  }/transactions/${safeTx.safeTx}`;
 }
 
 function getTxLink(safeTx: SafeTX): string {
