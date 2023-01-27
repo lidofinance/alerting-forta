@@ -105,7 +105,7 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
         const text =
           `Hi there 👋, objection phase 🙅‍♂️ started for ` +
           `${formatLink(`voting #${key}`, url)} ` +
-          `(${pro} pro, ${contra} contra, ${resultsStr})`;
+          `(${proStr} pro, ${contraStr} contra, ${resultsStr})`;
         voteStateChanged(text, findings);
         updated.alertLevel = 1;
       }
@@ -355,7 +355,7 @@ function votePing(
   const texts = [
     `Please, send the votes to ${formatLink(`#${id}`, vote.url)} — ${
       vote.quorumDistance
-    }% more required to reach a quorum, ${timeLeftStr} to go!! 🙏`,
+    }% more required to reach a quorum, ${timeLeftStr} to go! 🙏`,
     `🗳 ${
       vote.quorumDistance
     }% more required to gather a quorum, ${timeLeftStr}, please, send the votes to ${formatLink(
