@@ -509,7 +509,7 @@ export function handleProxyAdminEvents(
 function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
   const now = txEvent.block.timestamp;
   ST_MATIC_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (txEvent.to === eventInfo.address) {
+    if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         let severity = eventInfo.severity;
