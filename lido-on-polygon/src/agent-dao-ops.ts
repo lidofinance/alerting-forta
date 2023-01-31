@@ -307,14 +307,21 @@ export async function handleProxyAdmin(
   );
 
   if (lastReportedInvalidProxyAdmin + REPORT_WINDOW_PROXY_ALERTS < now) {
-    let proxyAdminFor = "";
+    let proxyAdminFor = "unknown";
     const promises = Object.entries(LIDO_ON_POLYGON_PROXIES).map(
       async ([contractName, contractAddr]) => {
-        proxyAdminFor = String(
-          await proxyAdmin.functions.getProxyAdmin(contractAddr, {
-            blockTag: blockEvent.block.number,
-          })
-        ).toLowerCase();
+        try {
+          proxyAdminFor = String(
+            await proxyAdmin.functions.getProxyAdmin(contractAddr, {
+              blockTag: blockEvent.block.number,
+            })
+          ).toLowerCase();
+        } catch (err) {
+          // execution reverted if the given contract is not known to the proxy admin
+          if (!(err as any).message?.includes("execution reverted")) {
+            throw err;
+          }
+        }
 
         if (proxyAdminFor != PROXY_ADMIN_ADDRESS) {
           findings.push(
