@@ -16,6 +16,7 @@ import MATIC_ABI from "./abi/MaticToken.json";
 import ST_MATIC_ABI from "./abi/stMaticToken.json";
 import PROXY_ADMIN_ABI from "./abi/ProxyAdmin.json";
 import POLYGON_ROOT_CHAIN_ABI from "./abi/RootChain.json";
+import NODE_OPERATORS_V2_ABI from "./abi/NodeOperatorsV2.json";
 import {
   MATIC_TOKEN_ADDRESS,
   ST_MATIC_TOKEN_ADDRESS,
@@ -39,6 +40,7 @@ import {
   POLYGON_ROOT_CHAIN_PROXY,
   SECS_PER_BLOCK,
   REWARDS_ESTIMATE_TO_ACTUAL_DIFF,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
 } from "./constants";
 import { byBlockNumberDesc } from "./utils/tools";
 import { Event } from "ethers";
@@ -506,39 +508,56 @@ export function handleProxyAdminEvents(
   }
 }
 
-function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
+async function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
   const now = txEvent.block.timestamp;
-  ST_MATIC_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        let severity = eventInfo.severity;
-        // Bump alert severity if there was delay alert
-        if (
-          eventInfo.alertId == "STMATIC-CONTRACT-REWARDS-DISTRIBUTED" &&
-          now - lastReportedRewards < REPORT_WINDOW_REWARDS_DISTRIBUTION
-        ) {
-          severity = FindingSeverity.Medium;
-        }
-        if (
-          eventInfo.alertId == "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED" &&
-          now - lastReportedBufferedMatic < REPORT_WINDOW_BUFFERED_MATIC
-        ) {
-          severity = FindingSeverity.Medium;
-        }
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: severity,
-            type: eventInfo.type,
-            metadata: { args: String(event.args) },
+  await Promise.all(
+    ST_MATIC_ADMIN_EVENTS.map(async (eventInfo) => {
+      if (eventInfo.address in txEvent.addresses) {
+        const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+        await Promise.all(
+          events.map(async (event) => {
+            let severity = eventInfo.severity;
+            // Bump alert severity if there was delay alert
+            if (
+              eventInfo.alertId == "STMATIC-CONTRACT-REWARDS-DISTRIBUTED" &&
+              now - lastReportedRewards < REPORT_WINDOW_REWARDS_DISTRIBUTION
+            ) {
+              severity = FindingSeverity.Medium;
+            }
+            if (
+              eventInfo.alertId == "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED" &&
+              now - lastReportedBufferedMatic < REPORT_WINDOW_BUFFERED_MATIC
+            ) {
+              severity = FindingSeverity.Medium;
+            }
+            let description = eventInfo.description(event.args);
+            if (eventInfo.addBalancedStatus) {
+              const nodeOperatorsRegistry = new ethers.Contract(
+                NODE_OPERATORS_REGISTRY_ADDRESS,
+                NODE_OPERATORS_V2_ABI,
+                ethersProvider
+              );
+              const protocolStats =
+                await nodeOperatorsRegistry.functions.getProtocolStats();
+              description +=
+                `\nProtocol is ` +
+                `${protocolStats.balanced ? "balanced ✅" : "unbalanced ❌"}`;
+            }
+            findings.push(
+              Finding.fromObject({
+                name: eventInfo.name,
+                description: description,
+                alertId: eventInfo.alertId,
+                severity: severity,
+                type: eventInfo.type,
+                metadata: { args: String(event.args) },
+              })
+            );
           })
         );
-      });
-    }
-  });
+      }
+    })
+  );
 }
 
 export function handleChekpointRewardUpdateEvent(
