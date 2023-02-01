@@ -33,6 +33,7 @@ import {
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   MEV_ALLOWED_LIST_ADDRESS,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
+  TRP_EVENTS_OF_NOTICE,
 } from "./constants";
 
 export const name = "DaoOps";
@@ -421,6 +422,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleLidoDAOTx(txEvent, findings);
   handleMevListTx(txEvent, findings);
   handleInsuranceFundEvents(txEvent, findings);
+  handleLidoTroTx(txEvent, findings);
 
   return findings;
 }
@@ -493,6 +495,26 @@ function handleInsuranceFundEvents(
   findings: Finding[]
 ) {
   INSURANCE_FUND_EVENTS_OF_NOTICE.forEach((eventInfo) => {
+    if (eventInfo.address in txEvent.addresses) {
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      events.forEach((event) => {
+        findings.push(
+          Finding.fromObject({
+            name: eventInfo.name,
+            description: eventInfo.description(event.args),
+            alertId: eventInfo.alertId,
+            severity: eventInfo.severity,
+            type: FindingType.Info,
+            metadata: { args: String(event.args) },
+          })
+        );
+      });
+    }
+  });
+}
+
+function handleLidoTroTx(txEvent: TransactionEvent, findings: Finding[]) {
+  TRP_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
