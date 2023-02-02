@@ -38,7 +38,7 @@ export const LIDO_INSURANCE_FUND_ADDRESS =
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
-export const TRP_FACTORY_ADDRESS = "TBD!!!!";
+export const TRP_FACTORY_ADDRESS = "0xDA1DF6442aFD2EC36aBEa91029794B9b2156ADD0";
 
 export const LIDO_ORACLES = new Map<string, string>([
   ["0x140bd8fbdc884f48da7cb1c09be8a2fadfea776e", "Chorus One"],
