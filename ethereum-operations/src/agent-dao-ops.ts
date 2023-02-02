@@ -422,7 +422,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleLidoDAOTx(txEvent, findings);
   handleMevListTx(txEvent, findings);
   handleInsuranceFundEvents(txEvent, findings);
-  handleLidoTroTx(txEvent, findings);
+  handleLidoTrpTx(txEvent, findings);
 
   return findings;
 }
@@ -513,7 +513,7 @@ function handleInsuranceFundEvents(
   });
 }
 
-function handleLidoTroTx(txEvent: TransactionEvent, findings: Finding[]) {
+function handleLidoTrpTx(txEvent: TransactionEvent, findings: Finding[]) {
   TRP_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
