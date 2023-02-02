@@ -23,7 +23,7 @@ export const MATIC_STAKING_NFT_ADDRESS =
 export const ST_MATIC_TOKEN_ADDRESS =
   "0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599";
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x797c1369e578172112526dfcd0d5f9182067c928";
+  "0x216B8b78e0632138dc38907dd089aAB601ED6EDC";
 export const PROXY_ADMIN_ADDRESS = "0x0833f5bd45803e05ef54e119a77e463ce6b1a963";
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
   "0xa22d223e732a5dcf4ff4529aa9a135293b7258fe";
@@ -38,7 +38,7 @@ export const LIDO_ON_POLYGON_PROXIES = {
   lido_nft_proxy: "0x60a91E2B7A1568f0848f3D43353C453730082E46",
   stMATIC_proxy: "0x9ee91F9f426fA633d227f7a9b000E28b9dfd8599",
   validator_factory_proxy: "0x0a6C933495a7BB768d95f4667B074Dd5b95b78eB",
-  node_operator_registry_proxy: "0x797C1369e578172112526dfcD0D5f9182067c928",
+  node_operator_registry_proxy: "0x216B8b78e0632138dc38907dd089aAB601ED6EDC",
 };
 
 // Lido of validators ids from Lido Node Operators Registry in order of apperance
@@ -72,6 +72,7 @@ type StMaticAdminEvent = {
   description: CallableFunction;
   severity: FindingSeverity;
   type: FindingType;
+  addBalancedStatus?: boolean;
 };
 
 export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
@@ -159,6 +160,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
         .toFixed(2)} MATIC`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
+    addBalancedStatus: true,
   },
   {
     address: ST_MATIC_TOKEN_ADDRESS,
@@ -176,6 +178,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
       ` MATIC remained pooled ${args._remainder} wei`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
+    addBalancedStatus: true,
   },
   {
     address: ST_MATIC_TOKEN_ADDRESS,

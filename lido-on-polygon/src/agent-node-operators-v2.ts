@@ -10,18 +10,24 @@ import { BigNumber } from "ethers";
 
 import NODE_OPERATORS_V2_ABI from "./abi/NodeOperatorsV2.json";
 import MATIC_STAKING_NFT_ABI from "./abi/MaticStakingNFT.json";
+import STAKE_MANAGER_ABI from "./abi/StakeManager.json";
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
   MATIC_STAKING_NFT_ADDRESS,
   NODE_OPERATORS_ADMIN_EVENTS,
+  POLYGON_STAKE_MANAGER_PROXY,
+  LIDO_VALIDATORS_IDS,
+  BLOCK_AT_11_59_59_UTC,
+  BLOCKS_PER_DAY,
 } from "./constants";
 import { ethersProvider } from "./ethers";
-import { getNORVersion } from "./helpers";
 
 // 2 hours
 const REPORT_WINDOW_BAD_OPERATORS_STATE = 60 * 60 * 2;
 // 2 hours
 const REPORT_WINDOW_NO_NFT_OWNER = 60 * 60 * 2;
+
+const lidoValidatorGoesInactiveReport: Set<string> = new Set();
 
 let lastReportedBadOperatorsState = 0;
 let lastReportedBadNftOwner = 0;
@@ -36,14 +42,15 @@ export async function initialize(): Promise<{ [key: string]: string }> {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  const version = await getNORVersion(blockEvent.blockNumber);
-  if (version.replace(/("|')/, "").startsWith("1.")) {
+  if (blockEvent.blockNumber < 16525714) {
+    console.warn("Skipping block before Node Operators V2 upgrade");
     return findings; // do nothing
   }
 
   await Promise.all([
     handleNodeOperatorsStatus(blockEvent, findings),
     handleNodeOperatorsNftOwners(blockEvent, findings),
+    handleNodeOperatorsActiveSet(blockEvent, findings),
   ]);
 
   return findings;
@@ -121,9 +128,12 @@ async function handleNodeOperatorsNftOwners(
 
     await Promise.all(
       vIds.map(async (id: BigNumber) => {
-        let info = await nodeOperators.getNodeOperator(id.toNumber(), {
-          blockTag: blockEvent.blockNumber,
-        });
+        let info = await nodeOperators["getNodeOperator(uint256)"](
+          id.toNumber(),
+          {
+            blockTag: blockEvent.blockNumber,
+          }
+        );
         stackingNFT.functions
           .ownerOf(info.validatorId, {
             blockTag: blockEvent.blockNumber,
@@ -145,6 +155,86 @@ async function handleNodeOperatorsNftOwners(
       })
     );
   }
+}
+
+async function handleNodeOperatorsActiveSet(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  interface IsValidatorResult {
+    isValidator: boolean;
+    vId: string;
+  }
+
+  // just aliases for readability
+  const isNotActive = (r: IsValidatorResult) => !r.isValidator;
+  const isActive = (r: IsValidatorResult) => !!r.isValidator;
+
+  const popFromReported = (r: IsValidatorResult) => {
+    return (lidoValidatorGoesInactiveReport.delete(r.vId) && r) || undefined;
+  };
+  const addToReported = (r: IsValidatorResult) => {
+    lidoValidatorGoesInactiveReport.add(r.vId);
+  };
+
+  const stakeManager = new ethers.Contract(
+    POLYGON_STAKE_MANAGER_PROXY,
+    STAKE_MANAGER_ABI,
+    ethersProvider
+  );
+
+  const rows: IsValidatorResult[] = await Promise.all(
+    Object.keys(LIDO_VALIDATORS_IDS).map(async (vId) => {
+      const request: [boolean] = await stakeManager.functions.isValidator(vId, {
+        blockTag: blockEvent.blockNumber,
+      });
+
+      return {
+        isValidator: request[0], // why its an array?
+        vId,
+      };
+    })
+  );
+
+  // first time or every ~ 24 hours otherwise
+  const mayFire = (r: IsValidatorResult) =>
+    !lidoValidatorGoesInactiveReport.has(r.vId) ||
+    (blockEvent.blockNumber - BLOCK_AT_11_59_59_UTC) % BLOCKS_PER_DAY === 0;
+
+  rows
+    .filter(isNotActive)
+    .filter(mayFire)
+    .forEach((r) => {
+      addToReported(r);
+      findings.push(
+        Finding.fromObject({
+          name: "🚨 Lido validator is not in the active set",
+          description: `Lido validator ${LIDO_VALIDATORS_IDS[r.vId]} of NFT ${
+            r.vId
+          } is not in the active set`,
+          alertId: "LIDO-VALIDATOR-NOT-IN-ACTIVE-SET",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        })
+      );
+    });
+
+  rows.filter(isActive).forEach((r) => {
+    const reported = popFromReported(r);
+    if (reported) {
+      findings.push(
+        Finding.fromObject({
+          name: "✅ Lido validator is back in the active set",
+          description: `Lido validator ${LIDO_VALIDATORS_IDS[r.vId]} of NFT ${
+            r.vId
+          } is back in the active set`,
+          alertId: "LIDO-VALIDATOR-BACK-IN-ACTIVE-SET",
+          severity: FindingSeverity.Low,
+          type: FindingType.Info,
+        })
+      );
+    }
+  });
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
