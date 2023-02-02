@@ -38,6 +38,8 @@ export const LIDO_INSURANCE_FUND_ADDRESS =
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
+export const TRP_FACTORY_ADDRESS = "0xDA1DF6442aFD2EC36aBEa91029794B9b2156ADD0";
+
 export const LIDO_ORACLES = new Map<string, string>([
   ["0x140bd8fbdc884f48da7cb1c09be8a2fadfea776e", "Chorus One"],
   ["0x1d0813bf088be3047d827d98524fbf779bc25f00", "Chorus One"],
@@ -704,6 +706,36 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Owner of the insurance fund was transferred from ${args.previousOwner} to ${args.newOwner}`,
     severity: FindingSeverity.Critical,
+  },
+];
+
+export const TRP_EVENTS_OF_NOTICE = [
+  {
+    address: TRP_FACTORY_ADDRESS,
+    event: "event VotingAdapterUpgraded(address voting_adapter)",
+    alertId: "TRP-VOTING-ADAPTER-UPGRADED",
+    name: "🚨 TRP Factory: Voting adapter upgraded",
+    description: (args: any) =>
+      `Voting adapter was upgraded to ${args.voting_adapter}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: TRP_FACTORY_ADDRESS,
+    event: "event OwnerChanged(address owner)",
+    alertId: "TRP-OWNER-CHANGED",
+    name: "🚨 TRP Factory: Owner changed",
+    description: (args: any) =>
+      `Owner of the TRP factory and all vestings was changed to ${args.owner}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: TRP_FACTORY_ADDRESS,
+    event: "event ManagerChanged(address manager)",
+    alertId: "TRP-MANAGER-CHANGED",
+    name: "🚨 TRP Factory: Manager changed",
+    description: (args: any) =>
+      `Manager of the TRP factory and all vestings was changed to ${args.manager}`,
+    severity: FindingSeverity.High,
   },
 ];
 
