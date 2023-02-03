@@ -156,7 +156,8 @@ export const NODE_OPERATOR_STAKING_LIMIT_SET_EVENT =
   "event NodeOperatorStakingLimitSet(uint256 indexed id, uint64 stakingLimit)";
 
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
-export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 1;
+export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM = 1;
+export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH = 5;
 
 export const LIDO_ARAGON_ACL_ADDRESS =
   "0x9895f0f17cc1d1891b6f18ee0b483b6f221b37bb";
