@@ -340,10 +340,13 @@ async function handleCurvePoolSize(
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    const severity =
+    let severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
         ? FindingSeverity.High
         : FindingSeverity.Info;
+    if (poolSizeChange > 0) {
+      severity = FindingSeverity.Info;
+    }
     findings.push(
       Finding.fromObject({
         name: "⚠️ Significant Curve Pool size change",
@@ -459,10 +462,13 @@ async function handleBalancerPoolSize(
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    const severity =
+    let severity =
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
         ? FindingSeverity.High
         : FindingSeverity.Info;
+    if (poolSizeChange > 0) {
+      severity = FindingSeverity.Info;
+    }
     findings.push(
       Finding.fromObject({
         name: "⚠️ Significant Balancer Pool size change",
