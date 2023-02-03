@@ -25,7 +25,7 @@ import {
   PEG_STEP_ALERT_MIN_VALUE,
   TOTAL_UNSTAKED_STETH_TOLERANCE,
   ONE_HOUR,
-  TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE,
+  TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT,
 } from "./constants";
 
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
@@ -194,6 +194,18 @@ function getTotalUnstakedStEth() {
       poolsParams.Balancer.poolDetails.token1.amount
     );
   return unstakedStEthCurve.plus(unstakedStEthBalancer);
+}
+
+
+function getTotalPoolsSize() {
+  const curve = poolsParams.Curve.poolDetails.token2.amount.plus(
+    poolsParams.Curve.poolDetails.token1.amount
+  );
+  const balancer =
+    poolsParams.Balancer.poolDetails.token2.amount.plus(
+      poolsParams.Balancer.poolDetails.token1.amount
+    );
+  return curve.plus(balancer);
 }
 
 function calcChange(balancePrev: BigNumber, balanceCur: BigNumber) {
@@ -568,7 +580,7 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       if (
         newUnstakedStEth.isGreaterThanOrEqualTo(
-          TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE
+          getTotalPoolsSize().times(TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT / 100)
         )
       ) {
         const severity =
