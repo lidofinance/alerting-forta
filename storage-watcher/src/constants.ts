@@ -22,6 +22,8 @@ export interface ContractStorageMap {
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
+export const NULL_STORAGE = "0x0000000000000000000000000000000000000000000000000000000000000000"
+
 // ADDRESSES AND EVENTS
 
 export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
