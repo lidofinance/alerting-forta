@@ -9,7 +9,12 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { STORAGE_SLOTS, ContractStorageMap, StorageSlot, NULL_STORAGE } from "./constants";
+import {
+  STORAGE_SLOTS,
+  ContractStorageMap,
+  StorageSlot,
+  NULL_STORAGE,
+} from "./constants";
 import { getStorageValue } from "./helpers";
 
 export const name = "StorageWatcher";

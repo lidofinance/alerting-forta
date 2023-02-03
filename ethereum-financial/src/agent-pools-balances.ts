@@ -196,15 +196,13 @@ function getTotalUnstakedStEth() {
   return unstakedStEthCurve.plus(unstakedStEthBalancer);
 }
 
-
 function getTotalPoolsSize() {
   const curve = poolsParams.Curve.poolDetails.token2.amount.plus(
     poolsParams.Curve.poolDetails.token1.amount
   );
-  const balancer =
-    poolsParams.Balancer.poolDetails.token2.amount.plus(
-      poolsParams.Balancer.poolDetails.token1.amount
-    );
+  const balancer = poolsParams.Balancer.poolDetails.token2.amount.plus(
+    poolsParams.Balancer.poolDetails.token1.amount
+  );
   return curve.plus(balancer);
 }
 
@@ -580,7 +578,9 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       if (
         newUnstakedStEth.isGreaterThanOrEqualTo(
-          getTotalPoolsSize().times(TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT / 100)
+          getTotalPoolsSize().times(
+            TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT / 100
+          )
         )
       ) {
         const severity =
