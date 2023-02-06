@@ -340,12 +340,9 @@ async function handleCurvePoolSize(
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    let severity =
-      Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
-        ? FindingSeverity.High
-        : FindingSeverity.Info;
-    if (poolSizeChange > 0) {
-      severity = FindingSeverity.Info;
+    let severity = FindingSeverity.Info;
+    if (poolSizeChange  < 0 && Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH) {
+      severity = FindingSeverity.High
     }
     findings.push(
       Finding.fromObject({
