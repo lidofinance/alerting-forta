@@ -158,6 +158,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x9409280dc1e6d33ab7a8c6ec03e5763fb61772b5", // Curve pool LDOETH-f
   "0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2", // AAVE v3
   "0xb748952c7bc638f31775245964707bcc5ddfabfc", // AAVE v3 Migration Helper
+  "0xd98e1c56a56a0ec5ca4bf6fdfbfa1572ee4d8a8d", // maverick-swap-alpha
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
