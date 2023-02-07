@@ -21,7 +21,8 @@ import {
   LIDO_ORACLE_BEACON_REPORTED_EVENT,
   LIDO_ORACLE_COMPLETED_EVENT,
   LIDO_ORACLE_EVENTS_OF_NOTICE,
-  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD,
+  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH,
+  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM,
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
   MAX_ORACLE_REPORT_DELAY,
@@ -394,10 +395,14 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   if (
     lastReport != null &&
-    rewardsDiffPercent! < -LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD
+    rewardsDiffPercent! < -LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM
   ) {
     const rewardsDiffEth = formatEth(rewardsDiff, 3);
     const prevRewardsEth = formatEth(lastReport.rewards, 3);
+    const severity =
+      rewardsDiffPercent! < -LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH
+        ? FindingSeverity.High
+        : FindingSeverity.Medium;
     findings.push(
       Finding.fromObject({
         name: "🚨 Lido Beacon rewards decreased",
@@ -405,7 +410,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
           `Rewards decreased from ${prevRewardsEth} ETH to ${rewardsEth} ` +
           `by ${rewardsDiffEth} ETH (${rewardsDiffPercent?.toFixed(2)}%)`,
         alertId: "LIDO-ORACLE-REWARDS-DECREASED",
-        severity: FindingSeverity.Medium,
+        severity: severity,
         type: FindingType.Degraded,
         metadata: {
           ...metadata,

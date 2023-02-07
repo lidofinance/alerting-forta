@@ -9,7 +9,12 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { STORAGE_SLOTS, ContractStorageMap, StorageSlot } from "./constants";
+import {
+  STORAGE_SLOTS,
+  ContractStorageMap,
+  StorageSlot,
+  NULL_STORAGE,
+} from "./constants";
 import { getStorageValue } from "./helpers";
 
 export const name = "StorageWatcher";
@@ -46,11 +51,19 @@ async function handleStorageSlots(
         new Map<string, string>();
       await Promise.all(
         contractStorageMap.slots.map(async (slot: StorageSlot) => {
-          const value = await getStorageValue(
+          let value = await getStorageValue(
             contractStorageMap.contract.address,
             slot,
             blockNumber
           );
+          // fetch value one more time in case of null
+          if (value == NULL_STORAGE) {
+            value = await getStorageValue(
+              contractStorageMap.contract.address,
+              slot,
+              blockNumber
+            );
+          }
           if (checkValues) {
             const prevValue = contractInfo.get(slot.name);
             if (prevValue && prevValue != value) {

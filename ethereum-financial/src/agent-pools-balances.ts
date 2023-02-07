@@ -25,7 +25,7 @@ import {
   PEG_STEP_ALERT_MIN_VALUE,
   TOTAL_UNSTAKED_STETH_TOLERANCE,
   ONE_HOUR,
-  TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE,
+  TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT,
 } from "./constants";
 
 import CURVE_POOL_ABI from "./abi/CurvePool.json";
@@ -196,6 +196,16 @@ function getTotalUnstakedStEth() {
   return unstakedStEthCurve.plus(unstakedStEthBalancer);
 }
 
+function getTotalPoolsSize() {
+  const curve = poolsParams.Curve.poolDetails.token2.amount.plus(
+    poolsParams.Curve.poolDetails.token1.amount
+  );
+  const balancer = poolsParams.Balancer.poolDetails.token2.amount.plus(
+    poolsParams.Balancer.poolDetails.token1.amount
+  );
+  return curve.plus(balancer);
+}
+
 function calcChange(balancePrev: BigNumber, balanceCur: BigNumber) {
   return (balanceCur.div(balancePrev).toNumber() - 1) * 100;
 }
@@ -330,10 +340,13 @@ async function handleCurvePoolSize(
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    const severity =
+    let severity = FindingSeverity.Info;
+    if (
+      poolSizeChange < 0 &&
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
-        ? FindingSeverity.High
-        : FindingSeverity.Info;
+    ) {
+      severity = FindingSeverity.High;
+    }
     findings.push(
       Finding.fromObject({
         name: "⚠️ Significant Curve Pool size change",
@@ -449,10 +462,13 @@ async function handleBalancerPoolSize(
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    const severity =
+    let severity = FindingSeverity.Info;
+    if (
+      poolSizeChange < 0 &&
       Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
-        ? FindingSeverity.High
-        : FindingSeverity.Info;
+    ) {
+      severity = FindingSeverity.High;
+    }
     findings.push(
       Finding.fromObject({
         name: "⚠️ Significant Balancer Pool size change",
@@ -568,7 +584,9 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       if (
         newUnstakedStEth.isGreaterThanOrEqualTo(
-          TOTAL_UNSTAKED_STETH_MIN_REPORT_VALUE
+          getTotalPoolsSize().times(
+            TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT / 100
+          )
         )
       ) {
         const severity =

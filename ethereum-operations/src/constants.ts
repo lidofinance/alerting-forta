@@ -156,7 +156,8 @@ export const NODE_OPERATOR_STAKING_LIMIT_SET_EVENT =
   "event NodeOperatorStakingLimitSet(uint256 indexed id, uint64 stakingLimit)";
 
 // Report with higher than info severity if rewards have decreased more than this percentage relative to previous reports value
-export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD = 1;
+export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM = 1;
+export const LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH = 5;
 
 export const LIDO_ARAGON_ACL_ADDRESS =
   "0x9895f0f17cc1d1891b6f18ee0b483b6f221b37bb";
@@ -1198,3 +1199,12 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
+
+export const LIDO_ENS_NAMES = ["lido", "steth", "staked", "lidopm", "lido-dao"];
+
+// approx 1 week
+export const ENS_CHECK_INTERVAL = 50_000;
+export const ONE_WEEK = 60 * 60 * 24 * 7;
+export const ONE_MONTH = ONE_WEEK * 4;
+export const ENS_BASE_REGISTRAR_ADDRESS =
+  "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85";

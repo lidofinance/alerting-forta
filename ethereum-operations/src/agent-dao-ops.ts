@@ -14,6 +14,7 @@ import { ethersProvider, etherscanProvider } from "./ethers";
 import NODE_OPERATORS_REGISTRY_ABI from "./abi/NodeOperatorsRegistry.json";
 import LIDO_DAO_ABI from "./abi/LidoDAO.json";
 import MEV_ALLOW_LIST_ABI from "./abi/MEVBoostRelayAllowedList.json";
+import ENS_BASE_REGISTRAR_ABI from "./abi/ENS.json";
 
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
@@ -34,6 +35,11 @@ import {
   MEV_ALLOWED_LIST_ADDRESS,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
+  ENS_CHECK_INTERVAL,
+  ENS_BASE_REGISTRAR_ADDRESS,
+  LIDO_ENS_NAMES,
+  ONE_MONTH,
+  ONE_WEEK,
 } from "./constants";
 
 export const name = "DaoOps";
@@ -101,6 +107,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleElRewardsBalance(blockEvent, findings),
     // This handler is disabled until we will have actual relays in the contract
     //handleMevRelayCount(blockEvent, findings),
+    handleEnsNamesExpiration(blockEvent, findings),
   ]);
 
   return findings;
@@ -412,6 +419,47 @@ async function handleMevRelayCount(
       })
     );
     lastReportedMevCountInfo = now;
+  }
+}
+
+async function handleEnsNamesExpiration(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  if (blockEvent.blockNumber % ENS_CHECK_INTERVAL == 0) {
+    const ens = new ethers.Contract(
+      ENS_BASE_REGISTRAR_ADDRESS,
+      ENS_BASE_REGISTRAR_ABI,
+      ethersProvider
+    );
+    await Promise.all(
+      LIDO_ENS_NAMES.map(async (name) => {
+        const labelHash = ethers.utils.keccak256(
+          ethers.utils.toUtf8Bytes(name)
+        );
+        const tokenId = ethers.BigNumber.from(labelHash).toString();
+        const expires = new BigNumber(
+          String(await ens.functions.nameExpires(tokenId))
+        ).toNumber();
+        const leftSec = expires - blockEvent.block.timestamp;
+        if (leftSec < ONE_MONTH) {
+          const left = leftSec > ONE_WEEK * 2 ? "month" : "2 weeks";
+          const severity =
+            leftSec > ONE_WEEK * 2
+              ? FindingSeverity.High
+              : FindingSeverity.Critical;
+          findings.push(
+            Finding.fromObject({
+              name: "⚠️ ENS: Domain expires soon",
+              description: `Domain rent for ${name}.eth expires in less than a ${left}`,
+              alertId: "ENS-RENT-EXPIRES",
+              severity: severity,
+              type: FindingType.Info,
+            })
+          );
+        }
+      })
+    );
   }
 }
 
