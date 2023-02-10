@@ -586,10 +586,10 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     name: "ℹ️ MEV Allowed list: Relay added",
     description: (args: any) =>
       `New MEV relay added.\n` +
-      `URI: ${args.relay.uri}\n` +
-      `Operator: ${args.relay.operator}\n` +
-      `Mandatory: ${args.relay.is_mandatory}\n` +
-      `Description: ${args.relay.description}`,
+      `URI: ${args[1].uri}\n` +
+      `Operator: ${args[1].operator}\n` +
+      `Mandatory: ${args[1].is_mandatory}\n` +
+      `Description: ${args[1].description}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -598,16 +598,6 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     alertId: "MEV-RELAY-REMOVED",
     name: "⚠️ MEV Allowed list: Relay removed",
     description: (args: any) => `MEV relay removed.\nURI: ${args.uri}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: MEV_ALLOWED_LIST_ADDRESS,
-    event: "event AllowedListUpdated (uint256 indexed allowed_list_version)",
-    alertId: "MEV-LIST-VERSION-UPDATED",
-    name: "ℹ️ MEV Allowed list: Version updated",
-    description: (args: any) =>
-      `MEV allowed list version updated.\n` +
-      `New version: ${args.allowed_list_version}`,
     severity: FindingSeverity.Info,
   },
   {
