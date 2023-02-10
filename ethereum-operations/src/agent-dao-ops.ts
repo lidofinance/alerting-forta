@@ -105,8 +105,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleDepositExecutorBalance(blockEvent, findings),
     handleStakingLimit(blockEvent, findings),
     handleElRewardsBalance(blockEvent, findings),
-    // This handler is disabled until we will have actual relays in the contract
-    //handleMevRelayCount(blockEvent, findings),
+    handleMevRelayCount(blockEvent, findings),
     handleEnsNamesExpiration(blockEvent, findings),
   ]);
 
@@ -389,7 +388,7 @@ async function handleMevRelayCount(
   const mevRelays = await mevAllowList.functions.get_relays({
     blockTag: blockEvent.block.number,
   });
-  const mevRelaysLength = mevRelays.length;
+  const mevRelaysLength = mevRelays[0].length;
   if (
     mevRelaysLength < MEV_RELAY_COUNT_THRESHOLD_HIGH &&
     lastReportedMevCountHigh + MEV_RELAY_COUNT_REPORT_WINDOW < now
