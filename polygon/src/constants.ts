@@ -13,7 +13,7 @@ export const AAVE_MINT_EVENT =
   "event Mint(address indexed caller, address indexed onBehalfOf, uint256 value, uint256 balanceIncrease, uint256 index)";
 export const AAVE_BURN_EVENT =
   "event Burn(address indexed from, address indexed target, uint256 value, uint256 balanceIncrease, uint256 index)";
-export const AAVE_MINT_BURN_THRESHOLD = 100_000;
+export const AAVE_MINT_BURN_THRESHOLD = 1_000_000;
 
 export const POOL_SIZE_CHANGE_TOLERANCE = 5;
 export const CURVE_POOL_ADDRESS = "0xfb6fe7802ba9290ef8b00ca16af4bc26eb663a28";
