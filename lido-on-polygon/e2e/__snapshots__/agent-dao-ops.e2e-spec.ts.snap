@@ -35,7 +35,7 @@ Finding {
   "addresses": [],
   "alertId": "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED",
   "description": "Pooled MATIC was delegated to validators. Delegated amount 679.9k MATIC remained pooled 0 wei
-Protocol is unbalanced ❌",
+Protocol is balanced ✅",
   "labels": [],
   "metadata": {
     "args": "679886151216827958837108,0",
@@ -52,7 +52,7 @@ Finding {
   "addresses": [],
   "alertId": "STMATIC-CONTRACT-REWARDS-DISTRIBUTED",
   "description": "Rewards for stMATIC was distributed. Rewards amount 571.50 MATIC
-Protocol is unbalanced ❌",
+Protocol is balanced ✅",
   "labels": [],
   "metadata": {
     "args": "571502046258362721768",
