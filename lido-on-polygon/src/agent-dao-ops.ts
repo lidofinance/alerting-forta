@@ -548,7 +548,7 @@ async function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
                 await nodeOperatorsRegistry.functions.getProtocolStats();
               description +=
                 `\nProtocol is ` +
-                `${protocolStats.balanced ? "balanced ✅" : "unbalanced ❌"}`;
+                `${protocolStats.isBalanced ? "balanced ✅" : "unbalanced ❌"}`;
             }
             findings.push(
               Finding.fromObject({
