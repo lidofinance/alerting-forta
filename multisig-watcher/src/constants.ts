@@ -108,6 +108,11 @@ export const SAFES = {
       "0xd65Fa54F8DF43064dfd8dDF223A446fc638800A9",
       "Lido-on-polygon multisig upgrader",
     ],
+    ["0x834560f580764bc2e0b16925f8bf229bb00cb759", "TRP Committee"],
+    [
+      "0x98be4a407bff0c125e25fbe9eb1165504349c37d",
+      "Relay Maintenance Committee",
+    ],
   ],
   [Blockchain.POLYGON]: [
     [
