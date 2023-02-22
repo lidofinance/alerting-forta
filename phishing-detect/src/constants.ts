@@ -161,6 +161,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xd98e1c56a56a0ec5ca4bf6fdfbfa1572ee4d8a8d", // maverick-swap-alpha
   "0x8267fdabd1b8c8645138f2de5b0fe24988dc9820", // SY-wstETH-WETH BalancerLP Aura
   "0xa0d3707c569ff8c87fa923d3823ec5d81c98be78", // Instadapp ETH v2 (iETHv2)
+  "0x40aa958dd87fc8305b97f2ba922cddca374bcd7f", // OKX-DEX
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
