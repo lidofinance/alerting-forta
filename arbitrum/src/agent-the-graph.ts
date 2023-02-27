@@ -46,7 +46,7 @@ async function handleLidoGraphBalance(
   const now = blockEvent.block.timestamp;
   if (
     lastReportedGraphBalance + REPORT_WINDOW_GRAPH_BALANCE < now &&
-    blockEvent.blockNumber % 100 == 0
+    blockEvent.blockNumber % 1000 == 0
   ) {
     const billing = new ethers.Contract(
       BILLING_ADDRESS,
