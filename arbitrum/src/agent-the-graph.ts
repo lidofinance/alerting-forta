@@ -16,6 +16,7 @@ import {
   GRAPH_BALANCE_THRESHOLD,
   LIDO_VAULT_ADDRESS,
   ETH_DECIMALS,
+  BLOCK_INTERVAL,
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
@@ -46,7 +47,7 @@ async function handleLidoGraphBalance(
   const now = blockEvent.block.timestamp;
   if (
     lastReportedGraphBalance + REPORT_WINDOW_GRAPH_BALANCE < now &&
-    blockEvent.blockNumber % 1000 == 0
+    blockEvent.blockNumber % BLOCK_INTERVAL == 0
   ) {
     const billing = new ethers.Contract(
       BILLING_ADDRESS,
