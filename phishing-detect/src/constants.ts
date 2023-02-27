@@ -162,6 +162,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x8267fdabd1b8c8645138f2de5b0fe24988dc9820", // SY-wstETH-WETH BalancerLP Aura
   "0xa0d3707c569ff8c87fa923d3823ec5d81c98be78", // Instadapp ETH v2 (iETHv2)
   "0x40aa958dd87fc8305b97f2ba922cddca374bcd7f", // OKX-DEX
+  "0x65582767218d8829ffb79853af7764cea34cee2b", // Mellow ERC20Vault
+  "0x13c7bcc2126d6892eefd489ad215a1a09f36aa9f", // Mellow ERC20RootVault
+  "0xbfafc964361f78754f523343b09b3cb7bb73bdd6", // Mellow Tamper Strategy
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
