@@ -257,7 +257,6 @@ describe("lido-on-polygon", () => {
   it("should process handleProxyAdminEvents", () => {
     const tEvent = {
       to: PROXY_ADMIN_ADDRESS,
-      blockNumber: 16725739,
       filterLog: () => {
         return [
           {
@@ -285,7 +284,6 @@ describe("lido-on-polygon", () => {
 
   it("should process handleCheckpointRewardUpdateEvent", () => {
     const tEvent = {
-      blockNumber: 16725739,
       filterLog: () => {
         return [
           {
