@@ -39,7 +39,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with rewards distribution",
     async () => {
       const findings = await runTransaction(
-        "0x19b1c8bdaab9cb2dd9fc89ca9ee916cd050ce8552394479a21a6fbac7271dbb4"
+        "0xba6222301a11142cd376ceba48b390d8df97502f776dd4dcb0f180ec87f9cd4e"
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
@@ -61,7 +61,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with pooled MATIC delegation",
     async () => {
       const findings = await runTransaction(
-        "0xe4577288b59eb8f834287151d63b0bd9a76e5ec6e177e9930b35d8dc4bf8daad"
+        "0x95b78c32c06fda9b11facbe40316cb593020a9fee58f56158c6b7481e47afbca"
       );
       expect(findings.at(0)).toMatchSnapshot();
     },

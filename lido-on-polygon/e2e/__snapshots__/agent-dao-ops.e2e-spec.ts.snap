@@ -34,11 +34,11 @@ exports[`agent-dao-ops e2e tests should process tx with pooled MATIC delegation 
 Finding {
   "addresses": [],
   "alertId": "STMATIC-CONTRACT-POOLED-MATIC-DELEGATED",
-  "description": "Pooled MATIC was delegated to validators. Delegated amount 679.9k MATIC remained pooled 0 wei
+  "description": "Pooled MATIC was delegated to validators. Delegated amount 2.1M MATIC remained pooled 3 wei
 Protocol is balanced ✅",
   "labels": [],
   "metadata": {
-    "args": "679886151216827958837108,0",
+    "args": "2109054805956318468376665,3",
   },
   "name": "✅ stMATIC: Pooled MATIC delegated",
   "protocol": "ethereum",
@@ -51,11 +51,11 @@ exports[`agent-dao-ops e2e tests should process tx with rewards distribution 1`]
 Finding {
   "addresses": [],
   "alertId": "STMATIC-CONTRACT-REWARDS-DISTRIBUTED",
-  "description": "Rewards for stMATIC was distributed. Rewards amount 571.50 MATIC
+  "description": "Rewards for stMATIC was distributed. Rewards amount 1051.76 MATIC
 Protocol is balanced ✅",
   "labels": [],
   "metadata": {
-    "args": "571502046258362721768",
+    "args": "1051759040557383259680",
   },
   "name": "✅ stMATIC: Rewards distributed",
   "protocol": "ethereum",

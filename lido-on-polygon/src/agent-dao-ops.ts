@@ -545,7 +545,9 @@ async function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
                 ethersProvider
               );
               const protocolStats =
-                await nodeOperatorsRegistry.functions.getProtocolStats();
+                await nodeOperatorsRegistry.functions.getProtocolStats({
+                  blockTag: txEvent.blockNumber,
+                });
               description +=
                 `\nProtocol is ` +
                 `${protocolStats.isBalanced ? "balanced ✅" : "unbalanced ❌"}`;
