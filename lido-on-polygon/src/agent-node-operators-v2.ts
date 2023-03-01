@@ -139,7 +139,7 @@ async function handleNodeOperatorsNftOwners(
             blockTag: blockEvent.blockNumber,
           })
           .then((value) => {
-            if (value !== info.rewardAddress) {
+            if (value != info.rewardAddress) {
               findings.push(
                 Finding.fromObject({
                   name: "🚨 Bad Node Operator proxy NFT owner",

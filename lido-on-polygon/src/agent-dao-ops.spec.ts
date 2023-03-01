@@ -228,6 +228,7 @@ describe("lido-on-polygon", () => {
   it("should process handleRewardDistributionEvent", async () => {
     const tEvent = {
       to: ST_MATIC_TOKEN_ADDRESS,
+      blockNumber: 16725739,
       filterLog: () => {
         return [
           {
