@@ -165,6 +165,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x65582767218d8829ffb79853af7764cea34cee2b", // Mellow ERC20Vault
   "0x13c7bcc2126d6892eefd489ad215a1a09f36aa9f", // Mellow ERC20RootVault
   "0xbfafc964361f78754f523343b09b3cb7bb73bdd6", // Mellow Tamper Strategy
+  "0x7f0a0c7149a46bf943ccd412da687144b49c6014", // Cat-in-a-Box Finance CDP
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
