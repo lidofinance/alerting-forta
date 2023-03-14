@@ -168,6 +168,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x7f0a0c7149a46bf943ccd412da687144b49c6014", // Cat-in-a-Box Finance CDP
   "0x4a585e0f7c18e2c414221d6402652d5e0990e5f8", // maverick pools wrapper
   "0x7623e9dc0da6ff821ddb9ebaba794054e078f8c4", // etherfi
+  "0x0000000001e4ef00d069e71d6ba041b0a16f7ea0", // pendle.finance Router
+  "0x463f9ed5e11764eb9029762011a03643603ad879", // Pods Finance stETHvv
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
