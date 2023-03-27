@@ -492,6 +492,38 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `was opened.\n`,
   },
+  {
+    contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+    to: "0xa17581a9e3356d9a858b789d68b4d866e593ae94",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Compound\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+    from: "0xa17581a9e3356d9a858b789d68b4d866e593ae94",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Compound\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+    to: "0x8377cd01a5834a6ead3b7efb482f678f2092b77e",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Maker(steCRV-A)\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0x06325440d014e39736583c165c2963ba99faf14e",
+    from: "0x8377cd01a5834a6ead3b7efb482f678f2092b77e",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Maker(steCRV-A)\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
 ];
 
 export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
@@ -908,7 +940,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was swapped for WETH in Balancer LP\n` +
+      `were swapped for WETH in Balancer LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
   {
@@ -926,7 +958,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was swapped for wstETH in Balancer LP\n` +
+      `were swapped for wstETH in Balancer LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
   {
@@ -1084,7 +1116,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was swapped for WETH in Curve concentrated LP\n` +
+      `were swapped for WETH in Curve concentrated LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
   {
@@ -1102,7 +1134,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was swapped for stETH in Curve concentrated LP\n` +
+      `were swapped for stETH in Curve concentrated LP\n` +
       `by: ${info.from} (${info.fromName})`,
   },
   {
@@ -1160,7 +1192,235 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `steCRV were withdrawn from Curve.fi ETH/stETH Convex Deposit\n` +
+      `were withdrawn from Curve.fi ETH/stETH Convex Deposit\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0x0b925ed163218f6662a35e0f0371ac234f9e9371",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x0B925eD163218f6662a35e0f0371Ac234f9E9371",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to AaveV3\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x0b925ed163218f6662a35e0f0371ac234f9e9371",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x0b925ed163218f6662a35e0f0371ac234f9e9371",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from AaveV3\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x0b925ed163218f6662a35e0f0371ac234f9e9371",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xc96113eed8cab59cd8a66813bcb0ceb29f06d2e4",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were borrowed on AaveV3\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0x0b925ed163218f6662a35e0f0371ac234f9e9371",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xc96113eed8cab59cd8a66813bcb0ceb29f06d2e4",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were repaid to AaveV3\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were added to Kyber WETH LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          from: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were swapped for WETH in Kyber LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        to: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          from: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were swapped for wstETH in Kyber LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x2b1c7b41f6a8f2b2bc45c3233a5d5fb3cd6dc9a8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x2b1c7b41f6a8f2b2bc45c3233a5d5fb3cd6dc9a8",
+          from: "0xebfe63ba0264ad639b3c41d2bfe1ad708f683bc8",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Kyber WETH LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were added to Kyber USDC LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+          from: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were swapped for USDC in Kyber LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        to: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          from: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were swapped for wstETH in Kyber LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x2b1c7b41f6a8f2b2bc45c3233a5d5fb3cd6dc9a8",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x2b1c7b41f6a8f2b2bc45c3233a5d5fb3cd6dc9a8",
+          from: "0xe6bcb55f45af6a2895fadbd644ced981bfa825cb",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Kyber USDC LP\n` +
       `by: ${info.to} (${info.toName})`,
   },
 ];
