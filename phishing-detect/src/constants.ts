@@ -170,6 +170,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x7623e9dc0da6ff821ddb9ebaba794054e078f8c4", // etherfi
   "0x0000000001e4ef00d069e71d6ba041b0a16f7ea0", // pendle.finance Router
   "0x463f9ed5e11764eb9029762011a03643603ad879", // Pods Finance stETHvv
+  "0xf70c086618dcf2b1a461311275e00d6b722ef914", // sushi
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
