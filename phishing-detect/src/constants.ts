@@ -172,6 +172,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x463f9ed5e11764eb9029762011a03643603ad879", // Pods Finance stETHvv
   "0x5937f58c2be65e95b5519f126a79a4ca4f281f10", // lsdx.finance
   "0xc3b7af1d8c3ca78f375eb125f0211164b9071cc0", // some WETH/wstETH pool implementation
+  "0xf70c086618dcf2b1a461311275e00d6b722ef914", // sushi
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
