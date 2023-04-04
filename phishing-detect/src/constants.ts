@@ -173,6 +173,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x5937f58c2be65e95b5519f126a79a4ca4f281f10", // lsdx.finance
   "0xc3b7af1d8c3ca78f375eb125f0211164b9071cc0", // some WETH/wstETH pool implementation
   "0xf70c086618dcf2b1a461311275e00d6b722ef914", // sushi
+  "0xe76ffee8722c21b390eebe71b67d95602f58237f", // unshETH lsd vault
+  "0x51a80238b5738725128d3a3e06ab41c1d4c05c74", // LSDVault_v2
+  "0x7461092aa5234b42a17ee8cc51cfde6ef4becbc7", // unshETHZapv2
+  "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364", // Pancake V3 Positions NFT-V1
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
