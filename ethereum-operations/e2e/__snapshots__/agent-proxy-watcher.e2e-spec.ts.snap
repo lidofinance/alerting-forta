@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-proxy-watcher e2e tests should process block with changed proxy implementation 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "PROXY-IMPL-CHANGED",
+  "description": "Implementation of Lido: Oracle (0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5) changed from 0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe to 0x5d39ABaa161e622B99D45616afC8B837E9F19a25",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "🚨 Proxy implementation changed",
+  "protocol": "ethereum",
+  "severity": 5,
+  "type": 4,
+}
+`;

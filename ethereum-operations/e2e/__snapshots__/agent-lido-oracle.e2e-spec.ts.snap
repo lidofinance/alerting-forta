@@ -1,0 +1,171 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-lido-oracle e2e tests should process tx with Lido Oracle report 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-REPORT",
+  "description": "Total balance: 5909524.783 ETH, total validators: 176728, rewards: 589.403 ETH (+0.609 ETH), time since last report: 23 hrs 54 min 24 sec",
+  "labels": Array [],
+  "metadata": Object {
+    "beaconBalance": "5909524783080576000000000",
+    "beaconValidators": "176728",
+    "reportDelay": "86064",
+    "rewards": "589402649547000000000",
+    "rewardsDiff": "608666205000000000",
+    "rewardsDiffPercent": "0.1",
+  },
+  "name": "✅ Lido Oracle report",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process block with Lido Oracle report overdue 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-OVERDUE",
+  "description": "Time since last report: 47 hrs 36 min 48 sec",
+  "labels": Array [],
+  "metadata": Object {
+    "delay": "171408",
+  },
+  "name": "🚨 Lido Oracle report overdue",
+  "protocol": "ethereum",
+  "severity": 5,
+  "type": 3,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with added member 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-MEMBER-ADDED",
+  "description": "New oracle member added - 0x140Bd8FbDc884f48dA7cb1c09bE8A2fAdfea776E",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0x140Bd8FbDc884f48dA7cb1c09bE8A2fAdfea776E",
+  },
+  "name": "ℹ️ Lido Oracle: Member Added",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with changed Beacon Report Receiver 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-BEACON-REPORT-RECEIVER-SET",
+  "description": "New beacon report receiver was set to 0x55a7E1cbD678d9EbD50c7d69Dc75203B0dBdD431",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0x55a7E1cbD678d9EbD50c7d69Dc75203B0dBdD431",
+  },
+  "name": "⚠️ Lido Oracle: Beacon Report Receiver Change",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with changed allowed Beacon Balance Annual Relative Decrease 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-BALANCE-RELATIVE-DECREASE-SET",
+  "description": "Allowed beacon balance annual relative decrease was set to 500",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "500",
+  },
+  "name": "⚠️ Lido Oracle: Allowed Beacon Balance Annual Relative Decrease Change",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with changed allowed Beacon Balance Annual Relative Increase 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-BALANCE-RELATIVE-INCREASE-SET",
+  "description": "Allowed beacon balance annual relative increase was set to 1750",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "1750",
+  },
+  "name": "⚠️ Lido Oracle: Allowed Beacon Balance Annual Relative Increase Change",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with changed quorum 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-QUORUM-CHANGED",
+  "description": "Quorum size was set to 5",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "5",
+  },
+  "name": "🚨 Lido Oracle: Quorum Changed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with decreased Lido Beacon rewards 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-REWARDS-DECREASED",
+  "description": "Rewards decreased from 594.775 ETH to 583.402 by -11.373 ETH (-1.91%)",
+  "labels": Array [],
+  "metadata": Object {
+    "beaconBalance": "5899179792328567000000000",
+    "beaconValidators": "176460",
+    "prevRewards": "594774737778000000000",
+    "reportDelay": "86412",
+    "rewards": "583402230417000000000",
+    "rewardsDiff": "-11372507361000000000",
+    "rewardsDiffPercent": "-1.91",
+  },
+  "name": "🚨 Lido Beacon rewards decreased",
+  "protocol": "ethereum",
+  "severity": 3,
+  "type": 3,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process block with low balance of Lido Oracle 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-ORACLE-LOW-BALANCE",
+  "description": "Balance of 0x946D3b081ed19173dC83Cd974fC69e1e760B7d78 (Stakefish) is 0.2479 ETH. This is rather low!",
+  "labels": Array [],
+  "metadata": Object {
+    "balance": "0.247862040202533669",
+    "oracle": "0x946D3b081ed19173dC83Cd974fC69e1e760B7d78",
+  },
+  "name": "⚠️ Low balance of Lido Oracle",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 3,
+}
+`;
+
+exports[`agent-lido-oracle e2e tests should process tx with super sloppy Lido Oracle 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "SLOPPY-LIDO-ORACLE",
+  "description": "Oracle 0x140Bd8FbDc884f48dA7cb1c09bE8A2fAdfea776E (Chorus One) has not reported before the quorum for more than 2 weeks or have never reported yet",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "⚠️ Super sloppy Lido Oracle",
+  "protocol": "ethereum",
+  "severity": 3,
+  "type": 2,
+}
+`;
