@@ -30,8 +30,13 @@ import {
   LIDO_ORACLE_BEACON_REPORTED_EVENT,
   LIDO_ORACLE_EVENTS_OF_NOTICE,
 } from "./constants";
-import { byBlockNumberDesc, getOracleName, formatEth, formatDelay } from "./utils";
-import {handleEventsOfNotice} from "../../common/utils";
+import {
+  byBlockNumberDesc,
+  getOracleName,
+  formatEth,
+  formatDelay,
+} from "./utils";
+import { handleEventsOfNotice } from "../../common/utils";
 
 export interface OracleReport {
   timestamp: number;
@@ -63,7 +68,9 @@ async function getOracles(blockNumber: number) {
     ethersProvider
   );
 
-  return String(await lidoOracle.functions.getOracleMembers({ blockTag: blockNumber })).split(",");
+  return String(
+    await lidoOracle.functions.getOracleMembers({ blockTag: blockNumber })
+  ).split(",");
 }
 
 export async function initialize(

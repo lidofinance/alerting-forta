@@ -15,7 +15,7 @@ import {
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
   SIGNING_KEY_REMOVED_EVENT,
 } from "./constants";
-import {handleEventsOfNotice} from "../../common/utils";
+import { handleEventsOfNotice } from "../../common/utils";
 
 export const name = "NodeOperatorsRegistry";
 
@@ -29,7 +29,11 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleEventsOfNotice(txEvent, findings, NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE);
+  handleEventsOfNotice(
+    txEvent,
+    findings,
+    NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE
+  );
   handleSigningKeysRemoved(txEvent, findings);
   handleStakeLimitSet(txEvent, findings);
 

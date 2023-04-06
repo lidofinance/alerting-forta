@@ -21,7 +21,9 @@ describe("agent-dao-ops e2e tests", () => {
   beforeEach(async () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
-      agentPath: asFunction(provideAgentPath("subagents/dao-ops/agent-dao-ops")),
+      agentPath: asFunction(
+        provideAgentPath("subagents/dao-ops/agent-dao-ops")
+      ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
     });
@@ -87,7 +89,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with unpaused deposits",
     async () => {
       const findings = await runTransaction(
-          "0xd5ddc8c0e3e24b36ffac6e804894c5c09c012e9079a9d9df24f503f1e75e2f64"
+        "0xd5ddc8c0e3e24b36ffac6e804894c5c09c012e9079a9d9df24f503f1e75e2f64"
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
@@ -98,7 +100,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with added guardian",
     async () => {
       const findings = await runTransaction(
-          "0x60d9392de6c6ae3f8ca8003cce414fc420d705c9a1c8051b9869b0b870d2ebbe"
+        "0x60d9392de6c6ae3f8ca8003cce414fc420d705c9a1c8051b9869b0b870d2ebbe"
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
@@ -109,7 +111,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with changed guardian quorum",
     async () => {
       const findings = await runTransaction(
-          "0x37ef7e9e71809be37143e3976bae7859268be3fac6728d69cd7b5d6d9cf8d24a"
+        "0x37ef7e9e71809be37143e3976bae7859268be3fac6728d69cd7b5d6d9cf8d24a"
       );
       expect(findings.at(4)).toMatchSnapshot();
     },
@@ -120,7 +122,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with changed max deposit",
     async () => {
       const findings = await runTransaction(
-          "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
+        "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
@@ -131,7 +133,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with changed min deposit block",
     async () => {
       const findings = await runTransaction(
-          "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
+        "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
       );
       expect(findings.at(1)).toMatchSnapshot();
     },
@@ -142,7 +144,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with changed node operators registry",
     async () => {
       const findings = await runTransaction(
-          "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
+        "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
       );
       expect(findings.at(2)).toMatchSnapshot();
     },
@@ -153,7 +155,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process tx with changed owner of the contract",
     async () => {
       const findings = await runTransaction(
-          "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
+        "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2"
       );
       expect(findings.at(3)).toMatchSnapshot();
     },
@@ -225,5 +227,4 @@ describe("agent-dao-ops e2e tests", () => {
     },
     TEST_TIMEOUT
   );
-
 });

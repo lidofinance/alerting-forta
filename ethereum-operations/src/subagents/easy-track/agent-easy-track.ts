@@ -22,7 +22,7 @@ import {
 import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { getMotionLink, getMotionType } from "./utils";
-import {handleEventsOfNotice} from "../../common/utils";
+import { handleEventsOfNotice } from "../../common/utils";
 
 export const name = "EasyTrack";
 

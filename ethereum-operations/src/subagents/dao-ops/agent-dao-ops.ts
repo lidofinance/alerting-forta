@@ -44,7 +44,7 @@ import {
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
 } from "./constants";
-import {handleEventsOfNotice} from "../../common/utils";
+import { handleEventsOfNotice } from "../../common/utils";
 
 export const name = "DaoOps";
 
@@ -129,7 +129,7 @@ async function handleNodeOperatorsKeys(
     );
     const nodeOperatorsCount =
       await nodeOperatorsRegistry.functions.getActiveNodeOperatorsCount({
-          blockTag: blockEvent.block.number,
+        blockTag: blockEvent.block.number,
       });
     let availableKeys: Promise<any>[] = [];
     let availableKeysCount = 0;
@@ -137,7 +137,7 @@ async function handleNodeOperatorsKeys(
       availableKeys.push(
         nodeOperatorsRegistry.functions
           .getUnusedSigningKeyCount(i, {
-              blockTag: blockEvent.block.number,
+            blockTag: blockEvent.block.number,
           })
           .then((value) => (availableKeysCount += parseInt(String(value))))
       );
@@ -231,7 +231,12 @@ async function handleDepositExecutorBalance(
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
     const executorBalanceRaw = new BigNumber(
-      String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS, blockEvent.blockHash))
+      String(
+        await ethersProvider.getBalance(
+          LIDO_DEPOSIT_EXECUTOR_ADDRESS,
+          blockEvent.blockHash
+        )
+      )
     );
     const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
@@ -329,7 +334,12 @@ async function handleElRewardsBalance(
       })) / 10000;
 
     const elBalance = new BigNumber(
-      String(await ethersProvider.getBalance(LIDO_EL_REWARDS_VAULT_ADDRESS, blockEvent.blockHash))
+      String(
+        await ethersProvider.getBalance(
+          LIDO_EL_REWARDS_VAULT_ADDRESS,
+          blockEvent.blockHash
+        )
+      )
     );
 
     if (
@@ -482,9 +492,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     LIDO_DAO_EVENTS_OF_NOTICE,
     MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
     INSURANCE_FUND_EVENTS_OF_NOTICE,
-    TRP_EVENTS_OF_NOTICE
+    TRP_EVENTS_OF_NOTICE,
   ].forEach((eventsOfNotice) => {
-      handleEventsOfNotice(txEvent, findings, eventsOfNotice);
+    handleEventsOfNotice(txEvent, findings, eventsOfNotice);
   });
 
   return findings;
@@ -492,7 +502,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
-    handleBlock,
-    handleTransaction,
-    // initialize, // sdk won't provide any arguments to the function
+  handleBlock,
+  handleTransaction,
+  // initialize, // sdk won't provide any arguments to the function
 };

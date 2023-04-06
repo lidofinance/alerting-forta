@@ -21,7 +21,11 @@ describe("agent-node-operators-registry e2e tests", () => {
   beforeEach(async () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
-      agentPath: asFunction(provideAgentPath("subagents/node-operators-registry/agent-node-operators-registry")),
+      agentPath: asFunction(
+        provideAgentPath(
+          "subagents/node-operators-registry/agent-node-operators-registry"
+        )
+      ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
     });
@@ -67,6 +71,4 @@ describe("agent-node-operators-registry e2e tests", () => {
     },
     TEST_TIMEOUT
   );
-
-
 });

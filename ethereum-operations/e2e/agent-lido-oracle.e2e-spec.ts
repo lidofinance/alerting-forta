@@ -21,7 +21,9 @@ describe("agent-lido-oracle e2e tests", () => {
   beforeEach(async () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
-      agentPath: asFunction(provideAgentPath("subagents/lido-oracle/agent-lido-oracle")),
+      agentPath: asFunction(
+        provideAgentPath("subagents/lido-oracle/agent-lido-oracle")
+      ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
     });
@@ -140,5 +142,4 @@ describe("agent-lido-oracle e2e tests", () => {
     },
     TEST_TIMEOUT
   );
-
 });

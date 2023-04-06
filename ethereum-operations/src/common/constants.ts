@@ -18,4 +18,4 @@ export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
 export const MOTION_ENACTED_EVENT =
-    "event MotionEnacted(uint256 indexed _motionId)";
+  "event MotionEnacted(uint256 indexed _motionId)";

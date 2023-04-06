@@ -1,6 +1,10 @@
-import {Finding, FindingType, TransactionEvent} from "forta-agent";
+import { Finding, FindingType, TransactionEvent } from "forta-agent";
 
-export function handleEventsOfNotice(txEvent: TransactionEvent, findings: Finding[], eventsOfNotice: any[]) {
+export function handleEventsOfNotice(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+  eventsOfNotice: any[]
+) {
   eventsOfNotice.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);

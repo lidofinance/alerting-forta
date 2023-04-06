@@ -9,7 +9,10 @@ import {
 const TEST_TIMEOUT = 60_000; // ms
 
 describe("agent-aragon-voting e2e tests", () => {
-  let runBlock: (blockHashOrNumber: string | number, initBlock?: number) => Promise<Finding[]>;
+  let runBlock: (
+    blockHashOrNumber: string | number,
+    initBlock?: number
+  ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
 
@@ -21,7 +24,9 @@ describe("agent-aragon-voting e2e tests", () => {
   beforeEach(async () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
-      agentPath: asFunction(provideAgentPath("subagents/aragon-voting/agent-aragon-voting")),
+      agentPath: asFunction(
+        provideAgentPath("subagents/aragon-voting/agent-aragon-voting")
+      ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
     });
@@ -65,5 +70,4 @@ describe("agent-aragon-voting e2e tests", () => {
     },
     TEST_TIMEOUT
   );
-
 });

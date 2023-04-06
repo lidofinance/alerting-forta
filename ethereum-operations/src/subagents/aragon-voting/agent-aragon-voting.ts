@@ -14,17 +14,14 @@ import {
 import { ethersProvider } from "../../ethers";
 
 import ARAGON_VOTING_ABI from "../../abi/AragonVoting.json";
-import {
-  ETH_DECIMALS,
-  ONE_HOUR,
-} from "../../common/constants";
+import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 import {
   LIDO_ARAGON_VOTING_ADDRESS,
   CAST_VOTE_EVENT,
   ARAGON_VOTING_EVENTS_OF_NOTICE,
 } from "./constants";
-import {handleEventsOfNotice} from "../../common/utils";
+import { handleEventsOfNotice } from "../../common/utils";
 
 export const name = "Aragon Voting Watcher";
 

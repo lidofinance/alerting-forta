@@ -244,7 +244,7 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
 
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
-    handleBlock,
-    handleTransaction,
-    initialize, // sdk won't provide any arguments to the function
+  handleBlock,
+  handleTransaction,
+  initialize, // sdk won't provide any arguments to the function
 };

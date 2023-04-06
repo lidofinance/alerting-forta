@@ -85,10 +85,8 @@ async function getProxyImplementation(
   });
 }
 
-
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleBlock,
   // initialize, // sdk won't provide any arguments to the function
 };
-

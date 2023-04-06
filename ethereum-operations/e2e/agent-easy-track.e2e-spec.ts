@@ -21,7 +21,9 @@ describe("agent-easy-track e2e tests", () => {
   beforeEach(async () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
-      agentPath: asFunction(provideAgentPath("subagents/easy-track/agent-easy-track")),
+      agentPath: asFunction(
+        provideAgentPath("subagents/easy-track/agent-easy-track")
+      ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
     });
@@ -34,7 +36,6 @@ describe("agent-easy-track e2e tests", () => {
   afterAll(() => {
     jest.resetAllMocks();
   });
-
 
   it(
     "should process tx with new motion created",
@@ -54,8 +55,8 @@ describe("agent-easy-track e2e tests", () => {
         "0x55c4c7e33eb92da16871944879d52180c1a2e59c2701404abef864c5196ab7f1"
       );
       expect(findings.at(0)).toMatchSnapshot();
-      },
-      TEST_TIMEOUT
+    },
+    TEST_TIMEOUT
   );
 
   it(
@@ -101,5 +102,4 @@ describe("agent-easy-track e2e tests", () => {
     },
     TEST_TIMEOUT
   );
-
 });

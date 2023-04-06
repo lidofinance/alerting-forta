@@ -21,7 +21,9 @@ describe("agent-acl-changes e2e tests", () => {
   beforeEach(async () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
-      agentPath: asFunction(provideAgentPath("subagents/acl-changes/agent-acl-changes")),
+      agentPath: asFunction(
+        provideAgentPath("subagents/acl-changes/agent-acl-changes")
+      ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
     });
@@ -56,5 +58,4 @@ describe("agent-acl-changes e2e tests", () => {
     },
     TEST_TIMEOUT
   );
-
 });
