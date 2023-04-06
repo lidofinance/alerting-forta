@@ -13,13 +13,13 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentLidoOracle from "./agent-lido-oracle";
-import * as agentEasyTrack from "./agent-easy-track";
-import * as agentDaoOps from "./agent-dao-ops";
-import * as agentProxy from "./agent-proxy-watcher";
-import * as agentAragon from "./agent-aragon-voting";
-import * as agentACL from "./agent-acl-changes";
-import * as agentNORegistry from "./agent-node-operators-registry";
+import * as agentLidoOracle from "./subagents/lido-oracle/agent-lido-oracle";
+import * as agentEasyTrack from "./subagents/easy-track/agent-easy-track";
+import * as agentDaoOps from "./subagents/dao-ops/agent-dao-ops";
+import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
+import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
+import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
+import * as agentNORegistry from "./subagents/node-operators-registry/agent-node-operators-registry";
 
 import VERSION from "./version";
 

@@ -9,38 +9,42 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider, etherscanProvider } from "./ethers";
+import { ethersProvider, etherscanProvider } from "../../ethers";
 
-import NODE_OPERATORS_REGISTRY_ABI from "./abi/NodeOperatorsRegistry.json";
-import LIDO_DAO_ABI from "./abi/LidoDAO.json";
-import MEV_ALLOW_LIST_ABI from "./abi/MEVBoostRelayAllowedList.json";
-import ENS_BASE_REGISTRAR_ABI from "./abi/ENS.json";
+import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
+import LIDO_DAO_ABI from "../../abi/LidoDAO.json";
+import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
+import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
 import {
   NODE_OPERATORS_REGISTRY_ADDRESS,
-  LIDO_DAO_ADDRESS,
-  MIN_AVAILABLE_KEYS_COUNT,
-  MAX_BUFFERED_ETH_AMOUNT_CRITICAL,
-  MAX_BUFFERED_ETH_AMOUNT_MEDIUM,
   ETH_DECIMALS,
-  LIDO_DEPOSIT_SECURITY_ADDRESS,
-  MAX_DEPOSITOR_TX_DELAY,
-  MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
-  LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-  MIN_DEPOSIT_EXECUTOR_BALANCE,
-  DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
-  LIDO_DAO_EVENTS_OF_NOTICE,
-  LIDO_EL_REWARDS_VAULT_ADDRESS,
-  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
-  MEV_ALLOWED_LIST_ADDRESS,
-  INSURANCE_FUND_EVENTS_OF_NOTICE,
-  TRP_EVENTS_OF_NOTICE,
-  ENS_CHECK_INTERVAL,
-  ENS_BASE_REGISTRAR_ADDRESS,
-  LIDO_ENS_NAMES,
   ONE_MONTH,
   ONE_WEEK,
+} from "../../common/constants";
+
+import {
+  LIDO_DAO_ADDRESS,
+  LIDO_DEPOSIT_SECURITY_ADDRESS,
+  LIDO_DEPOSIT_EXECUTOR_ADDRESS,
+  LIDO_EL_REWARDS_VAULT_ADDRESS,
+  MEV_ALLOWED_LIST_ADDRESS,
+  ENS_BASE_REGISTRAR_ADDRESS,
+  MIN_AVAILABLE_KEYS_COUNT,
+  MIN_DEPOSIT_EXECUTOR_BALANCE,
+  MAX_DEPOSITOR_TX_DELAY,
+  MAX_BUFFERED_ETH_AMOUNT_MEDIUM,
+  MAX_BUFFERED_ETH_AMOUNT_CRITICAL,
+  MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
+  ENS_CHECK_INTERVAL,
+  LIDO_ENS_NAMES,
+  LIDO_DAO_EVENTS_OF_NOTICE,
+  DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
+  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
+  INSURANCE_FUND_EVENTS_OF_NOTICE,
+  TRP_EVENTS_OF_NOTICE,
 } from "./constants";
+import {handleEventsOfNotice} from "../../common/utils";
 
 export const name = "DaoOps";
 
@@ -124,13 +128,17 @@ async function handleNodeOperatorsKeys(
       ethersProvider
     );
     const nodeOperatorsCount =
-      await nodeOperatorsRegistry.functions.getActiveNodeOperatorsCount();
+      await nodeOperatorsRegistry.functions.getActiveNodeOperatorsCount({
+          blockTag: blockEvent.block.number,
+      });
     let availableKeys: Promise<any>[] = [];
     let availableKeysCount = 0;
     for (let i = 0; i < nodeOperatorsCount; i++) {
       availableKeys.push(
         nodeOperatorsRegistry.functions
-          .getUnusedSigningKeyCount(i)
+          .getUnusedSigningKeyCount(i, {
+              blockTag: blockEvent.block.number,
+          })
           .then((value) => (availableKeysCount += parseInt(String(value))))
       );
     }
@@ -223,7 +231,7 @@ async function handleDepositExecutorBalance(
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
     const executorBalanceRaw = new BigNumber(
-      String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS))
+      String(await ethersProvider.getBalance(LIDO_DEPOSIT_EXECUTOR_ADDRESS, blockEvent.blockHash))
     );
     const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
@@ -321,7 +329,7 @@ async function handleElRewardsBalance(
       })) / 10000;
 
     const elBalance = new BigNumber(
-      String(await ethersProvider.getBalance(LIDO_EL_REWARDS_VAULT_ADDRESS))
+      String(await ethersProvider.getBalance(LIDO_EL_REWARDS_VAULT_ADDRESS, blockEvent.blockHash))
     );
 
     if (
@@ -465,117 +473,26 @@ async function handleEnsNamesExpiration(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleDepositorTx(txEvent, findings);
-  handleLidoDAOTx(txEvent, findings);
-  handleMevListTx(txEvent, findings);
-  handleInsuranceFundEvents(txEvent, findings);
-  handleLidoTrpTx(txEvent, findings);
+  if (txEvent.to == LIDO_DEPOSIT_SECURITY_ADDRESS) {
+    lastDepositorTxTime = txEvent.timestamp;
+  }
+
+  [
+    DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
+    LIDO_DAO_EVENTS_OF_NOTICE,
+    MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
+    INSURANCE_FUND_EVENTS_OF_NOTICE,
+    TRP_EVENTS_OF_NOTICE
+  ].forEach((eventsOfNotice) => {
+      handleEventsOfNotice(txEvent, findings, eventsOfNotice);
+  });
 
   return findings;
 }
 
-function handleDepositorTx(txEvent: TransactionEvent, findings: Finding[]) {
-  if (txEvent.to == LIDO_DEPOSIT_SECURITY_ADDRESS) {
-    lastDepositorTxTime = txEvent.timestamp;
-  }
-  DEPOSIT_SECURITY_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
-
-function handleLidoDAOTx(txEvent: TransactionEvent, findings: Finding[]) {
-  LIDO_DAO_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
-
-function handleMevListTx(txEvent: TransactionEvent, findings: Finding[]) {
-  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
-
-function handleInsuranceFundEvents(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
-  INSURANCE_FUND_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
-
-function handleLidoTrpTx(txEvent: TransactionEvent, findings: Finding[]) {
-  TRP_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+    handleBlock,
+    handleTransaction,
+    // initialize, // sdk won't provide any arguments to the function
+};

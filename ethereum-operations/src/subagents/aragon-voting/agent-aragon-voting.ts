@@ -11,16 +11,20 @@ import {
   TxEventBlock,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
-import ARAGON_VOTING_ABI from "./abi/AragonVoting.json";
+import ARAGON_VOTING_ABI from "../../abi/AragonVoting.json";
+import {
+  ETH_DECIMALS,
+  ONE_HOUR,
+} from "../../common/constants";
+
 import {
   LIDO_ARAGON_VOTING_ADDRESS,
   CAST_VOTE_EVENT,
-  ETH_DECIMALS,
   ARAGON_VOTING_EVENTS_OF_NOTICE,
-  ONE_HOUR,
 } from "./constants";
+import {handleEventsOfNotice} from "../../common/utils";
 
 export const name = "Aragon Voting Watcher";
 
@@ -192,7 +196,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   await Promise.all([
     handleAragonTransaction(txEvent, findings),
-    handleAragonEventsOfNoticeTransaction(txEvent, findings),
+    handleEventsOfNotice(txEvent, findings, ARAGON_VOTING_EVENTS_OF_NOTICE),
   ]);
 
   return findings;
@@ -203,39 +207,25 @@ async function handleAragonTransaction(
   findings: Finding[]
 ) {
   if (LIDO_ARAGON_VOTING_ADDRESS in txEvent.addresses) {
-    const [event] = txEvent.filterLog(
+    const events = txEvent.filterLog(
       CAST_VOTE_EVENT,
       LIDO_ARAGON_VOTING_ADDRESS
     );
-    if (event && event.args.voteId) {
-      await handleNewVoteInfo(
-        event.args.voteId.toNumber(),
-        txEvent.block,
-        findings
-      );
+    for (const event of events) {
+      if (event && event.args.voteId) {
+        await handleNewVoteInfo(
+          event.args.voteId.toNumber(),
+          txEvent.block,
+          findings
+        );
+      }
     }
   }
 }
 
-function handleAragonEventsOfNoticeTransaction(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
-  ARAGON_VOTING_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const [event] = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      if (event) {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      }
-    }
-  });
-}
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  handleTransaction,
+  // initialize, // sdk won't provide any arguments to the function
+};

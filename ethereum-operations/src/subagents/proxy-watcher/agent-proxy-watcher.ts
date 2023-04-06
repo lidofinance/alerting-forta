@@ -1,14 +1,13 @@
 import {
   ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
   FindingType,
   FindingSeverity,
 } from "forta-agent";
 import { IProxyContractData, LIDO_PROXY_CONTRACTS_DATA } from "./constants";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
 export const name = "ProxyWatcher";
 
@@ -85,3 +84,11 @@ async function getProxyImplementation(
     blockTag: currentBlock,
   });
 }
+
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  // initialize, // sdk won't provide any arguments to the function
+};
+

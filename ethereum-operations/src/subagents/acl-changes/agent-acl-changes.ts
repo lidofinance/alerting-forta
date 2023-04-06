@@ -7,7 +7,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
 import {
   LIDO_ARAGON_ACL_ADDRESS,
@@ -23,7 +23,7 @@ import {
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
 } from "./constants";
 
-import { isContract } from "./utils/tools";
+import { isContract } from "./utils";
 
 interface IPermission {
   app: string;
@@ -241,3 +241,10 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
 
   await Promise.all(promises);
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+    handleBlock,
+    handleTransaction,
+    initialize, // sdk won't provide any arguments to the function
+};

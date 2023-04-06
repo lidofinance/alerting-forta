@@ -11,27 +11,27 @@ import {
 
 import { Result } from "@ethersproject/abi";
 
-import { formatEth, formatDelay } from "./utils";
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
-import LIDO_ORACLE_ABI from "./abi/LidoOracle.json";
+import LIDO_ORACLE_ABI from "../../abi/LidoOracle.json";
 
+import { ETH_DECIMALS } from "../../common/constants";
 import {
+  TRIGGER_PERIOD,
   LIDO_ORACLE_ADDRESS,
-  LIDO_ORACLE_BEACON_REPORTED_EVENT,
-  LIDO_ORACLE_COMPLETED_EVENT,
-  LIDO_ORACLE_EVENTS_OF_NOTICE,
   LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH,
   LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM,
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
   MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
   MAX_ORACLE_REPORT_DELAY,
   MIN_ORACLE_BALANCE_INFO,
-  TRIGGER_PERIOD,
-  ETH_DECIMALS,
+  MIN_ORACLE_BALANCE_HIGH,
+  LIDO_ORACLE_COMPLETED_EVENT,
+  LIDO_ORACLE_BEACON_REPORTED_EVENT,
+  LIDO_ORACLE_EVENTS_OF_NOTICE,
 } from "./constants";
-import { byBlockNumberDesc, getOracleName } from "./utils/tools";
-import { MIN_ORACLE_BALANCE_HIGH } from "./constants";
+import { byBlockNumberDesc, getOracleName, formatEth, formatDelay } from "./utils";
+import {handleEventsOfNotice} from "../../common/utils";
 
 export interface OracleReport {
   timestamp: number;
@@ -56,14 +56,14 @@ export const name = "LidoOracle";
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
-async function getOracles() {
+async function getOracles(blockNumber: number) {
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
     ethersProvider
   );
 
-  return String(await lidoOracle.functions.getOracleMembers()).split(",");
+  return String(await lidoOracle.functions.getOracleMembers({ blockTag: blockNumber })).split(",");
 }
 
 export async function initialize(
@@ -76,7 +76,7 @@ export async function initialize(
     ethersProvider
   );
 
-  const oracles = await getOracles();
+  const oracles = await getOracles(currentBlock);
   const oracleReportBeaconFilter = lidoOracle.filters.BeaconReported();
   // ~14 days ago
   const beaconReportStartBlock =
@@ -263,7 +263,7 @@ async function handleOraclesBalances(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
-  const oracles = await getOracles();
+  const oracles = await getOracles(blockEvent.blockNumber);
   await Promise.all(
     oracles.map((oracle) => handleOracleBalance(oracle, blockEvent, findings))
   );
@@ -278,7 +278,7 @@ async function handleOracleBalance(
   const lastAlert = oraclesBalanceLastAlert.get(oracle) || 0;
   if (now > lastAlert + WEEK) {
     const balance = new BigNumber(
-      String(await ethersProvider.getBalance(oracle))
+      String(await ethersProvider.getBalance(oracle, blockEvent.blockHash))
     ).div(ETH_DECIMALS);
     if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_INFO)) {
       const severity = balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_HIGH)
@@ -311,9 +311,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   if (txEvent.to === LIDO_ORACLE_ADDRESS) {
     handleOracleTx(txEvent, findings);
     handleReportBeacon(txEvent);
-    handleLidoOracleTransaction(txEvent, findings);
     handleBeaconCompleted(txEvent, findings);
   }
+  handleEventsOfNotice(txEvent, findings, LIDO_ORACLE_EVENTS_OF_NOTICE);
 
   return findings;
 }
@@ -477,25 +477,9 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
   }
 }
 
-function handleLidoOracleTransaction(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
-  LIDO_ORACLE_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  handleTransaction,
+  initialize, // sdk won't provide any arguments to the function
+};

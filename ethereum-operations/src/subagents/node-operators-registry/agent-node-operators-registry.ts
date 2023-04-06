@@ -1,6 +1,4 @@
 import {
-  ethers,
-  BlockEvent,
   TransactionEvent,
   Finding,
   FindingType,
@@ -9,12 +7,15 @@ import {
 
 import {
   EASY_TRACK_ADDRESS,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
+  MOTION_ENACTED_EVENT,
+} from "../../common/constants";
+import {
   NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
   SIGNING_KEY_REMOVED_EVENT,
-  MOTION_ENACTED_EVENT,
 } from "./constants";
+import {handleEventsOfNotice} from "../../common/utils";
 
 export const name = "NodeOperatorsRegistry";
 
@@ -28,7 +29,7 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleEventsOfNotice(txEvent, findings);
+  handleEventsOfNotice(txEvent, findings, NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE);
   handleSigningKeysRemoved(txEvent, findings);
   handleStakeLimitSet(txEvent, findings);
 
@@ -84,22 +85,8 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   }
 }
 
-function handleEventsOfNotice(txEvent: TransactionEvent, findings: Finding[]) {
-  NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
-      events.forEach((event) => {
-        findings.push(
-          Finding.fromObject({
-            name: eventInfo.name,
-            description: eventInfo.description(event.args),
-            alertId: eventInfo.alertId,
-            severity: eventInfo.severity,
-            type: FindingType.Info,
-            metadata: { args: String(event.args) },
-          })
-        );
-      });
-    }
-  });
-}
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleTransaction,
+  initialize, // sdk won't provide any arguments to the function
+};
