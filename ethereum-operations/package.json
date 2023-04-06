@@ -20,7 +20,7 @@
     "disable": "forta-agent disable",
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:e2e": "yarn build && jest --config ./e2e/jest.config-e2e.json --passWithNoTests"
   },
   "dependencies": {
