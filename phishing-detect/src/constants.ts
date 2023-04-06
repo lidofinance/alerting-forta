@@ -177,6 +177,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x51a80238b5738725128d3a3e06ab41c1d4c05c74", // LSDVault_v2
   "0x7461092aa5234b42a17ee8cc51cfde6ef4becbc7", // unshETHZapv2
   "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364", // Pancake V3 Positions NFT-V1
+  "0x7b0eff0c991f0aa880481fdfa5624cb0bc9b10e1", // lsdx.finance
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
