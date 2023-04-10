@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-pools-rewards e2e tests should process block with prolonged rewards 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LDO-CURVE-REWARDS-PROLONGED",
+  "description": "Curve rewards successfully prolonged till Sun Apr 10 2022 07:30:27 GMT+0500 (West Kazakhstan Time)",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "ℹ️ Curve rewards prolonged",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-pools-rewards e2e tests should process block with rewards period expiration 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LDO-CURVE-REWARDS-EXPIRATION",
+  "description": "Curve rewards period expires in 2 days and LDO balance is under 10,000 LDO",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "⚠️ Curve rewards period expiration",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
