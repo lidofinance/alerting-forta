@@ -8,7 +8,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
 import {
   LDO_TOKEN_ADDRESS,
@@ -17,10 +17,10 @@ import {
   POOLS_PARAMS,
 } from "./constants";
 
-import LDO_TOKEN_ABI from "./abi/LdoToken.json";
-import CURVE_MANAGER_ABI from "./abi/CurveManager.json";
-import CURVE_REWARDS_ABI from "./abi/CurveRewards.json";
-import BALANCER_MANAGER_ABI from "./abi/BalancerManager.json";
+import LDO_TOKEN_ABI from "../../abi/LdoToken.json";
+import CURVE_MANAGER_ABI from "../../abi/CurveManager.json";
+import CURVE_REWARDS_ABI from "../../abi/CurveRewards.json";
+import BALANCER_MANAGER_ABI from "../../abi/BalancerManager.json";
 const rewardContractAbis = {
   Curve: {
     manager: CURVE_MANAGER_ABI,
@@ -59,15 +59,22 @@ function arePeriodsSorted(periods: any) {
   );
 }
 
-async function readPeriodFinish(poolName: string) {
+async function readPeriodFinish(poolName: string, block: number) {
   try {
-    return +(await g_pools[poolName].manager.period_finish()).toString();
-  } catch (err) {
-    const rewardsContract = g_pools[poolName].rewards;
-    if (!rewardsContract) {
-      throw `rewardsContract is undefined but is needed to get periodFinish. pool: (${poolName}), error: ${err}`;
+    return +(
+      await g_pools[poolName].manager.period_finish({ blockTag: block })
+    ).toString();
+  } catch (err: any) {
+    if (err.message.includes("is not a function")) {
+      const rewardsContract = g_pools[poolName].rewards;
+      if (!rewardsContract) {
+        throw `rewardsContract is undefined but is needed to get periodFinish. pool: (${poolName}), error: ${err}`;
+      }
+      return +(
+        await rewardsContract.periodFinish({ blockTag: block })
+      ).toString();
     }
-    return +(await rewardsContract.periodFinish()).toString();
+    console.log("Error while reading periodFinish", err);
   }
 }
 
@@ -104,22 +111,24 @@ export async function initialize(
       );
     }
 
-    const periodFinish = await readPeriodFinish(poolName);
-    g_pools[poolName]["periodFinish"] = periodFinish;
-    log(
-      `${poolName} reward expiration date is initialized to ${periodFinish}  (${formatTimestamp(
+    const periodFinish = await readPeriodFinish(poolName, currentBlock);
+    if (periodFinish) {
+      g_pools[poolName]["periodFinish"] = periodFinish;
+      log(
+        `${poolName} reward expiration date is initialized to ${periodFinish}  (${formatTimestamp(
+          periodFinish
+        )})`
+      );
+      metadata[poolName] = `periodFinish: ${periodFinish}  (${formatTimestamp(
         periodFinish
-      )})`
-    );
-    metadata[poolName] = `periodFinish: ${periodFinish}  (${formatTimestamp(
-      periodFinish
-    )})`;
+      )})`;
+    }
   }
 
   return metadata;
 }
 
-async function handlePeriodFinishChange(
+function handlePeriodFinishChange(
   poolName: string,
   newPeriodFinish: number,
   findings: Finding[]
@@ -147,7 +156,11 @@ async function handleRewardExpire(
   findings: Finding[]
 ) {
   let poolInfo = g_pools[poolName];
-  const periodFinishUpdated = await readPeriodFinish(poolName);
+  const periodFinishUpdated = await readPeriodFinish(
+    poolName,
+    blockEvent.blockNumber
+  );
+  if (!periodFinishUpdated) return;
 
   const handleStillNotProlonged = function () {
     findings.push(
@@ -210,7 +223,7 @@ async function handleRewardExpire(
       poolInfo.lastNotification = now;
       findings.push(
         Finding.fromObject({
-          name: `⚠️ ${poolName} rewards period expiriation`,
+          name: `⚠️ ${poolName} rewards period expiration`,
           description: description(poolName),
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRATION`,
           severity: severity,
@@ -250,10 +263,16 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all(
-    Object.keys(g_pools).map(async (key) => {
-      handleRewardExpire(key, blockEvent, findings);
-    })
+    Object.keys(g_pools).map(async (key) =>
+      handleRewardExpire(key, blockEvent, findings)
+    )
   );
 
   return findings;
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  // initialize, // sdk won't provide any arguments to the function
+};

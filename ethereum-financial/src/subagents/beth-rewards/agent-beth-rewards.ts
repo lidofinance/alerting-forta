@@ -9,26 +9,24 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { formatEth, formatDelay } from "./utils";
-import { ethersProvider } from "./ethers";
+import { formatEth } from "../../common";
+import { ethersProvider } from "../../ethers";
 
-import ANCHOR_VAULT_ABI from "./abi/AnchorVault.json";
-import LIDO_ORACLE_ABI from "./abi/LidoOracle.json";
+import ANCHOR_VAULT_ABI from "../../abi/AnchorVault.json";
+import LIDO_ORACLE_ABI from "../../abi/LidoOracle.json";
 
+import { ETH_DECIMALS } from "../../common/constants";
 import {
   ANCHOR_VAULT_ADDRESS,
   ANCHOR_VAULT_REWARDS_COLLECTED_EVENT,
   ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT,
-  MAX_BETH_REWARDS_SELL_DELAY,
-  TRIGGER_PERIOD,
   MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE,
-  ETH_DECIMALS,
   BALANCE_REPORT_WINDOW,
   LIDO_ORACLE_COMPLETED_EVENT,
   LIDO_ORACLE_ADDRESS,
 } from "./constants";
 
-import { byBlockNumberDesc } from "./utils/tools";
+import { byBlockNumberDesc } from "../../common/tools";
 
 let rewardsLiquidatorAddress: string;
 let rewardsLiquidatorAdminAddress: string;
@@ -113,64 +111,9 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([
-    //handleSellOverdue(blockEvent, findings),
-    handleAdminBalance(blockEvent, findings),
-  ]);
+  await Promise.all([handleAdminBalance(blockEvent, findings)]);
 
   return findings;
-}
-
-async function handleSellOverdue(blockEvent: BlockEvent, findings: Finding[]) {
-  if (lastRewardsSell.timestamp > lastOracleReportTime) {
-    // rewards already sold
-    return;
-  }
-
-  const now = blockEvent.block.timestamp;
-  const sellDelay = now - lastOracleReportTime;
-
-  console.log(`[AgentBethRewards] sellDelay: ${sellDelay}`);
-
-  if (
-    sellDelay <= MAX_BETH_REWARDS_SELL_DELAY ||
-    now - lastOverdueTriggeredAt < TRIGGER_PERIOD
-  ) {
-    return;
-  }
-
-  // final check to handle case of missed event
-
-  const anchorVault = new ethers.Contract(
-    ANCHOR_VAULT_ADDRESS,
-    ANCHOR_VAULT_ABI,
-    ethersProvider
-  );
-  const lastLiquidationTime = parseInt(
-    String(await anchorVault.functions.last_liquidation_time())
-  );
-
-  if (lastLiquidationTime > lastRewardsSell.timestamp) {
-    lastRewardsSell.timestamp = lastLiquidationTime;
-    lastRewardsSell.stethAmount = new BigNumber(0);
-    lastRewardsSell.ustAmount = new BigNumber(0);
-    return findings;
-  }
-
-  findings.push(
-    Finding.fromObject({
-      name: "Anchor rewards sell overdue",
-      description: `Time since oracle report: ${formatDelay(sellDelay)}`,
-      alertId: "BETH-REWARDS-OVERDUE",
-      severity: FindingSeverity.High,
-      type: FindingType.Degraded,
-      metadata: {
-        delay: `${sellDelay}`,
-      },
-    })
-  );
-
-  lastOverdueTriggeredAt = now;
 }
 
 async function handleAdminBalance(blockEvent: BlockEvent, findings: Finding[]) {

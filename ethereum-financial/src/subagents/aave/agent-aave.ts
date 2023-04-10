@@ -3,25 +3,24 @@ import BigNumber from "bignumber.js";
 import {
   ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
   FindingType,
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
-import LIDO_DAO_ABI from "./abi/LidoDAO.json";
-import ASTETH_ABI from "./abi/astETH.json";
-import STABLE_DEBT_STETH_ABI from "./abi/stableDebtStETH.json";
-import VARIABLE_DEBT_STETH_ABI from "./abi/variableDebtStETH.json";
+import LIDO_DAO_ABI from "../../abi/LidoDAO.json";
+import ASTETH_ABI from "../../abi/astETH.json";
+import STABLE_DEBT_STETH_ABI from "../../abi/stableDebtStETH.json";
+import VARIABLE_DEBT_STETH_ABI from "../../abi/variableDebtStETH.json";
 
+import { GWEI_DECIMALS } from "../../common/constants";
 import {
   LIDO_DAO_ADDRESS,
   AAVE_ASTETH_ADDRESS,
   AAVE_STABLE_DEBT_STETH_ADDRESS,
   AAVE_VARIABLE_DEBT_STETH_ADDRESS,
-  GWEI_DECIMALS,
   ASTETH_GWEI_DIFFERENCE_THRESHOLD,
 } from "./constants";
 
@@ -89,7 +88,7 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
           name: "🚨 astETH balance and totalSupply difference",
           description:
             `stETH.balanceOf(${AAVE_ASTETH_ADDRESS})` +
-            `=${astEthBalance.div(GWEI_DECIMALS).toFixed(0)}` +
+            `=${astEthBalance.div(GWEI_DECIMALS).toFixed(0)} ` +
             `gwei differs from astETH.totalSupply = ${astEthTotalSupply
               .div(GWEI_DECIMALS)
               .toFixed(0)} gwei by ` +

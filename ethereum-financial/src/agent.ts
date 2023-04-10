@@ -1,5 +1,4 @@
 import {
-  Initialize,
   BlockEvent,
   TransactionEvent,
   HandleBlock,
@@ -13,11 +12,11 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentBethRewards from "./agent-beth-rewards";
-import * as agentPoolsRewards from "./agent-pools-rewards";
-import * as agentPoolsBalances from "./agent-pools-balances";
-import * as agentAave from "./agent-aave";
-import * as agentDwstETH from "./agent-dwstETH";
+import * as agentBethRewards from "./subagents/beth-rewards/agent-beth-rewards";
+import * as agentPoolsRewards from "./subagents/pools-rewards/agent-pools-rewards";
+import * as agentPoolsBalances from "./subagents/pools-balances/agent-pools-balances";
+import * as agentAave from "./subagents/aave/agent-aave";
+import * as agentDwstETH from "./subagents/dwstETH/agent-dwstETH";
 
 import VERSION from "./version";
 
