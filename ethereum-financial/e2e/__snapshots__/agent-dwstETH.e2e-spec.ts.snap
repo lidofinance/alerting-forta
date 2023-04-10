@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-dwstETH e2e tests should process block with high amount of dwstETH minted 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "HIGH-DWSTETH-MINTS-SUM",
+  "description": "There were 4357226.75 dwstETH minted during the last 1 hour(s)",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "😱 High amount of dwstETH minted",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 2,
+}
+`;

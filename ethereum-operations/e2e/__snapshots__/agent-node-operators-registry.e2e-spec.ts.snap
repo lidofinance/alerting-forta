@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-node-operators-registry e2e tests should process tx with added Node operator 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "NODE-OPERATOR-ADDED",
+  "description": "Node operator 29 added
+Name: Attestant (BVI) Limited
+Reward address: 0xcd51df5142156BD92E7A9494Dd2b9362f5078D64
+StakingLimit: 0",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "29,Attestant (BVI) Limited,0xcd51df5142156BD92E7A9494Dd2b9362f5078D64,0",
+  },
+  "name": "ℹ NO Registry: Node operator added",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-node-operators-registry e2e tests should process tx with removed signing keys 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "NODE-OPERATORS-KEYS-REMOVED",
+  "description": "1 signing keys removed",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "🚨 NO Registry: Signing keys removed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-node-operators-registry e2e tests should process tx with set NO Stake limit by NON-EasyTrack action 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "NODE-OPERATORS-STAKING-LIMIT-SET",
+  "description": "Staking limit for node operator 13 was set to 3800 by NON-EasyTrack motion!",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "🚨 NO Stake limit set by NON-EasyTrack action",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;

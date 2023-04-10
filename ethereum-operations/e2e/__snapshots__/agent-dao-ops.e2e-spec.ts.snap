@@ -1,0 +1,360 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-dao-ops e2e tests should process block with MEV Allow list: Super low relay count and significant EL Rewards vault overfill 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "MEV-LOW-RELAY-COUNT",
+    "description": "There are only 0 relays in the allowed list.",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 MEV Allow list: Super low relay count",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "EL-REWARDS-VAULT-OVERFILL",
+    "description": "The current EL rewards vault balance of 2832.05 ETH exceeds the daily re-staking limit by more than 200%",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "⚠️ Significant EL Rewards vault overfill",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 4,
+  },
+]
+`;
+
+exports[`agent-dao-ops e2e tests should process block with huge buffered ETH amount and low deposit executor balance 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "HUGE-BUFFERED-ETH",
+    "description": "There are 39668.1056 buffered ETH in DAO for more than 1 hour(s)",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 Huge buffered ETH amount",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 3,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
+    "description": "Balance of deposit executor is 1.9652. This is extremely low! 😱",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "⚠️ Low deposit executor balance",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 2,
+  },
+]
+`;
+
+exports[`agent-dao-ops e2e tests should process block with low staking limit (10%) 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LOW-STAKING-LIMIT",
+  "description": "Current staking limit is 6909.61 ETH this is lower than 10% of max staking limit 150000.00 ETH",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "⚠️ Staking limit below 10%",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process block with low staking limit (30%) 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LOW-STAKING-LIMIT",
+  "description": "Current staking limit is 6909.61 ETH this is lower than 30% of max staking limit 150000.00 ETH",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "📉 Staking limit below 30%",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with EL rewards vault set and staking changes 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "LIDO-DAO-STAKING-RESUMED",
+    "description": "Staking was resumed!",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "",
+    },
+    "name": "✅ Lido DAO: Staking resumed",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "LIDO-DAO-STAKING-LIMIT-SET",
+    "description": "Staking limit was set with:
+Max staking limit: 150000000000000000000000
+Stake limit increase per block: 23437500000000000000",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "150000000000000000000000,23437500000000000000",
+    },
+    "name": "⚠️ Lido DAO: Staking limit set",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "LIDO-DAO-EL-REWARDS-VAULT-SET",
+    "description": "Vault: 0x388C818CA8B9251b393131C08a736A67ccB19297 ETH",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "0x388C818CA8B9251b393131C08a736A67ccB19297",
+    },
+    "name": "🚨 Lido DAO: EL rewards vault set",
+    "protocol": "ethereum",
+    "severity": 1,
+    "type": 4,
+  },
+]
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with EL rewards withdrawal limit set 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
+  "description": "Limit: 2 BP (0.02%)",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "2",
+  },
+  "name": "⚠️ Lido DAO: EL rewards withdrawal limit set",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with added guardian 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-GUARDIAN-ADDED",
+  "description": "New guardian added 0xa56b128Ea2Ea237052b0fA2a96a387C0E43157d8",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0xa56b128Ea2Ea237052b0fA2a96a387C0E43157d8",
+  },
+  "name": "⚠️ Deposit Security: Guardian added",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed distribution fee 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DAO-FEE-DISTRIBUTION-SET",
+  "description": "Lido DAO fee distribution was set to
+treasuryFeeBasisPoints:5000
+insuranceFeeBasisPoints:0
+operatorsFeeBasisPoints:5000
+",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "5000,0,5000",
+  },
+  "name": "⚠️ Lido DAO: Fee distribution set",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed guardian quorum 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED",
+  "description": "New quorum size 3",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "3",
+  },
+  "name": "🚨 Deposit Security: Guardian quorum changed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed max deposit 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED",
+  "description": "New value 150",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "150",
+  },
+  "name": "⚠️ Deposit Security: Max deposits changed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed min deposit block 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED",
+  "description": "New value 25",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "25",
+  },
+  "name": "⚠️ Deposit Security: Min deposit block distance changed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed node operators registry 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-NO-REGISTRY-CHANGED",
+  "description": "New node operators registry 0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5",
+  },
+  "name": "⚠️ Deposit Security: Node operators registry changed",
+  "protocol": "ethereum",
+  "severity": 5,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed owner of the contract 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-OWNER-CHANGED",
+  "description": "New owner 0xe19fc582dd93FA876CF4061Eb5456F310144F57b",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0xe19fc582dd93FA876CF4061Eb5456F310144F57b",
+  },
+  "name": "🚨 Deposit Security: Owner changed",
+  "protocol": "ethereum",
+  "severity": 5,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with changed protocol contracts 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DAO-PROTOCOL-CONTRACT-SET",
+  "description": "Protocol contracts were set to:
+Oracle: 0x442af784A788A5bd6F42A01Ebe9F287a871243fb
+Treasury: 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c
+Insurance fund: 0x8B3f33234ABD88493c0Cd28De33D583B70beDe35
+",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0x442af784A788A5bd6F42A01Ebe9F287a871243fb,0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c,0x8B3f33234ABD88493c0Cd28De33D583B70beDe35",
+  },
+  "name": "🚨 Lido DAO: Protocol contracts set",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with paused deposits 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-PAUSED",
+  "description": "Deposits were paused by 0x7912Fa976BcDe9c2cf728e213e892AD7588E6AaF",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "0x7912Fa976BcDe9c2cf728e213e892AD7588E6AaF",
+  },
+  "name": "🚨 Deposit Security: Deposits paused",
+  "protocol": "ethereum",
+  "severity": 5,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with received EL rewards 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DAO-EL-REWARDS-RECEIVED",
+  "description": "Rewards amount: 142.21 ETH",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "142210964953261078203",
+  },
+  "name": "✅ Lido DAO: EL rewards received",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with transferred ownership of Insurance fund 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "INS-FUND-OWNERSHIP-TRANSFERRED",
+    "description": "Owner of the insurance fund was transferred from 0x0000000000000000000000000000000000000000 to 0xbD829522d4791b9660f59f5998faE451dACA4E1C",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "0x0000000000000000000000000000000000000000,0xbD829522d4791b9660f59f5998faE451dACA4E1C",
+    },
+    "name": "🚨 Insurance fund: Ownership transferred",
+    "protocol": "ethereum",
+    "severity": 5,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "INS-FUND-OWNERSHIP-TRANSFERRED",
+    "description": "Owner of the insurance fund was transferred from 0xbD829522d4791b9660f59f5998faE451dACA4E1C to 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "0xbD829522d4791b9660f59f5998faE451dACA4E1C,0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c",
+    },
+    "name": "🚨 Insurance fund: Ownership transferred",
+    "protocol": "ethereum",
+    "severity": 5,
+    "type": 4,
+  },
+]
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with unpaused deposits 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-DEPOSITOR-UNPAUSED",
+  "description": "Deposits were resumed",
+  "labels": Array [],
+  "metadata": Object {
+    "args": "",
+  },
+  "name": "✅ Deposit Security: Deposits resumed",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 4,
+}
+`;
