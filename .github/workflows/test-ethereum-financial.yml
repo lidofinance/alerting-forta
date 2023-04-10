@@ -1,0 +1,15 @@
+---
+name: Tests @ ethereum-financial
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "ethereum-financial/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./ethereum-financial
+    secrets: inherit
