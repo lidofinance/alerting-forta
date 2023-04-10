@@ -44,7 +44,7 @@ describe("agent-proxy-watcher e2e tests", () => {
     "should process block with changed proxy implementation",
     async () => {
       const findings = await runBlock(15018882, 14524801);
-      findings.sort((a, b) => a.description.length - b.description.length)
+      findings.sort((a, b) => a.description.length - b.description.length);
       expect(findings).toMatchSnapshot();
     },
     TEST_TIMEOUT
