@@ -1,7 +1,6 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
   BlockEvent,
   TransactionEvent,
   Finding,
@@ -9,11 +8,8 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import {
-  DWSTETH_TOKEN_ADDRESS,
-  ETH_DECIMALS,
-  TRANSFER_EVENT,
-} from "./constants";
+import { ETH_DECIMALS } from "../../common/constants";
+import { DWSTETH_TOKEN_ADDRESS, TRANSFER_EVENT } from "./constants";
 
 export const name = "dwstETH monitor";
 
@@ -79,14 +75,11 @@ async function handleTooManyMints(blockEvent: BlockEvent, findings: Finding[]) {
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
-  const findings: Finding[] = [];
-
-  handleEulerTx(txEvent, findings);
-
-  return findings;
+  handleEulerTx(txEvent);
+  return [];
 }
 
-function handleEulerTx(txEvent: TransactionEvent, findings: Finding[]) {
+function handleEulerTx(txEvent: TransactionEvent) {
   if (DWSTETH_TOKEN_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(TRANSFER_EVENT, DWSTETH_TOKEN_ADDRESS);
     events.forEach((event) => {
@@ -100,3 +93,10 @@ function handleEulerTx(txEvent: TransactionEvent, findings: Finding[]) {
     });
   }
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  handleTransaction,
+  // initialize, // sdk won't provide any arguments to the function
+};

@@ -3,13 +3,14 @@ import BigNumber from "bignumber.js";
 import {
   ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
   FindingType,
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
+
+import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 import {
   POOLS_PARAMS_BALANCES,
@@ -18,19 +19,16 @@ import {
   POOL_SIZE_CHANGE_TOLERANCE_INFO,
   POOL_SIZE_CHANGE_TOLERANCE_HIGH,
   POOLS_BALANCES_REPORT_WINDOW,
-  ETH_DECIMALS,
   PEG_REPORT_INTERVAL,
   PEG_STEP,
   PEG_THRESHOLD,
   PEG_STEP_ALERT_MIN_VALUE,
   TOTAL_UNSTAKED_STETH_TOLERANCE,
-  ONE_HOUR,
   TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT,
 } from "./constants";
 
-import CURVE_POOL_ABI from "./abi/CurvePool.json";
-import CURVE_WETH_POOL_ABI from "./abi/CurveWethPool.json";
-import BALANCER_POOL_ABI from "./abi/BalancerPool.json";
+import CURVE_POOL_ABI from "../../abi/CurvePool.json";
+import BALANCER_POOL_ABI from "../../abi/BalancerPool.json";
 
 export const name = "PoolsBalances";
 
@@ -623,3 +621,9 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     }
   }
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  // initialize, // sdk won't provide any arguments to the function
+};

@@ -1,0 +1,121 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-pools-balances e2e tests should process block with Balancer pool rapid imbalance change 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "BALANCER-POOL-IMBALANCE-RAPID-CHANGE",
+  "description": "Prev reported pool sate:
+ETH - 62886.94 (39.89%)
+stETH - 94771.45 (60.11%)
+Current pool state:
+ETH - 54704.67 (34.84%)
+wstETH - 102297.29 (65.16%)",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "🚨 Balancer Pool rapid imbalance change",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 2,
+}
+`;
+
+exports[`agent-pools-balances e2e tests should process block with Curve pool rapid imbalance change 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
+  "description": "Prev reported pool sate:
+ETH - 238192.73 (37.39%)
+stETH - 398801.52 (62.61%)
+Current pool state:
+ETH - 207068.42 (32.25%)
+stETH - 435042.52 (67.75%)",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "🚨 Curve Pool rapid imbalance change",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 2,
+}
+`;
+
+exports[`agent-pools-balances e2e tests should process block with decreased stETH PEG on Curve 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "STETH-CURVE-PEG-DECREASE",
+  "description": "stETH PEG on Curve decreased to 0.9704",
+  "labels": Array [],
+  "metadata": Object {
+    "peg": "0.9704",
+  },
+  "name": "⚠️ stETH PEG on Curve decreased",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-pools-balances e2e tests should process block with imbalanced Balancer pool 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "BALANCER-POOL-IMBALANCE",
+  "description": "Current pool state:
+ETH - 41075.27 (44.16%)
+wstETH - 51934.46 (55.84%)",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "⚠️ Balancer Pool is imbalanced",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 2,
+}
+`;
+
+exports[`agent-pools-balances e2e tests should process block with imbalanced Curve pool 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "CURVE-POOL-IMBALANCE",
+  "description": "Current pool state:
+ETH - 432969.66 (44.87%)
+stETH - 531933.72 (55.13%)",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "⚠️ Curve Pool is imbalanced",
+  "protocol": "ethereum",
+  "severity": 4,
+  "type": 2,
+}
+`;
+
+exports[`agent-pools-balances e2e tests should process block with significant Balancer pool change 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "BALANCER-POOL-SIZE-CHANGE",
+  "description": "Balancer Pool size has increased by 5.26% since the last block",
+  "labels": Array [],
+  "metadata": Object {
+    "sizeAfter": "159703765204466775027621",
+    "sizeBefore": "151721475467519582335566",
+  },
+  "name": "⚠️ Significant Balancer Pool size change",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-pools-balances e2e tests should process block with significant Curve pool change 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "CURVE-POOL-SIZE-CHANGE",
+  "description": "Curve Pool size has increased by 15.26% since the last block",
+  "labels": Array [],
+  "metadata": Object {
+    "sizeAfter": "960964420322769261730507",
+    "sizeBefore": "833732119622588732317889",
+  },
+  "name": "⚠️ Significant Curve Pool size change",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
