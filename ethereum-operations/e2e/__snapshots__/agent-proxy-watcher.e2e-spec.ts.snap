@@ -1,15 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`agent-proxy-watcher e2e tests should process block with changed proxy implementation 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "PROXY-IMPL-CHANGED",
-  "description": "Implementation of Lido: Oracle (0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5) changed from 0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe to 0x5d39ABaa161e622B99D45616afC8B837E9F19a25",
-  "labels": Array [],
-  "metadata": Object {},
-  "name": "🚨 Proxy implementation changed",
-  "protocol": "ethereum",
-  "severity": 5,
-  "type": 4,
-}
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "PROXY-IMPL-CHANGED",
+    "description": "Implementation of Lido: Oracle (0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5) changed from 0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe to 0x5d39ABaa161e622B99D45616afC8B837E9F19a25",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 Proxy implementation changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "PROXY-IMPL-CHANGED",
+    "description": "Implementation of Lido DAO and stETH (0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84) changed from 0xC7B5aF82B05Eb3b64F12241B04B2cF14469E39F7 to 0x47EbaB13B806773ec2A2d16873e2dF770D130b50",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 Proxy implementation changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "PROXY-IMPL-CHANGED",
+    "description": "Implementation of Lido: Aragon Voting (0x2e59A20f205bB85a89C53f1936454680651E618e) changed from 0xb935C3D80229d5D92f3761b17Cd81dC2610e3a45 to 0x72fb5253AD16307B9E773d2A78CaC58E309d5Ba4",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 Proxy implementation changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "type": 4,
+  },
+]
 `;

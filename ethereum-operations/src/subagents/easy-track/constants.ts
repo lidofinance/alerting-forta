@@ -110,7 +110,6 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
       `Role ${args.role} was revoked from ${args.account} on RewardProgramsRegistry by ${args.sender}`,
     severity: FindingSeverity.High,
   },
-
   {
     address: EVM_SCRIPT_EXECUTOR_ADDRESS,
     event:
