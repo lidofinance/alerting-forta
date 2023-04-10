@@ -32,7 +32,7 @@ const rewardContractAbis = {
 } as any;
 
 function formatTimestamp(timestamp: number) {
-  return String(new Date(timestamp * 1000));
+  return String(new Date(timestamp * 1000).toUTCString());
 }
 
 const LDO_NUM_DECIMALS = 18;

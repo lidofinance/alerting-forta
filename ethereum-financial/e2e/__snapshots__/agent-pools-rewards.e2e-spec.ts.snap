@@ -4,7 +4,7 @@ exports[`agent-pools-rewards e2e tests should process block with prolonged rewar
 Finding {
   "addresses": Array [],
   "alertId": "LDO-CURVE-REWARDS-PROLONGED",
-  "description": "Curve rewards successfully prolonged till Sun Apr 10 2022 07:30:27 GMT+0500 (West Kazakhstan Time)",
+  "description": "Curve rewards successfully prolonged till Sun, 10 Apr 2022 02:30:27 GMT",
   "labels": Array [],
   "metadata": Object {},
   "name": "ℹ️ Curve rewards prolonged",
