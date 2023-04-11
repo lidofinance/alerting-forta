@@ -192,9 +192,7 @@ const handleTransaction: HandleTransaction = async (
       }
     }
     if (!success) {
-      txFindings.push(
-        errorToFinding(lastError, agent, "handleTransaction")
-      );
+      txFindings.push(errorToFinding(lastError, agent, "handleTransaction"));
     }
   };
 
