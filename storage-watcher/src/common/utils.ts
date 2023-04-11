@@ -1,5 +1,5 @@
-import { StorageSlot } from "./constants";
-import { ethersProvider } from "./ethers";
+import { StorageSlot } from "../subagents/storage-watcher/constants";
+import { ethersProvider } from "../ethers";
 import { keccak256 } from "@ethersproject/keccak256";
 import { toUtf8Bytes } from "@ethersproject/strings";
 

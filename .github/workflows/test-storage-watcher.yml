@@ -1,0 +1,15 @@
+---
+name: Tests @ storage-watcher
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "storage-watcher/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./storage-watcher
+    secrets: inherit
