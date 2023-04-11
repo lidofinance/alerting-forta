@@ -48,8 +48,6 @@ const processingTimeout = 120_000;
 const maxHandlerRetries = 5;
 
 let findingsOnInit: Finding[] = [];
-let blockFindingsCache: Finding[] = [];
-let txFindingsCache: Finding[] = [];
 
 const initialize = async () => {
   const metadata: Metadata = {
@@ -123,9 +121,10 @@ const timeout = async (agent: SubAgent) =>
 const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent
 ): Promise<Finding[]> => {
+  let blockFindings: Finding[] = [];
   // report findings from init. Will be done only for the first block report.
   if (findingsOnInit.length) {
-    blockFindingsCache = findingsOnInit;
+    blockFindings = blockFindings.concat(findingsOnInit);
     findingsOnInit = [];
   }
 
@@ -139,7 +138,7 @@ const handleBlock: HandleBlock = async (
         const newFindings = await agent.handleBlock(blockEvent);
         if (newFindings.length) {
           enrichFindingsMetadata(newFindings);
-          blockFindingsCache = blockFindingsCache.concat(newFindings);
+          blockFindings = blockFindings.concat(newFindings);
         }
         success = true;
       } catch (err) {
@@ -147,7 +146,7 @@ const handleBlock: HandleBlock = async (
       }
     }
     if (!success) {
-      blockFindingsCache.push(errorToFinding(lastError, agent, "handleBlock"));
+      blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
     }
   };
 
@@ -162,18 +161,19 @@ const handleBlock: HandleBlock = async (
 
   runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
-      blockFindingsCache.push(
+      blockFindings.push(
         errorToFinding(r.reason, subAgents[index], "handleBlock")
       );
     }
   });
 
-  return blockFindingsCache.splice(0, blockFindingsCache.length);
+  return blockFindings;
 };
 
 const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent
 ) => {
+  let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
     if (!agent.handleTransaction) return;
     let retries = maxHandlerRetries;
@@ -184,7 +184,7 @@ const handleTransaction: HandleTransaction = async (
         const newFindings = await agent.handleTransaction(txEvent);
         if (newFindings.length) {
           enrichFindingsMetadata(newFindings);
-          txFindingsCache = txFindingsCache.concat(newFindings);
+          txFindings = txFindings.concat(newFindings);
         }
         success = true;
       } catch (err) {
@@ -192,7 +192,7 @@ const handleTransaction: HandleTransaction = async (
       }
     }
     if (!success) {
-      txFindingsCache.push(
+      txFindings.push(
         errorToFinding(lastError, agent, "handleTransaction")
       );
     }
@@ -208,13 +208,13 @@ const handleTransaction: HandleTransaction = async (
 
   runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
-      txFindingsCache.push(
+      txFindings.push(
         errorToFinding(r.reason, subAgents[index], "handleBlock")
       );
     }
   });
 
-  return txFindingsCache.splice(0, txFindingsCache.length);
+  return txFindings;
 };
 
 function enrichFindingsMetadata(findings: Finding[]) {
