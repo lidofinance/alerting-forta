@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { LogDescription } from "forta-agent";
-import { abbreviateNumber } from "./helpers";
+import { abbreviateNumber } from "../../common/utils";
 
 // INTERFACES and CLASSES
 export interface SpecialTransferPattern {
