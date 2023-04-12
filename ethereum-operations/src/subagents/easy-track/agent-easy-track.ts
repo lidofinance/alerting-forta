@@ -60,7 +60,7 @@ async function handleEasyTrackMotionCreated(
         const args = event.args;
         let alertName = "ℹ EasyTrack: New motion created";
         let description =
-          `${getMotionType(args._evmScriptFactory)} ` +
+          `${getMotionType(constants.EASY_TRACK_TYPES_BY_FACTORIES, args._evmScriptFactory)} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`;
         if (
           args._evmScriptFactory.toLowerCase() ==

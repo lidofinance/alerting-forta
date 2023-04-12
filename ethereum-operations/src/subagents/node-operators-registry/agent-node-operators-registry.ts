@@ -5,11 +5,6 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import {
-  NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
-  NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-  SIGNING_KEY_REMOVED_EVENT,
-} from "./constants";
 import { handleEventsOfNotice, requireConstants } from "../../common/utils";
 import * as _constants from "./constants";
 
@@ -39,7 +34,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleEventsOfNotice(
     txEvent,
     findings,
-    NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE
+    constants.NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE
   );
   handleSigningKeysRemoved(txEvent, findings);
   handleStakeLimitSet(txEvent, findings);
@@ -53,7 +48,7 @@ function handleSigningKeysRemoved(
 ) {
   if (constants.NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
-      SIGNING_KEY_REMOVED_EVENT,
+      constants.SIGNING_KEY_REMOVED_EVENT,
       constants.NODE_OPERATORS_REGISTRY_ADDRESS
     );
     if (events.length > 0) {
@@ -73,7 +68,7 @@ function handleSigningKeysRemoved(
 function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   if (constants.NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const noLimitEvents = txEvent.filterLog(
-      NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+      constants.NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
       constants.NODE_OPERATORS_REGISTRY_ADDRESS
     );
     const motionEnactedEvents = txEvent.filterLog(
