@@ -9,21 +9,10 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import {
-  LIDO_ARAGON_ACL_ADDRESS,
-  LIDO_ROLES,
-  SET_PERMISSION_EVENT,
-  SET_PERMISSION_PARAMS_EVENT,
-  LIDO_APPS,
-  CHANGE_PERMISSION_MANAGER_EVENT,
-  ORDINARY_ENTITIES,
-  WHITELISTED_OWNERS,
-  OWNABLE_CONTRACTS,
-  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
-  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
-} from "./constants";
-
 import { isContract } from "./utils";
+import { requireConstants } from "../../common/utils";
+
+import * as _constants from "./constants";
 
 interface IPermission {
   app: string;
@@ -35,6 +24,17 @@ interface IPermission {
 const byLogIndexAsc = (e1: any, e2: any) => e1.logIndex - e2.logIndex;
 
 export const name = "ACL Monitor";
+
+export let constants: typeof _constants;
+try {
+  constants = requireConstants(`${module.path}/constants`);
+} catch (e: any) {
+  if (e?.code == "MODULE_NOT_FOUND") {
+    // Do nothing. `constants` will be undefined and sub-agent will be disabled
+  } else {
+    throw e;
+  }
+}
 
 export async function initialize(
   currentBlock: number
@@ -64,11 +64,11 @@ async function handleSetPermission(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
+  if (constants.LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
     let permissions = new Map<string, IPermission>();
     const setEvents = txEvent.filterLog(
-      SET_PERMISSION_EVENT,
-      LIDO_ARAGON_ACL_ADDRESS
+      constants.SET_PERMISSION_EVENT,
+      constants.LIDO_ARAGON_ACL_ADDRESS
     );
     setEvents.sort(byLogIndexAsc);
     setEvents.forEach((event) => {
@@ -84,8 +84,8 @@ async function handleSetPermission(
     });
 
     const setParamsEvents = txEvent.filterLog(
-      SET_PERMISSION_PARAMS_EVENT,
-      LIDO_ARAGON_ACL_ADDRESS
+      constants.SET_PERMISSION_PARAMS_EVENT,
+      constants.LIDO_ARAGON_ACL_ADDRESS
     );
     setParamsEvents.forEach((event) => {
       const permissionKey = eventToPermissionKey(event);
@@ -111,14 +111,15 @@ async function handlePermissionChange(
   findings: Finding[]
 ) {
   const shortState = permission.state.replace(" from", "").replace(" to", "");
-  const role = LIDO_ROLES.get(permission.role) || "unknown";
-  const app = LIDO_APPS.get(permission.app.toLowerCase()) || "unknown";
+  const role = constants.LIDO_ROLES.get(permission.role) || "unknown";
+  const app =
+    constants.LIDO_APPS.get(permission.app.toLowerCase()) || "unknown";
   const entityRaw = permission.entity.toLowerCase();
   let severity = FindingSeverity.Info;
-  let entity = ORDINARY_ENTITIES.get(entityRaw);
+  let entity = constants.ORDINARY_ENTITIES.get(entityRaw);
   if (!entity) {
     severity = FindingSeverity.Medium;
-    entity = LIDO_APPS.get(entityRaw);
+    entity = constants.LIDO_APPS.get(entityRaw);
     if (!entity) {
       if (await isContract(entityRaw)) {
         severity = FindingSeverity.High;
@@ -157,16 +158,17 @@ function handleChangePermissionManager(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
+  if (constants.LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
     const managerEvents = txEvent.filterLog(
-      CHANGE_PERMISSION_MANAGER_EVENT,
-      LIDO_ARAGON_ACL_ADDRESS
+      constants.CHANGE_PERMISSION_MANAGER_EVENT,
+      constants.LIDO_ARAGON_ACL_ADDRESS
     );
     managerEvents.forEach((event) => {
-      const role = LIDO_ROLES.get(event.args.role) || "unknown";
-      const app = LIDO_APPS.get(event.args.app.toLowerCase()) || "unknown";
+      const role = constants.LIDO_ROLES.get(event.args.role) || "unknown";
+      const app =
+        constants.LIDO_APPS.get(event.args.app.toLowerCase()) || "unknown";
       const manager =
-        LIDO_APPS.get(event.args.manager.toLowerCase()) || "unknown";
+        constants.LIDO_APPS.get(event.args.manager.toLowerCase()) || "unknown";
       findings.push(
         Finding.fromObject({
           name: `🚨 Aragon ACL: Permission manager changed`,
@@ -193,15 +195,15 @@ async function getOwner(
 const findingsTimestamps = new Map<string, number>();
 
 async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
-  const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(
+  const promises = Array.from(constants.OWNABLE_CONTRACTS.keys()).map(
     async (address: string) => {
-      const data = OWNABLE_CONTRACTS.get(address);
+      const data = constants.OWNABLE_CONTRACTS.get(address);
       if (!data) return;
 
       const curOwner = String(
         await getOwner(address, data.ownershipMethod, blockEvent.blockNumber)
       );
-      if (WHITELISTED_OWNERS.includes(curOwner)) return;
+      if (constants.WHITELISTED_OWNERS.includes(curOwner)) return;
 
       const curOwnerIsContract = await isContract(curOwner);
 
@@ -210,8 +212,8 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
       // skip if reported recently
       const lastReportTimestamp = findingsTimestamps.get(key);
       const interval = curOwnerIsContract
-        ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
-        : NEW_OWNER_IS_EOA_REPORT_INTERVAL;
+        ? constants.NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
+        : constants.NEW_OWNER_IS_EOA_REPORT_INTERVAL;
       if (lastReportTimestamp && interval > now - lastReportTimestamp) return;
 
       findings.push(

@@ -6,18 +6,25 @@ import {
 } from "forta-agent";
 
 import {
-  EASY_TRACK_ADDRESS,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-  MOTION_ENACTED_EVENT,
-} from "../../common/constants";
-import {
   NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
   SIGNING_KEY_REMOVED_EVENT,
 } from "./constants";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireConstants } from "../../common/utils";
+import * as _constants from "./constants";
 
 export const name = "NodeOperatorsRegistry";
+
+export let constants: typeof _constants;
+try {
+  constants = requireConstants(`${module.path}/constants`);
+} catch (e: any) {
+  if (e?.code == "MODULE_NOT_FOUND") {
+    // Do nothing. `constants` will be undefined and sub-agent will be disabled
+  } else {
+    throw e;
+  }
+}
 
 export async function initialize(
   currentBlock: number
@@ -44,10 +51,10 @@ function handleSigningKeysRemoved(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
+  if (constants.NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
       SIGNING_KEY_REMOVED_EVENT,
-      NODE_OPERATORS_REGISTRY_ADDRESS
+      constants.NODE_OPERATORS_REGISTRY_ADDRESS
     );
     if (events.length > 0) {
       findings.push(
@@ -64,14 +71,14 @@ function handleSigningKeysRemoved(
 }
 
 function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
-  if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
+  if (constants.NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const noLimitEvents = txEvent.filterLog(
       NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
-      NODE_OPERATORS_REGISTRY_ADDRESS
+      constants.NODE_OPERATORS_REGISTRY_ADDRESS
     );
     const motionEnactedEvents = txEvent.filterLog(
-      MOTION_ENACTED_EVENT,
-      EASY_TRACK_ADDRESS
+      constants.MOTION_ENACTED_EVENT,
+      constants.EASY_TRACK_ADDRESS
     );
     noLimitEvents.forEach((event) => {
       if (motionEnactedEvents.length < 1) {

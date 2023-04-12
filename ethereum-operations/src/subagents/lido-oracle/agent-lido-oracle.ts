@@ -17,26 +17,13 @@ import LIDO_ORACLE_ABI from "../../abi/LidoOracle.json";
 
 import { ETH_DECIMALS } from "../../common/constants";
 import {
-  TRIGGER_PERIOD,
-  LIDO_ORACLE_ADDRESS,
-  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH,
-  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM,
-  MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
-  MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
-  MAX_ORACLE_REPORT_DELAY,
-  MIN_ORACLE_BALANCE_INFO,
-  MIN_ORACLE_BALANCE_HIGH,
-  LIDO_ORACLE_COMPLETED_EVENT,
-  LIDO_ORACLE_BEACON_REPORTED_EVENT,
-  LIDO_ORACLE_EVENTS_OF_NOTICE,
-} from "./constants";
-import {
   byBlockNumberDesc,
   getOracleName,
   formatEth,
   formatDelay,
 } from "./utils";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireConstants } from "../../common/utils";
+import * as _constants from "./constants";
 
 export interface OracleReport {
   timestamp: number;
@@ -59,11 +46,22 @@ let reportedOverdueCount = 0;
 
 export const name = "LidoOracle";
 
+export let constants: typeof _constants;
+try {
+  constants = requireConstants(`${module.path}/constants`);
+} catch (e: any) {
+  if (e?.code == "MODULE_NOT_FOUND") {
+    // Do nothing. `constants` will be undefined and sub-agent will be disabled
+  } else {
+    throw e;
+  }
+}
+
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
 async function getOracles(blockNumber: number) {
   const lidoOracle = new ethers.Contract(
-    LIDO_ORACLE_ADDRESS,
+    constants.LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
     ethersProvider
   );
@@ -78,7 +76,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const lidoOracle = new ethers.Contract(
-    LIDO_ORACLE_ADDRESS,
+    constants.LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
     ethersProvider
   );
@@ -144,7 +142,7 @@ export async function initialize(
 
 async function getOracleReports(blockFrom: number, blockTo: number) {
   const lidoOracle = new ethers.Contract(
-    LIDO_ORACLE_ADDRESS,
+    constants.LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
     ethersProvider
   );
@@ -224,8 +222,8 @@ async function handleOracleReportDelay(
   }
 
   if (
-    reportDelay > MAX_ORACLE_REPORT_DELAY &&
-    now - lastReportedOverdue >= TRIGGER_PERIOD
+    reportDelay > constants.MAX_ORACLE_REPORT_DELAY &&
+    now - lastReportedOverdue >= constants.TRIGGER_PERIOD
   ) {
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with prev report
@@ -241,7 +239,7 @@ async function handleOracleReportDelay(
       );
     }
     const reportDelayUpdated = now - (lastReport ? lastReport.timestamp : 0);
-    if (reportDelayUpdated > MAX_ORACLE_REPORT_DELAY) {
+    if (reportDelayUpdated > constants.MAX_ORACLE_REPORT_DELAY) {
       const severity =
         reportedOverdueCount % 5 == 0
           ? FindingSeverity.Critical
@@ -287,8 +285,10 @@ async function handleOracleBalance(
     const balance = new BigNumber(
       String(await ethersProvider.getBalance(oracle, blockEvent.blockHash))
     ).div(ETH_DECIMALS);
-    if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_INFO)) {
-      const severity = balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_HIGH)
+    if (balance.isLessThanOrEqualTo(constants.MIN_ORACLE_BALANCE_INFO)) {
+      const severity = balance.isLessThanOrEqualTo(
+        constants.MIN_ORACLE_BALANCE_HIGH
+      )
         ? FindingSeverity.High
         : FindingSeverity.Info;
       findings.push(
@@ -315,12 +315,16 @@ async function handleOracleBalance(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (txEvent.to === LIDO_ORACLE_ADDRESS) {
+  if (txEvent.to === constants.LIDO_ORACLE_ADDRESS) {
     handleOracleTx(txEvent, findings);
     handleReportBeacon(txEvent);
     handleBeaconCompleted(txEvent, findings);
   }
-  handleEventsOfNotice(txEvent, findings, LIDO_ORACLE_EVENTS_OF_NOTICE);
+  handleEventsOfNotice(
+    txEvent,
+    findings,
+    constants.LIDO_ORACLE_EVENTS_OF_NOTICE
+  );
 
   return findings;
 }
@@ -329,8 +333,8 @@ const ETH_PER_VALIDATOR = new BigNumber(10).pow(18).times(32);
 
 function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
   const [reportEvent] = txEvent.filterLog(
-    LIDO_ORACLE_COMPLETED_EVENT,
-    LIDO_ORACLE_ADDRESS
+    constants.LIDO_ORACLE_COMPLETED_EVENT,
+    constants.LIDO_ORACLE_ADDRESS
   );
   if (reportEvent == undefined) {
     return;
@@ -379,7 +383,7 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   const now = txEvent.block.timestamp;
   const severity =
-    now > lastReportedOverdue + TRIGGER_PERIOD
+    now > lastReportedOverdue + constants.TRIGGER_PERIOD
       ? FindingSeverity.Info
       : FindingSeverity.Medium;
 
@@ -402,12 +406,14 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   if (
     lastReport != null &&
-    rewardsDiffPercent! < -LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM
+    rewardsDiffPercent! <
+      -constants.LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM
   ) {
     const rewardsDiffEth = formatEth(rewardsDiff, 3);
     const prevRewardsEth = formatEth(lastReport.rewards, 3);
     const severity =
-      rewardsDiffPercent! < -LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH
+      rewardsDiffPercent! <
+      -constants.LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH
         ? FindingSeverity.High
         : FindingSeverity.Medium;
     findings.push(
@@ -432,8 +438,8 @@ function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
 
 function handleReportBeacon(txEvent: TransactionEvent) {
   const beaconReportedEvents = txEvent.filterLog(
-    LIDO_ORACLE_BEACON_REPORTED_EVENT,
-    LIDO_ORACLE_ADDRESS
+    constants.LIDO_ORACLE_BEACON_REPORTED_EVENT,
+    constants.LIDO_ORACLE_ADDRESS
   );
   beaconReportedEvents.forEach((event) => {
     if (event.args.caller) {
@@ -444,15 +450,15 @@ function handleReportBeacon(txEvent: TransactionEvent) {
 
 function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
   const [completed] = txEvent.filterLog(
-    LIDO_ORACLE_COMPLETED_EVENT,
-    LIDO_ORACLE_ADDRESS
+    constants.LIDO_ORACLE_COMPLETED_EVENT,
+    constants.LIDO_ORACLE_ADDRESS
   );
   if (completed) {
     const block = txEvent.blockNumber;
     oraclesLastVotes.forEach((lastRepBlock, oracle) => {
       const reportDist = block - lastRepBlock;
       const reportDistDays = Math.floor((reportDist * 12) / (60 * 60 * 24));
-      if (reportDist > MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
+      if (reportDist > constants.MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM) {
         findings.push(
           Finding.fromObject({
             name: "⚠️ Super sloppy Lido Oracle",
@@ -466,7 +472,9 @@ function handleBeaconCompleted(txEvent: TransactionEvent, findings: Finding[]) {
             type: FindingType.Suspicious,
           })
         );
-      } else if (reportDist > MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO) {
+      } else if (
+        reportDist > constants.MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO
+      ) {
         findings.push(
           Finding.fromObject({
             name: "🤔 Sloppy Lido Oracle",

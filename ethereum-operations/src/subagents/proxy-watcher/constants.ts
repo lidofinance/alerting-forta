@@ -1,10 +1,7 @@
+import { IProxyContractData } from "../../common/constants";
+
 export const implementationFuncShortABI =
   '[{"constant":true,"inputs":[],"name":"implementation","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}]';
-
-export interface IProxyContractData {
-  name: string;
-  shortABI: string;
-}
 
 export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
   new Map<string, IProxyContractData>([

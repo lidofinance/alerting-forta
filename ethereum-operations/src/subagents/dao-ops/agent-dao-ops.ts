@@ -16,57 +16,24 @@ import LIDO_DAO_ABI from "../../abi/LidoDAO.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
 import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
-import {
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-  ETH_DECIMALS,
-  ONE_MONTH,
-  ONE_WEEK,
-} from "../../common/constants";
+import { ETH_DECIMALS, ONE_MONTH, ONE_WEEK } from "../../common/constants";
 
-import {
-  LIDO_DAO_ADDRESS,
-  LIDO_DEPOSIT_SECURITY_ADDRESS,
-  LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-  LIDO_EL_REWARDS_VAULT_ADDRESS,
-  MEV_ALLOWED_LIST_ADDRESS,
-  ENS_BASE_REGISTRAR_ADDRESS,
-  MIN_AVAILABLE_KEYS_COUNT,
-  MIN_DEPOSIT_EXECUTOR_BALANCE,
-  MAX_DEPOSITOR_TX_DELAY,
-  MAX_BUFFERED_ETH_AMOUNT_MEDIUM,
-  MAX_BUFFERED_ETH_AMOUNT_CRITICAL,
-  MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
-  ENS_CHECK_INTERVAL,
-  LIDO_ENS_NAMES,
-  LIDO_DAO_EVENTS_OF_NOTICE,
-  DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
-  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
-  INSURANCE_FUND_EVENTS_OF_NOTICE,
-  TRP_EVENTS_OF_NOTICE,
-} from "./constants";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireConstants } from "../../common/utils";
+
+import * as _constants from "./constants";
 
 export const name = "DaoOps";
 
-// 24 hours
-const REPORT_WINDOW = 60 * 60 * 24;
-// 4 hours
-const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
-// 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12;
-// 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12;
-// 24 hours
-const REPORT_WINDOW_EL_REWARDS_BALANCE = 60 * 60 * 24;
-// 110%
-const EL_REWARDS_BALANCE_OVERFILL_INFO = 1.1;
-// 300%
-const EL_REWARDS_BALANCE_OVERFILL_HIGH = 3;
-
-const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
-const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
-// 24 hours
-const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+export let constants: typeof _constants;
+try {
+  constants = requireConstants(`${module.path}/constants`);
+} catch (e: any) {
+  if (e?.code == "MODULE_NOT_FOUND") {
+    // Do nothing. `constants` will be undefined and sub-agent will be disabled
+  } else {
+    throw e;
+  }
+}
 
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
@@ -85,7 +52,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   let history = await etherscanProvider.getHistory(
-    LIDO_DEPOSIT_SECURITY_ADDRESS,
+    constants.LIDO_DEPOSIT_SECURITY_ADDRESS,
     currentBlock - Math.floor((60 * 60 * 72) / 13),
     currentBlock - 1
   );
@@ -121,9 +88,9 @@ async function handleNodeOperatorsKeys(
   findings: Finding[]
 ) {
   const now = blockEvent.block.timestamp;
-  if (lastReportedKeysShortage + REPORT_WINDOW < now) {
+  if (lastReportedKeysShortage + constants.REPORT_WINDOW < now) {
     const nodeOperatorsRegistry = new ethers.Contract(
-      NODE_OPERATORS_REGISTRY_ADDRESS,
+      constants.NODE_OPERATORS_REGISTRY_ADDRESS,
       NODE_OPERATORS_REGISTRY_ABI,
       ethersProvider
     );
@@ -143,7 +110,7 @@ async function handleNodeOperatorsKeys(
       );
     }
     await Promise.all(availableKeys);
-    if (availableKeysCount < MIN_AVAILABLE_KEYS_COUNT) {
+    if (availableKeysCount < constants.MIN_AVAILABLE_KEYS_COUNT) {
       findings.push(
         Finding.fromObject({
           name: "⚠️ Few available keys count",
@@ -161,7 +128,7 @@ async function handleNodeOperatorsKeys(
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   const lidoDao = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
+    constants.LIDO_DAO_ADDRESS,
     LIDO_DAO_ABI,
     ethersProvider
   );
@@ -174,17 +141,18 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   );
   const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
   // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
-  if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
+  if (bufferedEth > constants.MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
     criticalBufferAmountFrom =
       criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now;
   } else {
     // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
     criticalBufferAmountFrom = 0;
   }
-  if (lastReportedBufferedEth + REPORT_WINDOW < now) {
+  if (lastReportedBufferedEth + constants.REPORT_WINDOW < now) {
     if (
-      bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL &&
-      criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME
+      bufferedEth > constants.MAX_BUFFERED_ETH_AMOUNT_CRITICAL &&
+      criticalBufferAmountFrom <
+        now - constants.MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME
     ) {
       findings.push(
         Finding.fromObject({
@@ -193,7 +161,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
             `There are ${bufferedEth.toFixed(4)} ` +
             `buffered ETH in DAO for more than ` +
             `${Math.floor(
-              MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
+              constants.MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
             )} hour(s)`,
           alertId: "HUGE-BUFFERED-ETH",
           severity: FindingSeverity.High,
@@ -202,8 +170,8 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
       );
       lastReportedBufferedEth = now;
     } else if (
-      bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM &&
-      lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY &&
+      bufferedEth > constants.MAX_BUFFERED_ETH_AMOUNT_MEDIUM &&
+      lastDepositorTxTime < now - constants.MAX_DEPOSITOR_TX_DELAY &&
       lastDepositorTxTime !== 0
     ) {
       findings.push(
@@ -212,7 +180,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
           description:
             `There are ${bufferedEth.toFixed(4)} ` +
             `buffered ETH in DAO and there are more than ` +
-            `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
+            `${Math.floor(constants.MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
             `hours since last Depositor TX`,
           alertId: "HIGH-BUFFERED-ETH",
           severity: FindingSeverity.Medium,
@@ -229,17 +197,20 @@ async function handleDepositExecutorBalance(
   findings: Finding[]
 ) {
   const now = blockEvent.block.timestamp;
-  if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
+  if (
+    lastReportedExecutorBalance + constants.REPORT_WINDOW_EXECUTOR_BALANCE <
+    now
+  ) {
     const executorBalanceRaw = new BigNumber(
       String(
         await ethersProvider.getBalance(
-          LIDO_DEPOSIT_EXECUTOR_ADDRESS,
+          constants.LIDO_DEPOSIT_EXECUTOR_ADDRESS,
           blockEvent.blockHash
         )
       )
     );
     const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
-    if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
+    if (executorBalance < constants.MIN_DEPOSIT_EXECUTOR_BALANCE) {
       findings.push(
         Finding.fromObject({
           name: "⚠️ Low deposit executor balance",
@@ -259,7 +230,7 @@ async function handleDepositExecutorBalance(
 async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   const lidoDao = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
+    constants.LIDO_DAO_ADDRESS,
     LIDO_DAO_ABI,
     ethersProvider
   );
@@ -273,7 +244,8 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
     String(stakingLimitInfo.maxStakeLimit)
   ).div(ETH_DECIMALS);
   if (
-    lastReportedStakingLimit10 + REPORT_WINDOW_STAKING_LIMIT_10 < now &&
+    lastReportedStakingLimit10 + constants.REPORT_WINDOW_STAKING_LIMIT_10 <
+      now &&
     currentStakingLimit.isLessThan(maxStakingLimit.times(0.1))
   ) {
     findings.push(
@@ -290,7 +262,8 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
     );
     lastReportedStakingLimit10 = now;
   } else if (
-    lastReportedStakingLimit30 + REPORT_WINDOW_STAKING_LIMIT_30 < now &&
+    lastReportedStakingLimit30 + constants.REPORT_WINDOW_STAKING_LIMIT_30 <
+      now &&
     currentStakingLimit.isLessThan(maxStakingLimit.times(0.3))
   ) {
     findings.push(
@@ -316,7 +289,7 @@ async function handleElRewardsBalance(
   if (blockEvent.blockNumber % 1 == 0) {
     const now = blockEvent.block.timestamp;
     const lidoDao = new ethers.Contract(
-      LIDO_DAO_ADDRESS,
+      constants.LIDO_DAO_ADDRESS,
       LIDO_DAO_ABI,
       ethersProvider
     );
@@ -336,19 +309,20 @@ async function handleElRewardsBalance(
     const elBalance = new BigNumber(
       String(
         await ethersProvider.getBalance(
-          LIDO_EL_REWARDS_VAULT_ADDRESS,
+          constants.LIDO_EL_REWARDS_VAULT_ADDRESS,
           blockEvent.blockHash
         )
       )
     );
 
     if (
-      lastReportedElRewardsBalanceHigh + REPORT_WINDOW_EL_REWARDS_BALANCE <
+      lastReportedElRewardsBalanceHigh +
+        constants.REPORT_WINDOW_EL_REWARDS_BALANCE <
         now &&
       elBalance.isGreaterThan(
         totalSupply
           .times(elRewardsLimit)
-          .times(EL_REWARDS_BALANCE_OVERFILL_HIGH)
+          .times(constants.EL_REWARDS_BALANCE_OVERFILL_HIGH)
       )
     ) {
       findings.push(
@@ -358,7 +332,9 @@ async function handleElRewardsBalance(
             `The current EL rewards vault balance ` +
             `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
             `exceeds the daily re-staking limit by more than ` +
-            `${((EL_REWARDS_BALANCE_OVERFILL_HIGH - 1) * 100).toFixed(0)}%`,
+            `${((constants.EL_REWARDS_BALANCE_OVERFILL_HIGH - 1) * 100).toFixed(
+              0
+            )}%`,
           alertId: "EL-REWARDS-VAULT-OVERFILL",
           severity: FindingSeverity.High,
           type: FindingType.Info,
@@ -367,12 +343,13 @@ async function handleElRewardsBalance(
       lastReportedElRewardsBalanceHigh = now;
       lastReportedElRewardsBalanceInfo = now;
     } else if (
-      lastReportedElRewardsBalanceInfo + REPORT_WINDOW_EL_REWARDS_BALANCE <
+      lastReportedElRewardsBalanceInfo +
+        constants.REPORT_WINDOW_EL_REWARDS_BALANCE <
         now &&
       elBalance.isGreaterThan(
         totalSupply
           .times(elRewardsLimit)
-          .times(EL_REWARDS_BALANCE_OVERFILL_INFO)
+          .times(constants.EL_REWARDS_BALANCE_OVERFILL_INFO)
       )
     ) {
       findings.push(
@@ -382,7 +359,9 @@ async function handleElRewardsBalance(
             `The current EL rewards vault balance ` +
             `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
             `exceeds the daily re-staking limit by more than ` +
-            `${((EL_REWARDS_BALANCE_OVERFILL_INFO - 1) * 100).toFixed(0)}%`,
+            `${((constants.EL_REWARDS_BALANCE_OVERFILL_INFO - 1) * 100).toFixed(
+              0
+            )}%`,
           alertId: "EL-REWARDS-VAULT-OVERFILL",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -399,7 +378,7 @@ async function handleMevRelayCount(
 ) {
   const now = blockEvent.block.timestamp;
   const mevAllowList = new ethers.Contract(
-    MEV_ALLOWED_LIST_ADDRESS,
+    constants.MEV_ALLOWED_LIST_ADDRESS,
     MEV_ALLOW_LIST_ABI,
     ethersProvider
   );
@@ -408,8 +387,8 @@ async function handleMevRelayCount(
   });
   const mevRelaysLength = mevRelays[0].length;
   if (
-    mevRelaysLength < MEV_RELAY_COUNT_THRESHOLD_HIGH &&
-    lastReportedMevCountHigh + MEV_RELAY_COUNT_REPORT_WINDOW < now
+    mevRelaysLength < constants.MEV_RELAY_COUNT_THRESHOLD_HIGH &&
+    lastReportedMevCountHigh + constants.MEV_RELAY_COUNT_REPORT_WINDOW < now
   ) {
     findings.push(
       Finding.fromObject({
@@ -423,8 +402,8 @@ async function handleMevRelayCount(
     lastReportedMevCountInfo = now;
     lastReportedMevCountHigh = now;
   } else if (
-    mevRelaysLength < MEV_RELAY_COUNT_THRESHOLD_INFO &&
-    lastReportedMevCountInfo + MEV_RELAY_COUNT_REPORT_WINDOW < now
+    mevRelaysLength < constants.MEV_RELAY_COUNT_THRESHOLD_INFO &&
+    lastReportedMevCountInfo + constants.MEV_RELAY_COUNT_REPORT_WINDOW < now
   ) {
     findings.push(
       Finding.fromObject({
@@ -443,14 +422,14 @@ async function handleEnsNamesExpiration(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
-  if (blockEvent.blockNumber % ENS_CHECK_INTERVAL == 0) {
+  if (blockEvent.blockNumber % constants.ENS_CHECK_INTERVAL == 0) {
     const ens = new ethers.Contract(
-      ENS_BASE_REGISTRAR_ADDRESS,
+      constants.ENS_BASE_REGISTRAR_ADDRESS,
       ENS_BASE_REGISTRAR_ABI,
       ethersProvider
     );
     await Promise.all(
-      LIDO_ENS_NAMES.map(async (name) => {
+      constants.LIDO_ENS_NAMES.map(async (name) => {
         const labelHash = ethers.utils.keccak256(
           ethers.utils.toUtf8Bytes(name)
         );
@@ -483,16 +462,16 @@ async function handleEnsNamesExpiration(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (txEvent.to == LIDO_DEPOSIT_SECURITY_ADDRESS) {
+  if (txEvent.to == constants.LIDO_DEPOSIT_SECURITY_ADDRESS) {
     lastDepositorTxTime = txEvent.timestamp;
   }
 
   [
-    DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
-    LIDO_DAO_EVENTS_OF_NOTICE,
-    MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
-    INSURANCE_FUND_EVENTS_OF_NOTICE,
-    TRP_EVENTS_OF_NOTICE,
+    constants.DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
+    constants.LIDO_DAO_EVENTS_OF_NOTICE,
+    constants.MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
+    constants.INSURANCE_FUND_EVENTS_OF_NOTICE,
+    constants.TRP_EVENTS_OF_NOTICE,
   ].forEach((eventsOfNotice) => {
     handleEventsOfNotice(txEvent, findings, eventsOfNotice);
   });

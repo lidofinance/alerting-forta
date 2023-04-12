@@ -8,23 +8,24 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import {
-  EASY_TRACK_ADDRESS,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-} from "../../common/constants";
-
-import {
-  INCREASE_STAKING_LIMIT_ADDRESS,
-  EASY_TRACK_EVENTS_OF_NOTICE,
-  MOTION_CREATED_EVENT,
-} from "./constants";
-
 import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { getMotionLink, getMotionType } from "./utils";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireConstants } from "../../common/utils";
+import * as _constants from "./constants";
 
 export const name = "EasyTrack";
+
+export let constants: typeof _constants;
+try {
+  constants = requireConstants(`${module.path}/constants`);
+} catch (e: any) {
+  if (e?.code == "MODULE_NOT_FOUND") {
+    // Do nothing. `constants` will be undefined and sub-agent will be disabled
+  } else {
+    throw e;
+  }
+}
 
 export async function initialize(
   currentBlock: number
@@ -35,7 +36,11 @@ export async function initialize(
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
-  handleEventsOfNotice(txEvent, findings, EASY_TRACK_EVENTS_OF_NOTICE);
+  handleEventsOfNotice(
+    txEvent,
+    findings,
+    constants.EASY_TRACK_EVENTS_OF_NOTICE
+  );
   await handleEasyTrackMotionCreated(txEvent, findings);
 
   return findings;
@@ -45,8 +50,11 @@ async function handleEasyTrackMotionCreated(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (EASY_TRACK_ADDRESS in txEvent.addresses) {
-    const events = txEvent.filterLog(MOTION_CREATED_EVENT, EASY_TRACK_ADDRESS);
+  if (constants.EASY_TRACK_ADDRESS in txEvent.addresses) {
+    const events = txEvent.filterLog(
+      constants.MOTION_CREATED_EVENT,
+      constants.EASY_TRACK_ADDRESS
+    );
     await Promise.all(
       events.map(async (event) => {
         const args = event.args;
@@ -55,15 +63,16 @@ async function handleEasyTrackMotionCreated(
           `${getMotionType(args._evmScriptFactory)} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`;
         if (
-          args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS
+          args._evmScriptFactory.toLowerCase() ==
+          constants.INCREASE_STAKING_LIMIT_ADDRESS
         ) {
           const stakingLimitFactory = new ethers.Contract(
-            INCREASE_STAKING_LIMIT_ADDRESS,
+            constants.INCREASE_STAKING_LIMIT_ADDRESS,
             INCREASE_STAKING_LIMIT_ABI,
             ethersProvider
           );
           const nor = new ethers.Contract(
-            NODE_OPERATORS_REGISTRY_ADDRESS,
+            constants.NODE_OPERATORS_REGISTRY_ADDRESS,
             NODE_OPERATORS_REGISTRY_ABI,
             ethersProvider
           );

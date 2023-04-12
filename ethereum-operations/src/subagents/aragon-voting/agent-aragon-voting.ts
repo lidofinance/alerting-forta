@@ -16,26 +16,22 @@ import { ethersProvider } from "../../ethers";
 import ARAGON_VOTING_ABI from "../../abi/AragonVoting.json";
 import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
-import {
-  LIDO_ARAGON_VOTING_ADDRESS,
-  CAST_VOTE_EVENT,
-  ARAGON_VOTING_EVENTS_OF_NOTICE,
-} from "./constants";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireConstants } from "../../common/utils";
+
+import * as _constants from "./constants";
 
 export const name = "Aragon Voting Watcher";
 
-// Perform ad-hoc votes info refresh each BLOCK_WINDOW blocks
-const BLOCK_WINDOW = 1000;
-
-// Number of blocks for the whole 5 days
-const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 13);
-
-// 46 hours
-const TRIGGER_AFTER = 46 * ONE_HOUR;
-
-// 48 hours
-const PHASE_ONE_DURATION = 48 * ONE_HOUR;
+export let constants: typeof _constants;
+try {
+  constants = requireConstants(`${module.path}/constants`);
+} catch (e: any) {
+  if (e?.code == "MODULE_NOT_FOUND") {
+    // Do nothing. `constants` will be undefined and sub-agent will be disabled
+  } else {
+    throw e;
+  }
+}
 
 interface IVoteInfo {
   startDate: number;
@@ -60,7 +56,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const aragonVoting = new ethers.Contract(
-    LIDO_ARAGON_VOTING_ADDRESS,
+    constants.LIDO_ARAGON_VOTING_ADDRESS,
     ARAGON_VOTING_ABI,
     ethersProvider
   );
@@ -68,7 +64,7 @@ export async function initialize(
   const startedVotes = (
     await aragonVoting.queryFilter(
       filterStartVote,
-      currentBlock - FIVE_DAYS_BLOCKS,
+      currentBlock - constants.FIVE_DAYS_BLOCKS,
       currentBlock
     )
   ).map((value: any) => parseInt(String(value.args.voteId)));
@@ -93,7 +89,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 }
 
 async function adHocVotesRefresh(blockEvent: BlockEvent, findings: Finding[]) {
-  if (blockEvent.blockNumber % BLOCK_WINDOW == 0) {
+  if (blockEvent.blockNumber % constants.BLOCK_WINDOW == 0) {
     await Promise.all(
       Array.from(votes.keys()).map(async (voteId: number) => {
         await handleNewVoteInfo(voteId, blockEvent.block, findings);
@@ -107,7 +103,7 @@ async function getVoteInfo(
   blockNumber: number
 ): Promise<IVoteInfo> {
   const aragonVoting = new ethers.Contract(
-    LIDO_ARAGON_VOTING_ADDRESS,
+    constants.LIDO_ARAGON_VOTING_ADDRESS,
     ARAGON_VOTING_ABI,
     ethersProvider
   );
@@ -147,7 +143,7 @@ async function handleNewVoteInfo(
     const newOutcome = getVoteOutcome(newVoteInfo);
     if (
       oldOutcome != newOutcome &&
-      newVoteInfo.startDate + TRIGGER_AFTER < now &&
+      newVoteInfo.startDate + constants.TRIGGER_AFTER < now &&
       newVoteInfo.phase == 0
     ) {
       findings.push(
@@ -155,7 +151,10 @@ async function handleNewVoteInfo(
           name: "⚠️ Expected vote outcome has changed",
           description:
             `Expected aragon vote ${voteId} outcome changed from '${oldOutcome}' to '${newOutcome}' and there is less than ` +
-            `${Math.floor((PHASE_ONE_DURATION - TRIGGER_AFTER) / ONE_HOUR)}` +
+            `${Math.floor(
+              (constants.PHASE_ONE_DURATION - constants.TRIGGER_AFTER) /
+                ONE_HOUR
+            )}` +
             ` hour(s) left till the end of the first voting phase.`,
           alertId: "ARAGON-VOTE-OUTCOME-CHANGED",
           severity: FindingSeverity.High,
@@ -193,7 +192,11 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   await Promise.all([
     handleAragonTransaction(txEvent, findings),
-    handleEventsOfNotice(txEvent, findings, ARAGON_VOTING_EVENTS_OF_NOTICE),
+    handleEventsOfNotice(
+      txEvent,
+      findings,
+      constants.ARAGON_VOTING_EVENTS_OF_NOTICE
+    ),
   ]);
 
   return findings;
@@ -203,10 +206,10 @@ async function handleAragonTransaction(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (LIDO_ARAGON_VOTING_ADDRESS in txEvent.addresses) {
+  if (constants.LIDO_ARAGON_VOTING_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
-      CAST_VOTE_EVENT,
-      LIDO_ARAGON_VOTING_ADDRESS
+      constants.CAST_VOTE_EVENT,
+      constants.LIDO_ARAGON_VOTING_ADDRESS
     );
     for (const event of events) {
       if (event && event.args.voteId) {
