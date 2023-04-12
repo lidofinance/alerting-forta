@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-storage-watcher e2e tests should process block with critical storage slot value changed 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "STORAGE-SLOT-VALUE-CHANGED",
+    "description": "Value of the storage slot 'lido.LidoOracle.quorum' for contract 0x442af784a788a5bd6f42a01ebe9f287a871243fb (Lido Oracle) has changed!
+Prev value: 0x0000000000000000000000000000000000000000000000000000000000000003
+New value: 0x0000000000000000000000000000000000000000000000000000000000000005",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 Critical storage slot value changed",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 2,
+  },
+]
+`;

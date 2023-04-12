@@ -12,7 +12,7 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentDemo from "./agent-storage-watcher";
+import * as agentDemo from "./subagents/storage-watcher/agent-storage-watcher";
 
 import VERSION from "./version";
 
@@ -66,7 +66,7 @@ const initialize = async () => {
   }
 
   await Promise.all(
-    subAgents.map(async (agent, index) => {
+    subAgents.map(async (agent, _) => {
       if (agent.initialize) {
         try {
           const agentMeta = await agent.initialize(blockNumber);

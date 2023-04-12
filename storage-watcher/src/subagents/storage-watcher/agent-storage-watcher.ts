@@ -1,13 +1,4 @@
-import BigNumber from "bignumber.js";
-
-import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+import { BlockEvent, Finding, FindingType, FindingSeverity } from "forta-agent";
 
 import {
   STORAGE_SLOTS,
@@ -15,7 +6,7 @@ import {
   StorageSlot,
   NULL_STORAGE,
 } from "./constants";
-import { getStorageValue } from "./helpers";
+import { getStorageValue } from "../../common/utils";
 
 export const name = "StorageWatcher";
 
@@ -89,3 +80,9 @@ async function handleStorageSlots(
     })
   );
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  // initialize, // sdk won't provide any arguments to the function
+};
