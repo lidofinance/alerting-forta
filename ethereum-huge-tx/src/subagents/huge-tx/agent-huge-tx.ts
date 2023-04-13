@@ -7,10 +7,9 @@ import {
   Finding,
   FindingType,
   FindingSeverity,
-  LogDescription,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { ethersProvider } from "../../ethers";
 
 import {
   MONITORED_TOKENS,
@@ -45,9 +44,9 @@ import {
   prepareTransferEventText,
   abbreviateNumber,
   matchPattern,
-} from "./helpers";
+} from "../../common/utils";
 
-import ERC20_SHORT_TOKEN_ABI from "./abi/ERC20balance.json";
+import ERC20_SHORT_TOKEN_ABI from "../../abi/ERC20balance.json";
 import { ETH_DECIMALS } from "./constants";
 
 export const name = "Huge TX detector";
@@ -445,15 +444,15 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
     applicableAmount(transfer)
   );
 
-  let texts: TransferText[] = [];
-  let metas: TransferEventMetadata[] = [];
+  let texts: TransferText[];
+  let metas: TransferEventMetadata[];
   [transferInfos, texts, metas] = handleCurveExchange(transferInfos, txEvent);
   transfersTexts = transfersTexts.concat(texts);
   transfersMetadata = transfersMetadata.concat(metas);
 
   COMPLEX_TRANSFERS_TEMPLATES.forEach((template) => {
-    let texts: TransferText[] = [];
-    let metas: TransferEventMetadata[] = [];
+    let texts: TransferText[];
+    let metas: TransferEventMetadata[];
     [transferInfos, texts, metas] = handleComplexTransfers(
       transferInfos,
       template,
@@ -505,3 +504,10 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
     );
   });
 }
+
+// required for DI to retrieve handlers in the case of direct agent use
+exports.default = {
+  handleBlock,
+  handleTransaction,
+  // initialize, // sdk won't provide any arguments to the function
+};

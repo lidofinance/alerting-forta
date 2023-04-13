@@ -1,7 +1,4 @@
-import BigNumber from "bignumber.js";
-
 import {
-  Initialize,
   BlockEvent,
   TransactionEvent,
   HandleBlock,
@@ -15,7 +12,7 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentHugeTx from "./agent-huge-tx";
+import * as agentHugeTx from "./subagents/huge-tx/agent-huge-tx";
 
 import VERSION from "./version";
 

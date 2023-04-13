@@ -17,7 +17,7 @@ import {
   TX_AMOUNT_THRESHOLD_LDO,
   LDO_TOKEN_ADDRESS,
   CURVE_POOL_ADDRESS,
-} from "./constants";
+} from "../subagents/huge-tx/constants";
 
 const SI_SYMBOL = ["", "k", "M", "G", "T", "P", "E"];
 
@@ -155,7 +155,7 @@ export function handleCurveExchange(
       ETH_DECIMALS
     );
     const buyer = event.args.buyer;
-    let text: string = "";
+    let text: string;
     let pattern: TransferPattern;
     if (event.args.sold_id.toNumber() == 0) {
       pattern = EXCHANGE_ETH_TO_STETH_CURVE_PATTERN;
