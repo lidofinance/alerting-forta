@@ -23,9 +23,6 @@ import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 export const name = "DaoOps";
 
 import type * as Constants from "./constants";
-export let constants = requireWithTier<typeof Constants>(
-  `${module.path}/constants`
-);
 const {
   REPORT_WINDOW,
   REPORT_WINDOW_EXECUTOR_BALANCE,
@@ -57,7 +54,7 @@ const {
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
-} = constants;
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;

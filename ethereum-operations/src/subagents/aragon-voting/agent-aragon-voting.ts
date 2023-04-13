@@ -29,7 +29,7 @@ const {
   TRIGGER_AFTER,
   FIVE_DAYS_BLOCKS,
   BLOCK_WINDOW,
-} = requireWithTier<typeof Constants>(`${module.path}/constants`);
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 interface IVoteInfo {
   startDate: number;

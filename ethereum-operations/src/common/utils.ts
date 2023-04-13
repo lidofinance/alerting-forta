@@ -1,4 +1,5 @@
 import { Finding, FindingType, TransactionEvent } from "forta-agent";
+import { RUN_TIER } from "./constants";
 
 export enum RedefineMode {
   Strict = "strict",
@@ -8,60 +9,58 @@ export enum RedefineMode {
 /**
  * Special wrapper under `require` function that allows to
  * redefine variables from a file with the same name and `.<tier>` suffix.
- * `<tier>` is a string that is passed as a command line run argument after `--` delimiter.
- * @param path Absolute path to the main file to import.
+ * `<tier>` is a string that is passed by `FORTA_AGENT_RUN_TEAR` environment variable.
+ * @param module module object to get the path from.
+ * @param path relative to module path to the main file to import.
  * @param mode `strict` or `merge`. Default: `strict`.
  */
 export function requireWithTier<T>(
+  module: NodeModule,
   path: string,
   mode: RedefineMode = RedefineMode.Strict
 ): T {
-  let constants = require(path);
-  const tierDelimiterIndex = process.argv.lastIndexOf("--");
-  if (tierDelimiterIndex != -1) {
-    const tier = process.argv[tierDelimiterIndex + 1];
-    let redefinedConstants: any;
-    try {
-      redefinedConstants = require(`${path}.${tier}`);
-    } catch (e) {
-      console.warn(
-        `Failed to import module: '${path}.${tier}' doesn't exist. Using default`
+  const defaultContent = require(`${module.path}/${path}`);
+  if (!RUN_TIER) return defaultContent;
+  let tieredContent: any;
+  try {
+    tieredContent = require(`${module.path}/${path}.${RUN_TIER}`);
+    module.exports.__tier__ = RUN_TIER;
+  } catch (e) {
+    return defaultContent;
+  }
+  if (mode == RedefineMode.Strict) {
+    const valid = (key: string) => {
+      return (
+        key in tieredContent &&
+        typeof defaultContent[key] == typeof tieredContent[key]
       );
-      return constants;
-    }
-    if (mode == RedefineMode.Strict) {
-      const check = (key: string) => {
-        return (
-          key in redefinedConstants &&
-          typeof constants[key] == typeof redefinedConstants[key]
-        );
-      };
-      if (Object.keys(constants).every((key) => check(key))) {
-        constants = redefinedConstants;
-      } else {
-        throw new Error(
-          `Failed to import module: '${path}.${tier}' doesn't contain all keys or unmatched types with '${path}'`
-        );
-      }
-    }
-    if (mode == RedefineMode.Merge) {
-      const check = (key: string) => {
-        if (key in constants) {
-          return typeof constants[key] == typeof redefinedConstants[key];
-        } else {
-          return true;
-        }
-      };
-      if (Object.keys(redefinedConstants).every((key) => check(key))) {
-        constants = { ...constants, ...redefinedConstants };
-      } else {
-        throw new Error(
-          `Failed to import module: '${path}.${tier}' unmatched types with '${path}'`
-        );
-      }
+    };
+    if (Object.keys(defaultContent).every((key) => valid(key))) {
+      return tieredContent;
+    } else {
+      throw new Error(
+        `Failed to import module: '${module.path}/${path}.${RUN_TIER}' doesn't contain all keys or unmatched types 
+        with '${module.path}/${path}'`
+      );
     }
   }
-  return constants;
+  if (mode == RedefineMode.Merge) {
+    const valid = (key: string) => {
+      if (key in defaultContent) {
+        return typeof defaultContent[key] == typeof tieredContent[key];
+      } else {
+        return true;
+      }
+    };
+    if (Object.keys(tieredContent).every((key) => valid(key))) {
+      return { ...defaultContent, ...tieredContent };
+    } else {
+      throw new Error(
+        `Failed to import module: '${path}.${RUN_TIER}' unmatched types with '${path}'`
+      );
+    }
+  }
+  throw new Error(`Unknown require mode: ${mode}`);
 }
 
 export function handleEventsOfNotice(

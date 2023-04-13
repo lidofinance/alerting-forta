@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 
 // COMMON CONSTS
+export const RUN_TIER = process.env.FORTA_AGENT_RUN_TEAR;
 
 export const ONE_HOUR = 60 * 60;
 export const ONE_WEEK = 60 * 60 * 24 * 7;

@@ -23,7 +23,7 @@ const {
   INCREASE_STAKING_LIMIT_ADDRESS,
   EASY_TRACK_EVENTS_OF_NOTICE,
   MOTION_CREATED_EVENT,
-} = requireWithTier<typeof Constants>(`${module.path}/constants`);
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 export async function initialize(
   currentBlock: number

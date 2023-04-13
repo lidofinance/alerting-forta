@@ -36,7 +36,7 @@ const {
   OWNABLE_CONTRACTS,
   NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
-} = requireWithTier<typeof Constants>(`${module.path}/constants`);
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 export async function initialize(
   currentBlock: number

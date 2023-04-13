@@ -14,7 +14,8 @@ export const name = "ProxyWatcher";
 
 import type * as Constants from "./constants";
 const { LIDO_PROXY_CONTRACTS_DATA } = requireWithTier<typeof Constants>(
-  `${module.path}/constants`
+  module,
+  "./constants"
 );
 
 let prevProxyImplementations: Map<string, string> = new Map<string, string>();

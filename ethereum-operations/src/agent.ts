@@ -21,10 +21,11 @@ import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
 import * as agentNORegistry from "./subagents/node-operators-registry/agent-node-operators-registry";
 
 import VERSION from "./version";
+import { RUN_TIER } from "./common/constants";
 
 type Metadata = { [key: string]: string };
-
 interface SubAgent {
+  __tier__?: string;
   name: string;
   handleBlock?: HandleBlock;
   handleTransaction?: HandleTransaction;
@@ -39,7 +40,13 @@ const subAgents: SubAgent[] = [
   agentAragon,
   agentACL,
   agentNORegistry,
-];
+].filter((agent: SubAgent) => {
+  if (!RUN_TIER) return true;
+  if (agent.__tier__ == RUN_TIER) return true;
+  console.warn(
+    `Skipping sub-agent [${agent.name}]: unsupported run tier '${RUN_TIER}'`
+  );
+});
 
 // block or tx handling should take no more than 120 sec.
 // If not all processing is done it interrupts the execution, sends current findings and errors as findings too

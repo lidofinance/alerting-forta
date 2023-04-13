@@ -59,7 +59,7 @@ const {
   LIDO_ORACLE_COMPLETED_EVENT,
   LIDO_ORACLE_BEACON_REPORTED_EVENT,
   LIDO_ORACLE_EVENTS_OF_NOTICE,
-} = requireWithTier<typeof Constants>(`${module.path}/constants`);
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 

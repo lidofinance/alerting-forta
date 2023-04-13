@@ -17,7 +17,7 @@ const {
   SIGNING_KEY_REMOVED_EVENT,
   NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-} = requireWithTier<typeof Constants>(`${module.path}/constants`);
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 export async function initialize(
   currentBlock: number
@@ -92,5 +92,5 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleTransaction,
-  initialize, // sdk won't provide any arguments to the function
+  // initialize, // sdk won't provide any arguments to the function
 };
