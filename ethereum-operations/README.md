@@ -104,6 +104,7 @@ yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
 ### Testnet
 
 For example, you need to add `node-operators-registry` sub-agent `testnet` tier support:
+
 1. Change default import from `./constants` to `requireWithTier` function call:
    ##### Before:
    ```typescript
@@ -126,7 +127,7 @@ For example, you need to add `node-operators-registry` sub-agent `testnet` tier 
      SIGNING_KEY_REMOVED_EVENT,
      NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
      NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-   } = requireWithTier<typeof Constants>(module, './constants');
+   } = requireWithTier<typeof Constants>(module, "./constants");
    ```
 2. Copy `./constants.ts` file to `./constants.testnet.ts` and change the addresses and other vars to the testnet ones.
 3. Edit `~/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
