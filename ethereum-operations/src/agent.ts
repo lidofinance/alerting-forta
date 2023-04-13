@@ -26,7 +26,6 @@ type Metadata = { [key: string]: string };
 
 interface SubAgent {
   name: string;
-  constants: any;
   handleBlock?: HandleBlock;
   handleTransaction?: HandleTransaction;
   initialize?: (blockNumber: number) => Promise<Metadata>;
@@ -59,16 +58,11 @@ const initialize = async () => {
   let blockNumber: number = -1;
 
   if (argv.includes("--block")) {
-    const index = argv.indexOf("--block");
-    blockNumber = parseInt(argv[index + 1]);
+    blockNumber = parseInt(argv[4]);
   } else if (argv.includes("--range")) {
-    const index = argv.indexOf("--range");
-    blockNumber = parseInt(
-      argv[index + 1].slice(0, argv[index + 1].indexOf("."))
-    );
+    blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")));
   } else if (argv.includes("--tx")) {
-    const index = argv.indexOf("--tx");
-    const txHash = argv[index + 1];
+    const txHash = argv[4];
     const tx = await ethersProvider.getTransaction(txHash);
     if (!tx) {
       throw new Error(`Can't find transaction ${txHash}`);
@@ -86,12 +80,6 @@ const initialize = async () => {
   await Promise.all(
     subAgents.map(async (agent, _) => {
       if (agent.initialize) {
-        if (agent.constants == undefined) {
-          console.warn(
-            `[${agent.name}]: Skipping sub-agent handlers. No constants found for this tier`
-          );
-          return;
-        }
         try {
           const agentMeta = await agent.initialize(blockNumber);
           for (const metaKey in agentMeta) {
@@ -107,14 +95,7 @@ const initialize = async () => {
     })
   );
 
-  metadata.agents =
-    "[" +
-    subAgents
-      .map((a) => {
-        if (a.constants != undefined) return `"${a.name}"`;
-      })
-      .join(", ") +
-    "]";
+  metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
 
   findingsOnInit.push(
     Finding.fromObject({
@@ -148,7 +129,7 @@ const handleBlock: HandleBlock = async (
   }
 
   const run = async (agent: SubAgent, blockEvent: BlockEvent) => {
-    if (!agent.handleBlock || agent.constants == undefined) return;
+    if (!agent.handleBlock) return;
     let retries = maxHandlerRetries;
     let success = false;
     let lastError;
@@ -194,7 +175,7 @@ const handleTransaction: HandleTransaction = async (
 ) => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
-    if (!agent.handleTransaction || agent.constants == undefined) return;
+    if (!agent.handleTransaction) return;
     let retries = maxHandlerRetries;
     let success = false;
     let lastError;

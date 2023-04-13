@@ -5,21 +5,19 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { handleEventsOfNotice, requireConstants } from "../../common/utils";
-import * as _constants from "./constants";
+import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 
 export const name = "NodeOperatorsRegistry";
 
-export let constants: typeof _constants;
-try {
-  constants = requireConstants(`${module.path}/constants`);
-} catch (e: any) {
-  if (e?.code == "MODULE_NOT_FOUND") {
-    // Do nothing. `constants` will be undefined and sub-agent will be disabled
-  } else {
-    throw e;
-  }
-}
+import type * as Constants from "./constants";
+const {
+  NODE_OPERATORS_REGISTRY_ADDRESS,
+  EASY_TRACK_ADDRESS,
+  MOTION_ENACTED_EVENT,
+  SIGNING_KEY_REMOVED_EVENT,
+  NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+  NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+} = requireWithTier<typeof Constants>(`${module.path}/constants`);
 
 export async function initialize(
   currentBlock: number
@@ -34,7 +32,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleEventsOfNotice(
     txEvent,
     findings,
-    constants.NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE
+    NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE
   );
   handleSigningKeysRemoved(txEvent, findings);
   handleStakeLimitSet(txEvent, findings);
@@ -46,10 +44,10 @@ function handleSigningKeysRemoved(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (constants.NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
+  if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
-      constants.SIGNING_KEY_REMOVED_EVENT,
-      constants.NODE_OPERATORS_REGISTRY_ADDRESS
+      SIGNING_KEY_REMOVED_EVENT,
+      NODE_OPERATORS_REGISTRY_ADDRESS
     );
     if (events.length > 0) {
       findings.push(
@@ -66,14 +64,14 @@ function handleSigningKeysRemoved(
 }
 
 function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
-  if (constants.NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
+  if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const noLimitEvents = txEvent.filterLog(
-      constants.NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
-      constants.NODE_OPERATORS_REGISTRY_ADDRESS
+      NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+      NODE_OPERATORS_REGISTRY_ADDRESS
     );
     const motionEnactedEvents = txEvent.filterLog(
-      constants.MOTION_ENACTED_EVENT,
-      constants.EASY_TRACK_ADDRESS
+      MOTION_ENACTED_EVENT,
+      EASY_TRACK_ADDRESS
     );
     noLimitEvents.forEach((event) => {
       if (motionEnactedEvents.length < 1) {

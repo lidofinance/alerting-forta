@@ -11,21 +11,19 @@ import { ethersProvider } from "../../ethers";
 import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { getMotionLink, getMotionType } from "./utils";
-import { handleEventsOfNotice, requireConstants } from "../../common/utils";
-import * as _constants from "./constants";
+import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 
 export const name = "EasyTrack";
 
-export let constants: typeof _constants;
-try {
-  constants = requireConstants(`${module.path}/constants`);
-} catch (e: any) {
-  if (e?.code == "MODULE_NOT_FOUND") {
-    // Do nothing. `constants` will be undefined and sub-agent will be disabled
-  } else {
-    throw e;
-  }
-}
+import type * as Constants from "./constants";
+const {
+  EASY_TRACK_ADDRESS,
+  EASY_TRACK_TYPES_BY_FACTORIES,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
+  INCREASE_STAKING_LIMIT_ADDRESS,
+  EASY_TRACK_EVENTS_OF_NOTICE,
+  MOTION_CREATED_EVENT,
+} = requireWithTier<typeof Constants>(`${module.path}/constants`);
 
 export async function initialize(
   currentBlock: number
@@ -36,11 +34,7 @@ export async function initialize(
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
-  handleEventsOfNotice(
-    txEvent,
-    findings,
-    constants.EASY_TRACK_EVENTS_OF_NOTICE
-  );
+  handleEventsOfNotice(txEvent, findings, EASY_TRACK_EVENTS_OF_NOTICE);
   await handleEasyTrackMotionCreated(txEvent, findings);
 
   return findings;
@@ -50,32 +44,28 @@ async function handleEasyTrackMotionCreated(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (constants.EASY_TRACK_ADDRESS in txEvent.addresses) {
-    const events = txEvent.filterLog(
-      constants.MOTION_CREATED_EVENT,
-      constants.EASY_TRACK_ADDRESS
-    );
+  if (EASY_TRACK_ADDRESS in txEvent.addresses) {
+    const events = txEvent.filterLog(MOTION_CREATED_EVENT, EASY_TRACK_ADDRESS);
     await Promise.all(
       events.map(async (event) => {
         const args = event.args;
         let alertName = "ℹ EasyTrack: New motion created";
         let description =
           `${getMotionType(
-            constants.EASY_TRACK_TYPES_BY_FACTORIES,
+            EASY_TRACK_TYPES_BY_FACTORIES,
             args._evmScriptFactory
           )} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`;
         if (
-          args._evmScriptFactory.toLowerCase() ==
-          constants.INCREASE_STAKING_LIMIT_ADDRESS
+          args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS
         ) {
           const stakingLimitFactory = new ethers.Contract(
-            constants.INCREASE_STAKING_LIMIT_ADDRESS,
+            INCREASE_STAKING_LIMIT_ADDRESS,
             INCREASE_STAKING_LIMIT_ABI,
             ethersProvider
           );
           const nor = new ethers.Contract(
-            constants.NODE_OPERATORS_REGISTRY_ADDRESS,
+            NODE_OPERATORS_REGISTRY_ADDRESS,
             NODE_OPERATORS_REGISTRY_ABI,
             ethersProvider
           );
