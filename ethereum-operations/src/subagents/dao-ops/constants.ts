@@ -7,6 +7,26 @@ export interface ERC20 {
   name: string;
 }
 
+// 24 hours
+export const REPORT_WINDOW = 60 * 60 * 24;
+// 4 hours
+export const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
+// 12 hours
+export const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12;
+// 12 hours
+export const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12;
+// 24 hours
+export const REPORT_WINDOW_EL_REWARDS_BALANCE = 60 * 60 * 24;
+// 110%
+export const EL_REWARDS_BALANCE_OVERFILL_INFO = 1.1;
+// 300%
+export const EL_REWARDS_BALANCE_OVERFILL_HIGH = 3;
+
+export const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
+export const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
+// 24 hours
+export const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+
 export const LIDO_DAO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
 export const LIDO_DEPOSIT_SECURITY_ADDRESS =
   "0xdb149235b6f40dc08810aa69869783be101790e7";
@@ -21,6 +41,8 @@ export const LIDO_INSURANCE_FUND_ADDRESS =
 export const TRP_FACTORY_ADDRESS = "0xDA1DF6442aFD2EC36aBEa91029794B9b2156ADD0";
 export const ENS_BASE_REGISTRAR_ADDRESS =
   "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85";
+export const NODE_OPERATORS_REGISTRY_ADDRESS =
+  "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
 export const KNOWN_ERC20 = new Map<string, ERC20>([
   [

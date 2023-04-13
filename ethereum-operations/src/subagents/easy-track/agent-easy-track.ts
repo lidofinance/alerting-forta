@@ -8,23 +8,22 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import {
-  EASY_TRACK_ADDRESS,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-} from "../../common/constants";
-
-import {
-  INCREASE_STAKING_LIMIT_ADDRESS,
-  EASY_TRACK_EVENTS_OF_NOTICE,
-  MOTION_CREATED_EVENT,
-} from "./constants";
-
 import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { getMotionLink, getMotionType } from "./utils";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 
 export const name = "EasyTrack";
+
+import type * as Constants from "./constants";
+const {
+  EASY_TRACK_ADDRESS,
+  EASY_TRACK_TYPES_BY_FACTORIES,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
+  INCREASE_STAKING_LIMIT_ADDRESS,
+  EASY_TRACK_EVENTS_OF_NOTICE,
+  MOTION_CREATED_EVENT,
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 export async function initialize(
   currentBlock: number
@@ -52,7 +51,10 @@ async function handleEasyTrackMotionCreated(
         const args = event.args;
         let alertName = "ℹ EasyTrack: New motion created";
         let description =
-          `${getMotionType(args._evmScriptFactory)} ` +
+          `${getMotionType(
+            EASY_TRACK_TYPES_BY_FACTORIES,
+            args._evmScriptFactory
+          )} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`;
         if (
           args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS

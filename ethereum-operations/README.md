@@ -3,6 +3,7 @@
 ## Supported chains
 
 - Ethereum mainnet
+- Ethereum Goerli testnet (dev)
 
 ## Sub-bots
 
@@ -76,11 +77,15 @@ Alerting for the Node Operators Registry events
 
 ## Development
 
-Edit `~/.forta/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
+Install deps:
 
 ```
 yarn install
 ```
+
+### Mainnet
+
+Edit `~/forta.config.json` and set `jsonRpcUrl` to your Mainnet JSON-RPC provider.
 
 Running in a live mode:
 
@@ -95,3 +100,37 @@ yarn block 13626668
 yarn range '13626667..13626668'
 yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
 ```
+
+### Testnet
+
+For example, you need to add `node-operators-registry` sub-agent `testnet` tier support:
+
+1. Change default import from `./constants` to `requireWithTier` function call:
+   ##### Before:
+   ```typescript
+   import {
+     NODE_OPERATORS_REGISTRY_ADDRESS,
+     EASY_TRACK_ADDRESS,
+     MOTION_ENACTED_EVENT,
+     SIGNING_KEY_REMOVED_EVENT,
+     NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+     NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+   } from "./constants";
+   ```
+   ##### After:
+   ```typescript
+   import type * as Constants from "./constants";
+   const {
+     NODE_OPERATORS_REGISTRY_ADDRESS,
+     EASY_TRACK_ADDRESS,
+     MOTION_ENACTED_EVENT,
+     SIGNING_KEY_REMOVED_EVENT,
+     NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+     NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+   } = requireWithTier<typeof Constants>(module, "./constants");
+   ```
+2. Copy `./constants.ts` file to `./constants.testnet.ts` and change the addresses and other vars to the testnet ones.
+3. Edit `~/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
+4. Run `export FORTA_AGENT_RUN_TIER=testnet & yarn start:dev`
+
+That's it! Only sub-agents that have `testnet` tier support will be run.

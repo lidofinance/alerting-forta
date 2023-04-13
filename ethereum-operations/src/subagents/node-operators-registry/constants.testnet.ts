@@ -1,8 +1,8 @@
 import { FindingSeverity } from "forta-agent";
 
-export const EASY_TRACK_ADDRESS = "0xf0211b7660680b49de1a7e9f25c65660f0a13fea";
+export const EASY_TRACK_ADDRESS = "0xAf072C8D368E4DD4A9d4fF6A76693887d6ae92Af";
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
+  "0x9D4AF1Ee19Dad8857db3a45B0374c81c8A1C6320";
 
 export const MOTION_ENACTED_EVENT =
   "event MotionEnacted(uint256 indexed _motionId)";

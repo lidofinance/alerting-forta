@@ -16,20 +16,31 @@ import LIDO_DAO_ABI from "../../abi/LidoDAO.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
 import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
-import {
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-  ETH_DECIMALS,
-  ONE_MONTH,
-  ONE_WEEK,
-} from "../../common/constants";
+import { ETH_DECIMALS, ONE_MONTH, ONE_WEEK } from "../../common/constants";
 
-import {
+import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
+
+export const name = "DaoOps";
+
+import type * as Constants from "./constants";
+const {
+  REPORT_WINDOW,
+  REPORT_WINDOW_EXECUTOR_BALANCE,
+  REPORT_WINDOW_STAKING_LIMIT_10,
+  REPORT_WINDOW_STAKING_LIMIT_30,
+  REPORT_WINDOW_EL_REWARDS_BALANCE,
+  EL_REWARDS_BALANCE_OVERFILL_HIGH,
+  EL_REWARDS_BALANCE_OVERFILL_INFO,
+  MEV_RELAY_COUNT_THRESHOLD_HIGH,
+  MEV_RELAY_COUNT_THRESHOLD_INFO,
+  MEV_RELAY_COUNT_REPORT_WINDOW,
   LIDO_DAO_ADDRESS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
   LIDO_EL_REWARDS_VAULT_ADDRESS,
   MEV_ALLOWED_LIST_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
   MIN_AVAILABLE_KEYS_COUNT,
   MIN_DEPOSIT_EXECUTOR_BALANCE,
   MAX_DEPOSITOR_TX_DELAY,
@@ -43,30 +54,7 @@ import {
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
-} from "./constants";
-import { handleEventsOfNotice } from "../../common/utils";
-
-export const name = "DaoOps";
-
-// 24 hours
-const REPORT_WINDOW = 60 * 60 * 24;
-// 4 hours
-const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
-// 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12;
-// 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12;
-// 24 hours
-const REPORT_WINDOW_EL_REWARDS_BALANCE = 60 * 60 * 24;
-// 110%
-const EL_REWARDS_BALANCE_OVERFILL_INFO = 1.1;
-// 300%
-const EL_REWARDS_BALANCE_OVERFILL_HIGH = 3;
-
-const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
-const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
-// 24 hours
-const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;

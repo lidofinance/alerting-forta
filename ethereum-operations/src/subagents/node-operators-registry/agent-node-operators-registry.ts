@@ -5,19 +5,19 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import {
-  EASY_TRACK_ADDRESS,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-  MOTION_ENACTED_EVENT,
-} from "../../common/constants";
-import {
-  NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
-  NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-  SIGNING_KEY_REMOVED_EVENT,
-} from "./constants";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 
 export const name = "NodeOperatorsRegistry";
+
+import type * as Constants from "./constants";
+const {
+  NODE_OPERATORS_REGISTRY_ADDRESS,
+  EASY_TRACK_ADDRESS,
+  MOTION_ENACTED_EVENT,
+  SIGNING_KEY_REMOVED_EVENT,
+  NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+  NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 export async function initialize(
   currentBlock: number
@@ -92,5 +92,5 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleTransaction,
-  initialize, // sdk won't provide any arguments to the function
+  // initialize, // sdk won't provide any arguments to the function
 };

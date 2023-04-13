@@ -1,8 +1,4 @@
 import { FindingSeverity } from "forta-agent";
-import {
-  EASY_TRACK_ADDRESS,
-  MOTION_ENACTED_EVENT,
-} from "../../common/constants";
 
 export const INCREASE_STAKING_LIMIT_ADDRESS =
   "0xfebd8fac16de88206d4b18764e826af38546afe0";
@@ -10,7 +6,12 @@ export const EVM_SCRIPT_EXECUTOR_ADDRESS =
   "0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977";
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS =
   "0x3129c041b372ee93a5a8756dc4ec6f154d85bc9a";
+export const EASY_TRACK_ADDRESS = "0xf0211b7660680b49de1a7e9f25c65660f0a13fea";
+export const NODE_OPERATORS_REGISTRY_ADDRESS =
+  "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
+export const MOTION_ENACTED_EVENT =
+  "event MotionEnacted(uint256 indexed _motionId)";
 export const MOTION_CREATED_EVENT =
   "event MotionCreated(uint256 indexed _motionId, address _creator, address indexed _evmScriptFactory, bytes _evmScriptCallData, bytes _evmScript)";
 

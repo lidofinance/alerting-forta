@@ -5,11 +5,18 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
-import { IProxyContractData, LIDO_PROXY_CONTRACTS_DATA } from "./constants";
 
 import { ethersProvider } from "../../ethers";
+import { requireWithTier } from "../../common/utils";
+import { IProxyContractData } from "../../common/constants";
 
 export const name = "ProxyWatcher";
+
+import type * as Constants from "./constants";
+const { LIDO_PROXY_CONTRACTS_DATA } = requireWithTier<typeof Constants>(
+  module,
+  "./constants"
+);
 
 let prevProxyImplementations: Map<string, string> = new Map<string, string>();
 

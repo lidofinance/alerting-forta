@@ -1,29 +1,16 @@
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
 
 import { ethersProvider } from "../../ethers";
 
-import {
-  LIDO_ARAGON_ACL_ADDRESS,
-  LIDO_ROLES,
-  SET_PERMISSION_EVENT,
-  SET_PERMISSION_PARAMS_EVENT,
-  LIDO_APPS,
-  CHANGE_PERMISSION_MANAGER_EVENT,
-  ORDINARY_ENTITIES,
-  WHITELISTED_OWNERS,
-  OWNABLE_CONTRACTS,
-  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
-  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
-} from "./constants";
-
 import { isContract } from "./utils";
+import { requireWithTier } from "../../common/utils";
 
 interface IPermission {
   app: string;
@@ -35,6 +22,21 @@ interface IPermission {
 const byLogIndexAsc = (e1: any, e2: any) => e1.logIndex - e2.logIndex;
 
 export const name = "ACL Monitor";
+
+import type * as Constants from "./constants";
+const {
+  LIDO_ARAGON_ACL_ADDRESS,
+  LIDO_ROLES,
+  SET_PERMISSION_EVENT,
+  SET_PERMISSION_PARAMS_EVENT,
+  LIDO_APPS,
+  CHANGE_PERMISSION_MANAGER_EVENT,
+  ORDINARY_ENTITIES,
+  WHITELISTED_OWNERS,
+  OWNABLE_CONTRACTS,
+  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
+  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 export async function initialize(
   currentBlock: number

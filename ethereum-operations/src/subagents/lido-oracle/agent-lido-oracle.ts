@@ -17,26 +17,12 @@ import LIDO_ORACLE_ABI from "../../abi/LidoOracle.json";
 
 import { ETH_DECIMALS } from "../../common/constants";
 import {
-  TRIGGER_PERIOD,
-  LIDO_ORACLE_ADDRESS,
-  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH,
-  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM,
-  MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
-  MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
-  MAX_ORACLE_REPORT_DELAY,
-  MIN_ORACLE_BALANCE_INFO,
-  MIN_ORACLE_BALANCE_HIGH,
-  LIDO_ORACLE_COMPLETED_EVENT,
-  LIDO_ORACLE_BEACON_REPORTED_EVENT,
-  LIDO_ORACLE_EVENTS_OF_NOTICE,
-} from "./constants";
-import {
   byBlockNumberDesc,
   getOracleName,
   formatEth,
   formatDelay,
 } from "./utils";
-import { handleEventsOfNotice } from "../../common/utils";
+import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 
 export interface OracleReport {
   timestamp: number;
@@ -58,6 +44,22 @@ let oraclesBalanceLastAlert: Map<string, number> = new Map();
 let reportedOverdueCount = 0;
 
 export const name = "LidoOracle";
+
+import type * as Constants from "./constants";
+const {
+  TRIGGER_PERIOD,
+  LIDO_ORACLE_ADDRESS,
+  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH,
+  LIDO_ORACLE_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM,
+  MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_INFO,
+  MAX_BEACON_REPORT_QUORUM_SKIP_BLOCKS_MEDIUM,
+  MAX_ORACLE_REPORT_DELAY,
+  MIN_ORACLE_BALANCE_INFO,
+  MIN_ORACLE_BALANCE_HIGH,
+  LIDO_ORACLE_COMPLETED_EVENT,
+  LIDO_ORACLE_BEACON_REPORTED_EVENT,
+  LIDO_ORACLE_EVENTS_OF_NOTICE,
+} = requireWithTier<typeof Constants>(module, "./constants");
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
