@@ -130,11 +130,11 @@ async function handleReportSubmitted(
           : FindingSeverity.High;
       findings.push(
         Finding.fromObject({
-          name: "🚨 Accounting Oracle report submit overdue",
+          name: "🚨 ExitBus Oracle report submit overdue",
           description: `Time since last report: ${formatDelay(
             reportSubmitDelayUpdated
           )}`,
-          alertId: "ACCOUNTING-ORACLE-OVERDUE",
+          alertId: "EXITBUS-ORACLE-OVERDUE",
           severity: severity,
           type: FindingType.Degraded,
           metadata: {
