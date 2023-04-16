@@ -43,7 +43,7 @@ export const MIN_ORACLE_BALANCE_HIGH = 0.15; // 0.15 ETH
 
 export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
   {
-    address: ACCOUNTING_ORACLE_ADDRESS,
+    address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     event:
       "event ConsensusReached(uint256 indexed refSlot, bytes32 report, uint256 support)",
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-REACHED",
@@ -53,7 +53,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: ACCOUNTING_ORACLE_ADDRESS,
+    address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     event:
       "event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)",
     alertId: "ACCOUNTING-ORACLE-REPORT-RECEIVED",
