@@ -28,14 +28,14 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
 ]);
 
 export const MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
-  (60 * 60 * 24 * 7) / 12
-); // 1 week
+  (60 * 60 * 24) / 12
+); // 1 day
 export const MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (60 * 60 * 24 * 14) / 12
-); // 2 weeks
+  (60 * 60 * 24 * 2) / 12
+); // 2 days
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 24 * 60 * 60 + 15 * 60; // 24h 15m
+export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 15744; // 41 epoch in seconds
 
 export const MIN_ORACLE_BALANCE_INFO = 0.3; // 0.3 ETH
 

@@ -34,14 +34,14 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
 ]);
 
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
-  (60 * 60 * 24 * 7) / 12
-); // 1 week
+  (60 * 60 * 12) / 12
+); // 12h
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (60 * 60 * 24 * 14) / 12
-); // 2 weeks
+  (60 * 60 * 24) / 12
+); // 24h
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 6 * 60 * 60 + 15 * 60; // 6h 15m
+export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 1920; // 5 epoch in seconds
 
 export const MIN_MEMBER_BALANCE_INFO = 0.3; // 0.3 ETH
 
