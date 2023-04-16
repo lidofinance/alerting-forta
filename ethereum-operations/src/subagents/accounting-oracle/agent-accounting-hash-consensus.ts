@@ -15,7 +15,7 @@ import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 
 import { byBlockNumberDesc, getMemberName } from "./utils";
 import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
-import {ETH_DECIMALS, ONE_WEEK, ZERO} from "../../common/constants";
+import { ETH_DECIMALS, ONE_WEEK, ZERO } from "../../common/constants";
 
 // re-fetched from history on startup
 let membersLastReport: Map<string, number> = new Map();
