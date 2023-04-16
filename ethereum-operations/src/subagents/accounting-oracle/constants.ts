@@ -27,10 +27,10 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
   ["0x81E411f1BFDa43493D7994F82fb61A415F6b8Fd4", "Kyber Network"],
 ]);
 
-export const MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
+export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
   (60 * 60 * 24 * 7) / 12
 ); // 1 week
-export const MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
+export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
   (60 * 60 * 24 * 14) / 12
 ); // 2 weeks
 
@@ -47,7 +47,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusReached(uint256 indexed refSlot, bytes32 report, uint256 support)",
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-REACHED",
-    name: "ℹ️ Accounting Oracle: Consensus reached",
+    name: "✅ Accounting Oracle: Consensus reached",
     description: (args: any) =>
       `Reference slot - ${args.refSlot}\nSupport - ${args.support}`,
     severity: FindingSeverity.Info,

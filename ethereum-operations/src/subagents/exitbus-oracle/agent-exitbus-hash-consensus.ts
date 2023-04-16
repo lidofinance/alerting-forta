@@ -15,12 +15,13 @@ import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 
 import { byBlockNumberDesc, getMemberName } from "./utils";
 import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
-import { ETH_DECIMALS, ONE_WEEK } from "../../common/constants";
+import {ETH_DECIMALS, ONE_WEEK, ZERO} from "../../common/constants";
 
 // re-fetched from history on startup
 let membersLastReport: Map<string, number> = new Map();
 let membersBalanceLastAlert: Map<string, number> = new Map();
-let lastReportHash: string = "";
+let lastReceivedReportHash: string = "";
+let lastReceivedReportRefSlot = ZERO;
 
 export const name = "ExitBusOracleHashConsensus";
 
@@ -168,7 +169,12 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   );
   if (!event) return;
   membersLastReport.set(event.args.member, txEvent.blockNumber);
-  if (lastReportHash != "" && lastReportHash != event.args.report) {
+  const reportRefSlot = new BigNumber(event.args.refSlot);
+  if (
+    lastReceivedReportHash != "" &&
+    lastReceivedReportHash != event.args.report &&
+    lastReceivedReportRefSlot.eq(reportRefSlot)
+  ) {
     const member = event.args.member;
     findings.push(
       Finding.fromObject({
@@ -186,7 +192,8 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
       })
     );
   }
-  lastReportHash = event.args.report;
+  lastReceivedReportRefSlot = new BigNumber(event.args.refSlot);
+  lastReceivedReportHash = event.args.report;
 }
 
 function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {

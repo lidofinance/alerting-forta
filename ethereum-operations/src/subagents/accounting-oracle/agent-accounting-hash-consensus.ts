@@ -15,12 +15,13 @@ import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 
 import { byBlockNumberDesc, getMemberName } from "./utils";
 import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
-import { ETH_DECIMALS, ONE_WEEK } from "../../common/constants";
+import {ETH_DECIMALS, ONE_WEEK, ZERO} from "../../common/constants";
 
 // re-fetched from history on startup
 let membersLastReport: Map<string, number> = new Map();
 let membersBalanceLastAlert: Map<string, number> = new Map();
-let lastReportHash: string = "";
+let lastReceivedReportHash: string = "";
+let lastReceivedReportRefSlot = ZERO;
 
 export const name = "AccountingOracleHashConsensus";
 
@@ -28,8 +29,8 @@ import type * as Constants from "./constants";
 const {
   MIN_ORACLE_BALANCE_INFO,
   MIN_ORACLE_BALANCE_HIGH,
-  MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_INFO,
-  MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM,
+  MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO,
+  MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM,
   ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE,
   ACCOUNTING_ORACLE_MEMBERS,
   ACCOUNTING_HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
@@ -168,7 +169,12 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   );
   if (!event) return;
   membersLastReport.set(event.args.member, txEvent.blockNumber);
-  if (lastReportHash != "" && lastReportHash != event.args.report) {
+  const reportRefSlot = new BigNumber(event.args.refSlot);
+  if (
+    lastReceivedReportHash != "" &&
+    lastReceivedReportHash != event.args.report &&
+    lastReceivedReportRefSlot.eq(reportRefSlot)
+  ) {
     const member = event.args.member;
     findings.push(
       Finding.fromObject({
@@ -186,7 +192,8 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
       })
     );
   }
-  lastReportHash = event.args.report;
+  lastReceivedReportRefSlot = new BigNumber(event.args.refSlot);
+  lastReceivedReportHash = event.args.report;
 }
 
 function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
@@ -199,7 +206,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
   membersLastReport.forEach((lastRepBlock, member) => {
     const reportDist = block - lastRepBlock;
     const reportDistDays = Math.floor((reportDist * 12) / (60 * 60 * 24));
-    if (reportDist > MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM) {
+    if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM) {
       findings.push(
         Finding.fromObject({
           name: "⚠️ Super sloppy Accounting Oracle Member",
@@ -216,7 +223,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
           type: FindingType.Suspicious,
         })
       );
-    } else if (reportDist > MAX_BEACON_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
+    } else if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
       findings.push(
         Finding.fromObject({
           name: "🤔 Sloppy Accounting Oracle Member",

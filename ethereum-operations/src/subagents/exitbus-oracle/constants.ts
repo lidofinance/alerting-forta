@@ -53,7 +53,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusReached(uint256 indexed refSlot, bytes32 report, uint256 support)",
     alertId: "EXITBUS-ORACLE-CONSENSUS-REACHED",
-    name: "ℹ️ ExitBus Oracle: Consensus reached",
+    name: "✅ ExitBus Oracle: Consensus reached",
     description: (args: any) =>
       `Reference slot - ${args.refSlot}\nSupport - ${args.support}`,
     severity: FindingSeverity.Info,
