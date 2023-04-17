@@ -93,11 +93,13 @@ export async function initialize(
     });
     if (memberReports.length > 0) {
       const lastReport = memberReports[memberReports.length - 1];
-      membersLastReport.set(member, {
-        refSlot: lastReport.args?.refSlot,
-        report: lastReport.args?.report,
-        blockNumber: lastReport.blockNumber,
-      });
+      if (lastReport.args) {
+        membersLastReport.set(member, {
+          refSlot: lastReport.args.refSlot,
+          report: lastReport.args.report,
+          blockNumber: lastReport.blockNumber,
+        });
+      }
     } else {
       membersLastReport.set(member, {
         refSlot: BN_ZERO,
