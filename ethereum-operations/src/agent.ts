@@ -12,6 +12,10 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
+import * as agentAccountingOracle from "./subagents/accounting-oracle/agent-accounting-oracle";
+import * as agentAccountingOracleHashConsensus from "./subagents/accounting-oracle/agent-accounting-hash-consensus";
+import * as agentExitBusOracle from "./subagents/exitbus-oracle/agent-exitbus-oracle";
+import * as agentExitBusOracleHashConsensus from "./subagents/exitbus-oracle/agent-exitbus-hash-consensus";
 import * as agentLidoOracle from "./subagents/lido-oracle/agent-lido-oracle";
 import * as agentEasyTrack from "./subagents/easy-track/agent-easy-track";
 import * as agentDaoOps from "./subagents/dao-ops/agent-dao-ops";
@@ -35,6 +39,10 @@ interface SubAgent {
 }
 
 const subAgents: SubAgent[] = [
+  agentAccountingOracle,
+  agentAccountingOracleHashConsensus,
+  agentExitBusOracle,
+  agentExitBusOracleHashConsensus,
   agentLidoOracle,
   agentEasyTrack,
   agentDaoOps,
