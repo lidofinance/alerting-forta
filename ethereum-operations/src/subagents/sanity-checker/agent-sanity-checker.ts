@@ -1,27 +1,31 @@
 import {
-  ethers,
   BlockEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
 } from "forta-agent";
 
 import { ethersProvider } from "../../ethers";
 
 import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi/OracleReportSanityChecker.json";
 
-import { requireWithTier } from "../../common/utils";
+import { RedefineMode, requireWithTier } from "../../common/utils";
+import type * as Constants from "./constants";
+import BigNumber from "bignumber.js";
 
 let prevLimits: BigNumber[] = [];
 
 export const name = "OracleReportSanityChecker";
 
-import type * as Constants from "./constants";
-import BigNumber from "bignumber.js";
 const {
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
   ORACLE_REPORT_SANITY_CHECKER_LIMITS,
-} = requireWithTier<typeof Constants>(module, `./constants`);
+} = requireWithTier<typeof Constants>(
+  module,
+  `./constants`,
+  RedefineMode.Merge
+);
 
 export async function initialize(
   currentBlock: number

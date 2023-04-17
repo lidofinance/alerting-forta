@@ -1,13 +1,17 @@
 import { Finding, TransactionEvent } from "forta-agent";
 
-import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
+import {
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import type * as Constants from "./constants";
 
 export const name = "OracleDaemonConfig";
 
-import type * as Constants from "./constants";
 const { ORACLE_DAEMON_CONFIG_EVENTS_OF_NOTICE } = requireWithTier<
   typeof Constants
->(module, `./constants`);
+>(module, `./constants`, RedefineMode.Merge);
 
 export async function initialize(
   currentBlock: number
