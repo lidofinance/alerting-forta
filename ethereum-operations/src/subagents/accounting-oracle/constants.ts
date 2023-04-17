@@ -1,4 +1,5 @@
 import { FindingSeverity } from "forta-agent";
+import { ONE_DAY, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5;
@@ -28,18 +29,21 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
 ]);
 
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
-  (60 * 60 * 24 * 7) / 12
-); // 1 week
+  ONE_WEEK / SECONDS_PER_SLOT
+);
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (60 * 60 * 24 * 14) / 12
-); // 2 weeks
+  (2 * ONE_WEEK) / SECONDS_PER_SLOT
+);
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 24 * 60 * 60 + 15 * 60; // 24h 15m
+export const MAX_ORACLE_REPORT_SUBMIT_DELAY = ONE_DAY + 15 * 60; // 24h 15m
 
 export const MIN_ORACLE_BALANCE_INFO = 0.3; // 0.3 ETH
 
 export const MIN_ORACLE_BALANCE_HIGH = 0.15; // 0.15 ETH
+
+// every 5th alert will be critical
+export const REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER = 5;
 
 export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
   {
@@ -49,17 +53,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-REACHED",
     name: "✅ Accounting Oracle: Consensus reached",
     description: (args: any) =>
-      `Reference slot - ${args.refSlot}\nSupport - ${args.support}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-    event:
-      "event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)",
-    alertId: "ACCOUNTING-ORACLE-REPORT-RECEIVED",
-    name: "ℹ️ Accounting Oracle: Report received",
-    description: (args: any) =>
-      `Reference slot - ${args.refSlot}\nMember - ${args.member}`,
+      `Reference slot: ${args.refSlot}\nSupport: ${args.support}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -69,7 +63,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-MEMBER-ADDED",
     name: "ℹ️ Accounting Oracle: Member Added",
     description: (args: any) =>
-      `Oracle member added - ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
+      `Oracle member added: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
     severity: FindingSeverity.High,
   },
   {
@@ -79,7 +73,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-MEMBER-REMOVED",
     name: "⚠️ Accounting Oracle: Member Removed",
     description: (args: any) =>
-      `Oracle member removed - ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
+      `Oracle member removed: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
     severity: FindingSeverity.High,
   },
   {
@@ -97,8 +91,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event: "event FastLaneConfigSet(uint256 fastLaneLengthSlots)",
     alertId: "ACCOUNTING-ORACLE-FAST-LANE-CONFIG-SET",
     name: "🚨 Accounting Oracle: Fastlane Config Set",
-    description: (args: any) =>
-      `New length slots - ${args.fastLaneLengthSlots}`,
+    description: (args: any) => `New length slots: ${args.fastLaneLengthSlots}`,
     severity: FindingSeverity.High,
   },
   {
@@ -108,7 +101,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-FRAME-CONFIG-SET",
     name: "🚨 Accounting Oracle: Frame Config set",
     description: (args: any) =>
-      `New initial epoch - ${args.newInitialEpoch}\nNew epochs per frame - ${args.newEpochsPerFrame}`,
+      `New initial epoch: ${args.newInitialEpoch}\nNew epochs per frame - ${args.newEpochsPerFrame}`,
     severity: FindingSeverity.High,
   },
   {
@@ -118,7 +111,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-REPORT-PROCESSOR-SET",
     name: "🚨 Accounting Oracle: Report Processor set",
     description: (args: any) =>
-      `New report processor - ${args.processor}\nPrev report processor - ${args.prevProcessor}`,
+      `New report processor: ${args.processor}\nPrev report processor - ${args.prevProcessor}`,
     severity: FindingSeverity.High,
   },
   {
@@ -126,7 +119,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event: "event ConsensusLost(uint256 indexed refSlot)",
     alertId: "ACCOUNTING-ORACLE-REPORT-PROCESSOR-SET",
     name: "🚨 Accounting Oracle: Consensus lost",
-    description: (args: any) => `Reference slot - ${args.refSlot}`,
+    description: (args: any) => `Reference slot: ${args.refSlot}`,
     severity: FindingSeverity.High,
   },
 ];
@@ -135,21 +128,11 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
   {
     address: ACCOUNTING_ORACLE_ADDRESS,
     event:
-      "event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)",
-    alertId: "ACCOUNTING-ORACLE-REPORT-SUBMITTED",
-    name: "ℹ️ Accounting Oracle: Report Submitted",
-    description: (args: any) =>
-      `Reference slot - ${args.refSlot}\nHash: ${args.hash}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: ACCOUNTING_ORACLE_ADDRESS,
-    event:
       "event ProcessingStarted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)",
     alertId: "ACCOUNTING-ORACLE-PROCESSING-STARTED",
     name: "ℹ️ Accounting Oracle: Processing Started",
     description: (args: any) =>
-      `Reference slot - ${args.refSlot}\nHash: ${args.hash}`,
+      `Reference slot: ${args.refSlot}\nHash: ${args.hash}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -159,7 +142,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-HASH-CONTRACT-SET",
     name: "ℹ️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
-      `New address - ${args.addr}\nPrevious address: ${args.prevAddr}`,
+      `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
     severity: FindingSeverity.High,
   },
   {
@@ -169,7 +152,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-VERSION-SET",
     name: "ℹ️ Accounting Oracle: Consensus Version Set",
     description: (args: any) =>
-      `New version - ${args.version}\nPrevious version: ${args.prevVersion}`,
+      `New version: ${args.version}\nPrevious version: ${args.prevVersion}`,
     severity: FindingSeverity.High,
   },
   {
@@ -177,7 +160,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     event: "event WarnProcessingMissed(uint256 indexed refSlot)",
     alertId: "ACCOUNTING-ORACLE-PROCESSING-MISSED",
     name: "🚨 Accounting Oracle: Processing Missed",
-    description: (args: any) => `Reference slot - ${args.refSlot}`,
+    description: (args: any) => `Reference slot: ${args.refSlot}`,
     severity: FindingSeverity.High,
   },
   {
@@ -187,7 +170,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-EXTRA-DATA-INCOMPLETE-PROCESSING",
     name: "🚨 Accounting Oracle: Extra Data Incomplete Processing",
     description: (args: any) =>
-      `Reference slot - ${args.refSlot}\nProcessed items count: ${args.processedItemsCount}\nTotal items count: ${args.itemsCount}`,
+      `Reference slot: ${args.refSlot}\nProcessed items count: ${args.processedItemsCount}\nTotal items count: ${args.itemsCount}`,
     severity: FindingSeverity.High,
   },
 ];

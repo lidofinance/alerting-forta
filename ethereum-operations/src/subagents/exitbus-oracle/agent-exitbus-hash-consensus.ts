@@ -13,15 +13,25 @@ import { ethersProvider } from "../../ethers";
 
 import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 
-import { byBlockNumberDesc, getMemberName } from "./utils";
-import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
-import { ETH_DECIMALS, ONE_WEEK, ZERO } from "../../common/constants";
+import { getMemberName } from "./utils";
+import {
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import {
+  ETH_DECIMALS,
+  ONE_WEEK,
+  BN_ZERO,
+  ONE_DAY,
+  SECONDS_PER_SLOT,
+  MemberReport,
+} from "../../common/constants";
 
 // re-fetched from history on startup
-let membersLastReport: Map<string, number> = new Map();
+let membersAddresses: string[] = [];
+let membersLastReport: Map<string, MemberReport> = new Map();
 let membersBalanceLastAlert: Map<string, number> = new Map();
-let lastReceivedReportHash: string = "";
-let lastReceivedReportRefSlot = ZERO;
 
 export const name = "ExitBusOracleHashConsensus";
 
@@ -37,7 +47,11 @@ const {
   EXITBUS_HASH_CONSENSUS_ADDRESS,
   EXITBUS_ORACLE_ADDRESS,
   EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
-} = requireWithTier<typeof Constants>(module, `./constants`);
+} = requireWithTier<typeof Constants>(
+  module,
+  `./constants`,
+  RedefineMode.Merge
+);
 
 async function getOracleMembers(blockNumber: number): Promise<string[]> {
   const hashConsensus = new ethers.Contract(
@@ -62,27 +76,34 @@ export async function initialize(
     ethersProvider
   );
 
-  const members = await getOracleMembers(currentBlock);
+  membersAddresses = await getOracleMembers(currentBlock);
   const memberReportReceivedFilter = hashConsensus.filters.ReportReceived();
   // ~14 days ago
   const reportReceivedStartBlock =
-    currentBlock - Math.ceil((14 * 24 * 60 * 60) / 12);
+    currentBlock - Math.ceil((2 * ONE_WEEK) / SECONDS_PER_SLOT);
   const reportReceivedEvents = await hashConsensus.queryFilter(
     memberReportReceivedFilter,
     reportReceivedStartBlock,
     currentBlock - 1
   );
 
-  reportReceivedEvents.sort(byBlockNumberDesc);
-
-  members.forEach((member: string) => {
+  membersAddresses.forEach((member: string) => {
     let memberReports = reportReceivedEvents.filter((event) => {
       if (event.args) return event.args.member == member;
     });
     if (memberReports.length > 0) {
-      membersLastReport.set(member, memberReports[0].blockNumber);
+      const lastReport = memberReports[memberReports.length - 1];
+      membersLastReport.set(member, {
+        refSlot: lastReport.args?.refSlot,
+        report: lastReport.args?.report,
+        blockNumber: lastReport.blockNumber,
+      });
     } else {
-      membersLastReport.set(member, 0);
+      membersLastReport.set(member, {
+        refSlot: BN_ZERO,
+        report: "",
+        blockNumber: 0,
+      });
     }
   });
 
@@ -92,7 +113,7 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleMembersBalances(blockEvent, findings)]);
+  await handleMembersBalances(blockEvent, findings);
 
   return findings;
 }
@@ -101,9 +122,11 @@ async function handleMembersBalances(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
-  const members = await getOracleMembers(blockEvent.blockNumber);
+  membersAddresses = await getOracleMembers(blockEvent.blockNumber);
   await Promise.all(
-    members.map((member) => handleMemberBalance(member, blockEvent, findings))
+    membersAddresses.map((member) =>
+      handleMemberBalance(member, blockEvent, findings)
+    )
   );
 }
 
@@ -168,32 +191,54 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
     EXITBUS_HASH_CONSENSUS_ADDRESS
   );
   if (!event) return;
-  membersLastReport.set(event.args.member, txEvent.blockNumber);
-  const reportRefSlot = new BigNumber(event.args.refSlot);
+  const currentReportHashes = [...membersLastReport.values()]
+    .filter((r) => r.refSlot.eq(event.args.refSlot))
+    .map((r) => r.report);
+  const receivedReportNumber = currentReportHashes.length + 1;
+  const membersCount = membersAddresses.length;
   if (
-    lastReceivedReportHash != "" &&
-    lastReceivedReportHash != event.args.report &&
-    lastReceivedReportRefSlot.eq(reportRefSlot)
+    currentReportHashes.length > 0 &&
+    !currentReportHashes.includes(event.args.report)
   ) {
-    const member = event.args.member;
     findings.push(
       Finding.fromObject({
-        name: "⚠️ ExitBus Oracle: Alternative report hash",
+        name: "⚠️ ExitBus Oracle: Alternative report received",
         description:
-          `Member ${member} ` +
+          `Member ${event.args.member} ` +
           `(${getMemberName(
             EXITBUS_ORACLE_MEMBERS,
-            member.toLocaleLowerCase()
-          )}) ` +
-          `has reported a different hash than the previous other member.`,
-        alertId: "SLOPPY-EXITBUS-ORACLE-MEMBER",
+            event.args.member.toLocaleLowerCase()
+          )}) has reported a hash unmatched by other members.\nReference slot: ${
+            event.args.refSlot
+          }\n${receivedReportNumber} of ${membersCount} reports received`,
+        alertId: "EXITBUS-ORACLE-REPORT-RECEIVED-ALTERNATIVE-HASH",
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
       })
     );
+  } else {
+    findings.push(
+      Finding.fromObject({
+        name: "ℹ️ ExitBus Oracle: Report received",
+        description:
+          `Member ${event.args.member} ` +
+          `(${getMemberName(
+            EXITBUS_ORACLE_MEMBERS,
+            event.args.member.toLocaleLowerCase()
+          )})\nReference slot: ${
+            event.args.refSlot
+          }\n${receivedReportNumber} of ${membersCount} reports received`,
+        alertId: "EXITBUS-ORACLE-REPORT-RECEIVED",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
   }
-  lastReceivedReportRefSlot = new BigNumber(event.args.refSlot);
-  lastReceivedReportHash = event.args.report;
+  membersLastReport.set(event.args.member, {
+    refSlot: event.args.refSlot,
+    report: event.args.report,
+    blockNumber: txEvent.blockNumber,
+  });
 }
 
 function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
@@ -202,10 +247,21 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
     EXITBUS_ORACLE_ADDRESS
   );
   if (!submitted) return;
+  findings.push(
+    Finding.fromObject({
+      name: "ℹ️ ExitBus Oracle: Report Submitted",
+      description: `Reference slot: ${submitted.args.refSlot}\nHash: ${submitted.args.hash}`,
+      alertId: "EXITBUS-ORACLE-REPORT-SUBMITTED",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+    })
+  );
   const block = txEvent.blockNumber;
-  membersLastReport.forEach((lastRepBlock, member) => {
-    const reportDist = block - lastRepBlock;
-    const reportDistDays = Math.floor((reportDist * 12) / (60 * 60 * 24));
+  membersLastReport.forEach((report, member) => {
+    const reportDist = block - report.blockNumber;
+    const reportDistDays = Math.floor(
+      (reportDist * SECONDS_PER_SLOT) / ONE_DAY
+    );
     if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM) {
       findings.push(
         Finding.fromObject({

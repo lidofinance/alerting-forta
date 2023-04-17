@@ -1,18 +1,24 @@
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
 
 import { ethersProvider } from "../../ethers";
 
 import ACCOUNTING_ORACLE_ABI from "../../abi/AccountingOracle.json";
 
-import { byBlockNumberDesc, formatDelay } from "./utils";
-import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
+import { formatDelay } from "./utils";
+import {
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import type * as Constants from "./constants";
+import { ONE_HOUR, SECONDS_PER_SLOT } from "../../common/constants";
 
 // re-fetched from history on startup
 let lastReportSubmitTimestamp = 0;
@@ -22,13 +28,17 @@ let reportSubmitOverdueCount = 0;
 
 export const name = "AccountingOracle";
 
-import type * as Constants from "./constants";
 const {
   TRIGGER_PERIOD,
+  REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER,
   ACCOUNTING_ORACLE_ADDRESS,
   MAX_ORACLE_REPORT_SUBMIT_DELAY,
   ACCOUNTING_ORACLE_EVENTS_OF_NOTICE,
-} = requireWithTier<typeof Constants>(module, `./constants`);
+} = requireWithTier<typeof Constants>(
+  module,
+  `./constants`,
+  RedefineMode.Merge
+);
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
@@ -37,7 +47,8 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  const block48HoursAgo = currentBlock - Math.ceil((48 * 60 * 60) / 12);
+  const block48HoursAgo =
+    currentBlock - Math.ceil((48 * ONE_HOUR) / SECONDS_PER_SLOT);
 
   const reportSubmits = await getReportSubmits(
     block48HoursAgo,
@@ -45,10 +56,14 @@ export async function initialize(
   );
   let prevReportSubmitTimestamp = 0;
   if (reportSubmits.length > 1) {
-    prevReportSubmitTimestamp = (await reportSubmits[1].getBlock()).timestamp;
+    prevReportSubmitTimestamp = (
+      await reportSubmits[reportSubmits.length - 2].getBlock()
+    ).timestamp;
   }
   if (reportSubmits.length > 0) {
-    lastReportSubmitTimestamp = (await reportSubmits[0].getBlock()).timestamp;
+    lastReportSubmitTimestamp = (
+      await reportSubmits[reportSubmits.length - 1].getBlock()
+    ).timestamp;
   }
 
   log(
@@ -77,14 +92,11 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
 
   const oracleReportFilter = accountingOracle.filters.ReportSubmitted();
 
-  const submitEvents = await accountingOracle.queryFilter(
+  return await accountingOracle.queryFilter(
     oracleReportFilter,
     blockFrom,
     blockTo
   );
-
-  submitEvents.sort(byBlockNumberDesc);
-  return submitEvents;
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
@@ -103,10 +115,6 @@ async function handleReportSubmitted(
   const reportSubmitDelay =
     now - (lastReportSubmitTimestamp ? lastReportSubmitTimestamp : 0);
 
-  if (reportSubmitDelay > 24 * 60 * 60) {
-    log(`reportDelay: ${reportSubmitDelay}`);
-  }
-
   if (
     reportSubmitDelay > MAX_ORACLE_REPORT_SUBMIT_DELAY &&
     now - lastReportSubmitOverdueTimestamp >= TRIGGER_PERIOD
@@ -114,17 +122,20 @@ async function handleReportSubmitted(
     // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
     // needed to handle situation with the missed TX with prev report
     const reportSubmits = await getReportSubmits(
-      blockEvent.blockNumber - Math.ceil((24 * 60 * 60) / 12),
+      blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
       blockEvent.blockNumber - 1
     );
     if (reportSubmits.length > 0) {
-      lastReportSubmitTimestamp = (await reportSubmits[0].getBlock()).timestamp;
+      lastReportSubmitTimestamp = (
+        await reportSubmits[reportSubmits.length - 1].getBlock()
+      ).timestamp;
     }
     const reportSubmitDelayUpdated =
       now - (lastReportSubmitTimestamp ? lastReportSubmitTimestamp : 0);
     if (reportSubmitDelayUpdated > MAX_ORACLE_REPORT_SUBMIT_DELAY) {
       const severity =
-        reportSubmitOverdueCount % 5 == 0
+        reportSubmitOverdueCount % REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER ==
+        0
           ? FindingSeverity.Critical
           : FindingSeverity.High;
       findings.push(
