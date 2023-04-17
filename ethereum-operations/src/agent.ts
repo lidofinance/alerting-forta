@@ -23,6 +23,8 @@ import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
 import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
 import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
 import * as agentNORegistry from "./subagents/node-operators-registry/agent-node-operators-registry";
+import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-checker";
+import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
 
 import VERSION from "./version";
 import { RUN_TIER } from "./common/constants";
@@ -48,6 +50,8 @@ const subAgents: SubAgent[] = [
   agentAragon,
   agentACL,
   agentNORegistry,
+  agentSanityChecker,
+  agentOracleDaemonConfig,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;

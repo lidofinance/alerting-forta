@@ -1,0 +1,2 @@
+export const ORACLE_DAEMON_CONFIG_ADDRESS =
+  "0xe9cc5bd91543cdc9788454ee5063e2cd76b5206d";
