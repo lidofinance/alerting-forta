@@ -6,7 +6,7 @@ export const RUN_TIER = process.env.FORTA_AGENT_RUN_TEAR;
 
 export const SECONDS_PER_SLOT = 12;
 export const ONE_HOUR = 60 * 60;
-export const ONE_DAY = 24 * 60 * 60;
+export const ONE_DAY = 24 * ONE_HOUR;
 export const ONE_WEEK = 7 * ONE_DAY;
 export const ONE_MONTH = ONE_WEEK * 4;
 
