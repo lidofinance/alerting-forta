@@ -235,17 +235,23 @@ async function handleWithdrawalRequest(
   ) {
     firstUnfinalizedRequestTimestamp = txEvent.timestamp;
   }
+  const perRequestorAmounts = new Map<string, BigNumber>();
   for (const event of withdrawalEvents) {
-    const amount = new BigNumber(String(event.args.amountOfStETH)).div(
-      ETH_DECIMALS
+    perRequestorAmounts.set(
+      event.args.requestor,
+      (perRequestorAmounts.get(event.args.requestor) || new BigNumber(0)).plus(
+        new BigNumber(String(event.args.amountOfStETH)).div(ETH_DECIMALS)
+      )
     );
-    if (amount.gte(BIG_WITHDRAWAL_REQUEST_THRESHOLD)) {
+  }
+  for (const [requestor, amounts] of perRequestorAmounts.entries()) {
+    if (amounts.gte(BIG_WITHDRAWAL_REQUEST_THRESHOLD)) {
       findings.push(
         Finding.fromObject({
-          name: `ℹ️ Withdrawals: received withdrawal request greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH in one batch`,
-          description: `Requestor: ${
-            event.args.requestor
-          }\nAmount: ${amount.toFixed(0)} stETH`,
+          name: `ℹ️ Withdrawals: received withdrawal request in one batch greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH`,
+          description: `Requestor: ${requestor}\nAmount: ${amounts.toFixed(
+            0
+          )} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -253,7 +259,7 @@ async function handleWithdrawalRequest(
       );
     }
     amountOfRequestedStETHSinceLastTokenRebase =
-      amountOfRequestedStETHSinceLastTokenRebase.plus(amount);
+      amountOfRequestedStETHSinceLastTokenRebase.plus(amounts);
   }
   if (
     amountOfRequestedStETHSinceLastTokenRebase.gte(
@@ -263,7 +269,7 @@ async function handleWithdrawalRequest(
     if (lastBigRequestAfterRebaseAlertTimestamp < lastTokenRebaseTimestamp) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ Withdrawals: received withdrawal request greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH since the last rebase`,
+          name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH`,
           description: `Amount: ${amountOfRequestedStETHSinceLastTokenRebase.toFixed(
             0
           )} stETH`,
