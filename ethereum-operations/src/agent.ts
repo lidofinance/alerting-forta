@@ -25,6 +25,7 @@ import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
 import * as agentNORegistry from "./subagents/node-operators-registry/agent-node-operators-registry";
 import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-checker";
 import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
+import * as agentStakingRouter from "./subagents/staking-router/agent-staking-router";
 
 import VERSION from "./version";
 import { RUN_TIER } from "./common/constants";
@@ -52,6 +53,7 @@ const subAgents: SubAgent[] = [
   agentNORegistry,
   agentSanityChecker,
   agentOracleDaemonConfig,
+  agentStakingRouter,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
