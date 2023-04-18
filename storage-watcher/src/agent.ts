@@ -12,7 +12,7 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentDemo from "./subagents/storage-watcher/agent-storage-watcher";
+import * as storageWatcher from "./subagents/storage-watcher/agent-storage-watcher";
 
 import VERSION from "./version";
 
@@ -25,17 +25,15 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [agentDemo];
+const subAgents: SubAgent[] = [storageWatcher];
 
-// block or tx handling should take no more than 60 sec.
-// If not all processing is done it will be done later in background
-const handlerResolveTimeout = 60_000;
+// block or tx handling should take no more than 120 sec.
+// If not all processing is done it interrupts the execution, sends current findings and errors as findings too
+const processingTimeout = 120_000;
 
 const maxHandlerRetries = 5;
 
 let findingsOnInit: Finding[] = [];
-let blockFindingsCache: Finding[] = [];
-let txFindingsCache: Finding[] = [];
 
 const initialize = async () => {
   const metadata: Metadata = {
@@ -98,124 +96,109 @@ const initialize = async () => {
   console.log("Bot initialization is done!");
 };
 
+const timeout = async (agent: SubAgent) =>
+  new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      const err = new Error(`Sub-agent ${agent.name} timed out`);
+      reject(err);
+    }, processingTimeout);
+  });
+
 const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent
 ): Promise<Finding[]> => {
-  let responseResolve: (value: Finding[]) => void;
-  let wasResolved = false;
-
-  const response = new Promise<Finding[]>((resolve, _) => {
-    responseResolve = resolve;
-  });
-
-  // we need to resolve Promise in handlerResolveTimeout maximum.
-  // If not all handlers have finished execution we will leave them working in background
-  const blockHandlingTimeout = setTimeout(function () {
-    console.log(
-      `block ${blockEvent.blockNumber} processing moved to the background due to timeout`
-    );
-    responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
-    wasResolved = true;
-  }, handlerResolveTimeout);
-
+  let blockFindings: Finding[] = [];
   // report findings from init. Will be done only for the first block report.
   if (findingsOnInit.length) {
-    blockFindingsCache = findingsOnInit;
+    blockFindings = blockFindings.concat(findingsOnInit);
     findingsOnInit = [];
   }
 
-  // run agents handlers
-  Promise.all(
-    subAgents.map(async (agent) => {
-      if (agent.handleBlock) {
-        let retries = maxHandlerRetries;
-        let success = false;
-        let lastError;
-        while (retries-- > 0 && !success) {
-          try {
-            const newFindings = await agent.handleBlock(blockEvent);
-            if (newFindings.length) {
-              enrichFindingsMetadata(newFindings);
-              blockFindingsCache = blockFindingsCache.concat(newFindings);
-            }
-            success = true;
-          } catch (err) {
-            lastError = err;
-          }
+  const run = async (agent: SubAgent, blockEvent: BlockEvent) => {
+    if (!agent.handleBlock) return;
+    let retries = maxHandlerRetries;
+    let success = false;
+    let lastError;
+    while (retries-- > 0 && !success) {
+      try {
+        const newFindings = await agent.handleBlock(blockEvent);
+        if (newFindings.length) {
+          enrichFindingsMetadata(newFindings);
+          blockFindings = blockFindings.concat(newFindings);
         }
-        if (!success) {
-          blockFindingsCache.push(
-            errorToFinding(lastError, agent, "handleBlock")
-          );
-        }
+        success = true;
+      } catch (err) {
+        lastError = err;
       }
+    }
+    if (!success) {
+      blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
+    }
+  };
+
+  // run agents handlers
+  // wait all results whether success or failure (include timeout errors)
+
+  const runs = await Promise.allSettled(
+    subAgents.map(async (agent) => {
+      return await Promise.race([run(agent, blockEvent), timeout(agent)]);
     })
-  ).then(() => {
-    if (wasResolved) return;
-    // if all handlers have finished execution drop timeout and resolve promise
-    clearTimeout(blockHandlingTimeout);
-    responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
-    wasResolved = true; // should not be reached, but to make sure
+  );
+
+  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
+    if (r.status == "rejected") {
+      blockFindings.push(
+        errorToFinding(r.reason, subAgents[index], "handleBlock")
+      );
+    }
   });
 
-  return response;
+  return blockFindings;
 };
 
 const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent
 ) => {
-  let responseResolve: (value: Finding[]) => void;
-  let wasResolved = false;
-
-  const response = new Promise<Finding[]>((resolve, _) => {
-    responseResolve = resolve;
-  });
-
-  // we need to resolve Promise in handlerResolveTimeout maximum.
-  // If not all handlers has finished execution we will left them working in background
-  const txHandlingTimeout = setTimeout(function () {
-    console.log(
-      `transaction ${txEvent.transaction.hash} processing moved to the background due to timeout`
-    );
-    responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
-    wasResolved = true;
-  }, handlerResolveTimeout);
+  let txFindings: Finding[] = [];
+  const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
+    if (!agent.handleTransaction) return;
+    let retries = maxHandlerRetries;
+    let success = false;
+    let lastError;
+    while (retries-- > 0 && !success) {
+      try {
+        const newFindings = await agent.handleTransaction(txEvent);
+        if (newFindings.length) {
+          enrichFindingsMetadata(newFindings);
+          txFindings = txFindings.concat(newFindings);
+        }
+        success = true;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    if (!success) {
+      txFindings.push(errorToFinding(lastError, agent, "handleTransaction"));
+    }
+  };
 
   // run agents handlers
-  Promise.all(
+  // wait all results whether success or failure (include timeout errors)
+  const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
-      if (agent.handleTransaction) {
-        let retries = maxHandlerRetries;
-        let success = false;
-        let lastError;
-        while (retries-- > 0 && !success) {
-          try {
-            const newFindings = await agent.handleTransaction(txEvent);
-            if (newFindings.length) {
-              enrichFindingsMetadata(newFindings);
-              txFindingsCache = txFindingsCache.concat(newFindings);
-            }
-            success = true;
-          } catch (err) {
-            lastError = err;
-          }
-        }
-        if (!success) {
-          txFindingsCache.push(
-            errorToFinding(lastError, agent, "handleTransaction")
-          );
-        }
-      }
+      return await Promise.race([run(agent, txEvent), timeout(agent)]);
     })
-  ).then(() => {
-    if (wasResolved) return;
-    // if all handlers have finished execution drop timeout and resolve promise
-    clearTimeout(txHandlingTimeout);
-    responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
-    wasResolved = true; // should not be reached, but to make sure
+  );
+
+  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
+    if (r.status == "rejected") {
+      txFindings.push(
+        errorToFinding(r.reason, subAgents[index], "handleBlock")
+      );
+    }
   });
 
-  return response;
+  return txFindings;
 };
 
 function enrichFindingsMetadata(findings: Finding[]) {
