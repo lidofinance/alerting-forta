@@ -1,6 +1,8 @@
 import { ContractStorageMap } from "src/common/constants";
 
-// ADDRESSES AND EVENTS
+// Addresses and events
+
+// NOTE: NOT A PRODUCTION-READY CONTRACTS LIST
 
 export const LIDO_ADDRESS = "0xE5418393B2D9D36e94b7a8906Fb2e4E9dce9DEd3";
 export const NOR_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
@@ -34,9 +36,6 @@ export const VALIDATORS_EXIT_BUS_ORACLE_ADDRESS =
   "0xAE5f30D1494a7B29A9a6D0D05072b6Fb092e7Ad2";
 export const VALIDATORS_EXIT_BUS_HASH_CONSENSUS_ADDRESS =
   "0x8D108EB23306c9F860b1F667d9Fcdf0dA273fA89";
-
-export const SUBMITTED_EVENT =
-  "event Submitted(address indexed sender, uint256 amount, address referral)";
 
 // Storage slots mapping
 
@@ -204,7 +203,6 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
     },
     slots: [{ name: "_owner", address: "0x0" }],
   },
-  // NOTE: LidoLocator?
   {
     contract: {
       name: "Staking Router",
