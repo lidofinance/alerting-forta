@@ -1,30 +1,4 @@
-import BigNumber from "bignumber.js";
-
-// INTERFACES
-
-export interface StorageSlot {
-  name: string;
-  address?: string;
-  isArray?: boolean;
-}
-
-export interface Contract {
-  name: string;
-  address: string;
-}
-
-export interface ContractStorageMap {
-  contract: Contract;
-  slots: StorageSlot[];
-}
-
-// COMMON CONSTS
-
-// 1 ETH
-export const ETH_DECIMALS = new BigNumber(10).pow(18);
-
-export const NULL_STORAGE =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+import { ContractStorageMap } from "src/common/constants";
 
 // ADDRESSES AND EVENTS
 

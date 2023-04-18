@@ -1,12 +1,16 @@
 import { BlockEvent, Finding, FindingType, FindingSeverity } from "forta-agent";
-
+import { getStorageValue, requireWithTier } from "../../common/utils";
 import {
-  STORAGE_SLOTS,
   ContractStorageMap,
   StorageSlot,
   NULL_STORAGE,
-} from "./constants";
-import { getStorageValue } from "../../common/utils";
+} from "../../common/constants";
+
+import type * as Constants from "./constants";
+const { STORAGE_SLOTS } = requireWithTier<typeof Constants>(
+  module,
+  "./constants"
+);
 
 export const name = "StorageWatcher";
 
