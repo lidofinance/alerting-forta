@@ -12,7 +12,7 @@ import {
 import { ethersProvider, etherscanProvider } from "../../ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
-import LIDO_DAO_ABI from "../../abi/LidoDAO.json";
+import LIDO_DAO_ABI from "../../abi/Lido.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
 import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 

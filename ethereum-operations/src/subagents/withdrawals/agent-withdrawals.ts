@@ -19,13 +19,15 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import BigNumber from "bignumber.js";
-import { ONE_DAY } from "../../common/constants";
+import { ETH_DECIMALS } from "../../common/constants";
 
 // re-fetched from history on startup
+let lastFinalizedRequestId = 0;
 let lastFinalizedBatchTimestamp = 0;
+let firstUnfinalizedRequestAfterLastFinalizedTimestamp = 0;
 
 let lastBigUnfinalizedQueueAlertTimestamp = 0;
-let lastLongUnfinalizedQueueAlertBlockNumber = 0;
+let lastLongUnfinalizedQueueAlertTimestamp = 0;
 
 let isBunkerMode = false;
 let bunkerModeEnabledSinceTimestamp = 0;
@@ -45,6 +47,11 @@ const {
   WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED,
   WITHDRAWAL_QUEUE_WITHDRAWAL_BATCH_FINALIZED,
   WITHDRAWALS_EVENTS_OF_NOTICE,
+  BIG_WITHDRAWAL_REQUEST_THRESHOLD,
+  BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD,
+  BIG_UNFINALIZED_QUEUE_THRESHOLD,
+  LONG_UNFINALIZED_QUEUE_THRESHOLD,
+  LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -56,33 +63,56 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  const withdrawal = new ethers.Contract(
+  const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
     ethersProvider
   );
-  [isBunkerMode] = await withdrawal.functions.isBunkerModeActive({
+  [isBunkerMode] = await withdrawalNFT.functions.isBunkerModeActive({
     blockTag: currentBlock,
   });
   if (isBunkerMode) {
-    const since = await withdrawal.functions.bunkerModeSinceTimestamp({
-      blockTag: currentBlock,
-    });
-    bunkerModeEnabledSinceTimestamp = Number(since);
+    bunkerModeEnabledSinceTimestamp = Number(
+      await withdrawalNFT.functions.bunkerModeSinceTimestamp({
+        blockTag: currentBlock,
+      })
+    );
   }
 
-  const [lastFinalizedRequestId] =
-    await withdrawal.functions.getLastFinalizedRequestId({
-      blockTag: currentBlock,
-    });
+  lastFinalizedRequestId = Number(
+    (
+      await withdrawalNFT.functions.getLastFinalizedRequestId({
+        blockTag: currentBlock,
+      })
+    )[0]
+  );
+  const lastRequestId = Number(
+    (
+      await withdrawalNFT.functions.getLastRequestId({
+        blockTag: currentBlock,
+      })
+    )[0]
+  );
   lastFinalizedBatchTimestamp = Number(
     (
-      await withdrawal.functions.getWithdrawalStatus(
-        [String(lastFinalizedRequestId)],
+      await withdrawalNFT.functions.getWithdrawalStatus(
+        [lastFinalizedRequestId],
         { blockTag: currentBlock }
       )
     ).statuses[0].timestamp
   );
+  const diff = lastRequestId - lastFinalizedRequestId;
+  if (diff > 0) {
+    const firsUnfinalizedRequestAfterLastFinalized = lastFinalizedRequestId + 1;
+    firstUnfinalizedRequestAfterLastFinalizedTimestamp = Number(
+      (
+        await withdrawalNFT.functions.getWithdrawalStatus(
+          [firsUnfinalizedRequestAfterLastFinalized],
+          { blockTag: currentBlock }
+        )
+      ).statuses[0].timestamp
+    );
+  }
 
   return {};
 }
@@ -99,7 +129,7 @@ async function handleUnfinalizedRequestNumber(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
-  const withdrawal = new ethers.Contract(
+  const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
     ethersProvider
@@ -107,18 +137,16 @@ async function handleUnfinalizedRequestNumber(
   const now = blockEvent.block.timestamp;
 
   if (lastBigUnfinalizedQueueAlertTimestamp < lastFinalizedBatchTimestamp) {
-    const [result] = await withdrawal.functions.unfinalizedStETH({
+    const [result] = await withdrawalNFT.functions.unfinalizedStETH({
       blockTag: blockEvent.blockNumber,
     });
-    const unfinalizedStETH = new BigNumber(String(result)).div(
-      new BigNumber(10).pow(18)
-    );
-    if (unfinalizedStETH.gte(100000)) {
+    const unfinalizedStETH = new BigNumber(String(result)).div(ETH_DECIMALS);
+    if (unfinalizedStETH.gte(BIG_UNFINALIZED_QUEUE_THRESHOLD)) {
       // if alert hasn't been sent after last finalized batch
-      // and unfinalized queue is more than 100k StETH
+      // and unfinalized queue is more than `BIG_UNFINALIZED_QUEUE_THRESHOLD` StETH
       findings.push(
         Finding.fromObject({
-          name: "⚠️ Withdrawals: unfinalized queue is more than 100k StETH",
+          name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} StETH`,
           description: `Unfinalized queue is ${unfinalizedStETH.toFixed(
             0
           )} ETH`,
@@ -132,22 +160,28 @@ async function handleUnfinalizedRequestNumber(
   }
 
   if (!isBunkerMode) {
-    if (now - 5 * ONE_DAY > lastFinalizedBatchTimestamp) {
-      if (now - lastLongUnfinalizedQueueAlertBlockNumber > ONE_DAY) {
+    if (
+      now - LONG_UNFINALIZED_QUEUE_THRESHOLD >
+      firstUnfinalizedRequestAfterLastFinalizedTimestamp
+    ) {
+      if (
+        now - lastLongUnfinalizedQueueAlertTimestamp >
+        LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY
+      ) {
         // if we are in turbo mode and unfinalized queue is not finalized for 5 days
         // and alert hasn't been sent for 1 day
         findings.push(
           Finding.fromObject({
             name: "⚠️ Withdrawals: unfinalized queue wait time is too long",
             description: `Unfinalized queue wait time is ${formatDelay(
-              now - lastFinalizedBatchTimestamp
+              now - firstUnfinalizedRequestAfterLastFinalizedTimestamp
             )}`,
             alertId: "WITHDRAWALS-LONG-UNFINALIZED-QUEUE",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
           })
         );
-        lastLongUnfinalizedQueueAlertBlockNumber = now;
+        lastLongUnfinalizedQueueAlertTimestamp = now;
       }
     }
   }
@@ -156,10 +190,12 @@ async function handleUnfinalizedRequestNumber(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  await handleBunkerStatus(txEvent, findings);
-  await handleLastTokenRebase(txEvent);
-  await handleWithdrawalBatchFinalized(txEvent);
-  await handleWithdrawalRequest(txEvent, findings);
+  await Promise.all([
+    handleBunkerStatus(txEvent, findings),
+    handleLastTokenRebase(txEvent),
+    handleWithdrawalBatchFinalized(txEvent),
+    handleWithdrawalRequest(txEvent, findings),
+  ]);
 
   handleEventsOfNotice(txEvent, findings, WITHDRAWALS_EVENTS_OF_NOTICE);
 
@@ -167,17 +203,19 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 async function handleWithdrawalBatchFinalized(txEvent: TransactionEvent) {
-  const [withdrawalEvents] = txEvent.filterLog(
+  const [withdrawalEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWAL_BATCH_FINALIZED,
     WITHDRAWAL_QUEUE_ADDRESS
   );
-  if (!withdrawalEvents) return;
-  lastFinalizedBatchTimestamp = Number(withdrawalEvents.args.timestamp);
+  if (!withdrawalEvent) return;
+  lastFinalizedRequestId = Number(withdrawalEvent.args.to);
+  lastFinalizedBatchTimestamp = Number(withdrawalEvent.args.timestamp);
+  firstUnfinalizedRequestAfterLastFinalizedTimestamp = 0;
 }
 
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
-  const [rebaseEvents] = txEvent.filterLog(LIDO_TOKEN_REBASED, LIDO_ADDRESS);
-  if (!rebaseEvents) return;
+  const [rebaseEvent] = txEvent.filterLog(LIDO_TOKEN_REBASED, LIDO_ADDRESS);
+  if (!rebaseEvent) return;
   lastTokenRebaseTimestamp = txEvent.timestamp;
   amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0);
 }
@@ -190,38 +228,47 @@ async function handleWithdrawalRequest(
     WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED,
     WITHDRAWAL_QUEUE_ADDRESS
   );
-  const amountOfStETH = withdrawalEvents
-    .reduce(
-      (acc, event) => acc.plus(event.args.amountOfStETH),
-      new BigNumber(0)
-    )
-    .div(new BigNumber(10).pow(18));
-  if (amountOfStETH.gte(50000)) {
-    const requestor = withdrawalEvents[0].args.requestor;
-    findings.push(
-      Finding.fromObject({
-        name: "ℹ️ Withdrawals: received withdrawal request greater than 50k stETH in one batch",
-        description: `Requestor: ${requestor}\nAmount: ${amountOfStETH.toFixed(
-          0
-        )} stETH`,
-        alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-      })
-    );
+  if (!withdrawalEvents) return;
+  if (
+    firstUnfinalizedRequestAfterLastFinalizedTimestamp == 0 &&
+    txEvent.timestamp > lastFinalizedBatchTimestamp
+  ) {
+    firstUnfinalizedRequestAfterLastFinalizedTimestamp = txEvent.timestamp;
   }
-  amountOfRequestedStETHSinceLastTokenRebase =
-    amountOfRequestedStETHSinceLastTokenRebase.plus(amountOfStETH);
-  if (amountOfRequestedStETHSinceLastTokenRebase.gte(150000)) {
+  for (const event of withdrawalEvents) {
+    const amount = new BigNumber(String(event.args.amountOfStETH)).div(
+      ETH_DECIMALS
+    );
+    if (amount.gte(BIG_WITHDRAWAL_REQUEST_THRESHOLD)) {
+      findings.push(
+        Finding.fromObject({
+          name: `ℹ️ Withdrawals: received withdrawal request greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH in one batch`,
+          description: `Requestor: ${
+            event.args.requestor
+          }\nAmount: ${amount.toFixed(0)} stETH`,
+          alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
+          severity: FindingSeverity.Medium,
+          type: FindingType.Info,
+        })
+      );
+    }
+    amountOfRequestedStETHSinceLastTokenRebase =
+      amountOfRequestedStETHSinceLastTokenRebase.plus(amount);
+  }
+  if (
+    amountOfRequestedStETHSinceLastTokenRebase.gte(
+      BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD
+    )
+  ) {
     if (lastBigRequestAfterRebaseAlertTimestamp < lastTokenRebaseTimestamp) {
       findings.push(
         Finding.fromObject({
-          name: "⚠️ Withdrawals: received withdrawal request greater than 150k stETH since the last rebase",
+          name: `⚠️ Withdrawals: received withdrawal request greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH since the last rebase`,
           description: `Amount: ${amountOfRequestedStETHSinceLastTokenRebase.toFixed(
             0
           )} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE",
-          severity: FindingSeverity.Medium,
+          severity: FindingSeverity.High,
           type: FindingType.Info,
         })
       );
@@ -240,14 +287,12 @@ async function handleBunkerStatus(
   );
   if (bunkerEnabled) {
     isBunkerMode = true;
-    bunkerModeEnabledSinceTimestamp = Number(
-      bunkerEnabled.args._sinceTimestamp
-    );
+    bunkerModeEnabledSinceTimestamp = bunkerEnabled.args._sinceTimestamp;
     findings.push(
       Finding.fromObject({
         name: "🚨 Withdrawals: BUNKER MODE ON! 🚨",
         description: `Started from ${new Date(
-          bunkerModeEnabledSinceTimestamp
+          String(bunkerModeEnabledSinceTimestamp)
         ).toUTCString()}`,
         alertId: "WITHDRAWALS-BUNKER-ENABLED",
         severity: FindingSeverity.Critical,
@@ -263,14 +308,14 @@ async function handleBunkerStatus(
   if (bunkerDisabled) {
     isBunkerMode = false;
     const delay = formatDelay(
-      txEvent.block.timestamp - bunkerModeEnabledSinceTimestamp
+      txEvent.block.timestamp - Number(bunkerModeEnabledSinceTimestamp)
     );
     findings.push(
       Finding.fromObject({
         name: "✅ Withdrawals: BUNKER MODE OFF! ✅",
         description: `Bunker lasted ${delay}`,
         alertId: "WITHDRAWALS-BUNKER-DISABLED",
-        severity: FindingSeverity.Critical,
+        severity: FindingSeverity.High,
         type: FindingType.Info,
       })
     );

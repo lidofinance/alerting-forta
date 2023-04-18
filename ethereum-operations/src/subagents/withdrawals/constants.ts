@@ -1,9 +1,20 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
+import { ONE_DAY, ONE_HOUR } from "../../common/constants";
 
 export const WITHDRAWAL_QUEUE_ADDRESS =
   "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
 export const LIDO_ADDRESS = "0x1643e812ae58766192cf7d2cf9567df2c37e9b7f";
+
+export const BIG_WITHDRAWAL_REQUEST_THRESHOLD = new BigNumber(50000);
+export const BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD = new BigNumber(
+  150000
+);
+
+export const BIG_UNFINALIZED_QUEUE_THRESHOLD = new BigNumber(100000);
+
+export const LONG_UNFINALIZED_QUEUE_THRESHOLD = 5 * ONE_DAY;
+export const LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY;
 
 export const LIDO_TOKEN_REBASED =
   "event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)";
@@ -32,7 +43,7 @@ export const WITHDRAWALS_EVENTS_OF_NOTICE = [
     alertId: "WITHDRAWALS-PAUSED",
     name: "🚨 Withdrawals: contract was paused",
     description: (args: any) =>
-      `For ${new BigNumber(args.duration).div(360)} hours`,
+      `For ${new BigNumber(args.duration).div(ONE_HOUR)} hours`,
     severity: FindingSeverity.High,
   },
 ];
