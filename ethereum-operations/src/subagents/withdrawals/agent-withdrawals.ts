@@ -24,7 +24,7 @@ import { ETH_DECIMALS } from "../../common/constants";
 // re-fetched from history on startup
 let lastFinalizedRequestId = 0;
 let lastFinalizedBatchTimestamp = 0;
-let firstUnfinalizedRequestAfterLastFinalizedTimestamp = 0;
+let firstUnfinalizedRequestTimestamp = 0;
 
 let lastBigUnfinalizedQueueAlertTimestamp = 0;
 let lastLongUnfinalizedQueueAlertTimestamp = 0;
@@ -103,11 +103,11 @@ export async function initialize(
   );
   const diff = lastRequestId - lastFinalizedRequestId;
   if (diff > 0) {
-    const firsUnfinalizedRequestAfterLastFinalized = lastFinalizedRequestId + 1;
-    firstUnfinalizedRequestAfterLastFinalizedTimestamp = Number(
+    const firsUnfinalizedRequest = lastFinalizedRequestId + 1;
+    firstUnfinalizedRequestTimestamp = Number(
       (
         await withdrawalNFT.functions.getWithdrawalStatus(
-          [firsUnfinalizedRequestAfterLastFinalized],
+          [firsUnfinalizedRequest],
           { blockTag: currentBlock }
         )
       ).statuses[0].timestamp
@@ -146,10 +146,10 @@ async function handleUnfinalizedRequestNumber(
       // and unfinalized queue is more than `BIG_UNFINALIZED_QUEUE_THRESHOLD` StETH
       findings.push(
         Finding.fromObject({
-          name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} StETH`,
+          name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} stETH`,
           description: `Unfinalized queue is ${unfinalizedStETH.toFixed(
             0
-          )} ETH`,
+          )} stETH`,
           alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -162,7 +162,7 @@ async function handleUnfinalizedRequestNumber(
   if (!isBunkerMode) {
     if (
       now - LONG_UNFINALIZED_QUEUE_THRESHOLD >
-      firstUnfinalizedRequestAfterLastFinalizedTimestamp
+      firstUnfinalizedRequestTimestamp
     ) {
       if (
         now - lastLongUnfinalizedQueueAlertTimestamp >
@@ -174,7 +174,7 @@ async function handleUnfinalizedRequestNumber(
           Finding.fromObject({
             name: "⚠️ Withdrawals: unfinalized queue wait time is too long",
             description: `Unfinalized queue wait time is ${formatDelay(
-              now - firstUnfinalizedRequestAfterLastFinalizedTimestamp
+              now - firstUnfinalizedRequestTimestamp
             )}`,
             alertId: "WITHDRAWALS-LONG-UNFINALIZED-QUEUE",
             severity: FindingSeverity.Medium,
@@ -210,7 +210,7 @@ async function handleWithdrawalBatchFinalized(txEvent: TransactionEvent) {
   if (!withdrawalEvent) return;
   lastFinalizedRequestId = Number(withdrawalEvent.args.to);
   lastFinalizedBatchTimestamp = Number(withdrawalEvent.args.timestamp);
-  firstUnfinalizedRequestAfterLastFinalizedTimestamp = 0;
+  firstUnfinalizedRequestTimestamp = 0;
 }
 
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
@@ -230,10 +230,10 @@ async function handleWithdrawalRequest(
   );
   if (!withdrawalEvents) return;
   if (
-    firstUnfinalizedRequestAfterLastFinalizedTimestamp == 0 &&
+    firstUnfinalizedRequestTimestamp == 0 &&
     txEvent.timestamp > lastFinalizedBatchTimestamp
   ) {
-    firstUnfinalizedRequestAfterLastFinalizedTimestamp = txEvent.timestamp;
+    firstUnfinalizedRequestTimestamp = txEvent.timestamp;
   }
   for (const event of withdrawalEvents) {
     const amount = new BigNumber(String(event.args.amountOfStETH)).div(
@@ -247,7 +247,7 @@ async function handleWithdrawalRequest(
             event.args.requestor
           }\nAmount: ${amount.toFixed(0)} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
-          severity: FindingSeverity.Medium,
+          severity: FindingSeverity.Info,
           type: FindingType.Info,
         })
       );

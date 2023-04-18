@@ -44,6 +44,6 @@ export const WITHDRAWALS_EVENTS_OF_NOTICE = [
     name: "🚨 Withdrawals: contract was paused",
     description: (args: any) =>
       `For ${new BigNumber(args.duration).div(ONE_HOUR)} hours`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
 ];
