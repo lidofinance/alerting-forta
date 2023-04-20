@@ -138,7 +138,10 @@ async function handleUnfinalizedRequestNumber(
   const now = blockEvent.block.timestamp;
 
   if (now >= lastFinalizedTimestamp) {
-    if (now - lastBigUnfinalizedQueueAlertTimestamp > BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY) {
+    if (
+      now - lastBigUnfinalizedQueueAlertTimestamp >
+      BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY
+    ) {
       const [result] = await withdrawalNFT.functions.unfinalizedStETH({
         blockTag: blockEvent.blockNumber,
       });

@@ -127,8 +127,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
 export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
   {
     address: ACCOUNTING_ORACLE_ADDRESS,
-    event:
-      "event ProcessingStarted(uint256 indexed refSlot, bytes32 hash)",
+    event: "event ProcessingStarted(uint256 indexed refSlot, bytes32 hash)",
     alertId: "ACCOUNTING-ORACLE-PROCESSING-STARTED",
     name: "ℹ️ Accounting Oracle: Processing Started",
     description: (args: any) =>
