@@ -128,7 +128,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
   {
     address: ACCOUNTING_ORACLE_ADDRESS,
     event:
-      "event ProcessingStarted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)",
+      "event ProcessingStarted(uint256 indexed refSlot, bytes32 hash)",
     alertId: "ACCOUNTING-ORACLE-PROCESSING-STARTED",
     name: "ℹ️ Accounting Oracle: Processing Started",
     description: (args: any) =>
