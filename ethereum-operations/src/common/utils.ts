@@ -6,6 +6,10 @@ export enum RedefineMode {
   Merge = "merge",
 }
 
+export function etherscanAddress(address: string): string {
+  return `https://etherscan.io/address/${address}`;
+}
+
 /**
  * Special wrapper under `require` function that allows to
  * redefine variables from a file with the same name and `.<tier>` suffix.

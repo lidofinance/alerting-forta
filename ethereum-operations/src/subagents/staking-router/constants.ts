@@ -1,4 +1,5 @@
 import { FindingSeverity } from "forta-agent";
+import {etherscanAddress} from "../../common/utils";
 
 export const STAKING_ROUTER_ADDRESS =
   "0xa3dbd317e53d363176359e10948ba0b1c0a4c820";
@@ -10,7 +11,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
       "event WithdrawalCredentialsSet(bytes32 withdrawalCredentials, address setBy)",
     alertId: "STAKING-ROUTER-WITHDRAWAL-CREDENTIALS-SET",
     name: "🚨🚨🚨 Staking Router: withdrawal credentials set! 🚨🚨🚨",
-    description: (args: any) => `New value: ${args.withdrawalCredentials}`,
+    description: (args: any) => `New value: ${args.withdrawalCredentials}\nSet by: ${etherscanAddress(args.setBy)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -46,7 +47,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
       "event StakingModuleExitedValidatorsIncompleteReporting(uint256 indexed stakingModuleId, uint256 unreportedExitedValidatorsCount)",
     alertId: "STAKING-ROUTER-EXITED-INCOMPLETE-REPORTING",
     name: "🚨 Staking Router: exited validators incomplete reporting",
-    description: (args: any) => `Staking module ID: ${args.stakingModuleId}`,
+    description: (args: any) => `Staking module ID: ${args.stakingModuleId}\nUnreported exited validators count: ${args.unreportedExitedValidatorsCount}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -56,7 +57,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     alertId: "STAKING-ROUTER-MODULE-STATUS-SET",
     name: "🚨 Staking Router: staking module status set",
     description: (args: any) =>
-      `ID: ${args.stakingModuleId}\nStatus: ${args.status}`,
+      `ID: ${args.stakingModuleId}\nStatus: ${args.status}\nSet by: ${etherscanAddress(args.setBy)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -66,7 +67,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     alertId: "STAKING-ROUTER-MODULE-ADDED",
     name: "⚠️ Staking Router: new staking module added",
     description: (args: any) =>
-      `ID: ${args.stakingModuleId}\nAddress: ${args.stakingModule}\nStaking module name: ${args.name}`,
+      `ID: ${args.stakingModuleId}\nAddress: ${args.stakingModule}\nStaking module name: ${args.name}\nCreated by: ${etherscanAddress(args.createdBy)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -76,7 +77,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     alertId: "STAKING-ROUTER-MODULE-TARGET-SHARE-SET",
     name: "⚠️ Staking Router: staking module target share set",
     description: (args: any) =>
-      `ID: ${args.stakingModuleId}\nTarget share: ${args.targetShare}`,
+      `ID: ${args.stakingModuleId}\nTarget share: ${args.targetShare}\nSet by: ${etherscanAddress(args.setBy)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -86,7 +87,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     alertId: "STAKING-ROUTER-MODULE-FEES-SET",
     name: "⚠️ Staking Router: staking module fees set",
     description: (args: any) =>
-      `ID: ${args.stakingModuleId}\nStaking module fee: ${args.stakingModuleFee}\nTreasury fee: ${args.treasuryFee}`,
+      `ID: ${args.stakingModuleId}\nStaking module fee: ${args.stakingModuleFee}\nTreasury fee: ${args.treasuryFee}\nSet by: ${etherscanAddress(args.setBy)}`,
     severity: FindingSeverity.High,
   },
 ];
