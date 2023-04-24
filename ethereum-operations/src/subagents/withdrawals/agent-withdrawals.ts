@@ -137,15 +137,17 @@ async function handleUnfinalizedRequestNumber(
   );
   const now = blockEvent.block.timestamp;
 
+  let unfinalizedStETH = new BigNumber(0);
+
   if (now >= lastFinalizedTimestamp) {
+    const [result] = await withdrawalNFT.functions.unfinalizedStETH({
+      blockTag: blockEvent.blockNumber,
+    });
+    unfinalizedStETH = new BigNumber(String(result)).div(ETH_DECIMALS);
     if (
       now - lastBigUnfinalizedQueueAlertTimestamp >
       BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY
     ) {
-      const [result] = await withdrawalNFT.functions.unfinalizedStETH({
-        blockTag: blockEvent.blockNumber,
-      });
-      const unfinalizedStETH = new BigNumber(String(result)).div(ETH_DECIMALS);
       if (unfinalizedStETH.gte(BIG_UNFINALIZED_QUEUE_THRESHOLD)) {
         // if alert hasn't been sent after last finalized batch
         // and unfinalized queue is more than `BIG_UNFINALIZED_QUEUE_THRESHOLD` StETH
@@ -165,7 +167,7 @@ async function handleUnfinalizedRequestNumber(
     }
   }
 
-  if (!isBunkerMode) {
+  if (!isBunkerMode && unfinalizedStETH.gt(0)) {
     if (
       now - LONG_UNFINALIZED_QUEUE_THRESHOLD >
       firstUnfinalizedRequestTimestamp
@@ -216,7 +218,6 @@ async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
   if (!withdrawalEvent) return;
   lastFinalizedRequestId = Number(withdrawalEvent.args.to);
   lastFinalizedTimestamp = Number(withdrawalEvent.args.timestamp);
-  firstUnfinalizedRequestTimestamp = 0;
 }
 
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
@@ -236,8 +237,8 @@ async function handleWithdrawalRequest(
   );
   if (!withdrawalEvents) return;
   if (
-    firstUnfinalizedRequestTimestamp == 0 &&
-    txEvent.timestamp > lastFinalizedTimestamp
+    firstUnfinalizedRequestTimestamp < lastFinalizedTimestamp &&
+    txEvent.timestamp >= lastFinalizedTimestamp
   ) {
     firstUnfinalizedRequestTimestamp = txEvent.timestamp;
   }
