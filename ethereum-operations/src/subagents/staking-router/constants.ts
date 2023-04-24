@@ -44,8 +44,8 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     address: STAKING_ROUTER_ADDRESS,
     event:
       "event StakingModuleExitedValidatorsIncompleteReporting(uint256 indexed stakingModuleId, uint256 unreportedExitedValidatorsCount)",
-    alertId: "STAKING-ROUTER-REWARDS-MINTED-REPORT-FAILED",
-    name: "🚨 Staking Router: rewards minting was failed",
+    alertId: "STAKING-ROUTER-EXITED-INCOMPLETE-REPORTING",
+    name: "🚨 Staking Router: exited validators incomplete reporting",
     description: (args: any) => `Staking module ID: ${args.stakingModuleId}`,
     severity: FindingSeverity.Critical,
   },
