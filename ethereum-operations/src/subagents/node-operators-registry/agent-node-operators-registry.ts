@@ -90,8 +90,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     NODE_OPERATORS_REGISTRY_ADDRESS
   );
 
-  handleStuckStateChanged(stuckEvents, findings);
+  // the order is important
   handleExitedCountChanged(txEvent, stuckEvents, findings);
+  handleStuckStateChanged(stuckEvents, findings);
 
   handleSigningKeysRemoved(txEvent, findings);
   handleStakeLimitSet(txEvent, findings);
@@ -118,8 +119,8 @@ function handleExitedCountChanged(
     if (newExited > NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ NO Registry: Exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `Node operator ${nodeOperatorId} have new ${newExited} exited validators`,
+          name: `⚠️ NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
+          description: `ID: ${nodeOperatorId}\nNew exited: ${newExited}`,
           alertId: "NODE-OPERATORS-BIG-EXIT",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -134,14 +135,11 @@ function handleExitedCountChanged(
       actualStuckCount = stuckEvent
         ? Number(stuckEvent.args.stuckValidatorsCount)
         : lastDigest.stuck;
-      if (
-        !lastDigest.isStuckRefunded &&
-        Number(exitedValidatorsCount) >= actualStuckCount
-      ) {
+      if (lastDigest.stuck > 0 && actualStuckCount == 0) {
         findings.push(
           Finding.fromObject({
-            name: "ℹ️ NO Registry: Exited all stuck keys",
-            description: `Node operator ${nodeOperatorId} exited all stuck keys`,
+            name: "ℹ️ NO Registry: operator exited all stuck keys",
+            description: `ID: ${nodeOperatorId}\nWere stuck: ${lastDigest.stuck}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-EXITED",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
@@ -152,7 +150,6 @@ function handleExitedCountChanged(
     nodeOperatorDigests.set(String(nodeOperatorId), {
       ...lastDigest,
       exited: Number(exitedValidatorsCount),
-      isStuckRefunded: Number(exitedValidatorsCount) >= actualStuckCount,
     });
   }
 }
@@ -173,8 +170,8 @@ function handleStuckStateChanged(
       if (newStuck > NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD) {
         findings.push(
           Finding.fromObject({
-            name: "⚠️ NO Registry: new stuck validators",
-            description: `Node operator ${nodeOperatorId} have new ${stuckValidatorsCount} stuck validators`,
+            name: "⚠️ NO Registry: operator have new stuck keys",
+            description: `ID: ${nodeOperatorId}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: "NODE-OPERATORS-NEW-STUCK-KEYS",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
@@ -190,8 +187,8 @@ function handleStuckStateChanged(
       ) {
         findings.push(
           Finding.fromObject({
-            name: "ℹ️ NO Registry: Refunded all stuck validators",
-            description: `Node operator ${nodeOperatorId} refunded all stuck validators`,
+            name: "ℹ️ NO Registry: operator refunded all stuck keys",
+            description: `ID: ${nodeOperatorId}\nRefunded: ${refundedValidatorsCount}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-REFUNDED",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
