@@ -121,7 +121,7 @@ function handleExitedCountChanged(
           name: `⚠️ NO Registry: Exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
           description: `Node operator ${nodeOperatorId} have new ${newExited} exited validators`,
           alertId: "NODE-OPERATORS-BIG-EXIT",
-          severity: FindingSeverity.Medium,
+          severity: FindingSeverity.Info,
           type: FindingType.Info,
         })
       );
