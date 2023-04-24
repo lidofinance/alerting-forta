@@ -7,7 +7,7 @@ export enum RedefineMode {
 }
 
 export function etherscanAddress(address: string): string {
-  return `https://etherscan.io/address/${address}`;
+  return `[${address}](https://etherscan.io/address/${address})`;
 }
 
 /**
