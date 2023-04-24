@@ -8,7 +8,7 @@ import {
 
 const TEST_TIMEOUT = 60_000; // ms
 
-describe("agent-lido-oracle e2e tests", () => {
+describe("agent-lido-report e2e tests", () => {
   let runBlock: (blockHashOrNumber: string | number) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -22,7 +22,7 @@ describe("agent-lido-oracle e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/lido-oracle/agent-lido-oracle")
+        provideAgentPath("subagents/lido-report/agent-lido-report")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
