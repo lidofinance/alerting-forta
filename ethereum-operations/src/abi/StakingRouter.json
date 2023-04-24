@@ -121,6 +121,22 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "reportedExitedValidatorsCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "depositedValidatorsCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ReportedExitedValidatorsExceedDeposited",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "StakingModuleAddressExists",
     "type": "error"

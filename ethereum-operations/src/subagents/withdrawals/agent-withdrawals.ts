@@ -23,7 +23,7 @@ import { ETH_DECIMALS } from "../../common/constants";
 
 // re-fetched from history on startup
 let lastFinalizedRequestId = 0;
-let lastFinalizedBatchTimestamp = 0;
+let lastFinalizedTimestamp = 0;
 let firstUnfinalizedRequestTimestamp = 0;
 
 let lastBigUnfinalizedQueueAlertTimestamp = 0;
@@ -45,11 +45,12 @@ const {
   WITHDRAWALS_BUNKER_MODE_DISABLED,
   WITHDRAWAL_QUEUE_ADDRESS,
   WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED,
-  WITHDRAWAL_QUEUE_WITHDRAWAL_BATCH_FINALIZED,
+  WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED,
   WITHDRAWALS_EVENTS_OF_NOTICE,
   BIG_WITHDRAWAL_REQUEST_THRESHOLD,
   BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD,
   BIG_UNFINALIZED_QUEUE_THRESHOLD,
+  BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY,
   LONG_UNFINALIZED_QUEUE_THRESHOLD,
   LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY,
 } = requireWithTier<typeof Constants>(
@@ -93,7 +94,7 @@ export async function initialize(
       })
     )[0]
   );
-  lastFinalizedBatchTimestamp = Number(
+  lastFinalizedTimestamp = Number(
     (
       await withdrawalNFT.functions.getWithdrawalStatus(
         [lastFinalizedRequestId],
@@ -136,26 +137,31 @@ async function handleUnfinalizedRequestNumber(
   );
   const now = blockEvent.block.timestamp;
 
-  if (lastBigUnfinalizedQueueAlertTimestamp < lastFinalizedBatchTimestamp) {
-    const [result] = await withdrawalNFT.functions.unfinalizedStETH({
-      blockTag: blockEvent.blockNumber,
-    });
-    const unfinalizedStETH = new BigNumber(String(result)).div(ETH_DECIMALS);
-    if (unfinalizedStETH.gte(BIG_UNFINALIZED_QUEUE_THRESHOLD)) {
-      // if alert hasn't been sent after last finalized batch
-      // and unfinalized queue is more than `BIG_UNFINALIZED_QUEUE_THRESHOLD` StETH
-      findings.push(
-        Finding.fromObject({
-          name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} stETH`,
-          description: `Unfinalized queue is ${unfinalizedStETH.toFixed(
-            0
-          )} stETH`,
-          alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-        })
-      );
-      lastBigUnfinalizedQueueAlertTimestamp = now;
+  if (now >= lastFinalizedTimestamp) {
+    if (
+      now - lastBigUnfinalizedQueueAlertTimestamp >
+      BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY
+    ) {
+      const [result] = await withdrawalNFT.functions.unfinalizedStETH({
+        blockTag: blockEvent.blockNumber,
+      });
+      const unfinalizedStETH = new BigNumber(String(result)).div(ETH_DECIMALS);
+      if (unfinalizedStETH.gte(BIG_UNFINALIZED_QUEUE_THRESHOLD)) {
+        // if alert hasn't been sent after last finalized batch
+        // and unfinalized queue is more than `BIG_UNFINALIZED_QUEUE_THRESHOLD` StETH
+        findings.push(
+          Finding.fromObject({
+            name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} stETH`,
+            description: `Unfinalized queue is ${unfinalizedStETH.toFixed(
+              0
+            )} stETH`,
+            alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
+            severity: FindingSeverity.Medium,
+            type: FindingType.Info,
+          })
+        );
+        lastBigUnfinalizedQueueAlertTimestamp = now;
+      }
     }
   }
 
@@ -193,7 +199,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   await Promise.all([
     handleBunkerStatus(txEvent, findings),
     handleLastTokenRebase(txEvent),
-    handleWithdrawalBatchFinalized(txEvent),
+    handleWithdrawalFinalized(txEvent),
     handleWithdrawalRequest(txEvent, findings),
   ]);
 
@@ -202,14 +208,14 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   return findings;
 }
 
-async function handleWithdrawalBatchFinalized(txEvent: TransactionEvent) {
+async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
   const [withdrawalEvent] = txEvent.filterLog(
-    WITHDRAWAL_QUEUE_WITHDRAWAL_BATCH_FINALIZED,
+    WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED,
     WITHDRAWAL_QUEUE_ADDRESS
   );
   if (!withdrawalEvent) return;
   lastFinalizedRequestId = Number(withdrawalEvent.args.to);
-  lastFinalizedBatchTimestamp = Number(withdrawalEvent.args.timestamp);
+  lastFinalizedTimestamp = Number(withdrawalEvent.args.timestamp);
   firstUnfinalizedRequestTimestamp = 0;
 }
 
@@ -231,7 +237,7 @@ async function handleWithdrawalRequest(
   if (!withdrawalEvents) return;
   if (
     firstUnfinalizedRequestTimestamp == 0 &&
-    txEvent.timestamp > lastFinalizedBatchTimestamp
+    txEvent.timestamp > lastFinalizedTimestamp
   ) {
     firstUnfinalizedRequestTimestamp = txEvent.timestamp;
   }

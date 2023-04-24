@@ -1,16 +1,28 @@
 import { BlockEvent, Finding, FindingType, FindingSeverity } from "forta-agent";
-
 import {
-  STORAGE_SLOTS,
+  getStorageValue,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import {
   ContractStorageMap,
   StorageSlot,
   NULL_STORAGE,
-} from "./constants";
-import { getStorageValue } from "../../common/utils";
+} from "../../common/constants";
+
+import type * as Constants from "./constants";
+const { STORAGE_SLOTS } = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
 
 export const name = "StorageWatcher";
 
-let contractsStorageValues: Map<string, Map<string, string>> = new Map();
+let contractsStorageValues: Map<
+  string,
+  Map<string, string | string[]>
+> = new Map();
 
 export async function initialize(
   currentBlock: number
@@ -39,7 +51,7 @@ async function handleStorageSlots(
       const contract = contractStorageMap.contract;
       let contractInfo =
         contractsStorageValues.get(contract.address) ||
-        new Map<string, string>();
+        new Map<string, string | string[]>();
       await Promise.all(
         contractStorageMap.slots.map(async (slot: StorageSlot) => {
           let value = await getStorageValue(
@@ -57,7 +69,7 @@ async function handleStorageSlots(
           }
           if (checkValues) {
             const prevValue = contractInfo.get(slot.name);
-            if (prevValue && prevValue != value) {
+            if (prevValue && prevValue.toString() != value.toString()) {
               findings.push(
                 Finding.fromObject({
                   name: `🚨 Critical storage slot value changed`,
