@@ -66,7 +66,7 @@ describe("agent-dao-ops e2e tests", () => {
   );
 
   it(
-    "should process block with MEV Allow list: Super low relay count and significant EL Rewards vault overfill",
+    "should process block with MEV Allow list: Super low relay count",
     async () => {
       const findings = await runBlock(15960610);
       expect(findings).toMatchSnapshot();

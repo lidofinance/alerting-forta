@@ -1,15 +1,15 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
 
-import { ethersProvider, etherscanProvider } from "../../ethers";
+import { etherscanProvider, ethersProvider } from "../../ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import LIDO_DAO_ABI from "../../abi/Lido.json";
@@ -18,26 +18,26 @@ import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
 import { ETH_DECIMALS, ONE_MONTH, ONE_WEEK } from "../../common/constants";
 
-import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
+import {
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import type * as Constants from "./constants";
 
 export const name = "DaoOps";
 
-import type * as Constants from "./constants";
 const {
   REPORT_WINDOW,
   REPORT_WINDOW_EXECUTOR_BALANCE,
   REPORT_WINDOW_STAKING_LIMIT_10,
   REPORT_WINDOW_STAKING_LIMIT_30,
-  REPORT_WINDOW_EL_REWARDS_BALANCE,
-  EL_REWARDS_BALANCE_OVERFILL_HIGH,
-  EL_REWARDS_BALANCE_OVERFILL_INFO,
   MEV_RELAY_COUNT_THRESHOLD_HIGH,
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
   LIDO_DAO_ADDRESS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-  LIDO_EL_REWARDS_VAULT_ADDRESS,
   MEV_ALLOWED_LIST_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
   NODE_OPERATORS_REGISTRY_ADDRESS,
@@ -54,7 +54,11 @@ const {
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
-} = requireWithTier<typeof Constants>(module, "./constants");
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
 
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
@@ -63,8 +67,6 @@ let criticalBufferAmountFrom = 0;
 let lastReportedExecutorBalance = 0;
 let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
-let lastReportedElRewardsBalanceInfo = 0;
-let lastReportedElRewardsBalanceHigh = 0;
 let lastReportedMevCountInfo = 0;
 let lastReportedMevCountHigh = 0;
 
@@ -96,7 +98,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBufferedEth(blockEvent, findings),
     handleDepositExecutorBalance(blockEvent, findings),
     handleStakingLimit(blockEvent, findings),
-    handleElRewardsBalance(blockEvent, findings),
     handleMevRelayCount(blockEvent, findings),
     handleEnsNamesExpiration(blockEvent, findings),
   ]);
@@ -222,7 +223,7 @@ async function handleDepositExecutorBalance(
       String(
         await ethersProvider.getBalance(
           LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-          blockEvent.blockHash
+          blockEvent.blockNumber
         )
       )
     );
@@ -294,90 +295,6 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
     lastReportedStakingLimit30 = now;
-  }
-}
-
-async function handleElRewardsBalance(
-  blockEvent: BlockEvent,
-  findings: Finding[]
-) {
-  if (blockEvent.blockNumber % 1 == 0) {
-    const now = blockEvent.block.timestamp;
-    const lidoDao = new ethers.Contract(
-      LIDO_DAO_ADDRESS,
-      LIDO_DAO_ABI,
-      ethersProvider
-    );
-    const totalSupply = new BigNumber(
-      String(
-        await lidoDao.functions.totalSupply({
-          blockTag: blockEvent.block.number,
-        })
-      )
-    );
-
-    const elRewardsLimit =
-      (await lidoDao.functions.getELRewardsWithdrawalLimit({
-        blockTag: blockEvent.block.number,
-      })) / 10000;
-
-    const elBalance = new BigNumber(
-      String(
-        await ethersProvider.getBalance(
-          LIDO_EL_REWARDS_VAULT_ADDRESS,
-          blockEvent.blockHash
-        )
-      )
-    );
-
-    if (
-      lastReportedElRewardsBalanceHigh + REPORT_WINDOW_EL_REWARDS_BALANCE <
-        now &&
-      elBalance.isGreaterThan(
-        totalSupply
-          .times(elRewardsLimit)
-          .times(EL_REWARDS_BALANCE_OVERFILL_HIGH)
-      )
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: "⚠️ Significant EL Rewards vault overfill",
-          description:
-            `The current EL rewards vault balance ` +
-            `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
-            `exceeds the daily re-staking limit by more than ` +
-            `${((EL_REWARDS_BALANCE_OVERFILL_HIGH - 1) * 100).toFixed(0)}%`,
-          alertId: "EL-REWARDS-VAULT-OVERFILL",
-          severity: FindingSeverity.High,
-          type: FindingType.Info,
-        })
-      );
-      lastReportedElRewardsBalanceHigh = now;
-      lastReportedElRewardsBalanceInfo = now;
-    } else if (
-      lastReportedElRewardsBalanceInfo + REPORT_WINDOW_EL_REWARDS_BALANCE <
-        now &&
-      elBalance.isGreaterThan(
-        totalSupply
-          .times(elRewardsLimit)
-          .times(EL_REWARDS_BALANCE_OVERFILL_INFO)
-      )
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: "⚠️ EL Rewards vault overfill",
-          description:
-            `The current EL rewards vault balance ` +
-            `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
-            `exceeds the daily re-staking limit by more than ` +
-            `${((EL_REWARDS_BALANCE_OVERFILL_INFO - 1) * 100).toFixed(0)}%`,
-          alertId: "EL-REWARDS-VAULT-OVERFILL",
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-        })
-      );
-      lastReportedElRewardsBalanceInfo = now;
-    }
   }
 }
 

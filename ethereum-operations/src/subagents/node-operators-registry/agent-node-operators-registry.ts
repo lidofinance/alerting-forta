@@ -15,18 +15,6 @@ import {
 import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import { ethersProvider } from "../../ethers";
-
-export const name = "NodeOperatorsRegistry";
-
-interface NodeOperatorShortDigest {
-  stuck: number;
-  refunded: number;
-  exited: number;
-  isStuckRefunded: boolean;
-}
-
-const nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
-
 const {
   NODE_OPERATOR_REGISTRY_MODULE_ID,
   NODE_OPERATORS_REGISTRY_ADDRESS,
@@ -46,6 +34,18 @@ const {
   RedefineMode.Merge
 );
 
+export const name = "NodeOperatorsRegistry";
+
+interface NodeOperatorShortDigest {
+  stuck: number;
+  refunded: number;
+  exited: number;
+  isStuckRefunded: boolean;
+}
+
+const nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
+let initFindings: Finding[] = [];
+
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
@@ -57,27 +57,48 @@ export async function initialize(
     ethersProvider
   );
 
-  const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
-    NODE_OPERATOR_REGISTRY_MODULE_ID,
-    { blockTag: currentBlock }
-  );
+  try {
+    const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
+      NODE_OPERATOR_REGISTRY_MODULE_ID,
+      { blockTag: currentBlock }
+    );
 
-  operators.forEach((digest: any) =>
-    nodeOperatorDigests.set(String(digest.id), {
-      stuck: Number(digest.summary.stuckValidatorsCount),
-      refunded: Number(digest.summary.refundedValidatorsCount),
-      exited: Number(digest.summary.totalExitedValidators),
-      isStuckRefunded:
-        Number(digest.summary.refundedValidatorsCount) >=
-        Number(digest.summary.stuckValidatorsCount),
-    })
-  );
+    operators.forEach((digest: any) =>
+      nodeOperatorDigests.set(String(digest.id), {
+        stuck: Number(digest.summary.stuckValidatorsCount),
+        refunded: Number(digest.summary.refundedValidatorsCount),
+        exited: Number(digest.summary.totalExitedValidators),
+        isStuckRefunded:
+          Number(digest.summary.refundedValidatorsCount) >=
+          Number(digest.summary.stuckValidatorsCount),
+      })
+    );
+  } catch (e: any) {
+    // cant get node operators digests because is not deployed yet or something else
+    initFindings.push(
+      Finding.fromObject({
+        name: "StakingRouter.getAllNodeOperatorDigests error",
+        description: "Probably StakingRouter is not deployed yet",
+        alertId: "STAKING-ROUTER-NOT-DEPLOYED",
+        severity: FindingSeverity.Info,
+        type: FindingType.Suspicious,
+        metadata: {
+          stack: e.message,
+        },
+      })
+    );
+  }
 
   return {};
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
+
+  if (initFindings.length > 0) {
+    findings.push(...initFindings);
+    initFindings = [];
+  }
 
   handleEventsOfNotice(
     txEvent,

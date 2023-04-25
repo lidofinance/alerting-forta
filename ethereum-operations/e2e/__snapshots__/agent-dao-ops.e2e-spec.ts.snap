@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`agent-dao-ops e2e tests should process block with MEV Allow list: Super low relay count and significant EL Rewards vault overfill 1`] = `
+exports[`agent-dao-ops e2e tests should process block with MEV Allow list: Super low relay count 1`] = `
 Array [
   Finding {
     "addresses": Array [],
@@ -9,17 +9,6 @@ Array [
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 MEV Allow list: Super low relay count",
-    "protocol": "ethereum",
-    "severity": 4,
-    "type": 4,
-  },
-  Finding {
-    "addresses": Array [],
-    "alertId": "EL-REWARDS-VAULT-OVERFILL",
-    "description": "The current EL rewards vault balance of 2832.05 ETH exceeds the daily re-staking limit by more than 200%",
-    "labels": Array [],
-    "metadata": Object {},
-    "name": "⚠️ Significant EL Rewards vault overfill",
     "protocol": "ethereum",
     "severity": 4,
     "type": 4,
