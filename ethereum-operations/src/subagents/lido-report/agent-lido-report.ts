@@ -196,7 +196,7 @@ async function handleWithdrawalsVaultOverfill(
       )
     )
   );
-  if (now - lastELOverfillAlertTimestamp > OVERFILL_ALERT_TRIGGER_EVERY) {
+  if (now - lastWithdrawalsVaultOverfillAlertTimestamp > OVERFILL_ALERT_TRIGGER_EVERY) {
     if (balance.div(tvl).times(100).gt(OVERFILL_THRESHOLD_PERCENT)) {
       findings.push(
         Finding.fromObject({
