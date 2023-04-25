@@ -138,10 +138,10 @@ function handleExitedCountChanged(
       if (lastDigest.stuck > 0 && actualStuckCount == 0) {
         findings.push(
           Finding.fromObject({
-            name: "ℹ️ NO Registry: operator exited all stuck keys",
-            description: `ID: ${nodeOperatorId}\nWere stuck: ${lastDigest.stuck}`,
+            name: "ℹ️ NO Registry: operator exited all stuck keys 🎉",
+            description: `ID: ${nodeOperatorId}\nStuck exited: ${lastDigest.stuck}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-EXITED",
-            severity: FindingSeverity.Medium,
+            severity: FindingSeverity.Info,
             type: FindingType.Info,
           })
         );
@@ -187,10 +187,10 @@ function handleStuckStateChanged(
       ) {
         findings.push(
           Finding.fromObject({
-            name: "ℹ️ NO Registry: operator refunded all stuck keys",
+            name: "ℹ️ NO Registry: operator refunded all stuck keys 🎉",
             description: `ID: ${nodeOperatorId}\nRefunded: ${refundedValidatorsCount}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-REFUNDED",
-            severity: FindingSeverity.Medium,
+            severity: FindingSeverity.Info,
             type: FindingType.Info,
           })
         );
