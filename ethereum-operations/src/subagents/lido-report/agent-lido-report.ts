@@ -470,9 +470,9 @@ async function handleExitedStuckRefundedKeysDigest(
       type: FindingType.Info,
     })
   );
-  lastAllStuck += newExited;
-  lastAllRefunded += newStuck;
-  lastAllExited += newRefunded;
+  lastAllStuck = allStuck;
+  lastAllRefunded = allRefunded;
+  lastAllExited = allExited;
 }
 
 function handleWithdrawalsFinalizationDigest(
