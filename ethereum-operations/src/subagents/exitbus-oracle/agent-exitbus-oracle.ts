@@ -11,8 +11,8 @@ import { ethersProvider } from "../../ethers";
 
 import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
 
-import { formatDelay } from "./utils";
 import {
+  formatDelay,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
