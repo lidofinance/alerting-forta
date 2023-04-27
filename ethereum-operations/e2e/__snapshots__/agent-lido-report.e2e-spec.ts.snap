@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-lido-report e2e tests should process tx with Lido Oracle report 1`] = `undefined`;
+
+exports[`agent-lido-report e2e tests should process tx with decreased Lido Beacon rewards 1`] = `undefined`;

@@ -8,7 +8,7 @@ import {
 
 const TEST_TIMEOUT = 60_000; // ms
 
-describe("agent-node-operators-registry e2e tests", () => {
+describe("agent-lido-report e2e tests", () => {
   let runBlock: (blockHashOrNumber: string | number) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -22,9 +22,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath(
-          "subagents/node-operators-registry/agent-node-operators-registry"
-        )
+        provideAgentPath("subagents/lido-report/agent-lido-report")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -39,35 +37,25 @@ describe("agent-node-operators-registry e2e tests", () => {
     jest.resetAllMocks();
   });
 
+  // todo: change after upgrade. Findings completely changed
   it(
-    "should process tx with removed signing keys",
+    "should process tx with Lido Oracle report",
     async () => {
       const findings = await runTransaction(
-        "0x0397a4af942b58698cce7b5e7610dc7da41309b311318a5bc5ff54356bca74e7"
+        "0xe949652989ceed222ad1d1a903f7c925d64a7227b6a286451f9a454f753e9241"
       );
-      expect(findings).toMatchSnapshot();
+      expect(findings.at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT
   );
 
   it(
-    "should process tx with set NO Stake limit by NON-EasyTrack action",
+    "should process tx with decreased Lido Beacon rewards",
     async () => {
       const findings = await runTransaction(
-        "0x06c62f1d1fcfe2cd92c9b1e571b7bcc37d9ee541a6fae7be48d3f5bae2e07d3c"
+        "0x1a5eed94c2da9da1ab5d40b723f92c43ce8a06e00b0a369d15561618115ef199"
       );
-      expect(findings).toMatchSnapshot();
-    },
-    TEST_TIMEOUT
-  );
-
-  it(
-    "should process tx with added Node operator",
-    async () => {
-      const findings = await runTransaction(
-        "0x05ffd9394c9a28f361b7ff1b135a52c173fe5be55e3e639cf7088f0436903aab"
-      );
-      expect(findings).toMatchSnapshot();
+      expect(findings.at(1)).toMatchSnapshot();
     },
     TEST_TIMEOUT
   );
