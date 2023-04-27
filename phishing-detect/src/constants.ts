@@ -183,6 +183,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x638a98bbb92a7582d07c52ff407d49664dc8b3ee", // V1.4 ParaSpace PoolProxy
   "0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2", // MCD_JOIN_WSTETH_A MakerDAO
   "0xa17581a9e3356d9a858b789d68b4d866e593ae94", // Compound WETH (cWETHv3)
+  "0x97de57ec338ab5d51557da3434828c5dbfada371", // eUSD
+  "0x82d24dd5041a3eb942cca68b319f1fda9eb0c604", // Asymetrix Protocol
+  "0x4d9f9d15101eec665f77210cb999639f760f831e", // Curve.fi Factory Plain Pool: stETH/frxETH (st-frxETH-f)
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
