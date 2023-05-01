@@ -27,6 +27,7 @@ import * as agentWithdrawals from "./subagents/withdrawals/agent-withdrawals";
 import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-checker";
 import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
 import * as agentStakingRouter from "./subagents/staking-router/agent-staking-router";
+import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
 
 import VERSION from "./version";
 import { RUN_TIER } from "./common/constants";
@@ -56,6 +57,7 @@ const subAgents: SubAgent[] = [
   agentOracleDaemonConfig,
   agentStakingRouter,
   agentWithdrawals,
+  agentGateSeal,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
