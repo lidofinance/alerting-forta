@@ -28,9 +28,9 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5", "P2P Validator"],
   ["0x946d3b081ed19173dc83cd974fc69e1e760b7d78", "Stakefish"],
   ["0xec4bfbaf681eb505b94e4a7849877dc6c600ca3a", "Rated"],
-  ["0x61c91ECd902EB56e314bB2D5c5C07785444Ea1c8", "bloXroute"],
+  ["0x61c91ecd902eb56e314bb2d5c5c07785444ea1c8", "bloXroute"],
   ["0x1ca0fec59b86f549e1f1184d97cb47794c8af58d", "Instadapp"],
-  ["0xA7410857ABbf75043d61ea54e07D57A6EB6EF186", "Kyber Network"],
+  ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
 ]);
 
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
