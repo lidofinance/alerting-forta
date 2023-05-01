@@ -10,6 +10,7 @@ import {
 import { ethersProvider } from "../../ethers";
 
 import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
+import LIDO_ABI from "../../abi/Lido.json";
 
 import { formatDelay } from "./utils";
 import {
@@ -36,6 +37,8 @@ let lastTokenRebaseTimestamp = 0;
 let amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0);
 let lastBigRequestAfterRebaseAlertTimestamp = 0;
 
+let lastQueueOnParStakeLimitAlertTimestamp = 0;
+
 export const name = "Withdrawals";
 
 const {
@@ -53,6 +56,8 @@ const {
   BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY,
   LONG_UNFINALIZED_QUEUE_THRESHOLD,
   LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY,
+  QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD,
+  QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -121,9 +126,66 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await handleUnfinalizedRequestNumber(blockEvent, findings);
+  await Promise.all([
+    handleQueueOnParWithStakeLimit(blockEvent, findings),
+    handleUnfinalizedRequestNumber(blockEvent, findings),
+  ]);
 
   return findings;
+}
+
+async function handleQueueOnParWithStakeLimit(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  if (
+    now - lastQueueOnParStakeLimitAlertTimestamp <=
+    QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY
+  )
+    return;
+  const lidoContract = new ethers.Contract(
+    LIDO_ADDRESS,
+    LIDO_ABI,
+    ethersProvider
+  );
+  const withdrawalNFT = new ethers.Contract(
+    WITHDRAWAL_QUEUE_ADDRESS,
+    WITHDRAWAL_QUEUE_ABI,
+    ethersProvider
+  );
+  const stakeLimitFullInfo =
+    await lidoContract.functions.getStakeLimitFullInfo({
+      blockTag: blockEvent.blockNumber,
+    });
+  const [unfinalizedStETH] = await withdrawalNFT.functions.unfinalizedStETH({
+    blockTag: blockEvent.blockNumber,
+  });
+  if (stakeLimitFullInfo.isStakingPaused || unfinalizedStETH == 0) return;
+  const drainedLimit = new BigNumber(
+    String(stakeLimitFullInfo.maxStakeLimit)
+  ).minus(new BigNumber(String(stakeLimitFullInfo.currentStakeLimit)));
+  const absDiff = drainedLimit
+    .minus(new BigNumber(String(unfinalizedStETH)))
+    .abs();
+  if (absDiff.lte(QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD)) {
+    findings.push(
+      Finding.fromObject({
+        name: `⚠️ Withdrawals: unfinalized queue is on par with stake limit`,
+        description: `Unfinalized queue: ${new BigNumber(
+          String(unfinalizedStETH)
+        )
+          .div(ETH_DECIMALS)
+          .toFixed(3)} stETH\nDrained stake limit: ${drainedLimit
+          .div(ETH_DECIMALS)
+          .toFixed(3)} ETH\nAbsolute diff: ${absDiff.div(ETH_DECIMALS).toFixed(3)}`,
+        alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+      })
+    );
+    lastQueueOnParStakeLimitAlertTimestamp = now;
+  }
 }
 
 async function handleUnfinalizedRequestNumber(
@@ -155,7 +217,7 @@ async function handleUnfinalizedRequestNumber(
           Finding.fromObject({
             name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} stETH`,
             description: `Unfinalized queue is ${unfinalizedStETH.toFixed(
-              0
+              3
             )} stETH`,
             alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
             severity: FindingSeverity.Medium,
@@ -257,7 +319,7 @@ async function handleWithdrawalRequest(
         Finding.fromObject({
           name: `ℹ️ Withdrawals: received withdrawal request in one batch greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH`,
           description: `Requestor: ${requestor}\nAmount: ${amounts.toFixed(
-            0
+            3
           )} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
           severity: FindingSeverity.Info,
@@ -278,7 +340,7 @@ async function handleWithdrawalRequest(
         Finding.fromObject({
           name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH`,
           description: `Amount: ${amountOfRequestedStETHSinceLastTokenRebase.toFixed(
-            0
+            3
           )} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE",
           severity: FindingSeverity.High,

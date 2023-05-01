@@ -17,6 +17,9 @@ export const BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY;
 export const LONG_UNFINALIZED_QUEUE_THRESHOLD = 5 * ONE_DAY;
 export const LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY;
 
+export const QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD = new BigNumber(1);
+export const QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY = ONE_DAY;
+
 export const LIDO_TOKEN_REBASED =
   "event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)";
 
