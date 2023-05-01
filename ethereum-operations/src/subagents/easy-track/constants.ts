@@ -95,7 +95,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "REWARD-PROGRAMS-REGISTRY-ROLE-GRANTED",
-    name: "🚨 EasyTrack: Role was granted on RewardProgramsRegistry",
+    name: "🚨 Reward Programs: Role was granted on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was granted by ${args.account} on RewardProgramsRegistry by ${args.sender}`,
     severity: FindingSeverity.Critical,
@@ -105,7 +105,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     event:
       "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
     alertId: "REWARD-PROGRAMS-REGISTRY-ROLE-REVOKED",
-    name: "🚨 EasyTrack: Role was revoked on RewardProgramsRegistry",
+    name: "🚨 Reward Programs: Role was revoked on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was revoked from ${args.account} on RewardProgramsRegistry by ${args.sender}`,
     severity: FindingSeverity.High,
