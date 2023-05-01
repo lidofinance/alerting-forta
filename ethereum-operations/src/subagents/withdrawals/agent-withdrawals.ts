@@ -154,10 +154,11 @@ async function handleQueueOnParWithStakeLimit(
     WITHDRAWAL_QUEUE_ABI,
     ethersProvider
   );
-  const stakeLimitFullInfo =
-    await lidoContract.functions.getStakeLimitFullInfo({
+  const stakeLimitFullInfo = await lidoContract.functions.getStakeLimitFullInfo(
+    {
       blockTag: blockEvent.blockNumber,
-    });
+    }
+  );
   const [unfinalizedStETH] = await withdrawalNFT.functions.unfinalizedStETH({
     blockTag: blockEvent.blockNumber,
   });
@@ -178,7 +179,9 @@ async function handleQueueOnParWithStakeLimit(
           .div(ETH_DECIMALS)
           .toFixed(3)} stETH\nDrained stake limit: ${drainedLimit
           .div(ETH_DECIMALS)
-          .toFixed(3)} ETH\nAbsolute diff: ${absDiff.div(ETH_DECIMALS).toFixed(3)}`,
+          .toFixed(3)} ETH\nAbsolute diff: ${absDiff
+          .div(ETH_DECIMALS)
+          .toFixed(3)}`,
         alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
