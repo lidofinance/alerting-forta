@@ -186,6 +186,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x97de57ec338ab5d51557da3434828c5dbfada371", // eUSD
   "0x82d24dd5041a3eb942cca68b319f1fda9eb0c604", // Asymetrix Protocol
   "0x4d9f9d15101eec665f77210cb999639f760f831e", // Curve.fi Factory Plain Pool: stETH/frxETH (st-frxETH-f)
+  "0x5fe4b38520e856921978715c8579d2d7a4d2274f", // stETH ETHoria Vault (stETHev)
+  "0x02c6d994e13f71dc6d9b367e002a04f78d05a9ad", // eSLSD Staking pool
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
