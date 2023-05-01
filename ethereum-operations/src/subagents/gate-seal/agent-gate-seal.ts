@@ -169,7 +169,7 @@ async function handleExpiryGateSeal(
             String(expiryTimestamp)
           )}`,
           alertId: "GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED",
-          severity: FindingSeverity.Critical,
+          severity: FindingSeverity.High,
           type: FindingType.Degraded,
         })
       );
