@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { ONE_HOUR } from "../../common/constants";
+import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 export const WITHDRAWAL_QUEUE_ADDRESS =
   "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
@@ -13,5 +13,7 @@ export const BIG_UNFINALIZED_QUEUE_THRESHOLD = new BigNumber(5);
 export const LONG_UNFINALIZED_QUEUE_THRESHOLD = ONE_HOUR;
 export const LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_HOUR;
 
-export const QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD = new BigNumber(10);
+export const QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD = new BigNumber(
+  10
+).times(ETH_DECIMALS);
 export const QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY = ONE_HOUR;
