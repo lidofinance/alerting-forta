@@ -11,7 +11,8 @@ const TEST_TIMEOUT = 60_000; // ms
 describe("agent-proxy-watcher e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
-    initBlock?: number
+    initBlock?: number,
+    skipInit?: boolean
   ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -43,9 +44,13 @@ describe("agent-proxy-watcher e2e tests", () => {
   it(
     "should process block with changed proxy implementation",
     async () => {
-      const findings = await runBlock(15018882, 14524801);
-      findings.sort((a, b) => a.description.length - b.description.length);
+      let findings = await runBlock(15018882, 14524801);
+      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
+
+      // no subsequent findings expected
+      findings = await runBlock(15018883, undefined, true);
+      expect(findings.length).toBe(0);
     },
     TEST_TIMEOUT
   );
