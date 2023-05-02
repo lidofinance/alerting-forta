@@ -139,7 +139,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
-  if (txEvent.to === ST_MATIC_TOKEN_ADDRESS) {
+  if (ST_MATIC_TOKEN_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
       ST_MATIC_REQUEST_WITHDRAWAL_EVENT,
       ST_MATIC_TOKEN_ADDRESS

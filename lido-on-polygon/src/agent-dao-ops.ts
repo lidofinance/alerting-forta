@@ -419,7 +419,7 @@ export async function handleRewardDistributionEvent(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (txEvent.to !== ST_MATIC_TOKEN_ADDRESS) {
+  if (!(ST_MATIC_TOKEN_ADDRESS in txEvent.addresses)) {
     return;
   }
 
@@ -496,7 +496,7 @@ export function handleProxyAdminEvents(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (txEvent.to == PROXY_ADMIN_ADDRESS) {
+  if (PROXY_ADMIN_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
       PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT,
       PROXY_ADMIN_ADDRESS
