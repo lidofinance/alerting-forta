@@ -176,7 +176,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   if (txEvent.to === EXITBUS_HASH_CONSENSUS_ADDRESS) {
     handleReportReceived(txEvent, findings);
-    handleReportSubmitted(txEvent, findings);
+    await handleReportSubmitted(txEvent, findings);
   }
   handleEventsOfNotice(
     txEvent,
@@ -243,7 +243,10 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   });
 }
 
-function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
+async function handleReportSubmitted(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
   const [submitted] = txEvent.filterLog(
     EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
     EXITBUS_ORACLE_ADDRESS
@@ -259,6 +262,16 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
     })
   );
   const block = txEvent.blockNumber;
+  const hashConsensus = new ethers.Contract(
+    EXITBUS_HASH_CONSENSUS_ADDRESS,
+    HASH_CONSENSUS_ABI,
+    ethersProvider
+  );
+  const fastLaneMembers = (
+    await hashConsensus.functions.getFastLaneMembers({
+      blockTag: txEvent.blockNumber,
+    })
+  ).addresses;
   membersLastReport.forEach((report, member) => {
     const reportDist = block - report.blockNumber;
     const reportDistDays = Math.floor(
@@ -267,7 +280,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
     if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM) {
       findings.push(
         Finding.fromObject({
-          name: "⚠️ Super sloppy ExitBus Oracle Member",
+          name: "⚠️ ExitBus Oracle: super sloppy member",
           description:
             `Member ${member} ` +
             `(${getMemberName(
@@ -281,22 +294,25 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
           type: FindingType.Suspicious,
         })
       );
-    } else if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
-      findings.push(
-        Finding.fromObject({
-          name: "🤔 Sloppy ExitBus Oracle Member",
-          description:
-            `Member ${member} ` +
-            `(${getMemberName(
-              EXITBUS_ORACLE_MEMBERS,
-              member.toLocaleLowerCase()
-            )}) ` +
-            `has not reported before the submit for more than ${reportDistDays} days`,
-          alertId: "SLOPPY-EXITBUS-ORACLE-MEMBER",
-          severity: FindingSeverity.Info,
-          type: FindingType.Suspicious,
-        })
-      );
+    }
+    if (fastLaneMembers.includes(member)) {
+      if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
+        findings.push(
+          Finding.fromObject({
+            name: "🤔 ExitBus Oracle: sloppy member in fast lane",
+            description:
+              `Member ${member} ` +
+              `(${getMemberName(
+                EXITBUS_ORACLE_MEMBERS,
+                member.toLocaleLowerCase()
+              )}) ` +
+              `in fast lane and has not reported before the submit for more than ${reportDistDays} days`,
+            alertId: "SLOPPY-EXITBUS-ORACLE-FASTLANE-MEMBER",
+            severity: FindingSeverity.Info,
+            type: FindingType.Suspicious,
+          })
+        );
+      }
     }
   });
 }
