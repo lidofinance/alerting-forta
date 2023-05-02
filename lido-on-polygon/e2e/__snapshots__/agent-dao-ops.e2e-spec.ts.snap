@@ -4,7 +4,7 @@ exports[`agent-dao-ops e2e tests should process block with low deposit executor 
 Finding {
   "addresses": [],
   "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
-  "description": "Balance of deposit executor (0xa22d223e732a5dcf4ff4529aa9a135293b7258fe) is 0.1339 ETH. This is extremely low!",
+  "description": "Balance of deposit executor (0xa22d223e732a5dcf4ff4529aa9a135293b7258fe) is 0.4926 ETH. This is extremely low!",
   "labels": [],
   "metadata": {},
   "name": "⚠️ Low deposit executor balance (Lido on Polygon)",
