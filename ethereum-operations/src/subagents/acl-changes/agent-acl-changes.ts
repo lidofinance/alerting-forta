@@ -7,10 +7,13 @@ import {
   TransactionEvent,
 } from "forta-agent";
 
+import _ from "lodash";
+import { BlockTag } from "@ethersproject/providers";
+
 import { ethersProvider } from "../../ethers";
 
 import { isContract } from "./utils";
-import { requireWithTier } from "../../common/utils";
+import { RedefineMode, requireWithTier } from "../../common/utils";
 
 interface IPermission {
   app: string;
@@ -25,6 +28,8 @@ export const name = "ACL Monitor";
 
 import type * as Constants from "./constants";
 const {
+  ACLEnumerableABI,
+  ACL_ENUMERABLE_CONTRACTS,
   LIDO_ARAGON_ACL_ADDRESS,
   LIDO_ROLES,
   SET_PERMISSION_EVENT,
@@ -36,7 +41,14 @@ const {
   OWNABLE_CONTRACTS,
   NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
-} = requireWithTier<typeof Constants>(module, "./constants");
+  NEW_ROLE_MEMBERS_REPORT_INTERVAL,
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
+
+export const roleMembersReports = new Map<string, number>();
 
 export async function initialize(
   currentBlock: number
@@ -242,6 +254,75 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
   );
 
   await Promise.all(promises);
+}
+
+async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
+  const promises = Array.from(ACL_ENUMERABLE_CONTRACTS.keys()).map(
+    async (address: string) => {
+      const lastReportedAt = roleMembersReports.get(address) || 0;
+      const now = blockEvent.block.timestamp;
+      if (now - lastReportedAt < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
+        return;
+      }
+
+      const data = ACL_ENUMERABLE_CONTRACTS.get(address);
+      if (!data) return;
+
+      await Promise.all(
+        Array.from(data.roles.entries()).map(async (entry) => {
+          const [role, members] = entry;
+          const curMembers = await getRoleMembers(
+            address,
+            role.hash,
+            blockEvent.blockNumber
+          );
+          if (_.isEqual(curMembers, members)) return;
+
+          findings.push(
+            Finding.fromObject({
+              name: `🚨 ACL: Role members changed`,
+              description: `Role ${role.name} members of ${
+                data.name
+              } changed to [${curMembers.join(", ")}]`,
+              alertId: "ACL-ROLE-MEMBERS-CHANGED",
+              severity: FindingSeverity.Critical,
+              type: FindingType.Info,
+            })
+          );
+
+          roleMembersReports.set(address, now);
+        })
+      );
+    }
+  );
+
+  await Promise.all(promises);
+}
+
+export async function getRoleMembers(
+  address: string,
+  hash: string,
+  currentBlock: BlockTag
+): Promise<Array<string>> {
+  const contract = new ethers.Contract(
+    address,
+    ACLEnumerableABI,
+    ethersProvider
+  );
+
+  const count = await contract.functions.getRoleMemberCount(hash, {
+    blockTag: currentBlock,
+  });
+  if (Number(count) === 0) return [];
+
+  const members = [];
+  for (let i = 0; i < Number(count); i++) {
+    const member = await contract.functions.getRoleMember(hash, i, {
+      blockTag: currentBlock,
+    });
+    members.push(String(member).toLowerCase());
+  }
+  return members;
 }
 
 // required for DI to retrieve handlers in the case of direct agent use

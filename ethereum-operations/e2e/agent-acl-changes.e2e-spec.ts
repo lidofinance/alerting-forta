@@ -6,6 +6,9 @@ import {
   provideRunTransaction,
 } from "./utils";
 
+import { getRoleMembers } from "../src/subagents/acl-changes/agent-acl-changes";
+import { roleByName } from "../src/subagents/acl-changes/utils";
+
 const TEST_TIMEOUT = 60_000; // ms
 
 describe("agent-acl-changes e2e tests", () => {
@@ -58,4 +61,26 @@ describe("agent-acl-changes e2e tests", () => {
     },
     TEST_TIMEOUT
   );
+
+  it("should get role's members of a contract", async () => {
+    const admins = await getRoleMembers(
+      "0xbf05A929c3D7885a6aeAd833a992dA6E5ac23b09", // OracleDaemonConfig
+      roleByName("DEFAULT_ADMIN_ROLE").hash,
+      "latest"
+    );
+
+    expect(admins).toEqual([
+      "0x3e40d73eb977dc6a537af587d48316fee66e9c8c", // Aragon Agent
+    ]);
+
+    const members = await getRoleMembers(
+      "0xD15a672319Cf0352560eE76d9e89eAB0889046D3", // Burner
+      roleByName("REQUEST_BURN_SHARES_ROLE").hash,
+      "latest"
+    );
+
+    expect(
+      members.includes("0xae7ab96520de3a18e5e111b5eaab095312d7fe84") // Lido
+    ).toBeTruthy();
+  });
 });

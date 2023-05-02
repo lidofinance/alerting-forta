@@ -1,5 +1,13 @@
+import { roleByName, INamedRole } from "./utils";
+
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
+export const NEW_ROLE_MEMBERS_REPORT_INTERVAL = 60 * 60; // 1h
+
+export const ACLEnumerableABI = [
+  "function getRoleMember(bytes32, uint256) view returns (address)",
+  "function getRoleMemberCount(bytes32) view returns (uint256)",
+];
 
 export const LIDO_ARAGON_ACL_ADDRESS =
   "0x9895f0f17cc1d1891b6f18ee0b483b6f221b37bb";
@@ -26,9 +34,9 @@ export const LIDO_APPS = new Map([
   ["0x0d97e876ad14db2b183cfeeb8aa1a5c788eb1831", "NO registry Repo"],
   ["0x4ee3118e3858e8d7164a634825bfe0f73d99c792", "Voting Repo"],
   ["0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977", "EVMScriptExecutor"],
-  ["0x710b3303fb508a84f10793c1106e32be873c24cd", "Deposit Security module"],
+  ["0xC77F8768774E1c9244BEed705C4354f2113CFc09", "Deposit Security module"],
   ["0x55032650b14df07b85bf18a3a3ec8e0af2e028d5", "Node Operators registry"],
-  ["0x442af784a788a5bd6f42a01ebe9f287a871243fb", "Oracle"],
+  ["0x442af784a788a5bd6f42a01ebe9f287a871243fb", "Legacy Oracle"],
   ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH token"],
   ["0xa9b2f5ce3aae7374a62313473a74c98baa7fa70e", "LDO purchase executor"],
   ["0xb280e33812c0b09353180e92e27b8ad399b07f26", "SelfOwnedStETHBurner"],
@@ -224,7 +232,7 @@ export const LIDO_ROLES = new Map([
   ],
 ]);
 
-interface IOwnable {
+export interface IOwnable {
   name: string;
   ownershipMethod: string;
 }
@@ -232,7 +240,7 @@ interface IOwnable {
 // List of contracts to monitor for owner
 export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
   [
-    "0x710B3303fB508a84F10793c1106e32bE873C24cd",
+    "0xC77F8768774E1c9244BEed705C4354f2113CFc09",
     {
       name: "Deposit Security module",
       ownershipMethod: "getOwner",
@@ -299,6 +307,197 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     {
       name: "Easy Track EVMScriptExecutor",
       ownershipMethod: "owner",
+    },
+  ],
+  [
+    "0xC1d0b3DE6792Bf6b4b37EccdcC24e45978Cfd2Eb",
+    {
+      name: "Lido Locator",
+      ownershipMethod: "proxy__getAdmin",
+    },
+  ],
+  [
+    "0xFdDf38947aFB03C621C71b06C9C70bce73f12999",
+    {
+      name: "Staking Router",
+      ownershipMethod: "proxy__getAdmin",
+    },
+  ],
+  [
+    "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
+    {
+      name: "Withdrawal Queue",
+      ownershipMethod: "proxy__getAdmin",
+    },
+  ],
+  [
+    "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f",
+    {
+      name: "Withdrawal Vault",
+      ownershipMethod: "proxy_getAdmin",
+    },
+  ],
+  [
+    "0x852deD011285fe67063a08005c71a85690503Cee",
+    {
+      name: "Accounting Oracle",
+      ownershipMethod: "proxy__getAdmin",
+    },
+  ],
+  [
+    "0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e",
+    {
+      name: "Validator Exit Bus Oracle",
+      ownershipMethod: "proxy__getAdmin",
+    },
+  ],
+]);
+
+export interface IHasRoles {
+  name: string;
+  roles: Map<INamedRole, string[]>;
+}
+
+// NB! lower cased
+export const ROLES_OWNERS = {
+  agent: "0x3e40d73eb977dc6a537af587d48316fee66e9c8c",
+  dsm: "0xc77f8768774e1c9244beed705c4354f2113cfc09",
+  nor: "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5",
+  accountingOracle: "0x852ded011285fe67063a08005c71a85690503cee",
+  lido: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+  gateSeal: "0x1ad5cb2955940f998081c1ef5f5f00875431aa90",
+};
+
+export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
+  [
+    "0xbf05A929c3D7885a6aeAd833a992dA6E5ac23b09",
+    {
+      name: "OracleDaemonConfig",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("CONFIG_MANAGER_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0xD624B08C83bAECF0807Dd2c6880C3154a5F0B288",
+    {
+      name: "Accounting HashConsensus",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), []],
+        [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
+        [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
+        [roleByName("MANAGE_FRAME_CONFIG_ROLE"), []],
+        [roleByName("DISABLE_CONSENSUS_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0x7FaDB6358950c5fAA66Cb5EB8eE5147De3df355a",
+    {
+      name: "Validators Exit Bus HashConsensus",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), []],
+        [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
+        [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
+        [roleByName("MANAGE_FRAME_CONFIG_ROLE"), []],
+        [roleByName("DISABLE_CONSENSUS_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0x852deD011285fe67063a08005c71a85690503Cee",
+    {
+      name: "Accounting Oracle",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("MANAGE_CONSENSUS_CONTRACT_ROLE"), []],
+        [roleByName("MANAGE_CONSENSUS_VERSION_ROLE"), []],
+        [roleByName("SUBMIT_DATA_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e",
+    {
+      name: "Validators Exit Bus Oracle",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("SUBMIT_DATA_ROLE"), []],
+        [roleByName("PAUSE_ROLE"), [ROLES_OWNERS.gateSeal]],
+        [roleByName("RESUME_ROLE"), []],
+        [roleByName("MANAGE_CONSENSUS_CONTRACT_ROLE"), []],
+        [roleByName("MANAGE_CONSENSUS_VERSION_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0xD15a672319Cf0352560eE76d9e89eAB0889046D3",
+    {
+      name: "Burner",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("REQUEST_BURN_MY_STETH_ROLE"), []],
+        [roleByName("RECOVER_ASSETS_ROLE"), []],
+        [
+          roleByName("REQUEST_BURN_SHARES_ROLE"),
+          [ROLES_OWNERS.lido, ROLES_OWNERS.nor],
+        ],
+      ]),
+    },
+  ],
+  [
+    "0x9305c1Dbfe22c12c66339184C0025d7006f0f1cC",
+    {
+      name: "Oracle Report Sanity Checker",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("ALL_LIMITS_MANAGER_ROLE"), []],
+        [roleByName("CHURN_VALIDATORS_PER_DAY_LIMIT_MANGER_ROLE"), []],
+        [roleByName("ONE_OFF_CL_BALANCE_DECREASE_LIMIT_MANAGER_ROLE"), []],
+        [roleByName("ANNUAL_BALANCE_INCREASE_LIMIT_MANAGER_ROLE"), []],
+        [roleByName("SHARE_RATE_DEVIATION_LIMIT_MANAGER_ROLE"), []],
+        [roleByName("MAX_VALIDATOR_EXIT_REQUESTS_PER_REPORT_ROLE"), []],
+        [roleByName("MAX_ACCOUNTING_EXTRA_DATA_LIST_ITEMS_COUNT_ROLE"), []],
+        [roleByName("MAX_NODE_OPERATORS_PER_EXTRA_DATA_ITEM_COUNT_ROLE"), []],
+        [roleByName("REQUEST_TIMESTAMP_MARGIN_MANAGER_ROLE"), []],
+        [roleByName("MAX_POSITIVE_TOKEN_REBASE_MANAGER_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
+    {
+      name: "Withdrawal Queue",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("PAUSE_ROLE"), [ROLES_OWNERS.gateSeal]],
+        [roleByName("RESUME_ROLE"), []],
+        [roleByName("FINALIZE_ROLE"), [ROLES_OWNERS.lido]],
+        [roleByName("ORACLE_ROLE"), [ROLES_OWNERS.accountingOracle]],
+        [roleByName("MANAGE_TOKEN_URI_ROLE"), []],
+      ]),
+    },
+  ],
+  [
+    "0xFdDf38947aFB03C621C71b06C9C70bce73f12999",
+    {
+      name: "Staking Router",
+      roles: new Map<INamedRole, string[]>([
+        [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
+        [roleByName("MANAGE_WITHDRAWAL_CREDENTIALS_ROLE"), []],
+        [roleByName("STAKING_MODULE_PAUSE_ROLE"), [ROLES_OWNERS.dsm]],
+        [roleByName("STAKING_MODULE_RESUME_ROLE"), [ROLES_OWNERS.dsm]],
+        [roleByName("STAKING_MODULE_MANAGE_ROLE"), []],
+        [
+          roleByName("REPORT_EXITED_VALIDATORS_ROLE"),
+          [ROLES_OWNERS.accountingOracle],
+        ],
+        [roleByName("UNSAFE_SET_EXITED_VALIDATORS_ROLE"), []],
+        [roleByName("REPORT_REWARDS_MINTED_ROLE"), [ROLES_OWNERS.lido]],
+      ]),
     },
   ],
 ]);
