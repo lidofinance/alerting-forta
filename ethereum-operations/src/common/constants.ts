@@ -13,6 +13,8 @@ export const ONE_YEAR = ONE_MONTH * 12;
 
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
+// 32 ETH
+export const MIN_DEPOSIT = ETH_DECIMALS.times(32);
 
 export interface IProxyContractData {
   name: string;

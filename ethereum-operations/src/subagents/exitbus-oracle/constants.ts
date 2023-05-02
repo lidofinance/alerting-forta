@@ -2,6 +2,8 @@ import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 
+export const CL_GENESIS_TIMESTEMP = 1606824023;
+
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5;
 
@@ -9,6 +11,10 @@ export const EXITBUS_ORACLE_ADDRESS =
   "0xb75a55efab5a8f5224ae93b34b25741edd3da98b";
 export const EXITBUS_HASH_CONSENSUS_ADDRESS =
   "0x8374b4ac337d7e367ea1ef54bb29880c3f036a51";
+
+export const WITHDRAWALS_QUEUE_ADDRESS = "";
+export const WITHDRAWALS_VAULT_ADDRESS = "";
+export const EL_REWARDS_VAULT_ADDRESS = "";
 
 export const EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT =
   "event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)";
@@ -39,6 +45,9 @@ export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
   (2 * ONE_WEEK) / SECONDS_PER_SLOT
 );
+
+export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD = 8;
+export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD = 16;
 
 // max delay between two oracle reports
 export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 6 * ONE_HOUR + 15 * 60; // 6h 15m

@@ -140,7 +140,7 @@ async function handleReportSubmitted(
           : FindingSeverity.High;
       findings.push(
         Finding.fromObject({
-          name: "🚨 Accounting Oracle report submit overdue",
+          name: "🚨 Accounting Oracle: report submit overdue",
           description: `Time since last report: ${formatDelay(
             reportSubmitDelayUpdated
           )}`,
