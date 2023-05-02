@@ -244,7 +244,6 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 function handleNodeOperatorsTx(txEvent: TransactionEvent, findings: Finding[]) {
-  console.log(txEvent.addresses);
   NODE_OPERATORS_ADMIN_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
