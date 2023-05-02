@@ -245,7 +245,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleNodeOperatorsTx(txEvent: TransactionEvent, findings: Finding[]) {
   NODE_OPERATORS_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (txEvent.to === eventInfo.address) {
+    if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         let severity = eventInfo.severity;

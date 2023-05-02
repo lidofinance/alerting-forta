@@ -228,6 +228,7 @@ describe("lido-on-polygon", () => {
   it("should process handleRewardDistributionEvent", async () => {
     const tEvent = {
       to: ST_MATIC_TOKEN_ADDRESS,
+      addresses: { [ST_MATIC_TOKEN_ADDRESS]: true },
       blockNumber: 16725739,
       filterLog: () => {
         return [
@@ -257,6 +258,7 @@ describe("lido-on-polygon", () => {
   it("should process handleProxyAdminEvents", () => {
     const tEvent = {
       to: PROXY_ADMIN_ADDRESS,
+      addresses: { [PROXY_ADMIN_ADDRESS]: true },
       filterLog: () => {
         return [
           {
