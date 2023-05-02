@@ -23,22 +23,22 @@ export const MATIC_STAKING_NFT_ADDRESS =
 export const ST_MATIC_TOKEN_ADDRESS =
   "0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599";
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x216B8b78e0632138dc38907dd089aAB601ED6EDC";
+  "0x216b8b78e0632138dc38907dd089aab601ed6edc";
 export const PROXY_ADMIN_ADDRESS = "0x0833f5bd45803e05ef54e119a77e463ce6b1a963";
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
   "0xa22d223e732a5dcf4ff4529aa9a135293b7258fe";
 export const POLYGON_ROOT_CHAIN_PROXY =
-  "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287";
+  "0x86e4dc95c7fbdbf52e33d563bbdb00823894c287";
 export const POLYGON_STAKE_MANAGER_PROXY =
-  "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908";
+  "0x5e3ef299fddf15eaa0432e6e66473ace8c13d908";
 
 export const OWNER_MULTISIG_ADDRESS =
   "0xd65fa54f8df43064dfd8ddf223a446fc638800a9";
 export const LIDO_ON_POLYGON_PROXIES = {
-  lido_nft_proxy: "0x60a91E2B7A1568f0848f3D43353C453730082E46",
-  stMATIC_proxy: "0x9ee91F9f426fA633d227f7a9b000E28b9dfd8599",
-  validator_factory_proxy: "0x0a6C933495a7BB768d95f4667B074Dd5b95b78eB",
-  node_operator_registry_proxy: "0x216B8b78e0632138dc38907dd089aAB601ED6EDC",
+  lido_nft_proxy: "0x60a91e2b7a1568f0848f3d43353c453730082e46",
+  stMATIC_proxy: "0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599",
+  validator_factory_proxy: "0x0a6c933495a7bb768d95f4667b074dd5b95b78eb",
+  node_operator_registry_proxy: "0x216b8b78e0632138dc38907dd089aab601ed6edc",
 };
 
 // Lido of validators ids from Lido Node Operators Registry in order of apperance
