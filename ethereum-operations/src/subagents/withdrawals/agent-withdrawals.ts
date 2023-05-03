@@ -39,6 +39,12 @@ let lastBigRequestAfterRebaseAlertTimestamp = 0;
 
 let lastQueueOnParStakeLimitAlertTimestamp = 0;
 
+let claimedRequests = new Set<number>();
+let claimedSize = new BigNumber(0);
+let unclaimedRequests = new Set<number>();
+let unclaimedSize = new BigNumber(0);
+let lastUnclaimedRequestsAlertTimestamp = 0;
+
 export const name = "Withdrawals";
 
 const {
@@ -58,6 +64,8 @@ const {
   LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY,
   QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD,
   QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY,
+  UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD,
+  UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -108,16 +116,32 @@ export async function initialize(
     ).statuses[0].timestamp
   );
   const diff = lastRequestId - lastFinalizedRequestId;
+  const requestsRange = Array.from(
+    { length: diff > 0 ? lastFinalizedRequestId + 1 : lastFinalizedRequestId },
+    (_, i) => i + 1 // requests start from 1, not 0
+  );
+  const requestsStatuses = (
+    await withdrawalNFT.functions.getWithdrawalStatus(requestsRange, {
+      blockTag: currentBlock,
+    })
+  ).statuses;
+  for (const [index, reqStatus] of requestsStatuses.entries()) {
+    const reqId = index + 1;
+    if (reqStatus.isFinalized == true && reqStatus.isClaimed == true) {
+      claimedRequests.add(reqId);
+      claimedSize = claimedSize.plus(
+        new BigNumber(String(reqStatus.amountOfStETH))
+      );
+    } else if (reqStatus.isFinalized == true && reqStatus.isClaimed == false) {
+      unclaimedRequests.add(reqId);
+      unclaimedSize = unclaimedSize.plus(
+        new BigNumber(String(reqStatus.amountOfStETH))
+      );
+    }
+  }
   if (diff > 0) {
-    const firsUnfinalizedRequest = lastFinalizedRequestId + 1;
-    firstUnfinalizedRequestTimestamp = Number(
-      (
-        await withdrawalNFT.functions.getWithdrawalStatus(
-          [firsUnfinalizedRequest],
-          { blockTag: currentBlock }
-        )
-      ).statuses[0].timestamp
-    );
+    firstUnfinalizedRequestTimestamp =
+      requestsStatuses[requestsRange.length - 1].timestamp;
   }
 
   return {};
@@ -129,6 +153,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   await Promise.all([
     handleQueueOnParWithStakeLimit(blockEvent, findings),
     handleUnfinalizedRequestNumber(blockEvent, findings),
+    handleUnclaimedRequests(blockEvent, findings),
   ]);
 
   return findings;
@@ -169,7 +194,10 @@ async function handleQueueOnParWithStakeLimit(
   const absDiff = drainedLimit
     .minus(new BigNumber(String(unfinalizedStETH)))
     .abs();
-  if (absDiff.lte(QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD)) {
+  if (
+    !drainedLimit.eq(0) &&
+    absDiff.lte(QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD)
+  ) {
     findings.push(
       Finding.fromObject({
         name: `⚠️ Withdrawals: unfinalized queue is on par with stake limit`,
@@ -179,9 +207,9 @@ async function handleQueueOnParWithStakeLimit(
           .div(ETH_DECIMALS)
           .toFixed(3)} stETH\nDrained stake limit: ${drainedLimit
           .div(ETH_DECIMALS)
-          .toFixed(3)} ETH\nAbsolute diff: ${absDiff
+          .toFixed(3)} stETH\nAbsolute diff: ${absDiff
           .div(ETH_DECIMALS)
-          .toFixed(3)}`,
+          .toFixed(3)} stETH`,
         alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
@@ -257,6 +285,77 @@ async function handleUnfinalizedRequestNumber(
         lastLongUnfinalizedQueueAlertTimestamp = now;
       }
     }
+  }
+}
+
+async function handleUnclaimedRequests(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  const now = blockEvent.block.timestamp;
+  if (
+    now - lastUnclaimedRequestsAlertTimestamp <=
+    UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY
+  ) {
+    return;
+  }
+
+  const withdrawalNFT = new ethers.Contract(
+    WITHDRAWAL_QUEUE_ADDRESS,
+    WITHDRAWAL_QUEUE_ABI,
+    ethersProvider
+  );
+
+  const unclaimedRequestsStatuses = (
+    await withdrawalNFT.functions.getWithdrawalStatus(
+      Array.from(unclaimedRequests.values()),
+      { blockTag: blockEvent.blockNumber }
+    )
+  ).statuses;
+  for (const [index, reqStatus] of unclaimedRequestsStatuses.entries()) {
+    const reqId = Array.from(unclaimedRequests)[index];
+    if (reqStatus.isFinalized == true && reqStatus.isClaimed == true) {
+      if (!claimedRequests.has(reqId)) {
+        claimedRequests.add(reqId);
+        claimedSize = claimedSize.plus(
+          new BigNumber(String(reqStatus.amountOfStETH))
+        );
+      }
+      if (unclaimedRequests.has(reqId)) {
+        unclaimedRequests.delete(reqId);
+        unclaimedSize = unclaimedSize.minus(
+          new BigNumber(String(reqStatus.amountOfStETH))
+        );
+      }
+    } else if (reqStatus.isFinalized == true && reqStatus.isClaimed == false) {
+      if (!unclaimedRequests.has(reqId)) {
+        unclaimedRequests.add(reqId);
+        unclaimedSize = unclaimedSize.plus(
+          new BigNumber(String(reqStatus.amountOfStETH))
+        );
+      }
+    }
+  }
+
+  const totalFinalizedSize = claimedSize.plus(unclaimedSize);
+  const unclaimedSizeRate = unclaimedSize.div(totalFinalizedSize);
+  if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
+    findings.push(
+      Finding.fromObject({
+        name: `🤔 Withdrawals: ${unclaimedSizeRate
+          .times(100)
+          .toFixed(2)}% of finalized requests are unclaimed`,
+        description: `Unclaimed: ${unclaimedSize
+          .div(ETH_DECIMALS)
+          .toFixed(3)} stETH\nTotal finalized: ${totalFinalizedSize
+          .div(ETH_DECIMALS)
+          .toFixed(3)} stETH`,
+        alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS",
+        severity: FindingSeverity.Info,
+        type: FindingType.Suspicious,
+      })
+    );
+    lastUnclaimedRequestsAlertTimestamp = now;
   }
 }
 

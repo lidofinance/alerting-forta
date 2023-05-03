@@ -22,6 +22,9 @@ export const QUEUE_ON_PAR_STAKE_LIMIT_ABS_DIFF_THRESHOLD = new BigNumber(
 ).times(ETH_DECIMALS);
 export const QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY = ONE_DAY;
 
+export const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.2;
+export const UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY = ONE_DAY;
+
 export const LIDO_TOKEN_REBASED =
   "event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)";
 
