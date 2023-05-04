@@ -255,9 +255,9 @@ async function handleProcessingStarted(
     } else {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ ExitBus Oracle: withdrawal queue size is x${diffRate.toFixed(
+          name: `⚠️ ExitBus Oracle: withdrawal queue size is ${diffRate.toFixed(
             2
-          )} bigger than current buffer for requests finalization`,
+          )} times bigger than the current buffer for requests finalization`,
           description: `Withdrawal queue size: ${withdrawalsQueueSize
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nExit requests size: ${exitRequestsSize
