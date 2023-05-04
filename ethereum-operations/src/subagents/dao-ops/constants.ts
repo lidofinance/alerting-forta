@@ -167,7 +167,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
       `Protocol contracts were set to:\n` +
       `Oracle: ${args.oracle}\n` +
       `Treasury: ${args.treasury}\n` +
-      `Insurance fund: ${args.insuranceFund}\n`,
+      `Insurance fund: ${args.insuranceFund}`,
     severity: FindingSeverity.High,
   },
   {
