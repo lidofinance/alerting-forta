@@ -71,7 +71,14 @@ export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72;
 // approx 1 week
 export const ENS_CHECK_INTERVAL = 50_000;
 
-export const LIDO_ENS_NAMES = ["lido", "steth", "staked", "lidopm", "lido-dao", "unst"];
+export const LIDO_ENS_NAMES = [
+  "lido",
+  "steth",
+  "staked",
+  "lidopm",
+  "lido-dao",
+  "unst",
+];
 
 export const LIDO_DAO_EVENTS_OF_NOTICE = [
   {

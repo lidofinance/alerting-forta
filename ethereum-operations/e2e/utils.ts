@@ -62,10 +62,11 @@ export function provideRunBlock(
 ) {
   return async function (
     blockHashOrNumber: string | number,
-    initBlock?: number
+    initBlock?: number,
+    skipInit?: boolean
   ) {
     const agent = await dynamicImport(agentPath);
-    if (typeof agent.initialize === "function") {
+    if (typeof agent.initialize === "function" && !skipInit) {
       await agent.initialize(initBlock ? initBlock : blockHashOrNumber);
     }
 
