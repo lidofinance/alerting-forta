@@ -256,8 +256,7 @@ Finding {
   "description": "Protocol contracts were set to:
 Oracle: 0x442af784A788A5bd6F42A01Ebe9F287a871243fb
 Treasury: 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c
-Insurance fund: 0x8B3f33234ABD88493c0Cd28De33D583B70beDe35
-",
+Insurance fund: 0x8B3f33234ABD88493c0Cd28De33D583B70beDe35",
   "labels": Array [],
   "metadata": Object {
     "args": "0x442af784A788A5bd6F42A01Ebe9F287a871243fb,0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c,0x8B3f33234ABD88493c0Cd28De33D583B70beDe35",
