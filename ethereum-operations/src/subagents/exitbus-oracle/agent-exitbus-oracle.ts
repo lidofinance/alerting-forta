@@ -230,12 +230,12 @@ async function handleProcessingStarted(
     elVaultBalance.plus(withdrawalsVaultBalance).plus(exitRequestsSize)
   );
   if (diffRate.gte(EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD)) {
-    if (withdrawalsQueueSize.eq(0)) {
+    if (exitRequestsSize.eq(0)) {
       findings.push(
         Finding.fromObject({
-          name: `🚨 ExitBus Oracle: withdrawal queue is x${diffRate.toFixed(
+          name: `🚨 ExitBus Oracle: withdrawal queue is ${diffRate.toFixed(
             2
-          )} bigger than current buffer for requests finalization, but no one request to exit`,
+          )} times bigger than the current buffer for requests finalization, and no validators exit requests in current report`,
           description: `Withdrawal queue size: ${withdrawalsQueueSize
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nExit requests size: ${exitRequestsSize

@@ -53,6 +53,8 @@ const {
   RedefineMode.Merge
 );
 
+let fastLaneMembers: Array<string> = [];
+
 async function getOracleMembers(blockNumber: number): Promise<string[]> {
   const hashConsensus = new ethers.Contract(
     ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -109,15 +111,37 @@ export async function initialize(
     }
   });
 
+  fastLaneMembers = (
+    await hashConsensus.functions.getFastLaneMembers({
+      blockTag: currentBlock,
+    })
+  ).addresses;
+
   return {};
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await handleMembersBalances(blockEvent, findings);
+  await Promise.all([
+    handleFastLaneMembers(blockEvent),
+    handleMembersBalances(blockEvent, findings),
+  ]);
 
   return findings;
+}
+
+async function handleFastLaneMembers(blockEvent: BlockEvent) {
+  const hashConsensus = new ethers.Contract(
+    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
+    HASH_CONSENSUS_ABI,
+    ethersProvider
+  );
+  fastLaneMembers = (
+    await hashConsensus.functions.getFastLaneMembers({
+      blockTag: blockEvent.blockNumber,
+    })
+  ).addresses;
 }
 
 async function handleMembersBalances(
@@ -262,16 +286,6 @@ async function handleReportSubmitted(
     })
   );
   const block = txEvent.blockNumber;
-  const hashConsensus = new ethers.Contract(
-    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-    HASH_CONSENSUS_ABI,
-    ethersProvider
-  );
-  const fastLaneMembers = (
-    await hashConsensus.functions.getFastLaneMembers({
-      blockTag: txEvent.blockNumber,
-    })
-  ).addresses;
   membersLastReport.forEach((report, member) => {
     const reportDist = block - report.blockNumber;
     const reportDistDays = Math.floor(
