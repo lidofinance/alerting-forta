@@ -2,7 +2,7 @@ import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 
 export const ORACLE_DAEMON_CONFIG_ADDRESS =
-  "0xe9cc5bd91543cdc9788454ee5063e2cd76b5206d";
+  "0xbf05a929c3d7885a6aead833a992da6e5ac23b09";
 
 export const ORACLE_DAEMON_CONFIG_EVENTS_OF_NOTICE = [
   {

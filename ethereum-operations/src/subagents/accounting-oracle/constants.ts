@@ -5,9 +5,9 @@ import { ONE_DAY, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 export const TRIGGER_PERIOD = 60 * 5;
 
 export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x76f358a842defa0e179a8970767cff668fc134d6";
+  "0x852ded011285fe67063a08005c71a85690503cee";
 export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
-  "0x8d87a8bcf8d4e542fd396d1c50223301c164417b";
+  "0xd624b08c83baecf0807dd2c6880c3154a5f0b288";
 
 export const ACCOUNTING_ORACLE_REPORT_SUBMITTED_EVENT =
   "event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)";
