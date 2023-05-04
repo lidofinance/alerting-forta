@@ -179,12 +179,10 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event:
-      "event LidoLocatorSet(address lidoLocator)",
+    event: "event LidoLocatorSet(address lidoLocator)",
     alertId: "LIDO-DAO-LOCATOR-SET",
     name: "🚨 Lido DAO: Locator set",
-    description: (args: any) =>
-      `Lido locator was set to: ${args.lidoLocator}`,
+    description: (args: any) => `Lido locator was set to: ${args.lidoLocator}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -211,7 +209,8 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event: "event WithdrawalsReceived(address vault, address token, uint256 amount)",
+    event:
+      "event WithdrawalsReceived(address vault, address token, uint256 amount)",
     alertId: "LIDO-DAO-RECOVER-TO-VAULT",
     name: "ℹ Lido DAO: Funds recovered to vault",
     description: (args: any) =>
@@ -227,8 +226,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     alertId: "LIDO-DAO-CONTRACT-VERSION-SET",
     name: "ℹ Lido DAO: Contract version set",
     description: (args: any) =>
-      `Contract version set:\n` +
-      `Version: ${args.version}`,
+      `Contract version set:\n` + `Version: ${args.version}`,
     severity: FindingSeverity.Info,
   },
   {
