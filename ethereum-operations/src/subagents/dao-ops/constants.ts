@@ -174,8 +174,18 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
       `Protocol contracts were set to:\n` +
       `Oracle: ${args.oracle}\n` +
       `Treasury: ${args.treasury}\n` +
-      `Insurance fund: ${args.insuranceFund}\n`,
+      `Insurance fund: ${args.insuranceFund}`,
     severity: FindingSeverity.High,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event:
+      "event LidoLocatorSet(address lidoLocator)",
+    alertId: "LIDO-DAO-LOCATOR-SET",
+    name: "🚨 Lido DAO: Locator set",
+    description: (args: any) =>
+      `Lido locator was set to: ${args.lidoLocator}`,
+    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_DAO_ADDRESS,
@@ -186,6 +196,39 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
       `Rewards amount: ${new BigNumber(String(args.amount))
         .div(ETH_DECIMALS)
         .toFixed(2)} ETH`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event WithdrawalsReceived(uint256 amount)",
+    alertId: "LIDO-DAO-WITHDRAWALS-RECEIVED",
+    name: "✅ Lido DAO: Withdrawals received",
+    description: (args: any) =>
+      `Withdrawals amount: ${new BigNumber(String(args.amount))
+        .div(ETH_DECIMALS)
+        .toFixed(2)} ETH`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event WithdrawalsReceived(address vault, address token, uint256 amount)",
+    alertId: "LIDO-DAO-RECOVER-TO-VAULT",
+    name: "ℹ Lido DAO: Funds recovered to vault",
+    description: (args: any) =>
+      `Funds recovered to vault:\n` +
+      `Vault: ${args.vault}\n` +
+      `Token: ${args.token}\n` +
+      `Amount: ${args.amount}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_DAO_ADDRESS,
+    event: "event ContractVersionSet(uint256 version)",
+    alertId: "LIDO-DAO-CONTRACT-VERSION-SET",
+    name: "ℹ Lido DAO: Contract version set",
+    description: (args: any) =>
+      `Contract version set:\n` +
+      `Version: ${args.version}`,
     severity: FindingSeverity.Info,
   },
   {
