@@ -20,17 +20,6 @@ exports[`agent-dao-ops e2e tests should process block with huge buffered ETH amo
 Array [
   Finding {
     "addresses": Array [],
-    "alertId": "HUGE-BUFFERED-ETH",
-    "description": "There are 39668.1056 buffered ETH in DAO for more than 1 hour(s)",
-    "labels": Array [],
-    "metadata": Object {},
-    "name": "🚨 Huge buffered ETH amount",
-    "protocol": "ethereum",
-    "severity": 4,
-    "type": 3,
-  },
-  Finding {
-    "addresses": Array [],
     "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
     "description": "Balance of deposit executor is 1.9652. This is extremely low! 😱",
     "labels": Array [],
@@ -39,6 +28,17 @@ Array [
     "protocol": "ethereum",
     "severity": 4,
     "type": 2,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "HUGE-BUFFERED-ETH",
+    "description": "There are 39668.1056 buffered ETH in DAO for more than 1 hour(s)",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 Huge buffered ETH amount",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 3,
   },
 ]
 `;
@@ -75,19 +75,6 @@ exports[`agent-dao-ops e2e tests should process tx with EL rewards vault set and
 Array [
   Finding {
     "addresses": Array [],
-    "alertId": "LIDO-DAO-STAKING-RESUMED",
-    "description": "Staking was resumed!",
-    "labels": Array [],
-    "metadata": Object {
-      "args": "",
-    },
-    "name": "✅ Lido DAO: Staking resumed",
-    "protocol": "ethereum",
-    "severity": 4,
-    "type": 4,
-  },
-  Finding {
-    "addresses": Array [],
     "alertId": "LIDO-DAO-STAKING-LIMIT-SET",
     "description": "Staking limit was set with:
 Max staking limit: 150000000000000000000000
@@ -97,6 +84,19 @@ Stake limit increase per block: 23437500000000000000",
       "args": "150000000000000000000000,23437500000000000000",
     },
     "name": "⚠️ Lido DAO: Staking limit set",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "LIDO-DAO-STAKING-RESUMED",
+    "description": "Staking was resumed!",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "",
+    },
+    "name": "✅ Lido DAO: Staking resumed",
     "protocol": "ethereum",
     "severity": 4,
     "type": 4,
@@ -134,20 +134,6 @@ Finding {
 `;
 
 exports[`agent-dao-ops e2e tests should process tx with added guardian 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LOW-STAKING-LIMIT",
-  "description": "Current staking limit is 6909.61 ETH this is lower than 30% of max staking limit 150000.00 ETH",
-  "labels": Array [],
-  "metadata": Object {},
-  "name": "📉 Staking limit below 30%",
-  "protocol": "ethereum",
-  "severity": 1,
-  "type": 4,
-}
-`;
-
-exports[`agent-dao-ops e2e tests should process tx with added guardian 2`] = `
 Finding {
   "addresses": Array [],
   "alertId": "LIDO-DEPOSITOR-GUARDIAN-ADDED",
