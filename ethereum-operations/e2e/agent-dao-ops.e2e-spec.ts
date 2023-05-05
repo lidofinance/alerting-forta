@@ -50,7 +50,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process block with low staking limit (30%)",
     async () => {
       const findings = await runBlock(16704061);
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(findings.at(1)).toMatchSnapshot();
     },
     TEST_TIMEOUT
   );
