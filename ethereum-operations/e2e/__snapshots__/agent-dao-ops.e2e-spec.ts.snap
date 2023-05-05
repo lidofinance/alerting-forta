@@ -136,6 +136,20 @@ Finding {
 exports[`agent-dao-ops e2e tests should process tx with added guardian 1`] = `
 Finding {
   "addresses": Array [],
+  "alertId": "LOW-STAKING-LIMIT",
+  "description": "Current staking limit is 6909.61 ETH this is lower than 30% of max staking limit 150000.00 ETH",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "📉 Staking limit below 30%",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
+
+exports[`agent-dao-ops e2e tests should process tx with added guardian 2`] = `
+Finding {
+  "addresses": Array [],
   "alertId": "LIDO-DEPOSITOR-GUARDIAN-ADDED",
   "description": "New guardian added 0xa56b128Ea2Ea237052b0fA2a96a387C0E43157d8",
   "labels": Array [],
@@ -217,22 +231,6 @@ Finding {
 }
 `;
 
-exports[`agent-dao-ops e2e tests should process tx with changed node operators registry 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-DEPOSITOR-NO-REGISTRY-CHANGED",
-  "description": "New node operators registry 0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5",
-  },
-  "name": "⚠️ Deposit Security: Node operators registry changed",
-  "protocol": "ethereum",
-  "severity": 5,
-  "type": 4,
-}
-`;
-
 exports[`agent-dao-ops e2e tests should process tx with changed owner of the contract 1`] = `
 Finding {
   "addresses": Array [],
@@ -264,22 +262,6 @@ Insurance fund: 0x8B3f33234ABD88493c0Cd28De33D583B70beDe35",
   "name": "🚨 Lido DAO: Protocol contracts set",
   "protocol": "ethereum",
   "severity": 4,
-  "type": 4,
-}
-`;
-
-exports[`agent-dao-ops e2e tests should process tx with paused deposits 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-DEPOSITOR-PAUSED",
-  "description": "Deposits were paused by 0x7912Fa976BcDe9c2cf728e213e892AD7588E6AaF",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "0x7912Fa976BcDe9c2cf728e213e892AD7588E6AaF",
-  },
-  "name": "🚨 Deposit Security: Deposits paused",
-  "protocol": "ethereum",
-  "severity": 5,
   "type": 4,
 }
 `;
@@ -329,20 +311,4 @@ Array [
     "type": 4,
   },
 ]
-`;
-
-exports[`agent-dao-ops e2e tests should process tx with unpaused deposits 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-DEPOSITOR-UNPAUSED",
-  "description": "Deposits were resumed",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "",
-  },
-  "name": "✅ Deposit Security: Deposits resumed",
-  "protocol": "ethereum",
-  "severity": 4,
-  "type": 4,
-}
 `;
