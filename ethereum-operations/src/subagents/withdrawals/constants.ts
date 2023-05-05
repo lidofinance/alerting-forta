@@ -1,10 +1,6 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
-import {
-  ONE_DAY,
-  ONE_HOUR,
-  ONE_WEEK,
-} from "../../common/constants";
+import { ONE_DAY, ONE_HOUR, ONE_WEEK } from "../../common/constants";
 
 export const WITHDRAWAL_QUEUE_ADDRESS =
   "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
