@@ -6,31 +6,48 @@ import {
   Finding,
   FindingType,
   FindingSeverity,
+  ethers,
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentAccountingOracle from "./subagents/accounting-oracle/agent-accounting-oracle";
-import * as agentAccountingOracleHashConsensus from "./subagents/accounting-oracle/agent-accounting-hash-consensus";
-import * as agentExitBusOracle from "./subagents/exitbus-oracle/agent-exitbus-oracle";
-import * as agentExitBusOracleHashConsensus from "./subagents/exitbus-oracle/agent-exitbus-hash-consensus";
-import * as agentLidoOracle from "./subagents/lido-report/agent-lido-report";
-import * as agentEasyTrack from "./subagents/easy-track/agent-easy-track";
-import * as agentDaoOps from "./subagents/dao-ops/agent-dao-ops";
-import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
-import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
-import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
-import * as agentNORegistry from "./subagents/node-operators-registry/agent-node-operators-registry";
-import * as agentWithdrawals from "./subagents/withdrawals/agent-withdrawals";
-import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-checker";
-import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
-import * as agentStakingRouter from "./subagents/staking-router/agent-staking-router";
-import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
+import LIDO_APP_REPO_ABI from "./abi_v1/LidoAppRepo.json";
+
+import * as agentLidoOracle_v1 from "./subagents_v1/lido-oracle/agent-lido-oracle";
+import * as agentEasyTrack_v1 from "./subagents_v1/easy-track/agent-easy-track";
+import * as agentDaoOps_v1 from "./subagents_v1/dao-ops/agent-dao-ops";
+import * as agentProxy_v1 from "./subagents_v1/proxy-watcher/agent-proxy-watcher";
+import * as agentAragon_v1 from "./subagents_v1/aragon-voting/agent-aragon-voting";
+import * as agentACL_v1 from "./subagents_v1/acl-changes/agent-acl-changes";
+import * as agentNORegistry_v1 from "./subagents_v1/node-operators-registry/agent-node-operators-registry";
+
+import * as agentAccountingOracle_v2 from "./subagents_v2/accounting-oracle/agent-accounting-oracle";
+import * as agentAccountingOracleHashConsensus_v2 from "./subagents_v2/accounting-oracle/agent-accounting-hash-consensus";
+import * as agentExitBusOracle_v2 from "./subagents_v2/exitbus-oracle/agent-exitbus-oracle";
+import * as agentExitBusOracleHashConsensus_v2 from "./subagents_v2/exitbus-oracle/agent-exitbus-hash-consensus";
+import * as agentLidoOracle_v2 from "./subagents_v2/lido-report/agent-lido-report";
+import * as agentEasyTrack_v2 from "./subagents_v2/easy-track/agent-easy-track";
+import * as agentDaoOps_v2 from "./subagents_v2/dao-ops/agent-dao-ops";
+import * as agentProxy_v2 from "./subagents_v2/proxy-watcher/agent-proxy-watcher";
+import * as agentAragon_v2 from "./subagents_v2/aragon-voting/agent-aragon-voting";
+import * as agentACL_v2 from "./subagents_v2/acl-changes/agent-acl-changes";
+import * as agentNORegistry_v2 from "./subagents_v2/node-operators-registry/agent-node-operators-registry";
+import * as agentWithdrawals_v2 from "./subagents_v2/withdrawals/agent-withdrawals";
+import * as agentSanityChecker_v2 from "./subagents_v2/sanity-checker/agent-sanity-checker";
+import * as agentOracleDaemonConfig_v2 from "./subagents_v2/oracle-daemon-config/agent-oracle-daemon-config";
+import * as agentStakingRouter_v2 from "./subagents_v2/staking-router/agent-staking-router";
+import * as agentGateSeal_v2 from "./subagents_v2/gate-seal/agent-gate-seal";
 
 import VERSION from "./version";
-import { RUN_TIER } from "./common/constants";
+import {
+  LIDO_ADDRESS,
+  LIDO_APP_REPO_ADDRESS,
+  LIDO_APP_SEMANTIC_MAJOR_VERSION_V1,
+  LIDO_CONTRACT_VERSION_SET_EVENT,
+  RUN_TIER,
+} from "./common/constants";
 
 type Metadata = { [key: string]: string };
 interface SubAgent {
@@ -41,23 +58,33 @@ interface SubAgent {
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
-const subAgents: SubAgent[] = [
-  agentAccountingOracle,
-  agentAccountingOracleHashConsensus,
-  agentExitBusOracle,
-  agentExitBusOracleHashConsensus,
-  agentLidoOracle,
-  agentEasyTrack,
-  agentDaoOps,
-  agentProxy,
-  agentAragon,
-  agentACL,
-  agentNORegistry,
-  agentSanityChecker,
-  agentOracleDaemonConfig,
-  agentStakingRouter,
-  agentWithdrawals,
-  agentGateSeal,
+const subAgents_v1: SubAgent[] = [
+  agentLidoOracle_v1,
+  agentEasyTrack_v1,
+  agentDaoOps_v1,
+  agentProxy_v1,
+  agentAragon_v1,
+  agentACL_v1,
+  agentNORegistry_v1,
+];
+
+const subAgents_v2: SubAgent[] = [
+  agentAccountingOracle_v2,
+  agentAccountingOracleHashConsensus_v2,
+  agentExitBusOracle_v2,
+  agentExitBusOracleHashConsensus_v2,
+  agentLidoOracle_v2,
+  agentEasyTrack_v2,
+  agentDaoOps_v2,
+  agentProxy_v2,
+  agentAragon_v2,
+  agentACL_v2,
+  agentNORegistry_v2,
+  agentSanityChecker_v2,
+  agentOracleDaemonConfig_v2,
+  agentStakingRouter_v2,
+  agentWithdrawals_v2,
+  agentGateSeal_v2,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
@@ -74,12 +101,10 @@ const maxHandlerRetries = 5;
 
 let findingsOnInit: Finding[] = [];
 
-const initialize = async () => {
-  const metadata: Metadata = {
-    "version.commitHash": VERSION.commitHash,
-    "version.commitMsg": VERSION.commitMsg,
-  };
+let protocolVersionSwitchBlock: number = 0;
+let isNewVersionInitialized: boolean = false;
 
+const initialize = async () => {
   let blockNumber: number = -1;
 
   if (argv.includes("--block")) {
@@ -101,6 +126,28 @@ const initialize = async () => {
   if (blockNumber == -1) {
     blockNumber = await ethersProvider.getBlockNumber();
   }
+
+  const lidoAppRepo = new ethers.Contract(
+    LIDO_APP_REPO_ADDRESS,
+    LIDO_APP_REPO_ABI,
+    ethersProvider
+  );
+  const { semanticVersion } = await lidoAppRepo.functions.getLatest({
+    blockTag: blockNumber,
+  });
+  if (semanticVersion[0] > LIDO_APP_SEMANTIC_MAJOR_VERSION_V1) {
+    await _initialize(subAgents_v2, blockNumber);
+    isNewVersionInitialized = true;
+  } else {
+    await _initialize(subAgents_v1, blockNumber);
+  }
+};
+
+const _initialize = async (subAgents: SubAgent[], blockNumber: number) => {
+  const metadata: Metadata = {
+    "version.commitHash": VERSION.commitHash,
+    "version.commitMsg": VERSION.commitMsg,
+  };
 
   await Promise.all(
     subAgents.map(async (agent, _) => {
@@ -144,6 +191,26 @@ const timeout = async (agent: SubAgent) =>
   });
 
 const handleBlock: HandleBlock = async (
+  blockEvent: BlockEvent
+): Promise<Finding[]> => {
+  if (
+    !isNewVersionInitialized &&
+    protocolVersionSwitchBlock != 0 &&
+    blockEvent.blockNumber > protocolVersionSwitchBlock
+  ) {
+    await _initialize(subAgents_v2, blockEvent.blockNumber);
+    isNewVersionInitialized = true;
+  }
+
+  if (isNewVersionInitialized) {
+    return await _handleBlock(subAgents_v2, blockEvent);
+  } else {
+    return await _handleBlock(subAgents_v1, blockEvent);
+  }
+};
+
+const _handleBlock = async (
+  subAgents: SubAgent[],
   blockEvent: BlockEvent
 ): Promise<Finding[]> => {
   let blockFindings: Finding[] = [];
@@ -196,6 +263,27 @@ const handleBlock: HandleBlock = async (
 };
 
 const handleTransaction: HandleTransaction = async (
+  txEvent: TransactionEvent
+): Promise<Finding[]> => {
+  if (!isNewVersionInitialized) {
+    const [event] = txEvent.filterLog(
+      LIDO_CONTRACT_VERSION_SET_EVENT,
+      LIDO_ADDRESS
+    );
+    if (event) {
+      protocolVersionSwitchBlock = txEvent.blockNumber;
+    }
+  }
+
+  if (isNewVersionInitialized) {
+    return await _handleTransaction(subAgents_v2, txEvent);
+  } else {
+    return await _handleTransaction(subAgents_v1, txEvent);
+  }
+};
+
+const _handleTransaction = async (
+  subAgents: SubAgent[],
   txEvent: TransactionEvent
 ) => {
   let txFindings: Finding[] = [];
