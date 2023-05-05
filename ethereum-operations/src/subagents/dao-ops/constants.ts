@@ -30,6 +30,7 @@ export const MEV_ALLOWED_LIST_ADDRESS =
   "0xf95f069f9ad107938f6ba802a3da87892298610e";
 export const LIDO_INSURANCE_FUND_ADDRESS =
   "0x8b3f33234abd88493c0cd28de33d583b70bede35";
+export const LIDO_BURNER_ADDRESS = "0xD15a672319Cf0352560eE76d9e89eAB0889046D3";
 export const TRP_FACTORY_ADDRESS = "0xDA1DF6442aFD2EC36aBEa91029794B9b2156ADD0";
 export const ENS_BASE_REGISTRAR_ADDRESS =
   "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85";
@@ -249,21 +250,50 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
 ];
 
+
+export const BURNER_EVENTS_OF_NOTICE = [
+  {
+    address: LIDO_BURNER_ADDRESS,
+    event: "event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)",
+    alertId: "LIDO-BURNER-ERC20-RECOVERED",
+    name: "ℹ Lido Burner: ERC20 recovered",
+    description: (args: any) => `ERC20 recovered:\n` +
+      `Requested by: ${args.requestedBy}\n` +
+      `Token: ${args.token}\n` +
+      `Amount: ${args.amount}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: LIDO_BURNER_ADDRESS,
+    event: "event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)",
+    alertId: "LIDO-BURNE-ERC721-RECOVERED",
+    name: "ℹ Lido Burner: ERC721 recovered",
+    description: (args: any) => `ERC721 recovered:\n` +
+      `Requested by: ${args.requestedBy}\n` +
+      `Token: ${args.token}\n` +
+      `Token ID: ${args.tokenId}`,
+    severity: FindingSeverity.Info,
+  },
+];
+
 export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
   {
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-    event: "event DepositsPaused(address guardian)",
-    alertId: "LIDO-DEPOSITOR-PAUSED",
+    event:
+      "event DepositsPaused(address indexed guardian, uint24 indexed stakingModuleId)",
+    alertId: "LIDO-DEPOSITS-PAUSED",
     name: "🚨 Deposit Security: Deposits paused",
-    description: (args: any) => `Deposits were paused by ${args.guardian}`,
+    description: (args: any) =>
+      `Deposits were paused by ${args.guardian} for ${args.stakingModuleId} staking module`,
     severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-    event: "event DepositsUnpaused()",
-    alertId: "LIDO-DEPOSITOR-UNPAUSED",
+    event: "event DepositsUnpaused(uint24 indexed stakingModuleId)",
+    alertId: "LIDO-DEPOSITS-UNPAUSED",
     name: "✅ Deposit Security: Deposits resumed",
-    description: (args: any) => `Deposits were resumed`,
+    description: (args: any) =>
+      `Deposits were resumed for ${args.stakingModuleId} staking module`,
     severity: FindingSeverity.High,
   },
   {
@@ -305,14 +335,6 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     name: "⚠️ Deposit Security: Min deposit block distance changed",
     description: (args: any) => `New value ${args.newValue}`,
     severity: FindingSeverity.High,
-  },
-  {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
-    event: "event NodeOperatorsRegistryChanged(address newValue)",
-    alertId: "LIDO-DEPOSITOR-NO-REGISTRY-CHANGED",
-    name: "⚠️ Deposit Security: Node operators registry changed",
-    description: (args: any) => `New node operators registry ${args.newValue}`,
-    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_DEPOSIT_SECURITY_ADDRESS,
