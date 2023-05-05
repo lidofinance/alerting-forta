@@ -200,7 +200,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   if (txEvent.to === ACCOUNTING_HASH_CONSENSUS_ADDRESS) {
     handleReportReceived(txEvent, findings);
-    await handleReportSubmitted(txEvent, findings);
+    handleReportSubmitted(txEvent, findings);
   }
   handleEventsOfNotice(
     txEvent,
@@ -267,10 +267,7 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   });
 }
 
-async function handleReportSubmitted(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
+function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
   const [submitted] = txEvent.filterLog(
     ACCOUNTING_ORACLE_REPORT_SUBMITTED_EVENT,
     ACCOUNTING_ORACLE_ADDRESS
@@ -308,8 +305,7 @@ async function handleReportSubmitted(
           type: FindingType.Suspicious,
         })
       );
-    }
-    if (fastLaneMembers.includes(member)) {
+    } else if (fastLaneMembers.includes(member)) {
       if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
         findings.push(
           Finding.fromObject({
