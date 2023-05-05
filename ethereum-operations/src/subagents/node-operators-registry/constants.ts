@@ -50,6 +50,15 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   },
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event NodeOperatorNameSet(uint256 indexed id, string name)",
+    alertId: "NODE-OPERATOR-NAME-SET",
+    name: "ℹ️ NO Registry: Node operator name set",
+    description: (args: any) =>
+      `Node operator ${args.id} name set to ${args.name}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event:
       "event NodeOperatorRewardAddressSet(uint256 indexed id, address rewardAddress)",
     alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
@@ -77,5 +86,51 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Node operator ${args.id} total keys trimmed ${args.totalKeysTrimmed}`,
     severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event StakingModuleTypeSet(bytes32 moduleType)",
+    alertId: "STAKING-MODULE-TYPE-SET",
+    name: "⚠️ NO Registry: Staking module type set",
+    description: (args: any) => `Staking module type set to ${args.moduleType}`,
+    severity: FindingSeverity.Info,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event LocatorContractSet(address locatorAddress)",
+    alertId: "NOR-LOCATOR-CONTRACT-SET",
+    name: "⚠️ NO Registry: Locator contract set",
+    description: (args: any) =>
+      `Locator contract set to ${args.locatorAddress}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event VettedSigningKeysCountChanged(uint256 indexed nodeOperatorId, uint256 approvedValidatorsCount)",
+    alertId: "NOR-VETTED-SIGNING-KEYS-COUNT-CHANGED",
+    name: "⚠️ NO Registry: Vetted signing keys count changed",
+    description: (args: any) =>
+      `Node operator ${args.nodeOperatorId} vetted signing keys count changed to ${args.approvedValidatorsCount}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event: "event StuckPenaltyDelayChanged(uint256 stuckPenaltyDelay)",
+    alertId: "NOR-STUCK-PENALTY-DELAY-CHANGED",
+    name: "⚠️ NO Registry: Stuck penalty delay changed",
+    description: (args: any) =>
+      `Stuck penalty delay changed to ${args.stuckPenaltyDelay}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
+      "event NodeOperatorPenalized(address indexed recipientAddress, uint256 sharesPenalizedAmount)",
+    alertId: "NOR-NODE-OPERATOR-PENALIZED",
+    name: "⚠️ NO Registry: Node operator penalized",
+    description: (args: any) =>
+      `Node operator ${args.recipientAddress} penalized with ${args.sharesPenalizedAmount} shares`,
+    severity: FindingSeverity.High,
   },
 ];
