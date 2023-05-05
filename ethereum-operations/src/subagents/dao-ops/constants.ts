@@ -250,14 +250,15 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
 ];
 
-
 export const BURNER_EVENTS_OF_NOTICE = [
   {
     address: LIDO_BURNER_ADDRESS,
-    event: "event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)",
+    event:
+      "event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)",
     alertId: "LIDO-BURNER-ERC20-RECOVERED",
     name: "ℹ Lido Burner: ERC20 recovered",
-    description: (args: any) => `ERC20 recovered:\n` +
+    description: (args: any) =>
+      `ERC20 recovered:\n` +
       `Requested by: ${args.requestedBy}\n` +
       `Token: ${args.token}\n` +
       `Amount: ${args.amount}`,
@@ -265,10 +266,12 @@ export const BURNER_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_BURNER_ADDRESS,
-    event: "event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)",
+    event:
+      "event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)",
     alertId: "LIDO-BURNE-ERC721-RECOVERED",
     name: "ℹ Lido Burner: ERC721 recovered",
-    description: (args: any) => `ERC721 recovered:\n` +
+    description: (args: any) =>
+      `ERC721 recovered:\n` +
       `Requested by: ${args.requestedBy}\n` +
       `Token: ${args.token}\n` +
       `Token ID: ${args.tokenId}`,
