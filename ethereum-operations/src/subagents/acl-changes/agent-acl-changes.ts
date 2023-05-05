@@ -69,7 +69,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleOwnerChange(blockEvent, findings)]);
+  await Promise.all([
+    handleRolesMembers(blockEvent, findings),
+    handleOwnerChange(blockEvent, findings),
+  ]);
 
   return findings;
 }
