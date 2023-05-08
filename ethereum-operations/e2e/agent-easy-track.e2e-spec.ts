@@ -22,7 +22,7 @@ describe("agent-easy-track e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents_v2/easy-track/agent-easy-track")
+        provideAgentPath("subagents/easy-track/agent-easy-track")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),

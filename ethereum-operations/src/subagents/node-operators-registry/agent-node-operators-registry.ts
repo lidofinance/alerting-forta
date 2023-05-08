@@ -13,7 +13,7 @@ import {
   requireWithTier,
 } from "../../common/utils";
 import type * as Constants from "./constants";
-import STAKING_ROUTER_ABI from "../../abi_v2/StakingRouter.json";
+import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import { ethersProvider } from "../../ethers";
 const {
   NODE_OPERATOR_REGISTRY_MODULE_ID,

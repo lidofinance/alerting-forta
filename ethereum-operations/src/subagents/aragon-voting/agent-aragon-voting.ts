@@ -13,7 +13,7 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import ARAGON_VOTING_ABI from "../../abi_v2/AragonVoting.json";
+import ARAGON_VOTING_ABI from "../../abi/AragonVoting.json";
 import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 import { handleEventsOfNotice, requireWithTier } from "../../common/utils";

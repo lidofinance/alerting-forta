@@ -23,7 +23,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     container.register({
       agentPath: asFunction(
         provideAgentPath(
-          "subagents_v2/node-operators-registry/agent-node-operators-registry"
+          "subagents/node-operators-registry/agent-node-operators-registry"
         )
       ),
       runTransaction: asFunction(provideRunTransaction),

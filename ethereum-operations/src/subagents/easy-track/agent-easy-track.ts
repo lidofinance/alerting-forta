@@ -8,8 +8,8 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import INCREASE_STAKING_LIMIT_ABI from "../../abi_v2/IncreaseStakingLimit.json";
-import NODE_OPERATORS_REGISTRY_ABI from "../../abi_v2/NodeOperatorsRegistry.json";
+import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
+import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { getMotionLink, getMotionType } from "./utils";
 import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
 

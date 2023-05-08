@@ -9,7 +9,7 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import ACCOUNTING_ORACLE_ABI from "../../abi_v2/AccountingOracle.json";
+import ACCOUNTING_ORACLE_ABI from "../../abi/AccountingOracle.json";
 
 import { formatDelay } from "./utils";
 import {

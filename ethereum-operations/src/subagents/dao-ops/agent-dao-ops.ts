@@ -11,10 +11,10 @@ import {
 
 import { etherscanProvider, ethersProvider } from "../../ethers";
 
-import NODE_OPERATORS_REGISTRY_ABI from "../../abi_v2/NodeOperatorsRegistry.json";
-import LIDO_DAO_ABI from "../../abi_v2/Lido.json";
-import MEV_ALLOW_LIST_ABI from "../../abi_v2/MEVBoostRelayAllowedList.json";
-import ENS_BASE_REGISTRAR_ABI from "../../abi_v2/ENS.json";
+import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
+import LIDO_DAO_ABI from "../../abi/Lido.json";
+import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
+import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
 import { ETH_DECIMALS, ONE_MONTH, ONE_WEEK } from "../../common/constants";
 

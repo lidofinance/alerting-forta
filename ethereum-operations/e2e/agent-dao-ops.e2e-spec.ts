@@ -22,7 +22,7 @@ describe("agent-dao-ops e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents_v2/dao-ops/agent-dao-ops")
+        provideAgentPath("subagents/dao-ops/agent-dao-ops")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),

@@ -26,7 +26,7 @@ describe("agent-proxy-watcher e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents_v2/proxy-watcher/agent-proxy-watcher")
+        provideAgentPath("subagents/proxy-watcher/agent-proxy-watcher")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),

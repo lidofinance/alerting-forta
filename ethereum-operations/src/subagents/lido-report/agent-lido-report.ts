@@ -11,9 +11,9 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import LIDO_ABI from "../../abi_v2/Lido.json";
-import STAKING_ROUTER_ABI from "../../abi_v2/StakingRouter.json";
-import BURNER_ABI from "../../abi_v2/Burner.json";
+import LIDO_ABI from "../../abi/Lido.json";
+import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
+import BURNER_ABI from "../../abi/Burner.json";
 
 import { formatDelay } from "./utils";
 import { RedefineMode, requireWithTier } from "../../common/utils";

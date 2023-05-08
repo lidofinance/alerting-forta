@@ -22,7 +22,7 @@ describe("agent-lido-report e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents_v2/lido-report/agent-lido-report")
+        provideAgentPath("subagents/lido-report/agent-lido-report")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),

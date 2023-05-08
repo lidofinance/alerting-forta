@@ -8,7 +8,7 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi_v2/OracleReportSanityChecker.json";
+import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi/OracleReportSanityChecker.json";
 
 import { RedefineMode, requireWithTier } from "../../common/utils";
 import type * as Constants from "./constants";

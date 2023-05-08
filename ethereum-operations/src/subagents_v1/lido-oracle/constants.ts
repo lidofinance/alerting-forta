@@ -4,11 +4,11 @@ import {
   EXITBUS_HASH_CONSENSUS_ADDRESS,
   EXITBUS_ORACLE_ADDRESS,
   EXITBUS_ORACLE_PROCESSING_STARTED_EVENT,
-} from "../../subagents_v2/exitbus-oracle/constants";
+} from "../../subagents/exitbus-oracle/constants";
 import {
   ACCOUNTING_HASH_CONSENSUS_ADDRESS,
   ACCOUNTING_ORACLE_ADDRESS,
-} from "../../subagents_v2/accounting-oracle/constants";
+} from "../../subagents/accounting-oracle/constants";
 
 // trigger each 5 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 5;

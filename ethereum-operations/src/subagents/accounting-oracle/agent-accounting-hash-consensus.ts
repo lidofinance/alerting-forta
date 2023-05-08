@@ -11,7 +11,7 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import HASH_CONSENSUS_ABI from "../../abi_v2/HashConsensus.json";
+import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 
 import { getMemberName } from "./utils";
 import {
@@ -23,8 +23,8 @@ import {
   ETH_DECIMALS,
   ONE_WEEK,
   BN_ZERO,
-  ONE_DAY,
   SECONDS_PER_SLOT,
+  ONE_DAY,
   MemberReport,
 } from "../../common/constants";
 
@@ -33,20 +33,20 @@ let membersAddresses: string[] = [];
 let membersLastReport: Map<string, MemberReport> = new Map();
 let membersBalanceLastAlert: Map<string, number> = new Map();
 
-export const name = "ExitBusOracleHashConsensus";
+export const name = "AccountingOracleHashConsensus";
 
 import type * as Constants from "./constants";
 const {
-  MIN_MEMBER_BALANCE_INFO,
-  MIN_MEMBER_BALANCE_HIGH,
+  MIN_ORACLE_BALANCE_INFO,
+  MIN_ORACLE_BALANCE_HIGH,
   MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO,
   MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM,
-  EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE,
-  EXITBUS_ORACLE_MEMBERS,
-  EXITBUS_HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
-  EXITBUS_HASH_CONSENSUS_ADDRESS,
-  EXITBUS_ORACLE_ADDRESS,
-  EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
+  ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE,
+  ACCOUNTING_ORACLE_MEMBERS,
+  ACCOUNTING_HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
+  ACCOUNTING_HASH_CONSENSUS_ADDRESS,
+  ACCOUNTING_ORACLE_ADDRESS,
+  ACCOUNTING_ORACLE_REPORT_SUBMITTED_EVENT,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -57,7 +57,7 @@ let fastLaneMembers: Array<string> = [];
 
 async function getOracleMembers(blockNumber: number): Promise<string[]> {
   const hashConsensus = new ethers.Contract(
-    EXITBUS_HASH_CONSENSUS_ADDRESS,
+    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     HASH_CONSENSUS_ABI,
     ethersProvider
   );
@@ -73,7 +73,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const hashConsensus = new ethers.Contract(
-    EXITBUS_HASH_CONSENSUS_ADDRESS,
+    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     HASH_CONSENSUS_ABI,
     ethersProvider
   );
@@ -133,7 +133,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleFastLaneMembers(blockEvent: BlockEvent) {
   const hashConsensus = new ethers.Contract(
-    EXITBUS_HASH_CONSENSUS_ADDRESS,
+    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     HASH_CONSENSUS_ABI,
     ethersProvider
   );
@@ -167,21 +167,21 @@ async function handleMemberBalance(
     const balance = new BigNumber(
       String(await ethersProvider.getBalance(member, blockEvent.blockNumber))
     ).div(ETH_DECIMALS);
-    if (balance.isLessThanOrEqualTo(MIN_MEMBER_BALANCE_INFO)) {
-      const severity = balance.isLessThanOrEqualTo(MIN_MEMBER_BALANCE_HIGH)
+    if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_INFO)) {
+      const severity = balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_HIGH)
         ? FindingSeverity.High
         : FindingSeverity.Info;
       findings.push(
         Finding.fromObject({
-          name: "⚠️ Low balance of ExitBus Oracle Member",
+          name: "⚠️ Low balance of Accounting Oracle Member",
           description:
             `Balance of ${member} ` +
             `(${getMemberName(
-              EXITBUS_ORACLE_MEMBERS,
+              ACCOUNTING_ORACLE_MEMBERS,
               member.toLocaleLowerCase()
             )}) is ` +
             `${balance.toFixed(4)} ETH. This is rather low!`,
-          alertId: "EXITBUS-ORACLE-MEMBER-LOW-BALANCE",
+          alertId: "ACCOUNTING-ORACLE-MEMBER-LOW-BALANCE",
           severity: severity,
           type: FindingType.Degraded,
           metadata: {
@@ -198,14 +198,14 @@ async function handleMemberBalance(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (txEvent.to === EXITBUS_HASH_CONSENSUS_ADDRESS) {
+  if (txEvent.to === ACCOUNTING_HASH_CONSENSUS_ADDRESS) {
     handleReportReceived(txEvent, findings);
     handleReportSubmitted(txEvent, findings);
   }
   handleEventsOfNotice(
     txEvent,
     findings,
-    EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE
+    ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE
   );
 
   return findings;
@@ -213,8 +213,8 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   const [event] = txEvent.filterLog(
-    EXITBUS_HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
-    EXITBUS_HASH_CONSENSUS_ADDRESS
+    ACCOUNTING_HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
+    ACCOUNTING_HASH_CONSENSUS_ADDRESS
   );
   if (!event) return;
   const currentReportHashes = [...membersLastReport.values()]
@@ -228,16 +228,16 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   ) {
     findings.push(
       Finding.fromObject({
-        name: "⚠️ ExitBus Oracle: Alternative report received",
+        name: "⚠️ Accounting Oracle: Alternative report received",
         description:
           `Member ${event.args.member} ` +
           `(${getMemberName(
-            EXITBUS_ORACLE_MEMBERS,
+            ACCOUNTING_ORACLE_MEMBERS,
             event.args.member.toLocaleLowerCase()
           )}) has reported a hash unmatched by other members.\nReference slot: ${
             event.args.refSlot
           }\n${receivedReportNumber} of ${membersCount} reports received`,
-        alertId: "EXITBUS-ORACLE-REPORT-RECEIVED-ALTERNATIVE-HASH",
+        alertId: "ACCOUNTING-ORACLE-REPORT-RECEIVED-ALTERNATIVE-HASH",
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
       })
@@ -245,16 +245,16 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   } else {
     findings.push(
       Finding.fromObject({
-        name: "ℹ️ ExitBus Oracle: Report received",
+        name: "ℹ️ Accounting Oracle: Report received",
         description:
           `Member ${event.args.member} ` +
           `(${getMemberName(
-            EXITBUS_ORACLE_MEMBERS,
+            ACCOUNTING_ORACLE_MEMBERS,
             event.args.member.toLocaleLowerCase()
           )})\nReference slot: ${
             event.args.refSlot
           }\n${receivedReportNumber} of ${membersCount} reports received`,
-        alertId: "EXITBUS-ORACLE-REPORT-RECEIVED",
+        alertId: "ACCOUNTING-ORACLE-REPORT-RECEIVED",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
       })
@@ -269,15 +269,15 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
 
 function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
   const [submitted] = txEvent.filterLog(
-    EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
-    EXITBUS_ORACLE_ADDRESS
+    ACCOUNTING_ORACLE_REPORT_SUBMITTED_EVENT,
+    ACCOUNTING_ORACLE_ADDRESS
   );
   if (!submitted) return;
   findings.push(
     Finding.fromObject({
-      name: "ℹ️ ExitBus Oracle: Report Submitted",
+      name: "ℹ️ Accounting Oracle: Report Submitted",
       description: `Reference slot: ${submitted.args.refSlot}\nHash: ${submitted.args.hash}`,
-      alertId: "EXITBUS-ORACLE-REPORT-SUBMITTED",
+      alertId: "ACCOUNTING-ORACLE-REPORT-SUBMITTED",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
     })
@@ -291,16 +291,16 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
     if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM) {
       findings.push(
         Finding.fromObject({
-          name: "⚠️ ExitBus Oracle: super sloppy member",
+          name: "⚠️ Accounting Oracle: super sloppy member",
           description:
             `Member ${member} ` +
             `(${getMemberName(
-              EXITBUS_ORACLE_MEMBERS,
+              ACCOUNTING_ORACLE_MEMBERS,
               member.toLocaleLowerCase()
             )}) ` +
             `has not reported before the submit for more than 2 weeks` +
             ` or have never reported yet`,
-          alertId: "SLOPPY-EXITBUS-ORACLE-MEMBER",
+          alertId: "SLOPPY-ACCOUNTING-ORACLE-MEMBER",
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
         })
@@ -309,15 +309,15 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
       if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
         findings.push(
           Finding.fromObject({
-            name: "🤔 ExitBus Oracle: sloppy member in fast lane",
+            name: "🤔 Accounting Oracle: sloppy member in fast lane",
             description:
               `Member ${member} ` +
               `(${getMemberName(
-                EXITBUS_ORACLE_MEMBERS,
+                ACCOUNTING_ORACLE_MEMBERS,
                 member.toLocaleLowerCase()
               )}) ` +
               `in fast lane and has not reported before the submit for more than ${reportDistDays} days`,
-            alertId: "SLOPPY-EXITBUS-ORACLE-FASTLANE-MEMBER",
+            alertId: "SLOPPY-ACCOUNTING-ORACLE-FASTLANE-MEMBER",
             severity: FindingSeverity.Info,
             type: FindingType.Suspicious,
           })

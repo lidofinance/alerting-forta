@@ -23,22 +23,22 @@ import * as agentAragon_v1 from "./subagents_v1/aragon-voting/agent-aragon-votin
 import * as agentACL_v1 from "./subagents_v1/acl-changes/agent-acl-changes";
 import * as agentNORegistry_v1 from "./subagents_v1/node-operators-registry/agent-node-operators-registry";
 
-import * as agentAccountingOracle_v2 from "./subagents_v2/accounting-oracle/agent-accounting-oracle";
-import * as agentAccountingOracleHashConsensus_v2 from "./subagents_v2/accounting-oracle/agent-accounting-hash-consensus";
-import * as agentExitBusOracle_v2 from "./subagents_v2/exitbus-oracle/agent-exitbus-oracle";
-import * as agentExitBusOracleHashConsensus_v2 from "./subagents_v2/exitbus-oracle/agent-exitbus-hash-consensus";
-import * as agentLidoOracle_v2 from "./subagents_v2/lido-report/agent-lido-report";
-import * as agentEasyTrack_v2 from "./subagents_v2/easy-track/agent-easy-track";
-import * as agentDaoOps_v2 from "./subagents_v2/dao-ops/agent-dao-ops";
-import * as agentProxy_v2 from "./subagents_v2/proxy-watcher/agent-proxy-watcher";
-import * as agentAragon_v2 from "./subagents_v2/aragon-voting/agent-aragon-voting";
-import * as agentACL_v2 from "./subagents_v2/acl-changes/agent-acl-changes";
-import * as agentNORegistry_v2 from "./subagents_v2/node-operators-registry/agent-node-operators-registry";
-import * as agentWithdrawals_v2 from "./subagents_v2/withdrawals/agent-withdrawals";
-import * as agentSanityChecker_v2 from "./subagents_v2/sanity-checker/agent-sanity-checker";
-import * as agentOracleDaemonConfig_v2 from "./subagents_v2/oracle-daemon-config/agent-oracle-daemon-config";
-import * as agentStakingRouter_v2 from "./subagents_v2/staking-router/agent-staking-router";
-import * as agentGateSeal_v2 from "./subagents_v2/gate-seal/agent-gate-seal";
+import * as agentAccountingOracle from "./subagents/accounting-oracle/agent-accounting-oracle";
+import * as agentAccountingOracleHashConsensus from "./subagents/accounting-oracle/agent-accounting-hash-consensus";
+import * as agentExitBusOracle from "./subagents/exitbus-oracle/agent-exitbus-oracle";
+import * as agentExitBusOracleHashConsensus from "./subagents/exitbus-oracle/agent-exitbus-hash-consensus";
+import * as agentLidoOracle from "./subagents/lido-report/agent-lido-report";
+import * as agentEasyTrack from "./subagents/easy-track/agent-easy-track";
+import * as agentDaoOps from "./subagents/dao-ops/agent-dao-ops";
+import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
+import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
+import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
+import * as agentNORegistry from "./subagents/node-operators-registry/agent-node-operators-registry";
+import * as agentWithdrawals from "./subagents/withdrawals/agent-withdrawals";
+import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-checker";
+import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
+import * as agentStakingRouter from "./subagents/staking-router/agent-staking-router";
+import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
 
 import VERSION from "./version";
 import {
@@ -68,23 +68,23 @@ const subAgents_v1: SubAgent[] = [
   agentNORegistry_v1,
 ];
 
-const subAgents_v2: SubAgent[] = [
-  agentAccountingOracle_v2,
-  agentAccountingOracleHashConsensus_v2,
-  agentExitBusOracle_v2,
-  agentExitBusOracleHashConsensus_v2,
-  agentLidoOracle_v2,
-  agentEasyTrack_v2,
-  agentDaoOps_v2,
-  agentProxy_v2,
-  agentAragon_v2,
-  agentACL_v2,
-  agentNORegistry_v2,
-  agentSanityChecker_v2,
-  agentOracleDaemonConfig_v2,
-  agentStakingRouter_v2,
-  agentWithdrawals_v2,
-  agentGateSeal_v2,
+const subAgents: SubAgent[] = [
+  agentAccountingOracle,
+  agentAccountingOracleHashConsensus,
+  agentExitBusOracle,
+  agentExitBusOracleHashConsensus,
+  agentLidoOracle,
+  agentEasyTrack,
+  agentDaoOps,
+  agentProxy,
+  agentAragon,
+  agentACL,
+  agentNORegistry,
+  agentSanityChecker,
+  agentOracleDaemonConfig,
+  agentStakingRouter,
+  agentWithdrawals,
+  agentGateSeal,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
@@ -136,7 +136,7 @@ const initialize = async () => {
     blockTag: blockNumber,
   });
   if (semanticVersion[0] > LIDO_APP_SEMANTIC_MAJOR_VERSION_V1) {
-    await _initialize(subAgents_v2, blockNumber);
+    await _initialize(subAgents, blockNumber);
     isNewVersionInitialized = true;
   } else {
     await _initialize(subAgents_v1, blockNumber);
@@ -198,12 +198,12 @@ const handleBlock: HandleBlock = async (
     protocolVersionSwitchBlock != 0 &&
     blockEvent.blockNumber > protocolVersionSwitchBlock
   ) {
-    await _initialize(subAgents_v2, blockEvent.blockNumber);
+    await _initialize(subAgents, blockEvent.blockNumber);
     isNewVersionInitialized = true;
   }
 
   if (isNewVersionInitialized) {
-    return await _handleBlock(subAgents_v2, blockEvent);
+    return await _handleBlock(subAgents, blockEvent);
   } else {
     return await _handleBlock(subAgents_v1, blockEvent);
   }
@@ -276,7 +276,7 @@ const handleTransaction: HandleTransaction = async (
   }
 
   if (isNewVersionInitialized) {
-    return await _handleTransaction(subAgents_v2, txEvent);
+    return await _handleTransaction(subAgents, txEvent);
   } else {
     return await _handleTransaction(subAgents_v1, txEvent);
   }

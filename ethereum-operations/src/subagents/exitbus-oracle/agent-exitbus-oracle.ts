@@ -9,7 +9,7 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import EXITBUS_ORACLE_ABI from "../../abi_v2/ValidatorsExitBusOracle.json";
+import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
 
 import {
   formatDelay,

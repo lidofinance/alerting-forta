@@ -11,9 +11,9 @@ import { formatDelay, RedefineMode, requireWithTier } from "../../common/utils";
 import * as Constants from "./constants";
 import { ethersProvider } from "../../ethers";
 
-import GATE_SEAL_ABI from "../../abi_v2/GateSeal.json";
-import WITHDRAWAL_QUEUE_ABI from "../../abi_v2/WithdrawalQueueERC721.json";
-import EXITBUS_ORACLE_ABI from "../../abi_v2/ValidatorsExitBusOracle.json";
+import GATE_SEAL_ABI from "../../abi/GateSeal.json";
+import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
+import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
 
 const {
   GATE_SEAL_FACTORY_ADDRESS,

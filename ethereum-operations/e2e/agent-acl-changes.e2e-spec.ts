@@ -6,8 +6,8 @@ import {
   provideRunTransaction,
 } from "./utils";
 
-import { getRoleMembers } from "../src/subagents_v2/acl-changes/agent-acl-changes";
-import { roleByName } from "../src/subagents_v2/acl-changes/utils";
+import { getRoleMembers } from "../src/subagents/acl-changes/agent-acl-changes";
+import { roleByName } from "../src/subagents/acl-changes/utils";
 
 const TEST_TIMEOUT = 60_000; // ms
 
@@ -25,7 +25,7 @@ describe("agent-acl-changes e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents_v2/acl-changes/agent-acl-changes")
+        provideAgentPath("subagents/acl-changes/agent-acl-changes")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
