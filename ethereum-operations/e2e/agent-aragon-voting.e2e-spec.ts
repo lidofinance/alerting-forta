@@ -25,7 +25,7 @@ describe("agent-aragon-voting e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/aragon-voting/agent-aragon-voting")
+        provideAgentPath("subagents_v2/aragon-voting/agent-aragon-voting")
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
