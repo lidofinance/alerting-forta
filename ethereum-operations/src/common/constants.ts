@@ -5,7 +5,8 @@ export const LIDO_APP_REPO_ADDRESS =
   "0xF5Dc67E54FC96F993CD06073f71ca732C1E654B1";
 export const LIDO_ADDRESS = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84";
 
-export const LIDO_CONTRACT_VERSION_SET_EVENT = "";
+export const LIDO_CONTRACT_VERSION_SET_EVENT =
+  "event ContractVersionSet(uint256 version)";
 
 // todo: consts for v1. should be removed after upgrade with old subagents
 export const LIDO_APP_SEMANTIC_MAJOR_VERSION_V1 = 3;

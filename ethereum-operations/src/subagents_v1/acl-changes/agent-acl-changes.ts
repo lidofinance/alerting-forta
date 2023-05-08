@@ -246,5 +246,5 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
 exports.default = {
   handleBlock,
   handleTransaction,
-  initialize, // sdk won't provide any arguments to the function
+  // initialize, // sdk won't provide any arguments to the function
 };
