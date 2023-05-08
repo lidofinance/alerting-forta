@@ -43,6 +43,7 @@ import {
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
+  BURNER_EVENTS_OF_NOTICE,
 } from "./constants";
 import { handleEventsOfNotice } from "../../common/utils";
 
@@ -493,6 +494,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
     INSURANCE_FUND_EVENTS_OF_NOTICE,
     TRP_EVENTS_OF_NOTICE,
+    BURNER_EVENTS_OF_NOTICE,
   ].forEach((eventsOfNotice) => {
     handleEventsOfNotice(txEvent, findings, eventsOfNotice);
   });

@@ -29,6 +29,10 @@ import {
   LIDO_ORACLE_COMPLETED_EVENT,
   LIDO_ORACLE_BEACON_REPORTED_EVENT,
   LIDO_ORACLE_EVENTS_OF_NOTICE,
+  ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE,
+  ACCOUNTING_ORACLE_EVENTS_OF_NOTICE,
+  EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE,
+  EXITBUS_ORACLE_EVENTS_OF_NOTICE,
 } from "./constants";
 import {
   byBlockNumberDesc,
@@ -320,7 +324,13 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     handleReportBeacon(txEvent);
     handleBeaconCompleted(txEvent, findings);
   }
-  handleEventsOfNotice(txEvent, findings, LIDO_ORACLE_EVENTS_OF_NOTICE);
+  [
+    LIDO_ORACLE_EVENTS_OF_NOTICE,
+    ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE,
+    ACCOUNTING_ORACLE_EVENTS_OF_NOTICE,
+    EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE,
+    EXITBUS_ORACLE_EVENTS_OF_NOTICE,
+  ].forEach((events) => handleEventsOfNotice(txEvent, findings, events));
 
   return findings;
 }
