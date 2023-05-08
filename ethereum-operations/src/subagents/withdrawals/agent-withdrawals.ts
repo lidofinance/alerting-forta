@@ -313,18 +313,18 @@ async function handleUnclaimedRequests(
   );
 
   const unclaimedReqIds: number[] = [];
-  const outdatedReqIds: number[] = [];
+  const outdatedClaimedReqIds: number[] = [];
   finalizedWithdrawalRequests.forEach((req, id) => {
     const isOutdated =
       now - Number(req.timestamp) > UNCLAIMED_REQUESTS_TIME_WINDOW;
-    if (isOutdated) {
-      outdatedReqIds.push(id);
+    if (req.claimed && isOutdated) {
+      outdatedClaimedReqIds.push(id);
     }
-    if (!isOutdated && !req.claimed) {
+    if (!req.claimed) {
       unclaimedReqIds.push(id);
     }
   });
-  outdatedReqIds.forEach((id) => {
+  outdatedClaimedReqIds.forEach((id) => {
     finalizedWithdrawalRequests.delete(id);
   });
   const unclaimedRequestsStatuses = (
@@ -361,9 +361,12 @@ async function handleUnclaimedRequests(
         name: `🤔 Withdrawals: ${unclaimedSizeRate
           .times(100)
           .toFixed(2)}% of finalized requests are unclaimed`,
-        description: `Unclaimed: ${unclaimedSize
+        description: `Unclaimed (for all time): ${unclaimedSize
           .div(ETH_DECIMALS)
-          .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize
+          .toFixed(2)} stETH\n
+          Claimed (for 2 weeks): ${claimedSize
+            .div(ETH_DECIMALS)
+            .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize
           .div(ETH_DECIMALS)
           .toFixed(2)} stETH`,
         alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS",
