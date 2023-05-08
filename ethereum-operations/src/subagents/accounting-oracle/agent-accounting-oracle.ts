@@ -102,7 +102,7 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleReportSubmitted(blockEvent, findings)]);
+  await handleReportSubmitted(blockEvent, findings);
 
   return findings;
 }
@@ -140,7 +140,7 @@ async function handleReportSubmitted(
           : FindingSeverity.High;
       findings.push(
         Finding.fromObject({
-          name: "🚨 Accounting Oracle report submit overdue",
+          name: "🚨 Accounting Oracle: report submit overdue",
           description: `Time since last report: ${formatDelay(
             reportSubmitDelayUpdated
           )}`,

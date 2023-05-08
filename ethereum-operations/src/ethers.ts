@@ -8,6 +8,6 @@ const etherscanKey = Buffer.from(
 
 export const ethersProvider: Provider = getEthersProvider();
 export const etherscanProvider = new ethers.providers.EtherscanProvider(
-  undefined,
+  process.env.FORTA_AGENT_RUN_TEAR == "testnet" ? "goerli" : undefined,
   etherscanKey
 );
