@@ -103,7 +103,7 @@ yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
 
 ### Testnet
 
-For example, you need to add `node-operators-registry` sub-agent `testnet` tier support:
+For example, you need to add `testnet` tier support for some new sub-agent:
 
 1. Change default import from `./constants` to `requireWithTier` function call:
    ##### Before:
