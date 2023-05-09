@@ -256,7 +256,9 @@ async function checkGateSeal(
     blockTag: blockNumber,
   });
   if (expired) return undefined;
-  const keccakGateSeal = ethers.utils.keccak256(gateSealAddress);
+  const keccakPauseRole = ethers.utils.keccak256(
+    ethers.utils.toUtf8Bytes("PAUSE_ROLE")
+  );
   const withdrawalQueue = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
@@ -267,13 +269,21 @@ async function checkGateSeal(
     EXITBUS_ORACLE_ABI,
     ethersProvider
   );
-  const [queuePauseRole] = await withdrawalQueue.functions.PAUSE_ROLE({
-    blockTag: blockNumber,
-  });
-  const [exitBusPauseRole] = await exitBusOracle.functions.PAUSE_ROLE({
-    blockTag: blockNumber,
-  });
-  roleForExitBus = keccakGateSeal == exitBusPauseRole;
-  roleForWithdrawalQueue = keccakGateSeal == queuePauseRole;
+  const [queuePauseRoleMember] = await withdrawalQueue.functions.getRoleMember(
+    keccakPauseRole,
+    0,
+    {
+      blockTag: blockNumber,
+    }
+  );
+  const [exitBusPauseRoleMember] = await exitBusOracle.functions.getRoleMember(
+    keccakPauseRole,
+    0,
+    {
+      blockTag: blockNumber,
+    }
+  );
+  roleForExitBus = gateSealAddress == queuePauseRoleMember;
+  roleForWithdrawalQueue = gateSealAddress == exitBusPauseRoleMember;
   return { roleForExitBus, roleForWithdrawalQueue };
 }
