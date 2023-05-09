@@ -41,13 +41,20 @@ import * as agentStakingRouter from "./subagents/staking-router/agent-staking-ro
 import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
 
 import VERSION from "./version";
-import {
+import { RedefineMode, requireWithTier } from "./common/utils";
+import type * as Constants from "./common/constants";
+
+const {
   LIDO_ADDRESS,
   LIDO_APP_REPO_ADDRESS,
   LIDO_APP_SEMANTIC_MAJOR_VERSION_V1,
   LIDO_CONTRACT_VERSION_SET_EVENT,
   RUN_TIER,
-} from "./common/constants";
+} = requireWithTier<typeof Constants>(
+  module,
+  `./common/constants`,
+  RedefineMode.Merge
+);
 
 type Metadata = { [key: string]: string };
 interface SubAgent {

@@ -115,7 +115,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       "0xdc62f9e8C34be08501Cdef4EBDE0a280f576D762",
       {
         name: "Withdrawal Vault",
-        shortABI: ossifiableProxyImplABI,
+        shortABI: implementationFuncShortABI,
       },
     ],
     [
