@@ -72,7 +72,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     event: "event MemberAdded(address member)",
     alertId: "LIDO-ORACLE-MEMBER-ADDED",
     name: "ℹ️ Lido Oracle: Member Added",
-    description: (args: any) => `New oracle member added - ${args.member}`,
+    description: (args: any) => `New oracle member added: ${args.member}`,
     severity: FindingSeverity.High,
   },
   {
@@ -80,7 +80,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     event: "event MemberRemoved(address member)",
     alertId: "LIDO-ORACLE-MEMBER-REMOVED",
     name: "⚠️ Lido Oracle: Member Removed",
-    description: (args: any) => `New oracle member removed - ${args.member}`,
+    description: (args: any) => `New oracle member removed: ${args.member}`,
     severity: FindingSeverity.High,
   },
   {
@@ -149,7 +149,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-FRAME-CONFIG-SET",
     name: "🚨 Accounting Oracle: Frame Config set",
     description: (args: any) =>
-      `New initial epoch: ${args.newInitialEpoch}\nNew epochs per frame - ${args.newEpochsPerFrame}`,
+      `New initial epoch: ${args.newInitialEpoch}\nNew epochs per frame: ${args.newEpochsPerFrame}`,
     severity: FindingSeverity.High,
   },
   {
@@ -159,7 +159,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "ACCOUNTING-ORACLE-REPORT-PROCESSOR-SET",
     name: "🚨 Accounting Oracle: Report Processor set",
     description: (args: any) =>
-      `New report processor: ${args.processor}\nPrev report processor - ${args.prevProcessor}`,
+      `New report processor: ${args.processor}\nPrev report processor: ${args.prevProcessor}`,
     severity: FindingSeverity.High,
   },
   {
@@ -187,7 +187,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusHashContractSet(address indexed addr, address indexed prevAddr)",
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-HASH-CONTRACT-SET",
-    name: "ℹ️ Accounting Oracle: Consensus Hash Contract Set",
+    name: "⚠️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
     severity: FindingSeverity.High,
@@ -197,7 +197,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)",
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-VERSION-SET",
-    name: "ℹ️ Accounting Oracle: Consensus Version Set",
+    name: "⚠️ Accounting Oracle: Consensus Version Set",
     description: (args: any) =>
       `New version: ${args.version}\nPrevious version: ${args.prevVersion}`,
     severity: FindingSeverity.High,
@@ -316,7 +316,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusHashContractSet(address indexed addr, address indexed prevAddr)",
     alertId: "EXITBUS-ORACLE-CONSENSUS-HASH-CONTRACT-SET",
-    name: "ℹ️ ExitBus Oracle: Consensus Hash Contract Set",
+    name: "⚠️️ ExitBus Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
     severity: FindingSeverity.High,
@@ -326,7 +326,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)",
     alertId: "EXITBUS-ORACLE-CONSENSUS-VERSION-SET",
-    name: "ℹ️ ExitBus Oracle: Consensus Version Set",
+    name: "⚠️ ExitBus Oracle: Consensus Version Set",
     description: (args: any) =>
       `New version: ${args.version}\nPrevious version: ${args.prevVersion}`,
     severity: FindingSeverity.High,

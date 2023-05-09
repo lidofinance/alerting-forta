@@ -196,8 +196,7 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_DAO_ADDRESS,
-    event:
-      "event WithdrawalsReceived(address vault, address token, uint256 amount)",
+    event: "event RecoverToVault(address vault, address token, uint256 amount)",
     alertId: "LIDO-DAO-RECOVER-TO-VAULT",
     name: "ℹ Lido DAO: Funds recovered to vault",
     description: (args: any) =>

@@ -138,7 +138,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusHashContractSet(address indexed addr, address indexed prevAddr)",
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-HASH-CONTRACT-SET",
-    name: "ℹ️ Accounting Oracle: Consensus Hash Contract Set",
+    name: "⚠️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
     severity: FindingSeverity.High,
@@ -148,7 +148,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)",
     alertId: "ACCOUNTING-ORACLE-CONSENSUS-VERSION-SET",
-    name: "ℹ️ Accounting Oracle: Consensus Version Set",
+    name: "⚠️ Accounting Oracle: Consensus Version Set",
     description: (args: any) =>
       `New version: ${args.version}\nPrevious version: ${args.prevVersion}`,
     severity: FindingSeverity.High,

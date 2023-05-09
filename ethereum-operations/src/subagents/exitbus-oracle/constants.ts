@@ -153,7 +153,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusHashContractSet(address indexed addr, address indexed prevAddr)",
     alertId: "EXITBUS-ORACLE-CONSENSUS-HASH-CONTRACT-SET",
-    name: "ℹ️ ExitBus Oracle: Consensus Hash Contract Set",
+    name: "⚠️ ExitBus Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
     severity: FindingSeverity.High,
@@ -163,7 +163,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     event:
       "event ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)",
     alertId: "EXITBUS-ORACLE-CONSENSUS-VERSION-SET",
-    name: "ℹ️ ExitBus Oracle: Consensus Version Set",
+    name: "⚠️ ExitBus Oracle: Consensus Version Set",
     description: (args: any) =>
       `New version: ${args.version}\nPrevious version: ${args.prevVersion}`,
     severity: FindingSeverity.High,
