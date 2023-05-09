@@ -8,9 +8,9 @@ export const CL_GENESIS_TIMESTEMP = 1606824023;
 export const TRIGGER_PERIOD = 60 * 5;
 
 export const EXITBUS_ORACLE_ADDRESS =
-  "0xb75a55efab5a8f5224ae93b34b25741edd3da98b";
+  "0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e";
 export const EXITBUS_HASH_CONSENSUS_ADDRESS =
-  "0x8374b4ac337d7e367ea1ef54bb29880c3f036a51";
+  "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
 
 export const WITHDRAWALS_QUEUE_ADDRESS = "";
 export const WITHDRAWALS_VAULT_ADDRESS = "";
