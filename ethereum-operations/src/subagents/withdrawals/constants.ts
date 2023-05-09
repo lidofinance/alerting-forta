@@ -1,6 +1,6 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
-import { ONE_DAY, ONE_HOUR } from "../../common/constants";
+import { ONE_DAY, ONE_HOUR, ONE_WEEK } from "../../common/constants";
 
 export const WITHDRAWAL_QUEUE_ADDRESS =
   "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
@@ -16,6 +16,13 @@ export const BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY;
 
 export const LONG_UNFINALIZED_QUEUE_THRESHOLD = 5 * ONE_DAY;
 export const LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY;
+
+export const QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD = 0.95;
+export const QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY = ONE_DAY;
+
+export const UNCLAIMED_REQUESTS_TIME_WINDOW = 2 * ONE_WEEK;
+export const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.2;
+export const UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY = ONE_DAY;
 
 export const LIDO_TOKEN_REBASED =
   "event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)";
