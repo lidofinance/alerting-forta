@@ -1,3 +1,5 @@
+import { ONE_DAY } from "../../common/constants";
+
 export const ACCOUNTING_ORACLE_ADDRESS =
   "0x76f358a842defa0e179a8970767cff668fc134d6";
 export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
@@ -16,4 +18,4 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
 ]);
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 15744; // 41 epoch in seconds
+export const MAX_ORACLE_REPORT_SUBMIT_DELAY = ONE_DAY + 15 * 60; // 24h 15m

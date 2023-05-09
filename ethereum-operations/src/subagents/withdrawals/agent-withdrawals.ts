@@ -363,10 +363,9 @@ async function handleUnclaimedRequests(
           .toFixed(2)}% of finalized requests are unclaimed`,
         description: `Unclaimed (for all time): ${unclaimedSize
           .div(ETH_DECIMALS)
-          .toFixed(2)} stETH\n
-          Claimed (for 2 weeks): ${claimedSize
-            .div(ETH_DECIMALS)
-            .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize
+          .toFixed(2)} stETH\nClaimed (for 2 weeks): ${claimedSize
+          .div(ETH_DECIMALS)
+          .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize
           .div(ETH_DECIMALS)
           .toFixed(2)} stETH`,
         alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS",

@@ -1,3 +1,5 @@
+import { ONE_HOUR } from "../../common/constants";
+
 export const CL_GENESIS_TIMESTEMP = 1616508000;
 
 export const EXITBUS_ORACLE_ADDRESS =
@@ -28,4 +30,4 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
 ]);
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 1920; // 5 epoch in seconds
+export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 8 * ONE_HOUR + 15 * 60; // 8h 15m

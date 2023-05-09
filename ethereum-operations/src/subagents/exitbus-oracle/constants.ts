@@ -50,7 +50,7 @@ export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD = 8;
 export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD = 16;
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 6 * ONE_HOUR + 15 * 60; // 6h 15m
+export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 8 * ONE_HOUR + 15 * 60; // 6h 15m
 
 export const MIN_MEMBER_BALANCE_INFO = 0.3; // 0.3 ETH
 
