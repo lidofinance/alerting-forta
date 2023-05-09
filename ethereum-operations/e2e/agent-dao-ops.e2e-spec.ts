@@ -77,7 +77,8 @@ describe("agent-dao-ops e2e tests", () => {
     TEST_TIMEOUT
   );
 
-  // disabled due to changes in the event signatures
+  // todo: disabled due to changes in the event signatures.
+  //  uncomment or remove after V2
   // it(
   //   "should process tx with paused deposits",
   //   async () => {
