@@ -289,7 +289,7 @@ async function handleOracleBalance(
   const lastAlert = oraclesBalanceLastAlert.get(oracle) || 0;
   if (now > lastAlert + WEEK) {
     const balance = new BigNumber(
-      String(await ethersProvider.getBalance(oracle, blockEvent.blockHash))
+      String(await ethersProvider.getBalance(oracle, blockEvent.blockNumber))
     ).div(ETH_DECIMALS);
     if (balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_INFO)) {
       const severity = balance.isLessThanOrEqualTo(MIN_ORACLE_BALANCE_HIGH)

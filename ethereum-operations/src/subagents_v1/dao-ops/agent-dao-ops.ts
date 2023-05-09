@@ -235,7 +235,7 @@ async function handleDepositExecutorBalance(
       String(
         await ethersProvider.getBalance(
           LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-          blockEvent.blockHash
+          blockEvent.blockNumber
         )
       )
     );
@@ -338,7 +338,7 @@ async function handleElRewardsBalance(
       String(
         await ethersProvider.getBalance(
           LIDO_EL_REWARDS_VAULT_ADDRESS,
-          blockEvent.blockHash
+          blockEvent.blockNumber
         )
       )
     );
