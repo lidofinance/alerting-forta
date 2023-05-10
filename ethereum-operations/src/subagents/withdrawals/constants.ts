@@ -41,7 +41,7 @@ export const WITHDRAWALS_EVENTS_OF_NOTICE = [
     address: WITHDRAWAL_QUEUE_ADDRESS,
     event: "event Resumed()",
     alertId: "WITHDRAWALS-UNPAUSED",
-    name: "ℹ️ Withdrawals: contract was unpaused",
+    name: "✅ Withdrawals: contract was unpaused",
     description: (args: any) => "",
     severity: FindingSeverity.High,
   },

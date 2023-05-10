@@ -4,17 +4,20 @@ import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 
 export const CL_GENESIS_TIMESTEMP = 1606824023;
 
-// trigger each 5 minutes for lasting conditions
-export const TRIGGER_PERIOD = 60 * 5;
+// trigger each 10 minutes for lasting conditions
+export const TRIGGER_PERIOD = 60 * 10;
 
 export const EXITBUS_ORACLE_ADDRESS =
   "0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e";
 export const EXITBUS_HASH_CONSENSUS_ADDRESS =
   "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
 
-export const WITHDRAWALS_QUEUE_ADDRESS = "";
-export const WITHDRAWALS_VAULT_ADDRESS = "";
-export const EL_REWARDS_VAULT_ADDRESS = "";
+export const WITHDRAWALS_QUEUE_ADDRESS =
+  "0xa2ecee311e61edaf4a3ac56b437fddfaced8da80";
+export const WITHDRAWALS_VAULT_ADDRESS =
+  "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
+export const EL_REWARDS_VAULT_ADDRESS =
+  "0x388c818ca8b9251b393131c08a736a67ccb19297";
 
 export const EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT =
   "event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)";
@@ -75,10 +78,10 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event:
       "event MemberAdded(address indexed addr, uint256 newTotalMembers, uint256 newQuorum)",
     alertId: "EXITBUS-ORACLE-MEMBER-ADDED",
-    name: "ℹ️ ExitBus Oracle: Member Added",
+    name: "⚠️ ExitBus Oracle: Member Added",
     description: (args: any) =>
       `Oracle member added: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
@@ -88,7 +91,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "⚠️ ExitBus Oracle: Member Removed",
     description: (args: any) =>
       `Oracle member removed: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
@@ -98,7 +101,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "🚨 ExitBus Oracle: Quorum Set",
     description: (args: any) =>
       `Quorum size was set to ${args.newQuorum}\nTotal members: ${args.totalMembers}\nPrevious quorum: ${args.prevQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
@@ -156,7 +159,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️ ExitBus Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_ORACLE_ADDRESS,
@@ -183,7 +186,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     name: "🚨 ExitBus Oracle: contract was paused",
     description: (args: any) =>
       `For ${new BigNumber(args.duration).div(360)} hours`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_ORACLE_ADDRESS,

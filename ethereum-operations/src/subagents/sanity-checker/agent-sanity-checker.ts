@@ -80,10 +80,10 @@ async function handleOracleReportLimits(
   if (changed) {
     findings.push(
       Finding.fromObject({
-        name: "⚠️ Oracle Report Sanity Checker: some limits were changed",
+        name: "⚠️ Oracle Report Sanity Checker: limits were changed",
         description: description,
         alertId: "ORACLE-REPORT-SANITY-CHECKER-LIMITS-CHANGED",
-        severity: FindingSeverity.Medium,
+        severity: FindingSeverity.High,
         type: FindingType.Info,
       })
     );

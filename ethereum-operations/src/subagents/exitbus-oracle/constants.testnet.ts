@@ -1,4 +1,7 @@
-import { ONE_HOUR } from "../../common/constants";
+import {
+  EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE as hashConsensusEvents,
+  EXITBUS_ORACLE_EVENTS_OF_NOTICE as oracleEvents,
+} from "./constants";
 
 export const CL_GENESIS_TIMESTEMP = 1616508000;
 
@@ -29,5 +32,14 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x3ff28f2ede8358e288798afc23ee299a503ad5c9", "Kyber Network"],
 ]);
 
-// max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = 8 * ONE_HOUR + 15 * 60; // 8h 15m
+export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
+  (event) => ({
+    ...event,
+    address: EXITBUS_HASH_CONSENSUS_ADDRESS,
+  })
+);
+
+export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = oracleEvents.map((event) => ({
+  ...event,
+  address: EXITBUS_ORACLE_ADDRESS,
+}));

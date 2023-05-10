@@ -73,28 +73,12 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  try {
-    const { allExited, allStuck, allRefunded } = await getSummaryDigest(
-      currentBlock
-    );
-    lastAllExited = allExited;
-    lastAllStuck = allStuck;
-    lastAllRefunded = allRefunded;
-  } catch (e: any) {
-    // cant get node operators digests because is not deployed yet or something else
-    initFindings.push(
-      Finding.fromObject({
-        name: "StakingRouter.getAllNodeOperatorDigests error",
-        description: "Probably StakingRouter is not deployed yet",
-        alertId: "STAKING-ROUTER-NOT-DEPLOYED",
-        severity: FindingSeverity.Info,
-        type: FindingType.Suspicious,
-        metadata: {
-          stack: e.message,
-        },
-      })
-    );
-  }
+  const { allExited, allStuck, allRefunded } = await getSummaryDigest(
+    currentBlock
+  );
+  lastAllExited = allExited;
+  lastAllStuck = allStuck;
+  lastAllRefunded = allRefunded;
 
   const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const block48HoursAgo =
@@ -168,7 +152,7 @@ async function handleELRewardsVaultOverfill(
     if (balance.div(tvl).times(100).gt(OVERFILL_THRESHOLD_PERCENT)) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ ELRewardsVault overfilled: balance more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
+          name: `⚠️ ELRewardsVault overfilled: balance is more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
           description: `Balance: ${balance
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(3)} ETH`,
@@ -203,7 +187,7 @@ async function handleWithdrawalsVaultOverfill(
     if (balance.div(tvl).times(100).gt(OVERFILL_THRESHOLD_PERCENT)) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ WithdrawalsVault overfilled: balance more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
+          name: `⚠️ WithdrawalsVault overfilled: balance is more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
           description: `Balance: ${balance
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(3)} ETH`,
@@ -241,7 +225,7 @@ async function handleBurnerUnburntSharesOverfill(
     ) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ Burner overfilled: unburnt shares more than ${OVERFILL_THRESHOLD_PERCENT}% of total shares`,
+          name: `⚠️ Burner overfilled: unburnt shares are more than ${OVERFILL_THRESHOLD_PERCENT}% of total shares`,
           description: `Unburnt: ${unburntShares
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nTotal shares: ${totalShares
@@ -496,7 +480,7 @@ function handleWithdrawalsFinalizationDigest(
   if (requests > 0) {
     description = `Requests: ${
       Number(to) - Number(from)
-    }, Shares: ${shares.toFixed(3)} ETH, Ether: ${ether.toFixed(3)} ETH`;
+    }\nShares: ${shares.toFixed(2)} ETH\nEther: ${ether.toFixed(2)} ETH`;
   }
   findings.push(
     Finding.fromObject({

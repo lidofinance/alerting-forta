@@ -57,37 +57,21 @@ export async function initialize(
     ethersProvider
   );
 
-  try {
-    const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
-      NODE_OPERATOR_REGISTRY_MODULE_ID,
-      { blockTag: currentBlock }
-    );
+  const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
+    NODE_OPERATOR_REGISTRY_MODULE_ID,
+    { blockTag: currentBlock }
+  );
 
-    operators.forEach((digest: any) =>
-      nodeOperatorDigests.set(String(digest.id), {
-        stuck: Number(digest.summary.stuckValidatorsCount),
-        refunded: Number(digest.summary.refundedValidatorsCount),
-        exited: Number(digest.summary.totalExitedValidators),
-        isStuckRefunded:
-          Number(digest.summary.refundedValidatorsCount) >=
-          Number(digest.summary.stuckValidatorsCount),
-      })
-    );
-  } catch (e: any) {
-    // cant get node operators digests because is not deployed yet or something else
-    initFindings.push(
-      Finding.fromObject({
-        name: "StakingRouter.getAllNodeOperatorDigests error",
-        description: "Probably StakingRouter is not deployed yet",
-        alertId: "STAKING-ROUTER-NOT-DEPLOYED",
-        severity: FindingSeverity.Info,
-        type: FindingType.Suspicious,
-        metadata: {
-          stack: e.message,
-        },
-      })
-    );
-  }
+  operators.forEach((digest: any) =>
+    nodeOperatorDigests.set(String(digest.id), {
+      stuck: Number(digest.summary.stuckValidatorsCount),
+      refunded: Number(digest.summary.refundedValidatorsCount),
+      exited: Number(digest.summary.totalExitedValidators),
+      isStuckRefunded:
+        Number(digest.summary.refundedValidatorsCount) >=
+        Number(digest.summary.stuckValidatorsCount),
+    })
+  );
 
   return {};
 }
@@ -141,7 +125,7 @@ function handleExitedCountChanged(
       findings.push(
         Finding.fromObject({
           name: `⚠️ NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `ID: ${nodeOperatorId}\nNew exited: ${newExited}`,
+          description: `Operator ID: ${nodeOperatorId}\nNew exited: ${newExited}`,
           alertId: "NODE-OPERATORS-BIG-EXIT",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -160,7 +144,7 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator exited all stuck keys 🎉",
-            description: `ID: ${nodeOperatorId}\nStuck exited: ${lastDigest.stuck}`,
+            description: `Operator ID: ${nodeOperatorId}\nStuck exited: ${lastDigest.stuck}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-EXITED",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -192,7 +176,7 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: "⚠️ NO Registry: operator have new stuck keys",
-            description: `ID: ${nodeOperatorId}\nNew stuck: ${stuckValidatorsCount}`,
+            description: `Operator ID: ${nodeOperatorId}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: "NODE-OPERATORS-NEW-STUCK-KEYS",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
@@ -209,7 +193,7 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator refunded all stuck keys 🎉",
-            description: `ID: ${nodeOperatorId}\nRefunded: ${refundedValidatorsCount}`,
+            description: `Operator ID: ${nodeOperatorId}\nRefunded: ${refundedValidatorsCount}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-REFUNDED",
             severity: FindingSeverity.Info,
             type: FindingType.Info,

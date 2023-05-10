@@ -1,8 +1,8 @@
 import { FindingSeverity } from "forta-agent";
 import { ONE_DAY, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 
-// trigger each 5 minutes for lasting conditions
-export const TRIGGER_PERIOD = 60 * 5;
+// trigger each 10 minutes for lasting conditions
+export const TRIGGER_PERIOD = 60 * 10;
 
 export const ACCOUNTING_ORACLE_ADDRESS =
   "0x852ded011285fe67063a08005c71a85690503cee";
@@ -60,10 +60,10 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event:
       "event MemberAdded(address indexed addr, uint256 newTotalMembers, uint256 newQuorum)",
     alertId: "ACCOUNTING-ORACLE-MEMBER-ADDED",
-    name: "ℹ️ Accounting Oracle: Member Added",
+    name: "⚠️️ Accounting Oracle: Member Added",
     description: (args: any) =>
       `Oracle member added: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -73,7 +73,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "⚠️ Accounting Oracle: Member Removed",
     description: (args: any) =>
       `Oracle member removed: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -83,7 +83,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "🚨 Accounting Oracle: Quorum Set",
     description: (args: any) =>
       `Quorum size was set to ${args.newQuorum}\nTotal members: ${args.totalMembers}\nPrevious quorum: ${args.prevQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -141,7 +141,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_ORACLE_ADDRESS,

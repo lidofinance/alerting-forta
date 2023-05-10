@@ -31,7 +31,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     event:
       "event ExitedAndStuckValidatorsCountsUpdateFailed(uint256 indexed stakingModuleId, bytes lowLevelRevertData)",
     alertId: "STAKING-ROUTER-EXITED-AND-STUCK-UPDATE-FAILED",
-    name: "🚨 Staking Router: exited and stuck validators counts update was failed",
+    name: "🚨 Staking Router: exited and stuck validators counts update failed",
     description: (args: any) => `Staking module ID: ${args.stakingModuleId}`,
     severity: FindingSeverity.Critical,
   },
@@ -40,7 +40,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     event:
       "event RewardsMintedReportFailed(uint256 indexed stakingModuleId, bytes lowLevelRevertData)",
     alertId: "STAKING-ROUTER-REWARDS-MINTED-REPORT-FAILED",
-    name: "🚨 Staking Router: rewards minting was failed",
+    name: "🚨 Staking Router: rewards minting failed",
     description: (args: any) => `Staking module ID: ${args.stakingModuleId}`,
     severity: FindingSeverity.Critical,
   },

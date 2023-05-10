@@ -198,7 +198,7 @@ async function handleMemberBalance(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (txEvent.to === ACCOUNTING_HASH_CONSENSUS_ADDRESS) {
+  if (ACCOUNTING_HASH_CONSENSUS_ADDRESS in txEvent.addresses) {
     handleReportReceived(txEvent, findings);
     handleReportSubmitted(txEvent, findings);
   }

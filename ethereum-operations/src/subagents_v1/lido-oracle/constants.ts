@@ -71,9 +71,9 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     address: LIDO_ORACLE_ADDRESS,
     event: "event MemberAdded(address member)",
     alertId: "LIDO-ORACLE-MEMBER-ADDED",
-    name: "ℹ️ Lido Oracle: Member Added",
+    name: "⚠️ Lido Oracle: Member Added",
     description: (args: any) => `New oracle member added: ${args.member}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_ORACLE_ADDRESS,
@@ -81,7 +81,7 @@ export const LIDO_ORACLE_EVENTS_OF_NOTICE = [
     alertId: "LIDO-ORACLE-MEMBER-REMOVED",
     name: "⚠️ Lido Oracle: Member Removed",
     description: (args: any) => `New oracle member removed: ${args.member}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: LIDO_ORACLE_ADDRESS,
@@ -109,10 +109,10 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event:
       "event MemberAdded(address indexed addr, uint256 newTotalMembers, uint256 newQuorum)",
     alertId: "ACCOUNTING-ORACLE-MEMBER-ADDED",
-    name: "ℹ️ Accounting Oracle: Member Added",
+    name: "⚠️️ Accounting Oracle: Member Added",
     description: (args: any) =>
       `Oracle member added: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -122,7 +122,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "⚠️ Accounting Oracle: Member Removed",
     description: (args: any) =>
       `Oracle member removed: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -132,7 +132,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "🚨 Accounting Oracle: Quorum Set",
     description: (args: any) =>
       `Quorum size was set to ${args.newQuorum}\nTotal members: ${args.totalMembers}\nPrevious quorum: ${args.prevQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -190,7 +190,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: ACCOUNTING_ORACLE_ADDRESS,
@@ -238,10 +238,10 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     event:
       "event MemberAdded(address indexed addr, uint256 newTotalMembers, uint256 newQuorum)",
     alertId: "EXITBUS-ORACLE-MEMBER-ADDED",
-    name: "ℹ️ ExitBus Oracle: Member Added",
+    name: "⚠️ ExitBus Oracle: Member Added",
     description: (args: any) =>
       `Oracle member added: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
@@ -251,7 +251,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "⚠️ ExitBus Oracle: Member Removed",
     description: (args: any) =>
       `Oracle member removed: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
@@ -261,7 +261,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "🚨 ExitBus Oracle: Quorum Set",
     description: (args: any) =>
       `Quorum size was set to ${args.newQuorum}\nTotal members: ${args.totalMembers}\nPrevious quorum: ${args.prevQuorum}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
@@ -319,7 +319,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️️ ExitBus Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_ORACLE_ADDRESS,
@@ -346,7 +346,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     name: "🚨 ExitBus Oracle: contract was paused",
     description: (args: any) =>
       `For ${new BigNumber(args.duration).div(360)} hours`,
-    severity: FindingSeverity.High,
+    severity: FindingSeverity.Critical,
   },
   {
     address: EXITBUS_ORACLE_ADDRESS,

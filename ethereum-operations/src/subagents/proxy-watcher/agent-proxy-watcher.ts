@@ -141,7 +141,7 @@ async function getProxyImplementation(
     });
   }
   throw new Error(
-    `Proxy contract ${address} does not have implementation function`
+    `Proxy contract ${address} does not have "implementation" or "proxy__getImplementation" functions`
   );
 }
 

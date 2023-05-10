@@ -1,3 +1,12 @@
+import {
+  BURNER_EVENTS_OF_NOTICE as burnerEvents,
+  LIDO_DAO_EVENTS_OF_NOTICE as daoEvents,
+  DEPOSIT_SECURITY_EVENTS_OF_NOTICE as depositSecurityEvents,
+  MEV_ALLOWED_LIST_EVENTS_OF_NOTICE as mevAllowedListEvents,
+  INSURANCE_FUND_EVENTS_OF_NOTICE as insuranceFundEvents,
+  TRP_EVENTS_OF_NOTICE as trpEvents,
+} from "./constants";
+
 export interface ERC20 {
   decimals: number;
   name: string;
@@ -17,6 +26,7 @@ export const ENS_BASE_REGISTRAR_ADDRESS =
   "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85";
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
+export const LIDO_BURNER_ADDRESS = "0x20c61c07c2e2fab04bf5b4e12ce45a459a18f3b1";
 
 export const KNOWN_ERC20 = new Map<string, ERC20>([
   [
@@ -32,3 +42,39 @@ export const KNOWN_ERC20 = new Map<string, ERC20>([
   ["0xdAC17F958D2ee523a2206206994597C13D831ec7", { decimals: 6, name: "USDT" }],
   ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", { decimals: 6, name: "USDC" }],
 ]);
+
+export const LIDO_DAO_EVENTS_OF_NOTICE = daoEvents.map((event) => ({
+  ...event,
+  address: LIDO_DAO_ADDRESS,
+}));
+
+export const BURNER_EVENTS_OF_NOTICE = burnerEvents.map((event) => ({
+  ...event,
+  address: LIDO_BURNER_ADDRESS,
+}));
+
+export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = depositSecurityEvents.map(
+  (event) => ({
+    ...event,
+    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+  })
+);
+
+export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
+  (event) => ({
+    ...event,
+    address: MEV_ALLOWED_LIST_ADDRESS,
+  })
+);
+
+export const INSURANCE_FUND_EVENTS_OF_NOTICE = insuranceFundEvents.map(
+  (event) => ({
+    ...event,
+    address: LIDO_INSURANCE_FUND_ADDRESS,
+  })
+);
+
+export const TRP_EVENTS_OF_NOTICE = trpEvents.map((event) => ({
+  ...event,
+  address: TRP_FACTORY_ADDRESS,
+}));

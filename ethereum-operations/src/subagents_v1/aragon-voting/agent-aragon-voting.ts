@@ -29,7 +29,7 @@ export const name = "Aragon Voting Watcher";
 const BLOCK_WINDOW = 1000;
 
 // Number of blocks for the whole 5 days
-const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 13);
+const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 12);
 
 // 46 hours
 const TRIGGER_AFTER = 46 * ONE_HOUR;

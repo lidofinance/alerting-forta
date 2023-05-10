@@ -5,7 +5,7 @@ import { ONE_HOUR } from "../../common/constants";
 export const BLOCK_WINDOW = 1000;
 
 // Number of blocks for the whole 5 days
-export const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 13);
+export const FIVE_DAYS_BLOCKS = Math.floor((ONE_HOUR * 24 * 5) / 12);
 
 // 46 hours
 export const TRIGGER_AFTER = 46 * ONE_HOUR;

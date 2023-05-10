@@ -23,7 +23,7 @@ export const NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT =
   "event StuckPenaltyStateChanged(uint256 indexed nodeOperatorId, uint256 stuckValidatorsCount, uint256 refundedValidatorsCount, uint256 stuckPenaltyEndTimestamp)";
 
 export const NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD = 100;
-export const NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD = 10;
+export const NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD = 5;
 
 export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   {

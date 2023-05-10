@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import { ONE_HOUR } from "../../common/constants";
+import { WITHDRAWALS_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
 
 export const WITHDRAWAL_QUEUE_ADDRESS =
   "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
@@ -18,3 +19,10 @@ export const QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY = ONE_HOUR;
 
 export const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.02;
 export const UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY = 2 * ONE_HOUR;
+
+export const WITHDRAWALS_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
+  (event) => ({
+    ...event,
+    address: WITHDRAWAL_QUEUE_ADDRESS,
+  })
+);

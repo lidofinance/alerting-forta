@@ -49,7 +49,7 @@ async function handleEasyTrackMotionCreated(
     await Promise.all(
       events.map(async (event) => {
         const args = event.args;
-        let alertName = "ℹ EasyTrack: New motion created";
+        let alertName = "ℹ️ EasyTrack: New motion created";
         let description =
           `${getMotionType(
             EASY_TRACK_TYPES_BY_FACTORIES,
