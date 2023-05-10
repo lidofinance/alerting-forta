@@ -488,16 +488,16 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     lastDepositorTxTime = txEvent.timestamp;
   }
 
-  [
+  for (const eventsOfNotice of [
     DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
     LIDO_DAO_EVENTS_OF_NOTICE,
     MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
     INSURANCE_FUND_EVENTS_OF_NOTICE,
     TRP_EVENTS_OF_NOTICE,
     BURNER_EVENTS_OF_NOTICE,
-  ].forEach((eventsOfNotice) => {
+  ]) {
     handleEventsOfNotice(txEvent, findings, eventsOfNotice);
-  });
+  }
 
   return findings;
 }

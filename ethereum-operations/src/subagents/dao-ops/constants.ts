@@ -21,7 +21,7 @@ export const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
 // 24 hours
 export const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
 
-export const LIDO_DAO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
+export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
 export const LIDO_DEPOSIT_SECURITY_ADDRESS =
   "0xc77f8768774e1c9244beed705c4354f2113cfc09";
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
@@ -30,10 +30,10 @@ export const MEV_ALLOWED_LIST_ADDRESS =
   "0xf95f069f9ad107938f6ba802a3da87892298610e";
 export const LIDO_INSURANCE_FUND_ADDRESS =
   "0x8b3f33234abd88493c0cd28de33d583b70bede35";
-export const LIDO_BURNER_ADDRESS = "0xD15a672319Cf0352560eE76d9e89eAB0889046D3";
-export const TRP_FACTORY_ADDRESS = "0xDA1DF6442aFD2EC36aBEa91029794B9b2156ADD0";
+export const LIDO_BURNER_ADDRESS = "0xd15a672319cf0352560ee76d9e89eab0889046d3";
+export const TRP_FACTORY_ADDRESS = "0xda1df6442afd2ec36abea91029794b9b2156add0";
 export const ENS_BASE_REGISTRAR_ADDRESS =
-  "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85";
+  "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85";
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
@@ -81,76 +81,45 @@ export const LIDO_ENS_NAMES = [
   "unst",
 ];
 
-export const LIDO_DAO_EVENTS_OF_NOTICE = [
+export const LIDO_EVENTS_OF_NOTICE = [
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event Stopped()",
-    alertId: "LIDO-DAO-STOPPED",
-    name: "🚨🚨🚨 Lido DAO: Stopped 🚨🚨🚨",
+    alertId: "LIDO-STOPPED",
+    name: "🚨🚨🚨 Lido: Stopped 🚨🚨🚨",
     description: (args: any) => `Lido DAO contract was stopped`,
     severity: FindingSeverity.Critical,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event Resumed()",
-    alertId: "LIDO-DAO-RESUMED",
-    name: "✅ Lido DAO: Resumed",
+    alertId: "LIDO-RESUMED",
+    name: "✅ Lido: Resumed",
     description: (args: any) => `Lido DAO contract was resumed`,
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DAO_ADDRESS,
-    event: "event FeeSet(uint16 feeBasisPoints)",
-    alertId: "LIDO-DAO-FEE-SET",
-    name: "⚠️ Lido DAO: Fee set",
-    description: (args: any) =>
-      `Lido DAO fee was set to ${args.feeBasisPoints}`,
-    severity: FindingSeverity.High,
-  },
-  {
-    address: LIDO_DAO_ADDRESS,
-    event:
-      "event FeeDistributionSet(uint16 treasuryFeeBasisPoints, uint16 insuranceFeeBasisPoints, uint16 operatorsFeeBasisPoints)",
-    alertId: "LIDO-DAO-FEE-DISTRIBUTION-SET",
-    name: "⚠️ Lido DAO: Fee distribution set",
-    description: (args: any) =>
-      `Lido DAO fee distribution was set to\n` +
-      `treasuryFeeBasisPoints:${args.treasuryFeeBasisPoints}\n` +
-      `insuranceFeeBasisPoints:${args.insuranceFeeBasisPoints}\n` +
-      `operatorsFeeBasisPoints:${args.operatorsFeeBasisPoints}\n`,
-    severity: FindingSeverity.High,
-  },
-  {
-    address: LIDO_DAO_ADDRESS,
-    event: "event WithdrawalCredentialsSet(bytes32 withdrawalCredentials)",
-    alertId: "LIDO-DAO-WD-CREDS-SET",
-    name: "🚨🚨🚨 Lido DAO: Withdrawal Credentials Set",
-    description: (args: any) =>
-      `Lido DAO withdrawal credentials was set to ${args.withdrawalCredentials}`,
-    severity: FindingSeverity.Critical,
-  },
-  {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event StakingPaused()",
-    alertId: "LIDO-DAO-STAKING-PAUSED",
-    name: "🚨 Lido DAO: Staking paused",
+    alertId: "LIDO-STAKING-PAUSED",
+    name: "🚨 Lido: Staking paused",
     description: (args: any) => `Staking was paused!`,
     severity: FindingSeverity.Critical,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event StakingResumed()",
-    alertId: "LIDO-DAO-STAKING-RESUMED",
-    name: "✅ Lido DAO: Staking resumed",
+    alertId: "LIDO-STAKING-RESUMED",
+    name: "✅ Lido: Staking resumed",
     description: (args: any) => `Staking was resumed!`,
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event:
       "event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)",
-    alertId: "LIDO-DAO-STAKING-LIMIT-SET",
-    name: "⚠️ Lido DAO: Staking limit set",
+    alertId: "LIDO-STAKING-LIMIT-SET",
+    name: "⚠️ Lido: Staking limit set",
     description: (args: any) =>
       `Staking limit was set with:\n` +
       `Max staking limit: ${args.maxStakeLimit}\n` +
@@ -158,39 +127,26 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event StakingLimitRemoved()",
-    alertId: "LIDO-DAO-STAKING-LIMIT-REMOVED",
-    name: "🚨 Lido DAO: Staking limit removed",
+    alertId: "LIDO-STAKING-LIMIT-REMOVED",
+    name: "🚨 Lido: Staking limit removed",
     description: (args: any) => `Staking limit was removed`,
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DAO_ADDRESS,
-    event:
-      "event ProtocolContactsSet(address oracle, address treasury, address insuranceFund)",
-    alertId: "LIDO-DAO-PROTOCOL-CONTRACT-SET",
-    name: "🚨 Lido DAO: Protocol contracts set",
-    description: (args: any) =>
-      `Protocol contracts were set to:\n` +
-      `Oracle: ${args.oracle}\n` +
-      `Treasury: ${args.treasury}\n` +
-      `Insurance fund: ${args.insuranceFund}`,
-    severity: FindingSeverity.High,
-  },
-  {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event LidoLocatorSet(address lidoLocator)",
-    alertId: "LIDO-DAO-LOCATOR-SET",
-    name: "🚨 Lido DAO: Locator set",
+    alertId: "LIDO-LOCATOR-SET",
+    name: "🚨 Lido: Locator set",
     description: (args: any) => `Lido locator was set to: ${args.lidoLocator}`,
     severity: FindingSeverity.Critical,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event ELRewardsReceived(uint256 amount)",
-    alertId: "LIDO-DAO-EL-REWARDS-RECEIVED",
-    name: "✅ Lido DAO: EL rewards received",
+    alertId: "LIDO-EL-REWARDS-RECEIVED",
+    name: "✅ Lido: EL rewards received",
     description: (args: any) =>
       `Rewards amount: ${new BigNumber(String(args.amount))
         .div(ETH_DECIMALS)
@@ -198,10 +154,10 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event WithdrawalsReceived(uint256 amount)",
-    alertId: "LIDO-DAO-WITHDRAWALS-RECEIVED",
-    name: "✅ Lido DAO: Withdrawals received",
+    alertId: "LIDO-WITHDRAWALS-RECEIVED",
+    name: "✅ Lido: Withdrawals received",
     description: (args: any) =>
       `Withdrawals amount: ${new BigNumber(String(args.amount))
         .div(ETH_DECIMALS)
@@ -209,10 +165,10 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event RecoverToVault(address vault, address token, uint256 amount)",
-    alertId: "LIDO-DAO-RECOVER-TO-VAULT",
-    name: "ℹ Lido DAO: Funds recovered to vault",
+    alertId: "LIDO-RECOVER-TO-VAULT",
+    name: "ℹ️ Lido: Funds recovered to vault",
     description: (args: any) =>
       `Funds recovered to vault:\n` +
       `Vault: ${args.vault}\n` +
@@ -221,30 +177,12 @@ export const LIDO_DAO_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_DAO_ADDRESS,
+    address: LIDO_ADDRESS,
     event: "event ContractVersionSet(uint256 version)",
-    alertId: "LIDO-DAO-CONTRACT-VERSION-SET",
-    name: "ℹ Lido DAO: Contract version set",
+    alertId: "LIDO-CONTRACT-VERSION-SET",
+    name: "ℹ️ Lido: Contract version set",
     description: (args: any) =>
       `Contract version set:\n` + `Version: ${args.version}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: LIDO_DAO_ADDRESS,
-    event: "event ELRewardsWithdrawalLimitSet(uint256 limitPoints)",
-    alertId: "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
-    name: "⚠️ Lido DAO: EL rewards withdrawal limit set",
-    description: (args: any) =>
-      `Limit: ${args.limitPoints.toNumber()} BP ` +
-      `(${args.limitPoints.toNumber() / 100}%)`,
-    severity: FindingSeverity.High,
-  },
-  {
-    address: LIDO_DAO_ADDRESS,
-    event: "event ELRewardsVaultSet(address executionLayerRewardsVault)",
-    alertId: "LIDO-DAO-EL-REWARDS-VAULT-SET",
-    name: "🚨 Lido DAO: EL rewards vault set",
-    description: (args: any) => `Vault: ${args.executionLayerRewardsVault} ETH`,
     severity: FindingSeverity.Info,
   },
 ];
@@ -255,7 +193,7 @@ export const BURNER_EVENTS_OF_NOTICE = [
     event:
       "event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)",
     alertId: "LIDO-BURNER-ERC20-RECOVERED",
-    name: "ℹ Lido Burner: ERC20 recovered",
+    name: "ℹ️ Lido Burner: ERC20 recovered",
     description: (args: any) =>
       `ERC20 recovered:\n` +
       `Requested by: ${args.requestedBy}\n` +
@@ -268,7 +206,7 @@ export const BURNER_EVENTS_OF_NOTICE = [
     event:
       "event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)",
     alertId: "LIDO-BURNE-ERC721-RECOVERED",
-    name: "ℹ Lido Burner: ERC721 recovered",
+    name: "ℹ️ Lido Burner: ERC721 recovered",
     description: (args: any) =>
       `ERC721 recovered:\n` +
       `Requested by: ${args.requestedBy}\n` +

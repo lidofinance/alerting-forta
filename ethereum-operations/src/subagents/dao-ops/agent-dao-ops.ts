@@ -12,7 +12,7 @@ import {
 import { etherscanProvider, ethersProvider } from "../../ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
-import LIDO_DAO_ABI from "../../abi/Lido.json";
+import LIDO_ABI from "../../abi/Lido.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
 import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
@@ -35,7 +35,7 @@ const {
   MEV_RELAY_COUNT_THRESHOLD_HIGH,
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
-  LIDO_DAO_ADDRESS,
+  LIDO_ADDRESS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
   MEV_ALLOWED_LIST_ADDRESS,
@@ -49,7 +49,7 @@ const {
   MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
   ENS_CHECK_INTERVAL,
   LIDO_ENS_NAMES,
-  LIDO_DAO_EVENTS_OF_NOTICE,
+  LIDO_EVENTS_OF_NOTICE,
   DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
@@ -150,11 +150,7 @@ async function handleNodeOperatorsKeys(
 
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const lidoDao = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
-    LIDO_DAO_ABI,
-    ethersProvider
-  );
+  const lidoDao = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const bufferedEthRaw = new BigNumber(
     String(
       await lidoDao.functions.getBufferedEther({
@@ -248,11 +244,7 @@ async function handleDepositExecutorBalance(
 
 async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const lidoDao = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
-    LIDO_DAO_ABI,
-    ethersProvider
-  );
+  const lidoDao = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const stakingLimitInfo = await lidoDao.functions.getStakeLimitFullInfo({
     blockTag: blockEvent.block.number,
   });
@@ -393,16 +385,16 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     lastDepositorTxTime = txEvent.timestamp;
   }
 
-  [
+  for (const eventsOfNotice of [
     DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
-    LIDO_DAO_EVENTS_OF_NOTICE,
+    LIDO_EVENTS_OF_NOTICE,
     MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
     INSURANCE_FUND_EVENTS_OF_NOTICE,
     TRP_EVENTS_OF_NOTICE,
     BURNER_EVENTS_OF_NOTICE,
-  ].forEach((eventsOfNotice) => {
+  ]) {
     handleEventsOfNotice(txEvent, findings, eventsOfNotice);
-  });
+  }
 
   return findings;
 }
