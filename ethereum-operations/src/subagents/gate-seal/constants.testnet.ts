@@ -1,4 +1,4 @@
-import { ONE_HOUR, ONE_YEAR } from "../../common/constants";
+import { ONE_HOUR } from "../../common/constants";
 
 export const GATE_SEAL_FACTORY_ADDRESS =
   "0x248c4a34645921c70a591ccc200cb75d6a4c5091";
@@ -10,7 +10,4 @@ export const WITHDRAWAL_QUEUE_ADDRESS =
 export const EXITBUS_ORACLE_ADDRESS =
   "0xb75a55efab5a8f5224ae93b34b25741edd3da98b";
 
-export const GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY = 2 * ONE_HOUR;
-
-export const GATE_SEAL_EXPIRY_THRESHOLD = ONE_YEAR;
 export const GATE_SEAL_EXPIRY_TRIGGER_EVERY = 2 * ONE_HOUR;
