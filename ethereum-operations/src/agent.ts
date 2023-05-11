@@ -39,6 +39,7 @@ import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-che
 import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
 import * as agentStakingRouter from "./subagents/staking-router/agent-staking-router";
 import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
+import * as agentVaults from "./subagents/vaults/agent-vaults";
 
 import VERSION from "./version";
 import { RedefineMode, requireWithTier } from "./common/utils";
@@ -92,6 +93,7 @@ const subAgents: SubAgent[] = [
   agentStakingRouter,
   agentWithdrawals,
   agentGateSeal,
+  agentVaults,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
