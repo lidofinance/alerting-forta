@@ -32,7 +32,8 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   },
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
-    event: "event NodeOperatorNameSet(uint256 indexed id, string name)",
+    event:
+      "event NodeOperatorNameSet(uint256 indexed nodeOperatorId, string name)",
     alertId: "NODE-OPERATOR-NAME-SET",
     name: "ℹ️ NO Registry: Node operator name set",
     description: (args: any) =>
@@ -42,7 +43,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event:
-      "event NodeOperatorRewardAddressSet(uint256 indexed id, address rewardAddress)",
+      "event NodeOperatorRewardAddressSet(uint256 indexed nodeOperatorId, address rewardAddress)",
     alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
     name: "ℹ️ NO Registry: Node operator reward address set",
     description: (args: any) =>
@@ -52,17 +53,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event:
-      "event NodeOperatorTotalStoppedValidatorsReported(uint256 indexed id, uint64 totalStopped)",
-    alertId: "NODE-OPERATOR-STOPPED-VALIDATORS",
-    name: "ℹ️ NO Registry: Node operator total stopped validators reported",
-    description: (args: any) =>
-      `Node operator ${args.id} total stooped validators ${args.totalStopped}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: NODE_OPERATORS_REGISTRY_ADDRESS,
-    event:
-      "event NodeOperatorTotalKeysTrimmed(uint256 indexed id, uint64 totalKeysTrimmed)",
+      "event NodeOperatorTotalKeysTrimmed(uint256 indexed nodeOperatorId, uint64 totalKeysTrimmed)",
     alertId: "NODE-OPERATOR-KEYS-TRIMMED",
     name: "⚠️ NO Registry: Node operator total keys trimmed",
     description: (args: any) =>

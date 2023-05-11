@@ -13,7 +13,7 @@ export const EXITBUS_HASH_CONSENSUS_ADDRESS =
   "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
 
 export const WITHDRAWALS_QUEUE_ADDRESS =
-  "0xa2ecee311e61edaf4a3ac56b437fddfaced8da80";
+  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
 export const WITHDRAWALS_VAULT_ADDRESS =
   "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
 export const EL_REWARDS_VAULT_ADDRESS =

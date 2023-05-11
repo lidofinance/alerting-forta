@@ -150,10 +150,10 @@ async function handleNodeOperatorsKeys(
 
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const lidoDao = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const bufferedEthRaw = new BigNumber(
     String(
-      await lidoDao.functions.getBufferedEther({
+      await lido.functions.getBufferedEther({
         blockTag: blockEvent.block.number,
       })
     )
@@ -244,8 +244,8 @@ async function handleDepositExecutorBalance(
 
 async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const lidoDao = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
-  const stakingLimitInfo = await lidoDao.functions.getStakeLimitFullInfo({
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const stakingLimitInfo = await lido.functions.getStakeLimitFullInfo({
     blockTag: blockEvent.block.number,
   });
   const currentStakingLimit = new BigNumber(
