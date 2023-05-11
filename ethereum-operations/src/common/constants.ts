@@ -25,7 +25,7 @@ export const ONE_HOUR = 60 * 60;
 export const ONE_DAY = 24 * ONE_HOUR;
 export const ONE_WEEK = 7 * ONE_DAY;
 export const ONE_MONTH = ONE_WEEK * 4;
-export const ONE_YEAR = ONE_MONTH * 12;
+export const ONE_YEAR = 365 * ONE_DAY;
 
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
