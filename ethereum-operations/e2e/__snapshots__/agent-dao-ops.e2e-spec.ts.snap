@@ -75,7 +75,7 @@ exports[`agent-dao-ops e2e tests should process tx with EL rewards vault set and
 Array [
   Finding {
     "addresses": Array [],
-    "alertId": "LIDO-DAO-STAKING-LIMIT-SET",
+    "alertId": "LIDO-STAKING-LIMIT-SET",
     "description": "Staking limit was set with:
 Max staking limit: 150000000000000000000000
 Stake limit increase per block: 23437500000000000000",
@@ -83,83 +83,35 @@ Stake limit increase per block: 23437500000000000000",
     "metadata": Object {
       "args": "150000000000000000000000,23437500000000000000",
     },
-    "name": "⚠️ Lido DAO: Staking limit set",
+    "name": "⚠️ Lido: Staking limit set",
     "protocol": "ethereum",
     "severity": 4,
     "type": 4,
   },
   Finding {
     "addresses": Array [],
-    "alertId": "LIDO-DAO-STAKING-RESUMED",
+    "alertId": "LIDO-STAKING-RESUMED",
     "description": "Staking was resumed!",
     "labels": Array [],
     "metadata": Object {
       "args": "",
     },
-    "name": "✅ Lido DAO: Staking resumed",
+    "name": "✅ Lido: Staking resumed",
     "protocol": "ethereum",
     "severity": 4,
-    "type": 4,
-  },
-  Finding {
-    "addresses": Array [],
-    "alertId": "LIDO-DAO-EL-REWARDS-VAULT-SET",
-    "description": "Vault: 0x388C818CA8B9251b393131C08a736A67ccB19297 ETH",
-    "labels": Array [],
-    "metadata": Object {
-      "args": "0x388C818CA8B9251b393131C08a736A67ccB19297",
-    },
-    "name": "🚨 Lido DAO: EL rewards vault set",
-    "protocol": "ethereum",
-    "severity": 1,
     "type": 4,
   },
 ]
 `;
 
-exports[`agent-dao-ops e2e tests should process tx with EL rewards withdrawal limit set 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-DAO-EL-REWARDS-WD-LIMIT-SET",
-  "description": "Limit: 2 BP (0.02%)",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "2",
-  },
-  "name": "⚠️ Lido DAO: EL rewards withdrawal limit set",
-  "protocol": "ethereum",
-  "severity": 4,
-  "type": 4,
-}
-`;
-
 // todo: disabled due to changes in the event signatures.
 //  uncomment or remove after V2
 
-exports[`agent-dao-ops e2e tests should process tx with added guardian 1`] =  = `undefined`;
+exports[`agent-dao-ops e2e tests should process tx with EL rewards withdrawal limit set 1`] = `undefined`;
 
-exports[`agent-dao-ops e2e tests should process tx with changed distribution fee 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-DAO-FEE-DISTRIBUTION-SET",
-  "description": "Lido DAO fee distribution was set to
-treasuryFeeBasisPoints:5000
-insuranceFeeBasisPoints:0
-operatorsFeeBasisPoints:5000
-",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "5000,0,5000",
-  },
-  "name": "⚠️ Lido DAO: Fee distribution set",
-  "protocol": "ethereum",
-  "severity": 4,
-  "type": 4,
-}
-`;
+exports[`agent-dao-ops e2e tests should process tx with added guardian 1`] = `undefined`;
 
-// todo: disabled due to changes in the event signatures.
-//  uncomment or remove after V2
+exports[`agent-dao-ops e2e tests should process tx with changed distribution fee 1`] = `undefined`;
 
 exports[`agent-dao-ops e2e tests should process tx with changed guardian quorum 1`] = `undefined`;
 
@@ -169,35 +121,18 @@ exports[`agent-dao-ops e2e tests should process tx with changed min deposit bloc
 
 exports[`agent-dao-ops e2e tests should process tx with changed owner of the contract 1`] = `undefined`;
 
-exports[`agent-dao-ops e2e tests should process tx with changed protocol contracts 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-DAO-PROTOCOL-CONTRACT-SET",
-  "description": "Protocol contracts were set to:
-Oracle: 0x442af784A788A5bd6F42A01Ebe9F287a871243fb
-Treasury: 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c
-Insurance fund: 0x8B3f33234ABD88493c0Cd28De33D583B70beDe35",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "0x442af784A788A5bd6F42A01Ebe9F287a871243fb,0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c,0x8B3f33234ABD88493c0Cd28De33D583B70beDe35",
-  },
-  "name": "🚨 Lido DAO: Protocol contracts set",
-  "protocol": "ethereum",
-  "severity": 4,
-  "type": 4,
-}
-`;
+exports[`agent-dao-ops e2e tests should process tx with changed protocol contracts 1`] = `undefined`;
 
 exports[`agent-dao-ops e2e tests should process tx with received EL rewards 1`] = `
 Finding {
   "addresses": Array [],
-  "alertId": "LIDO-DAO-EL-REWARDS-RECEIVED",
+  "alertId": "LIDO-EL-REWARDS-RECEIVED",
   "description": "Rewards amount: 142.21 ETH",
   "labels": Array [],
   "metadata": Object {
     "args": "142210964953261078203",
   },
-  "name": "✅ Lido DAO: EL rewards received",
+  "name": "✅ Lido: EL rewards received",
   "protocol": "ethereum",
   "severity": 1,
   "type": 4,
