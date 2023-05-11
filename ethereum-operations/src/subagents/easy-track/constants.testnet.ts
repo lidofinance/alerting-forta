@@ -10,11 +10,6 @@ export const EASY_TRACK_ADDRESS = "0xaf072c8d368e4dd4a9d4ff6a76693887d6ae92af";
 export const NODE_OPERATORS_REGISTRY_ADDRESS =
   "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
 
-export const MOTION_ENACTED_EVENT =
-  "event MotionEnacted(uint256 indexed _motionId)";
-export const MOTION_CREATED_EVENT =
-  "event MotionCreated(uint256 indexed _motionId, address _creator, address indexed _evmScriptFactory, bytes _evmScriptCallData, bytes _evmScript)";
-
 export const EASY_TRACK_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({
     ...event,
