@@ -37,7 +37,6 @@ describe("agent-lido-report e2e tests", () => {
     jest.resetAllMocks();
   });
 
-
   it(
     "should process tx with Lido Oracle report",
     async () => {
