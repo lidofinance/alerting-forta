@@ -1,8 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-// todo: disabled due to changes in the event signatures.
-//  uncomment or remove after V2
-
-exports[`agent-lido-report e2e tests should process tx with Lido Oracle report 1`] = `undefined`;
-
-exports[`agent-lido-report e2e tests should process tx with decreased Lido Beacon rewards 1`] = `undefined`;
