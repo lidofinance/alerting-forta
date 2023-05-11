@@ -20,7 +20,7 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import BigNumber from "bignumber.js";
-import { ETH_DECIMALS } from "../../common/constants";
+import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 interface WithdrawalRequest {
   id: number;
@@ -50,6 +50,11 @@ let finalizedWithdrawalRequests = new Map<number, WithdrawalRequest>();
 
 let lastUnclaimedRequestsAlertTimestamp = 0;
 
+let lastUnclaimedMoreThanBalanceAlertTimestamp = 0;
+
+let claimedAmountMoreThanRequestedAlertsCount = 0;
+let lastClaimedAmountMoreThanRequestedAlertTimestamp = 0;
+
 export const name = "Withdrawals";
 
 const {
@@ -60,6 +65,7 @@ const {
   WITHDRAWAL_QUEUE_ADDRESS,
   WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED,
   WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED,
+  WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED,
   WITHDRAWALS_EVENTS_OF_NOTICE,
   BIG_WITHDRAWAL_REQUEST_THRESHOLD,
   BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD,
@@ -72,6 +78,8 @@ const {
   UNCLAIMED_REQUESTS_TIME_WINDOW,
   UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD,
   UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY,
+  UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY,
+  CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -299,12 +307,6 @@ async function handleUnclaimedRequests(
   findings: Finding[]
 ) {
   const now = blockEvent.block.timestamp;
-  if (
-    now - lastUnclaimedRequestsAlertTimestamp <=
-    UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY
-  ) {
-    return;
-  }
 
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
@@ -314,18 +316,12 @@ async function handleUnclaimedRequests(
 
   const unclaimedReqIds: number[] = [];
   const outdatedClaimedReqIds: number[] = [];
+  const unclaimedStETH = new BigNumber(0);
+  const claimedStETH = new BigNumber(0);
   finalizedWithdrawalRequests.forEach((req, id) => {
-    const isOutdated =
-      now - Number(req.timestamp) > UNCLAIMED_REQUESTS_TIME_WINDOW;
-    if (req.claimed && isOutdated) {
-      outdatedClaimedReqIds.push(id);
-    }
     if (!req.claimed) {
       unclaimedReqIds.push(id);
     }
-  });
-  outdatedClaimedReqIds.forEach((id) => {
-    finalizedWithdrawalRequests.delete(id);
   });
   const unclaimedRequestsStatuses = (
     await withdrawalNFT.functions.getWithdrawalStatus(unclaimedReqIds, {
@@ -334,46 +330,88 @@ async function handleUnclaimedRequests(
   ).statuses;
   for (const [index, reqStatus] of unclaimedRequestsStatuses.entries()) {
     const reqId = unclaimedReqIds[index];
+    const curr = finalizedWithdrawalRequests.get(reqId) as WithdrawalRequest;
     finalizedWithdrawalRequests.set(reqId, {
-      id: reqId,
+      ...curr,
       amount: new BigNumber(String(reqStatus.amountOfStETH)),
       claimed: reqStatus.isClaimed,
-      timestamp: String(reqStatus.timestamp),
     });
   }
-  const unclaimedSize = Array.from(finalizedWithdrawalRequests.values()).reduce(
-    (acc, req) => {
-      return req.claimed ? acc.plus(0) : acc.plus(req.amount as BigNumber);
-    },
-    new BigNumber(0)
-  );
-  const claimedSize = Array.from(finalizedWithdrawalRequests.values()).reduce(
-    (acc, req) => {
-      return req.claimed ? acc.plus(req.amount as BigNumber) : acc.plus(0);
-    },
-    new BigNumber(0)
-  );
-  const totalFinalizedSize = claimedSize.plus(unclaimedSize);
-  const unclaimedSizeRate = unclaimedSize.div(totalFinalizedSize);
-  if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
-    findings.push(
-      Finding.fromObject({
-        name: `🤔 Withdrawals: ${unclaimedSizeRate
-          .times(100)
-          .toFixed(2)}% of finalized requests are unclaimed`,
-        description: `Unclaimed (for all time): ${unclaimedSize
-          .div(ETH_DECIMALS)
-          .toFixed(2)} stETH\nClaimed (for 2 weeks): ${claimedSize
-          .div(ETH_DECIMALS)
-          .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize
-          .div(ETH_DECIMALS)
-          .toFixed(2)} stETH`,
-        alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS",
-        severity: FindingSeverity.Info,
-        type: FindingType.Suspicious,
-      })
+  finalizedWithdrawalRequests.forEach((req, id) => {
+    const isOutdated =
+      now - Number(req.timestamp) > UNCLAIMED_REQUESTS_TIME_WINDOW;
+    if (isOutdated) {
+      if (!req.claimed) {
+        outdatedClaimedReqIds.push(id);
+      }
+    } else {
+      req.claimed
+        ? claimedStETH.plus(req.amount as BigNumber)
+        : unclaimedStETH.plus(req.amount as BigNumber);
+    }
+  });
+  outdatedClaimedReqIds.forEach((id) => {
+    finalizedWithdrawalRequests.delete(id);
+  });
+  const totalFinalizedSize = claimedStETH.plus(unclaimedStETH);
+  const unclaimedSizeRate = unclaimedStETH.div(totalFinalizedSize);
+  if (
+    now - lastUnclaimedRequestsAlertTimestamp >
+    UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY
+  ) {
+    if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
+      findings.push(
+        Finding.fromObject({
+          name: `🤔 Withdrawals: ${unclaimedSizeRate
+            .times(100)
+            .toFixed(2)}% of finalized requests are unclaimed`,
+          description: `Unclaimed (for all time): ${unclaimedStETH
+            .div(ETH_DECIMALS)
+            .toFixed(2)} stETH\nClaimed (for 2 weeks): ${claimedStETH
+            .div(ETH_DECIMALS)
+            .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize
+            .div(ETH_DECIMALS)
+            .toFixed(2)} stETH`,
+          alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS",
+          severity: FindingSeverity.Info,
+          type: FindingType.Suspicious,
+        })
+      );
+      lastUnclaimedRequestsAlertTimestamp = now;
+    }
+  }
+  if (
+    now - lastUnclaimedMoreThanBalanceAlertTimestamp >
+    UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY
+  ) {
+    const withdrawalQueueBalance = new BigNumber(
+      String(
+        await ethersProvider.getBalance(
+          WITHDRAWAL_QUEUE_ADDRESS,
+          blockEvent.blockNumber
+        )
+      )
     );
-    lastUnclaimedRequestsAlertTimestamp = now;
+    if (unclaimedStETH.gt(withdrawalQueueBalance)) {
+      findings.push(
+        Finding.fromObject({
+          name: `🤔 Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
+          description: `Unclaimed: ${unclaimedStETH
+            .div(ETH_DECIMALS)
+            .toFixed(
+              2
+            )} stETH\nWithdrawal queue balance: ${withdrawalQueueBalance
+            .div(ETH_DECIMALS)
+            .toFixed(2)} ETH\nDifference: ${unclaimedStETH.minus(
+            withdrawalQueueBalance
+          )} wei`,
+          alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        })
+      );
+      lastUnclaimedMoreThanBalanceAlertTimestamp = now;
+    }
   }
 }
 
@@ -385,6 +423,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     handleLastTokenRebase(txEvent),
     handleWithdrawalFinalized(txEvent),
     handleWithdrawalRequest(txEvent, findings),
+    handleWithdrawalClaimed(txEvent, findings),
   ]);
 
   handleEventsOfNotice(txEvent, findings, WITHDRAWALS_EVENTS_OF_NOTICE);
@@ -419,6 +458,57 @@ async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
   lastFinalizedTimestamp = Number(withdrawalEvent.args.timestamp);
 }
 
+async function handleWithdrawalClaimed(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  const claimedEvents = txEvent.filterLog(
+    WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED,
+    WITHDRAWAL_QUEUE_ADDRESS
+  );
+  if (!claimedEvents) return;
+  const now = txEvent.block.timestamp;
+  if (now - lastClaimedAmountMoreThanRequestedAlertTimestamp > ONE_HOUR) {
+    claimedAmountMoreThanRequestedAlertsCount = 0;
+  }
+  if (
+    claimedAmountMoreThanRequestedAlertsCount >=
+    CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR
+  )
+    return;
+  for (const event of claimedEvents) {
+    const reqId = Number(event.args.requestId);
+    if (finalizedWithdrawalRequests.has(reqId)) {
+      const curr = finalizedWithdrawalRequests.get(reqId) as WithdrawalRequest;
+      const claimedAmount = new BigNumber(String(event.args.amountOfETH));
+      if (claimedAmount.gt(curr.amount as BigNumber)) {
+        findings.push(
+          Finding.fromObject({
+            name: `🤔 Withdrawals: claimed amount is more than requested`,
+            description: `Request ID: ${reqId}\nClaimed: ${claimedAmount
+              .div(ETH_DECIMALS)
+              .toFixed(2)} ETH\nRequested: ${(curr.amount as BigNumber)
+              .div(ETH_DECIMALS)
+              .toFixed(2)} stETH\nDifference: ${claimedAmount.minus(
+              curr.amount as BigNumber
+            )} wei`,
+            alertId: "WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED",
+            severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+          })
+        );
+        claimedAmountMoreThanRequestedAlertsCount += 1;
+        lastClaimedAmountMoreThanRequestedAlertTimestamp = now;
+      }
+      finalizedWithdrawalRequests.set(reqId, {
+        ...curr,
+        amount: new BigNumber(String(event.args.amountOfETH)),
+        claimed: true,
+      });
+    }
+  }
+}
+
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
   const [rebaseEvent] = txEvent.filterLog(LIDO_TOKEN_REBASED, LIDO_ADDRESS);
   if (!rebaseEvent) return;
@@ -430,11 +520,11 @@ async function handleWithdrawalRequest(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  const withdrawalEvents = txEvent.filterLog(
+  const requestEvents = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED,
     WITHDRAWAL_QUEUE_ADDRESS
   );
-  if (!withdrawalEvents) return;
+  if (!requestEvents) return;
   if (
     firstUnfinalizedRequestTimestamp < lastFinalizedTimestamp &&
     txEvent.timestamp >= lastFinalizedTimestamp
@@ -442,7 +532,7 @@ async function handleWithdrawalRequest(
     firstUnfinalizedRequestTimestamp = txEvent.timestamp;
   }
   const perRequestorAmounts = new Map<string, BigNumber>();
-  for (const event of withdrawalEvents) {
+  for (const event of requestEvents) {
     perRequestorAmounts.set(
       event.args.requestor,
       (perRequestorAmounts.get(event.args.requestor) || new BigNumber(0)).plus(
