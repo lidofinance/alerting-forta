@@ -316,8 +316,8 @@ async function handleUnclaimedRequests(
 
   const unclaimedReqIds: number[] = [];
   const outdatedClaimedReqIds: number[] = [];
-  const unclaimedStETH = BN_ZERO;
-  const claimedStETH = BN_ZERO;
+  let unclaimedStETH = BN_ZERO;
+  let claimedStETH = BN_ZERO;
   finalizedWithdrawalRequests.forEach((req, id) => {
     if (!req.claimed) {
       unclaimedReqIds.push(id);
@@ -344,10 +344,12 @@ async function handleUnclaimedRequests(
       if (req.claimed) {
         outdatedClaimedReqIds.push(id);
       }
-    } else {
-      req.claimed
-        ? claimedStETH.plus(req.amount as BigNumber)
-        : unclaimedStETH.plus(req.amount as BigNumber);
+    }
+    if (!isOutdated && req.claimed) {
+      claimedStETH = claimedStETH.plus(req.amount as BigNumber);
+    }
+    if (!req.claimed) {
+      unclaimedStETH = unclaimedStETH.plus(req.amount as BigNumber);
     }
   });
   outdatedClaimedReqIds.forEach((id) => {
