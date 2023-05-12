@@ -7,7 +7,7 @@ export enum RedefineMode {
 }
 
 export function mergeFindings(findings: Finding[]): Finding[] {
-  const mergedFindings: Finding[] = [];
+  const mergedFindingsList: Finding[] = [];
   const findingsByAlertId = findings.reduce((acc, finding) => {
     if (!acc.has(finding.alertId)) {
       acc.set(finding.alertId, [finding]);
@@ -25,9 +25,9 @@ export function mergeFindings(findings: Finding[]): Finding[] {
         args: findings.map((f) => f.metadata.args).join(","),
       },
     });
-    mergedFindings.push(mergedFinding);
+    mergedFindingsList.push(mergedFinding);
   });
-  return mergedFindings;
+  return mergedFindingsList;
 }
 
 export function etherscanAddress(address: string): string {
