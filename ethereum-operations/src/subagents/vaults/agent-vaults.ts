@@ -108,7 +108,7 @@ async function handleWithdrawalVaultBalance(
 
     findings.push(
       Finding.fromObject({
-        name: "Withdrawal Vault Balance significant change",
+        name: "🚨 Withdrawal Vault Balance significant change",
         description: `Withdrawal Vault Balance has increased by ${toEthString(
           withdrawalVaultBalanceDiff
         )}`,
@@ -135,7 +135,7 @@ async function handleNoWithdrawalVaultDrains(
     if (currentBalance.lt(prevBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "Withdrawal Vault balance mismatch",
+          name: "🚨 Withdrawal Vault balance mismatch",
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance)
           )} without Oracle report`,
@@ -155,7 +155,7 @@ async function handleNoWithdrawalVaultDrains(
     if (currentBalance.lt(expectedBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "Withdrawal Vault balance mismatch",
+          name: "🚨 Withdrawal Vault balance mismatch",
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance)
           )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
@@ -183,7 +183,7 @@ async function handleELVaultBalance(
 
     findings.push(
       Finding.fromObject({
-        name: "EL Vault Balance significant change",
+        name: "🚨 EL Vault Balance significant change",
         description: `EL Vault Balance has increased by ${toEthString(
           elVaultBalanceDiff
         )}`,
@@ -207,7 +207,7 @@ async function handleNoELVaultDrains(
     if (currentBalance.lt(prevBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "EL Vault balance mismatch",
+          name: "🚨 EL Vault balance mismatch",
           description: `EL Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance)
           )} without Oracle report`,
@@ -227,7 +227,7 @@ async function handleNoELVaultDrains(
     if (currentBalance.lt(expectedBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "EL Vault balance mismatch",
+          name: "🚨 EL Vault balance mismatch",
           description: `EL Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance)
           )} but Oracle report shows ${toEthString(
@@ -261,7 +261,7 @@ async function handleBurnerSharesTx(
   for (const event of events) {
     findings.push(
       Finding.fromObject({
-        name: "Burner shares transfer",
+        name: "🚨 Burner shares transfer",
         description: `Burner shares transfer to ${event.args.to} has occurred`,
         alertId: "BURNER_SHARES_TRANSFER",
         severity: FindingSeverity.High,
