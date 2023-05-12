@@ -153,9 +153,6 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
     "0xfebd8fac16de88206d4b18764e826af38546afe0",
     "Increase node operator staking limit",
   ],
-  ["0x9d15032b91d01d5c1d940eb919461426ab0dd4e3", "Add reward program"],
-  ["0xc21e5e72ffc223f02fc410aaede3084a63963932", "Remove reward program"],
-  ["0x77781a93c4824d2299a38ac8bbb11eb3cd6bc3b7", "Top up reward program"],
   ["0x929547490ceb6aeedd7d72f1ab8957c0210b6e51", "Add referral partner"],
   ["0xe9eb838fb3a288bf59e9275ccd7e124fdff88a9c", "Remove referral partner"],
   ["0x54058ee0e0c87ad813c002262cd75b98a7f59218", "Top up referral partner"],
@@ -174,4 +171,9 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ["0x4e6d3a5023a38ce2c4c5456d3760357fd93a22cd", "Top up recipients (PML DAI)"],
   ["0x67fb97abb9035e2e93a7e3761a0d0571c5d7cd07", "Top up recipients (ATC DAI)"],
   ["0x41F9daC5F89092dD6061E59578A2611849317dc8", "Top up recipients (GAS ETH)"],
+  [
+    "0x009ffa22ce4388d2f5de128ca8e6fd229a312450",
+    "Top up recipients (Referral Program DAI)",
+  ],
+  ["0xbd2b6dc189eefd51b273f5cb2d99ba1ce565fb8c", "Top up recipients (TRP LDO)"],
 ]);

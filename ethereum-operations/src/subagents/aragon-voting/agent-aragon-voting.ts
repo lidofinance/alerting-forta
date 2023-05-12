@@ -1,13 +1,13 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
   Block,
+  BlockEvent,
+  ethers,
+  Finding,
+  FindingSeverity,
+  FindingType,
+  TransactionEvent,
   TxEventBlock,
 } from "forta-agent";
 
@@ -16,11 +16,15 @@ import { ethersProvider } from "../../ethers";
 import ARAGON_VOTING_ABI from "../../abi/AragonVoting.json";
 import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
-import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
+import {
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import type * as Constants from "./constants";
 
 export const name = "Aragon Voting Watcher";
 
-import type * as Constants from "./constants";
 const {
   LIDO_ARAGON_VOTING_ADDRESS,
   CAST_VOTE_EVENT,
@@ -29,7 +33,11 @@ const {
   TRIGGER_AFTER,
   FIVE_DAYS_BLOCKS,
   BLOCK_WINDOW,
-} = requireWithTier<typeof Constants>(module, "./constants");
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
 
 interface IVoteInfo {
   startDate: number;

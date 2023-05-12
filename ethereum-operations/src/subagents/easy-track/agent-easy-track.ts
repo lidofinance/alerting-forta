@@ -1,9 +1,9 @@
 import {
   ethers,
-  TransactionEvent,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
 
 import { ethersProvider } from "../../ethers";
@@ -11,11 +11,15 @@ import { ethersProvider } from "../../ethers";
 import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { getMotionLink, getMotionType } from "./utils";
-import { handleEventsOfNotice, requireWithTier } from "../../common/utils";
+import {
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import type * as Constants from "./constants";
 
 export const name = "EasyTrack";
 
-import type * as Constants from "./constants";
 const {
   EASY_TRACK_ADDRESS,
   EASY_TRACK_TYPES_BY_FACTORIES,
@@ -23,7 +27,11 @@ const {
   INCREASE_STAKING_LIMIT_ADDRESS,
   EASY_TRACK_EVENTS_OF_NOTICE,
   MOTION_CREATED_EVENT,
-} = requireWithTier<typeof Constants>(module, "./constants");
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
 
 export async function initialize(
   currentBlock: number
