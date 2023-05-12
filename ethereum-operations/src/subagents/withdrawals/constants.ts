@@ -24,6 +24,10 @@ export const UNCLAIMED_REQUESTS_TIME_WINDOW = 2 * ONE_WEEK;
 export const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.2;
 export const UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY = ONE_DAY;
 
+export const UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY = ONE_DAY;
+
+export const CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR = 5;
+
 export const LIDO_TOKEN_REBASED =
   "event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)";
 
@@ -31,6 +35,8 @@ export const WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED =
   "event WithdrawalRequested(uint256 indexed requestId, address indexed requestor, address indexed owner, uint256 amountOfStETH, uint256 amountOfShares)";
 export const WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED =
   "event WithdrawalsFinalized(uint256 indexed from, uint256 indexed to, uint256 amountOfETHLocked, uint256 sharesToBurn, uint256 timestamp)";
+export const WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED =
+  "event WithdrawalClaimed(uint256 indexed requestId, address indexed owner, address indexed receiver, uint256 amountOfETH)";
 
 export const WITHDRAWALS_BUNKER_MODE_ENABLED =
   "event BunkerModeEnabled(uint256 _sinceTimestamp)";
