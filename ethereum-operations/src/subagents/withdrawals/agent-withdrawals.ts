@@ -14,6 +14,7 @@ import LIDO_ABI from "../../abi/Lido.json";
 
 import { formatDelay } from "./utils";
 import {
+  etherscanAddress,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -493,7 +494,9 @@ async function handleWithdrawalClaimed(
               .div(ETH_DECIMALS)
               .toFixed(2)} stETH\nDifference: ${claimedAmount.minus(
               curr.amount as BigNumber
-            )} wei`,
+            )} wei\nOwner: ${etherscanAddress(
+              event.args.owner
+            )}\nReceiver: ${etherscanAddress(event.args.receiver)}`,
             alertId: "WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED",
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
