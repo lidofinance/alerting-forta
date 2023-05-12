@@ -20,7 +20,7 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import BigNumber from "bignumber.js";
-import {BN_ZERO, ETH_DECIMALS, ONE_HOUR} from "../../common/constants";
+import { BN_ZERO, ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 interface WithdrawalRequest {
   id: number;
