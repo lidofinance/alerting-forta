@@ -290,12 +290,13 @@ async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
       await Promise.all(
         Array.from(data.roles.entries()).map(async (entry) => {
           const [role, members] = entry;
+          const membersInLower = members.map((m) => m.toLowerCase());
           const curMembers = await getRoleMembers(
             address,
             role.hash,
             blockEvent.blockNumber
           );
-          if (_.isEqual(curMembers, members)) return;
+          if (_.isEqual(curMembers, membersInLower)) return;
 
           findings.push(
             Finding.fromObject({

@@ -392,7 +392,6 @@ export interface IHasRoles {
   roles: Map<INamedRole, string[]>;
 }
 
-// NB! addresses should be lower cased because of return values from the contract
 export const ROLES_OWNERS = {
   agent: ARAGON_AGENT_ADDRESS,
   dsm: DEPOSIT_SECURITY_MODULE_ADDRESS,
