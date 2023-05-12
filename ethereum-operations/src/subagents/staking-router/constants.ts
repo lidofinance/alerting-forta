@@ -73,9 +73,9 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     alertId: "STAKING-ROUTER-MODULE-ADDED",
     name: "⚠️ Staking Router: new staking module added",
     description: (args: any) =>
-      `ID: ${args.stakingModuleId}\nAddress: ${
+      `ID: ${args.stakingModuleId}\nAddress: ${etherscanAddress(
         args.stakingModule
-      }\nStaking module name: ${args.name}\nCreated by: ${etherscanAddress(
+      )}\nStaking module name: ${args.name}\nCreated by: ${etherscanAddress(
         args.createdBy
       )}`,
     severity: FindingSeverity.High,
