@@ -8,7 +8,7 @@ Array [
     "description": "EL Vault Balance has increased by 689.017 ETH",
     "labels": Array [],
     "metadata": Object {},
-    "name": "EL Vault Balance significant change",
+    "name": "🚨 EL Vault Balance significant change",
     "protocol": "ethereum",
     "severity": 3,
     "type": 2,
