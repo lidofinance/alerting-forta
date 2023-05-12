@@ -20,7 +20,7 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import BigNumber from "bignumber.js";
-import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
+import {BN_ZERO, ETH_DECIMALS, ONE_HOUR} from "../../common/constants";
 
 interface WithdrawalRequest {
   id: number;
@@ -41,7 +41,7 @@ let isBunkerMode = false;
 let bunkerModeEnabledSinceTimestamp = 0;
 
 let lastTokenRebaseTimestamp = 0;
-let amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0);
+let amountOfRequestedStETHSinceLastTokenRebase = BN_ZERO;
 let lastBigRequestAfterRebaseAlertTimestamp = 0;
 
 let lastQueueOnParStakeLimitAlertTimestamp = 0;
@@ -316,8 +316,8 @@ async function handleUnclaimedRequests(
 
   const unclaimedReqIds: number[] = [];
   const outdatedClaimedReqIds: number[] = [];
-  const unclaimedStETH = new BigNumber(0);
-  const claimedStETH = new BigNumber(0);
+  const unclaimedStETH = BN_ZERO;
+  const claimedStETH = BN_ZERO;
   finalizedWithdrawalRequests.forEach((req, id) => {
     if (!req.claimed) {
       unclaimedReqIds.push(id);
@@ -341,7 +341,7 @@ async function handleUnclaimedRequests(
     const isOutdated =
       now - Number(req.timestamp) > UNCLAIMED_REQUESTS_TIME_WINDOW;
     if (isOutdated) {
-      if (!req.claimed) {
+      if (req.claimed) {
         outdatedClaimedReqIds.push(id);
       }
     } else {
