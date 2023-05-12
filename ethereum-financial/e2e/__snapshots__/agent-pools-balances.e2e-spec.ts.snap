@@ -86,6 +86,22 @@ stETH - 531933.72 (55.13%)",
 }
 `;
 
+exports[`agent-pools-balances e2e tests should process block with low stETH PEG on Chainlink 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LOW-STETH-CHAINLINK-PEG",
+  "description": "Current stETH PEG on Chainlink - 0.9828",
+  "labels": Array [],
+  "metadata": Object {
+    "peg": "0.9828",
+  },
+  "name": "🚨🚨🚨 Super low stETH PEG on Chainlink",
+  "protocol": "ethereum",
+  "severity": 5,
+  "type": 3,
+}
+`;
+
 exports[`agent-pools-balances e2e tests should process block with significant Balancer pool change 1`] = `
 Finding {
   "addresses": Array [],
