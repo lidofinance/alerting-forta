@@ -42,7 +42,7 @@ import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
 import * as agentVaults from "./subagents/vaults/agent-vaults";
 
 import VERSION from "./version";
-import { RedefineMode, requireWithTier } from "./common/utils";
+import { mergeFindings, RedefineMode, requireWithTier } from "./common/utils";
 import type * as Constants from "./common/constants";
 
 const {
@@ -268,6 +268,9 @@ const _handleBlock = async (
     }
   });
 
+  if (blockFindings.length > 50) {
+    blockFindings = mergeFindings(blockFindings);
+  }
   return blockFindings;
 };
 
@@ -334,6 +337,9 @@ const _handleTransaction = async (
     }
   });
 
+  if (txFindings.length > 50) {
+    txFindings = mergeFindings(txFindings);
+  }
   return txFindings;
 };
 
