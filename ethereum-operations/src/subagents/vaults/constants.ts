@@ -19,14 +19,3 @@ export const TRANSFER_SHARES_EVENT = `
         uint256 sharesValue
     )
 `;
-
-export const ETH_DISTRIBUTED_EVENT = `
-    event ETHDistributed(
-        uint256 indexed reportTimestamp,
-        uint256 preCLBalance,
-        uint256 postCLBalance,
-        uint256 withdrawalsWithdrawn,
-        uint256 executionLayerRewardsWithdrawn,
-        uint256 postBufferedEther
-    )
-`;
