@@ -113,6 +113,7 @@ export const SAFES = {
       "0x98be4a407bff0c125e25fbe9eb1165504349c37d",
       "Relay Maintenance Committee",
     ],
+    ["0x8772e3a2d86b9347a2688f9bc1808a6d8917760c", "Gate Seal Committee"],
   ],
   [Blockchain.POLYGON]: [
     [
@@ -125,11 +126,23 @@ export const SAFES = {
       "0x8c2b8595ea1b627427efe4f29a64b145df439d16",
       "reWARDS Committee (Arbitrum)",
     ],
+    [
+      "0xfdcf209a213a0b3c403d543f87e74fcbca11de34",
+      "Emergency Brakes (Arbitrum)",
+    ],
   ],
   [Blockchain.OPTIMISM]: [
     [
       "0x5033823f27c5f977707b58f0351adcd732c955dd",
       "reWARDS Committee (Optimism)",
+    ],
+    [
+      "0x4cf8fe0a4c2539f7efdd2047d8a5d46f14613088",
+      "Emergency Brakes (Optimism)",
+    ],
+    [
+      "0x91ce2f083d59b832f95f90aa0997168ae051a98a",
+      "reWARDS Committee OP Token Multisig (Optimism)",
     ],
   ],
   [Blockchain.MOONBEAM]: [
