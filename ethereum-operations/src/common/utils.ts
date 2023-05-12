@@ -6,6 +6,30 @@ export enum RedefineMode {
   Merge = "merge",
 }
 
+export function mergeFindings(findings: Finding[]): Finding[] {
+  const mergedFindingsList: Finding[] = [];
+  const findingsByAlertId = findings.reduce((acc, finding) => {
+    if (!acc.has(finding.alertId)) {
+      acc.set(finding.alertId, [finding]);
+    } else {
+      acc.get(finding.alertId)?.push(finding);
+    }
+    return acc;
+  }, new Map<string, Finding[]>());
+  findingsByAlertId.forEach((findings) => {
+    const mergedFinding = Finding.fromObject({
+      ...findings[0],
+      description: findings.map((f) => f.description).join("\n---\n"),
+      metadata: {
+        ...findings[0].metadata,
+        args: findings.map((f) => f.metadata.args).join(","),
+      },
+    });
+    mergedFindingsList.push(mergedFinding);
+  });
+  return mergedFindingsList;
+}
+
 export function etherscanAddress(address: string): string {
   const subpath =
     process.env.FORTA_AGENT_RUN_TEAR == "testnet" ? "goerli." : "";
