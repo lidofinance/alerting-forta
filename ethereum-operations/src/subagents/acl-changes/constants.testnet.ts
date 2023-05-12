@@ -1,6 +1,14 @@
 import { IHasRoles, IOwnable } from "./constants";
 import { roleByName, INamedRole } from "./utils";
 
+export const DEV_EOAs = [
+  "0xa5F1d7D49F581136Cf6e58B32cBE9a2039C48bA1",
+  "0x3Dda46d78dF19c451D12c49ef071a7E5203eeD7b",
+  "0xe57025e250275ca56f92d76660decfc490c7e79a",
+  "0x97e6f3c884117a48a4e9526d7541fd95d712e9bf",
+  "0xc8a75e7196b11ae2debc39a2f8583f852e5bb7c3",
+];
+
 export const LIDO_ARAGON_ACL_ADDRESS =
   "0x9895f0f17cc1d1891b6f18ee0b483b6f221b37bb";
 
@@ -36,6 +44,8 @@ export const WHITELISTED_OWNERS = [
   // multisigs
   "0x73b047fe6337183A454c5217241D780a932777bD",
   "0x3cd9F71F80AB08ea5a7Dca348B5e94BC595f26A0",
+  // DEV
+  ...DEV_EOAs,
 ];
 
 // List of contracts to monitor for owner
@@ -105,7 +115,6 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
   ],
 ]);
 
-// NB! lower cased
 export const ROLES_OWNERS = {
   agent: "0x4333218072d5d7008546737786663c38b4d561a4",
   dsm: "0xe57025e250275ca56f92d76660decfc490c7e79a",
@@ -122,7 +131,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "OracleDaemonConfig",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [roleByName("CONFIG_MANAGER_ROLE"), []],
+        [roleByName("CONFIG_MANAGER_ROLE"), [DEV_EOAs[0]]],
       ]),
     },
   ],
@@ -132,10 +141,10 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Accounting HashConsensus",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), []],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), [DEV_EOAs[0]]],
         [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
         [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
-        [roleByName("MANAGE_FRAME_CONFIG_ROLE"), []],
+        [roleByName("MANAGE_FRAME_CONFIG_ROLE"), [DEV_EOAs[0]]],
         [roleByName("DISABLE_CONSENSUS_ROLE"), []],
       ]),
     },
@@ -146,10 +155,10 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Validators Exit Bus HashConsensus",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), []],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), [DEV_EOAs[0]]],
         [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
         [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
-        [roleByName("MANAGE_FRAME_CONFIG_ROLE"), []],
+        [roleByName("MANAGE_FRAME_CONFIG_ROLE"), [DEV_EOAs[0]]],
         [roleByName("DISABLE_CONSENSUS_ROLE"), []],
       ]),
     },
@@ -207,7 +216,10 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName("ANNUAL_BALANCE_INCREASE_LIMIT_MANAGER_ROLE"), []],
         [roleByName("SHARE_RATE_DEVIATION_LIMIT_MANAGER_ROLE"), []],
         [roleByName("MAX_VALIDATOR_EXIT_REQUESTS_PER_REPORT_ROLE"), []],
-        [roleByName("MAX_ACCOUNTING_EXTRA_DATA_LIST_ITEMS_COUNT_ROLE"), []],
+        [
+          roleByName("MAX_ACCOUNTING_EXTRA_DATA_LIST_ITEMS_COUNT_ROLE"),
+          [DEV_EOAs[0]],
+        ],
         [roleByName("MAX_NODE_OPERATORS_PER_EXTRA_DATA_ITEM_COUNT_ROLE"), []],
         [roleByName("REQUEST_TIMESTAMP_MARGIN_MANAGER_ROLE"), []],
         [roleByName("MAX_POSITIVE_TOKEN_REBASE_MANAGER_ROLE"), []],
@@ -235,9 +247,9 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
         [roleByName("MANAGE_WITHDRAWAL_CREDENTIALS_ROLE"), []],
-        [roleByName("STAKING_MODULE_PAUSE_ROLE"), [ROLES_OWNERS.dsm]],
+        [roleByName("STAKING_MODULE_PAUSE_ROLE"), [DEV_EOAs[4], DEV_EOAs[2]]],
         [roleByName("STAKING_MODULE_RESUME_ROLE"), [ROLES_OWNERS.dsm]],
-        [roleByName("STAKING_MODULE_MANAGE_ROLE"), []],
+        [roleByName("STAKING_MODULE_MANAGE_ROLE"), [DEV_EOAs[3]]],
         [
           roleByName("REPORT_EXITED_VALIDATORS_ROLE"),
           [ROLES_OWNERS.accountingOracle],
