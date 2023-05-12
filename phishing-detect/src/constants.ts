@@ -188,6 +188,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x4d9f9d15101eec665f77210cb999639f760f831e", // Curve.fi Factory Plain Pool: stETH/frxETH (st-frxETH-f)
   "0x5fe4b38520e856921978715c8579d2d7a4d2274f", // stETH ETHoria Vault (stETHev)
   "0x02c6d994e13f71dc6d9b367e002a04f78d05a9ad", // eSLSD Staking pool
+  "0xbbf1ee38152e9d8e3470dc47947eaa65dca94913", // maverick
+  "0xb9e7008fa856d66680bee9e0a24da407d9d7fad5", // zenith.cash
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
