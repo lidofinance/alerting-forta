@@ -1,4 +1,5 @@
 import { FindingSeverity } from "forta-agent";
+import { etherscanAddress } from "../../common/utils";
 
 export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 
@@ -35,7 +36,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Node operator ${args.id} added\n` +
       `Name: ${args.name}\n` +
-      `Reward address: ${args.rewardAddress}\n` +
+      `Reward address: ${etherscanAddress(args.rewardAddress)}\n` +
       `StakingLimit: ${args.stakingLimit}`,
     severity: FindingSeverity.Info,
   },
@@ -65,7 +66,9 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
     name: "ℹ️ NO Registry: Node operator reward address set",
     description: (args: any) =>
-      `Node operator ${args.id} reward address set to ${args.rewardAddress}`,
+      `Node operator ${args.id} reward address set to ${etherscanAddress(
+        args.rewardAddress
+      )}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -92,7 +95,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     alertId: "NOR-LOCATOR-CONTRACT-SET",
     name: "⚠️ NO Registry: Locator contract set",
     description: (args: any) =>
-      `Locator contract set to ${args.locatorAddress}`,
+      `Locator contract set to ${etherscanAddress(args.locatorAddress)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -121,7 +124,9 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     alertId: "NOR-NODE-OPERATOR-PENALIZED",
     name: "⚠️ NO Registry: Node operator penalized",
     description: (args: any) =>
-      `Node operator ${args.recipientAddress} penalized with ${args.sharesPenalizedAmount} shares`,
+      `Node operator ${etherscanAddress(
+        args.recipientAddress
+      )} penalized with ${args.sharesPenalizedAmount} shares`,
     severity: FindingSeverity.High,
   },
 ];

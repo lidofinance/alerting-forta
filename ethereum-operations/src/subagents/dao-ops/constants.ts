@@ -1,6 +1,7 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { ETH_DECIMALS } from "../../common/constants";
+import { etherscanAddress } from "../../common/utils";
 
 export interface ERC20 {
   decimals: number;
@@ -139,7 +140,8 @@ export const LIDO_EVENTS_OF_NOTICE = [
     event: "event LidoLocatorSet(address lidoLocator)",
     alertId: "LIDO-LOCATOR-SET",
     name: "🚨 Lido: Locator set",
-    description: (args: any) => `Lido locator was set to: ${args.lidoLocator}`,
+    description: (args: any) =>
+      `Lido locator was set to: ${etherscanAddress(args.lidoLocator)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -171,8 +173,8 @@ export const LIDO_EVENTS_OF_NOTICE = [
     name: "ℹ️ Lido: Funds recovered to vault",
     description: (args: any) =>
       `Funds recovered to vault:\n` +
-      `Vault: ${args.vault}\n` +
-      `Token: ${args.token}\n` +
+      `Vault: ${etherscanAddress(args.vault)}\n` +
+      `Token: ${etherscanAddress(args.token)}\n` +
       `Amount: ${args.amount}`,
     severity: FindingSeverity.Info,
   },
@@ -196,8 +198,8 @@ export const BURNER_EVENTS_OF_NOTICE = [
     name: "ℹ️ Lido Burner: ERC20 recovered",
     description: (args: any) =>
       `ERC20 recovered:\n` +
-      `Requested by: ${args.requestedBy}\n` +
-      `Token: ${args.token}\n` +
+      `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
+      `Token: ${etherscanAddress(args.token)}\n` +
       `Amount: ${args.amount}`,
     severity: FindingSeverity.Info,
   },
@@ -209,8 +211,8 @@ export const BURNER_EVENTS_OF_NOTICE = [
     name: "ℹ️ Lido Burner: ERC721 recovered",
     description: (args: any) =>
       `ERC721 recovered:\n` +
-      `Requested by: ${args.requestedBy}\n` +
-      `Token: ${args.token}\n` +
+      `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
+      `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}`,
     severity: FindingSeverity.Info,
   },
@@ -224,7 +226,9 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     alertId: "LIDO-DEPOSITS-PAUSED",
     name: "🚨 Deposit Security: Deposits paused",
     description: (args: any) =>
-      `Deposits were paused by ${args.guardian} for ${args.stakingModuleId} staking module`,
+      `Deposits were paused by ${etherscanAddress(args.guardian)} for ${
+        args.stakingModuleId
+      } staking module`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -241,7 +245,8 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     event: "event GuardianAdded(address guardian)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-ADDED",
     name: "⚠️ Deposit Security: Guardian added",
-    description: (args: any) => `New guardian added ${args.guardian}`,
+    description: (args: any) =>
+      `New guardian added ${etherscanAddress(args.guardian)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -249,7 +254,8 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     event: "event GuardianRemoved(address guardian)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-REMOVED",
     name: "⚠️ Deposit Security: Guardian removed",
-    description: (args: any) => `Guardian ${args.guardian} was removed`,
+    description: (args: any) =>
+      `Guardian ${etherscanAddress(args.guardian)} was removed`,
     severity: FindingSeverity.High,
   },
   {
@@ -281,7 +287,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     event: "event OwnerChanged(address newValue)",
     alertId: "LIDO-DEPOSITOR-OWNER-CHANGED",
     name: "🚨 Deposit Security: Owner changed",
-    description: (args: any) => `New owner ${args.newValue}`,
+    description: (args: any) => `New owner ${etherscanAddress(args.newValue)}`,
     severity: FindingSeverity.Critical,
   },
 ];
@@ -317,9 +323,9 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     name: "⚠️ MEV Allowed list: ERC20 Recovered",
     description: (args: any) =>
       `ERC20 tokens were recovered from MEV allowed list contract.\n` +
-      `Token: ${args.token}\n` +
+      `Token: ${etherscanAddress(args.token)}\n` +
       `Amount: ${new BigNumber(String(args.amount)).toFixed(0)}\n` +
-      `Recipient: ${args.recipient}`,
+      `Recipient: ${etherscanAddress(args.recipient)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -353,9 +359,11 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `${new BigNumber(String(args._amount))
         .div(ETH_DECIMALS)
-        .toFixed(2)} ETH were transferred from insurance fund to ${
+        .toFixed(
+          2
+        )} ETH were transferred from insurance fund to ${etherscanAddress(
         args._recipient
-      }`,
+      )}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -365,7 +373,11 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     alertId: "INS-FUND-ERC721-TRANSFERRED",
     name: "⚠️ Insurance fund: ERC721 transferred",
     description: (args: any) =>
-      `ERC721 token (address: ${args._token}, id: ${args._tokenId}) was transferred form insurance fund to ${args._recipient}`,
+      `ERC721 token (address: ${etherscanAddress(args._token)}, id: ${
+        args._tokenId
+      }) was transferred form insurance fund to ${etherscanAddress(
+        args._recipient
+      )}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -381,9 +393,11 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
       };
       return `${new BigNumber(String(args._amount))
         .div(10 ** tokenInfo.decimals)
-        .toFixed(2)} of ${args._token}(${
+        .toFixed(2)} of ${etherscanAddress(args._token)}(${
         tokenInfo.name
-      }) were transferred from insurance fund to ${args._recipient}`;
+      }) were transferred from insurance fund to ${etherscanAddress(
+        args._recipient
+      )}`;
     },
     severity: FindingSeverity.High,
   },
@@ -394,7 +408,13 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     alertId: "INS-FUND-ERC1155-TRANSFERRED",
     name: "⚠️ Insurance fund: ERC1155 transferred",
     description: (args: any) =>
-      `${args._amount} of ERC1155 token (address: ${args._token}, id: ${args._tokenId}) was transferred form insurance fund to ${args._recipient}`,
+      `${args._amount} of ERC1155 token (address: ${etherscanAddress(
+        args._token
+      )}, id: ${
+        args._tokenId
+      }) was transferred form insurance fund to ${etherscanAddress(
+        args._recipient
+      )}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -404,7 +424,9 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     alertId: "INS-FUND-OWNERSHIP-TRANSFERRED",
     name: "🚨 Insurance fund: Ownership transferred",
     description: (args: any) =>
-      `Owner of the insurance fund was transferred from ${args.previousOwner} to ${args.newOwner}`,
+      `Owner of the insurance fund was transferred from ${etherscanAddress(
+        args.previousOwner
+      )} to ${etherscanAddress(args.newOwner)}`,
     severity: FindingSeverity.Critical,
   },
 ];
@@ -416,7 +438,7 @@ export const TRP_EVENTS_OF_NOTICE = [
     alertId: "TRP-VOTING-ADAPTER-UPGRADED",
     name: "🚨 TRP Factory: Voting adapter upgraded",
     description: (args: any) =>
-      `Voting adapter was upgraded to ${args.voting_adapter}`,
+      `Voting adapter was upgraded to ${etherscanAddress(args.voting_adapter)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -425,7 +447,9 @@ export const TRP_EVENTS_OF_NOTICE = [
     alertId: "TRP-OWNER-CHANGED",
     name: "🚨 TRP Factory: Owner changed",
     description: (args: any) =>
-      `Owner of the TRP factory and all vestings was changed to ${args.owner}`,
+      `Owner of the TRP factory and all vestings was changed to ${etherscanAddress(
+        args.owner
+      )}`,
     severity: FindingSeverity.High,
   },
   {
@@ -434,7 +458,9 @@ export const TRP_EVENTS_OF_NOTICE = [
     alertId: "TRP-MANAGER-CHANGED",
     name: "🚨 TRP Factory: Manager changed",
     description: (args: any) =>
-      `Manager of the TRP factory and all vestings was changed to ${args.manager}`,
+      `Manager of the TRP factory and all vestings was changed to ${etherscanAddress(
+        args.manager
+      )}`,
     severity: FindingSeverity.High,
   },
 ];

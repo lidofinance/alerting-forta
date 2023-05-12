@@ -14,6 +14,7 @@ import LIDO_ABI from "../../abi/Lido.json";
 
 import { formatDelay } from "./utils";
 import {
+  etherscanAddress,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -455,9 +456,9 @@ async function handleWithdrawalRequest(
       findings.push(
         Finding.fromObject({
           name: `ℹ️ Withdrawals: received withdrawal request in one batch greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH`,
-          description: `Requestor: ${requestor}\nAmount: ${amounts.toFixed(
-            2
-          )} stETH`,
+          description: `Requestor: ${etherscanAddress(
+            requestor
+          )}\nAmount: ${amounts.toFixed(2)} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
           severity: FindingSeverity.Info,
           type: FindingType.Info,

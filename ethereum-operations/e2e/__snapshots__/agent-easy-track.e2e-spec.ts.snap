@@ -20,7 +20,7 @@ exports[`agent-easy-track e2e tests should process tx with granted role 1`] = `
 Finding {
   "addresses": Array [],
   "alertId": "EASY-TRACK-ROLE-GRANTED",
-  "description": "Role 0x0000000000000000000000000000000000000000000000000000000000000000 was granted to 0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d on EasyTrack contract by 0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d",
+  "description": "Role 0x0000000000000000000000000000000000000000000000000000000000000000 was granted to [0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d](https://etherscan.io/address/0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d) on EasyTrack contract by [0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d](https://etherscan.io/address/0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d)",
   "labels": Array [],
   "metadata": Object {
     "args": "0x0000000000000000000000000000000000000000000000000000000000000000,0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d,0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d",
@@ -36,7 +36,7 @@ exports[`agent-easy-track e2e tests should process tx with granted role on Rewar
 Finding {
   "addresses": Array [],
   "alertId": "REWARD-PROGRAMS-REGISTRY-ROLE-GRANTED",
-  "description": "Role 0x0000000000000000000000000000000000000000000000000000000000000000 was granted by 0x2e59A20f205bB85a89C53f1936454680651E618e on RewardProgramsRegistry by 0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d",
+  "description": "Role 0x0000000000000000000000000000000000000000000000000000000000000000 was granted by [0x2e59A20f205bB85a89C53f1936454680651E618e](https://etherscan.io/address/0x2e59A20f205bB85a89C53f1936454680651E618e) on RewardProgramsRegistry by [0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d](https://etherscan.io/address/0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d)",
   "labels": Array [],
   "metadata": Object {
     "args": "0x0000000000000000000000000000000000000000000000000000000000000000,0x2e59A20f205bB85a89C53f1936454680651E618e,0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d",
@@ -68,7 +68,7 @@ exports[`agent-easy-track e2e tests should process tx with objected motion 1`] =
 Finding {
   "addresses": Array [],
   "alertId": "EASY-TRACK-MOTION-OBJECTED",
-  "description": "EasyTrack motion 351 was objected by 0x22c05930160c6a74a6bA59436e8F7006176ed104",
+  "description": "EasyTrack motion 351 was objected by [0x22c05930160c6a74a6bA59436e8F7006176ed104](https://etherscan.io/address/0x22c05930160c6a74a6bA59436e8F7006176ed104)",
   "labels": Array [],
   "metadata": Object {
     "args": "351,0x22c05930160c6a74a6bA59436e8F7006176ed104,10000000000000000000000,10000000000000000000000,0",
@@ -84,7 +84,7 @@ exports[`agent-easy-track e2e tests should process tx with revoked role 1`] = `
 Finding {
   "addresses": Array [],
   "alertId": "EASY-TRACK-ROLE-REVOKED",
-  "description": "Role 0x9f959e00d95122f5cbd677010436cf273ef535b86b056afc172852144b9491d7 was revoked from 0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d on EasyTrack contract by 0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d",
+  "description": "Role 0x9f959e00d95122f5cbd677010436cf273ef535b86b056afc172852144b9491d7 was revoked from [0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d](https://etherscan.io/address/0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d) on EasyTrack contract by [0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d](https://etherscan.io/address/0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d)",
   "labels": Array [],
   "metadata": Object {
     "args": "0x9f959e00d95122f5cbd677010436cf273ef535b86b056afc172852144b9491d7,0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d,0x2a61d3ba5030Ef471C74f612962c7367ECa3a62d",

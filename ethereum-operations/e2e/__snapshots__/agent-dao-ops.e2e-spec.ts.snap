@@ -104,9 +104,6 @@ Stake limit increase per block: 23437500000000000000",
 ]
 `;
 
-// todo: disabled due to changes in the event signatures.
-//  uncomment or remove after V2
-
 exports[`agent-dao-ops e2e tests should process tx with EL rewards withdrawal limit set 1`] = `undefined`;
 
 exports[`agent-dao-ops e2e tests should process tx with added guardian 1`] = `undefined`;
@@ -144,7 +141,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "INS-FUND-OWNERSHIP-TRANSFERRED",
-    "description": "Owner of the insurance fund was transferred from 0x0000000000000000000000000000000000000000 to 0xbD829522d4791b9660f59f5998faE451dACA4E1C",
+    "description": "Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)",
     "labels": Array [],
     "metadata": Object {
       "args": "0x0000000000000000000000000000000000000000,0xbD829522d4791b9660f59f5998faE451dACA4E1C",
@@ -157,7 +154,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "INS-FUND-OWNERSHIP-TRANSFERRED",
-    "description": "Owner of the insurance fund was transferred from 0xbD829522d4791b9660f59f5998faE451dACA4E1C to 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c",
+    "description": "Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)",
     "labels": Array [],
     "metadata": Object {
       "args": "0xbD829522d4791b9660f59f5998faE451dACA4E1C,0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c",

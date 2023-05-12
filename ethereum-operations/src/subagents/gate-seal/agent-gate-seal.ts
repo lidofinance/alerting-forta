@@ -6,7 +6,12 @@ import {
   FindingType,
   TransactionEvent,
 } from "forta-agent";
-import { formatDelay, RedefineMode, requireWithTier } from "../../common/utils";
+import {
+  etherscanAddress,
+  formatDelay,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
 
 import * as Constants from "./constants";
 import { ethersProvider } from "../../ethers";
@@ -51,7 +56,9 @@ export async function initialize(
     initFindings.push(
       Finding.fromObject({
         name: "⚠️ GateSeal: default GateSeal address in forta agent is expired",
-        description: `GateSeal address: ${GATE_SEAL_DEFAULT_ADDRESS}]`,
+        description: `GateSeal address: ${etherscanAddress(
+          GATE_SEAL_DEFAULT_ADDRESS
+        )}]`,
         alertId: "GATE-SEAL-DEFAULT-EXPIRED",
         severity: FindingSeverity.High,
         type: FindingType.Info,
@@ -62,13 +69,19 @@ export async function initialize(
     if (!roleForExitBus || !roleForWithdrawalQueue) {
       let additionalDesc = "";
       if (!roleForExitBus)
-        additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${EXITBUS_ORACLE_ADDRESS}`;
+        additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(
+          EXITBUS_ORACLE_ADDRESS
+        )}`;
       if (!roleForWithdrawalQueue)
-        additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${WITHDRAWAL_QUEUE_ADDRESS}`;
+        additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${etherscanAddress(
+          WITHDRAWAL_QUEUE_ADDRESS
+        )}`;
       initFindings.push(
         Finding.fromObject({
           name: "⚠️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts",
-          description: `GateSeal address: ${GATE_SEAL_DEFAULT_ADDRESS}${additionalDesc}`,
+          description: `GateSeal address: ${etherscanAddress(
+            GATE_SEAL_DEFAULT_ADDRESS
+          )}${additionalDesc}`,
           alertId: "GATE-SEAL-DEFAULT-WITHOUT-ROLE",
           severity: FindingSeverity.High,
           type: FindingType.Info,
@@ -108,9 +121,13 @@ async function handlePauseRole(blockEvent: BlockEvent, findings: Finding[]) {
   if (!roleForExitBus || !roleForWithdrawalQueue) {
     let additionalDesc = "";
     if (!roleForExitBus)
-      additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${EXITBUS_ORACLE_ADDRESS}`;
+      additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(
+        EXITBUS_ORACLE_ADDRESS
+      )}`;
     if (!roleForWithdrawalQueue)
-      additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${WITHDRAWAL_QUEUE_ADDRESS}`;
+      additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${etherscanAddress(
+        WITHDRAWAL_QUEUE_ADDRESS
+      )}`;
     if (
       now - lastNoPauseRoleAlertTimestamp >
       GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY
@@ -118,7 +135,9 @@ async function handlePauseRole(blockEvent: BlockEvent, findings: Finding[]) {
       findings.push(
         Finding.fromObject({
           name: "🚨GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
-          description: `GateSeal address: ${actualGateSeal}${additionalDesc}`,
+          description: `GateSeal address: ${etherscanAddress(
+            actualGateSeal
+          )}${additionalDesc}`,
           alertId: "GATE-SEAL-WITHOUT-PAUSE-ROLE",
           severity: FindingSeverity.Critical,
           type: FindingType.Degraded,
@@ -150,7 +169,7 @@ async function handleExpiryGateSeal(
     findings.push(
       Finding.fromObject({
         name: "🚨🚨🚨 GateSeal: is expired! 🚨🚨🚨",
-        description: `GateSeal address: ${actualGateSeal}}`,
+        description: `GateSeal address: ${etherscanAddress(actualGateSeal)}}`,
         alertId: "GATE-SEAL-IS-EXPIRED",
         severity: FindingSeverity.Critical,
         type: FindingType.Degraded,
@@ -165,9 +184,9 @@ async function handleExpiryGateSeal(
       findings.push(
         Finding.fromObject({
           name: "⚠️ GateSeal: is about to be expired",
-          description: `GateSeal address: ${actualGateSeal}\nExpiry date ${new Date(
-            String(expiryTimestamp)
-          )}`,
+          description: `GateSeal address: ${etherscanAddress(
+            actualGateSeal
+          )}\nExpiry date ${new Date(String(expiryTimestamp))}`,
           alertId: "GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED",
           severity: FindingSeverity.High,
           type: FindingType.Degraded,
@@ -206,7 +225,11 @@ async function handleSealedGateSeal(
     findings.push(
       Finding.fromObject({
         name: "🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨",
-        description: `GateSeal address: ${actualGateSeal}\nSealed by: ${sealed_by}\nSealed for: ${duration}\nSealable: ${sealable}`,
+        description: `GateSeal address: ${etherscanAddress(
+          actualGateSeal
+        )}\nSealed by: ${etherscanAddress(
+          sealed_by
+        )}\nSealed for: ${duration}\nSealable: ${etherscanAddress(sealable)}`,
         alertId: "GATE-SEAL-IS-SEALED",
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
@@ -229,7 +252,9 @@ async function handleNewGateSeal(
     findings.push(
       Finding.fromObject({
         name: "🚨 GateSeal: new one created",
-        description: `GateSeal address: ${gate_seal}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,
+        description: `GateSeal address: ${etherscanAddress(
+          gate_seal
+        )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,
         alertId: "GATE-SEAL-NEW-ONE-CREATED",
         severity: FindingSeverity.High,
         type: FindingType.Info,

@@ -7,7 +7,11 @@ import {
 } from "forta-agent";
 
 import { ethersProvider } from "../../ethers";
-import { RedefineMode, requireWithTier } from "../../common/utils";
+import {
+  etherscanAddress,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
 import { IProxyContractData } from "../../common/constants";
 
 export const name = "ProxyWatcher";
@@ -36,7 +40,9 @@ export async function initialize(
         initFindings.push(
           Finding.fromObject({
             name: "🚨 Proxy contract not found",
-            description: `Proxy contract ${data?.name} (${address}) not found`,
+            description: `Proxy contract ${data?.name} (${etherscanAddress(
+              address
+            )}) not found`,
             alertId: "PROXY-NOT-FOUND",
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
@@ -87,7 +93,9 @@ async function handleProxyImplementations(
         findings.push(
           Finding.fromObject({
             name: `🚨 Proxy contract selfdestructed`,
-            description: `Proxy contract ${data?.name} (${address}) selfdestructed`,
+            description: `Proxy contract ${data?.name} (${etherscanAddress(
+              address
+            )}) selfdestructed`,
             alertId: `PROXY-SELFDESTRUCTED`,
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
@@ -107,7 +115,11 @@ async function handleProxyImplementations(
           findings.push(
             Finding.fromObject({
               name: `🚨 Proxy implementation changed`,
-              description: `Implementation of ${data.name} (${address}) changed from ${prevImpl} to ${currentImpl}`,
+              description: `Implementation of ${data.name} (${etherscanAddress(
+                address
+              )}) changed from ${
+                prevImpl ? etherscanAddress(prevImpl) : prevImpl
+              } to ${etherscanAddress(currentImpl)}`,
               alertId: `PROXY-IMPL-CHANGED`,
               severity: FindingSeverity.Critical,
               type: FindingType.Info,

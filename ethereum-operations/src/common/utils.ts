@@ -7,7 +7,9 @@ export enum RedefineMode {
 }
 
 export function etherscanAddress(address: string): string {
-  return `[${address}](https://etherscan.io/address/${address})`;
+  const subpath =
+    process.env.FORTA_AGENT_RUN_TEAR == "testnet" ? "goerli." : "";
+  return `[${address}](https://${subpath}etherscan.io/address/${address})`;
 }
 
 /**

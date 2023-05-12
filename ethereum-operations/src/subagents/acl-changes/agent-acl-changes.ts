@@ -13,7 +13,11 @@ import { BlockTag } from "@ethersproject/providers";
 import { ethersProvider } from "../../ethers";
 
 import { isContract } from "./utils";
-import { RedefineMode, requireWithTier } from "../../common/utils";
+import {
+  etherscanAddress,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
 
 interface IPermission {
   app: string;
@@ -149,7 +153,11 @@ async function handlePermissionChange(
   findings.push(
     Finding.fromObject({
       name: `🚨 Aragon ACL: Permission ${shortState}`,
-      description: `Role ${permission.role} (${role}) on the app ${permission.app} (${app}) was ${permission.state} ${permission.entity} (${entity})`,
+      description: `Role ${
+        permission.role
+      } (${role}) on the app ${etherscanAddress(permission.app)} (${app}) was ${
+        permission.state
+      } ${permission.entity} (${entity})`,
       alertId: "ARAGON-ACL-PERMISSION-CHANGED",
       severity: severity,
       type: FindingType.Info,
@@ -187,7 +195,13 @@ function handleChangePermissionManager(
       findings.push(
         Finding.fromObject({
           name: `🚨 Aragon ACL: Permission manager changed`,
-          description: `Permission manager for the role ${event.args.role} (${role}) on the app ${event.args.app} (${app}) was set to ${event.args.manager} (${manager})`,
+          description: `Permission manager for the role ${
+            event.args.role
+          } (${role}) on the app ${etherscanAddress(
+            event.args.app
+          )} (${app}) was set to ${etherscanAddress(
+            event.args.manager
+          )} (${manager})`,
           alertId: "ARAGON-ACL-PERMISSION-MANAGER-CHANGED",
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
@@ -236,9 +250,11 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
           name: curOwnerIsContract
             ? "🚨 Contract owner set to address not in whitelist"
             : "🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨",
-          description: `${data.name} contract (${address}) owner is set to ${
+          description: `${data.name} contract (${etherscanAddress(
+            address
+          )}) owner is set to ${
             curOwnerIsContract ? "contract" : "EOA"
-          } address ${curOwner}`,
+          } address ${etherscanAddress(curOwner)}`,
           alertId: "SUSPICIOUS-CONTRACT-OWNER",
           type: FindingType.Suspicious,
           severity: curOwnerIsContract
@@ -286,7 +302,9 @@ async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
               name: `🚨 ACL: Role members changed`,
               description: `Role ${role.name} members of ${
                 data.name
-              } changed to [${curMembers.join(", ")}]`,
+              } changed to [${curMembers
+                .map((m) => etherscanAddress(m))
+                .join(", ")}]`,
               alertId: "ACL-ROLE-MEMBERS-CHANGED",
               severity: FindingSeverity.Critical,
               type: FindingType.Info,

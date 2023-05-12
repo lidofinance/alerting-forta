@@ -15,6 +15,7 @@ import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 
 import { getMemberName } from "./utils";
 import {
+  etherscanAddress,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -175,7 +176,7 @@ async function handleMemberBalance(
         Finding.fromObject({
           name: "⚠️ Low balance of Accounting Oracle Member",
           description:
-            `Balance of ${member} ` +
+            `Balance of ${etherscanAddress(member)} ` +
             `(${getMemberName(
               ACCOUNTING_ORACLE_MEMBERS,
               member.toLocaleLowerCase()
@@ -230,7 +231,7 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
       Finding.fromObject({
         name: "⚠️ Accounting Oracle: Alternative report received",
         description:
-          `Member ${event.args.member} ` +
+          `Member ${etherscanAddress(event.args.member)} ` +
           `(${getMemberName(
             ACCOUNTING_ORACLE_MEMBERS,
             event.args.member.toLocaleLowerCase()
@@ -247,7 +248,7 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
       Finding.fromObject({
         name: "ℹ️ Accounting Oracle: Report received",
         description:
-          `Member ${event.args.member} ` +
+          `Member ${etherscanAddress(event.args.member)} ` +
           `(${getMemberName(
             ACCOUNTING_ORACLE_MEMBERS,
             event.args.member.toLocaleLowerCase()
@@ -293,7 +294,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "⚠️ Accounting Oracle: super sloppy member",
           description:
-            `Member ${member} ` +
+            `Member ${etherscanAddress(member)} ` +
             `(${getMemberName(
               ACCOUNTING_ORACLE_MEMBERS,
               member.toLocaleLowerCase()
@@ -311,7 +312,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
           Finding.fromObject({
             name: "🤔 Accounting Oracle: sloppy member in fast lane",
             description:
-              `Member ${member} ` +
+              `Member ${etherscanAddress(member)} ` +
               `(${getMemberName(
                 ACCOUNTING_ORACLE_MEMBERS,
                 member.toLocaleLowerCase()

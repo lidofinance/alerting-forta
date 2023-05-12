@@ -1,6 +1,7 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
+import { etherscanAddress } from "../../common/utils";
 
 export const CL_GENESIS_TIMESTEMP = 1606824023;
 
@@ -80,7 +81,9 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "EXITBUS-ORACLE-MEMBER-ADDED",
     name: "⚠️ ExitBus Oracle: Member Added",
     description: (args: any) =>
-      `Oracle member added: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
+      `Oracle member added: ${etherscanAddress(args.addr)}\nTotal members: ${
+        args.newTotalMembers
+      }\nQuorum: ${args.newQuorum}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -90,7 +93,9 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "EXITBUS-ORACLE-MEMBER-REMOVED",
     name: "⚠️ ExitBus Oracle: Member Removed",
     description: (args: any) =>
-      `Oracle member removed: ${args.addr}\nTotal members: ${args.newTotalMembers}\nQuorum: ${args.newQuorum}`,
+      `Oracle member removed: ${etherscanAddress(args.addr)}\nTotal members: ${
+        args.newTotalMembers
+      }\nQuorum: ${args.newQuorum}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -128,7 +133,9 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     alertId: "EXITBUS-ORACLE-REPORT-PROCESSOR-SET",
     name: "🚨 ExitBus Oracle: Report Processor set",
     description: (args: any) =>
-      `New report processor: ${args.processor}\nPrev report processor: ${args.prevProcessor}`,
+      `New report processor: ${etherscanAddress(
+        args.processor
+      )}\nPrev report processor: ${etherscanAddress(args.prevProcessor)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -158,7 +165,9 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     alertId: "EXITBUS-ORACLE-CONSENSUS-HASH-CONTRACT-SET",
     name: "⚠️ ExitBus Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
-      `New address: ${args.addr}\nPrevious address: ${args.prevAddr}`,
+      `New address: ${etherscanAddress(
+        args.addr
+      )}\nPrevious address: ${etherscanAddress(args.prevAddr)}`,
     severity: FindingSeverity.Critical,
   },
   {
