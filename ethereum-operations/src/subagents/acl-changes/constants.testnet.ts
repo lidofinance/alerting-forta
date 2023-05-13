@@ -2,8 +2,8 @@ import { IHasRoles, IOwnable } from "./constants";
 import { roleByName, INamedRole } from "./utils";
 
 export const DEV_EOAs = [
-  "0xa5F1d7D49F581136Cf6e58B32cBE9a2039C48bA1",
-  "0x3Dda46d78dF19c451D12c49ef071a7E5203eeD7b",
+  "0xa5f1d7d49f581136cf6e58b32cbe9a2039c48ba1",
+  "0x3dda46d78df19c451d12c49ef071a7e5203eed7b",
   "0xe57025e250275ca56f92d76660decfc490c7e79a",
   "0x97e6f3c884117a48a4e9526d7541fd95d712e9bf",
   "0xc8a75e7196b11ae2debc39a2f8583f852e5bb7c3",
@@ -39,11 +39,11 @@ export const ORDINARY_ENTITIES = new Map([
 
 // Rewards contracts allowed owners
 export const WHITELISTED_OWNERS = [
-  "0xbc0B67b4553f4CF52a913DE9A6eD0057E2E758Db",
-  "0x4333218072D5d7008546737786663c38B4D561A4",
+  "0xbc0b67b4553f4cf52a913de9a6ed0057e2e758db",
+  "0x4333218072d5d7008546737786663c38b4d561a4",
   // multisigs
-  "0x73b047fe6337183A454c5217241D780a932777bD",
-  "0x3cd9F71F80AB08ea5a7Dca348B5e94BC595f26A0",
+  "0x73b047fe6337183a454c5217241d780a932777bd",
+  "0x3cd9f71f80ab08ea5a7dca348b5e94bc595f26a0",
   // DEV
   ...DEV_EOAs,
 ];
