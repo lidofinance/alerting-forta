@@ -185,7 +185,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     event: "event Resumed()",
     alertId: "EXITBUS-ORACLE-UNPAUSED",
     name: "ℹ️ ExitBus Oracle: contract was unpaused",
-    description: (args: any) => "",
+    description: (args: any) => "Contract was resumed",
     severity: FindingSeverity.High,
   },
   {

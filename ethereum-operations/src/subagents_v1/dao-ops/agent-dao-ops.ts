@@ -329,10 +329,21 @@ async function handleElRewardsBalance(
       )
     );
 
-    const elRewardsLimit =
-      (await lidoDao.functions.getELRewardsWithdrawalLimit({
-        blockTag: blockEvent.block.number,
-      })) / 10000;
+    let elRewardsLimit = 0;
+    try {
+      elRewardsLimit =
+        (await lidoDao.functions.getELRewardsWithdrawalLimit({
+          blockTag: blockEvent.block.number,
+        })) / 10000;
+    } catch (e: any) {
+      if (e.message.includes("Transaction reverted")) {
+        console.error(
+          "Failed to get EL rewards limit. `getELRewardsWithdrawalLimit` is not available in this version of contract"
+        );
+        return;
+      }
+      throw e;
+    }
 
     const elBalance = new BigNumber(
       String(

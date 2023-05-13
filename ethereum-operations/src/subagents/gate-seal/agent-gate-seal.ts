@@ -294,21 +294,21 @@ async function checkGateSeal(
     EXITBUS_ORACLE_ABI,
     ethersProvider
   );
-  const [queuePauseRoleMember] = await withdrawalQueue.functions.getRoleMember(
+  const [queuePauseRoleMember] = (await withdrawalQueue.functions.hasRole(
     keccakPauseRole,
-    0,
+    gateSealAddress,
     {
       blockTag: blockNumber,
     }
-  );
-  const [exitBusPauseRoleMember] = await exitBusOracle.functions.getRoleMember(
+  )) as boolean[];
+  const [exitBusPauseRoleMember] = (await exitBusOracle.functions.hasRole(
     keccakPauseRole,
-    0,
+    gateSealAddress,
     {
       blockTag: blockNumber,
     }
-  );
-  roleForExitBus = gateSealAddress == queuePauseRoleMember;
-  roleForWithdrawalQueue = gateSealAddress == exitBusPauseRoleMember;
-  return { roleForExitBus, roleForWithdrawalQueue };
+  )) as boolean[];
+  roleForWithdrawalQueue = queuePauseRoleMember;
+  roleForExitBus = exitBusPauseRoleMember;
+  return { roleForWithdrawalQueue, roleForExitBus };
 }

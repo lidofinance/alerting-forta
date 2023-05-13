@@ -274,7 +274,19 @@ async function handleOraclesBalances(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
-  const oracles = await getOracles(blockEvent.blockNumber);
+  let oracles: string[];
+  try {
+    oracles = await getOracles(blockEvent.blockNumber);
+  } catch (e: any) {
+    if (e.message.includes("Transaction reverted")) {
+      console.error(
+        "Failed to get oracles from current implementation. `getOracleMembers` is not available in this version of contract"
+      );
+      return;
+    }
+    throw e;
+  }
+
   await Promise.all(
     oracles.map((oracle) => handleOracleBalance(oracle, blockEvent, findings))
   );
@@ -324,13 +336,15 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     handleReportBeacon(txEvent);
     handleBeaconCompleted(txEvent, findings);
   }
-  [
+  for (const events of [
     LIDO_ORACLE_EVENTS_OF_NOTICE,
     ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE,
     ACCOUNTING_ORACLE_EVENTS_OF_NOTICE,
     EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE,
     EXITBUS_ORACLE_EVENTS_OF_NOTICE,
-  ].forEach((events) => handleEventsOfNotice(txEvent, findings, events));
+  ]) {
+    handleEventsOfNotice(txEvent, findings, events);
+  }
 
   return findings;
 }

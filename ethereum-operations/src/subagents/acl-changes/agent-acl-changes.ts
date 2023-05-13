@@ -232,7 +232,7 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
       const curOwner = String(
         await getOwner(address, data.ownershipMethod, blockEvent.blockNumber)
       );
-      if (WHITELISTED_OWNERS.includes(curOwner)) return;
+      if (WHITELISTED_OWNERS.includes(curOwner.toLowerCase())) return;
 
       const curOwnerIsContract = await isContract(curOwner);
 
