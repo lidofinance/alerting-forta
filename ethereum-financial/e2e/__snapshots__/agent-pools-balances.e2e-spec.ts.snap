@@ -90,10 +90,10 @@ exports[`agent-pools-balances e2e tests should process block with low stETH PEG 
 Finding {
   "addresses": Array [],
   "alertId": "LOW-STETH-CHAINLINK-PEG",
-  "description": "Current stETH PEG on Chainlink - 0.9828",
+  "description": "Current stETH PEG on Chainlink - 0.9660",
   "labels": Array [],
   "metadata": Object {
-    "peg": "0.9828",
+    "peg": "0.9660",
   },
   "name": "🚨🚨🚨 Super low stETH PEG on Chainlink",
   "protocol": "ethereum",

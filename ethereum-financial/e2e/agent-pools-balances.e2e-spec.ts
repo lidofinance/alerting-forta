@@ -114,7 +114,7 @@ describe("agent-pools-balances e2e tests", () => {
   it(
     "should process block with low stETH PEG on Chainlink",
     async () => {
-      const findings = await runBlock(16038267, 16037266);
+      const findings = await runBlock(15485829, 15485828);
       expect(
         findings
           .filter((finding) => finding.alertId == "LOW-STETH-CHAINLINK-PEG")

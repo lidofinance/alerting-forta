@@ -30,6 +30,6 @@ export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 10;
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
 
 export const PEG_REPORT_INTERVAL = 60 * 60 * 24; // 24 hours
-export const PEG_STEP_ALERT_MIN_VALUE = 0.98;
-export const PEG_STEP = 0.01;
-export const PEG_THRESHOLD = 0.99;
+export const PEG_STEP_ALERT_MIN_VALUE = 0.995;
+export const PEG_STEP = 0.005;
+export const PEG_THRESHOLD = 0.98;
