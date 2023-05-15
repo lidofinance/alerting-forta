@@ -53,7 +53,13 @@ describe("agent-pools-balances e2e tests", () => {
     "should process block with Curve pool rapid imbalance change",
     async () => {
       const findings = await runBlock(16306452, 16300452);
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(
+        findings
+          .filter(
+            (finding) => finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE"
+          )
+          .at(0)
+      ).toMatchSnapshot();
     },
     TEST_TIMEOUT
   );
@@ -93,7 +99,27 @@ describe("agent-pools-balances e2e tests", () => {
     "should process block with Balancer pool rapid imbalance change",
     async () => {
       const findings = await runBlock(16306450, 16306009);
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(
+        findings
+          .filter(
+            (finding) =>
+              finding.alertId == "BALANCER-POOL-IMBALANCE-RAPID-CHANGE"
+          )
+          .at(0)
+      ).toMatchSnapshot();
+    },
+    TEST_TIMEOUT
+  );
+
+  it(
+    "should process block with low stETH PEG on Chainlink",
+    async () => {
+      const findings = await runBlock(15485829, 15485828);
+      expect(
+        findings
+          .filter((finding) => finding.alertId == "LOW-STETH-CHAINLINK-PEG")
+          .at(0)
+      ).toMatchSnapshot();
     },
     TEST_TIMEOUT
   );

@@ -13,6 +13,7 @@ import { ethersProvider } from "../../ethers";
 import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
 
 import {
+  CHAINLINK_STETH_PRICE_FEED,
   POOLS_PARAMS_BALANCES,
   IMBALANCE_CHANGE_TOLERANCE,
   IMBALANCE_TOLERANCE,
@@ -29,6 +30,7 @@ import {
 
 import CURVE_POOL_ABI from "../../abi/CurvePool.json";
 import BALANCER_POOL_ABI from "../../abi/BalancerPool.json";
+import CHAINLINK_AGGREGATOR_ABI from "../../abi/ChainlinkAggregator.json";
 
 export const name = "PoolsBalances";
 
@@ -106,6 +108,8 @@ let poolsParams: { [name: string]: PoolParams } = {
 let lastReportedCurvePegTime = 0;
 let lastReportedCurvePegVal = 0;
 let lastReportedCurvePegLevel = 0;
+let lastReportedChainlinkPegTime = 0;
+let lastReportedChainlinkPegLevel = 0;
 let lastReportedUnstakedStEth = new BigNumber(0);
 let lastReportedUnstakedStEthTime = 0;
 
@@ -169,11 +173,16 @@ export async function initialize(
   // Division by 100 is required to normalize lastReportedCurvePegLevel to PEG_STEP
   lastReportedCurvePegLevel =
     Math.ceil(lastReportedCurvePegVal / PEG_STEP) / 100;
+  lastReportedChainlinkPegLevel =
+    Math.ceil((await getChainlinkPeg(currentBlock)) / PEG_STEP) / 100;
+  lastReportedChainlinkPegTime = 0;
+
   lastReportedUnstakedStEth = getTotalUnstakedStEth();
   lastReportedUnstakedStEthTime = now;
 
   return {
     curveStEthPeg: lastReportedCurvePegVal.toFixed(4),
+    chainlinkStEthPeg: lastReportedChainlinkPegLevel.toFixed(4),
     curvePoolImbalance: poolsParams.Curve.lastReportedImbalance.toString(),
     curvePoolSize: poolsParams.Curve.poolSize.toFixed(),
     balancerPoolImbalance:
@@ -242,6 +251,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBalancerPoolSize(blockEvent, findings),
     handleCurvePoolSize(blockEvent, findings),
     handleCurvePeg(blockEvent, findings),
+    handleChainlinkPeg(blockEvent, findings),
     handleUnstakedStEth(blockEvent, findings),
   ]);
 
@@ -554,6 +564,75 @@ async function getCurvePeg(blockNumber: number) {
     )
   );
   return amountEth.div(amountStEth).toNumber();
+}
+
+///////// CHAINLINK PEG ////////////
+
+async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
+  const now = blockEvent.block.timestamp;
+  const peg = await getChainlinkPeg(blockEvent.blockNumber);
+  // Division by 100 is required to normalize pegLevel to PEG_STEP
+  const pegLevel = Math.ceil(peg / PEG_STEP) / 100;
+  // info on PEG decrease
+  if (
+    pegLevel < lastReportedChainlinkPegLevel &&
+    peg < PEG_STEP_ALERT_MIN_VALUE
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "⚠️ stETH PEG on Chainlink decreased",
+        description: `stETH PEG on Chainlink decreased to ${peg.toFixed(4)}`,
+        alertId: "STETH-CHAINLINK-PEG-DECREASE",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata: {
+          peg: peg.toFixed(4),
+        },
+      })
+    );
+    lastReportedChainlinkPegLevel = pegLevel;
+  }
+  // ALERT on PEG lower threshold
+  if (
+    peg <= PEG_THRESHOLD &&
+    now > lastReportedChainlinkPegTime + PEG_REPORT_INTERVAL
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "🚨🚨🚨 Super low stETH PEG on Chainlink",
+        description: `Current stETH PEG on Chainlink - ${peg.toFixed(4)}`,
+        alertId: "LOW-STETH-CHAINLINK-PEG",
+        severity: FindingSeverity.Critical,
+        type: FindingType.Degraded,
+        metadata: {
+          peg: peg.toFixed(4),
+        },
+      })
+    );
+    lastReportedChainlinkPegTime = now;
+  }
+  // update PEG vals if PEG goes way back
+  if (lastReportedChainlinkPegLevel + PEG_STEP * 2 < pegLevel) {
+    lastReportedChainlinkPegLevel = pegLevel;
+  }
+}
+
+async function getChainlinkPeg(blockNumber: number): Promise<number> {
+  const chainlinkAggregator = new ethers.Contract(
+    CHAINLINK_STETH_PRICE_FEED,
+    CHAINLINK_AGGREGATOR_ABI,
+    ethersProvider
+  );
+
+  const peg = new BigNumber(
+    String(
+      await chainlinkAggregator.functions.latestAnswer({
+        blockTag: blockNumber,
+      })
+    )
+  );
+
+  return peg.div(ETH_DECIMALS).toNumber();
 }
 
 ///////// "UNSTAKED" stETH ////////////
