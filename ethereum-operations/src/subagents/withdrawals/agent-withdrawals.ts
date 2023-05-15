@@ -122,40 +122,43 @@ export async function initialize(
         })
       )[0]
     );
-    lastFinalizedTimestamp = Number(
-      (
-        await withdrawalNFT.functions.getWithdrawalStatus(
-          [lastFinalizedRequestId],
-          { blockTag: currentBlock }
-        )
-      ).statuses[0].timestamp
-    );
-    const diff = lastRequestId - lastFinalizedRequestId;
-    const requestsRange = Array.from(
-      {
-        length: diff > 0 ? lastFinalizedRequestId + 1 : lastFinalizedRequestId,
-      },
-      (_, i) => i + 1 // requests start from 1, not 0
-    );
-    const requestsStatuses = (
-      await withdrawalNFT.functions.getWithdrawalStatus(requestsRange, {
-        blockTag: currentBlock,
-      })
-    ).statuses;
-    for (const [index, reqStatus] of requestsStatuses.entries()) {
-      const reqId = index + 1;
-      if (reqStatus.isFinalized == true) {
-        finalizedWithdrawalRequests.set(reqId, {
-          id: reqId,
-          amount: new BigNumber(String(reqStatus.amountOfStETH)),
-          claimed: reqStatus.isClaimed,
-          timestamp: String(reqStatus.timestamp),
-        });
+    if (lastFinalizedRequestId != 0) {
+      lastFinalizedTimestamp = Number(
+        (
+          await withdrawalNFT.functions.getWithdrawalStatus(
+            [lastFinalizedRequestId],
+            { blockTag: currentBlock }
+          )
+        ).statuses[0].timestamp
+      );
+      const diff = lastRequestId - lastFinalizedRequestId;
+      const requestsRange = Array.from(
+        {
+          length:
+            diff > 0 ? lastFinalizedRequestId + 1 : lastFinalizedRequestId,
+        },
+        (_, i) => i + 1 // requests start from 1, not 0
+      );
+      const requestsStatuses = (
+        await withdrawalNFT.functions.getWithdrawalStatus(requestsRange, {
+          blockTag: currentBlock,
+        })
+      ).statuses;
+      for (const [index, reqStatus] of requestsStatuses.entries()) {
+        const reqId = index + 1;
+        if (reqStatus.isFinalized == true) {
+          finalizedWithdrawalRequests.set(reqId, {
+            id: reqId,
+            amount: new BigNumber(String(reqStatus.amountOfStETH)),
+            claimed: reqStatus.isClaimed,
+            timestamp: String(reqStatus.timestamp),
+          });
+        }
       }
-    }
-    if (diff > 0) {
-      firstUnfinalizedRequestTimestamp =
-        requestsStatuses[requestsRange.length - 1].timestamp;
+      if (diff > 0) {
+        firstUnfinalizedRequestTimestamp =
+          requestsStatuses[requestsRange.length - 1].timestamp;
+      }
     }
   }
   return {};
