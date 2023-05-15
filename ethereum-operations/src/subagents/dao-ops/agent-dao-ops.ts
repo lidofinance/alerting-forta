@@ -1,35 +1,46 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
 
-import { ethersProvider, etherscanProvider } from "../../ethers";
+import { etherscanProvider, ethersProvider } from "../../ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
-import LIDO_DAO_ABI from "../../abi/LidoDAO.json";
+import LIDO_ABI from "../../abi/Lido.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
 import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
 
-import {
-  NODE_OPERATORS_REGISTRY_ADDRESS,
-  ETH_DECIMALS,
-  ONE_MONTH,
-  ONE_WEEK,
-} from "../../common/constants";
+import { ETH_DECIMALS, ONE_MONTH, ONE_WEEK } from "../../common/constants";
 
 import {
-  LIDO_DAO_ADDRESS,
+  handleEventsOfNotice,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import type * as Constants from "./constants";
+
+export const name = "DaoOps";
+
+const {
+  REPORT_WINDOW,
+  REPORT_WINDOW_EXECUTOR_BALANCE,
+  REPORT_WINDOW_STAKING_LIMIT_10,
+  REPORT_WINDOW_STAKING_LIMIT_30,
+  MEV_RELAY_COUNT_THRESHOLD_HIGH,
+  MEV_RELAY_COUNT_THRESHOLD_INFO,
+  MEV_RELAY_COUNT_REPORT_WINDOW,
+  LIDO_ADDRESS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-  LIDO_EL_REWARDS_VAULT_ADDRESS,
   MEV_ALLOWED_LIST_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
   MIN_AVAILABLE_KEYS_COUNT,
   MIN_DEPOSIT_EXECUTOR_BALANCE,
   MAX_DEPOSITOR_TX_DELAY,
@@ -38,35 +49,17 @@ import {
   MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
   ENS_CHECK_INTERVAL,
   LIDO_ENS_NAMES,
-  LIDO_DAO_EVENTS_OF_NOTICE,
+  LIDO_EVENTS_OF_NOTICE,
   DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
-} from "./constants";
-import { handleEventsOfNotice } from "../../common/utils";
-
-export const name = "DaoOps";
-
-// 24 hours
-const REPORT_WINDOW = 60 * 60 * 24;
-// 4 hours
-const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4;
-// 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12;
-// 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12;
-// 24 hours
-const REPORT_WINDOW_EL_REWARDS_BALANCE = 60 * 60 * 24;
-// 110%
-const EL_REWARDS_BALANCE_OVERFILL_INFO = 1.1;
-// 300%
-const EL_REWARDS_BALANCE_OVERFILL_HIGH = 3;
-
-const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
-const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
-// 24 hours
-const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+  BURNER_EVENTS_OF_NOTICE,
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
 
 let lastReportedKeysShortage = 0;
 let lastReportedBufferedEth = 0;
@@ -75,8 +68,6 @@ let criticalBufferAmountFrom = 0;
 let lastReportedExecutorBalance = 0;
 let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
-let lastReportedElRewardsBalanceInfo = 0;
-let lastReportedElRewardsBalanceHigh = 0;
 let lastReportedMevCountInfo = 0;
 let lastReportedMevCountHigh = 0;
 
@@ -108,7 +99,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBufferedEth(blockEvent, findings),
     handleDepositExecutorBalance(blockEvent, findings),
     handleStakingLimit(blockEvent, findings),
-    handleElRewardsBalance(blockEvent, findings),
     handleMevRelayCount(blockEvent, findings),
     handleEnsNamesExpiration(blockEvent, findings),
   ]);
@@ -160,14 +150,10 @@ async function handleNodeOperatorsKeys(
 
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const lidoDao = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
-    LIDO_DAO_ABI,
-    ethersProvider
-  );
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const bufferedEthRaw = new BigNumber(
     String(
-      await lidoDao.functions.getBufferedEther({
+      await lido.functions.getBufferedEther({
         blockTag: blockEvent.block.number,
       })
     )
@@ -234,7 +220,7 @@ async function handleDepositExecutorBalance(
       String(
         await ethersProvider.getBalance(
           LIDO_DEPOSIT_EXECUTOR_ADDRESS,
-          blockEvent.blockHash
+          blockEvent.blockNumber
         )
       )
     );
@@ -258,12 +244,8 @@ async function handleDepositExecutorBalance(
 
 async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
-  const lidoDao = new ethers.Contract(
-    LIDO_DAO_ADDRESS,
-    LIDO_DAO_ABI,
-    ethersProvider
-  );
-  const stakingLimitInfo = await lidoDao.functions.getStakeLimitFullInfo({
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const stakingLimitInfo = await lido.functions.getStakeLimitFullInfo({
     blockTag: blockEvent.block.number,
   });
   const currentStakingLimit = new BigNumber(
@@ -306,90 +288,6 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
     lastReportedStakingLimit30 = now;
-  }
-}
-
-async function handleElRewardsBalance(
-  blockEvent: BlockEvent,
-  findings: Finding[]
-) {
-  if (blockEvent.blockNumber % 1 == 0) {
-    const now = blockEvent.block.timestamp;
-    const lidoDao = new ethers.Contract(
-      LIDO_DAO_ADDRESS,
-      LIDO_DAO_ABI,
-      ethersProvider
-    );
-    const totalSupply = new BigNumber(
-      String(
-        await lidoDao.functions.totalSupply({
-          blockTag: blockEvent.block.number,
-        })
-      )
-    );
-
-    const elRewardsLimit =
-      (await lidoDao.functions.getELRewardsWithdrawalLimit({
-        blockTag: blockEvent.block.number,
-      })) / 10000;
-
-    const elBalance = new BigNumber(
-      String(
-        await ethersProvider.getBalance(
-          LIDO_EL_REWARDS_VAULT_ADDRESS,
-          blockEvent.blockHash
-        )
-      )
-    );
-
-    if (
-      lastReportedElRewardsBalanceHigh + REPORT_WINDOW_EL_REWARDS_BALANCE <
-        now &&
-      elBalance.isGreaterThan(
-        totalSupply
-          .times(elRewardsLimit)
-          .times(EL_REWARDS_BALANCE_OVERFILL_HIGH)
-      )
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: "⚠️ Significant EL Rewards vault overfill",
-          description:
-            `The current EL rewards vault balance ` +
-            `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
-            `exceeds the daily re-staking limit by more than ` +
-            `${((EL_REWARDS_BALANCE_OVERFILL_HIGH - 1) * 100).toFixed(0)}%`,
-          alertId: "EL-REWARDS-VAULT-OVERFILL",
-          severity: FindingSeverity.High,
-          type: FindingType.Info,
-        })
-      );
-      lastReportedElRewardsBalanceHigh = now;
-      lastReportedElRewardsBalanceInfo = now;
-    } else if (
-      lastReportedElRewardsBalanceInfo + REPORT_WINDOW_EL_REWARDS_BALANCE <
-        now &&
-      elBalance.isGreaterThan(
-        totalSupply
-          .times(elRewardsLimit)
-          .times(EL_REWARDS_BALANCE_OVERFILL_INFO)
-      )
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: "⚠️ EL Rewards vault overfill",
-          description:
-            `The current EL rewards vault balance ` +
-            `of ${elBalance.div(ETH_DECIMALS).toFixed(2)} ETH ` +
-            `exceeds the daily re-staking limit by more than ` +
-            `${((EL_REWARDS_BALANCE_OVERFILL_INFO - 1) * 100).toFixed(0)}%`,
-          alertId: "EL-REWARDS-VAULT-OVERFILL",
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-        })
-      );
-      lastReportedElRewardsBalanceInfo = now;
-    }
   }
 }
 
@@ -487,15 +385,16 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     lastDepositorTxTime = txEvent.timestamp;
   }
 
-  [
+  for (const eventsOfNotice of [
     DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
-    LIDO_DAO_EVENTS_OF_NOTICE,
+    LIDO_EVENTS_OF_NOTICE,
     MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
     INSURANCE_FUND_EVENTS_OF_NOTICE,
     TRP_EVENTS_OF_NOTICE,
-  ].forEach((eventsOfNotice) => {
+    BURNER_EVENTS_OF_NOTICE,
+  ]) {
     handleEventsOfNotice(txEvent, findings, eventsOfNotice);
-  });
+  }
 
   return findings;
 }

@@ -34,7 +34,7 @@ exports[`agent-aragon-voting e2e tests should process tx with started vote 1`] =
 Finding {
   "addresses": Array [],
   "alertId": "ARAGON-VOTE-STARTED",
-  "description": "Aragon vote 30 was started by 0xf73a1260d222f447210581DDf212D915c09a3249
+  "description": "Aragon vote 30 was started by [0xf73a1260d222f447210581DDf212D915c09a3249](https://etherscan.io/address/0xf73a1260d222f447210581DDf212D915c09a3249)
 Details:
 ",
   "labels": Array [],

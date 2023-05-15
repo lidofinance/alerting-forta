@@ -1,8 +1,5 @@
 import { FindingSeverity } from "forta-agent";
-import {
-  EASY_TRACK_ADDRESS,
-  MOTION_ENACTED_EVENT,
-} from "../../common/constants";
+import { etherscanAddress } from "../../common/utils";
 
 export const INCREASE_STAKING_LIMIT_ADDRESS =
   "0xfebd8fac16de88206d4b18764e826af38546afe0";
@@ -10,7 +7,12 @@ export const EVM_SCRIPT_EXECUTOR_ADDRESS =
   "0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977";
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS =
   "0x3129c041b372ee93a5a8756dc4ec6f154d85bc9a";
+export const EASY_TRACK_ADDRESS = "0xf0211b7660680b49de1a7e9f25c65660f0a13fea";
+export const NODE_OPERATORS_REGISTRY_ADDRESS =
+  "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 
+export const MOTION_ENACTED_EVENT =
+  "event MotionEnacted(uint256 indexed _motionId)";
 export const MOTION_CREATED_EVENT =
   "event MotionCreated(uint256 indexed _motionId, address _creator, address indexed _evmScriptFactory, bytes _evmScriptCallData, bytes _evmScript)";
 
@@ -21,7 +23,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EASY-TRACK-PAUSED",
     name: "🚨 EasyTrack: EasyTrack contract was paused",
     description: (args: any) =>
-      `EasyTrack contract was paused by ${args.account}`,
+      `EasyTrack contract was paused by ${etherscanAddress(args.account)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -30,7 +32,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EASY-TRACK-UNPAUSED",
     name: "✅ EasyTrack: EasyTrack contract was unpaused",
     description: (args: any) =>
-      `EasyTrack contract was unpaused by ${args.account}`,
+      `EasyTrack contract was unpaused by ${etherscanAddress(args.account)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -40,7 +42,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EASY-TRACK-ROLE-GRANTED",
     name: "🚨 EasyTrack: Role was granted on EasyTrack contract",
     description: (args: any) =>
-      `Role ${args.role} was granted to ${args.account} on EasyTrack contract by ${args.sender}`,
+      `Role ${args.role} was granted to ${etherscanAddress(
+        args.account
+      )} on EasyTrack contract by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -50,7 +54,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EASY-TRACK-ROLE-REVOKED",
     name: "🚨 EasyTrack: Role was revoked on EasyTrack contract",
     description: (args: any) =>
-      `Role ${args.role} was revoked from ${args.account} on EasyTrack contract by ${args.sender}`,
+      `Role ${args.role} was revoked from ${etherscanAddress(
+        args.account
+      )} on EasyTrack contract by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -69,7 +75,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EASY-TRACK-MOTION-OBJECTED",
     name: "ℹ️ EasyTrack: Motion objected",
     description: (args: any) =>
-      `EasyTrack motion ${args._motionId} was objected by ${args._objector}`,
+      `EasyTrack motion ${args._motionId} was objected by ${etherscanAddress(
+        args._objector
+      )}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -97,7 +105,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "REWARD-PROGRAMS-REGISTRY-ROLE-GRANTED",
     name: "🚨 Reward Programs: Role was granted on RewardProgramsRegistry",
     description: (args: any) =>
-      `Role ${args.role} was granted by ${args.account} on RewardProgramsRegistry by ${args.sender}`,
+      `Role ${args.role} was granted by ${etherscanAddress(
+        args.account
+      )} on RewardProgramsRegistry by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -107,7 +117,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "REWARD-PROGRAMS-REGISTRY-ROLE-REVOKED",
     name: "🚨 Reward Programs: Role was revoked on RewardProgramsRegistry",
     description: (args: any) =>
-      `Role ${args.role} was revoked from ${args.account} on RewardProgramsRegistry by ${args.sender}`,
+      `Role ${args.role} was revoked from ${etherscanAddress(
+        args.account
+      )} on RewardProgramsRegistry by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.High,
   },
   {
@@ -117,7 +129,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EVM-SCRIPT-EXECUTOR-EASY-TRACK-CHANGED",
     name: "🚨 EasyTrack: EVMScriptExecutor's EasyTrack address changed",
     description: (args: any) =>
-      `EVMScriptExecutor's EasyTrack address changed from ${args._previousEasyTrack} to ${args._newEasyTrack}`,
+      `EVMScriptExecutor's EasyTrack address changed from ${etherscanAddress(
+        args._previousEasyTrack
+      )} to ${etherscanAddress(args._newEasyTrack)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -127,7 +141,9 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     alertId: "EVM-SCRIPT-EXECUTOR-OWNERSHIP-TRANSFERRED",
     name: "🚨 EasyTrack: EVMScriptExecutor's ownership transferred",
     description: (args: any) =>
-      `EVMScriptExecutor's ownership transferred from ${args.previousOwner} to ${args.newOwner}`,
+      `EVMScriptExecutor's ownership transferred from ${etherscanAddress(
+        args.previousOwner
+      )} to ${etherscanAddress(args.newOwner)}`,
     severity: FindingSeverity.Critical,
   },
 ];
@@ -137,9 +153,6 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
     "0xfebd8fac16de88206d4b18764e826af38546afe0",
     "Increase node operator staking limit",
   ],
-  ["0x9d15032b91d01d5c1d940eb919461426ab0dd4e3", "Add reward program"],
-  ["0xc21e5e72ffc223f02fc410aaede3084a63963932", "Remove reward program"],
-  ["0x77781a93c4824d2299a38ac8bbb11eb3cd6bc3b7", "Top up reward program"],
   ["0x929547490ceb6aeedd7d72f1ab8957c0210b6e51", "Add referral partner"],
   ["0xe9eb838fb3a288bf59e9275ccd7e124fdff88a9c", "Remove referral partner"],
   ["0x54058ee0e0c87ad813c002262cd75b98a7f59218", "Top up referral partner"],
@@ -158,4 +171,9 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ["0x4e6d3a5023a38ce2c4c5456d3760357fd93a22cd", "Top up recipients (PML DAI)"],
   ["0x67fb97abb9035e2e93a7e3761a0d0571c5d7cd07", "Top up recipients (ATC DAI)"],
   ["0x41F9daC5F89092dD6061E59578A2611849317dc8", "Top up recipients (GAS ETH)"],
+  [
+    "0x009ffa22ce4388d2f5de128ca8e6fd229a312450",
+    "Top up recipients (Referral Program DAI)",
+  ],
+  ["0xbd2b6dc189eefd51b273f5cb2d99ba1ce565fb8c", "Top up recipients (TRP LDO)"],
 ]);

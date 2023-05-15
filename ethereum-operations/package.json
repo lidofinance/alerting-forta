@@ -25,10 +25,11 @@
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.6"
+    "forta-agent": "^0.1.24"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
+    "@types/lodash": "^4.14.194",
     "@types/nodemon": "^1.19.0",
     "jest": "^27.0.6",
     "nodemon": "^2.0.8",

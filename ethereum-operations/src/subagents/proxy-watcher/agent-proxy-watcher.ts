@@ -5,13 +5,27 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
-import { IProxyContractData, LIDO_PROXY_CONTRACTS_DATA } from "./constants";
 
 import { ethersProvider } from "../../ethers";
+import {
+  etherscanAddress,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
+import { IProxyContractData } from "../../common/constants";
 
 export const name = "ProxyWatcher";
 
+import type * as Constants from "./constants";
+const { LIDO_PROXY_CONTRACTS_DATA } = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
+
 let prevProxyImplementations: Map<string, string> = new Map<string, string>();
+let initFindings: Finding[] = [];
+let proxiesNoCode: string[] = [];
 
 export async function initialize(
   currentBlock: number
@@ -21,6 +35,24 @@ export async function initialize(
   await Promise.all(
     Array.from(LIDO_PROXY_CONTRACTS_DATA.keys()).map(async (address: any) => {
       const data = LIDO_PROXY_CONTRACTS_DATA.get(address);
+
+      if (!(await isDeployed(address, currentBlock))) {
+        initFindings.push(
+          Finding.fromObject({
+            name: "🚨 Proxy contract not found",
+            description: `Proxy contract ${data?.name} (${etherscanAddress(
+              address
+            )}) not found`,
+            alertId: "PROXY-NOT-FOUND",
+            severity: FindingSeverity.Critical,
+            type: FindingType.Info,
+          })
+        );
+
+        proxiesNoCode.push(address);
+        return;
+      }
+
       if (data) {
         prevProxyImplementations.set(
           address,
@@ -34,9 +66,13 @@ export async function initialize(
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
-  const findings: Finding[] = [];
+  const findings: Finding[] = initFindings;
 
   await Promise.all([handleProxyImplementations(blockEvent, findings)]);
+
+  if (initFindings.length > 0) {
+    initFindings = [];
+  }
 
   return findings;
 }
@@ -47,7 +83,29 @@ async function handleProxyImplementations(
 ) {
   await Promise.all(
     Array.from(LIDO_PROXY_CONTRACTS_DATA.keys()).map(async (address: any) => {
+      if (proxiesNoCode.includes(address)) {
+        return;
+      }
+
       const data = LIDO_PROXY_CONTRACTS_DATA.get(address);
+
+      if (!(await isDeployed(address, blockEvent.blockNumber))) {
+        findings.push(
+          Finding.fromObject({
+            name: `🚨 Proxy contract selfdestructed`,
+            description: `Proxy contract ${data?.name} (${etherscanAddress(
+              address
+            )}) selfdestructed`,
+            alertId: `PROXY-SELFDESTRUCTED`,
+            severity: FindingSeverity.Critical,
+            type: FindingType.Info,
+          })
+        );
+
+        proxiesNoCode.push(address);
+        return;
+      }
+
       if (data) {
         const prevImpl = prevProxyImplementations.get(address);
         const currentImpl = String(
@@ -57,7 +115,11 @@ async function handleProxyImplementations(
           findings.push(
             Finding.fromObject({
               name: `🚨 Proxy implementation changed`,
-              description: `Implementation of ${data.name} (${address}) changed from ${prevImpl} to ${currentImpl}`,
+              description: `Implementation of ${data.name} (${etherscanAddress(
+                address
+              )}) changed from ${
+                prevImpl ? etherscanAddress(prevImpl) : prevImpl
+              } to ${etherscanAddress(currentImpl)}`,
               alertId: `PROXY-IMPL-CHANGED`,
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
@@ -80,9 +142,27 @@ async function getProxyImplementation(
     data.shortABI,
     ethersProvider
   );
-  return await proxyContract.functions.implementation({
-    blockTag: currentBlock,
-  });
+  if ("implementation" in proxyContract.functions) {
+    return await proxyContract.functions.implementation({
+      blockTag: currentBlock,
+    });
+  }
+  if ("proxy__getImplementation" in proxyContract.functions) {
+    return await proxyContract.functions.proxy__getImplementation({
+      blockTag: currentBlock,
+    });
+  }
+  throw new Error(
+    `Proxy contract ${address} does not have "implementation" or "proxy__getImplementation" functions`
+  );
+}
+
+async function isDeployed(
+  address: string,
+  blockNumber?: number
+): Promise<boolean> {
+  const code = await ethersProvider.getCode(address, blockNumber);
+  return code !== "0x";
 }
 
 // required for DI to retrieve handlers in the case of direct agent use

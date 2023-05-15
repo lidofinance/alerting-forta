@@ -1,9 +1,8 @@
-import { EASY_TRACK_TYPES_BY_FACTORIES } from "./constants";
-
-export const getMotionType = (evmScriptFactory: string) => {
-  return (
-    EASY_TRACK_TYPES_BY_FACTORIES.get(evmScriptFactory.toLowerCase()) || "New "
-  );
+export const getMotionType = (
+  types: Map<string, string>,
+  evmScriptFactory: string
+) => {
+  return types.get(evmScriptFactory.toLowerCase()) || "New ";
 };
 
 export const getMotionLink = (motionId: string) => {

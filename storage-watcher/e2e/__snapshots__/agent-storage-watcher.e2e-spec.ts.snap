@@ -5,9 +5,9 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "STORAGE-SLOT-VALUE-CHANGED",
-    "description": "Value of the storage slot 'lido.LidoOracle.quorum' for contract 0x442af784a788a5bd6f42a01ebe9f287a871243fb (Lido Oracle) has changed!
-Prev value: 0x0000000000000000000000000000000000000000000000000000000000000003
-New value: 0x0000000000000000000000000000000000000000000000000000000000000005",
+    "description": "Value of the storage slot 'manager' for contract 0xF95f069F9AD107938F6ba802a3da87892298610E (MEV Boost Relay Allowed List) has changed!
+Prev value: 0x0000000000000000000000000000000000000000000000000000000000000000
+New value: 0x00000000000000000000000098be4a407bff0c125e25fbe9eb1165504349c37d",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Critical storage slot value changed",

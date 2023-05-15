@@ -13,6 +13,9 @@ export const POOLS_PARAMS_BALANCES = {
   },
 };
 
+export const CHAINLINK_STETH_PRICE_FEED =
+  "0x86392dC19c0b719886221c78AB11eb8Cf5c52812";
+
 export const TOTAL_UNSTAKED_STETH_TOLERANCE = 10;
 // report only unstaked values higher than 10% of the pools size
 export const TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT = 10;
@@ -27,6 +30,6 @@ export const POOL_SIZE_CHANGE_TOLERANCE_HIGH = 10;
 export const POOLS_BALANCES_REPORT_WINDOW = 60 * 60 * 24 * 7; // 1 week
 
 export const PEG_REPORT_INTERVAL = 60 * 60 * 24; // 24 hours
-export const PEG_STEP_ALERT_MIN_VALUE = 0.98;
-export const PEG_STEP = 0.01;
-export const PEG_THRESHOLD = 0.9;
+export const PEG_STEP_ALERT_MIN_VALUE = 0.995;
+export const PEG_STEP = 0.005;
+export const PEG_THRESHOLD = 0.98;

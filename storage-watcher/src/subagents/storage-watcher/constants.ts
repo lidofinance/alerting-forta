@@ -1,42 +1,16 @@
-import BigNumber from "bignumber.js";
+import { ContractStorageMap } from "src/common/constants";
 
-// INTERFACES
+// Addresses and events
 
-export interface StorageSlot {
-  name: string;
-  address?: string;
-}
-
-export interface Contract {
-  name: string;
-  address: string;
-}
-
-export interface ContractStorageMap {
-  contract: Contract;
-  slots: StorageSlot[];
-}
-
-// COMMON CONSTS
-
-// 1 ETH
-export const ETH_DECIMALS = new BigNumber(10).pow(18);
-
-export const NULL_STORAGE =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
-
-// ADDRESSES AND EVENTS
-
-export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
-export const SELFOWNEDSTETHBURNER_ADDRESS =
-  "0xb280e33812c0b09353180e92e27b8ad399b07f26";
-export const NOR_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
-export const LIDO_ORACLE_ADDRESS = "0x442af784a788a5bd6f42a01ebe9f287a871243fb";
+export const LIDO_ADDRESS = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84";
+export const NOR_ADDRESS = "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5";
+export const LEGACY_ORACLE_ADDRESS =
+  "0x442af784A788A5bd6F42A01Ebe9F287a871243fb";
 export const DEPOSIT_SECURITY_MODULE =
-  "0x710b3303fb508a84f10793c1106e32be873c24cd";
-export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+  "0xC77F8768774E1c9244BEed705C4354f2113CFc09";
+export const WSTETH_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
 export const MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS =
-  "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+  "0xF95f069F9AD107938F6ba802a3da87892298610E";
 export const ARAGON_VOTING_ADDRESS =
   "0x2e59A20f205bB85a89C53f1936454680651E618e";
 export const ARAGON_TOKEN_MANAGER_ADDRESS =
@@ -45,9 +19,21 @@ export const ARAGON_FINANCE_ADDRESS =
   "0xb9e5cbb9ca5b0d659238807e84d0176930753d86";
 export const LIDO_TREASURY_ADDRESS =
   "0x3e40d73eb977dc6a537af587d48316fee66e9c8c";
-
-export const SUBMITTED_EVENT =
-  "event Submitted(address indexed sender, uint256 amount, address referral)";
+export const LIDO_INSURANCE_ADDRESS =
+  "0x8B3f33234ABD88493c0Cd28De33D583B70beDe35";
+export const STAKING_ROUTER_ADDRESS =
+  "0xFdDf38947aFB03C621C71b06C9C70bce73f12999";
+export const WITHDRAWALS_QUEUE_ADDRESS =
+  "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1";
+export const BURNER_ADDRESS = "0xD15a672319Cf0352560eE76d9e89eAB0889046D3";
+export const ACCOUNTING_ORACLE_ADDRESS =
+  "0x852deD011285fe67063a08005c71a85690503Cee";
+export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
+  "0xD624B08C83bAECF0807Dd2c6880C3154a5F0B288";
+export const VALIDATORS_EXIT_BUS_ORACLE_ADDRESS =
+  "0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e";
+export const VALIDATORS_EXIT_BUS_HASH_CONSENSUS_ADDRESS =
+  "0x7FaDB6358950c5fAA66Cb5EB8eE5147De3df355a";
 
 // Storage slots mapping
 
@@ -58,61 +44,97 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
       address: LIDO_ADDRESS,
     },
     slots: [
-      { name: "lido.Lido.fee" },
-      { name: "lido.Lido.treasuryFee" },
-      { name: "lido.Lido.insuranceFee" },
-      { name: "lido.Lido.nodeOperatorsFee" },
-      { name: "lido.Lido.treasuryFee" },
-      { name: "lido.Lido.insuranceFund" },
-      { name: "lido.Lido.oracle" },
-      { name: "lido.Lido.depositContract" },
-      { name: "lido.Lido.executionLayerRewardsVault" },
-      { name: "lido.Lido.ELRewardsWithdrawalLimit" },
-      { name: "lido.Lido.withdrawalCredentials" },
+      { name: "lido.Versioned.contractVersion" },
+      { name: "lido.Lido.lidoLocator" },
+      { name: "lido.Lido.stakeLimit" },
     ],
-  },
-  {
-    contract: {
-      name: "SelfOwnedStETHBurner",
-      address: SELFOWNEDSTETHBURNER_ADDRESS,
-    },
-    slots: [{ name: "maxBurnAmountPerRunBasisPoints", address: "0x4" }],
   },
   {
     contract: {
       name: "Node Operators Registry",
       address: NOR_ADDRESS,
     },
-    slots: [{ name: "lido.NodeOperatorsRegistry.lido" }],
-  },
-  {
-    contract: {
-      name: "Lido Oracle",
-      address: LIDO_ORACLE_ADDRESS,
-    },
     slots: [
-      { name: "lido.LidoOracle.quorum" },
-      { name: "lido.LidoOracle.lido" },
-      { name: "lido.LidoOracle.beaconSpec" },
-      { name: "lido.LidoOracle.contractVersion" },
-      { name: "lido.LidoOracle.beaconReportReceiver" },
-      { name: "lido.LidoOracle.allowedBeaconBalanceAnnualRelativeIncrease" },
-      { name: "lido.LidoOracle.allowedBeaconBalanceDecrease" },
+      { name: "lido.NodeOperatorsRegistry.lidoLocator" },
+      { name: "lido.NodeOperatorsRegistry.stuckPenaltyDelay" },
+      { name: "lido.NodeOperatorsRegistry.type" },
     ],
   },
   {
     contract: {
-      name: "Lido Oracle",
+      name: "Legacy Oracle",
+      address: LEGACY_ORACLE_ADDRESS,
+    },
+    slots: [
+      { name: "lido.Versioned.contractVersion" },
+      { name: "lido.LidoOracle.accountingOracle" },
+      { name: "lido.LidoOracle.beaconSpec" },
+      { name: "lido.LidoOracle.contractVersion" },
+      { name: "lido.LidoOracle.lastCompletedEpochId" },
+      { name: "lido.LidoOracle.lido" },
+      { name: "lido.LidoOracle.postCompletedTotalPooledEther" },
+      { name: "lido.LidoOracle.preCompletedTotalPooledEther" },
+      { name: "lido.LidoOracle.timeElapsed" },
+    ],
+  },
+  {
+    contract: {
+      name: "Accounting Oracle",
+      address: ACCOUNTING_ORACLE_ADDRESS,
+    },
+    slots: [
+      { name: "lido.Versioned.contractVersion" },
+      { name: "lido.BaseOracle.consensusContract" },
+      { name: "lido.BaseOracle.consensusVersion" },
+    ],
+  },
+  {
+    contract: {
+      name: "Accounting Hash Consensus",
+      address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
+    },
+    slots: [
+      { name: "_frameConfig", address: "0x0" },
+      { name: "_memberAddresses", address: "0x2", isArray: true },
+      { name: "_quorum", address: "0x5" },
+      { name: "_reportProcessor", address: "0x8" },
+    ],
+  },
+  {
+    contract: {
+      name: "Validators Exit Bus Oracle",
+      address: VALIDATORS_EXIT_BUS_ORACLE_ADDRESS,
+    },
+    slots: [
+      { name: "lido.Versioned.contractVersion" },
+      { name: "lido.BaseOracle.consensusContract" },
+      { name: "lido.BaseOracle.consensusVersion" },
+    ],
+  },
+  {
+    contract: {
+      name: "Validators Exit Bus Hash Consensus",
+      address: VALIDATORS_EXIT_BUS_HASH_CONSENSUS_ADDRESS,
+    },
+    slots: [
+      { name: "_frameConfig", address: "0x0" },
+      { name: "_memberAddresses", address: "0x2", isArray: true },
+      { name: "_quorum", address: "0x5" },
+      { name: "_reportProcessor", address: "0x8" },
+    ],
+  },
+  {
+    contract: {
+      name: "Deposit Security Module",
       address: DEPOSIT_SECURITY_MODULE,
     },
     slots: [
-      { name: "nodeOperatorsRegistry", address: "0x0" },
-      { name: "maxDepositsPerBlock", address: "0x1" },
-      { name: "minDepositBlockDistance", address: "0x2" },
-      { name: "pauseIntentValidityPeriodBlocks", address: "0x3" },
-      { name: "owner", address: "0x4" },
-      { name: "quorum", address: "0x7" },
-      { name: "paused", address: "0x8" },
+      { name: "maxDepositsPerBlock", address: "0x0" },
+      { name: "minDepositBlockDistance", address: "0x1" },
+      { name: "pauseIntentValidityPeriodBlocks", address: "0x2" },
+      { name: "owner", address: "0x3" },
+      { name: "quorum", address: "0x4" },
+      { name: "guardians", address: "0x5", isArray: true },
     ],
   },
   {
@@ -128,9 +150,10 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
       address: MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
     },
     slots: [
+      // vyper -f layout contracts/MEVBoostRelayAllowedList.vy | jq
       { name: "owner", address: "0x0" },
       { name: "manager", address: "0x1" },
-      { name: "allowed_list_version", address: "0x4003" },
+      { name: "allowed_list_version", address: "0xfa3" },
     ],
   },
   {
@@ -170,5 +193,47 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
       address: LIDO_TREASURY_ADDRESS,
     },
     slots: [{ name: "designatedSigner", address: "0x1" }],
+  },
+  {
+    contract: {
+      name: "Lido Insurance",
+      address: LIDO_INSURANCE_ADDRESS,
+    },
+    slots: [{ name: "_owner", address: "0x0" }],
+  },
+  {
+    contract: {
+      name: "Staking Router",
+      address: STAKING_ROUTER_ADDRESS,
+    },
+    slots: [
+      { name: "lido.Versioned.contractVersion" },
+      { name: "lido.StakingRouter.lido" },
+      { name: "lido.StakingRouter.lastStakingModuleId" },
+      { name: "lido.StakingRouter.stakingModulesCount" },
+      { name: "lido.StakingRouter.withdrawalCredentials" },
+    ],
+  },
+  {
+    contract: {
+      name: "Withdrawals Queue",
+      address: WITHDRAWALS_QUEUE_ADDRESS,
+    },
+    slots: [
+      { name: "lido.Versioned.contractVersion" },
+      { name: "lido.WithdrawalQueue.bunkerModeSinceTimestamp" },
+      { name: "lido.WithdrawalQueueERC721.baseUri" },
+      { name: "lido.WithdrawalQueueERC721.nftDescriptorAddress" },
+    ],
+  },
+  {
+    contract: {
+      name: "Burner",
+      address: BURNER_ADDRESS,
+    },
+    slots: [
+      { name: "coverSharesBurnRequested", address: "0x0" },
+      { name: "totalCoverSharesBurnt", address: "0x2" },
+    ],
   },
 ];

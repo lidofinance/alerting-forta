@@ -1,29 +1,23 @@
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
+
+import _ from "lodash";
+import { BlockTag } from "@ethersproject/providers";
 
 import { ethersProvider } from "../../ethers";
 
-import {
-  LIDO_ARAGON_ACL_ADDRESS,
-  LIDO_ROLES,
-  SET_PERMISSION_EVENT,
-  SET_PERMISSION_PARAMS_EVENT,
-  LIDO_APPS,
-  CHANGE_PERMISSION_MANAGER_EVENT,
-  ORDINARY_ENTITIES,
-  WHITELISTED_OWNERS,
-  OWNABLE_CONTRACTS,
-  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
-  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
-} from "./constants";
-
 import { isContract } from "./utils";
+import {
+  etherscanAddress,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
 
 interface IPermission {
   app: string;
@@ -35,6 +29,30 @@ interface IPermission {
 const byLogIndexAsc = (e1: any, e2: any) => e1.logIndex - e2.logIndex;
 
 export const name = "ACL Monitor";
+
+import type * as Constants from "./constants";
+const {
+  ACLEnumerableABI,
+  ACL_ENUMERABLE_CONTRACTS,
+  LIDO_ARAGON_ACL_ADDRESS,
+  LIDO_ROLES,
+  SET_PERMISSION_EVENT,
+  SET_PERMISSION_PARAMS_EVENT,
+  LIDO_APPS,
+  CHANGE_PERMISSION_MANAGER_EVENT,
+  ORDINARY_ENTITIES,
+  WHITELISTED_OWNERS,
+  OWNABLE_CONTRACTS,
+  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
+  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
+  NEW_ROLE_MEMBERS_REPORT_INTERVAL,
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge
+);
+
+export const roleMembersReports = new Map<string, number>();
 
 export async function initialize(
   currentBlock: number
@@ -55,7 +73,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleOwnerChange(blockEvent, findings)]);
+  await Promise.all([
+    handleRolesMembers(blockEvent, findings),
+    handleOwnerChange(blockEvent, findings),
+  ]);
 
   return findings;
 }
@@ -132,7 +153,11 @@ async function handlePermissionChange(
   findings.push(
     Finding.fromObject({
       name: `🚨 Aragon ACL: Permission ${shortState}`,
-      description: `Role ${permission.role} (${role}) on the app ${permission.app} (${app}) was ${permission.state} ${permission.entity} (${entity})`,
+      description: `Role ${
+        permission.role
+      } (${role}) on the app ${etherscanAddress(permission.app)} (${app}) was ${
+        permission.state
+      } ${permission.entity} (${entity})`,
       alertId: "ARAGON-ACL-PERMISSION-CHANGED",
       severity: severity,
       type: FindingType.Info,
@@ -170,7 +195,13 @@ function handleChangePermissionManager(
       findings.push(
         Finding.fromObject({
           name: `🚨 Aragon ACL: Permission manager changed`,
-          description: `Permission manager for the role ${event.args.role} (${role}) on the app ${event.args.app} (${app}) was set to ${event.args.manager} (${manager})`,
+          description: `Permission manager for the role ${
+            event.args.role
+          } (${role}) on the app ${etherscanAddress(
+            event.args.app
+          )} (${app}) was set to ${etherscanAddress(
+            event.args.manager
+          )} (${manager})`,
           alertId: "ARAGON-ACL-PERMISSION-MANAGER-CHANGED",
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
@@ -201,7 +232,7 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
       const curOwner = String(
         await getOwner(address, data.ownershipMethod, blockEvent.blockNumber)
       );
-      if (WHITELISTED_OWNERS.includes(curOwner)) return;
+      if (WHITELISTED_OWNERS.includes(curOwner.toLowerCase())) return;
 
       const curOwnerIsContract = await isContract(curOwner);
 
@@ -219,9 +250,11 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
           name: curOwnerIsContract
             ? "🚨 Contract owner set to address not in whitelist"
             : "🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨",
-          description: `${data.name} contract (${address}) owner is set to ${
+          description: `${data.name} contract (${etherscanAddress(
+            address
+          )}) owner is set to ${
             curOwnerIsContract ? "contract" : "EOA"
-          } address ${curOwner}`,
+          } address ${etherscanAddress(curOwner)}`,
           alertId: "SUSPICIOUS-CONTRACT-OWNER",
           type: FindingType.Suspicious,
           severity: curOwnerIsContract
@@ -240,6 +273,78 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
   );
 
   await Promise.all(promises);
+}
+
+async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
+  const promises = Array.from(ACL_ENUMERABLE_CONTRACTS.keys()).map(
+    async (address: string) => {
+      const lastReportedAt = roleMembersReports.get(address) || 0;
+      const now = blockEvent.block.timestamp;
+      if (now - lastReportedAt < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
+        return;
+      }
+
+      const data = ACL_ENUMERABLE_CONTRACTS.get(address);
+      if (!data) return;
+
+      await Promise.all(
+        Array.from(data.roles.entries()).map(async (entry) => {
+          const [role, members] = entry;
+          const membersInLower = members.map((m) => m.toLowerCase());
+          const curMembers = await getRoleMembers(
+            address,
+            role.hash,
+            blockEvent.blockNumber
+          );
+          if (_.isEqual(curMembers, membersInLower)) return;
+
+          findings.push(
+            Finding.fromObject({
+              name: `🚨 ACL: Role members changed`,
+              description: `Role ${role.name} members of ${
+                data.name
+              } changed to [${curMembers
+                .map((m) => etherscanAddress(m))
+                .join(", ")}]`,
+              alertId: "ACL-ROLE-MEMBERS-CHANGED",
+              severity: FindingSeverity.Critical,
+              type: FindingType.Info,
+            })
+          );
+
+          roleMembersReports.set(address, now);
+        })
+      );
+    }
+  );
+
+  await Promise.all(promises);
+}
+
+export async function getRoleMembers(
+  address: string,
+  hash: string,
+  currentBlock: BlockTag
+): Promise<Array<string>> {
+  const contract = new ethers.Contract(
+    address,
+    ACLEnumerableABI,
+    ethersProvider
+  );
+
+  const count = await contract.functions.getRoleMemberCount(hash, {
+    blockTag: currentBlock,
+  });
+  if (Number(count) === 0) return [];
+
+  const members = [];
+  for (let i = 0; i < Number(count); i++) {
+    const member = await contract.functions.getRoleMember(hash, i, {
+      blockTag: currentBlock,
+    });
+    members.push(String(member).toLowerCase());
+  }
+  return members;
 }
 
 // required for DI to retrieve handlers in the case of direct agent use
