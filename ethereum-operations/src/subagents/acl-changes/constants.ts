@@ -1,4 +1,4 @@
-import {INamedRole, roleByName} from "./utils";
+import { INamedRole, roleByName } from "./utils";
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
@@ -266,17 +266,9 @@ export const LIDO_ROLES = new Map([
     "DEPOSIT ROLE",
   ],
   [
-    "0x46b8504718b48a11e89304b407879435528b3cd3af96afde67dfe598e4683bd8",
-    "MANAGE FEE"
-  ],
-  [
-    "0x96088a8483023eb2f67b12aabbaf17d1d055e6ef387e563902adc1bba1e4028b",
-    "MANAGE WITHDRAWAL KEY"
-  ],
-  [
     "0xbb75b874360e0bfd87f964eadd8276d8efb7c942134fc329b513032d0803e0c6",
-    "STAKING ROUTER ROLE"
-  ]
+    "STAKING ROUTER ROLE",
+  ],
 ]);
 
 export interface IOwnable {

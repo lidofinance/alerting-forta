@@ -32,7 +32,7 @@ export const LIDO_APPS = new Map([
   ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH token"],
   ["0xa9b2f5ce3aae7374a62313473a74c98baa7fa70e", "LDO purchase executor"],
   ["0xb280e33812c0b09353180e92e27b8ad399b07f26", "SelfOwnedStETHBurner"],
-  ["0xfddf38947afb03c621c71b06c9c70bce73f12999", "Staking Router"]
+  ["0xfddf38947afb03c621c71b06c9c70bce73f12999", "Staking Router"],
 ]);
 
 export const ORDINARY_ENTITIES = new Map([
@@ -225,16 +225,16 @@ export const LIDO_ROLES = new Map([
   ],
   [
     "0x46b8504718b48a11e89304b407879435528b3cd3af96afde67dfe598e4683bd8",
-    "MANAGE FEE"
+    "MANAGE FEE",
   ],
   [
     "0x96088a8483023eb2f67b12aabbaf17d1d055e6ef387e563902adc1bba1e4028b",
-    "MANAGE WITHDRAWAL KEY"
+    "MANAGE WITHDRAWAL KEY",
   ],
   [
     "0xbb75b874360e0bfd87f964eadd8276d8efb7c942134fc329b513032d0803e0c6",
-    "STAKING ROUTER ROLE"
-  ]
+    "STAKING ROUTER ROLE",
+  ],
 ]);
 
 interface IOwnable {

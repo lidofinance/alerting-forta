@@ -1,4 +1,4 @@
-import {ethers, FindingSeverity} from "forta-agent";
+import { ethers, FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
@@ -194,7 +194,11 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     alertId: "EXITBUS-ORACLE-PAUSED",
     name: "🚨 ExitBus Oracle: contract was paused",
     description: (args: any) =>
-      `For ${String(args.duration) === String(ethers.constants.MaxUint256) ? 'inf' : new BigNumber(String(args.duration)).div(360)} hours`,
+      `For ${
+        String(args.duration) === String(ethers.constants.MaxUint256)
+          ? "inf"
+          : new BigNumber(String(args.duration)).div(360)
+      } hours`,
     severity: FindingSeverity.Critical,
   },
   {
