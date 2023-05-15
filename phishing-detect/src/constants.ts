@@ -33,6 +33,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x828b154032950c8ff7cf8085d841723db2696056", // curveStEthWEthPool
   "0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a", // L2 Arbitrum Bridge
   "0x76943c0d61395d8f2edf9060e1533529cae05de6", // L2 Optimism Bridge
+  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1", // unstETH
   // externally owned
   "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9", // aaveLandingPoolV2
   "0x1111111254fb6c44bac0bed2854e76f90643097d", // oneInchV4Router
