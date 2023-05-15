@@ -91,7 +91,7 @@ const subAgents: SubAgent[] = [
   agentSanityChecker,
   agentOracleDaemonConfig,
   agentStakingRouter,
-  //agentWithdrawals,
+  agentWithdrawals,
   agentGateSeal,
   agentVaults,
 ].filter((agent: SubAgent) => {
