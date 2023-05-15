@@ -21,7 +21,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
-    "description": "Balance of deposit executor is 1.9652. This is extremely low! 😱",
+    "description": "Balance of deposit executor is 1.9232. This is extremely low! 😱",
     "labels": Array [],
     "metadata": Object {},
     "name": "⚠️ Low deposit executor balance",
@@ -32,7 +32,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "HUGE-BUFFERED-ETH",
-    "description": "There are 39668.1056 buffered ETH in DAO for more than 1 hour(s)",
+    "description": "There are 41420.0866 buffered ETH in DAO for more than 1 hour(s)",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Huge buffered ETH amount",
@@ -47,7 +47,7 @@ exports[`agent-dao-ops e2e tests should process block with low staking limit (10
 Finding {
   "addresses": Array [],
   "alertId": "LOW-STAKING-LIMIT",
-  "description": "Current staking limit is 6909.61 ETH this is lower than 10% of max staking limit 150000.00 ETH",
+  "description": "Current staking limit is 7237.74 ETH this is lower than 10% of max staking limit 150000.00 ETH",
   "labels": Array [],
   "metadata": Object {},
   "name": "⚠️ Staking limit below 10%",
@@ -61,7 +61,7 @@ exports[`agent-dao-ops e2e tests should process block with low staking limit (30
 Finding {
   "addresses": Array [],
   "alertId": "LOW-STAKING-LIMIT",
-  "description": "Current staking limit is 6909.61 ETH this is lower than 30% of max staking limit 150000.00 ETH",
+  "description": "Current staking limit is 7237.74 ETH this is lower than 30% of max staking limit 150000.00 ETH",
   "labels": Array [],
   "metadata": Object {},
   "name": "📉 Staking limit below 30%",

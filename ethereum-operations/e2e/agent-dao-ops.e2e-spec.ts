@@ -40,7 +40,7 @@ describe("agent-dao-ops e2e tests", () => {
   it(
     "should process block with low staking limit (10%)",
     async () => {
-      let findings = await runBlock(16704061);
+      let findings = await runBlock(16704075);
       findings.sort();
       expect(findings.at(0)).toMatchSnapshot();
     },
@@ -50,7 +50,7 @@ describe("agent-dao-ops e2e tests", () => {
   it(
     "should process block with low staking limit (30%)",
     async () => {
-      let findings = await runBlock(16704061);
+      let findings = await runBlock(16704075);
       findings.sort();
       expect(findings.at(0)).toMatchSnapshot();
     },
@@ -60,7 +60,7 @@ describe("agent-dao-ops e2e tests", () => {
   it(
     "should process block with huge buffered ETH amount and low deposit executor balance",
     async () => {
-      let findings = await runBlock(16704433);
+      let findings = await runBlock(17241550);
       findings.sort();
       expect(findings).toMatchSnapshot();
     },
@@ -70,7 +70,7 @@ describe("agent-dao-ops e2e tests", () => {
   it(
     "should process block with MEV Allow list: Super low relay count",
     async () => {
-      let findings = await runBlock(15960610);
+      let findings = await runBlock(15960625);
       findings.sort();
       expect(findings).toMatchSnapshot();
     },

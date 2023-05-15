@@ -55,6 +55,7 @@ const {
   INSURANCE_FUND_EVENTS_OF_NOTICE,
   TRP_EVENTS_OF_NOTICE,
   BURNER_EVENTS_OF_NOTICE,
+  BLOCK_CHECK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -149,6 +150,11 @@ async function handleNodeOperatorsKeys(
 }
 
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
+  const blockNumber = blockEvent.block.number;
+  if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
+    return;
+  }
+
   const now = blockEvent.block.timestamp;
   const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const bufferedEthRaw = new BigNumber(
@@ -214,6 +220,11 @@ async function handleDepositExecutorBalance(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
+  const blockNumber = blockEvent.block.number;
+  if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
+    return;
+  }
+
   const now = blockEvent.block.timestamp;
   if (lastReportedExecutorBalance + REPORT_WINDOW_EXECUTOR_BALANCE < now) {
     const executorBalanceRaw = new BigNumber(
@@ -243,6 +254,11 @@ async function handleDepositExecutorBalance(
 }
 
 async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
+  const blockNumber = blockEvent.block.number;
+  if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
+    return;
+  }
+
   const now = blockEvent.block.timestamp;
   const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const stakingLimitInfo = await lido.functions.getStakeLimitFullInfo({
@@ -295,6 +311,11 @@ async function handleMevRelayCount(
   blockEvent: BlockEvent,
   findings: Finding[]
 ) {
+  const blockNumber = blockEvent.block.number;
+  if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
+    return;
+  }
+
   const now = blockEvent.block.timestamp;
   const mevAllowList = new ethers.Contract(
     MEV_ALLOWED_LIST_ADDRESS,
