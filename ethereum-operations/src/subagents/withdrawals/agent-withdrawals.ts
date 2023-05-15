@@ -122,14 +122,16 @@ export async function initialize(
         })
       )[0]
     );
-    lastFinalizedTimestamp = Number(
-      (
-        await withdrawalNFT.functions.getWithdrawalStatus(
-          [lastFinalizedRequestId],
-          { blockTag: currentBlock }
-        )
-      ).statuses[0].timestamp
-    );
+    if (lastFinalizedRequestId != 0) {
+      lastFinalizedTimestamp = Number(
+        (
+          await withdrawalNFT.functions.getWithdrawalStatus(
+            [lastFinalizedRequestId],
+            { blockTag: currentBlock }
+          )
+        ).statuses[0].timestamp
+      );
+    }
     const diff = lastRequestId - lastFinalizedRequestId;
     const requestsRange = Array.from(
       {
