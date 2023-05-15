@@ -69,11 +69,7 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
       { name: "lido.LidoOracle.accountingOracle" },
       { name: "lido.LidoOracle.beaconSpec" },
       { name: "lido.LidoOracle.contractVersion" },
-      { name: "lido.LidoOracle.lastCompletedEpochId" },
       { name: "lido.LidoOracle.lido" },
-      { name: "lido.LidoOracle.postCompletedTotalPooledEther" },
-      { name: "lido.LidoOracle.preCompletedTotalPooledEther" },
-      { name: "lido.LidoOracle.timeElapsed" },
     ],
   },
   {
@@ -223,16 +219,6 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
       { name: "lido.WithdrawalQueue.bunkerModeSinceTimestamp" },
       { name: "lido.WithdrawalQueueERC721.baseUri" },
       { name: "lido.WithdrawalQueueERC721.nftDescriptorAddress" },
-    ],
-  },
-  {
-    contract: {
-      name: "Burner",
-      address: BURNER_ADDRESS,
-    },
-    slots: [
-      { name: "coverSharesBurnRequested", address: "0x0" },
-      { name: "totalCoverSharesBurnt", address: "0x2" },
     ],
   },
 ];
