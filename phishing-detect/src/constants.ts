@@ -190,6 +190,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x02c6d994e13f71dc6d9b367e002a04f78d05a9ad", // eSLSD Staking pool
   "0xbbf1ee38152e9d8e3470dc47947eaa65dca94913", // maverick
   "0xb9e7008fa856d66680bee9e0a24da407d9d7fad5", // zenith.cash
+  "0x35636b85b68c1b4a216110fb3a5fb447a99db14a", // unsheth vdAAM
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
