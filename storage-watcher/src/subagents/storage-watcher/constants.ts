@@ -46,7 +46,6 @@ export const STORAGE_SLOTS: ContractStorageMap[] = [
     slots: [
       { name: "lido.Versioned.contractVersion" },
       { name: "lido.Lido.lidoLocator" },
-      { name: "lido.Lido.stakeLimit" },
     ],
   },
   {
