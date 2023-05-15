@@ -6,7 +6,6 @@ import {
   Finding,
   FindingType,
   FindingSeverity,
-  ethers,
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
@@ -35,13 +34,7 @@ import VERSION from "./version";
 import { mergeFindings, RedefineMode, requireWithTier } from "./common/utils";
 import type * as Constants from "./common/constants";
 
-const {
-  LIDO_ADDRESS,
-  LIDO_APP_REPO_ADDRESS,
-  LIDO_APP_SEMANTIC_MAJOR_VERSION_V1,
-  LIDO_CONTRACT_VERSION_SET_EVENT,
-  RUN_TIER,
-} = requireWithTier<typeof Constants>(
+const { RUN_TIER } = requireWithTier<typeof Constants>(
   module,
   `./common/constants`,
   RedefineMode.Merge

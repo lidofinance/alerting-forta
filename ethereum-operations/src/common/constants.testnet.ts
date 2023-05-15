@@ -2,9 +2,3 @@
 export const LIDO_APP_REPO_ADDRESS =
   "0xE9eDe497d2417fd980D8B5338232666641B9B9aC";
 export const LIDO_ADDRESS = "0x1643E812aE58766192Cf7D2Cf9567dF2C37e9B7F";
-
-// todo: consts for v1. should be removed after upgrade with old subagents
-export const LIDO_APP_SEMANTIC_MAJOR_VERSION_V1 = 12;
-export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
-export const EASY_TRACK_ADDRESS = "0xAf072C8D368E4DD4A9d4fF6A76693887d6ae92Af";
