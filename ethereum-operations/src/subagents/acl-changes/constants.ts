@@ -1,4 +1,4 @@
-import { roleByName, INamedRole } from "./utils";
+import { INamedRole, roleByName } from "./utils";
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
@@ -64,6 +64,7 @@ export const LIDO_APPS = new Map([
   [NOR_ADDRESS, "Node Operators registry"],
   [LEGACY_ORACLE_ADDRESS, "Legacy Oracle"],
   [LIDO_ADDRESS, "stETH token"],
+  [STAKING_ROUTER_ADDRESS, "Staking Router"],
   ["0x4ee3118e3858e8d7164a634825bfe0f73d99c792", "Voting Repo"],
   ["0xa9b2f5ce3aae7374a62313473a74c98baa7fa70e", "LDO purchase executor"],
   ["0xb280e33812c0b09353180e92e27b8ad399b07f26", "SelfOwnedStETHBurner"],
@@ -263,6 +264,10 @@ export const LIDO_ROLES = new Map([
   [
     "0x2561bf26f818282a3be40719542054d2173eb0d38539e8a8d3cff22f29fd2384",
     "DEPOSIT ROLE",
+  ],
+  [
+    "0xbb75b874360e0bfd87f964eadd8276d8efb7c942134fc329b513032d0803e0c6",
+    "STAKING ROUTER ROLE",
   ],
 ]);
 
