@@ -113,10 +113,6 @@ const initialize = async () => {
     blockNumber = await ethersProvider.getBlockNumber();
   }
 
-  await _initialize(subAgents, blockNumber);
-};
-
-const _initialize = async (subAgents: SubAgent[], blockNumber: number) => {
   const metadata: Metadata = {
     "version.commitHash": VERSION.commitHash,
     "version.commitMsg": VERSION.commitMsg,
