@@ -12,10 +12,6 @@ export const POOLS_PARAMS = {
     rewardsAddress: "0x99ac10631f69c753ddb595d074422a0922d9056b",
     poolContractAddress: "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",
   },
-  Balancer: {
-    managerAddress: "0x86f6c353a0965eb069cd7f4f91c1afef8c725551",
-    rewardsAddress: "",
-  },
 };
 
 const period10days = 10 * 24 * 60 * 60;
