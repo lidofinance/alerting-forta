@@ -21,6 +21,8 @@ export const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
 export const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
 // 24 hours
 export const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+// 5 minutes
+export const BLOCK_CHECK_INTERVAL = 25;
 
 export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
 export const LIDO_DEPOSIT_SECURITY_ADDRESS =
