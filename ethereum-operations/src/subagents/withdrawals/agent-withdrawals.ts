@@ -326,6 +326,7 @@ async function handleUnclaimedRequests(
       unclaimedReqIds.push(id);
     }
   });
+  if (unclaimedReqIds.length == 0) return;
   const unclaimedRequestsStatuses = (
     await withdrawalNFT.functions.getWithdrawalStatus(unclaimedReqIds, {
       blockTag: blockEvent.blockNumber,
