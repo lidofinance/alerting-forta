@@ -2,9 +2,8 @@ import { FindingSeverity } from "forta-agent";
 import { ONE_DAY, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
 
-// trigger each 10 minutes for lasting conditions
-// TODO: chnage back to 10 minutes after first report
-export const TRIGGER_PERIOD = 60 * 60 * 24;
+// trigger each 20 minutes for lasting conditions
+export const TRIGGER_PERIOD = 60 * 20; // 20 minutes
 
 export const ACCOUNTING_ORACLE_ADDRESS =
   "0x852ded011285fe67063a08005c71a85690503cee";
