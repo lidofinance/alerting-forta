@@ -238,6 +238,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
       })
     );
   }
+  lastBufferedEth = bufferedEthRaw;
 }
 
 async function handleDepositExecutorBalance(
