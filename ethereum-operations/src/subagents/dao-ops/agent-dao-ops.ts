@@ -71,6 +71,8 @@ let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
 let lastReportedMevCountInfo = 0;
 let lastReportedMevCountHigh = 0;
+// remove once depositor bot is switched on
+let lastBufferedEth = new BigNumber(0);
 
 export async function initialize(
   currentBlock: number
@@ -89,6 +91,11 @@ export async function initialize(
     lastDepositorTxTime = depositorTxTimestamps[0];
   }
   console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`);
+  // remove once depositor bot is switched on
+  lastBufferedEth = new BigNumber(
+    String(await ethersProvider.getBalance(LIDO_ADDRESS, currentBlock))
+  );
+  console.log(`[${name}] lastBufferedEth=${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)}`);
   return {};
 }
 
@@ -213,6 +220,21 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
       );
       lastReportedBufferedEth = now;
     }
+  }
+  // remove once depositor bot is switched on
+  if (bufferedEthRaw.lt(lastBufferedEth)) {
+    findings.push(
+      Finding.fromObject({
+        name: "🚨🚨🚨 Buffered ETH amount decreased",
+        description:
+          `Buffered ETH amount decreased from ` +
+          `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
+          `to ${bufferedEth.toFixed(2)} while depositor is switched off`,
+        alertId: "BUFFERED-ETH-DECREASED",
+        severity: FindingSeverity.Critical,
+        type: FindingType.Suspicious,
+      })
+    );
   }
 }
 
