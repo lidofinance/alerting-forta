@@ -112,11 +112,11 @@ export async function initialize(
     }
   });
 
-  // fastLaneMembers = (
-  //   await hashConsensus.functions.getFastLaneMembers({
-  //     blockTag: currentBlock,
-  //   })
-  // ).addresses;
+  fastLaneMembers = (
+    await hashConsensus.functions.getFastLaneMembers({
+      blockTag: currentBlock,
+    })
+  ).addresses;
 
   return {};
 }
@@ -125,7 +125,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    //handleFastLaneMembers(blockEvent),
+    handleFastLaneMembers(blockEvent),
     handleMembersBalances(blockEvent, findings),
   ]);
 
