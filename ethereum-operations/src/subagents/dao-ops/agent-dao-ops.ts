@@ -95,7 +95,9 @@ export async function initialize(
   lastBufferedEth = new BigNumber(
     String(await ethersProvider.getBalance(LIDO_ADDRESS, currentBlock))
   );
-  console.log(`[${name}] lastBufferedEth=${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)}`);
+  console.log(
+    `[${name}] lastBufferedEth=${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)}`
+  );
   return {};
 }
 
