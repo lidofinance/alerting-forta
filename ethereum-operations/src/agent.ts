@@ -6,22 +6,11 @@ import {
   Finding,
   FindingType,
   FindingSeverity,
-  ethers,
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
-
-import LIDO_APP_REPO_ABI from "./abi_v1/LidoAppRepo.json";
-
-import * as agentLidoOracle_v1 from "./subagents_v1/lido-oracle/agent-lido-oracle";
-import * as agentEasyTrack_v1 from "./subagents_v1/easy-track/agent-easy-track";
-import * as agentDaoOps_v1 from "./subagents_v1/dao-ops/agent-dao-ops";
-import * as agentProxy_v1 from "./subagents_v1/proxy-watcher/agent-proxy-watcher";
-import * as agentAragon_v1 from "./subagents_v1/aragon-voting/agent-aragon-voting";
-import * as agentACL_v1 from "./subagents_v1/acl-changes/agent-acl-changes";
-import * as agentNORegistry_v1 from "./subagents_v1/node-operators-registry/agent-node-operators-registry";
 
 import * as agentAccountingOracle from "./subagents/accounting-oracle/agent-accounting-oracle";
 import * as agentAccountingOracleHashConsensus from "./subagents/accounting-oracle/agent-accounting-hash-consensus";
@@ -45,13 +34,7 @@ import VERSION from "./version";
 import { mergeFindings, RedefineMode, requireWithTier } from "./common/utils";
 import type * as Constants from "./common/constants";
 
-const {
-  LIDO_ADDRESS,
-  LIDO_APP_REPO_ADDRESS,
-  LIDO_APP_SEMANTIC_MAJOR_VERSION_V1,
-  LIDO_CONTRACT_VERSION_SET_EVENT,
-  RUN_TIER,
-} = requireWithTier<typeof Constants>(
+const { RUN_TIER } = requireWithTier<typeof Constants>(
   module,
   `./common/constants`,
   RedefineMode.Merge
@@ -65,16 +48,6 @@ interface SubAgent {
   handleTransaction?: HandleTransaction;
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
-
-const subAgents_v1: SubAgent[] = [
-  agentLidoOracle_v1,
-  agentEasyTrack_v1,
-  agentDaoOps_v1,
-  agentProxy_v1,
-  agentAragon_v1,
-  agentACL_v1,
-  agentNORegistry_v1,
-];
 
 const subAgents: SubAgent[] = [
   agentAccountingOracle,
@@ -110,9 +83,6 @@ const maxHandlerRetries = 5;
 
 let findingsOnInit: Finding[] = [];
 
-let protocolVersionSwitchBlock: number = 0;
-let isNewVersionInitialized: boolean = false;
-
 const initialize = async () => {
   let blockNumber: number = -1;
 
@@ -136,23 +106,6 @@ const initialize = async () => {
     blockNumber = await ethersProvider.getBlockNumber();
   }
 
-  const lidoAppRepo = new ethers.Contract(
-    LIDO_APP_REPO_ADDRESS,
-    LIDO_APP_REPO_ABI,
-    ethersProvider
-  );
-  const { semanticVersion } = await lidoAppRepo.functions.getLatest({
-    blockTag: blockNumber,
-  });
-  if (semanticVersion[0] > LIDO_APP_SEMANTIC_MAJOR_VERSION_V1) {
-    await _initialize(subAgents, blockNumber);
-    isNewVersionInitialized = true;
-  } else {
-    await _initialize(subAgents_v1, blockNumber);
-  }
-};
-
-const _initialize = async (subAgents: SubAgent[], blockNumber: number) => {
   const metadata: Metadata = {
     "version.commitHash": VERSION.commitHash,
     "version.commitMsg": VERSION.commitMsg,
@@ -200,26 +153,6 @@ const timeout = async (agent: SubAgent) =>
   });
 
 const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent
-): Promise<Finding[]> => {
-  if (
-    !isNewVersionInitialized &&
-    protocolVersionSwitchBlock != 0 &&
-    blockEvent.blockNumber > protocolVersionSwitchBlock
-  ) {
-    await _initialize(subAgents, blockEvent.blockNumber);
-    isNewVersionInitialized = true;
-  }
-
-  if (isNewVersionInitialized) {
-    return await _handleBlock(subAgents, blockEvent);
-  } else {
-    return await _handleBlock(subAgents_v1, blockEvent);
-  }
-};
-
-const _handleBlock = async (
-  subAgents: SubAgent[],
   blockEvent: BlockEvent
 ): Promise<Finding[]> => {
   let blockFindings: Finding[] = [];
@@ -277,27 +210,6 @@ const _handleBlock = async (
 const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent
 ): Promise<Finding[]> => {
-  if (!isNewVersionInitialized) {
-    const [event] = txEvent.filterLog(
-      LIDO_CONTRACT_VERSION_SET_EVENT,
-      LIDO_ADDRESS
-    );
-    if (event) {
-      protocolVersionSwitchBlock = txEvent.blockNumber;
-    }
-  }
-
-  if (isNewVersionInitialized) {
-    return await _handleTransaction(subAgents, txEvent);
-  } else {
-    return await _handleTransaction(subAgents_v1, txEvent);
-  }
-};
-
-const _handleTransaction = async (
-  subAgents: SubAgent[],
-  txEvent: TransactionEvent
-) => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
     if (!agent.handleTransaction) return;
