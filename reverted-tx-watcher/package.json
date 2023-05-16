@@ -1,7 +1,7 @@
 {
-  "name": "lido-bot-voting-watcher",
+  "name": "lido-reverted-tx-watcher-bot",
   "version": "0.0.1",
-  "description": "Lido Forta bot watching voting",
+  "description": "Lido bot detecting reverted transactions",
   "chainIds": [
     1
   ],
@@ -20,7 +20,8 @@
     "disable": "forta-agent disable",
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
-    "test": "jest --passWithNoTests"
+    "test": "jest",
+    "test:e2e": "yarn build && jest --config ./e2e/jest.config-e2e.json --passWithNoTests"
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",

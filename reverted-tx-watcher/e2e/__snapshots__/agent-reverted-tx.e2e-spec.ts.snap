@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-reverted-tx e2e tests should find reverted tx in motions contract 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "REVERTED-TX",
+  "description": "Reverted tx to the EasyTrack contract. https://etherscan.io/tx/0x99912053494d59ec0d0957f5e76e17f4e7d28baa6d5bbf886ef8b9356dc68425",
+  "labels": Array [],
+  "metadata": Object {
+    "sender": "0x07fe5f404778c27f4d3a0ab56dc59f8efdd32d96",
+  },
+  "name": "Reverted tx",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 2,
+}
+`;
