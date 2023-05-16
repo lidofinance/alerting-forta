@@ -20,6 +20,7 @@ export const MONITORED_ERC20_ADDRESSES = new Map<string, string>([
   ["0xae7ab96520de3a18e5e111b5eaab095312d7fe84", "stETH"],
   ["0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0", "wstETH"],
   ["0x1982b2f5814301d4e9a8b0201555376e62f82428", "astETH"],
+  ["0x0b925ed163218f6662a35e0f0371ac234f9e9371", "awstETH"],
   ["0x9ee91f9f426fa633d227f7a9b000e28b9dfd8599", "stMATIC"],
 ]);
 
