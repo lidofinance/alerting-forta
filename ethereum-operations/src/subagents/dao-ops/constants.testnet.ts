@@ -13,6 +13,8 @@ export interface ERC20 {
 }
 
 export const LIDO_ADDRESS = "0x1643e812ae58766192cf7d2cf9567df2c37e9b7f";
+export const WITHDRAWAL_QUEUE_ADDRESS =
+  "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
 export const LIDO_DEPOSIT_SECURITY_ADDRESS =
   "0xe57025e250275ca56f92d76660decfc490c7e79a";
 export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =

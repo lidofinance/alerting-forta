@@ -15,6 +15,7 @@ import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import LIDO_ABI from "../../abi/Lido.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
 import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
+import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
 
 import { ETH_DECIMALS, ONE_MONTH, ONE_WEEK } from "../../common/constants";
 
@@ -36,6 +37,7 @@ const {
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
   LIDO_ADDRESS,
+  WITHDRAWAL_QUEUE_ADDRESS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
   MEV_ALLOWED_LIST_ADDRESS,
@@ -71,7 +73,6 @@ let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
 let lastReportedMevCountInfo = 0;
 let lastReportedMevCountHigh = 0;
-// remove once depositor bot is switched on
 let lastBufferedEth = new BigNumber(0);
 
 export async function initialize(
@@ -91,7 +92,6 @@ export async function initialize(
     lastDepositorTxTime = depositorTxTimestamps[0];
   }
   console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`);
-  // remove once depositor bot is switched on
   lastBufferedEth = new BigNumber(
     String(await ethersProvider.getBalance(LIDO_ADDRESS, currentBlock))
   );
@@ -160,9 +160,6 @@ async function handleNodeOperatorsKeys(
 
 async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const blockNumber = blockEvent.block.number;
-  if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
-    return;
-  }
 
   const now = blockEvent.block.timestamp;
   const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
@@ -174,69 +171,83 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     )
   );
   const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
-  // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
-  if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
-    criticalBufferAmountFrom =
-      criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now;
-  } else {
-    // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
-    criticalBufferAmountFrom = 0;
+
+  if (blockNumber % BLOCK_CHECK_INTERVAL == 0) {
+    // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
+    if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
+      criticalBufferAmountFrom =
+        criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now;
+    } else {
+      // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
+      criticalBufferAmountFrom = 0;
+    }
+    if (lastReportedBufferedEth + REPORT_WINDOW < now) {
+      if (
+        bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL &&
+        criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME
+      ) {
+        findings.push(
+          Finding.fromObject({
+            name: "🚨 Huge buffered ETH amount",
+            description:
+              `There are ${bufferedEth.toFixed(4)} ` +
+              `buffered ETH in DAO for more than ` +
+              `${Math.floor(
+                MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
+              )} hour(s)`,
+            alertId: "HUGE-BUFFERED-ETH",
+            severity: FindingSeverity.High,
+            type: FindingType.Degraded,
+          })
+        );
+        lastReportedBufferedEth = now;
+      } else if (
+        bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM &&
+        lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY &&
+        lastDepositorTxTime !== 0
+      ) {
+        findings.push(
+          Finding.fromObject({
+            name: "⚠️ High buffered ETH amount",
+            description:
+              `There are ${bufferedEth.toFixed(4)} ` +
+              `buffered ETH in DAO and there are more than ` +
+              `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
+              `hours since last Depositor TX`,
+            alertId: "HIGH-BUFFERED-ETH",
+            severity: FindingSeverity.Medium,
+            type: FindingType.Suspicious,
+          })
+        );
+        lastReportedBufferedEth = now;
+      }
+    }
   }
-  if (lastReportedBufferedEth + REPORT_WINDOW < now) {
-    if (
-      bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL &&
-      criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME
-    ) {
+  if (bufferedEthRaw.lt(lastBufferedEth)) {
+    const unbufferedEvents = await getUnbufferedEvents(
+      blockNumber,
+      blockNumber
+    );
+    const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
+      blockNumber,
+      blockNumber
+    );
+    if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
       findings.push(
         Finding.fromObject({
-          name: "🚨 Huge buffered ETH amount",
+          name: "🚨🚨🚨 Buffered ETH drain",
           description:
-            `There are ${bufferedEth.toFixed(4)} ` +
-            `buffered ETH in DAO for more than ` +
-            `${Math.floor(
-              MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
-            )} hour(s)`,
-          alertId: "HUGE-BUFFERED-ETH",
-          severity: FindingSeverity.High,
-          type: FindingType.Degraded,
-        })
-      );
-      lastReportedBufferedEth = now;
-    } else if (
-      bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM &&
-      lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY &&
-      lastDepositorTxTime !== 0
-    ) {
-      findings.push(
-        Finding.fromObject({
-          name: "⚠️ High buffered ETH amount",
-          description:
-            `There are ${bufferedEth.toFixed(4)} ` +
-            `buffered ETH in DAO and there are more than ` +
-            `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
-            `hours since last Depositor TX`,
-          alertId: "HIGH-BUFFERED-ETH",
-          severity: FindingSeverity.Medium,
+            `Buffered ETH amount decreased from ` +
+            `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
+            `to ${bufferedEth.toFixed(
+              2
+            )} without Unbuffered or WithdrawalsFinalized events`,
+          alertId: "BUFFERED-ETH-DRAIN",
+          severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         })
       );
-      lastReportedBufferedEth = now;
     }
-  }
-  // remove once depositor bot is switched on
-  if (bufferedEthRaw.lt(lastBufferedEth)) {
-    findings.push(
-      Finding.fromObject({
-        name: "🚨🚨🚨 Buffered ETH amount decreased",
-        description:
-          `Buffered ETH amount decreased from ` +
-          `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
-          `to ${bufferedEth.toFixed(2)} while depositor is switched off`,
-        alertId: "BUFFERED-ETH-DECREASED",
-        severity: FindingSeverity.Critical,
-        type: FindingType.Suspicious,
-      })
-    );
   }
   lastBufferedEth = bufferedEthRaw;
 }
@@ -443,6 +454,26 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   }
 
   return findings;
+}
+
+async function getUnbufferedEvents(blockFrom: number, blockTo: number) {
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+
+  const unbufferedFilter = lido.filters.Unbuffered();
+
+  return await lido.queryFilter(unbufferedFilter, blockFrom, blockTo);
+}
+
+async function getWdRequestFinalizedEvents(blockFrom: number, blockTo: number) {
+  const wdQueue = new ethers.Contract(
+    WITHDRAWAL_QUEUE_ADDRESS,
+    WITHDRAWAL_QUEUE_ABI,
+    ethersProvider
+  );
+
+  const wdReqFinalized = wdQueue.filters.WithdrawalsFinalized();
+
+  return await wdQueue.queryFilter(wdReqFinalized, blockFrom, blockTo);
 }
 
 // required for DI to retrieve handlers in the case of direct agent use
