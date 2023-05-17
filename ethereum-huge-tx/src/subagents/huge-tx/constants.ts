@@ -94,6 +94,11 @@ export const WSTETH_B_VAULT_ADDRESS =
   "0x248cCBf4864221fC0E840F29BB042ad5bFC89B5c";
 export const CURVE_POOL_ADDRESS = "0xdc24316b9ae028f1497c275eb9192a3ea0f67022";
 
+export const IGNORE_LIST = [
+  "0xd15a672319cf0352560ee76d9e89eab0889046d3", // Burner
+  "0xae7ab96520de3a18e5e111b5eaab095312d7fe84", // Lido
+];
+
 export const MONITORED_TOKENS = new Map<string, string>(
   [
     [STETH_TOKEN_ADDRESS, "stETH"],

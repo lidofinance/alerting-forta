@@ -33,6 +33,7 @@ import {
   CURVE_REMOVE_LIQUIDITY_EVENT,
   CURVE_REMOVE_LIQUIDITY_ONE_EVENT,
   REMOVE_ONE_STETH_CURVE_PATTERN,
+  IGNORE_LIST,
 } from "./constants";
 
 import {
@@ -431,6 +432,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
   let transfersMetadata: TransferEventMetadata[] = [];
   const transferEvents = txEvent
     .filterLog(TRANSFER_EVENT)
+    .filter((event) => !IGNORE_LIST.includes(event.args._to.toLowerCase()))
     .filter(
       (event) =>
         MONITORED_TOKENS.get(event.address.toLowerCase()) ||
