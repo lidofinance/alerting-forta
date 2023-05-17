@@ -6,6 +6,8 @@
 
 ## Alerts
 
+- REVERTED-TX: A reverted transaction has been detected on the specified contract
+
 ## Development
 
 Edit `~/.forta/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
