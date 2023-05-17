@@ -6,29 +6,17 @@ import {
   TransactionEvent,
 } from "forta-agent";
 
-import { EASY_TRACK_ADDRESS, LIDO_LOCATOR_ADDRESS } from "./constants";
+import {
+  LIDO_LOCATOR_ADDRESS,
+  LocatorContracts,
+  staticContracts,
+} from "./constants";
 import LIDO_LOCATOR_ABI from "./abi/LidoLocator.json";
 import { ethersProvider } from "./ethers";
 
 export const name = "RevertedTxWatcher";
 
-let contracts: {
-  accountingOracle: string;
-  depositSecurityModule: string;
-  elRewardsVault: string;
-  legacyOracle: string;
-  lido: string;
-  oracleReportSanityChecker: string;
-  postTokenRebaseReceiver: string;
-  burner: string;
-  stakingRouter: string;
-  treasury: string;
-  validatorsExitBusOracle: string;
-  withdrawalQueue: string;
-  withdrawalVault: string;
-  oracleDaemonConfig: string;
-};
-
+let contracts: LocatorContracts;
 let addresses: [string, string][] = [];
 
 export async function initialize(
@@ -57,8 +45,10 @@ export async function initialize(
     oracleDaemonConfig: await locator.oracleDaemonConfig(),
   };
 
-  addresses = Object.entries(contracts);
-  addresses.push(["EasyTrack", EASY_TRACK_ADDRESS]);
+  addresses = [
+    ...Object.entries(contracts),
+    ...Object.entries(staticContracts),
+  ];
 
   return {
     addresses: JSON.stringify(addresses),
@@ -78,17 +68,20 @@ async function handleRevertedTx(
   findings: Finding[]
 ) {
   for (let [name, address] of addresses) {
-    if (address in txEvent.addresses) {
+    const eventAddresses = Object.keys(txEvent.addresses).map((a) =>
+      a.toLowerCase()
+    );
+    if (eventAddresses.includes(address.toLowerCase())) {
       const receipt = await ethersProvider.getTransactionReceipt(
         txEvent.transaction.hash
       );
       if (receipt.status === 0) {
-        const fromSelf = address === txEvent.from;
+        const fromSelf = address.toLowerCase() === txEvent.from.toLowerCase();
         findings.push(
           Finding.fromObject({
-            name: "Reverted tx",
+            name: "🤔 Reverted TX detected",
             description:
-              `Reverted tx ${fromSelf ? "from" : "to"} the ${name} contract. ` +
+              `Reverted TX ${fromSelf ? "from" : "to"} the ${name} contract. ` +
               etherscanLink(txEvent.transaction.hash),
             alertId: "REVERTED-TX",
             severity: FindingSeverity.Info,
