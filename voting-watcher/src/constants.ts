@@ -30,7 +30,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
       `New ${formatLink(
         `voting #${args.voteId}`,
         `${VOTING_BASE_URL}${args.voteId}`
-      )} started 🚀\n Subject: ${args.metadata}`,
+      )} started 🚀`,
     severity: FindingSeverity.Info,
   },
   {

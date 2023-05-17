@@ -27,9 +27,8 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     alertId: "ARAGON-VOTE-STARTED",
     name: "🚀 Aragon: Vote started",
     description: (args: any) =>
-      `Aragon vote ${args.voteId} was started by ${etherscanAddress(
-        args.creator
-      )}\nDetails:\n${args.metadata}`,
+      `Aragon vote ${args.voteId} was started by ` +
+      `${etherscanAddress(args.creator)}`,
     severity: FindingSeverity.Info,
   },
   {
