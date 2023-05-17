@@ -10,6 +10,7 @@ import {
 import { ethersProvider } from "../../ethers";
 
 import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
+import LIDO_ABI from "../../abi/Lido.json";
 
 import {
   formatDelay,
@@ -40,6 +41,7 @@ const {
   TRIGGER_PERIOD,
   REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER,
   EXITBUS_ORACLE_ADDRESS,
+  LIDO_ADDRESS,
   WITHDRAWALS_QUEUE_ADDRESS,
   WITHDRAWALS_VAULT_ADDRESS,
   EL_REWARDS_VAULT_ADDRESS,
@@ -206,6 +208,7 @@ async function handleProcessingStarted(
     WITHDRAWAL_QUEUE_ABI,
     ethersProvider
   );
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
   const { refSlot } = processingStarted.args;
   const reportSlotsDiff =
     Math.floor((now - CL_GENESIS_TIMESTEMP) / SECONDS_PER_SLOT) -
@@ -213,6 +216,13 @@ async function handleProcessingStarted(
   // it is assumption because we can't get block number by slot number using EL API
   // there are missed slots, so we consider this error in diff to be negligible
   const refBlock = txEvent.blockNumber - reportSlotsDiff;
+  const bufferedEth = new BigNumber(
+    String(
+      await lido.functions.getBufferedEther({
+        blockTag: refBlock,
+      })
+    )
+  );
   const elVaultBalance = new BigNumber(
     String(await ethersProvider.getBalance(EL_REWARDS_VAULT_ADDRESS, refBlock))
   );
@@ -226,25 +236,31 @@ async function handleProcessingStarted(
       })
     )
   );
-  const diffRate = withdrawalsQueueSize.div(
-    elVaultBalance.plus(withdrawalsVaultBalance).plus(exitRequestsSize)
-  );
+  const forFinalization = elVaultBalance
+    .plus(withdrawalsVaultBalance)
+    .plus(exitRequestsSize)
+    .plus(bufferedEth);
+  const diffRate = withdrawalsQueueSize.div(forFinalization);
   if (diffRate.gte(EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD)) {
     if (exitRequestsSize.eq(0)) {
       findings.push(
         Finding.fromObject({
-          name: `🚨 ExitBus Oracle: withdrawal queue is ${diffRate.toFixed(
+          name: `🚨 ExitBus Oracle: no validators exits in the report, but withdrawal queue was ${diffRate.toFixed(
             2
-          )} times bigger than the current buffer for requests finalization, and no validators exit requests in current report`,
-          description: `Withdrawal queue size: ${withdrawalsQueueSize
+          )} times bigger than the buffer for requests finalization on reference slot`,
+          description: `Validators exits: ${exitRequestsSize
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nExit requests size: ${exitRequestsSize
+            .toFixed(3)} ETH\nBuffered ethers: ${bufferedEth
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nEL vault balance: ${elVaultBalance
+            .toFixed(3)}\nEL vault balance: ${elVaultBalance
             .div(ETH_DECIMALS)
             .toFixed(
               3
             )} ETH\nWithdrawals vault balance: ${withdrawalsVaultBalance
+            .div(ETH_DECIMALS)
+            .toFixed(3)} ETH\n---\nTotal for finalization: ${forFinalization
+            .div(ETH_DECIMALS)
+            .toFixed(3)} ETH\nWithdrawal queue size: ${withdrawalsQueueSize
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH`,
           alertId: "EXITBUS-ORACLE-NO-EXIT-REQUESTS-WHEN-HUGE-QUEUE",
@@ -255,18 +271,22 @@ async function handleProcessingStarted(
     } else {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ ExitBus Oracle: withdrawal queue size is ${diffRate.toFixed(
+          name: `⚠️ ExitBus Oracle: not enough validators exits in the report, withdrawal queue size was ${diffRate.toFixed(
             2
-          )} times bigger than the current buffer for requests finalization`,
-          description: `Withdrawal queue size: ${withdrawalsQueueSize
+          )} times bigger than the buffer for requests finalization on reference slot`,
+          description: `Validators exits: ${exitRequestsSize
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nExit requests size: ${exitRequestsSize
+            .toFixed(3)} ETH\nBuffered ethers: ${bufferedEth
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nEL vault balance: ${elVaultBalance
+            .toFixed(3)}\nEL vault balance: ${elVaultBalance
             .div(ETH_DECIMALS)
             .toFixed(
               3
             )} ETH\nWithdrawals vault balance: ${withdrawalsVaultBalance
+            .div(ETH_DECIMALS)
+            .toFixed(3)} ETH\n---\nTotal for finalization: ${forFinalization
+            .div(ETH_DECIMALS)
+            .toFixed(3)} ETH\nWithdrawal queue size: ${withdrawalsQueueSize
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH`,
           alertId: "EXITBUS-ORACLE-TOO-LOW-BUFFER-SIZE",
@@ -278,16 +298,20 @@ async function handleProcessingStarted(
   } else if (diffRate.gte(EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD)) {
     findings.push(
       Finding.fromObject({
-        name: `🤔️ ExitBus Oracle: withdrawal queue size is ${diffRate.toFixed(
+        name: `🤔️ ExitBus Oracle: not enough validators exits in the report, withdrawal queue size was ${diffRate.toFixed(
           2
-        )} times bigger than the current buffer for requests finalization`,
-        description: `Withdrawal queue size: ${withdrawalsQueueSize
+        )} times bigger than the buffer for requests finalization on reference slot`,
+        description: `Validators exits: ${exitRequestsSize
           .div(ETH_DECIMALS)
-          .toFixed(3)} ETH\nExit requests size: ${exitRequestsSize
+          .toFixed(3)} ETH\nBuffered ethers: ${bufferedEth
           .div(ETH_DECIMALS)
-          .toFixed(3)} ETH\nEL vault balance: ${elVaultBalance
+          .toFixed(3)}\nEL vault balance: ${elVaultBalance
           .div(ETH_DECIMALS)
           .toFixed(3)} ETH\nWithdrawals vault balance: ${withdrawalsVaultBalance
+          .div(ETH_DECIMALS)
+          .toFixed(3)} ETH\n---\nTotal for finalization: ${forFinalization
+          .div(ETH_DECIMALS)
+          .toFixed(3)} ETH\nWithdrawal queue size: ${withdrawalsQueueSize
           .div(ETH_DECIMALS)
           .toFixed(3)} ETH`,
         alertId: "EXITBUS-ORACLE-LOW-BUFFER-SIZE",
