@@ -1,7 +1,6 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
   BlockEvent,
   TransactionEvent,
   Finding,
@@ -16,10 +15,13 @@ import {
   ETH_DECIMALS,
   UNIQ_DELEGATES_THRESHOLD_EOA,
   UNIQ_DELEGATES_THRESHOLD_CONTRACT,
-  APPROVE_EVENT_ABI,
   MONITORED_ERC20_ADDRESSES,
   WHITE_LIST_ADDRESSES,
   BLOCKS_PER_HOUR,
+  ERC_20_APPROVAL_EVENT_ABI,
+  ERC721_APPROVAL_EVENT_ABI,
+  ERC721_APPROVAL_FOR_ALL_EVENT_ABI,
+  WITHDRAWAL_QUEUE_ADDRESS,
 } from "./constants";
 
 import { isContract } from "./utils/tools";
@@ -30,7 +32,7 @@ export const spenders = new Map<string, ISpenderInfo>();
 export const name = "PhishingDetect";
 
 export async function initialize(
-  currentBlock: number
+  _: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -49,44 +51,72 @@ export async function handleBlock(blockEvent: BlockEvent) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  const approvalEvents = txEvent
-    .filterLog(APPROVE_EVENT_ABI)
+  txEvent
+    .filterLog(ERC_20_APPROVAL_EVENT_ABI)
     .filter((event: LogDescription) =>
       Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(event.address)
-    );
+    )
+    .map(handleERC20Approval);
 
-  approvalEvents.map((event: LogDescription) => {
-    handleERC20Approval(event, txEvent);
-  });
+  txEvent
+    .filterLog(ERC721_APPROVAL_EVENT_ABI)
+    .filter(
+      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS
+    )
+    .map((event: LogDescription) => {
+      createOrUpdateSpender(
+        event.args.approved.toLowerCase(),
+        event.address,
+        event.args.owner.toLowerCase()
+      );
+    });
+
+  txEvent
+    .filterLog(ERC721_APPROVAL_FOR_ALL_EVENT_ABI)
+    .filter(
+      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS
+    )
+    .filter((event: LogDescription) => event.args.approved)
+    .map((event: LogDescription) => {
+      createOrUpdateSpender(
+        event.args.operator.toLowerCase(),
+        event.address,
+        event.args.owner.toLowerCase()
+      );
+    });
 
   return findings;
 }
 
-function handleERC20Approval(event: LogDescription, txEvent: TransactionEvent) {
-  const from = txEvent.from.toLowerCase();
+function handleERC20Approval(event: LogDescription) {
+  const from = event.args.owner.toLowerCase();
   const token = event.address;
   const spender = event.args.spender.toLowerCase();
   const amount = new BigNumber(String(event.args.value)).div(ETH_DECIMALS);
   // handle only non-whitelisted addresses
   if (!WHITE_LIST_ADDRESSES.includes(spender)) {
-    let spenderInfo = spenders.get(spender);
     if (!amount.eq(0)) {
-      if (spenderInfo) {
-        let tokenApprovers = spenderInfo.tokens.get(token);
-        if (tokenApprovers) {
-          tokenApprovers.add(from);
-        } else {
-          tokenApprovers = new Set([from]);
-        }
-        spenderInfo.tokens.set(token, tokenApprovers);
-      } else {
-        spenders.set(spender, {
-          tokens: new Map([[token, new Set([from])]]),
-          reportedApproversCount: 0,
-          reportedTokenTypesCount: 0,
-        });
-      }
+      createOrUpdateSpender(spender, token, from);
     }
+  }
+}
+
+function createOrUpdateSpender(spender: string, token: string, from: string) {
+  let spenderInfo = spenders.get(spender);
+  if (spenderInfo) {
+    let tokenApprovers = spenderInfo.tokens.get(token);
+    if (tokenApprovers) {
+      tokenApprovers.add(from);
+    } else {
+      tokenApprovers = new Set([from]);
+    }
+    spenderInfo.tokens.set(token, tokenApprovers);
+  } else {
+    spenders.set(spender, {
+      tokens: new Map([[token, new Set([from])]]),
+      reportedApproversCount: 0,
+      reportedTokenTypesCount: 0,
+    });
   }
 }
 
@@ -118,7 +148,7 @@ async function handleSpenders(findings: Finding[]) {
           Finding.fromObject({
             name: `🕵️ Suspicious ${addressType.toLocaleLowerCase()} ${spender} detected`,
             description:
-              `Significant amount of address has approved Lido tokens to ` +
+              `A significant number of addresses has approved Lido tokens to ` +
               `${etherscanLink(spender)} (${addressType}).` +
               ` Looks like a phishing at a glance`,
             alertId: `PHISHING-${addressType}-DETECTED`,

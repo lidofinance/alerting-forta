@@ -11,6 +11,7 @@ import {
   UNIQ_DELEGATES_THRESHOLD_CONTRACT,
   UNIQ_DELEGATES_THRESHOLD_EOA,
   BLOCKS_PER_HOUR,
+  ERC_20_APPROVAL_EVENT_ABI,
 } from "./constants";
 
 function randomAddress(): string {
@@ -31,13 +32,16 @@ describe("phishing-detect", () => {
     block: {
       timestamp: 1234567,
     },
-    filterLog() {
+    filterLog(abi: string) {
+      if (abi !== ERC_20_APPROVAL_EVENT_ABI) return [];
+
       return [
         {
           address: token,
           args: {
-            value: "0x207ab57c0bb17971", // some big amount
+            owner: approver,
             spender,
+            value: "0x207ab57c0bb17971", // some big amount
           },
         },
       ];
