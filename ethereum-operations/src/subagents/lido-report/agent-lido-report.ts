@@ -88,9 +88,9 @@ export async function initialize(
     block48HoursAgo,
     currentBlock - 1
   );
-  if (ethDistributedEvents.length > 1) {
+  if (ethDistributedEvents.length > 0) {
     const { preCLBalance, postCLBalance, withdrawalsWithdrawn } =
-      ethDistributedEvents[ethDistributedEvents.length - 2].args as any;
+      ethDistributedEvents[ethDistributedEvents.length - 1].args as any;
     lastCLrewards = new BigNumber(String(postCLBalance))
       .minus(String(preCLBalance))
       .plus(String(withdrawalsWithdrawn))
@@ -376,7 +376,7 @@ function handleRebaseDigest(txEvent: TransactionEvent, findings: Finding[]) {
     ETH_DECIMALS
   );
 
-  lastCLrewards = lastCLrewards != BN_ZERO ? lastCLrewards : clRewards;
+  lastCLrewards = lastCLrewards.eq(BN_ZERO) ? clRewards : lastCLrewards;
   const clRewardsDiff = clRewards.minus(lastCLrewards);
   const strCLRewardsDiff =
     Number(clRewardsDiff) > 0
