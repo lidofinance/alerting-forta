@@ -199,5 +199,20 @@ export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
   (address) => address.toLowerCase()
 );
 
-export const APPROVE_EVENT_ABI =
+export const WITHDRAWAL_QUEUE_ADDRESS =
+  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
+
+export const ERC_20_APPROVAL_EVENT_ABI =
   "event Approval (address indexed owner, address indexed spender, uint256 value)";
+export const ERC721_APPROVAL_EVENT_ABI = `
+event Approval(
+  address indexed owner,
+  address indexed approved,
+  uint256 indexed tokenId
+)`;
+export const ERC721_APPROVAL_FOR_ALL_EVENT_ABI = `
+event ApprovalForAll(
+  address indexed owner,
+  address indexed operator,
+  bool approved
+)`;
