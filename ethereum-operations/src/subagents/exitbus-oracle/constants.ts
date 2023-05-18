@@ -13,6 +13,8 @@ export const EXITBUS_ORACLE_ADDRESS =
 export const EXITBUS_HASH_CONSENSUS_ADDRESS =
   "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
 
+export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
+
 export const WITHDRAWALS_QUEUE_ADDRESS =
   "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
 export const WITHDRAWALS_VAULT_ADDRESS =
