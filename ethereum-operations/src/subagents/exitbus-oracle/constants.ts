@@ -5,8 +5,8 @@ import { etherscanAddress } from "../../common/utils";
 
 export const CL_GENESIS_TIMESTEMP = 1606824023;
 
-// trigger each 8 hours for lasting conditions
-export const TRIGGER_PERIOD = 8 * ONE_HOUR;
+// trigger each 20 mins for lasting conditions
+export const TRIGGER_PERIOD = 60 * 20;
 
 export const EXITBUS_ORACLE_ADDRESS =
   "0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e";
