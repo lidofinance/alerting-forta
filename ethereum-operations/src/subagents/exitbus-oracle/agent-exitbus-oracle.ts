@@ -264,7 +264,8 @@ async function handleProcessingStarted(
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH`,
           alertId: "EXITBUS-ORACLE-NO-EXIT-REQUESTS-WHEN-HUGE-QUEUE",
-          severity: FindingSeverity.High,
+          // todo: should be reconsidered after several exits
+          severity: FindingSeverity.Info,
           type: FindingType.Suspicious,
         })
       );
@@ -290,7 +291,8 @@ async function handleProcessingStarted(
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH`,
           alertId: "EXITBUS-ORACLE-TOO-LOW-BUFFER-SIZE",
-          severity: FindingSeverity.Medium,
+          // todo: should be reconsidered after several exits
+          severity: FindingSeverity.Info,
           type: FindingType.Suspicious,
         })
       );
