@@ -139,11 +139,18 @@ export async function initialize(
       },
       (_, i) => i + 1 // requests start from 1, not 0
     );
-    const requestsStatuses = (
-      await withdrawalNFT.functions.getWithdrawalStatus(requestsRange, {
-        blockTag: currentBlock,
-      })
-    ).statuses;
+    let requestsStatuses = [];
+    const requestsCount = requestsRange.length;
+    while (requestsRange.length > 0) {
+      const chunk = requestsRange.splice(0, 50);
+      requestsStatuses.push(
+        ...(
+          await withdrawalNFT.functions.getWithdrawalStatus(chunk, {
+            blockTag: currentBlock,
+          })
+        ).statuses
+      );
+    }
     for (const [index, reqStatus] of requestsStatuses.entries()) {
       const reqId = index + 1;
       if (reqStatus.isFinalized == true) {
@@ -157,7 +164,7 @@ export async function initialize(
     }
     if (diff > 0) {
       firstUnfinalizedRequestTimestamp =
-        requestsStatuses[requestsRange.length - 1].timestamp;
+        requestsStatuses[requestsCount - 1].timestamp;
     }
   }
   return {};
