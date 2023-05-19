@@ -180,9 +180,9 @@ async function handleELRewardsVaultOverfill(
       findings.push(
         Finding.fromObject({
           name: `⚠️ ELRewardsVault overfilled: balance is more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
-          description: `Balance: ${balance
-            .div(ETH_DECIMALS)
-            .toFixed(2)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(2)} ETH`,
+          description:
+            `Balance: ${balance.div(ETH_DECIMALS).toFixed(2)} ` +
+            `ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(2)} ETH`,
           alertId: "LIDO-EL-REWARDS-VAULT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -215,9 +215,9 @@ async function handleWithdrawalsVaultOverfill(
       findings.push(
         Finding.fromObject({
           name: `⚠️ WithdrawalsVault overfilled: balance is more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
-          description: `Balance: ${balance
-            .div(ETH_DECIMALS)
-            .toFixed(2)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(2)} ETH`,
+          description:
+            `Balance: ${balance.div(ETH_DECIMALS).toFixed(2)} ` +
+            `ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(2)} ETH`,
           alertId: "LIDO-WITHDRAWALS-VAULT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -253,11 +253,10 @@ async function handleBurnerUnburntSharesOverfill(
       findings.push(
         Finding.fromObject({
           name: `⚠️ Burner overfilled: unburnt shares are more than ${OVERFILL_THRESHOLD_PERCENT}% of total shares`,
-          description: `Unburnt: ${unburntShares
-            .div(ETH_DECIMALS)
-            .toFixed(2)} 1e18\nTotal shares: ${totalShares
-            .div(ETH_DECIMALS)
-            .toFixed(2)} 1e18`,
+          description:
+            `Unburnt: ${unburntShares.div(ETH_DECIMALS).toFixed(2)} ` +
+            `1e18\nTotal shares: ${totalShares.div(ETH_DECIMALS).toFixed(2)} ` +
+            `1e18`,
           alertId: "LIDO-BURNER-UNBURNT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -326,7 +325,7 @@ async function handleRebaseDigest(
     prepareRewardsLines(txEvent, findings),
     prepareValidatorsCountLines(txEvent),
     await prepareWithdrawnLines(txEvent),
-    prepareRequestsFinalizationLines(txEvent),
+    await prepareRequestsFinalizationLines(txEvent),
     prepareSharesBurntLines(txEvent),
   ];
 
@@ -418,7 +417,7 @@ function prepareAPRLines(
     .toFixed(2)} -> ${postTotalShares
     .div(ETH_DECIMALS)
     .toFixed(
-      3
+      2
     )} 1e18 (${strSharesDiffPercent}%)\nTotal pooled ether: ${preTotalEther
     .div(ETH_DECIMALS)
     .toFixed(2)} -> ${postTotalEther
@@ -496,7 +495,7 @@ function prepareRewardsLines(
       : totalRewardsDiff.toFixed(2);
 
   let strCLRewards = `CL rewards: ${clRewards.toFixed(
-    3
+    2
   )} (${strCLRewardsDiff}) ETH`;
 
   const clRewardsDiffPercent = clRewardsDiff.div(lastCLrewards).times(100);
@@ -520,9 +519,8 @@ function prepareRewardsLines(
       Finding.fromObject({
         name: "🚨 Lido Report: CL rewards decreased",
         description:
-          `Rewards decreased from ${lastCLrewards.toFixed(
-            3
-          )} ETH to ${clRewards.toFixed(2)} ` +
+          `Rewards decreased from ${lastCLrewards.toFixed(2)} ` +
+          `ETH to ${clRewards.toFixed(2)} ` +
           `by ${clRewardsDiff.toFixed(2)} ETH (${strCLRewardsDiffPercent}%)`,
         alertId: "LIDO-REPORT-CL-REWARDS-DECREASED",
         severity: severity,
@@ -535,7 +533,7 @@ function prepareRewardsLines(
   lastELrewards = elRewards;
 
   return `*Rewards*\n${strCLRewards}\nEL rewards: ${elRewards.toFixed(
-    3
+    2
   )} (${strELRewardsDiff}) ETH\nTotal: ${clRewards
     .plus(elRewards)
     .toFixed(2)} (${strTotalRewardsDiff}) ETH`;
@@ -568,48 +566,38 @@ async function prepareWithdrawnLines(
     ? new BigNumber(String(elRewardsReceivedEvent.args.amount))
     : BN_ZERO;
 
-  const {
-    withdrawalsWithdrawn,
-    executionLayerRewardsWithdrawn,
-    postBufferedEther,
-  } = ethDistributedEvent.args;
+  const { withdrawalsWithdrawn, executionLayerRewardsWithdrawn } =
+    ethDistributedEvent.args;
   const wdWithdrawn = new BigNumber(String(withdrawalsWithdrawn)).div(
     ETH_DECIMALS
   );
   const elWithdrawn = new BigNumber(String(executionLayerRewardsWithdrawn));
   const elWithdrawnReceivedDiff = elRewardsReceived.minus(elWithdrawn);
 
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
-  const preBufferedEther = await lido.functions.getBufferedEther({
-    blockTag: txEvent.blockNumber - 1,
-  });
-  const bufferDiff = new BigNumber(String(postBufferedEther)).minus(
-    preBufferedEther
+  return (
+    `*Withdrawn from vaults*\nWithdrawal Vault: ` +
+    `${wdWithdrawn.toFixed(2)} ETH` +
+    `\nEL Vault: ${elWithdrawn.div(ETH_DECIMALS).toFixed(2)} ETH` +
+    `${
+      elWithdrawnReceivedDiff.gt(0)
+        ? ` ⚠️ ${elWithdrawnReceivedDiff
+            .div(ETH_DECIMALS)
+            .toFixed(2)} ETH left on the vault`
+        : ""
+    }`
   );
-
-  return `*Withdrawn from*\nWithdrawal Vault: ${wdWithdrawn.toFixed(
-    3
-  )} ETH\nEL Vault: ${elWithdrawn.div(ETH_DECIMALS).toFixed(2)} ETH${
-    elWithdrawnReceivedDiff.gt(0)
-      ? ` ⚠️ ${elWithdrawnReceivedDiff
-          .div(ETH_DECIMALS)
-          .toFixed(2)} ETH left on the vault`
-      : ""
-  }\nBuffer: ${
-    bufferDiff.lt(0)
-      ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(2)
-      : "0.000"
-  } ETH`;
 }
 
-function prepareRequestsFinalizationLines(txEvent: TransactionEvent): string {
+async function prepareRequestsFinalizationLines(
+  txEvent: TransactionEvent
+): Promise<string> {
   const [withdrawalsFinalizedEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
     WITHDRAWAL_QUEUE_ADDRESS
   );
   let description = "No finalized requests";
   if (!withdrawalsFinalizedEvent) {
-    return `*Requests finalisation*\n${description}`;
+    return `*Requests finalization*\n${description}`;
   }
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
@@ -622,10 +610,30 @@ function prepareRequestsFinalizationLines(txEvent: TransactionEvent): string {
   const shareRate = new BigNumber(String(postTotalEther)).div(
     new BigNumber(String(postTotalShares))
   );
+
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const [ethDistributedEvent] = txEvent.filterLog(
+    LIDO_ETHDESTRIBUTED_EVENT,
+    LIDO_ADDRESS
+  );
+  const { postBufferedEther } = ethDistributedEvent.args;
+  const preBufferedEther = await lido.functions.getBufferedEther({
+    blockTag: txEvent.blockNumber - 1,
+  });
+  const bufferDiff = new BigNumber(String(postBufferedEther)).minus(
+    preBufferedEther
+  );
+
   if (requests > 0) {
-    description = `Finalized: ${
-      Number(to) - Number(from)
-    }\nEther: ${ether.toFixed(2)} ETH\nShare rate: ${shareRate.toFixed(5)}`;
+    description =
+      `Finalized: ${Number(to) - Number(from)}\nEther: ${ether.toFixed(
+        2
+      )} ETH\nShare rate: ${shareRate.toFixed(5)}` +
+      `\nBuffered ether used for withdrawal finalization: ${
+        bufferDiff.lt(0)
+          ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(2)
+          : "0.00"
+      } ETH`;
   }
   return `*Requests finalization*\n${description}`;
 }
