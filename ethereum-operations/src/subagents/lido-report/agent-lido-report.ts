@@ -324,7 +324,7 @@ async function handleRebaseDigest(
     prepareAPRLines(txEvent, findings),
     prepareRewardsLines(txEvent, findings),
     prepareValidatorsCountLines(txEvent),
-    await prepareWithdrawnLines(txEvent),
+    prepareWithdrawnLines(txEvent),
     await prepareRequestsFinalizationLines(txEvent),
     prepareSharesBurntLines(txEvent),
   ];
@@ -550,9 +550,7 @@ function prepareValidatorsCountLines(txEvent: TransactionEvent): string {
   } newly appeared)`;
 }
 
-async function prepareWithdrawnLines(
-  txEvent: TransactionEvent
-): Promise<string> {
+function prepareWithdrawnLines(txEvent: TransactionEvent): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
     LIDO_ADDRESS
