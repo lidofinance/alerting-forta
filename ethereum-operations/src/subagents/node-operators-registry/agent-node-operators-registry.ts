@@ -22,7 +22,7 @@ const {
   STAKING_ROUTER_ADDRESS,
   MOTION_ENACTED_EVENT,
   SIGNING_KEY_REMOVED_EVENT,
-  NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+  NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
   NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
   NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
@@ -237,7 +237,7 @@ function handleSigningKeysRemoved(
 function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const noLimitEvents = txEvent.filterLog(
-      NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
+      NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
       NODE_OPERATORS_REGISTRY_ADDRESS
     );
     const motionEnactedEvents = txEvent.filterLog(
@@ -248,9 +248,9 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
       if (motionEnactedEvents.length < 1) {
         findings.push(
           Finding.fromObject({
-            name: "🚨 NO Stake limit set by NON-EasyTrack action",
-            description: `Staking limit for node operator ${event.args.id} was set to ${event.args.stakingLimit} by NON-EasyTrack motion!`,
-            alertId: "NODE-OPERATORS-STAKING-LIMIT-SET",
+            name: "🚨 NO Vetted keys set by NON-EasyTrack action",
+            description: `Vetted keys count for node operator ${event.args.nodeOperatorId} was set to ${event.args.approvedValidatorsCount} by NON-EasyTrack motion!`,
+            alertId: "NODE-OPERATORS-VETTED-KEYS-SET",
             severity: FindingSeverity.High,
             type: FindingType.Info,
           })
