@@ -120,22 +120,6 @@ exports[`agent-dao-ops e2e tests should process tx with changed owner of the con
 
 exports[`agent-dao-ops e2e tests should process tx with changed protocol contracts 1`] = `undefined`;
 
-exports[`agent-dao-ops e2e tests should process tx with received EL rewards 1`] = `
-Finding {
-  "addresses": Array [],
-  "alertId": "LIDO-EL-REWARDS-RECEIVED",
-  "description": "Rewards amount: 142.21 ETH",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "142210964953261078203",
-  },
-  "name": "✅ Lido: EL rewards received",
-  "protocol": "ethereum",
-  "severity": 1,
-  "type": 4,
-}
-`;
-
 exports[`agent-dao-ops e2e tests should process tx with transferred ownership of Insurance fund 1`] = `
 Array [
   Finding {

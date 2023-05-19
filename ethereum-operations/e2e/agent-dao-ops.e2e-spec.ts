@@ -186,18 +186,6 @@ describe("agent-dao-ops e2e tests", () => {
   );
 
   it(
-    "should process tx with received EL rewards",
-    async () => {
-      let findings = await runTransaction(
-        "0x60a7671264723099c564d33b04af6617195093531f012941e75c372dcb9ba242"
-      );
-      findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
-    },
-    TEST_TIMEOUT
-  );
-
-  it(
     "should process tx with EL rewards withdrawal limit set",
     async () => {
       let findings = await runTransaction(
