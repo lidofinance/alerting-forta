@@ -15,8 +15,8 @@ export const MOTION_ENACTED_EVENT =
 export const SIGNING_KEY_REMOVED_EVENT =
   "event SigningKeyRemoved(uint256 indexed operatorId, bytes pubkey)";
 
-export const NODE_OPERATOR_STAKING_LIMIT_SET_EVENT =
-  "event NodeOperatorStakingLimitSet(uint256 indexed id, uint64 stakingLimit)";
+export const NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT =
+  "event VettedSigningKeysCountChanged(uint256 indexed nodeOperatorId, uint256 approvedValidatorsCount)";
 
 export const NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT =
   "event ExitedSigningKeysCountChanged(uint256 indexed nodeOperatorId, uint256 exitedValidatorsCount)";
@@ -30,11 +30,11 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event:
-      "event NodeOperatorAdded(uint256 id, string name, address rewardAddress, uint64 stakingLimit)",
+      "event NodeOperatorAdded(uint256 nodeOperatorId, string name, address rewardAddress, uint64 stakingLimit)",
     alertId: "NODE-OPERATOR-ADDED",
     name: "ℹ️ NO Registry: Node operator added",
     description: (args: any) =>
-      `Node operator ${args.id} added\n` +
+      `Node operator ${args.nodeOperatorId} added\n` +
       `Name: ${args.name}\n` +
       `Reward address: ${etherscanAddress(args.rewardAddress)}\n` +
       `StakingLimit: ${args.stakingLimit}`,
@@ -42,11 +42,11 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   },
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
-    event: "event NodeOperatorActiveSet(uint256 indexed id, bool active)",
+    event: "event NodeOperatorActiveSet(uint256 indexed nodeOperatorId, bool active)",
     alertId: "NODE-OPERATOR-ACTIVE-SET",
     name: "ℹ️ NO Registry: Node operator active set",
     description: (args: any) =>
-      `Node operator ${args.id} active status set to ${args.active}`,
+      `Node operator ${args.nodeOperatorId} active status set to ${args.active}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -96,16 +96,6 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     name: "⚠️ NO Registry: Locator contract set",
     description: (args: any) =>
       `Locator contract set to ${etherscanAddress(args.locatorAddress)}`,
-    severity: FindingSeverity.High,
-  },
-  {
-    address: NODE_OPERATORS_REGISTRY_ADDRESS,
-    event:
-      "event VettedSigningKeysCountChanged(uint256 indexed nodeOperatorId, uint256 approvedValidatorsCount)",
-    alertId: "NOR-VETTED-SIGNING-KEYS-COUNT-CHANGED",
-    name: "⚠️ NO Registry: Vetted signing keys count changed",
-    description: (args: any) =>
-      `Node operator ${args.nodeOperatorId} vetted signing keys count changed to ${args.approvedValidatorsCount}`,
     severity: FindingSeverity.High,
   },
   {
