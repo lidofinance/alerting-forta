@@ -17,6 +17,12 @@ export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 
 export const LIDO_ETHDESTRIBUTED_EVENT =
   "event ETHDistributed(uint256 indexed reportTimestamp, uint256 preCLBalance, uint256 postCLBalance, uint256 withdrawalsWithdrawn, uint256 executionLayerRewardsWithdrawn, uint256 postBufferedEther)";
+export const LIDO_ELREWARDSRECEIVED_EVENT =
+  "event ELRewardsReceived(uint256 amount)";
+export const LIDO_WITHDRAWALSRECEIVED_EVENT =
+  "event WithdrawalsReceived(uint256 amount)";
+export const LIDO_VALIDATORS_UPDATED_EVENT =
+  "event CLValidatorsUpdated(uint256 indexed reportTimestamp, uint256 preCLValidators, uint256 postCLValidators)";
 export const LIDO_SHARES_BURNT_EVENT =
   "event SharesBurnt(address indexed account, uint256 preRebaseTokenAmount, uint256 postRebaseTokenAmount, uint256 sharesAmount)";
 export const LIDO_TOKEN_REBASED_EVENT =

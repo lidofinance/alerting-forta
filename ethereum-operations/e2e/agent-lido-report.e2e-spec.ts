@@ -60,4 +60,15 @@ describe("agent-lido-report e2e tests", () => {
     },
     TEST_TIMEOUT
   );
+
+  it(
+    "should process tx with Lido rebase digest",
+    async () => {
+      const findings = await runTransaction(
+        "0xbf52777e4dd583d52104be96f7da420be977faeee97cc25a89d6c81fa919056f"
+      );
+      expect(findings.at(0)).toMatchSnapshot();
+    },
+    TEST_TIMEOUT
+  );
 });

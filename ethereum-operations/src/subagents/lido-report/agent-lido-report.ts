@@ -36,6 +36,9 @@ const {
   NODE_OPERATOR_REGISTRY_MODULE_ID,
   ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
   LIDO_ETHDESTRIBUTED_EVENT,
+  LIDO_ELREWARDSRECEIVED_EVENT,
+  LIDO_WITHDRAWALSRECEIVED_EVENT,
+  LIDO_VALIDATORS_UPDATED_EVENT,
   LIDO_SHARES_BURNT_EVENT,
   LIDO_TOKEN_REBASED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
@@ -55,7 +58,8 @@ const {
 export const name = "LidoReport";
 
 // re-fetched from history on startup
-let lastCLrewards = new BigNumber(0);
+let lastCLrewards = BN_ZERO;
+let lastELrewards = BN_ZERO;
 let lastAllExited = 0;
 let lastAllStuck = 0;
 let lastAllRefunded = 0;
@@ -89,12 +93,35 @@ export async function initialize(
     currentBlock - 1
   );
   if (ethDistributedEvents.length > 0) {
-    const { preCLBalance, postCLBalance, withdrawalsWithdrawn } =
-      ethDistributedEvents[ethDistributedEvents.length - 1].args as any;
-    lastCLrewards = new BigNumber(String(postCLBalance))
-      .minus(String(preCLBalance))
-      .plus(String(withdrawalsWithdrawn))
-      .div(ETH_DECIMALS);
+    const lastEvent = ethDistributedEvents[ethDistributedEvents.length - 1];
+
+    const [withdrawalsReceivedEvent] = await lido.queryFilter(
+      lido.filters.WithdrawalsReceived(),
+      lastEvent.blockNumber,
+      lastEvent.blockNumber
+    );
+    const [elRewardsReceivedEvent] = await lido.queryFilter(
+      lido.filters.ELRewardsReceived(),
+      lastEvent.blockNumber,
+      lastEvent.blockNumber
+    );
+    if (withdrawalsReceivedEvent) {
+      const { preCLBalance, postCLBalance } = ethDistributedEvents[
+        ethDistributedEvents.length - 1
+      ].args as any;
+
+      lastCLrewards = new BigNumber(String(postCLBalance))
+        .minus(String(preCLBalance))
+        .plus(
+          String(new BigNumber(String(withdrawalsReceivedEvent.args?.amount)))
+        )
+        .div(ETH_DECIMALS);
+    }
+    if (elRewardsReceivedEvent) {
+      lastELrewards = new BigNumber(
+        String(elRewardsReceivedEvent.args?.amount)
+      ).div(ETH_DECIMALS);
+    }
   }
 
   return {};
@@ -228,9 +255,9 @@ async function handleBurnerUnburntSharesOverfill(
           name: `⚠️ Burner overfilled: unburnt shares are more than ${OVERFILL_THRESHOLD_PERCENT}% of total shares`,
           description: `Unburnt: ${unburntShares
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nTotal shares: ${totalShares
+            .toFixed(3)} 1e18\nTotal shares: ${totalShares
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH`,
+            .toFixed(3)} 1e18`,
           alertId: "LIDO-BURNER-UNBURNT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -245,21 +272,83 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   if (txEvent.to === ACCOUNTING_ORACLE_ADDRESS) {
-    await handleExitedStuckRefundedKeysDigest(txEvent, findings);
-    handleWithdrawalsFinalizationDigest(txEvent, findings);
-    handleRebaseDigest(txEvent, findings);
-    handleAPR(txEvent, findings);
+    await Promise.all([
+      handleExitedStuckRefundedKeysDigest(txEvent, findings),
+      handleRebaseDigest(txEvent, findings),
+    ]);
   }
 
   return findings;
 }
 
-function handleAPR(txEvent: TransactionEvent, findings: Finding[]) {
+async function handleExitedStuckRefundedKeysDigest(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  const [extraDataSubmittedEvent] = txEvent.filterLog(
+    ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
+    ACCOUNTING_ORACLE_ADDRESS
+  );
+  if (!extraDataSubmittedEvent) return;
+  const { allExited, allStuck, allRefunded } = await getSummaryDigest(
+    txEvent.blockNumber
+  );
+  const newExited = allExited - lastAllExited;
+  const newStuck = allStuck - lastAllStuck;
+  const newRefunded = allRefunded - lastAllRefunded;
+  if (newExited == 0 && newStuck == 0 && newRefunded == 0) return;
+  findings.push(
+    Finding.fromObject({
+      name: "ℹ️ Lido Report: new exited, stuck and refunded keys digest",
+      description: `New exited: ${newExited}\nNew stuck: ${newStuck}\nNew refunded: ${newRefunded}`,
+      alertId: "LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+    })
+  );
+  lastAllStuck = allStuck;
+  lastAllRefunded = allRefunded;
+  lastAllExited = allExited;
+}
+
+async function handleRebaseDigest(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  const [ethDistributedEvent] = txEvent.filterLog(
+    LIDO_ETHDESTRIBUTED_EVENT,
+    LIDO_ADDRESS
+  );
+  if (!ethDistributedEvent) return;
+
+  const lines = [
+    prepareAPRLines(txEvent, findings),
+    prepareRewardsLines(txEvent, findings),
+    prepareValidatorsCountLines(txEvent),
+    await prepareWithdrawnLines(txEvent),
+    prepareRequestsFinalizationLines(txEvent),
+    prepareSharesBurntLines(txEvent),
+  ];
+
+  findings.push(
+    Finding.fromObject({
+      name: "ℹ️ Lido Report: rebase digest",
+      description: lines.filter((l) => l != undefined).join("\n\n"),
+      alertId: "LIDO-REPORT-REBASE-DIGEST",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+    })
+  );
+}
+
+function prepareAPRLines(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+): string | undefined {
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
     LIDO_ADDRESS
   );
-  if (!tokenRebasedEvent) return;
   lastRebaseEventTimestamp = txEvent.block.timestamp;
   let timeElapsed = new BigNumber(String(tokenRebasedEvent.args.timeElapsed));
   let preTotalShares = new BigNumber(
@@ -293,8 +382,6 @@ function handleAPR(txEvent: TransactionEvent, findings: Finding[]) {
       ? `+${etherDiffPercent.toFixed(2)}`
       : etherDiffPercent.toFixed(2);
 
-  let severity = FindingSeverity.Info;
-  let name = "ℹ️ Lido Report: APR stats";
   const apr = calculateAPR(
     timeElapsed,
     preTotalShares,
@@ -302,113 +389,128 @@ function handleAPR(txEvent: TransactionEvent, findings: Finding[]) {
     postTotalShares,
     postTotalEther
   );
+
+  let findingName: string = "";
+  let findingSeverity: FindingSeverity = FindingSeverity.Info;
+  let digestAprStr = `APR: ${apr.times(100).toFixed(2)}%`;
   if (apr.gte(LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD)) {
-    name = `⚠️ Lido Report: APR is greater than ${
+    findingName = `🚨️ Lido Report: APR is greater than ${
       LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100
     }% limit`;
-    severity = FindingSeverity.High;
+    digestAprStr += ` 🚨️ > ${LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100}%`;
+    findingSeverity = FindingSeverity.High;
   } else if (apr.gte(LIDO_REPORT_HIGH_APR_THRESHOLD)) {
-    name = `⚠️ Lido Report: APR is greater than ${
+    findingName = `⚠️ Lido Report: APR is greater than ${
       LIDO_REPORT_HIGH_APR_THRESHOLD * 100
     }%`;
-    severity = FindingSeverity.Medium;
+    digestAprStr += ` ⚠️ > ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
+    findingSeverity = FindingSeverity.Medium;
   } else if (apr.lte(LIDO_REPORT_LOW_APR_THRESHOLD)) {
-    name = `⚠️ Lido Report: APR is less than ${
+    findingName = `🚨️️ Lido Report: APR is less than ${
       LIDO_REPORT_LOW_APR_THRESHOLD * 100
     }%`;
-    severity = FindingSeverity.High;
+    digestAprStr += ` 🚨 < ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
+    findingSeverity = FindingSeverity.High;
   }
 
-  findings.push(
-    Finding.fromObject({
-      name: name,
-      alertId: "LIDO-REPORT-APR-STATS",
-      description: `APR: ${apr
-        .times(100)
-        .toFixed(2)}%\nTime elapsed: ${formatDelay(
-        Number(timeElapsed)
-      )}\nTotal shares: ${preTotalShares
-        .div(ETH_DECIMALS)
-        .toFixed(3)} -> ${postTotalShares
-        .div(ETH_DECIMALS)
-        .toFixed(
-          3
-        )} ETH (${strSharesDiffPercent}%)\nTotal ether: ${preTotalEther
-        .div(ETH_DECIMALS)
-        .toFixed(3)} -> ${postTotalEther
-        .div(ETH_DECIMALS)
-        .toFixed(3)} ETH (${strEtherDiffPercent}%)`,
-      severity: severity,
-      type: FindingType.Info,
-    })
-  );
+  const additionalDescription = `Total shares: ${preTotalShares
+    .div(ETH_DECIMALS)
+    .toFixed(3)} -> ${postTotalShares
+    .div(ETH_DECIMALS)
+    .toFixed(
+      3
+    )} 1e18 (${strSharesDiffPercent}%)\nTotal pooled ether: ${preTotalEther
+    .div(ETH_DECIMALS)
+    .toFixed(3)} -> ${postTotalEther
+    .div(ETH_DECIMALS)
+    .toFixed(3)} ETH (${strEtherDiffPercent}%)\nTime elapsed: ${formatDelay(
+    Number(timeElapsed)
+  )}`;
+
+  if (findingName != "") {
+    findings.push(
+      Finding.fromObject({
+        name: findingName,
+        alertId: "LIDO-UNUSUAL-REPORT-APR-STATS",
+        description: `APR: ${apr
+          .times(100)
+          .toFixed(2)}%\n${additionalDescription}`,
+        severity: findingSeverity,
+        type: FindingType.Info,
+      })
+    );
+  }
+
+  return `*APR stats*\n${digestAprStr}\n${additionalDescription}`;
 }
 
-function handleRebaseDigest(txEvent: TransactionEvent, findings: Finding[]) {
+function prepareRewardsLines(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
     LIDO_ADDRESS
   );
-  if (!ethDistributedEvent) return;
-  const [sharesBurntEvent] = txEvent.filterLog(
-    LIDO_SHARES_BURNT_EVENT,
+  const [withdrawalsReceivedEvent] = txEvent.filterLog(
+    LIDO_WITHDRAWALSRECEIVED_EVENT,
     LIDO_ADDRESS
   );
-  const sharesBurnt = sharesBurntEvent
-    ? new BigNumber(String(sharesBurntEvent.args.sharesAmount)).div(
-        ETH_DECIMALS
-      )
-    : new BigNumber(0);
-  const {
-    preCLBalance,
-    postCLBalance,
-    withdrawalsWithdrawn,
-    executionLayerRewardsWithdrawn,
-  } = ethDistributedEvent.args;
-  const clRewards = new BigNumber(String(postCLBalance))
-    .minus(new BigNumber(String(preCLBalance)))
-    .plus(new BigNumber(String(withdrawalsWithdrawn)))
-    .div(ETH_DECIMALS);
-  const elRewards = new BigNumber(String(executionLayerRewardsWithdrawn)).div(
-    ETH_DECIMALS
-  );
-  const withdrawals = new BigNumber(String(withdrawalsWithdrawn)).div(
-    ETH_DECIMALS
+  const [elRewardsReceivedEvent] = txEvent.filterLog(
+    LIDO_ELREWARDSRECEIVED_EVENT,
+    LIDO_ADDRESS
   );
 
+  const { preCLBalance, postCLBalance } = ethDistributedEvent.args;
+  const clValidatorsBalanceDiff = new BigNumber(String(postCLBalance)).minus(
+    new BigNumber(String(preCLBalance))
+  );
+  const withdrawalsReceived = withdrawalsReceivedEvent
+    ? new BigNumber(String(withdrawalsReceivedEvent.args.amount))
+    : BN_ZERO;
+  const clRewards = clValidatorsBalanceDiff
+    .plus(withdrawalsReceived)
+    .div(ETH_DECIMALS);
+  const elRewards = elRewardsReceivedEvent
+    ? new BigNumber(String(elRewardsReceivedEvent.args.amount)).div(
+        ETH_DECIMALS
+      )
+    : BN_ZERO;
+
   lastCLrewards = lastCLrewards.eq(BN_ZERO) ? clRewards : lastCLrewards;
+  lastELrewards = lastELrewards.eq(BN_ZERO) ? elRewards : lastELrewards;
   const clRewardsDiff = clRewards.minus(lastCLrewards);
+  const elRewardsDiff = elRewards.minus(lastELrewards);
+  const totalRewardsDiff = clRewardsDiff.plus(elRewardsDiff);
   const strCLRewardsDiff =
     Number(clRewardsDiff) > 0
       ? `+${clRewardsDiff.toFixed(3)}`
       : clRewardsDiff.toFixed(3);
+  const strELRewardsDiff =
+    Number(elRewardsDiff) > 0
+      ? `+${elRewardsDiff.toFixed(3)}`
+      : elRewardsDiff.toFixed(3);
+  const strTotalRewardsDiff =
+    Number(totalRewardsDiff) > 0
+      ? `+${totalRewardsDiff.toFixed(3)}`
+      : totalRewardsDiff.toFixed(3);
 
-  findings.push(
-    Finding.fromObject({
-      name: "ℹ️ Lido Report: rebase digest",
-      description: `CL rewards (includes withdrawn from WithdrawalVault): ${clRewards.toFixed(
-        3
-      )} ETH (${strCLRewardsDiff} ETH)\nWithdrawn EL rewards: ${elRewards.toFixed(
-        3
-      )} ETH\nWithdrawn from WithdrawalVault: ${withdrawals.toFixed(
-        3
-      )} ETH\nShares burnt: ${sharesBurnt.toFixed(3)} ETH`,
-      alertId: "LIDO-REPORT-REBASE-DIGEST",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-    })
-  );
+  let strCLRewards = `CL rewards: ${clRewards.toFixed(
+    3
+  )} (${strCLRewardsDiff}) ETH`;
 
   const clRewardsDiffPercent = clRewardsDiff.div(lastCLrewards).times(100);
   const strCLRewardsDiffPercent =
     Number(clRewardsDiffPercent) > 0
       ? `+${clRewardsDiffPercent.toFixed(2)}`
       : clRewardsDiffPercent.toFixed(2);
-
   if (
     Number(clRewardsDiffPercent) <
     -LIDO_REPORT_CL_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM
   ) {
+    strCLRewards =
+      `️CL rewards: ${clRewards.toFixed(3)} ETH 🚨️ decreased ` +
+      `by ${clRewardsDiff.toFixed(3)} ETH (${strCLRewardsDiffPercent}%)`;
     const severity =
       Number(clRewardsDiffPercent) <
       -LIDO_REPORT_CL_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH
@@ -430,67 +532,118 @@ function handleRebaseDigest(txEvent: TransactionEvent, findings: Finding[]) {
   }
 
   lastCLrewards = clRewards;
+  lastELrewards = elRewards;
+
+  return `*Rewards*\n${strCLRewards}\nEL rewards: ${elRewards.toFixed(
+    3
+  )} (${strELRewardsDiff}) ETH\nTotal: ${clRewards
+    .plus(elRewards)
+    .toFixed(3)} (${strTotalRewardsDiff}) ETH`;
 }
 
-async function handleExitedStuckRefundedKeysDigest(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
-  const [extraDataSubmittedEvent] = txEvent.filterLog(
-    ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
-    ACCOUNTING_ORACLE_ADDRESS
+function prepareValidatorsCountLines(txEvent: TransactionEvent): string {
+  const [validatorsUpdated] = txEvent.filterLog(
+    LIDO_VALIDATORS_UPDATED_EVENT,
+    LIDO_ADDRESS
   );
-  if (!extraDataSubmittedEvent) return;
-  const { allExited, allStuck, allRefunded } = await getSummaryDigest(
-    txEvent.blockNumber
-  );
-  const newExited = allExited - lastAllExited;
-  const newStuck = allStuck - lastAllStuck;
-  const newRefunded = allRefunded - lastAllRefunded;
-  if (newExited == 0 && newStuck == 0 && newRefunded == 0) return;
-  findings.push(
-    Finding.fromObject({
-      name: "ℹ️ Lido Report: new exited, stuck and refunded keys digest",
-      description: `New exited: ${newExited}\nNew stuck: ${newStuck}\nNew refunded: ${newRefunded}`,
-      alertId: "LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-    })
-  );
-  lastAllStuck = allStuck;
-  lastAllRefunded = allRefunded;
-  lastAllExited = allExited;
+  const { preCLValidators, postCLValidators } = validatorsUpdated.args;
+  return `*Validators*\nCount: ${postCLValidators} (${
+    Number(postCLValidators) - Number(preCLValidators)
+  } newly appeared)`;
 }
 
-function handleWithdrawalsFinalizationDigest(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
+async function prepareWithdrawnLines(
+  txEvent: TransactionEvent
+): Promise<string> {
+  const [ethDistributedEvent] = txEvent.filterLog(
+    LIDO_ETHDESTRIBUTED_EVENT,
+    LIDO_ADDRESS
+  );
+  const [elRewardsReceivedEvent] = txEvent.filterLog(
+    LIDO_ELREWARDSRECEIVED_EVENT,
+    LIDO_ADDRESS
+  );
+
+  const elRewardsReceived = elRewardsReceivedEvent
+    ? new BigNumber(String(elRewardsReceivedEvent.args.amount))
+    : BN_ZERO;
+
+  const {
+    withdrawalsWithdrawn,
+    executionLayerRewardsWithdrawn,
+    postBufferedEther,
+  } = ethDistributedEvent.args;
+  const wdWithdrawn = new BigNumber(String(withdrawalsWithdrawn)).div(
+    ETH_DECIMALS
+  );
+  const elWithdrawn = new BigNumber(String(executionLayerRewardsWithdrawn));
+  const elWithdrawnReceivedDiff = elRewardsReceived.minus(elWithdrawn);
+
+  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const preBufferedEther = await lido.functions.getBufferedEther({
+    blockTag: txEvent.blockNumber - 1,
+  });
+  const bufferDiff = new BigNumber(String(postBufferedEther)).minus(
+    preBufferedEther
+  );
+
+  return `*Withdrawn from*\nWithdrawal Vault: ${wdWithdrawn.toFixed(
+    3
+  )} ETH\nEL Vault: ${elWithdrawn.div(ETH_DECIMALS).toFixed(3)} ETH${
+    elWithdrawnReceivedDiff.gt(0)
+      ? ` ⚠️ ${elWithdrawnReceivedDiff
+          .div(ETH_DECIMALS)
+          .toFixed(3)} ETH left on the vault`
+      : ""
+  }\nBuffer: ${
+    bufferDiff.lt(0)
+      ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(3)
+      : "0.000"
+  } ETH`;
+}
+
+function prepareRequestsFinalizationLines(txEvent: TransactionEvent): string {
   const [withdrawalsFinalizedEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
     WITHDRAWAL_QUEUE_ADDRESS
   );
-  if (!withdrawalsFinalizedEvent) return;
-  const { from, to, amountOfETHLocked, sharesToBurn } =
-    withdrawalsFinalizedEvent.args;
-  const ether = new BigNumber(String(amountOfETHLocked)).div(ETH_DECIMALS);
-  const shares = new BigNumber(String(sharesToBurn)).div(ETH_DECIMALS);
-  const requests = Number(to) - Number(from);
-  let description = "No one finalized requests";
-  if (requests > 0) {
-    description = `Requests: ${
-      Number(to) - Number(from)
-    }\nShares: ${shares.toFixed(2)} ETH\nEther: ${ether.toFixed(2)} ETH`;
+  let description = "No finalized requests";
+  if (!withdrawalsFinalizedEvent) {
+    return `*Requests finalisation*\n${description}`;
   }
-  findings.push(
-    Finding.fromObject({
-      name: "ℹ️ Lido Report: withdrawals finalization digest",
-      description: description,
-      alertId: "LIDO-REPORT-WITHDRAWALS-FINALIZATION-DIGEST",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-    })
+  const [tokenRebasedEvent] = txEvent.filterLog(
+    LIDO_TOKEN_REBASED_EVENT,
+    LIDO_ADDRESS
   );
+  const { postTotalEther, postTotalShares } = tokenRebasedEvent.args;
+  const { from, to, amountOfETHLocked } = withdrawalsFinalizedEvent.args;
+  const ether = new BigNumber(String(amountOfETHLocked)).div(ETH_DECIMALS);
+  const requests = Number(to) - Number(from);
+  const shareRate = new BigNumber(String(postTotalEther)).div(
+    new BigNumber(String(postTotalShares))
+  );
+  if (requests > 0) {
+    description = `Finalized: ${
+      Number(to) - Number(from)
+    }\nEther: ${ether.toFixed(3)} ETH\nShare rate: ${shareRate.toFixed(5)}`;
+  }
+  return `*Requests finalization*\n${description}`;
+}
+
+function prepareSharesBurntLines(txEvent: TransactionEvent): string {
+  const [sharesBurntEvent] = txEvent.filterLog(
+    LIDO_SHARES_BURNT_EVENT,
+    LIDO_ADDRESS
+  );
+  if (!sharesBurntEvent) {
+    return `*Shares*\nNo shares burnt`;
+  }
+  const sharesBurnt = sharesBurntEvent
+    ? new BigNumber(String(sharesBurntEvent.args.sharesAmount)).div(
+        ETH_DECIMALS
+      )
+    : new BigNumber(0);
+  return `*Shares*\nBurnt: ${sharesBurnt.toFixed(3)} 1e18`;
 }
 
 async function getSummaryDigest(block: number) {

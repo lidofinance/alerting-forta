@@ -150,28 +150,6 @@ export const LIDO_EVENTS_OF_NOTICE = [
   },
   {
     address: LIDO_ADDRESS,
-    event: "event ELRewardsReceived(uint256 amount)",
-    alertId: "LIDO-EL-REWARDS-RECEIVED",
-    name: "✅ Lido: EL rewards received",
-    description: (args: any) =>
-      `Rewards amount: ${new BigNumber(String(args.amount))
-        .div(ETH_DECIMALS)
-        .toFixed(2)} ETH`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: LIDO_ADDRESS,
-    event: "event WithdrawalsReceived(uint256 amount)",
-    alertId: "LIDO-WITHDRAWALS-RECEIVED",
-    name: "✅ Lido: Withdrawals received",
-    description: (args: any) =>
-      `Withdrawals amount: ${new BigNumber(String(args.amount))
-        .div(ETH_DECIMALS)
-        .toFixed(2)} ETH`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: LIDO_ADDRESS,
     event: "event RecoverToVault(address vault, address token, uint256 amount)",
     alertId: "LIDO-RECOVER-TO-VAULT",
     name: "ℹ️ Lido: Funds recovered to vault",

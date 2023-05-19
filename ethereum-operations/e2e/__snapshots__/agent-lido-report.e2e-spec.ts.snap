@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-lido-report e2e tests should process tx with Lido rebase digest 1`] = `
+Finding {
+  "addresses": Array [],
+  "alertId": "LIDO-REPORT-REBASE-DIGEST",
+  "description": "*APR stats*
+APR: 5.26%
+Total shares: 5646066.679 -> 5644434.777 1e18 (-0.03%)
+Total pooled ether: 6349026.643 -> 6348106.239 ETH (-0.01%)
+Time elapsed: 24 hrs 0 sec
+
+*Rewards*
+CL rewards: 623.374 (+0.248) ETH
+EL rewards: 392.917 (+51.693) ETH
+Total: 1016.291 (+51.940) ETH
+
+*Validators*
+Count: 196087 (0 newly appeared)
+
+*Withdrawn from*
+Withdrawal Vault: 756.285 ETH
+EL Vault: 392.917 ETH
+Buffer: 787.493 ETH
+
+*Requests finalization*
+Finalized: 41
+Ether: 1936.695 ETH
+Share rate: 1.12467
+
+*Shares*
+Burnt: 1722.266 1e18",
+  "labels": Array [],
+  "metadata": Object {},
+  "name": "ℹ️ Lido Report: rebase digest",
+  "protocol": "ethereum",
+  "severity": 1,
+  "type": 4,
+}
+`;
