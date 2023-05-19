@@ -153,15 +153,6 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
 export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
   {
     address: EXITBUS_ORACLE_ADDRESS,
-    event: EXITBUS_ORACLE_PROCESSING_STARTED_EVENT,
-    alertId: "EXITBUS-ORACLE-PROCESSING-STARTED",
-    name: "ℹ️ ExitBus Oracle: Processing Started",
-    description: (args: any) =>
-      `Reference slot: ${args.refSlot}\nHash: ${args.hash}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: EXITBUS_ORACLE_ADDRESS,
     event:
       "event ConsensusHashContractSet(address indexed addr, address indexed prevAddr)",
     alertId: "EXITBUS-ORACLE-CONSENSUS-HASH-CONTRACT-SET",

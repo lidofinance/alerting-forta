@@ -277,7 +277,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
   findings.push(
     Finding.fromObject({
       name: "ℹ️ ExitBus Oracle: Report Submitted",
-      description: `Reference slot: ${submitted.args.refSlot}\nHash: ${submitted.args.hash}`,
+      description: `Reference slot: ${submitted.args.refSlot}\nReport hash: ${submitted.args.hash}`,
       alertId: "EXITBUS-ORACLE-REPORT-SUBMITTED",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
