@@ -6,8 +6,8 @@ Finding {
   "alertId": "LIDO-REPORT-REBASE-DIGEST",
   "description": "*APR stats*
 APR: 5.26%
-Total shares: 5646066.68 -> 5644434.78 × 1e18 (-0.03%)
-Total pooled ether: 6349026.64 -> 6348106.24 ETH (-0.01%)
+Total shares: 5644434.78 (-1631.90) × 1e18
+Total pooled ether: 6348106.24 (-920.40) ETH
 Time elapsed: 24 hrs 0 sec
 
 *Rewards*
@@ -26,7 +26,7 @@ EL Vault: 392.92 ETH
 Finalized: 41
 Ether: 1936.70 ETH
 Share rate: 1.12467
-Buffered ether used for withdrawal finalization: 787.49 ETH
+Used buffer: 787.49 ETH
 
 *Shares*
 Burnt: 1722.27 × 1e18",

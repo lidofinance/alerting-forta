@@ -363,23 +363,15 @@ function prepareAPRLines(
     String(tokenRebasedEvent.args.postTotalEther)
   );
 
-  const sharesDiffPercent = postTotalShares
+  const sharesDiffStr = postTotalShares
     .minus(preTotalShares)
-    .div(preTotalShares)
-    .times(100);
-  const strSharesDiffPercent =
-    Number(sharesDiffPercent) > 0
-      ? `+${sharesDiffPercent.toFixed(2)}`
-      : sharesDiffPercent.toFixed(2);
+    .div(ETH_DECIMALS)
+    .toFixed(2);
 
-  const etherDiffPercent = postTotalEther
+  const etherDiffStr = postTotalEther
     .minus(preTotalEther)
-    .div(preTotalEther)
-    .times(100);
-  const strEtherDiffPercent =
-    Number(etherDiffPercent) > 0
-      ? `+${etherDiffPercent.toFixed(2)}`
-      : etherDiffPercent.toFixed(2);
+    .div(ETH_DECIMALS)
+    .toFixed(2);
 
   const apr = calculateAPR(
     timeElapsed,
@@ -412,19 +404,14 @@ function prepareAPRLines(
     findingSeverity = FindingSeverity.High;
   }
 
-  const additionalDescription = `Total shares: ${preTotalShares
-    .div(ETH_DECIMALS)
-    .toFixed(2)} -> ${postTotalShares
-    .div(ETH_DECIMALS)
-    .toFixed(
-      2
-    )} × 1e18 (${strSharesDiffPercent}%)\nTotal pooled ether: ${preTotalEther
-    .div(ETH_DECIMALS)
-    .toFixed(2)} -> ${postTotalEther
-    .div(ETH_DECIMALS)
-    .toFixed(2)} ETH (${strEtherDiffPercent}%)\nTime elapsed: ${formatDelay(
-    Number(timeElapsed)
-  )}`;
+  const additionalDescription =
+    `Total shares: ` +
+    `${postTotalShares
+      .div(ETH_DECIMALS)
+      .toFixed(2)} (${sharesDiffStr}) × 1e18` +
+    `\nTotal pooled ether: ` +
+    `${postTotalEther.div(ETH_DECIMALS).toFixed(2)} (${etherDiffStr}) ETH` +
+    `\nTime elapsed: ${formatDelay(Number(timeElapsed))}`;
 
   if (findingName != "") {
     findings.push(
@@ -624,10 +611,10 @@ async function prepareRequestsFinalizationLines(
 
   if (requests > 0) {
     description =
-      `Finalized: ${Number(to) - Number(from)}\nEther: ${ether.toFixed(
-        2
-      )} ETH\nShare rate: ${shareRate.toFixed(5)}` +
-      `\nBuffered ether used for withdrawal finalization: ${
+      `Finalized: ` +
+      `${Number(to) - Number(from)}\nEther: ${ether.toFixed(2)} ETH` +
+      `\nShare rate: ${shareRate.toFixed(5)}` +
+      `\nUsed buffer: ${
         bufferDiff.lt(0)
           ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(2)
           : "0.00"
