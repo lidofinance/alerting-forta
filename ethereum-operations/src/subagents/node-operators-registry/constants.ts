@@ -42,7 +42,8 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   },
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
-    event: "event NodeOperatorActiveSet(uint256 indexed nodeOperatorId, bool active)",
+    event:
+      "event NodeOperatorActiveSet(uint256 indexed nodeOperatorId, bool active)",
     alertId: "NODE-OPERATOR-ACTIVE-SET",
     name: "ℹ️ NO Registry: Node operator active set",
     description: (args: any) =>
