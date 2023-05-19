@@ -248,7 +248,7 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
       Finding.fromObject({
         name: "ℹ️ ExitBus Oracle: Report received",
         description:
-          `Member ${event.args.member} ` +
+          `Member ${etherscanAddress(event.args.member)} ` +
           `(${getMemberName(
             EXITBUS_ORACLE_MEMBERS,
             event.args.member.toLocaleLowerCase()
@@ -312,7 +312,7 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
           Finding.fromObject({
             name: "🤔 ExitBus Oracle: sloppy member in fast lane",
             description:
-              `Member ${member} ` +
+              `Member ${etherscanAddress(member)} ` +
               `(${getMemberName(
                 EXITBUS_ORACLE_MEMBERS,
                 member.toLocaleLowerCase()
