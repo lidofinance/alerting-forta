@@ -636,7 +636,7 @@ function prepareSharesBurntLines(txEvent: TransactionEvent): string {
     LIDO_ADDRESS
   );
   if (!sharesBurntEvent) {
-    return `*Shares*\nBurnt: 0.000 1e18`;
+    return `*Shares*\nNo shares burnt`;
   }
   const sharesBurnt = sharesBurntEvent
     ? new BigNumber(String(sharesBurntEvent.args.sharesAmount)).div(
