@@ -406,7 +406,9 @@ function prepareAPRLines(
 
   const additionalDescription =
     `Total shares: ` +
-    `${postTotalShares.div(ETH_DECIMALS).toFixed(2)} (${sharesDiffStr}) × 1e18` +
+    `${postTotalShares
+      .div(ETH_DECIMALS)
+      .toFixed(2)} (${sharesDiffStr}) × 1e18` +
     `\nTotal pooled ether: ` +
     `${postTotalEther.div(ETH_DECIMALS).toFixed(2)} (${etherDiffStr}) ETH` +
     `\nTime elapsed: ${formatDelay(Number(timeElapsed))}`;
