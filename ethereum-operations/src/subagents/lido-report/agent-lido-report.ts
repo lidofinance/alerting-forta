@@ -254,9 +254,8 @@ async function handleBurnerUnburntSharesOverfill(
         Finding.fromObject({
           name: `⚠️ Burner overfilled: unburnt shares are more than ${OVERFILL_THRESHOLD_PERCENT}% of total shares`,
           description:
-            `Unburnt: ${unburntShares.div(ETH_DECIMALS).toFixed(2)} ` +
-            `1e18\nTotal shares: ${totalShares.div(ETH_DECIMALS).toFixed(2)} ` +
-            `1e18`,
+            `Unburnt: ${unburntShares.div(ETH_DECIMALS).toFixed(2)}×1e18` +
+            `\nTotal shares: ${totalShares.div(ETH_DECIMALS).toFixed(2)}×1e18`,
           alertId: "LIDO-BURNER-UNBURNT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -418,7 +417,7 @@ function prepareAPRLines(
     .div(ETH_DECIMALS)
     .toFixed(
       2
-    )} 1e18 (${strSharesDiffPercent}%)\nTotal pooled ether: ${preTotalEther
+    )}×1e18 (${strSharesDiffPercent}%)\nTotal pooled ether: ${preTotalEther
     .div(ETH_DECIMALS)
     .toFixed(2)} -> ${postTotalEther
     .div(ETH_DECIMALS)
@@ -649,7 +648,7 @@ function prepareSharesBurntLines(txEvent: TransactionEvent): string {
         ETH_DECIMALS
       )
     : new BigNumber(0);
-  return `*Shares*\nBurnt: ${sharesBurnt.toFixed(2)} 1e18`;
+  return `*Shares*\nBurnt: ${sharesBurnt.toFixed(2)}×1e18`;
 }
 
 async function getSummaryDigest(block: number) {
