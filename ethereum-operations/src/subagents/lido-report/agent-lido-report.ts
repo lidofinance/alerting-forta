@@ -182,7 +182,7 @@ async function handleELRewardsVaultOverfill(
           name: `⚠️ ELRewardsVault overfilled: balance is more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
           description: `Balance: ${balance
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(3)} ETH`,
+            .toFixed(2)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(2)} ETH`,
           alertId: "LIDO-EL-REWARDS-VAULT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -217,7 +217,7 @@ async function handleWithdrawalsVaultOverfill(
           name: `⚠️ WithdrawalsVault overfilled: balance is more than ${OVERFILL_THRESHOLD_PERCENT}% of TVL`,
           description: `Balance: ${balance
             .div(ETH_DECIMALS)
-            .toFixed(3)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(3)} ETH`,
+            .toFixed(2)} ETH\nTVL: ${tvl.div(ETH_DECIMALS).toFixed(2)} ETH`,
           alertId: "LIDO-WITHDRAWALS-VAULT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -255,9 +255,9 @@ async function handleBurnerUnburntSharesOverfill(
           name: `⚠️ Burner overfilled: unburnt shares are more than ${OVERFILL_THRESHOLD_PERCENT}% of total shares`,
           description: `Unburnt: ${unburntShares
             .div(ETH_DECIMALS)
-            .toFixed(3)} 1e18\nTotal shares: ${totalShares
+            .toFixed(2)} 1e18\nTotal shares: ${totalShares
             .div(ETH_DECIMALS)
-            .toFixed(3)} 1e18`,
+            .toFixed(2)} 1e18`,
           alertId: "LIDO-BURNER-UNBURNT-OVERFILLED",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -415,15 +415,15 @@ function prepareAPRLines(
 
   const additionalDescription = `Total shares: ${preTotalShares
     .div(ETH_DECIMALS)
-    .toFixed(3)} -> ${postTotalShares
+    .toFixed(2)} -> ${postTotalShares
     .div(ETH_DECIMALS)
     .toFixed(
       3
     )} 1e18 (${strSharesDiffPercent}%)\nTotal pooled ether: ${preTotalEther
     .div(ETH_DECIMALS)
-    .toFixed(3)} -> ${postTotalEther
+    .toFixed(2)} -> ${postTotalEther
     .div(ETH_DECIMALS)
-    .toFixed(3)} ETH (${strEtherDiffPercent}%)\nTime elapsed: ${formatDelay(
+    .toFixed(2)} ETH (${strEtherDiffPercent}%)\nTime elapsed: ${formatDelay(
     Number(timeElapsed)
   )}`;
 
@@ -484,16 +484,16 @@ function prepareRewardsLines(
   const totalRewardsDiff = clRewardsDiff.plus(elRewardsDiff);
   const strCLRewardsDiff =
     Number(clRewardsDiff) > 0
-      ? `+${clRewardsDiff.toFixed(3)}`
-      : clRewardsDiff.toFixed(3);
+      ? `+${clRewardsDiff.toFixed(2)}`
+      : clRewardsDiff.toFixed(2);
   const strELRewardsDiff =
     Number(elRewardsDiff) > 0
-      ? `+${elRewardsDiff.toFixed(3)}`
-      : elRewardsDiff.toFixed(3);
+      ? `+${elRewardsDiff.toFixed(2)}`
+      : elRewardsDiff.toFixed(2);
   const strTotalRewardsDiff =
     Number(totalRewardsDiff) > 0
-      ? `+${totalRewardsDiff.toFixed(3)}`
-      : totalRewardsDiff.toFixed(3);
+      ? `+${totalRewardsDiff.toFixed(2)}`
+      : totalRewardsDiff.toFixed(2);
 
   let strCLRewards = `CL rewards: ${clRewards.toFixed(
     3
@@ -509,8 +509,8 @@ function prepareRewardsLines(
     -LIDO_REPORT_CL_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM
   ) {
     strCLRewards =
-      `️CL rewards: ${clRewards.toFixed(3)} ETH 🚨️ decreased ` +
-      `by ${clRewardsDiff.toFixed(3)} ETH (${strCLRewardsDiffPercent}%)`;
+      `️CL rewards: ${clRewards.toFixed(2)} ETH 🚨️ decreased ` +
+      `by ${clRewardsDiff.toFixed(2)} ETH (${strCLRewardsDiffPercent}%)`;
     const severity =
       Number(clRewardsDiffPercent) <
       -LIDO_REPORT_CL_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH
@@ -522,8 +522,8 @@ function prepareRewardsLines(
         description:
           `Rewards decreased from ${lastCLrewards.toFixed(
             3
-          )} ETH to ${clRewards.toFixed(3)} ` +
-          `by ${clRewardsDiff.toFixed(3)} ETH (${strCLRewardsDiffPercent}%)`,
+          )} ETH to ${clRewards.toFixed(2)} ` +
+          `by ${clRewardsDiff.toFixed(2)} ETH (${strCLRewardsDiffPercent}%)`,
         alertId: "LIDO-REPORT-CL-REWARDS-DECREASED",
         severity: severity,
         type: FindingType.Degraded,
@@ -538,7 +538,7 @@ function prepareRewardsLines(
     3
   )} (${strELRewardsDiff}) ETH\nTotal: ${clRewards
     .plus(elRewards)
-    .toFixed(3)} (${strTotalRewardsDiff}) ETH`;
+    .toFixed(2)} (${strTotalRewardsDiff}) ETH`;
 }
 
 function prepareValidatorsCountLines(txEvent: TransactionEvent): string {
@@ -589,15 +589,15 @@ async function prepareWithdrawnLines(
 
   return `*Withdrawn from*\nWithdrawal Vault: ${wdWithdrawn.toFixed(
     3
-  )} ETH\nEL Vault: ${elWithdrawn.div(ETH_DECIMALS).toFixed(3)} ETH${
+  )} ETH\nEL Vault: ${elWithdrawn.div(ETH_DECIMALS).toFixed(2)} ETH${
     elWithdrawnReceivedDiff.gt(0)
       ? ` ⚠️ ${elWithdrawnReceivedDiff
           .div(ETH_DECIMALS)
-          .toFixed(3)} ETH left on the vault`
+          .toFixed(2)} ETH left on the vault`
       : ""
   }\nBuffer: ${
     bufferDiff.lt(0)
-      ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(3)
+      ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(2)
       : "0.000"
   } ETH`;
 }
@@ -625,7 +625,7 @@ function prepareRequestsFinalizationLines(txEvent: TransactionEvent): string {
   if (requests > 0) {
     description = `Finalized: ${
       Number(to) - Number(from)
-    }\nEther: ${ether.toFixed(3)} ETH\nShare rate: ${shareRate.toFixed(5)}`;
+    }\nEther: ${ether.toFixed(2)} ETH\nShare rate: ${shareRate.toFixed(5)}`;
   }
   return `*Requests finalization*\n${description}`;
 }
@@ -643,7 +643,7 @@ function prepareSharesBurntLines(txEvent: TransactionEvent): string {
         ETH_DECIMALS
       )
     : new BigNumber(0);
-  return `*Shares*\nBurnt: ${sharesBurnt.toFixed(3)} 1e18`;
+  return `*Shares*\nBurnt: ${sharesBurnt.toFixed(2)} 1e18`;
 }
 
 async function getSummaryDigest(block: number) {
