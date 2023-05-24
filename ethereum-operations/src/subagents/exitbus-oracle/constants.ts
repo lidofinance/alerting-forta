@@ -2,6 +2,11 @@ import { ethers, FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
+import {
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+} from "../../common/constants";
 
 export const CL_GENESIS_TIMESTEMP = 1606824023;
 
@@ -14,13 +19,11 @@ export const EXITBUS_HASH_CONSENSUS_ADDRESS =
   "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS =
   "0x9305c1dbfe22c12c66339184c0025d7006f0f1cc";
-export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
+export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
-export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
+export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
-export const WITHDRAWALS_QUEUE_ADDRESS =
-  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
+export const WITHDRAWALS_QUEUE_ADDRESS = wqAddress;
 export const WITHDRAWALS_VAULT_ADDRESS =
   "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
 export const EL_REWARDS_VAULT_ADDRESS =

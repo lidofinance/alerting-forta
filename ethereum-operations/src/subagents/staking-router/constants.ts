@@ -1,8 +1,8 @@
 import { FindingSeverity } from "forta-agent";
 import { etherscanAddress } from "../../common/utils";
+import { STAKING_ROUTER_ADDRESS as srAddress } from "../../common/constants";
 
-export const STAKING_ROUTER_ADDRESS =
-  "0xfddf38947afb03c621c71b06c9c70bce73f12999";
+export const STAKING_ROUTER_ADDRESS = srAddress;
 
 export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
   {

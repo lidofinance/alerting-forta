@@ -1,10 +1,13 @@
 import { NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
+import {
+  EASY_TRACK_ADDRESS as etAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+} from "../../common/constants";
 
-export const EASY_TRACK_ADDRESS = "0xAf072C8D368E4DD4A9d4fF6A76693887d6ae92Af";
-export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
-export const STAKING_ROUTER_ADDRESS =
-  "0xa3dbd317e53d363176359e10948ba0b1c0a4c820";
+export const EASY_TRACK_ADDRESS = etAddress;
+export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const STAKING_ROUTER_ADDRESS = srAddress;
 
 export const NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD = 1;
 export const NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD = 5;

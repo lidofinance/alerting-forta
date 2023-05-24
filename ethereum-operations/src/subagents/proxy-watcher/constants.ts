@@ -1,4 +1,13 @@
 import { IProxyContractData } from "../../common/constants";
+import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+  LIDO_ARAGON_VOTING_ADDRESS as votingAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+} from "../../common/constants";
 
 export const implementationFuncShortABI =
   '[{"constant":true,"inputs":[],"name":"implementation","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}]';
@@ -9,14 +18,14 @@ export const ossifiableProxyImplABI =
 export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
   new Map<string, IProxyContractData>([
     [
-      "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+      lidoStethAddress,
       {
         name: "Lido DAO and stETH",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5",
+      norAddress,
       {
         name: "Node Operators Registry",
         shortABI: implementationFuncShortABI,
@@ -44,7 +53,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0x2e59A20f205bB85a89C53f1936454680651E618e",
+      votingAddress,
       {
         name: "Aragon Voting",
         shortABI: implementationFuncShortABI,
@@ -121,21 +130,21 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0xC1d0b3DE6792Bf6b4b37EccdcC24e45978Cfd2Eb",
+      lidoLocatorAddress,
       {
         name: "Lido Locator",
         shortABI: ossifiableProxyImplABI,
       },
     ],
     [
-      "0xFdDf38947aFB03C621C71b06C9C70bce73f12999",
+      srAddress,
       {
         name: "Staking Router",
         shortABI: ossifiableProxyImplABI,
       },
     ],
     [
-      "0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1",
+      wqAddress,
       {
         name: "Withdrawal Queue",
         shortABI: ossifiableProxyImplABI,
@@ -149,7 +158,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0x852deD011285fe67063a08005c71a85690503Cee",
+      accountingOracleAddress,
       {
         name: "Accounting Oracle",
         shortABI: ossifiableProxyImplABI,

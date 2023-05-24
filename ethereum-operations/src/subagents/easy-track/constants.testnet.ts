@@ -1,4 +1,8 @@
 import { EASY_TRACK_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
+import {
+  EASY_TRACK_ADDRESS as etAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+} from "../../common/constants.testnet";
 
 export const INCREASE_STAKING_LIMIT_ADDRESS =
   "0xe033673d83a8a60500bce02abd9007ffab587714";
@@ -6,9 +10,8 @@ export const EVM_SCRIPT_EXECUTOR_ADDRESS =
   "0x3c9aca237b838c59612d79198685e7f20c7fe783";
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS =
   "0x28a08f61ae129d0d8bd4380ae5647e7add0527ca";
-export const EASY_TRACK_ADDRESS = "0xaf072c8d368e4dd4a9d4ff6a76693887d6ae92af";
-export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
+export const EASY_TRACK_ADDRESS = etAddress;
+export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
 export const EASY_TRACK_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({

@@ -1,30 +1,28 @@
 import { INamedRole, roleByName } from "./utils";
+import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  ACCOUNTING_HASH_CONSENSUS_ADDRESS as accountingHashConsensusAddress,
+  LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+  LIDO_ARAGON_VOTING_ADDRESS as votingAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  LIDO_DEPOSIT_SECURITY_ADDRESS as dsAddress,
+  LIDO_BURNER_ADDRESS as burnerAddress,
+} from "../../common/constants";
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
 export const NEW_ROLE_MEMBERS_REPORT_INTERVAL = 60 * 60; // 1h
 
-export const LIDO_LOCATOR_ADDRESS =
-  "0xc1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb";
-export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
-export const NOR_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
 export const LEGACY_ORACLE_ADDRESS =
   "0x442af784a788a5bd6f42a01ebe9f287a871243fb";
-export const DEPOSIT_SECURITY_MODULE_ADDRESS =
-  "0xc77f8768774e1c9244beed705c4354f2113cfc09";
-export const ARAGON_VOTING_ADDRESS =
-  "0x2e59a20f205bb85a89c53f1936454680651e618e";
+export const DEPOSIT_SECURITY_MODULE_ADDRESS = dsAddress;
 export const ARAGON_AGENT_ADDRESS =
   "0x3e40d73eb977dc6a537af587d48316fee66e9c8c";
-export const STAKING_ROUTER_ADDRESS =
-  "0xfddf38947afb03c621c71b06c9c70bce73f12999";
-export const WITHDRAWAL_QUEUE_ADDRESS =
-  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
-export const BURNER_ADDRESS = "0xd15a672319cf0352560ee76d9e89eab0889046d3";
-export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x852ded011285fe67063a08005c71a85690503cee";
-export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
-  "0xd624b08c83baecf0807dd2c6880c3154a5f0b288";
+export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
+export const BURNER_ADDRESS = burnerAddress;
 export const VALIDATORS_EXIT_BUS_ORACLE_ADDRESS =
   "0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e";
 export const VALIDATORS_EXIT_BUS_HASH_CONSENSUS_ADDRESS =
@@ -56,15 +54,15 @@ export const CHANGE_PERMISSION_MANAGER_EVENT =
   "event ChangePermissionManager(address indexed app, bytes32 indexed role, address indexed manager)";
 
 export const LIDO_APPS = new Map([
-  [ARAGON_VOTING_ADDRESS, "Aragon Voting"],
+  [votingAddress, "Aragon Voting"],
   [ARAGON_AGENT_ADDRESS, "Aragon Agent"],
   [LIDO_ARAGON_ACL_ADDRESS, "Aragon ACL"],
   [EVM_SCRIPT_EXECUTOR_ADDRESS, "EVMScriptExecutor"],
   [DEPOSIT_SECURITY_MODULE_ADDRESS, "Deposit Security module"],
-  [NOR_ADDRESS, "Node Operators registry"],
+  [norAddress, "Node Operators registry"],
   [LEGACY_ORACLE_ADDRESS, "Legacy Oracle"],
-  [LIDO_ADDRESS, "stETH token"],
-  [STAKING_ROUTER_ADDRESS, "Staking Router"],
+  [lidoStethAddress, "stETH token"],
+  [srAddress, "Staking Router"],
   ["0x4ee3118e3858e8d7164a634825bfe0f73d99c792", "Voting Repo"],
   ["0xa9b2f5ce3aae7374a62313473a74c98baa7fa70e", "LDO purchase executor"],
   ["0xb280e33812c0b09353180e92e27b8ad399b07f26", "SelfOwnedStETHBurner"],
@@ -78,13 +76,13 @@ export const LIDO_APPS = new Map([
 ]);
 
 export const ORDINARY_ENTITIES = new Map([
-  [ARAGON_VOTING_ADDRESS, "Aragon Voting"],
+  [votingAddress, "Aragon Voting"],
   [ARAGON_AGENT_ADDRESS, "Aragon Agent"],
 ]);
 
 // Rewards contracts allowed owners
 export const WHITELISTED_OWNERS = [
-  ARAGON_VOTING_ADDRESS,
+  votingAddress,
   ARAGON_AGENT_ADDRESS,
   // multisigs
   "0x73b047fe6337183A454c5217241D780a932777bD",
@@ -349,14 +347,14 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
   [
-    LIDO_LOCATOR_ADDRESS,
+    lidoLocatorAddress,
     {
       name: "Lido Locator",
       ownershipMethod: "proxy__getAdmin",
     },
   ],
   [
-    STAKING_ROUTER_ADDRESS,
+    srAddress,
     {
       name: "Staking Router",
       ownershipMethod: "proxy__getAdmin",
@@ -377,7 +375,7 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
   [
-    ACCOUNTING_ORACLE_ADDRESS,
+    accountingOracleAddress,
     {
       name: "Accounting Oracle",
       ownershipMethod: "proxy__getAdmin",
@@ -400,9 +398,9 @@ export interface IHasRoles {
 export const ROLES_OWNERS = {
   agent: ARAGON_AGENT_ADDRESS,
   dsm: DEPOSIT_SECURITY_MODULE_ADDRESS,
-  nor: NOR_ADDRESS,
-  accountingOracle: ACCOUNTING_ORACLE_ADDRESS,
-  lido: LIDO_ADDRESS,
+  nor: norAddress,
+  accountingOracle: accountingOracleAddress,
+  lido: lidoStethAddress,
   gateSeal: GATE_SEAL_ADDRESS,
 };
 
@@ -418,7 +416,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
+    accountingHashConsensusAddress,
     {
       name: "Accounting HashConsensus",
       roles: new Map<INamedRole, string[]>([
@@ -446,7 +444,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    ACCOUNTING_ORACLE_ADDRESS,
+    accountingOracleAddress,
     {
       name: "Accounting Oracle",
       roles: new Map<INamedRole, string[]>([
@@ -520,7 +518,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    STAKING_ROUTER_ADDRESS,
+    srAddress,
     {
       name: "Staking Router",
       roles: new Map<INamedRole, string[]>([

@@ -7,34 +7,37 @@ import {
   TRP_EVENTS_OF_NOTICE as trpEvents,
 } from "./constants";
 
+import {
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  LIDO_DEPOSIT_SECURITY_ADDRESS as dsAddress,
+  LIDO_DEPOSIT_EXECUTOR_ADDRESS as deAddress,
+  MEV_ALLOWED_LIST_ADDRESS as mevAllowlistAddress,
+  LIDO_INSURANCE_FUND_ADDRESS as insuranceAddress,
+  LIDO_BURNER_ADDRESS as burnerAddress,
+  TRP_FACTORY_ADDRESS as trpFactoryAddress,
+  ENS_BASE_REGISTRAR_ADDRESS as ensRegistrarAddress,
+} from "../../common/constants.testnet";
+
 export interface ERC20 {
   decimals: number;
   name: string;
 }
 
-export const LIDO_ADDRESS = "0x1643e812ae58766192cf7d2cf9567df2c37e9b7f";
-export const WITHDRAWAL_QUEUE_ADDRESS =
-  "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
-export const LIDO_DEPOSIT_SECURITY_ADDRESS =
-  "0xe57025e250275ca56f92d76660decfc490c7e79a";
-export const LIDO_DEPOSIT_EXECUTOR_ADDRESS =
-  "0x745ad85f7c20ea6f3c85b830208394e0d70a31ea";
-export const MEV_ALLOWED_LIST_ADDRESS =
-  "0xeabe95ac5f3d64ae16acbb668ed0efcd81b721bc";
-export const LIDO_INSURANCE_FUND_ADDRESS =
-  "0x2fae4d2d86efb17249f24c9fb70855d4c58585a5";
-export const TRP_FACTORY_ADDRESS = "0x8d20fd1ac547e035bf01089cfb92459054f82ff7";
-export const ENS_BASE_REGISTRAR_ADDRESS =
-  "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85";
-export const NODE_OPERATORS_REGISTRY_ADDRESS =
-  "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
-export const LIDO_BURNER_ADDRESS = "0x20c61c07c2e2fab04bf5b4e12ce45a459a18f3b1";
+export const LIDO_STETH_ADDRESS = lidoStethAddress;
+export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
+export const LIDO_DEPOSIT_SECURITY_ADDRESS = dsAddress;
+export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = deAddress;
+export const MEV_ALLOWED_LIST_ADDRESS = mevAllowlistAddress;
+export const LIDO_INSURANCE_FUND_ADDRESS = insuranceAddress;
+export const LIDO_BURNER_ADDRESS = burnerAddress;
+export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
+export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
+export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
 export const KNOWN_ERC20 = new Map<string, ERC20>([
-  [
-    "0x1643E812aE58766192Cf7D2Cf9567dF2C37e9B7F",
-    { decimals: 18, name: "stETH" },
-  ],
+  [lidoStethAddress, { decimals: 18, name: "stETH" }],
   [
     "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
     { decimals: 18, name: "wstETH" },
@@ -47,7 +50,7 @@ export const KNOWN_ERC20 = new Map<string, ERC20>([
 
 export const LIDO_EVENTS_OF_NOTICE = daoEvents.map((event) => ({
   ...event,
-  address: LIDO_ADDRESS,
+  address: LIDO_STETH_ADDRESS,
 }));
 
 export const BURNER_EVENTS_OF_NOTICE = burnerEvents.map((event) => ({

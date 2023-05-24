@@ -26,7 +26,7 @@ import {
   SECONDS_PER_SLOT,
 } from "../../common/constants";
 const {
-  LIDO_ADDRESS,
+  LIDO_STETH_ADDRESS,
   ACCOUNTING_ORACLE_ADDRESS,
   STAKING_ROUTER_ADDRESS,
   WITHDRAWAL_QUEUE_ADDRESS,
@@ -84,7 +84,7 @@ export async function initialize(
   lastAllStuck = allStuck;
   lastAllRefunded = allRefunded;
 
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
   const block48HoursAgo =
     currentBlock - Math.ceil((2 * ONE_DAY) / SECONDS_PER_SLOT);
   const ethDistributedEvents = await lido.queryFilter(
@@ -138,7 +138,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const now = blockEvent.block.timestamp;
 
   if (now >= lastRebaseEventTimestamp) {
-    const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+    const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
 
     const tvl = new BigNumber(
       String(
@@ -316,7 +316,7 @@ async function handleRebaseDigest(
 ) {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   if (!ethDistributedEvent) return;
 
@@ -346,7 +346,7 @@ function prepareAPRLines(
 ): string | undefined {
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   lastRebaseEventTimestamp = txEvent.block.timestamp;
   let timeElapsed = new BigNumber(String(tokenRebasedEvent.args.timeElapsed));
@@ -436,15 +436,15 @@ function prepareRewardsLines(
 ): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   const [withdrawalsReceivedEvent] = txEvent.filterLog(
     LIDO_WITHDRAWALSRECEIVED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   const [elRewardsReceivedEvent] = txEvent.filterLog(
     LIDO_ELREWARDSRECEIVED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
 
   const { preCLBalance, postCLBalance } = ethDistributedEvent.args;
@@ -529,7 +529,7 @@ function prepareRewardsLines(
 function prepareValidatorsCountLines(txEvent: TransactionEvent): string {
   const [validatorsUpdated] = txEvent.filterLog(
     LIDO_VALIDATORS_UPDATED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   const { preCLValidators, postCLValidators } = validatorsUpdated.args;
   return `*Validators*\nCount: ${postCLValidators} (${
@@ -540,11 +540,11 @@ function prepareValidatorsCountLines(txEvent: TransactionEvent): string {
 function prepareWithdrawnLines(txEvent: TransactionEvent): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   const [elRewardsReceivedEvent] = txEvent.filterLog(
     LIDO_ELREWARDSRECEIVED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
 
   const elRewardsReceived = elRewardsReceivedEvent
@@ -586,7 +586,7 @@ async function prepareRequestsFinalizationLines(
   }
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   const { postTotalEther, postTotalShares } = tokenRebasedEvent.args;
   const { from, to, amountOfETHLocked } = withdrawalsFinalizedEvent.args;
@@ -596,10 +596,10 @@ async function prepareRequestsFinalizationLines(
     new BigNumber(String(postTotalShares))
   );
 
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   const { postBufferedEther } = ethDistributedEvent.args;
   const preBufferedEther = await lido.functions.getBufferedEther({
@@ -626,7 +626,7 @@ async function prepareRequestsFinalizationLines(
 function prepareSharesBurntLines(txEvent: TransactionEvent): string {
   const [sharesBurntEvent] = txEvent.filterLog(
     LIDO_SHARES_BURNT_EVENT,
-    LIDO_ADDRESS
+    LIDO_STETH_ADDRESS
   );
   if (!sharesBurntEvent) {
     return `*Shares*\nNo shares burnt`;

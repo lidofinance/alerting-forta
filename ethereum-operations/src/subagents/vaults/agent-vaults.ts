@@ -23,7 +23,7 @@ const {
   WITHDRAWAL_VAULT_ADDRESS,
   EL_VAULT_ADDRESS,
   BURNER_ADDRESS,
-  LIDO_ADDRESS,
+  LIDO_STETH_ADDRESS,
   TRANSFER_SHARES_EVENT,
   WITHDRAWAL_VAULT_BALANCE_DIFF_HIGH,
   WITHDRAWAL_VAULT_BALANCE_DIFF_INFO,
@@ -38,7 +38,7 @@ const {
 export async function initialize(): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
 
   return {};
 }
@@ -255,7 +255,7 @@ async function handleBurnerSharesTx(
   findings: Finding[]
 ) {
   const events = txEvent
-    .filterLog(TRANSFER_SHARES_EVENT, LIDO_ADDRESS)
+    .filterLog(TRANSFER_SHARES_EVENT, LIDO_STETH_ADDRESS)
     .filter((e) => e.args.from.toLowerCase() === BURNER_ADDRESS.toLowerCase());
 
   for (const event of events) {

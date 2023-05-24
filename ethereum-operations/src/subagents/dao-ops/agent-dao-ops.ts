@@ -36,7 +36,7 @@ const {
   MEV_RELAY_COUNT_THRESHOLD_HIGH,
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
-  LIDO_ADDRESS,
+  LIDO_STETH_ADDRESS,
   WITHDRAWAL_QUEUE_ADDRESS,
   LIDO_DEPOSIT_SECURITY_ADDRESS,
   LIDO_DEPOSIT_EXECUTOR_ADDRESS,
@@ -93,7 +93,7 @@ export async function initialize(
   }
   console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`);
   lastBufferedEth = new BigNumber(
-    String(await ethersProvider.getBalance(LIDO_ADDRESS, currentBlock))
+    String(await ethersProvider.getBalance(LIDO_STETH_ADDRESS, currentBlock))
   );
   console.log(
     `[${name}] lastBufferedEth=${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)}`
@@ -162,7 +162,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const blockNumber = blockEvent.block.number;
 
   const now = blockEvent.block.timestamp;
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
   const bufferedEthRaw = new BigNumber(
     String(
       await lido.functions.getBufferedEther({
@@ -296,7 +296,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   }
 
   const now = blockEvent.block.timestamp;
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
   const stakingLimitInfo = await lido.functions.getStakeLimitFullInfo({
     blockTag: blockEvent.block.number,
   });
@@ -457,7 +457,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 async function getUnbufferedEvents(blockFrom: number, blockTo: number) {
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
 
   const unbufferedFilter = lido.filters.Unbuffered();
 

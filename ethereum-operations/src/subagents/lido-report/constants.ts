@@ -1,17 +1,21 @@
 import { ONE_DAY } from "../../common/constants";
+import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  LIDO_BURNER_ADDRESS as burnerAddress,
+} from "../../common/constants";
 
-export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
-export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x852ded011285fe67063a08005c71a85690503cee";
-export const STAKING_ROUTER_ADDRESS =
-  "0xfddf38947afb03c621c71b06c9c70bce73f12999";
-export const WITHDRAWAL_QUEUE_ADDRESS =
-  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
+export const LIDO_STETH_ADDRESS = lidoStethAddress;
+export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
+export const STAKING_ROUTER_ADDRESS = srAddress;
+export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
 export const EL_REWARDS_VAULT_ADDRESS =
   "0x388c818ca8b9251b393131c08a736a67ccb19297";
 export const WITHDRAWALS_VAULT_ADDRESS =
   "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
-export const BURNER_ADDRESS = "0xd15a672319cf0352560ee76d9e89eab0889046d3";
+export const BURNER_ADDRESS = burnerAddress;
 
 export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 

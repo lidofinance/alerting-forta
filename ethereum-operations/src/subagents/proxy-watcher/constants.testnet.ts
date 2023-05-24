@@ -1,5 +1,14 @@
 import { IProxyContractData } from "src/common/constants";
 import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+  LIDO_ARAGON_VOTING_ADDRESS as votingAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+} from "../../common/constants.testnet";
+import {
   implementationFuncShortABI,
   ossifiableProxyImplABI,
 } from "./constants";
@@ -7,14 +16,14 @@ import {
 export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
   new Map<string, IProxyContractData>([
     [
-      "0x1643E812aE58766192Cf7D2Cf9567dF2C37e9B7F",
+      lidoStethAddress,
       {
         name: "Lido DAO and stETH",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x9D4AF1Ee19Dad8857db3a45B0374c81c8A1C6320",
+      norAddress,
       {
         name: "Node Operators Registry",
         shortABI: implementationFuncShortABI,
@@ -28,7 +37,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0xbc0B67b4553f4CF52a913DE9A6eD0057E2E758Db",
+      votingAddress,
       {
         name: "Aragon Voting",
         shortABI: implementationFuncShortABI,
@@ -91,21 +100,21 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0x1eDf09b5023DC86737b59dE68a8130De878984f5",
+      lidoLocatorAddress,
       {
         name: "Lido Locator",
         shortABI: ossifiableProxyImplABI,
       },
     ],
     [
-      "0xa3Dbd317E53D363176359E10948BA0b1c0A4c820",
+      srAddress,
       {
         name: "Staking Router",
         shortABI: ossifiableProxyImplABI,
       },
     ],
     [
-      "0xCF117961421cA9e546cD7f50bC73abCdB3039533",
+      wqAddress,
       {
         name: "Withdrawal Queue",
         shortABI: ossifiableProxyImplABI,
@@ -119,7 +128,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0x76f358A842defa0E179a8970767CFf668Fc134d6",
+      accountingOracleAddress,
       {
         name: "Accounting Oracle",
         shortABI: ossifiableProxyImplABI,
