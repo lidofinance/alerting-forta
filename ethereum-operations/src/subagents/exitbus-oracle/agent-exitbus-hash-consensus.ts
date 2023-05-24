@@ -243,23 +243,6 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
         type: FindingType.Suspicious,
       })
     );
-  } else {
-    findings.push(
-      Finding.fromObject({
-        name: "ℹ️ ExitBus Oracle: Report received",
-        description:
-          `Member ${etherscanAddress(event.args.member)} ` +
-          `(${getMemberName(
-            EXITBUS_ORACLE_MEMBERS,
-            event.args.member.toLocaleLowerCase()
-          )})\nReference slot: ${
-            event.args.refSlot
-          }\n${receivedReportNumber} of ${membersCount} reports received`,
-        alertId: "EXITBUS-ORACLE-REPORT-RECEIVED",
-        severity: FindingSeverity.Info,
-        type: FindingType.Info,
-      })
-    );
   }
   membersLastReport.set(event.args.member, {
     refSlot: event.args.refSlot,
