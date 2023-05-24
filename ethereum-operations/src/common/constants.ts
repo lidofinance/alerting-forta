@@ -10,7 +10,7 @@ export const LIDO_CONTRACT_VERSION_SET_EVENT =
 
 // COMMON CONSTS
 export const BN_ZERO = new BigNumber(0);
-export const RUN_TIER = process.env.FORTA_AGENT_RUN_TEAR;
+export const RUN_TIER = process.env.FORTA_AGENT_RUN_TIER;
 
 export const SECONDS_PER_SLOT = 12;
 export const ONE_HOUR = 60 * 60;
