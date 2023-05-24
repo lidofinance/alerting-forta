@@ -4,6 +4,7 @@ import {
   Finding,
   FindingSeverity,
   FindingType,
+  LogDescription,
   TransactionEvent,
 } from "forta-agent";
 
@@ -11,6 +12,8 @@ import { ethersProvider } from "../../ethers";
 
 import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
 import LIDO_ABI from "../../abi/Lido.json";
+import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi/OracleReportSanityChecker.json";
+import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 
 import {
   formatDelay,
@@ -33,6 +36,9 @@ let lastReportSubmitTimestamp = 0;
 let lastReportSubmitOverdueTimestamp = 0;
 
 let reportSubmitOverdueCount = 0;
+let lastMaxValidatorExitRequestsPerReport = 0;
+
+let noNames = new Map<number, string>();
 
 export const name = "ExitBusOracle";
 
@@ -51,6 +57,9 @@ const {
   EXITBUS_ORACLE_EVENTS_OF_NOTICE,
   EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD,
   EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD,
+  ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
+  EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
+  NODE_OPERATORS_REGISTRY_ADDRESS,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -94,9 +103,19 @@ export async function initialize(
     ).toUTCString()}`
   );
 
+  await updateMaxValidatorExitRequestsPerReport(currentBlock);
+  await updateNoNames(currentBlock);
+
+  log(
+    `lastMaxValidatorExitRequestsPerReport: ${lastMaxValidatorExitRequestsPerReport}`
+  );
+
   return {
     lastReportTimestamp: String(lastReportSubmitTimestamp) ?? "unknown",
     prevReportTimestamp: String(prevReportSubmitTimestamp) ?? "unknown",
+    lastMaxValidatorExitRequestsPerReport: String(
+      lastMaxValidatorExitRequestsPerReport
+    ),
   };
 }
 
@@ -116,10 +135,47 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
   );
 }
 
+async function updateMaxValidatorExitRequestsPerReport(block: number) {
+  const sanityChecker = new ethers.Contract(
+    ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
+    ORACLE_REPORT_SANITY_CHECKER_ABI,
+    ethersProvider
+  );
+
+  const { maxValidatorExitRequestsPerReport } =
+    await sanityChecker.getOracleReportLimits({ blockTag: block });
+
+  lastMaxValidatorExitRequestsPerReport = maxValidatorExitRequestsPerReport;
+}
+
+async function updateNoNames(block: number) {
+  const nor = new ethers.Contract(
+    NODE_OPERATORS_REGISTRY_ADDRESS,
+    NODE_OPERATORS_REGISTRY_ABI,
+    ethersProvider
+  );
+  // limit=1000 is times higher than possible number of the NOs in the registry
+  const nodeOperatorIDs = await nor.getNodeOperatorIds(0, 1000);
+  await Promise.all(
+    nodeOperatorIDs.map(async (id: number) => {
+      const { name } = await nor.getNodeOperator(id, true);
+      noNames.set(Number(id), name);
+    })
+  );
+}
+
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await handleReportSubmitted(blockEvent, findings);
+  await Promise.all([
+    handleReportSubmitted(blockEvent, findings),
+    updateMaxValidatorExitRequestsPerReport(blockEvent.blockNumber),
+  ]);
+
+  // Update NO names each 100 blocks
+  if (blockEvent.blockNumber % 100) {
+    await updateNoNames(blockEvent.blockNumber);
+  }
 
   return findings;
 }
@@ -178,12 +234,9 @@ async function handleReportSubmitted(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (txEvent.to == EXITBUS_ORACLE_ADDRESS) {
-    await handleProcessingStarted(txEvent, findings);
-    await handleExitRequest(txEvent, findings);
-  }
-
+  handleExitRequest(txEvent, findings);
   handleEventsOfNotice(txEvent, findings, EXITBUS_ORACLE_EVENTS_OF_NOTICE);
+  await handleProcessingStarted(txEvent, findings);
 
   return findings;
 }
@@ -324,32 +377,74 @@ async function handleProcessingStarted(
   }
 }
 
-async function handleExitRequest(
-  txEvent: TransactionEvent,
-  findings: Finding[]
-) {
+function prepareExitsDigest(exitRequests: LogDescription[]): string {
+  let digest = new Map<String, Map<String, number>>();
+  exitRequests.forEach((request: any) => {
+    let args = request.args;
+    let nodeOperatorId = Number(args.nodeOperatorId);
+    let name = String(args.nodeOperatorId);
+    let stakingModuleName = String(args.stakingModuleId);
+    if (stakingModuleName == "1") {
+      name = noNames.get(nodeOperatorId) || name;
+      stakingModuleName = "Curated";
+    }
+    let moduleDigest =
+      digest.get(stakingModuleName) || new Map<string, number>();
+    let prevModuleExitsCount = moduleDigest.get(name) || 0;
+    moduleDigest.set(name, prevModuleExitsCount + 1);
+    digest.set(stakingModuleName, moduleDigest);
+  });
+  let digestStr = "";
+  for (let [moduleName, moduleDigest] of digest.entries()) {
+    digestStr += `\n**Module**: ${moduleName}`;
+    for (let [name, exitsCount] of moduleDigest.entries()) {
+      digestStr += `\n  ${name}:${exitsCount}`;
+    }
+  }
+  return digestStr;
+}
+
+function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
+  const [processingStarted] = txEvent.filterLog(
+    EXITBUS_ORACLE_PROCESSING_STARTED_EVENT,
+    EXITBUS_ORACLE_ADDRESS
+  );
+  if (!processingStarted) {
+    return;
+  }
   const exitRequests = txEvent.filterLog(
     EXITBUS_ORACLE_VALIDATOR_EXIT_REQUEST_EVENT,
     EXITBUS_ORACLE_ADDRESS
   );
-  if (!exitRequests) return;
-  if (exitRequests.length > 1000) {
+  let digest = "";
+  if (exitRequests.length == 0) {
+    digest = "No validator exits requested";
+  } else {
+    digest = prepareExitsDigest(exitRequests);
+  }
+  findings.push(
+    Finding.fromObject({
+      name: "ℹ️ ExitBus Oracle: Exit requests digest",
+      description: digest,
+      alertId: "EXITBUS-ORACLE-EXIT-REQUESTS-DIGEST",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+    })
+  );
+
+  if (
+    exitRequests.length >
+    Math.ceil(
+      lastMaxValidatorExitRequestsPerReport *
+        EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT
+    )
+  ) {
     findings.push(
       Finding.fromObject({
-        name: "⚠️ ExitBus Oracle: requested to exit more than 1000 validators",
+        name: "⚠️ ExitBus Oracle: Huge validators exits requests",
         description: `Requested to exit ${exitRequests.length} validators in a single report`,
-        alertId: "EXITBUS-ORACLE-MANY-EXIT-REQUESTS",
+        alertId: "EXITBUS-ORACLE-HUGE-EXIT-REQUESTS",
         severity: FindingSeverity.High,
-        type: FindingType.Suspicious,
-      })
-    );
-  } else if (exitRequests.length > 100) {
-    findings.push(
-      Finding.fromObject({
-        name: "ℹ️ ExitBus Oracle: requested to exit more than 100 validators",
-        description: `Requested to exit ${exitRequests.length} validators in a single report`,
-        alertId: "EXITBUS-ORACLE-MANY-EXIT-REQUESTS",
-        severity: FindingSeverity.Info,
         type: FindingType.Suspicious,
       })
     );
