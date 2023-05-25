@@ -193,6 +193,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xbbf1ee38152e9d8e3470dc47947eaa65dca94913", // maverick
   "0xb9e7008fa856d66680bee9e0a24da407d9d7fad5", // zenith.cash
   "0x35636b85b68c1b4a216110fb3a5fb447a99db14a", // unsheth vdAAM
+  "0x2bca0300c2aa65de6f19c2d241b54a445c9990e2", // gravitaprotocol.com
+  "0x39254033945aa2e4809cc2977e7087bee48bd7ab", // originprotocol.com
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
