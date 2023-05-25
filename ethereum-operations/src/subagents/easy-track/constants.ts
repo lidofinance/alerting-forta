@@ -176,7 +176,7 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
     "Top up recipients (Referral Program DAI)",
   ],
   ["0xbd2b6dc189eefd51b273f5cb2d99ba1ce565fb8c", "Top up recipients (TRP LDO)"],
-  ["0x935cb3366faf2cfc415b2099d1f974fd27202b77", "Add recipient (stETH)"],
-  ["0x22010d1747cafc370b1f1fbba61022a313c5693b", "Remove recipient (stETH)"],
-  ["0x1f2b79fe297b7098875930bba6dd17068103897e", "Top up recipients (stETH)"],
+  ["0x935cb3366faf2cfc415b2099d1f974fd27202b77", "Add recipient (stETH reWARDS)"],
+  ["0x22010d1747cafc370b1f1fbba61022a313c5693b", "Remove recipient (stETH reWARDS)"],
+  ["0x1f2b79fe297b7098875930bba6dd17068103897e", "Top up recipients (stETH reWARDS)"],
 ]);
