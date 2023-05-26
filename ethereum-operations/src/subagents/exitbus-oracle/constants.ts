@@ -6,28 +6,28 @@ import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
+  EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,
+  ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
+  WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
+  EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
 } from "../../common/constants";
 
-export const CL_GENESIS_TIMESTEMP = 1606824023;
+export const CL_GENESIS_TIMESTAMP = 1606824023;
 
 // trigger each 20 mins for lasting conditions
 export const TRIGGER_PERIOD = 60 * 20;
 
-export const EXITBUS_ORACLE_ADDRESS =
-  "0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e";
-export const EXITBUS_HASH_CONSENSUS_ADDRESS =
-  "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
-export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS =
-  "0x9305c1dbfe22c12c66339184c0025d7006f0f1cc";
+export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
+export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
+export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
 export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
 export const WITHDRAWALS_QUEUE_ADDRESS = wqAddress;
-export const WITHDRAWALS_VAULT_ADDRESS =
-  "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
-export const EL_REWARDS_VAULT_ADDRESS =
-  "0x388c818ca8b9251b393131c08a736a67ccb19297";
+export const WITHDRAWALS_VAULT_ADDRESS = wdVaultAddress;
+export const EL_REWARDS_VAULT_ADDRESS = elVaultAddress;
 
 export const EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT =
   "event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)";

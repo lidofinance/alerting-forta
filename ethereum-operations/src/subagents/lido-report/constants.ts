@@ -4,17 +4,17 @@ import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
-  LIDO_BURNER_ADDRESS as burnerAddress,
+  BURNER_ADDRESS as burnerAddress,
+  WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
+  EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
 } from "../../common/constants";
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
-export const EL_REWARDS_VAULT_ADDRESS =
-  "0x388c818ca8b9251b393131c08a736a67ccb19297";
-export const WITHDRAWALS_VAULT_ADDRESS =
-  "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
+export const EL_REWARDS_VAULT_ADDRESS = elVaultAddress;
+export const WITHDRAWALS_VAULT_ADDRESS = wdVaultAddress;
 export const BURNER_ADDRESS = burnerAddress;
 
 export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;

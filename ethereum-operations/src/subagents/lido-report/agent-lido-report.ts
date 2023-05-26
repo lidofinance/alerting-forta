@@ -84,7 +84,11 @@ export async function initialize(
   lastAllStuck = allStuck;
   lastAllRefunded = allRefunded;
 
-  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(
+    LIDO_STETH_ADDRESS,
+    LIDO_ABI,
+    ethersProvider
+  );
   const block48HoursAgo =
     currentBlock - Math.ceil((2 * ONE_DAY) / SECONDS_PER_SLOT);
   const ethDistributedEvents = await lido.queryFilter(
@@ -138,7 +142,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const now = blockEvent.block.timestamp;
 
   if (now >= lastRebaseEventTimestamp) {
-    const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
+    const lido = new ethers.Contract(
+      LIDO_STETH_ADDRESS,
+      LIDO_ABI,
+      ethersProvider
+    );
 
     const tvl = new BigNumber(
       String(
@@ -596,7 +604,11 @@ async function prepareRequestsFinalizationLines(
     new BigNumber(String(postTotalShares))
   );
 
-  const lido = new ethers.Contract(LIDO_STETH_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(
+    LIDO_STETH_ADDRESS,
+    LIDO_ABI,
+    ethersProvider
+  );
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
     LIDO_STETH_ADDRESS

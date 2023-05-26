@@ -14,13 +14,10 @@ export const STAKING_ROUTER_ADDRESS = srAddress;
 
 export const MOTION_ENACTED_EVENT =
   "event MotionEnacted(uint256 indexed _motionId)";
-
 export const SIGNING_KEY_REMOVED_EVENT =
   "event SigningKeyRemoved(uint256 indexed operatorId, bytes pubkey)";
-
 export const NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT =
   "event VettedSigningKeysCountChanged(uint256 indexed nodeOperatorId, uint256 approvedValidatorsCount)";
-
 export const NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT =
   "event ExitedSigningKeysCountChanged(uint256 indexed nodeOperatorId, uint256 exitedValidatorsCount)";
 export const NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT =

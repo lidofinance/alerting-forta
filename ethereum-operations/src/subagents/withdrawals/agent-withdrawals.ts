@@ -527,7 +527,10 @@ async function handleWithdrawalClaimed(
 }
 
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
-  const [rebaseEvent] = txEvent.filterLog(LIDO_TOKEN_REBASED, LIDO_STETH_ADDRESS);
+  const [rebaseEvent] = txEvent.filterLog(
+    LIDO_TOKEN_REBASED,
+    LIDO_STETH_ADDRESS
+  );
   if (!rebaseEvent) return;
   lastTokenRebaseTimestamp = txEvent.timestamp;
   amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0);

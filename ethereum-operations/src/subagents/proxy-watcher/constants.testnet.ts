@@ -5,8 +5,19 @@ import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
-  LIDO_ARAGON_VOTING_ADDRESS as votingAddress,
+  ARAGON_VOTING_ADDRESS as votingAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
+  WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
+  ARAGON_ACL_ADDRESS as aclAddress,
+  LEGACY_ORACLE_ADDRESS as legacyOracleAddress,
+  ARAGON_AGENT_ADDRESS as agentAddress,
+  VOTING_REPO_ADDRESS as votingRepoAddress,
+  APP_REPO_ADDRESS as appRepoAddress,
+  ORACLE_REPO_ADDRESS as oracleRepoAddress,
+  NO_REPO_ADDRESS as noRepoAddress,
+  ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
+  ARAGON_FINANCE_ADDRESS as financeAddress,
 } from "../../common/constants.testnet";
 import {
   implementationFuncShortABI,
@@ -30,7 +41,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0x24d8451BC07e7aF4Ba94F69aCDD9ad3c6579D9FB",
+      legacyOracleAddress,
       {
         name: "Legacy Oracle",
         shortABI: implementationFuncShortABI,
@@ -44,56 +55,56 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0xDfe76d11b365f5e0023343A367f0b311701B3bc1",
+      tmAddress,
       {
         name: "Aragon Token Manager",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x75c7b1D23f1cad7Fb4D60281d7069E46440BC179",
+      financeAddress,
       {
         name: "Aragon Finance",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x4333218072D5d7008546737786663c38B4D561A4",
+      agentAddress,
       {
         name: "Lido Treasury",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0xb3CF58412a00282934D3C3E73F49347567516E98",
+      aclAddress,
       {
         name: "Aragon ACL",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x9234e37Adeb44022A078557D9943b72AB89bF36a",
+      oracleRepoAddress,
       {
         name: "Lido Oracle Repo",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0xE9eDe497d2417fd980D8B5338232666641B9B9aC",
+      appRepoAddress,
       {
         name: "Lido App Repo",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x5F867429616b380f1Ca7a7283Ff18C53a0033073",
+      noRepoAddress,
       {
         name: "Node Operators Registry Repo",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      "0x14de4f901cE0B81F4EfcA594ad7b70935C276806",
+      votingRepoAddress,
       {
         name: "Voting Repo",
         shortABI: implementationFuncShortABI,
@@ -121,7 +132,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0xdc62f9e8C34be08501Cdef4EBDE0a280f576D762",
+      wdVaultAddress,
       {
         name: "Withdrawal Vault",
         shortABI: implementationFuncShortABI,
@@ -135,7 +146,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      "0xb75A55EFab5A8f5224Ae93B34B25741EDd3da98b",
+      ebOracleAddress,
       {
         name: "Validator Exit Bus Oracle",
         shortABI: ossifiableProxyImplABI,

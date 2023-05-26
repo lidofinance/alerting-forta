@@ -3,14 +3,14 @@ import { etherscanAddress } from "../../common/utils";
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  INCREASE_STAKING_LIMIT_ADDRESS as increaseStakinigLimitAddress,
+  EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
+  REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegAddress,
 } from "../../common/constants";
 
-export const INCREASE_STAKING_LIMIT_ADDRESS =
-  "0xfebd8fac16de88206d4b18764e826af38546afe0";
-export const EVM_SCRIPT_EXECUTOR_ADDRESS =
-  "0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977";
-export const REWARD_PROGRAMS_REGISTRY_ADDRESS =
-  "0x3129c041b372ee93a5a8756dc4ec6f154d85bc9a";
+export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakinigLimitAddress;
+export const EVM_SCRIPT_EXECUTOR_ADDRESS = evmExecutorAddress;
+export const REWARD_PROGRAMS_REGISTRY_ADDRESS = rewardProgramRegAddress;
 export const EASY_TRACK_ADDRESS = easyTrackAddress;
 export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
@@ -152,10 +152,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
 ];
 
 export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
-  [
-    "0xfebd8fac16de88206d4b18764e826af38546afe0",
-    "Increase node operator staking limit",
-  ],
+  [increaseStakinigLimitAddress, "Increase node operator staking limit"],
   ["0x929547490ceb6aeedd7d72f1ab8957c0210b6e51", "Add referral partner"],
   ["0xe9eb838fb3a288bf59e9275ccd7e124fdff88a9c", "Remove referral partner"],
   ["0x54058ee0e0c87ad813c002262cd75b98a7f59218", "Top up referral partner"],

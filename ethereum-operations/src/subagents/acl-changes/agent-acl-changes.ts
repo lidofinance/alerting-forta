@@ -34,7 +34,7 @@ import type * as Constants from "./constants";
 const {
   ACLEnumerableABI,
   ACL_ENUMERABLE_CONTRACTS,
-  LIDO_ARAGON_ACL_ADDRESS,
+  ARAGON_ACL_ADDRESS,
   LIDO_ROLES,
   SET_PERMISSION_EVENT,
   SET_PERMISSION_PARAMS_EVENT,
@@ -85,11 +85,11 @@ async function handleSetPermission(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
+  if (ARAGON_ACL_ADDRESS in txEvent.addresses) {
     let permissions = new Map<string, IPermission>();
     const setEvents = txEvent.filterLog(
       SET_PERMISSION_EVENT,
-      LIDO_ARAGON_ACL_ADDRESS
+      ARAGON_ACL_ADDRESS
     );
     setEvents.sort(byLogIndexAsc);
     setEvents.forEach((event) => {
@@ -106,7 +106,7 @@ async function handleSetPermission(
 
     const setParamsEvents = txEvent.filterLog(
       SET_PERMISSION_PARAMS_EVENT,
-      LIDO_ARAGON_ACL_ADDRESS
+      ARAGON_ACL_ADDRESS
     );
     setParamsEvents.forEach((event) => {
       const permissionKey = eventToPermissionKey(event);
@@ -182,10 +182,10 @@ function handleChangePermissionManager(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (LIDO_ARAGON_ACL_ADDRESS in txEvent.addresses) {
+  if (ARAGON_ACL_ADDRESS in txEvent.addresses) {
     const managerEvents = txEvent.filterLog(
       CHANGE_PERMISSION_MANAGER_EVENT,
-      LIDO_ARAGON_ACL_ADDRESS
+      ARAGON_ACL_ADDRESS
     );
     managerEvents.forEach((event) => {
       const role = LIDO_ROLES.get(event.args.role) || "unknown";

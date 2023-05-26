@@ -6,13 +6,18 @@ import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
-  LIDO_DEPOSIT_SECURITY_ADDRESS as dsAddress,
-  LIDO_DEPOSIT_EXECUTOR_ADDRESS as deAddress,
+  DEPOSIT_SECURITY_ADDRESS as dsAddress,
+  DEPOSIT_EXECUTOR_ADDRESS as deAddress,
   MEV_ALLOWED_LIST_ADDRESS as mevAllowlistAddress,
-  LIDO_INSURANCE_FUND_ADDRESS as insuranceAddress,
-  LIDO_BURNER_ADDRESS as burnerAddress,
+  INSURANCE_FUND_ADDRESS as insuranceAddress,
+  BURNER_ADDRESS as burnerAddress,
   TRP_FACTORY_ADDRESS as trpFactoryAddress,
   ENS_BASE_REGISTRAR_ADDRESS as ensRegistrarAddress,
+  LDO_ADDRESS as ldoAddress,
+  WSTETH_ADDRESS as wstethAddress,
+  DAI_ADDRESS as daiAddress,
+  USDT_ADDRESS as usdtAddress,
+  USDC_ADDRESS as usdcAddress,
 } from "../../common/constants";
 
 export interface ERC20 {
@@ -38,25 +43,22 @@ export const BLOCK_CHECK_INTERVAL = 25;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
-export const LIDO_DEPOSIT_SECURITY_ADDRESS = dsAddress;
-export const LIDO_DEPOSIT_EXECUTOR_ADDRESS = deAddress;
+export const DEPOSIT_SECURITY_ADDRESS = dsAddress;
+export const DEPOSIT_EXECUTOR_ADDRESS = deAddress;
 export const MEV_ALLOWED_LIST_ADDRESS = mevAllowlistAddress;
-export const LIDO_INSURANCE_FUND_ADDRESS = insuranceAddress;
-export const LIDO_BURNER_ADDRESS = burnerAddress;
+export const INSURANCE_FUND_ADDRESS = insuranceAddress;
+export const BURNER_ADDRESS = burnerAddress;
 export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
 export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
 export const KNOWN_ERC20 = new Map<string, ERC20>([
   [lidoStethAddress, { decimals: 18, name: "stETH" }],
-  [
-    "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-    { decimals: 18, name: "wstETH" },
-  ],
-  ["0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32", { decimals: 18, name: "LDO" }],
-  ["0x6B175474E89094C44Da98b954EedeAC495271d0F", { decimals: 18, name: "DAI" }],
-  ["0xdAC17F958D2ee523a2206206994597C13D831ec7", { decimals: 6, name: "USDT" }],
-  ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", { decimals: 6, name: "USDC" }],
+  [wstethAddress, { decimals: 18, name: "wstETH" }],
+  [ldoAddress, { decimals: 18, name: "LDO" }],
+  [daiAddress, { decimals: 18, name: "DAI" }],
+  [usdtAddress, { decimals: 6, name: "USDT" }],
+  [usdcAddress, { decimals: 6, name: "USDC" }],
 ]);
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000;
@@ -175,7 +177,7 @@ export const LIDO_EVENTS_OF_NOTICE = [
 
 export const BURNER_EVENTS_OF_NOTICE = [
   {
-    address: LIDO_BURNER_ADDRESS,
+    address: BURNER_ADDRESS,
     event:
       "event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)",
     alertId: "LIDO-BURNER-ERC20-RECOVERED",
@@ -188,7 +190,7 @@ export const BURNER_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_BURNER_ADDRESS,
+    address: BURNER_ADDRESS,
     event:
       "event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)",
     alertId: "LIDO-BURNE-ERC721-RECOVERED",
@@ -204,7 +206,7 @@ export const BURNER_EVENTS_OF_NOTICE = [
 
 export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event:
       "event DepositsPaused(address indexed guardian, uint24 indexed stakingModuleId)",
     alertId: "LIDO-DEPOSITS-PAUSED",
@@ -216,7 +218,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Critical,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event DepositsUnpaused(uint24 indexed stakingModuleId)",
     alertId: "LIDO-DEPOSITS-UNPAUSED",
     name: "✅ Deposit Security: Deposits resumed",
@@ -225,7 +227,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event GuardianAdded(address guardian)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-ADDED",
     name: "⚠️ Deposit Security: Guardian added",
@@ -234,7 +236,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event GuardianRemoved(address guardian)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-REMOVED",
     name: "⚠️ Deposit Security: Guardian removed",
@@ -243,7 +245,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event GuardianQuorumChanged(uint256 newValue)",
     alertId: "LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED",
     name: "🚨 Deposit Security: Guardian quorum changed",
@@ -251,7 +253,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event MaxDepositsChanged(uint256 newValue)",
     alertId: "LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED",
     name: "⚠️ Deposit Security: Max deposits changed",
@@ -259,7 +261,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event MinDepositBlockDistanceChanged(uint256 newValue)",
     alertId: "LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED",
     name: "⚠️ Deposit Security: Min deposit block distance changed",
@@ -267,7 +269,7 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_DEPOSIT_SECURITY_ADDRESS,
+    address: DEPOSIT_SECURITY_ADDRESS,
     event: "event OwnerChanged(address newValue)",
     alertId: "LIDO-DEPOSITOR-OWNER-CHANGED",
     name: "🚨 Deposit Security: Owner changed",
@@ -335,7 +337,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
 
 export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
   {
-    address: LIDO_INSURANCE_FUND_ADDRESS,
+    address: INSURANCE_FUND_ADDRESS,
     event:
       "event EtherTransferred(address indexed _recipient, uint256 _amount)",
     alertId: "INS-FUND-ETH-TRANSFERRED",
@@ -351,7 +353,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_INSURANCE_FUND_ADDRESS,
+    address: INSURANCE_FUND_ADDRESS,
     event:
       "event ERC721Transferred(address indexed _token, address indexed _recipient, uint256 _tokenId, bytes _data)",
     alertId: "INS-FUND-ERC721-TRANSFERRED",
@@ -365,7 +367,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_INSURANCE_FUND_ADDRESS,
+    address: INSURANCE_FUND_ADDRESS,
     event:
       "event ERC20Transferred(address indexed _token, address indexed _recipient, uint256 _amount)",
     alertId: "INS-FUND-ERC20-TRANSFERRED",
@@ -386,7 +388,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
   {
-    address: LIDO_INSURANCE_FUND_ADDRESS,
+    address: INSURANCE_FUND_ADDRESS,
     event:
       "event ERC1155Transferred(address indexed _token, address indexed _recipient, uint256 _tokenId, uint256 _amount, bytes _data)",
     alertId: "INS-FUND-ERC1155-TRANSFERRED",
@@ -402,7 +404,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: LIDO_INSURANCE_FUND_ADDRESS,
+    address: INSURANCE_FUND_ADDRESS,
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "INS-FUND-OWNERSHIP-TRANSFERRED",
