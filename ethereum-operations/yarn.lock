@@ -2687,9 +2687,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"forta-agent@npm:^0.1.24":
-  version: 0.1.28
-  resolution: "forta-agent@npm:0.1.28"
+"forta-agent@npm:^0.1.32":
+  version: 0.1.32
+  resolution: "forta-agent@npm:0.1.32"
   dependencies:
     "@grpc/grpc-js": ^1.3.6
     "@grpc/proto-loader": ^0.6.4
@@ -2714,7 +2714,7 @@ __metadata:
     yargs: ^17.0.1
   bin:
     forta-agent: dist/cli/index.js
-  checksum: 5289f12f2583a7c0f0cebd8a877d22c72d8ef83c9d3f3e678a2f2be2bf2c75b97eceff7a03d4010a91ebdfd37f87784e5ff8870ac3f8e2bf6461ed60af82ebda
+  checksum: f7e53d88ab7a45f58e63bdada1275702270331ff204a811f55949c6b3903b0cc4e09e423d9c4a5bada86b3e422384f250b96d5c794b704a17ad4566d6ef9931d
   languageName: node
   linkType: hard
 
@@ -3890,7 +3890,7 @@ __metadata:
     "@types/lodash": ^4.14.194
     "@types/nodemon": ^1.19.0
     bignumber.js: ^9.0.1
-    forta-agent: ^0.1.24
+    forta-agent: ^0.1.32
     jest: ^27.0.6
     nodemon: ^2.0.8
     ts-jest: ^27.0.3

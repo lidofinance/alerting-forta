@@ -1,12 +1,14 @@
 import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  ACCOUNTING_HASH_CONSENSUS_ADDRESS as accountingHashConsensusAddress,
+} from "../../common/constants.testnet";
+import {
   ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE as hashConsensusEvents,
   ACCOUNTING_ORACLE_EVENTS_OF_NOTICE as oracleEvents,
 } from "./constants";
 
-export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x76f358a842defa0e179a8970767cff668fc134d6";
-export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
-  "0x8d87a8bcf8d4e542fd396d1c50223301c164417b";
+export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
+export const ACCOUNTING_HASH_CONSENSUS_ADDRESS = accountingHashConsensusAddress;
 
 export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
   ["0xa8af49fb44aaa8eeca9ae918bb7c05e2e71c9de9", "Chorus One"],

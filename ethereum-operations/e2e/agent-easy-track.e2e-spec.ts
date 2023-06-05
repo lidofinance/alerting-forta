@@ -96,7 +96,7 @@ describe("agent-easy-track e2e tests", () => {
     "should process tx with granted role on RewardProgramsRegistry",
     async () => {
       const findings = await runTransaction(
-        "0x89f37d45875f3e97f498d2f9fefaf094700a85e80d70fa9d28ad93049d72821e"
+        "0xd02f92e5a47792082f41ad6ca9e2d05d60f409a63328ac41a5d2704a7eb3fc1c"
       );
       expect(findings.at(0)).toMatchSnapshot();
     },

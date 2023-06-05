@@ -43,11 +43,11 @@ let noNames = new Map<number, string>();
 export const name = "ExitBusOracle";
 
 const {
-  CL_GENESIS_TIMESTEMP,
+  CL_GENESIS_TIMESTAMP,
   TRIGGER_PERIOD,
   REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER,
   EXITBUS_ORACLE_ADDRESS,
-  LIDO_ADDRESS,
+  LIDO_STETH_ADDRESS,
   WITHDRAWALS_QUEUE_ADDRESS,
   WITHDRAWALS_VAULT_ADDRESS,
   EL_REWARDS_VAULT_ADDRESS,
@@ -261,10 +261,14 @@ async function handleProcessingStarted(
     WITHDRAWAL_QUEUE_ABI,
     ethersProvider
   );
-  const lido = new ethers.Contract(LIDO_ADDRESS, LIDO_ABI, ethersProvider);
+  const lido = new ethers.Contract(
+    LIDO_STETH_ADDRESS,
+    LIDO_ABI,
+    ethersProvider
+  );
   const { refSlot } = processingStarted.args;
   const reportSlotsDiff =
-    Math.floor((now - CL_GENESIS_TIMESTEMP) / SECONDS_PER_SLOT) -
+    Math.floor((now - CL_GENESIS_TIMESTAMP) / SECONDS_PER_SLOT) -
     Number(refSlot);
   // it is assumption because we can't get block number by slot number using EL API
   // there are missed slots, so we consider this error in diff to be negligible

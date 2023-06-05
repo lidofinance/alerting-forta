@@ -59,7 +59,7 @@ let lastClaimedAmountMoreThanRequestedAlertTimestamp = 0;
 export const name = "Withdrawals";
 
 const {
-  LIDO_ADDRESS,
+  LIDO_STETH_ADDRESS,
   LIDO_TOKEN_REBASED,
   WITHDRAWALS_BUNKER_MODE_ENABLED,
   WITHDRAWALS_BUNKER_MODE_DISABLED,
@@ -193,7 +193,7 @@ async function handleQueueOnParWithStakeLimit(
   )
     return;
   const lidoContract = new ethers.Contract(
-    LIDO_ADDRESS,
+    LIDO_STETH_ADDRESS,
     LIDO_ABI,
     ethersProvider
   );
@@ -527,7 +527,10 @@ async function handleWithdrawalClaimed(
 }
 
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
-  const [rebaseEvent] = txEvent.filterLog(LIDO_TOKEN_REBASED, LIDO_ADDRESS);
+  const [rebaseEvent] = txEvent.filterLog(
+    LIDO_TOKEN_REBASED,
+    LIDO_STETH_ADDRESS
+  );
   if (!rebaseEvent) return;
   lastTokenRebaseTimestamp = txEvent.timestamp;
   amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0);

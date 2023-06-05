@@ -1,18 +1,22 @@
 import { ONE_HOUR } from "../../common/constants";
+import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  BURNER_ADDRESS as burnerAddress,
+  WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
+  EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
+} from "../../common/constants.testnet";
 
-export const LIDO_ADDRESS = "0x1643e812ae58766192cf7d2cf9567df2c37e9b7f";
-export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x76f358a842defa0e179a8970767cff668fc134d6";
-export const NODE_OPERATOR_REGISTRY_ADDRESS =
-  "0x9d4af1ee19dad8857db3a45b0374c81c8a1c6320";
-export const STAKING_ROUTER_ADDRESS =
-  "0xa3dbd317e53d363176359e10948ba0b1c0a4c820";
-export const WITHDRAWAL_QUEUE_ADDRESS =
-  "0xcf117961421ca9e546cd7f50bc73abcdb3039533";
-export const EL_REWARDS_VAULT_ADDRESS =
-  "0x94750381bE1AbA0504C666ee1DB118F68f0780D4";
-export const WITHDRAWALS_VAULT_ADDRESS =
-  "0xdc62f9e8C34be08501Cdef4EBDE0a280f576D762";
-export const BURNER_ADDRESS = "0x20c61C07C2E2FAb04BF5b4E12ce45a459a18f3B1";
+export const LIDO_STETH_ADDRESS = lidoStethAddress;
+export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
+export const NODE_OPERATOR_REGISTRY_ADDRESS = norAddress;
+export const STAKING_ROUTER_ADDRESS = srAddress;
+export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
+export const EL_REWARDS_VAULT_ADDRESS = elVaultAddress;
+export const WITHDRAWALS_VAULT_ADDRESS = wdVaultAddress;
+export const BURNER_ADDRESS = burnerAddress;
 
 export const OVERFILL_ALERT_TRIGGER_EVERY = 2 * ONE_HOUR;

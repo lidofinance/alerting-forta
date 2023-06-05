@@ -1,5 +1,6 @@
-export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS =
-  "0x9305c1dbfe22c12c66339184c0025d7006f0f1cc";
+import { ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress } from "../../common/constants";
+
+export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
 
 export const ORACLE_REPORT_SANITY_CHECKER_LIMITS = [
   "churnValidatorsPerDayLimit",

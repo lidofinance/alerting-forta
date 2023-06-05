@@ -5,7 +5,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-IMPL-CHANGED",
-    "description": "Implementation of Aragon Voting ([0x2e59A20f205bB85a89C53f1936454680651E618e](https://etherscan.io/address/0x2e59A20f205bB85a89C53f1936454680651E618e)) changed from [0xb935C3D80229d5D92f3761b17Cd81dC2610e3a45](https://etherscan.io/address/0xb935C3D80229d5D92f3761b17Cd81dC2610e3a45) to [0x72fb5253AD16307B9E773d2A78CaC58E309d5Ba4](https://etherscan.io/address/0x72fb5253AD16307B9E773d2A78CaC58E309d5Ba4)",
+    "description": "Implementation of Aragon Voting ([0x2e59a20f205bb85a89c53f1936454680651e618e](https://etherscan.io/address/0x2e59a20f205bb85a89c53f1936454680651e618e)) changed from [0xb935C3D80229d5D92f3761b17Cd81dC2610e3a45](https://etherscan.io/address/0xb935C3D80229d5D92f3761b17Cd81dC2610e3a45) to [0x72fb5253AD16307B9E773d2A78CaC58E309d5Ba4](https://etherscan.io/address/0x72fb5253AD16307B9E773d2A78CaC58E309d5Ba4)",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy implementation changed",
@@ -16,7 +16,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-IMPL-CHANGED",
-    "description": "Implementation of Legacy Oracle ([0x442af784A788A5bd6F42A01Ebe9F287a871243fb](https://etherscan.io/address/0x442af784A788A5bd6F42A01Ebe9F287a871243fb)) changed from [0xADa6E33aa65590934870bFD204Fe8efe9c6Aa4bC](https://etherscan.io/address/0xADa6E33aa65590934870bFD204Fe8efe9c6Aa4bC) to [0x1430194905301504e8830ce4B0b0df7187E84AbD](https://etherscan.io/address/0x1430194905301504e8830ce4B0b0df7187E84AbD)",
+    "description": "Implementation of Legacy Oracle ([0x442af784a788a5bd6f42a01ebe9f287a871243fb](https://etherscan.io/address/0x442af784a788a5bd6f42a01ebe9f287a871243fb)) changed from [0xADa6E33aa65590934870bFD204Fe8efe9c6Aa4bC](https://etherscan.io/address/0xADa6E33aa65590934870bFD204Fe8efe9c6Aa4bC) to [0x1430194905301504e8830ce4B0b0df7187E84AbD](https://etherscan.io/address/0x1430194905301504e8830ce4B0b0df7187E84AbD)",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy implementation changed",
@@ -27,7 +27,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-IMPL-CHANGED",
-    "description": "Implementation of Lido DAO and stETH ([0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84](https://etherscan.io/address/0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84)) changed from [0xC7B5aF82B05Eb3b64F12241B04B2cF14469E39F7](https://etherscan.io/address/0xC7B5aF82B05Eb3b64F12241B04B2cF14469E39F7) to [0x47EbaB13B806773ec2A2d16873e2dF770D130b50](https://etherscan.io/address/0x47EbaB13B806773ec2A2d16873e2dF770D130b50)",
+    "description": "Implementation of Lido DAO and stETH ([0xae7ab96520de3a18e5e111b5eaab095312d7fe84](https://etherscan.io/address/0xae7ab96520de3a18e5e111b5eaab095312d7fe84)) changed from [0xC7B5aF82B05Eb3b64F12241B04B2cF14469E39F7](https://etherscan.io/address/0xC7B5aF82B05Eb3b64F12241B04B2cF14469E39F7) to [0x47EbaB13B806773ec2A2d16873e2dF770D130b50](https://etherscan.io/address/0x47EbaB13B806773ec2A2d16873e2dF770D130b50)",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy implementation changed",
@@ -38,7 +38,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-IMPL-CHANGED",
-    "description": "Implementation of Node Operators Registry ([0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5](https://etherscan.io/address/0x55032650b14df07b85bF18A3a3eC8E0Af2e028d5)) changed from [0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe](https://etherscan.io/address/0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe) to [0x5d39ABaa161e622B99D45616afC8B837E9F19a25](https://etherscan.io/address/0x5d39ABaa161e622B99D45616afC8B837E9F19a25)",
+    "description": "Implementation of Node Operators Registry ([0x55032650b14df07b85bf18a3a3ec8e0af2e028d5](https://etherscan.io/address/0x55032650b14df07b85bf18a3a3ec8e0af2e028d5)) changed from [0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe](https://etherscan.io/address/0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe) to [0x5d39ABaa161e622B99D45616afC8B837E9F19a25](https://etherscan.io/address/0x5d39ABaa161e622B99D45616afC8B837E9F19a25)",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy implementation changed",
@@ -49,7 +49,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-NOT-FOUND",
-    "description": "Proxy contract Accounting Oracle ([0x852deD011285fe67063a08005c71a85690503Cee](https://etherscan.io/address/0x852deD011285fe67063a08005c71a85690503Cee)) not found",
+    "description": "Proxy contract Accounting Oracle ([0x852ded011285fe67063a08005c71a85690503cee](https://etherscan.io/address/0x852ded011285fe67063a08005c71a85690503cee)) not found",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy contract not found",
@@ -60,7 +60,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-NOT-FOUND",
-    "description": "Proxy contract Lido Locator ([0xC1d0b3DE6792Bf6b4b37EccdcC24e45978Cfd2Eb](https://etherscan.io/address/0xC1d0b3DE6792Bf6b4b37EccdcC24e45978Cfd2Eb)) not found",
+    "description": "Proxy contract Lido Locator ([0xc1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb](https://etherscan.io/address/0xc1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb)) not found",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy contract not found",
@@ -71,7 +71,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-NOT-FOUND",
-    "description": "Proxy contract Staking Router ([0xFdDf38947aFB03C621C71b06C9C70bce73f12999](https://etherscan.io/address/0xFdDf38947aFB03C621C71b06C9C70bce73f12999)) not found",
+    "description": "Proxy contract Staking Router ([0xfddf38947afb03c621c71b06c9c70bce73f12999](https://etherscan.io/address/0xfddf38947afb03c621c71b06c9c70bce73f12999)) not found",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy contract not found",
@@ -82,7 +82,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-NOT-FOUND",
-    "description": "Proxy contract Validator Exit Bus Oracle ([0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e](https://etherscan.io/address/0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e)) not found",
+    "description": "Proxy contract Validator Exit Bus Oracle ([0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e](https://etherscan.io/address/0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e)) not found",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy contract not found",
@@ -93,7 +93,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "PROXY-NOT-FOUND",
-    "description": "Proxy contract Withdrawal Queue ([0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1](https://etherscan.io/address/0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1)) not found",
+    "description": "Proxy contract Withdrawal Queue ([0x889edc2edab5f40e902b864ad4d7ade8e412f9b1](https://etherscan.io/address/0x889edc2edab5f40e902b864ad4d7ade8e412f9b1)) not found",
     "labels": Array [],
     "metadata": Object {},
     "name": "🚨 Proxy contract not found",

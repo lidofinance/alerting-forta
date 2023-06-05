@@ -1,10 +1,13 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { ONE_DAY, ONE_HOUR, ONE_WEEK } from "../../common/constants";
+import {
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+} from "../../common/constants";
 
-export const WITHDRAWAL_QUEUE_ADDRESS =
-  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
-export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
+export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
+export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
 export const BIG_WITHDRAWAL_REQUEST_THRESHOLD = new BigNumber(50000);
 export const BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD = new BigNumber(

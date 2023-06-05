@@ -26,7 +26,7 @@ import type * as Constants from "./constants";
 export const name = "Aragon Voting Watcher";
 
 const {
-  LIDO_ARAGON_VOTING_ADDRESS,
+  ARAGON_VOTING_ADDRESS,
   CAST_VOTE_EVENT,
   ARAGON_VOTING_EVENTS_OF_NOTICE,
   PHASE_ONE_DURATION,
@@ -62,7 +62,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const aragonVoting = new ethers.Contract(
-    LIDO_ARAGON_VOTING_ADDRESS,
+    ARAGON_VOTING_ADDRESS,
     ARAGON_VOTING_ABI,
     ethersProvider
   );
@@ -109,7 +109,7 @@ async function getVoteInfo(
   blockNumber: number
 ): Promise<IVoteInfo> {
   const aragonVoting = new ethers.Contract(
-    LIDO_ARAGON_VOTING_ADDRESS,
+    ARAGON_VOTING_ADDRESS,
     ARAGON_VOTING_ABI,
     ethersProvider
   );
@@ -205,11 +205,8 @@ async function handleAragonTransaction(
   txEvent: TransactionEvent,
   findings: Finding[]
 ) {
-  if (LIDO_ARAGON_VOTING_ADDRESS in txEvent.addresses) {
-    const events = txEvent.filterLog(
-      CAST_VOTE_EVENT,
-      LIDO_ARAGON_VOTING_ADDRESS
-    );
+  if (ARAGON_VOTING_ADDRESS in txEvent.addresses) {
+    const events = txEvent.filterLog(CAST_VOTE_EVENT, ARAGON_VOTING_ADDRESS);
     for (const event of events) {
       if (event && event.args.voteId) {
         await handleNewVoteInfo(

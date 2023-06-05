@@ -1,45 +1,45 @@
 import { INamedRole, roleByName } from "./utils";
+import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  ACCOUNTING_HASH_CONSENSUS_ADDRESS as accountingHashConsensusAddress,
+  LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
+  LIDO_STETH_ADDRESS as lidoStethAddress,
+  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
+  ARAGON_VOTING_ADDRESS as votingAddress,
+  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  DEPOSIT_SECURITY_ADDRESS as dsAddress,
+  BURNER_ADDRESS as burnerAddress,
+  EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
+  EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
+  EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,
+  ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
+  WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
+  ORACLE_DAEMON_CONFIG_ADDRESS as oracleConfigAddress,
+  GATE_SEAL_DEFAULT_ADDRESS as gsAddress,
+  ARAGON_ACL_ADDRESS as aclAddress,
+  LEGACY_ORACLE_ADDRESS as legacyOracleAddress,
+  ARAGON_AGENT_ADDRESS as agentAddress,
+  VOTING_REPO_ADDRESS as votingRepoAddress,
+  LDO_PURCHASE_EXECUTOR_ADDRESS as ldoPurchaseAddress,
+  APP_REPO_ADDRESS as appREpoAddress,
+  ORACLE_REPO_ADDRESS as oracleRepoAddress,
+  NO_REPO_ADDRESS as noRepoAddress,
+  LIDO_DAO_ADDRESS as daoAddress,
+  LDO_ADDRESS as ldoAddress,
+  ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
+  ARAGON_FINANCE_ADDRESS as financeAddress,
+  CURVE_LIQUIDITY_FARMING_MANAGER_ADDRESS as curveManagerAddress,
+  ANCHOR_VAULT_ADDRESS as anchorVaultAddress,
+  EMERGENCY_BRAKES_MS_ADDRESS as emergencyMsAddress,
+  DEV_MS_ADDRESS as devMsAddress,
+} from "../../common/constants";
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
 export const NEW_ROLE_MEMBERS_REPORT_INTERVAL = 60 * 60; // 1h
 
-export const LIDO_LOCATOR_ADDRESS =
-  "0xc1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb";
-export const LIDO_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
-export const NOR_ADDRESS = "0x55032650b14df07b85bf18a3a3ec8e0af2e028d5";
-export const LEGACY_ORACLE_ADDRESS =
-  "0x442af784a788a5bd6f42a01ebe9f287a871243fb";
-export const DEPOSIT_SECURITY_MODULE_ADDRESS =
-  "0xc77f8768774e1c9244beed705c4354f2113cfc09";
-export const ARAGON_VOTING_ADDRESS =
-  "0x2e59a20f205bb85a89c53f1936454680651e618e";
-export const ARAGON_AGENT_ADDRESS =
-  "0x3e40d73eb977dc6a537af587d48316fee66e9c8c";
-export const STAKING_ROUTER_ADDRESS =
-  "0xfddf38947afb03c621c71b06c9c70bce73f12999";
-export const WITHDRAWAL_QUEUE_ADDRESS =
-  "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
-export const BURNER_ADDRESS = "0xd15a672319cf0352560ee76d9e89eab0889046d3";
-export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x852ded011285fe67063a08005c71a85690503cee";
-export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
-  "0xd624b08c83baecf0807dd2c6880c3154a5f0b288";
-export const VALIDATORS_EXIT_BUS_ORACLE_ADDRESS =
-  "0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e";
-export const VALIDATORS_EXIT_BUS_HASH_CONSENSUS_ADDRESS =
-  "0x7fadb6358950c5faa66cb5eb8ee5147de3df355a";
-export const GATE_SEAL_ADDRESS = "0x1ad5cb2955940f998081c1ef5f5f00875431aa90";
-export const ORACLE_DAEMON_CONFIG_ADDRESS =
-  "0xbf05a929c3d7885a6aead833a992da6e5ac23b09";
-export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS =
-  "0x9305c1dbfe22c12c66339184c0025d7006f0f1cc";
-export const WITHDRAWAL_VAULT_ADDRESS =
-  "0xb9d7934878b5fb9610b3fe8a5e441e8fad7e293f";
-export const LIDO_ARAGON_ACL_ADDRESS =
-  "0x9895f0f17cc1d1891b6f18ee0b483b6f221b37bb";
-export const EVM_SCRIPT_EXECUTOR_ADDRESS =
-  "0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977";
+export const ARAGON_ACL_ADDRESS = aclAddress;
 
 export const ACLEnumerableABI = [
   "function getRoleMember(bytes32, uint256) view returns (address)",
@@ -56,39 +56,38 @@ export const CHANGE_PERMISSION_MANAGER_EVENT =
   "event ChangePermissionManager(address indexed app, bytes32 indexed role, address indexed manager)";
 
 export const LIDO_APPS = new Map([
-  [ARAGON_VOTING_ADDRESS, "Aragon Voting"],
-  [ARAGON_AGENT_ADDRESS, "Aragon Agent"],
-  [LIDO_ARAGON_ACL_ADDRESS, "Aragon ACL"],
-  [EVM_SCRIPT_EXECUTOR_ADDRESS, "EVMScriptExecutor"],
-  [DEPOSIT_SECURITY_MODULE_ADDRESS, "Deposit Security module"],
-  [NOR_ADDRESS, "Node Operators registry"],
-  [LEGACY_ORACLE_ADDRESS, "Legacy Oracle"],
-  [LIDO_ADDRESS, "stETH token"],
-  [STAKING_ROUTER_ADDRESS, "Staking Router"],
-  ["0x4ee3118e3858e8d7164a634825bfe0f73d99c792", "Voting Repo"],
-  ["0xa9b2f5ce3aae7374a62313473a74c98baa7fa70e", "LDO purchase executor"],
-  ["0xb280e33812c0b09353180e92e27b8ad399b07f26", "SelfOwnedStETHBurner"],
-  ["0xf5dc67e54fc96f993cd06073f71ca732c1e654b1", "Lido App Repo"],
-  ["0xf9339de629973c60c4d2b76749c81e6f40960e3a", "Lido Oracle Repo"],
-  ["0x0d97e876ad14db2b183cfeeb8aa1a5c788eb1831", "NO registry Repo"],
-  ["0xb8ffc3cd6e7cf5a098a1c92f48009765b24088dc", "Lido DAO"],
-  ["0x5a98fcbea516cf06857215779fd812ca3bef1b32", "LDO token"],
-  ["0xf73a1260d222f447210581ddf212d915c09a3249", "Aragon Token Manager"],
-  ["0xb9e5cbb9ca5b0d659238807e84d0176930753d86", "Aragon Finance"],
+  [votingAddress, "Aragon Voting"],
+  [agentAddress, "Aragon Agent"],
+  [ARAGON_ACL_ADDRESS, "Aragon ACL"],
+  [evmExecutorAddress, "EVMScriptExecutor"],
+  [dsAddress, "Deposit Security module"],
+  [norAddress, "Node Operators registry"],
+  [legacyOracleAddress, "Legacy Oracle"],
+  [lidoStethAddress, "stETH token"],
+  [srAddress, "Staking Router"],
+  [votingRepoAddress, "Voting Repo"],
+  [ldoPurchaseAddress, "LDO purchase executor"],
+  [appREpoAddress, "Lido App Repo"],
+  [oracleRepoAddress, "Lido Oracle Repo"],
+  [noRepoAddress, "NO registry Repo"],
+  [daoAddress, "Lido DAO"],
+  [ldoAddress, "LDO token"],
+  [tmAddress, "Aragon Token Manager"],
+  [financeAddress, "Aragon Finance"],
 ]);
 
 export const ORDINARY_ENTITIES = new Map([
-  [ARAGON_VOTING_ADDRESS, "Aragon Voting"],
-  [ARAGON_AGENT_ADDRESS, "Aragon Agent"],
+  [votingAddress, "Aragon Voting"],
+  [agentAddress, "Aragon Agent"],
 ]);
 
 // Rewards contracts allowed owners
 export const WHITELISTED_OWNERS = [
-  ARAGON_VOTING_ADDRESS,
-  ARAGON_AGENT_ADDRESS,
+  votingAddress,
+  agentAddress,
   // multisigs
-  "0x73b047fe6337183A454c5217241D780a932777bD",
-  "0x3cd9F71F80AB08ea5a7Dca348B5e94BC595f26A0",
+  emergencyMsAddress,
+  devMsAddress,
 ];
 
 // i.e. keccak256("APP_MANAGER_ROLE")
@@ -279,14 +278,14 @@ export interface IOwnable {
 // List of contracts to monitor for owner
 export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
   [
-    DEPOSIT_SECURITY_MODULE_ADDRESS,
+    dsAddress,
     {
       name: "Deposit Security module",
       ownershipMethod: "getOwner",
     },
   ],
   [
-    "0x753D5167C31fBEB5b49624314d74A957Eb271709",
+    curveManagerAddress,
     {
       name: "Curve Liquidity Farming Manager",
       ownershipMethod: "owner",
@@ -335,56 +334,56 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
   [
-    "0xA2F987A546D4CD1c607Ee8141276876C26b72Bdf",
+    anchorVaultAddress,
     {
       name: "AnchorVault",
       ownershipMethod: "admin",
     },
   ],
   [
-    EVM_SCRIPT_EXECUTOR_ADDRESS,
+    evmExecutorAddress,
     {
       name: "Easy Track EVMScriptExecutor",
       ownershipMethod: "owner",
     },
   ],
   [
-    LIDO_LOCATOR_ADDRESS,
+    lidoLocatorAddress,
     {
       name: "Lido Locator",
       ownershipMethod: "proxy__getAdmin",
     },
   ],
   [
-    STAKING_ROUTER_ADDRESS,
+    srAddress,
     {
       name: "Staking Router",
       ownershipMethod: "proxy__getAdmin",
     },
   ],
   [
-    WITHDRAWAL_QUEUE_ADDRESS,
+    wqAddress,
     {
       name: "Withdrawal Queue",
       ownershipMethod: "proxy__getAdmin",
     },
   ],
   [
-    WITHDRAWAL_VAULT_ADDRESS,
+    wdVaultAddress,
     {
       name: "Withdrawal Vault",
       ownershipMethod: "proxy_getAdmin",
     },
   ],
   [
-    ACCOUNTING_ORACLE_ADDRESS,
+    accountingOracleAddress,
     {
       name: "Accounting Oracle",
       ownershipMethod: "proxy__getAdmin",
     },
   ],
   [
-    VALIDATORS_EXIT_BUS_ORACLE_ADDRESS,
+    ebOracleAddress,
     {
       name: "Validator Exit Bus Oracle",
       ownershipMethod: "proxy__getAdmin",
@@ -398,17 +397,17 @@ export interface IHasRoles {
 }
 
 export const ROLES_OWNERS = {
-  agent: ARAGON_AGENT_ADDRESS,
-  dsm: DEPOSIT_SECURITY_MODULE_ADDRESS,
-  nor: NOR_ADDRESS,
-  accountingOracle: ACCOUNTING_ORACLE_ADDRESS,
-  lido: LIDO_ADDRESS,
-  gateSeal: GATE_SEAL_ADDRESS,
+  agent: agentAddress,
+  dsm: dsAddress,
+  nor: norAddress,
+  accountingOracle: accountingOracleAddress,
+  lido: lidoStethAddress,
+  gateSeal: gsAddress,
 };
 
 export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
   [
-    ORACLE_DAEMON_CONFIG_ADDRESS,
+    oracleConfigAddress,
     {
       name: "OracleDaemonConfig",
       roles: new Map<INamedRole, string[]>([
@@ -418,7 +417,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    ACCOUNTING_HASH_CONSENSUS_ADDRESS,
+    accountingHashConsensusAddress,
     {
       name: "Accounting HashConsensus",
       roles: new Map<INamedRole, string[]>([
@@ -432,7 +431,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    VALIDATORS_EXIT_BUS_HASH_CONSENSUS_ADDRESS,
+    ebHashAddress,
     {
       name: "Validators Exit Bus HashConsensus",
       roles: new Map<INamedRole, string[]>([
@@ -446,7 +445,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    ACCOUNTING_ORACLE_ADDRESS,
+    accountingOracleAddress,
     {
       name: "Accounting Oracle",
       roles: new Map<INamedRole, string[]>([
@@ -458,7 +457,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    VALIDATORS_EXIT_BUS_ORACLE_ADDRESS,
+    ebOracleAddress,
     {
       name: "Validators Exit Bus Oracle",
       roles: new Map<INamedRole, string[]>([
@@ -472,7 +471,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    BURNER_ADDRESS,
+    burnerAddress,
     {
       name: "Burner",
       roles: new Map<INamedRole, string[]>([
@@ -487,7 +486,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
+    checkerAddress,
     {
       name: "Oracle Report Sanity Checker",
       roles: new Map<INamedRole, string[]>([
@@ -506,7 +505,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    WITHDRAWAL_QUEUE_ADDRESS,
+    wqAddress,
     {
       name: "Withdrawal Queue",
       roles: new Map<INamedRole, string[]>([
@@ -520,7 +519,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     },
   ],
   [
-    STAKING_ROUTER_ADDRESS,
+    srAddress,
     {
       name: "Staking Router",
       roles: new Map<INamedRole, string[]>([

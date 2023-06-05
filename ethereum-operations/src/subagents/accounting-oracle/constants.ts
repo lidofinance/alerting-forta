@@ -1,14 +1,16 @@
 import { FindingSeverity } from "forta-agent";
 import { ONE_DAY, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
+import {
+  ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
+  ACCOUNTING_HASH_CONSENSUS_ADDRESS as accountingHashConsensusAddress,
+} from "../../common/constants";
 
 // trigger each 20 minutes for lasting conditions
 export const TRIGGER_PERIOD = 60 * 20; // 20 minutes
 
-export const ACCOUNTING_ORACLE_ADDRESS =
-  "0x852ded011285fe67063a08005c71a85690503cee";
-export const ACCOUNTING_HASH_CONSENSUS_ADDRESS =
-  "0xd624b08c83baecf0807dd2c6880c3154a5f0b288";
+export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
+export const ACCOUNTING_HASH_CONSENSUS_ADDRESS = accountingHashConsensusAddress;
 
 export const ACCOUNTING_ORACLE_REPORT_SUBMITTED_EVENT =
   "event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)";
