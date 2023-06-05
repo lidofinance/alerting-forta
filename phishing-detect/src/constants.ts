@@ -195,6 +195,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x35636b85b68c1b4a216110fb3a5fb447a99db14a", // unsheth vdAAM
   "0x2bca0300c2aa65de6f19c2d241b54a445c9990e2", // gravitaprotocol.com
   "0x39254033945aa2e4809cc2977e7087bee48bd7ab", // originprotocol.com
+  "0x839d6833cee34ffab6fa9057b39f02bd3091a1d6", // tempus.finance
+  "0xa7ca2c8673bcfa5a26d8ceec2887f2cc2b0db22a", // mimic.fi
+  "0x21e27a5e5513d6e65c4f830167390997aa84843a", // curve.fi stETH pool
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
