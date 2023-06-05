@@ -581,7 +581,9 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
     findings.push(
       Finding.fromObject({
         name: "⚠️ stETH PEG on Chainlink decreased",
-        description: `stETH PEG on Chainlink decreased to ${peg.toFixed(4)}`,
+        description: `stETH PEG on Chainlink decreased to ${peg.toFixed(
+          4
+        )}, [source](https://data.chain.link/ethereum/mainnet/crypto-eth/steth-eth)`,
         alertId: "STETH-CHAINLINK-PEG-DECREASE",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -600,7 +602,9 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
     findings.push(
       Finding.fromObject({
         name: "🚨🚨🚨 Super low stETH PEG on Chainlink",
-        description: `Current stETH PEG on Chainlink - ${peg.toFixed(4)}`,
+        description: `Current stETH PEG on Chainlink - ${peg.toFixed(
+          4
+        )}, [source](https://data.chain.link/ethereum/mainnet/crypto-eth/steth-eth)`,
         alertId: "LOW-STETH-CHAINLINK-PEG",
         severity: FindingSeverity.Critical,
         type: FindingType.Degraded,
