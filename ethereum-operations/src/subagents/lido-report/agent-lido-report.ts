@@ -25,6 +25,7 @@ import {
   ONE_YEAR,
   SECONDS_PER_SLOT,
 } from "../../common/constants";
+import { last } from "lodash";
 const {
   LIDO_STETH_ADDRESS,
   ACCOUNTING_ORACLE_ADDRESS,
@@ -60,6 +61,8 @@ export const name = "LidoReport";
 // re-fetched from history on startup
 let lastCLrewards = BN_ZERO;
 let lastELrewards = BN_ZERO;
+let lastTotalShares = BN_ZERO;
+let lastTotalEther = BN_ZERO;
 let lastAllExited = 0;
 let lastAllStuck = 0;
 let lastAllRefunded = 0;
@@ -109,6 +112,11 @@ export async function initialize(
       lastEvent.blockNumber,
       lastEvent.blockNumber
     );
+    const [tokenRebasedEvent] = await lido.queryFilter(
+      lido.filters.TokenRebased(),
+      lastEvent.blockNumber,
+      lastEvent.blockNumber
+    );
     if (withdrawalsReceivedEvent) {
       const { preCLBalance, postCLBalance } = ethDistributedEvents[
         ethDistributedEvents.length - 1
@@ -125,6 +133,14 @@ export async function initialize(
       lastELrewards = new BigNumber(
         String(elRewardsReceivedEvent.args?.amount)
       ).div(ETH_DECIMALS);
+    }
+    if (tokenRebasedEvent) {
+      lastTotalShares = new BigNumber(
+        String(tokenRebasedEvent.args?.postTotalShares)
+      );
+      lastTotalEther = new BigNumber(
+        String(tokenRebasedEvent.args?.postTotalEther)
+      );
     }
   }
 
@@ -371,15 +387,17 @@ function prepareAPRLines(
     String(tokenRebasedEvent.args.postTotalEther)
   );
 
-  const sharesDiffStr = postTotalShares
-    .minus(preTotalShares)
-    .div(ETH_DECIMALS)
-    .toFixed(2);
+  const sharesDiff = postTotalShares.minus(lastTotalShares).div(ETH_DECIMALS);
+  const sharesDiffStr =
+    Number(sharesDiff) > 0
+      ? `+${sharesDiff.toFixed(2)}`
+      : sharesDiff.toFixed(2);
+  lastTotalShares = postTotalShares;
 
-  const etherDiffStr = postTotalEther
-    .minus(preTotalEther)
-    .div(ETH_DECIMALS)
-    .toFixed(2);
+  const etherDiff = postTotalEther.minus(lastTotalEther).div(ETH_DECIMALS);
+  const etherDiffStr =
+    Number(etherDiff) > 0 ? `+${etherDiff.toFixed(2)}` : etherDiff.toFixed(2);
+  lastTotalEther = postTotalEther;
 
   const apr = calculateAPR(
     timeElapsed,
