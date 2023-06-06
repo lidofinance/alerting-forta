@@ -10,7 +10,11 @@ import {
 
 import { ethersProvider } from "../../ethers";
 
-import { ETH_DECIMALS, ONE_HOUR } from "../../common/constants";
+import {
+  CHAINLINK_STETH_ETH_PAGE,
+  ETH_DECIMALS,
+  ONE_HOUR,
+} from "../../common/constants";
 
 import {
   CHAINLINK_STETH_PRICE_FEED,
@@ -583,7 +587,7 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
         name: "⚠️ stETH PEG on Chainlink decreased",
         description: `stETH PEG on Chainlink decreased to ${peg.toFixed(
           4
-        )}, [source](https://data.chain.link/ethereum/mainnet/crypto-eth/steth-eth)`,
+        )}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
         alertId: "STETH-CHAINLINK-PEG-DECREASE",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -604,7 +608,7 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
         name: "🚨🚨🚨 Super low stETH PEG on Chainlink",
         description: `Current stETH PEG on Chainlink - ${peg.toFixed(
           4
-        )}, [source](https://data.chain.link/ethereum/mainnet/crypto-eth/steth-eth)`,
+        )}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
         alertId: "LOW-STETH-CHAINLINK-PEG",
         severity: FindingSeverity.Critical,
         type: FindingType.Degraded,
