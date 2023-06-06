@@ -41,7 +41,8 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
       "event RewardsMintedReportFailed(uint256 indexed stakingModuleId, bytes lowLevelRevertData)",
     alertId: "STAKING-ROUTER-REWARDS-MINTED-REPORT-FAILED",
     name: "🚨 Staking Router: rewards minting failed",
-    description: (args: any) => `Staking module ID: ${args.stakingModuleId}`,
+    description: (args: any) =>
+      `Staking module ID: ${args.stakingModuleId}, reverted data: \`${args.lowLevelRevertData}\``,
     severity: FindingSeverity.Critical,
   },
   {
