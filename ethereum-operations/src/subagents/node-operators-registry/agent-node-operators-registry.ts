@@ -1,4 +1,5 @@
 import {
+  BlockEvent,
   ethers,
   Finding,
   FindingSeverity,
@@ -8,12 +9,14 @@ import {
 } from "forta-agent";
 
 import {
+  formatDelay,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
+import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { ethersProvider } from "../../ethers";
 const {
   NODE_OPERATOR_REGISTRY_MODULE_ID,
@@ -41,6 +44,7 @@ interface NodeOperatorShortDigest {
   refunded: number;
   exited: number;
   isStuckRefunded: boolean;
+  stuckPenaltyEndTimestamp: number;
 }
 
 const nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
@@ -57,12 +61,37 @@ export async function initialize(
     ethersProvider
   );
 
+  const nodeOperatorRegistry = new ethers.Contract(
+    NODE_OPERATORS_REGISTRY_ADDRESS,
+    NODE_OPERATORS_REGISTRY_ABI,
+    ethersProvider
+  );
+
   const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
     NODE_OPERATOR_REGISTRY_MODULE_ID,
     { blockTag: currentBlock }
   );
 
-  operators.forEach((digest: any) =>
+  const stuckOperators = operators.filter(
+    (digest: any) => Number(digest.summary.stuckValidatorsCount) != 0
+  );
+
+  const stuckOperatorsSummaries = await Promise.all(
+    stuckOperators.map((digest: any) =>
+      nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
+        blockTag: currentBlock,
+      })
+    )
+  );
+
+  const stuckOperatorsEndTimestampMap = new Map<String, number>(
+    stuckOperators.map((digest: any, index: number) => [
+      String(digest.id),
+      Number(stuckOperatorsSummaries[index].stuckPenaltyEndTimestamp),
+    ])
+  );
+
+  for (const digest of operators) {
     nodeOperatorDigests.set(String(digest.id), {
       stuck: Number(digest.summary.stuckValidatorsCount),
       refunded: Number(digest.summary.refundedValidatorsCount),
@@ -70,8 +99,10 @@ export async function initialize(
       isStuckRefunded:
         Number(digest.summary.refundedValidatorsCount) >=
         Number(digest.summary.stuckValidatorsCount),
-    })
-  );
+      stuckPenaltyEndTimestamp:
+        stuckOperatorsEndTimestampMap.get(String(digest.id)) ?? 0,
+    });
+  }
 
   return {};
 }
@@ -207,6 +238,7 @@ function handleStuckStateChanged(
       refunded: Number(refundedValidatorsCount),
       isStuckRefunded:
         Number(refundedValidatorsCount) >= Number(stuckValidatorsCount),
+      stuckPenaltyEndTimestamp: Number(event.args.stuckPenaltyEndTimestamp),
     });
   }
 }
@@ -260,8 +292,41 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   }
 }
 
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+
+  handleStuckPenaltyEnd(blockEvent, findings);
+
+  return findings;
+}
+
+function handleStuckPenaltyEnd(blockEvent: BlockEvent, findings: Finding[]) {
+  for (const [id, digest] of nodeOperatorDigests.entries()) {
+    const { stuckPenaltyEndTimestamp } = digest;
+    if (
+      stuckPenaltyEndTimestamp > 0 &&
+      stuckPenaltyEndTimestamp < blockEvent.block.timestamp
+    ) {
+      const delay =
+        Number(blockEvent.block.timestamp) - stuckPenaltyEndTimestamp;
+      findings.push(
+        Finding.fromObject({
+          name: "ℹ️ NO Registry: operator stuck penalty ended",
+          description: `Operator ID: ${id}\nStuck penalty ended ${formatDelay(
+            delay
+          )} ago\nNote: don't forget to call \`clearNodeOperatorPenalty\``,
+          alertId: "NODE-OPERATORS-STUCK-PENALTY-ENDED",
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
+      );
+    }
+  }
+}
+
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleTransaction,
+  handleBlock,
   // initialize, // sdk won't provide any arguments to the function
 };
