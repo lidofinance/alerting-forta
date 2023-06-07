@@ -38,8 +38,8 @@ const {
   RedefineMode.Merge
 );
 
-let lastAlertedClosestPenaltyEndTimestamp = 0;
-let lastPenaltyEndTimestampAlertTimestamp = 0;
+let closestPenaltyEndTimestamp = 0;
+let penaltyEndAlertTriggeredAt = 0;
 
 export const name = "NodeOperatorsRegistry";
 
@@ -309,7 +309,7 @@ async function handleStuckPenaltyEnd(
   findings: Finding[]
 ) {
   let description = "";
-  let closestPenaltyEndTimestamp = 0;
+  let currentClosestPenaltyEndTimestamp = 0;
   const now = Number(blockEvent.block.timestamp);
   for (const [id, digest] of nodeOperatorDigests.entries()) {
     const { stuck, refunded, stuckPenaltyEndTimestamp } = digest;
@@ -318,8 +318,8 @@ async function handleStuckPenaltyEnd(
       stuckPenaltyEndTimestamp > 0 &&
       stuckPenaltyEndTimestamp < blockEvent.block.timestamp
     ) {
-      if (stuckPenaltyEndTimestamp > closestPenaltyEndTimestamp) {
-        closestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
+      if (stuckPenaltyEndTimestamp > currentClosestPenaltyEndTimestamp) {
+        currentClosestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
       }
       const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
       description += `Operator ID: ${id}: penalty ended ${formatDelay(
@@ -328,10 +328,10 @@ async function handleStuckPenaltyEnd(
     }
   }
   if (
-    (closestPenaltyEndTimestamp != 0 &&
-      now - lastPenaltyEndTimestampAlertTimestamp >
+    (currentClosestPenaltyEndTimestamp != 0 &&
+      now - penaltyEndAlertTriggeredAt >
         STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
-    closestPenaltyEndTimestamp > lastAlertedClosestPenaltyEndTimestamp
+    currentClosestPenaltyEndTimestamp > closestPenaltyEndTimestamp
   ) {
     description += "\nNote: don't forget to call `clearNodeOperatorPenalty`";
     findings.push(
@@ -343,8 +343,8 @@ async function handleStuckPenaltyEnd(
         type: FindingType.Info,
       })
     );
-    lastAlertedClosestPenaltyEndTimestamp = closestPenaltyEndTimestamp;
-    lastPenaltyEndTimestampAlertTimestamp = now;
+    closestPenaltyEndTimestamp = currentClosestPenaltyEndTimestamp;
+    penaltyEndAlertTriggeredAt = now;
   }
 }
 
