@@ -31,14 +31,8 @@ import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
 import * as agentVaults from "./subagents/vaults/agent-vaults";
 
 import VERSION from "./version";
-import { mergeFindings, RedefineMode, requireWithTier } from "./common/utils";
-import type * as Constants from "./common/constants";
-
-const { RUN_TIER } = requireWithTier<typeof Constants>(
-  module,
-  `./common/constants`,
-  RedefineMode.Merge
-);
+import { mergeFindings } from "./common/utils";
+import { RUN_TIER } from "./common/constants";
 
 type Metadata = { [key: string]: string };
 interface SubAgent {

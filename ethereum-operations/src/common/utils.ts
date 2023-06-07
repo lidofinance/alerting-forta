@@ -32,14 +32,14 @@ export function mergeFindings(findings: Finding[]): Finding[] {
 
 export function etherscanAddress(address: string): string {
   const subpath =
-    process.env.FORTA_AGENT_RUN_TEAR == "testnet" ? "goerli." : "";
+    process.env.FORTA_AGENT_RUN_TIER == "testnet" ? "goerli." : "";
   return `[${address}](https://${subpath}etherscan.io/address/${address})`;
 }
 
 /**
  * Special wrapper under `require` function that allows to
  * redefine variables from a file with the same name and `.<tier>` suffix.
- * `<tier>` is a string that is passed by `FORTA_AGENT_RUN_TEAR` environment variable.
+ * `<tier>` is a string that is passed by `FORTA_AGENT_RUN_TIER` environment variable.
  * @param module module object to get the path from.
  * @param path relative to module path to the main file to import.
  * @param mode `strict` or `merge`. Default: `strict`.
