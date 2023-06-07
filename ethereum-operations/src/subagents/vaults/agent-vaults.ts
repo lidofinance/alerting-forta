@@ -139,7 +139,7 @@ async function handleNoWithdrawalVaultDrains(
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance)
           )} without Oracle report`,
-          alertId: "WITHDRAWAL_VAULT_BALANCE_DRAIN",
+          alertId: "WITHDRAWAL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         })
@@ -159,7 +159,7 @@ async function handleNoWithdrawalVaultDrains(
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance)
           )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
-          alertId: "WITHDRAWAL_VAULT_BALANCE_DRAIN",
+          alertId: "WITHDRAWAL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         })
@@ -211,7 +211,7 @@ async function handleNoELVaultDrains(
           description: `EL Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance)
           )} without Oracle report`,
-          alertId: "EL_VAULT_BALANCE_DRAIN",
+          alertId: "EL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         })
@@ -233,7 +233,7 @@ async function handleNoELVaultDrains(
           )} but Oracle report shows ${toEthString(
             executionLayerRewardsWithdrawn
           )}`,
-          alertId: "EL_VAULT_BALANCE_DRAIN",
+          alertId: "EL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         })
