@@ -46,6 +46,7 @@ async function handleStorageSlots(
   findings: Finding[],
   checkValues: boolean
 ) {
+  // TODO: sophisticated attacker can change the storage slot value back to the original one in the single block
   await Promise.all(
     STORAGE_SLOTS.map(async (contractStorageMap: ContractStorageMap) => {
       const contract = contractStorageMap.contract;
@@ -79,7 +80,7 @@ async function handleStorageSlots(
                     `\nPrev value: ${prevValue}` +
                     `\nNew value: ${value}`,
                   alertId: "STORAGE-SLOT-VALUE-CHANGED",
-                  severity: FindingSeverity.High,
+                  severity: FindingSeverity.Critical,
                   type: FindingType.Suspicious,
                 })
               );
