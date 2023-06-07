@@ -12,7 +12,7 @@ New value: 0x00000000000000000000000098be4a407bff0c125e25fbe9eb1165504349c37d",
     "metadata": Object {},
     "name": "🚨 Critical storage slot value changed",
     "protocol": "ethereum",
-    "severity": 4,
+    "severity": 5,
     "type": 2,
   },
 ]
