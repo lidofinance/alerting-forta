@@ -38,7 +38,9 @@ export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
 );
 
 // max delay between two oracle reports
-export const MAX_ORACLE_REPORT_SUBMIT_DELAY = ONE_DAY + 15 * 60; // 24h 15m
+export const MAX_ORACLE_REPORT_MAIN_DATA_SUBMIT_DELAY = ONE_DAY + 15 * 60; // 24h 15m
+export const MAX_ORACLE_REPORT_EXTRA_DATA_SUBMIT_AFTER_MAIN_DATA_DELAY =
+  20 * 60; // 20m
 
 export const MIN_ORACLE_BALANCE_INFO = 0.3; // 0.3 ETH
 
