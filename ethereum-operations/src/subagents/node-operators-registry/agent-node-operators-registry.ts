@@ -329,8 +329,7 @@ async function handleStuckPenaltyEnd(
   }
   if (
     (currentClosestPenaltyEndTimestamp != 0 &&
-      now - penaltyEndAlertTriggeredAt >
-        STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
+      now - penaltyEndAlertTriggeredAt > STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
     currentClosestPenaltyEndTimestamp > closestPenaltyEndTimestamp
   ) {
     description += "\nNote: don't forget to call `clearNodeOperatorPenalty`";
