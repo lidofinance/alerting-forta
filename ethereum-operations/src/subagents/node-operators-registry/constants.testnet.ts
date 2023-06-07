@@ -3,7 +3,7 @@ import {
   EASY_TRACK_ADDRESS as etAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
-} from "../../common/constants";
+} from "../../common/constants.testnet";
 
 export const EASY_TRACK_ADDRESS = etAddress;
 export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
