@@ -36,6 +36,12 @@ export function etherscanAddress(address: string): string {
   return `[${address}](https://${subpath}etherscan.io/address/${address})`;
 }
 
+export function etherscanNft(address: string, id: number | string): string {
+  const subpath =
+    process.env.FORTA_AGENT_RUN_TEAR == "testnet" ? "goerli." : "";
+  return `[${id}](https://${subpath}etherscan.io/nft/${address}/${id})`;
+}
+
 /**
  * Special wrapper under `require` function that allows to
  * redefine variables from a file with the same name and `.<tier>` suffix.

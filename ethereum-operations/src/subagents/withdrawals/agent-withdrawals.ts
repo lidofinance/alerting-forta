@@ -15,6 +15,7 @@ import LIDO_ABI from "../../abi/Lido.json";
 import { formatDelay } from "./utils";
 import {
   etherscanAddress,
+  etherscanNft,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -500,7 +501,10 @@ async function handleWithdrawalClaimed(
         findings.push(
           Finding.fromObject({
             name: `🤔 Withdrawals: claimed amount is more than requested`,
-            description: `Request ID: ${reqId}\nClaimed: ${claimedAmount
+            description: `Request ID: ${etherscanNft(
+              WITHDRAWAL_QUEUE_ADDRESS,
+              reqId
+            )}\nClaimed: ${claimedAmount
               .div(ETH_DECIMALS)
               .toFixed(2)} ETH\nRequested: ${(curr.amount as BigNumber)
               .div(ETH_DECIMALS)
