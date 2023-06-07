@@ -50,10 +50,10 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     event:
       "event StakingModuleExitedValidatorsIncompleteReporting(uint256 indexed stakingModuleId, uint256 unreportedExitedValidatorsCount)",
     alertId: "STAKING-ROUTER-EXITED-INCOMPLETE-REPORTING",
-    name: "🚨 Staking Router: exited validators incomplete reporting",
+    name: "⚠️ Staking Router: exited validators incomplete reporting",
     description: (args: any) =>
       `Staking module ID: ${args.stakingModuleId}\nUnreported exited validators count: ${args.unreportedExitedValidatorsCount}`,
-    severity: FindingSeverity.Critical,
+    severity: FindingSeverity.High,
   },
   {
     address: STAKING_ROUTER_ADDRESS,
