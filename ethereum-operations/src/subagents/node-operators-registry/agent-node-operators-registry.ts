@@ -31,11 +31,15 @@ const {
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
   NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD,
+  STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
   RedefineMode.Merge
 );
+
+let lastAlertedClosestPenaltyEndTimestamp = 0;
+let lastPenaltyEndTimestampAlertTimestamp = 0;
 
 export const name = "NodeOperatorsRegistry";
 
@@ -295,32 +299,52 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  handleStuckPenaltyEnd(blockEvent, findings);
+  await handleStuckPenaltyEnd(blockEvent, findings);
 
   return findings;
 }
 
-function handleStuckPenaltyEnd(blockEvent: BlockEvent, findings: Finding[]) {
+async function handleStuckPenaltyEnd(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  let description = "";
+  let closestPenaltyEndTimestamp = 0;
+  const now = Number(blockEvent.block.timestamp);
   for (const [id, digest] of nodeOperatorDigests.entries()) {
-    const { stuckPenaltyEndTimestamp } = digest;
+    const { stuck, refunded, stuckPenaltyEndTimestamp } = digest;
     if (
+      refunded >= stuck &&
       stuckPenaltyEndTimestamp > 0 &&
       stuckPenaltyEndTimestamp < blockEvent.block.timestamp
     ) {
-      const delay =
-        Number(blockEvent.block.timestamp) - stuckPenaltyEndTimestamp;
-      findings.push(
-        Finding.fromObject({
-          name: "ℹ️ NO Registry: operator stuck penalty ended",
-          description: `Operator ID: ${id}\nStuck penalty ended ${formatDelay(
-            delay
-          )} ago\nNote: don't forget to call \`clearNodeOperatorPenalty\``,
-          alertId: "NODE-OPERATORS-STUCK-PENALTY-ENDED",
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-        })
-      );
+      if (stuckPenaltyEndTimestamp > closestPenaltyEndTimestamp) {
+        closestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
+      }
+      const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
+      description += `Operator ID: ${id}: penalty ended ${formatDelay(
+        delay
+      )} ago\n`;
     }
+  }
+  if (
+    (closestPenaltyEndTimestamp != 0 &&
+      now - lastPenaltyEndTimestampAlertTimestamp >
+        STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
+    closestPenaltyEndTimestamp > lastAlertedClosestPenaltyEndTimestamp
+  ) {
+    description += "\nNote: don't forget to call `clearNodeOperatorPenalty`";
+    findings.push(
+      Finding.fromObject({
+        name: "ℹ️ NO Registry: operator stuck penalty ended",
+        description: description,
+        alertId: "NODE-OPERATORS-STUCK-PENALTY-ENDED",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
+    lastAlertedClosestPenaltyEndTimestamp = closestPenaltyEndTimestamp;
+    lastPenaltyEndTimestampAlertTimestamp = now;
   }
 }
 
