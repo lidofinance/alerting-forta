@@ -8,7 +8,7 @@ import {
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   BURNER_ADDRESS as burnerAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,

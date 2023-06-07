@@ -6,7 +6,7 @@ import {
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   ARAGON_ACL_ADDRESS as aclAddress,

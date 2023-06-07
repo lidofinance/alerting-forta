@@ -10,7 +10,7 @@ import {
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   DEPOSIT_EXECUTOR_ADDRESS as deAddress,
   MEV_ALLOWED_LIST_ADDRESS as mevAllowlistAddress,

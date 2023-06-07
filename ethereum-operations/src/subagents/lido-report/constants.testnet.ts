@@ -4,7 +4,7 @@ import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   BURNER_ADDRESS as burnerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
