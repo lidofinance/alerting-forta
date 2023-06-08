@@ -3,8 +3,11 @@ import { etherscanAddress } from "../../common/utils";
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  ONE_DAY,
   STAKING_ROUTER_ADDRESS as srAddress,
 } from "../../common/constants";
+
+export const STUCK_PENALTY_ENDED_TRIGGER_PERIOD = ONE_DAY;
 
 export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 

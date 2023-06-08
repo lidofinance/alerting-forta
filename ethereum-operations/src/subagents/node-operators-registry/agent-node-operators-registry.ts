@@ -1,4 +1,5 @@
 import {
+  BlockEvent,
   ethers,
   Finding,
   FindingSeverity,
@@ -8,12 +9,14 @@ import {
 } from "forta-agent";
 
 import {
+  formatDelay,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
+import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { ethersProvider } from "../../ethers";
 const {
   NODE_OPERATOR_REGISTRY_MODULE_ID,
@@ -28,11 +31,15 @@ const {
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
   NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD,
+  STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
   RedefineMode.Merge
 );
+
+let closestPenaltyEndTimestamp = 0;
+let penaltyEndAlertTriggeredAt = 0;
 
 export const name = "NodeOperatorsRegistry";
 
@@ -41,6 +48,7 @@ interface NodeOperatorShortDigest {
   refunded: number;
   exited: number;
   isStuckRefunded: boolean;
+  stuckPenaltyEndTimestamp: number;
 }
 
 const nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
@@ -57,12 +65,37 @@ export async function initialize(
     ethersProvider
   );
 
+  const nodeOperatorRegistry = new ethers.Contract(
+    NODE_OPERATORS_REGISTRY_ADDRESS,
+    NODE_OPERATORS_REGISTRY_ABI,
+    ethersProvider
+  );
+
   const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
     NODE_OPERATOR_REGISTRY_MODULE_ID,
     { blockTag: currentBlock }
   );
 
-  operators.forEach((digest: any) =>
+  const stuckOperators = operators.filter(
+    (digest: any) => Number(digest.summary.stuckValidatorsCount) != 0
+  );
+
+  const stuckOperatorsSummaries = await Promise.all(
+    stuckOperators.map((digest: any) =>
+      nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
+        blockTag: currentBlock,
+      })
+    )
+  );
+
+  const stuckOperatorsEndTimestampMap = new Map<String, number>(
+    stuckOperators.map((digest: any, index: number) => [
+      String(digest.id),
+      Number(stuckOperatorsSummaries[index].stuckPenaltyEndTimestamp),
+    ])
+  );
+
+  for (const digest of operators) {
     nodeOperatorDigests.set(String(digest.id), {
       stuck: Number(digest.summary.stuckValidatorsCount),
       refunded: Number(digest.summary.refundedValidatorsCount),
@@ -70,8 +103,10 @@ export async function initialize(
       isStuckRefunded:
         Number(digest.summary.refundedValidatorsCount) >=
         Number(digest.summary.stuckValidatorsCount),
-    })
-  );
+      stuckPenaltyEndTimestamp:
+        stuckOperatorsEndTimestampMap.get(String(digest.id)) ?? 0,
+    });
+  }
 
   return {};
 }
@@ -207,6 +242,7 @@ function handleStuckStateChanged(
       refunded: Number(refundedValidatorsCount),
       isStuckRefunded:
         Number(refundedValidatorsCount) >= Number(stuckValidatorsCount),
+      stuckPenaltyEndTimestamp: Number(event.args.stuckPenaltyEndTimestamp),
     });
   }
 }
@@ -260,8 +296,60 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   }
 }
 
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+
+  await handleStuckPenaltyEnd(blockEvent, findings);
+
+  return findings;
+}
+
+async function handleStuckPenaltyEnd(
+  blockEvent: BlockEvent,
+  findings: Finding[]
+) {
+  let description = "";
+  let currentClosestPenaltyEndTimestamp = 0;
+  const now = Number(blockEvent.block.timestamp);
+  for (const [id, digest] of nodeOperatorDigests.entries()) {
+    const { stuck, refunded, stuckPenaltyEndTimestamp } = digest;
+    if (
+      refunded >= stuck &&
+      stuckPenaltyEndTimestamp > 0 &&
+      stuckPenaltyEndTimestamp < blockEvent.block.timestamp
+    ) {
+      if (stuckPenaltyEndTimestamp > currentClosestPenaltyEndTimestamp) {
+        currentClosestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
+      }
+      const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
+      description += `Operator ID: ${id}: penalty ended ${formatDelay(
+        delay
+      )} ago\n`;
+    }
+  }
+  if (
+    (currentClosestPenaltyEndTimestamp != 0 &&
+      now - penaltyEndAlertTriggeredAt > STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
+    currentClosestPenaltyEndTimestamp > closestPenaltyEndTimestamp
+  ) {
+    description += "\nNote: don't forget to call `clearNodeOperatorPenalty`";
+    findings.push(
+      Finding.fromObject({
+        name: "ℹ️ NO Registry: operator stuck penalty ended",
+        description: description,
+        alertId: "NODE-OPERATORS-STUCK-PENALTY-ENDED",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+    );
+    closestPenaltyEndTimestamp = currentClosestPenaltyEndTimestamp;
+    penaltyEndAlertTriggeredAt = now;
+  }
+}
+
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleTransaction,
+  handleBlock,
   // initialize, // sdk won't provide any arguments to the function
 };
