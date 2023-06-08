@@ -31,6 +31,9 @@ export const UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY = ONE_DAY;
 
 export const CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR = 5;
 
+// 20 minutes
+export const BLOCK_CHECK_INTERVAL = 100;
+
 export const LIDO_TOKEN_REBASED =
   "event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)";
 

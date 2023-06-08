@@ -46,9 +46,9 @@ const {
   MIN_AVAILABLE_KEYS_COUNT,
   MIN_DEPOSIT_EXECUTOR_BALANCE,
   MAX_DEPOSITOR_TX_DELAY,
-  MAX_BUFFERED_ETH_AMOUNT_MEDIUM,
-  MAX_BUFFERED_ETH_AMOUNT_CRITICAL,
-  MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME,
+  MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM,
+  MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL,
+  MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME,
   ENS_CHECK_INTERVAL,
   LIDO_ENS_NAMES,
   LIDO_EVENTS_OF_NOTICE,
@@ -65,9 +65,9 @@ const {
 );
 
 let lastReportedKeysShortage = 0;
-let lastReportedBufferedEth = 0;
+let lastReportedDepositableEth = 0;
 let lastDepositorTxTime = 0;
-let criticalBufferAmountFrom = 0;
+let criticalDepositableAmountFrom = 0;
 let lastReportedExecutorBalance = 0;
 let lastReportedStakingLimit10 = 0;
 let lastReportedStakingLimit30 = 0;
@@ -175,82 +175,93 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     )
   );
   const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
+  const depositableEtherRaw = new BigNumber(
+    String(
+      await lido.functions.getDepositableEther({
+        blockTag: blockEvent.block.number,
+      })
+    )
+  );
+  const depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber();
 
   if (blockNumber % BLOCK_CHECK_INTERVAL == 0) {
+    if (bufferedEthRaw.lt(lastBufferedEth)) {
+      const unbufferedEvents = await getUnbufferedEvents(
+        blockNumber,
+        blockNumber
+      );
+      const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
+        blockNumber,
+        blockNumber
+      );
+      if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
+        findings.push(
+          Finding.fromObject({
+            name: "🚨🚨🚨 Buffered ETH drain",
+            description:
+              `Buffered ETH amount decreased from ` +
+              `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
+              `to ${depositableEther.toFixed(
+                2
+              )} without Unbuffered or WithdrawalsFinalized events`,
+            alertId: "BUFFERED-ETH-DRAIN",
+            severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+          })
+        );
+      }
+    }
     // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
-    if (bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL) {
-      criticalBufferAmountFrom =
-        criticalBufferAmountFrom != 0 ? criticalBufferAmountFrom : now;
+    if (depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL) {
+      criticalDepositableAmountFrom =
+        criticalDepositableAmountFrom != 0
+          ? criticalDepositableAmountFrom
+          : now;
     } else {
       // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
-      criticalBufferAmountFrom = 0;
+      criticalDepositableAmountFrom = 0;
     }
-    if (lastReportedBufferedEth + REPORT_WINDOW < now) {
+    if (lastReportedDepositableEth + REPORT_WINDOW < now) {
       if (
-        bufferedEth > MAX_BUFFERED_ETH_AMOUNT_CRITICAL &&
-        criticalBufferAmountFrom < now - MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME
+        depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL &&
+        criticalDepositableAmountFrom <
+          now - MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME
       ) {
         findings.push(
           Finding.fromObject({
-            name: "🚨 Huge buffered ETH amount",
+            name: "🚨 Huge depositable ETH amount",
             description:
-              `There are ${bufferedEth.toFixed(4)} ` +
-              `buffered ETH in DAO for more than ` +
+              `There are ${depositableEther.toFixed(2)} ` +
+              `depositable ETH in DAO for more than ` +
               `${Math.floor(
-                MAX_BUFFERED_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
+                MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
               )} hour(s)`,
-            alertId: "HUGE-BUFFERED-ETH",
+            alertId: "HUGE-DEPOSITABLE-ETH",
             severity: FindingSeverity.High,
             type: FindingType.Degraded,
           })
         );
-        lastReportedBufferedEth = now;
+        lastReportedDepositableEth = now;
       } else if (
-        bufferedEth > MAX_BUFFERED_ETH_AMOUNT_MEDIUM &&
+        depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM &&
         lastDepositorTxTime < now - MAX_DEPOSITOR_TX_DELAY &&
         lastDepositorTxTime !== 0
       ) {
         findings.push(
           Finding.fromObject({
-            name: "⚠️ High buffered ETH amount",
+            name: "⚠️ High depositable ETH amount",
             description:
-              `There are ${bufferedEth.toFixed(4)} ` +
-              `buffered ETH in DAO and there are more than ` +
+              `There are ${bufferedEth.toFixed(2)} ` +
+              `depositable ETH in DAO and there are more than ` +
               `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
               `hours since last Depositor TX`,
-            alertId: "HIGH-BUFFERED-ETH",
+            alertId: "HIGH-DEPOSITABLE-ETH",
             severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
           })
         );
-        lastReportedBufferedEth = now;
+        lastReportedDepositableEth = now;
       }
-    }
-  }
-  if (bufferedEthRaw.lt(lastBufferedEth)) {
-    const unbufferedEvents = await getUnbufferedEvents(
-      blockNumber,
-      blockNumber
-    );
-    const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
-      blockNumber,
-      blockNumber
-    );
-    if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
-      findings.push(
-        Finding.fromObject({
-          name: "🚨🚨🚨 Buffered ETH drain",
-          description:
-            `Buffered ETH amount decreased from ` +
-            `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
-            `to ${bufferedEth.toFixed(
-              2
-            )} without Unbuffered or WithdrawalsFinalized events`,
-          alertId: "BUFFERED-ETH-DRAIN",
-          severity: FindingSeverity.Critical,
-          type: FindingType.Suspicious,
-        })
-      );
     }
   }
   lastBufferedEth = bufferedEthRaw;
