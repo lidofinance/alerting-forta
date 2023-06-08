@@ -1,6 +1,9 @@
 import {
   EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE as hashConsensusEvents,
   EXITBUS_ORACLE_EVENTS_OF_NOTICE as oracleEvents,
+} from "./constants";
+
+import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -9,7 +12,7 @@ import {
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
-} from "./constants";
+} from "../../common/constants.testnet";
 
 export const CL_GENESIS_TIMESTAMP = 1616508000;
 

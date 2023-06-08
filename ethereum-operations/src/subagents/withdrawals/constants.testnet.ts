@@ -1,7 +1,7 @@
 import { WITHDRAWALS_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
 } from "../..//common/constants.testnet";
 
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;

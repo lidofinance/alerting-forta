@@ -1,6 +1,6 @@
 import { ONE_HOUR } from "../../common/constants";
 import {
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   GATE_SEAL_FACTORY_ADDRESS as gsFactoryAddress,
   GATE_SEAL_DEFAULT_ADDRESS as gsAddress,
