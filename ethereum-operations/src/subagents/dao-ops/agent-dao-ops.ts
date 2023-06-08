@@ -175,14 +175,18 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     )
   );
   const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
-  const depositableEtherRaw = new BigNumber(
-    String(
-      await lido.functions.getDepositableEther({
-        blockTag: blockEvent.block.number,
-      })
-    )
-  );
-  const depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber();
+  let depositableEtherRaw = bufferedEthRaw;
+  let depositableEther = bufferedEth;
+  try {
+    depositableEtherRaw = new BigNumber(
+      String(
+        await lido.functions.getDepositableEther({
+          blockTag: blockEvent.block.number,
+        })
+      )
+    );
+    depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber();
+  } catch (e) {}
 
   if (blockNumber % BLOCK_CHECK_INTERVAL == 0) {
     if (bufferedEthRaw.lt(lastBufferedEth)) {
