@@ -82,6 +82,7 @@ const {
   UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY,
   UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY,
   CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR,
+  BLOCK_CHECK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -174,11 +175,13 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([
-    handleQueueOnParWithStakeLimit(blockEvent, findings),
-    handleUnfinalizedRequestNumber(blockEvent, findings),
-    handleUnclaimedRequests(blockEvent, findings),
-  ]);
+  if (blockEvent.block.number % BLOCK_CHECK_INTERVAL == 0) {
+    await Promise.all([
+      handleQueueOnParWithStakeLimit(blockEvent, findings),
+      handleUnfinalizedRequestNumber(blockEvent, findings),
+      handleUnclaimedRequests(blockEvent, findings),
+    ]);
+  }
 
   return findings;
 }
