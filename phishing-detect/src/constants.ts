@@ -198,6 +198,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x839d6833cee34ffab6fa9057b39f02bd3091a1d6", // tempus.finance
   "0xa7ca2c8673bcfa5a26d8ceec2887f2cc2b0db22a", // mimic.fi
   "0x21e27a5e5513d6e65c4f830167390997aa84843a", // curve.fi stETH pool
+  "0x5f59b322eb3e16a0c78846195af1f588b77403fc", // raft.fi positionManager
+  "0x100daa78fc509db39ef7d04de0c1abd299f4c6ce", // Crvusd controller wstETH
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
