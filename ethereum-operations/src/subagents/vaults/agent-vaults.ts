@@ -108,7 +108,7 @@ async function handleWithdrawalVaultBalance(
 
     findings.push(
       Finding.fromObject({
-        name: "🚨 Withdrawal Vault Balance significant change",
+        name: "💵 Withdrawal Vault Balance significant change",
         description: `Withdrawal Vault Balance has increased by ${toEthString(
           withdrawalVaultBalanceDiff
         )}`,
@@ -183,7 +183,7 @@ async function handleELVaultBalance(
 
     findings.push(
       Finding.fromObject({
-        name: "🚨 EL Vault Balance significant change",
+        name: "💵 EL Vault Balance significant change",
         description: `EL Vault Balance has increased by ${toEthString(
           elVaultBalanceDiff
         )}`,
