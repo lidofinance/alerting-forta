@@ -1,5 +1,5 @@
 # Build stage: compile Typescript to Javascript
-FROM node:12.22.12-alpine3.15 AS base
+FROM node:16.17.1-alpine3.16 AS base
 
 FROM base as builder
 WORKDIR /app
