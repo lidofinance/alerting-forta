@@ -200,6 +200,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x21e27a5e5513d6e65c4f830167390997aa84843a", // curve.fi stETH pool
   "0x5f59b322eb3e16a0c78846195af1f588b77403fc", // raft.fi positionManager
   "0x100daa78fc509db39ef7d04de0c1abd299f4c6ce", // Crvusd controller wstETH
+  "0x858646372cc42e1a627fce94aa7a7033e7cf075a", // EigenLayer StrategyManager
+  "0x827179dd56d07a7eea32e3873493835da2866976", // Sushiswap stablePoolFactory
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
