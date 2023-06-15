@@ -5,7 +5,7 @@ Array [
   Finding {
     "addresses": Array [],
     "alertId": "STORAGE-SLOT-VALUE-CHANGED",
-    "description": "Value of the storage slot 'manager' for contract 0xF95f069F9AD107938F6ba802a3da87892298610E (MEV Boost Relay Allowed List) has changed!
+    "description": "Value of the storage slot \`'manager'\` for contract 0xF95f069F9AD107938F6ba802a3da87892298610E (MEV Boost Relay Allowed List) has changed!
 Prev value: 0x0000000000000000000000000000000000000000000000000000000000000000
 New value: 0x00000000000000000000000098be4a407bff0c125e25fbe9eb1165504349c37d",
     "labels": Array [],
