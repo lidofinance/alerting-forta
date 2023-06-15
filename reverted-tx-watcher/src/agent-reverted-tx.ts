@@ -73,6 +73,7 @@ async function handleRevertedTx(
   const suitableAddresses = addresses.filter(([, address]) =>
     eventAddresses.includes(address.toLowerCase())
   );
+  if (suitableAddresses.length === 0) return;
 
   const receipt = await ethersProvider.getTransactionReceipt(
     txEvent.transaction.hash
