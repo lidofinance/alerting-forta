@@ -75,7 +75,7 @@ async function handleStorageSlots(
                 Finding.fromObject({
                   name: `🚨 Critical storage slot value changed`,
                   description:
-                    `Value of the storage slot '${slot.name}' ` +
+                    `Value of the storage slot \`'${slot.name}'\` ` +
                     `for contract ${contract.address} (${contract.name}) has changed!` +
                     `\nPrev value: ${prevValue}` +
                     `\nNew value: ${value}`,
