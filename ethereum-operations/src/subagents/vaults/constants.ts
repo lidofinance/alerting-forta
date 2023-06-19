@@ -11,10 +11,8 @@ export const EL_VAULT_ADDRESS = elVaultAddress;
 export const BURNER_ADDRESS = burnerAddress;
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
-export const WITHDRAWAL_VAULT_BALANCE_DIFF_HIGH = ETH_DECIMALS.times(512);
-export const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(100);
+export const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(32);
 
-export const EL_VAULT_BALANCE_DIFF_MEDIUM = ETH_DECIMALS.times(200);
 export const EL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(50);
 
 export const TRANSFER_SHARES_EVENT = `

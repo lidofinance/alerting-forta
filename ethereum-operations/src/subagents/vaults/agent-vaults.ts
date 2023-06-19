@@ -25,10 +25,8 @@ const {
   BURNER_ADDRESS,
   LIDO_STETH_ADDRESS,
   TRANSFER_SHARES_EVENT,
-  WITHDRAWAL_VAULT_BALANCE_DIFF_HIGH,
   WITHDRAWAL_VAULT_BALANCE_DIFF_INFO,
   EL_VAULT_BALANCE_DIFF_INFO,
-  EL_VAULT_BALANCE_DIFF_MEDIUM,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -100,12 +98,6 @@ async function handleWithdrawalVaultBalance(
   const withdrawalVaultBalanceDiff = withdrawalVaultBalance.minus(prevBalance);
 
   if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
-    const severity = withdrawalVaultBalanceDiff.gte(
-      WITHDRAWAL_VAULT_BALANCE_DIFF_HIGH
-    )
-      ? FindingSeverity.High
-      : FindingSeverity.Info;
-
     findings.push(
       Finding.fromObject({
         name: "💵 Withdrawal Vault Balance significant change",
@@ -113,8 +105,8 @@ async function handleWithdrawalVaultBalance(
           withdrawalVaultBalanceDiff
         )}`,
         alertId: "WITHDRAWAL_VAULT_BALANCE_CHANGE",
-        type: FindingType.Suspicious,
-        severity,
+        type: FindingType.Info,
+        severity: FindingSeverity.Info,
       })
     );
   }
@@ -177,10 +169,6 @@ async function handleELVaultBalance(
   const elVaultBalanceDiff = elVaultBalance.minus(prevBalance);
 
   if (elVaultBalanceDiff.gte(EL_VAULT_BALANCE_DIFF_INFO)) {
-    const severity = elVaultBalanceDiff.gte(EL_VAULT_BALANCE_DIFF_MEDIUM)
-      ? FindingSeverity.Medium
-      : FindingSeverity.Info;
-
     findings.push(
       Finding.fromObject({
         name: "💵 EL Vault Balance significant change",
@@ -188,8 +176,8 @@ async function handleELVaultBalance(
           elVaultBalanceDiff
         )}`,
         alertId: "EL_VAULT_BALANCE_CHANGE",
-        type: FindingType.Suspicious,
-        severity,
+        type: FindingType.Info,
+        severity: FindingSeverity.Info,
       })
     );
   }
