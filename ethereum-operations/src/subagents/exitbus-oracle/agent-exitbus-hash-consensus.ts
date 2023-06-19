@@ -257,15 +257,6 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
     EXITBUS_ORACLE_ADDRESS
   );
   if (!submitted) return;
-  findings.push(
-    Finding.fromObject({
-      name: "ℹ️ ExitBus Oracle: Report Submitted",
-      description: `Reference slot: ${submitted.args.refSlot}\nReport hash: ${submitted.args.hash}`,
-      alertId: "EXITBUS-ORACLE-REPORT-SUBMITTED",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-    })
-  );
   const block = txEvent.blockNumber;
   membersLastReport.forEach((report, member) => {
     const reportDist = block - report.blockNumber;
