@@ -10,8 +10,8 @@ Array [
     "metadata": Object {},
     "name": "💵 EL Vault Balance significant change",
     "protocol": "ethereum",
-    "severity": 3,
-    "type": 2,
+    "severity": 1,
+    "type": 4,
   },
 ]
 `;
