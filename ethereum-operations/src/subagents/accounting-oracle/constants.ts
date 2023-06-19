@@ -53,16 +53,6 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     event:
-      "event ConsensusReached(uint256 indexed refSlot, bytes32 report, uint256 support)",
-    alertId: "ACCOUNTING-ORACLE-CONSENSUS-REACHED",
-    name: "✅ Accounting Oracle: Consensus reached",
-    description: (args: any) =>
-      `Reference slot: ${args.refSlot}\nSupport: ${args.support}`,
-    severity: FindingSeverity.Info,
-  },
-  {
-    address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-    event:
       "event MemberAdded(address indexed addr, uint256 newTotalMembers, uint256 newQuorum)",
     alertId: "ACCOUNTING-ORACLE-MEMBER-ADDED",
     name: "⚠️️ Accounting Oracle: Member Added",
