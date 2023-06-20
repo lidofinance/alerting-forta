@@ -141,7 +141,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
   {
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
     event: "event ConsensusLost(uint256 indexed refSlot)",
-    alertId: "EXITBUS-ORACLE-REPORT-PROCESSOR-SET",
+    alertId: "EXITBUS-ORACLE-CONSENSUS-LOST",
     name: "🚨 ExitBus Oracle: Consensus lost",
     description: (args: any) => `Reference slot: ${args.refSlot}`,
     severity: FindingSeverity.High,
