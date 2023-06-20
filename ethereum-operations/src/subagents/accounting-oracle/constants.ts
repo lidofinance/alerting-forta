@@ -115,7 +115,7 @@ export const ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
   {
     address: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
     event: "event ConsensusLost(uint256 indexed refSlot)",
-    alertId: "ACCOUNTING-ORACLE-REPORT-PROCESSOR-SET",
+    alertId: "ACCOUNTING-ORACLE-CONSENSUS-LOST",
     name: "🚨 Accounting Oracle: Consensus lost",
     description: (args: any) => `Reference slot: ${args.refSlot}`,
     severity: FindingSeverity.High,
