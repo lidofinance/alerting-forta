@@ -202,6 +202,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x100daa78fc509db39ef7d04de0c1abd299f4c6ce", // Crvusd controller wstETH
   "0x858646372cc42e1a627fce94aa7a7033e7cf075a", // EigenLayer StrategyManager
   "0x827179dd56d07a7eea32e3873493835da2866976", // Sushiswap stablePoolFactory
+  "0xC402D13B0D04867649a632F17528c753d8f6FBD2", // PoolPositionManager
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
