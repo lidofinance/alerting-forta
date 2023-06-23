@@ -22,7 +22,8 @@ import {
   LDO_TOKEN_ADDRESS,
   STETH_TOKEN_ADDRESS,
   WSTETH_TOKEN_ADDRESS,
-  AAVE_VAULT_ADDRESS,
+  AAVE_V2_VAULT_ADDRESS,
+  AAVE_V3_VAULT_ADDRESS,
   WSTETH_A_VAULT_ADDRESS,
   WSTETH_B_VAULT_ADDRESS,
   CURVE_ADD_LIQUIDITY_EVENT,
@@ -55,7 +56,8 @@ export const name = "Huge TX detector";
 const poolMinutesWindow = 15;
 const poolBlockWindow = Math.round((60 * poolMinutesWindow) / 13);
 let lastVaultBalanceBlock = 0;
-let lastAaveVaultBalance = 0;
+let lastAaveV2VaultBalance = 0;
+let lastAaveV3VaultBalance = 0;
 let lastMakerAVaultBalance = 0;
 let lastMakerBVaultBalance = 0;
 
@@ -66,11 +68,16 @@ export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-  [lastAaveVaultBalance, lastMakerAVaultBalance, lastMakerBVaultBalance] =
-    await getVaultsBalances(currentBlock);
+  [
+    lastAaveV2VaultBalance,
+    lastAaveV3VaultBalance,
+    lastMakerAVaultBalance,
+    lastMakerBVaultBalance,
+  ] = await getVaultsBalances(currentBlock);
   lastVaultBalanceBlock = currentBlock;
   return {
-    aaveVaultBalance: lastAaveVaultBalance.toFixed(),
+    aaveV2VaultBalance: lastAaveV2VaultBalance.toFixed(),
+    aaveV3VaultBalance: lastAaveV3VaultBalance.toFixed(),
     makerAVaultBalance: lastMakerAVaultBalance.toFixed(),
     makerBVaultBalance: lastMakerBVaultBalance.toFixed(),
     poolBlockWindow: poolBlockWindow.toFixed(),
@@ -95,9 +102,18 @@ async function getVaultsBalances(blockNumber: number) {
     ethersProvider
   );
 
-  const aaveVaultBalance = new BigNumber(
+  const aaveV2VaultBalance = new BigNumber(
     String(
-      await stETH.functions.balanceOf(AAVE_VAULT_ADDRESS, {
+      await stETH.functions.balanceOf(AAVE_V2_VAULT_ADDRESS, {
+        blockTag: blockNumber,
+      })
+    )
+  )
+    .div(ETH_DECIMALS)
+    .toNumber();
+  const aaveV3VaultBalance = new BigNumber(
+    String(
+      await wstETH.functions.balanceOf(AAVE_V3_VAULT_ADDRESS, {
         blockTag: blockNumber,
       })
     )
@@ -123,7 +139,12 @@ async function getVaultsBalances(blockNumber: number) {
     .div(ETH_DECIMALS)
     .toNumber();
 
-  return [aaveVaultBalance, makerAVaultBalance, makerBVaultBalance];
+  return [
+    aaveV2VaultBalance,
+    aaveV3VaultBalance,
+    makerAVaultBalance,
+    makerBVaultBalance,
+  ];
 }
 
 function getDiffPercents(before: number, after: number): number {
@@ -132,10 +153,21 @@ function getDiffPercents(before: number, after: number): number {
 
 async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
   if (blockEvent.blockNumber % poolBlockWindow == 0) {
-    const [aaveVaultBalance, makerAVaultBalance, makerBVaultBalance] =
-      await getVaultsBalances(blockEvent.blockNumber);
+    const [
+      aaveV2VaultBalance,
+      aaveV3VaultBalance,
+      makerAVaultBalance,
+      makerBVaultBalance,
+    ] = await getVaultsBalances(blockEvent.blockNumber);
 
-    const aaveDiff = getDiffPercents(lastAaveVaultBalance, aaveVaultBalance);
+    const aaveV2Diff = getDiffPercents(
+      lastAaveV2VaultBalance,
+      aaveV2VaultBalance
+    );
+    const aaveV3Diff = getDiffPercents(
+      lastAaveV3VaultBalance,
+      aaveV3VaultBalance
+    );
     const makerADiff = getDiffPercents(
       lastMakerAVaultBalance,
       makerAVaultBalance
@@ -145,17 +177,35 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
       makerBVaultBalance
     );
 
-    if (Math.abs(aaveDiff) > balanceChangeThreshold) {
-      const aaveChangeText = aaveDiff > 0 ? "increased" : "decreased";
+    if (Math.abs(aaveV2Diff) > balanceChangeThreshold) {
+      const aaveChangeText = aaveV2Diff > 0 ? "increased" : "decreased";
       findings.push(
         Finding.fromObject({
-          name: "Huge change in AAVE vault balance",
+          name: "Huge change in AAVEv2 stETH vault balance",
           description:
             "**AAVE** vault balance has " +
-            `**${aaveChangeText} by ${Math.abs(aaveDiff).toFixed(2)}%** ` +
+            `**${aaveChangeText} by ${Math.abs(aaveV2Diff).toFixed(2)}%** ` +
             `during last ${poolMinutesWindow} min.\n` +
-            `Previous balance: ${lastAaveVaultBalance.toFixed(2)} stETH\n` +
-            `Current balance: ${aaveVaultBalance.toFixed(2)} stETH\n`,
+            `Previous balance: ${lastAaveV2VaultBalance.toFixed(2)} stETH\n` +
+            `Current balance: ${aaveV2VaultBalance.toFixed(2)} stETH\n`,
+          alertId: "HUGE-VAULT-BALANCE-CHANGE",
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
+      );
+    }
+
+    if (Math.abs(aaveV3Diff) > balanceChangeThreshold) {
+      const aaveChangeText = aaveV3Diff > 0 ? "increased" : "decreased";
+      findings.push(
+        Finding.fromObject({
+          name: "Huge change in AAVEv3 wstETH vault balance",
+          description:
+            "**AAVE** vault balance has " +
+            `**${aaveChangeText} by ${Math.abs(aaveV3Diff).toFixed(2)}%** ` +
+            `during last ${poolMinutesWindow} min.\n` +
+            `Previous balance: ${lastAaveV3VaultBalance.toFixed(2)} stETH\n` +
+            `Current balance: ${aaveV3VaultBalance.toFixed(2)} stETH\n`,
           alertId: "HUGE-VAULT-BALANCE-CHANGE",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -198,7 +248,8 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
         })
       );
     }
-    lastAaveVaultBalance = aaveVaultBalance;
+    lastAaveV2VaultBalance = aaveV2VaultBalance;
+    lastAaveV3VaultBalance = aaveV3VaultBalance;
     lastMakerAVaultBalance = makerAVaultBalance;
     lastMakerBVaultBalance = makerBVaultBalance;
     lastVaultBalanceBlock = blockEvent.blockNumber;
