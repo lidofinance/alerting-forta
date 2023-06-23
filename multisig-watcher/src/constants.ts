@@ -25,6 +25,7 @@ export interface BlockchainInfo {
   addressUrlPrefix: string;
   txUrlPrefix: string;
   safeTxUrlPrefix: string;
+  safeUrlPrefix: string;
 }
 
 // COMMON CONSTS
@@ -40,32 +41,38 @@ export const BLOCKCHAIN_INFO: { [key in Blockchain]: BlockchainInfo } = {
   [Blockchain.ETH]: {
     addressUrlPrefix: "https://etherscan.io/address/",
     txUrlPrefix: "https://etherscan.io/tx/",
-    safeTxUrlPrefix: "https://app.safe.global/eth:",
+    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=eth:",
+    safeUrlPrefix: "https://app.safe.global/home?safe=eth:",
   },
   [Blockchain.POLYGON]: {
     addressUrlPrefix: "https://polygonscan.com/address/",
     txUrlPrefix: "https://polygonscan.com/tx/",
-    safeTxUrlPrefix: "https://app.safe.global/matic:",
+    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=matic:",
+    safeUrlPrefix: "https://app.safe.global/home?safe=matic:",
   },
   [Blockchain.ARBITRUM]: {
     addressUrlPrefix: "https://arbiscan.io/address/",
     txUrlPrefix: "https://arbiscan.io/tx/",
-    safeTxUrlPrefix: "https://app.safe.global/arb1:",
+    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=arb1:",
+    safeUrlPrefix: "https://app.safe.global/home?safe=arb1:",
   },
   [Blockchain.OPTIMISM]: {
     addressUrlPrefix: "https://optimistic.etherscan.io/address/",
     txUrlPrefix: "https://optimistic.etherscan.io/tx/",
-    safeTxUrlPrefix: "https://app.safe.global/oeth:",
+    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=oeth:",
+    safeUrlPrefix: "https://app.safe.global/home?safe=oeth:",
   },
   [Blockchain.MOONBEAM]: {
     addressUrlPrefix: "https://moonbeam.moonscan.io/address/",
     txUrlPrefix: "https://moonbeam.moonscan.io/tx/",
-    safeTxUrlPrefix: "https://multisig.moonbeam.network/mbeam:",
+    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=mbeam:",
+    safeUrlPrefix: "https://app.safe.global/home?safe=mbeam:",
   },
   [Blockchain.MOONRIVER]: {
     addressUrlPrefix: "https://moonriver.moonscan.io/address/",
     txUrlPrefix: "https://moonriver.moonscan.io/tx/",
-    safeTxUrlPrefix: "https://multisig.moonbeam.network/mriver:",
+    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=mriver:",
+    safeUrlPrefix: "https://app.safe.global/home?safe=mriver:",
   },
 };
 
@@ -254,7 +261,7 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     alertId: "SAFE-EXECUTION-FAILURE",
     name: "❌ Gnosis Safe: TX Execution failed",
     description: (safeTx: SafeTX, args: any) =>
-      `TX (${safeTx.safeTx}) execution failed for ` +
+      `[TX](${getSafeTxLink(safeTx)}) execution failed for ` +
       `${getSafeLink(safeTx)}\n` +
       `[blockchain explorer](${getTxLink(safeTx)})`,
     severity: FindingSeverity.Info,
@@ -264,7 +271,7 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
     alertId: "SAFE-EXECUTION-SUCCESS",
     name: "✅ Gnosis Safe: TX Executed",
     description: (safeTx: SafeTX, args: any) =>
-      `TX (${safeTx.safeTx}) executed by ${getSafeLink(safeTx)}\n` +
+      `[TX](${getSafeTxLink(safeTx)}) executed by ${getSafeLink(safeTx)}\n` +
       `[blockchain explorer](${getTxLink(safeTx)})`,
     severity: FindingSeverity.Info,
   },
@@ -289,10 +296,16 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
 
 function getSafeLink(safeTx: SafeTX): string {
   return `[${safeTx.safeName}](${
-    BLOCKCHAIN_INFO[safeTx.blockchain].safeTxUrlPrefix
+    BLOCKCHAIN_INFO[safeTx.blockchain].safeUrlPrefix
   }${safeTx.safeAddress})`;
 }
 
 function getTxLink(safeTx: SafeTX): string {
   return `${BLOCKCHAIN_INFO[safeTx.blockchain].txUrlPrefix}${safeTx.tx}`;
+}
+
+function getSafeTxLink(safeTx: SafeTX): string {
+  return `${BLOCKCHAIN_INFO[safeTx.blockchain].safeTxUrlPrefix}${
+    safeTx.safeAddress
+  }&id=multisig_${safeTx.safeAddress}_${safeTx.safeTx}`;
 }
