@@ -27,6 +27,7 @@ const {
   TRANSFER_SHARES_EVENT,
   WITHDRAWAL_VAULT_BALANCE_DIFF_INFO,
   EL_VAULT_BALANCE_DIFF_INFO,
+  WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -90,25 +91,28 @@ async function handleWithdrawalVaultBalance(
   prevBalance: BigNumber,
   findings: Finding[]
 ) {
-  const withdrawalVaultBalance = await getBalance(
-    WITHDRAWAL_VAULT_ADDRESS,
-    blockNumber
-  );
-
-  const withdrawalVaultBalanceDiff = withdrawalVaultBalance.minus(prevBalance);
-
-  if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
-    findings.push(
-      Finding.fromObject({
-        name: "💵 Withdrawal Vault Balance significant change",
-        description: `Withdrawal Vault Balance has increased by ${toEthString(
-          withdrawalVaultBalanceDiff
-        )}`,
-        alertId: "WITHDRAWAL_VAULT_BALANCE_CHANGE",
-        type: FindingType.Info,
-        severity: FindingSeverity.Info,
-      })
+  if (blockNumber % WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL === 0) {
+    const withdrawalVaultBalance = await getBalance(
+      WITHDRAWAL_VAULT_ADDRESS,
+      blockNumber
     );
+
+    const withdrawalVaultBalanceDiff =
+      withdrawalVaultBalance.minus(prevBalance);
+
+    if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
+      findings.push(
+        Finding.fromObject({
+          name: "💵 Withdrawal Vault Balance significant change",
+          description: `Withdrawal Vault Balance has increased by ${toEthString(
+            withdrawalVaultBalanceDiff
+          )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} block`,
+          alertId: "WITHDRAWAL_VAULT_BALANCE_CHANGE",
+          type: FindingType.Info,
+          severity: FindingSeverity.Info,
+        })
+      );
+    }
   }
 }
 
