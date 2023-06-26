@@ -12,6 +12,7 @@ export const BURNER_ADDRESS = burnerAddress;
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
 export const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(32);
+export const WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL = 100;
 
 export const EL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(50);
 
