@@ -1,8 +1,6 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
-  BlockEvent,
   TransactionEvent,
   Finding,
   FindingType,
@@ -16,6 +14,8 @@ import {
   AAVE_MINT_BURN_THRESHOLD,
   MATIC_DECIMALS,
 } from "./constants";
+
+import { abbreviateNumber } from "./helpers";
 
 export const name = "AAVE";
 
@@ -42,10 +42,10 @@ function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
       if (value.gte(AAVE_MINT_BURN_THRESHOLD)) {
         findings.push(
           Finding.fromObject({
-            name: "😱 Huge amount supplied to AAVE",
-            description: `**${value.toFixed(
-              2
-            )} stMATIC** were supplied to AAVE`,
+            name: "😱 Huge amount supplied to AAVE (stMATIC)",
+            description:
+              `**${abbreviateNumber(value.toNumber())} ` +
+              `stMATIC** were supplied to AAVE`,
             alertId: "HUGE-AAVE-TX",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -60,10 +60,10 @@ function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
       if (value.gte(AAVE_MINT_BURN_THRESHOLD)) {
         findings.push(
           Finding.fromObject({
-            name: "🤔 Huge amount withdrawn from AAVE",
-            description: `**${value.toFixed(
-              2
-            )} stMATIC** were withdrawn from AAVE`,
+            name: "🤔 Huge amount withdrawn from AAVE (stMATIC)",
+            description:
+              `**${abbreviateNumber(value.toNumber())} ` +
+              `stMATIC** were withdrawn from AAVE`,
             alertId: "HUGE-AAVE-TX",
             severity: FindingSeverity.Info,
             type: FindingType.Info,

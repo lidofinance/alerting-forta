@@ -3,7 +3,6 @@ import BigNumber from "bignumber.js";
 import {
   ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
   FindingType,
   FindingSeverity,
@@ -20,10 +19,9 @@ import {
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
+import { abbreviateNumber } from "./helpers";
 
 export const name = "Finance";
-
-const BLOCK_INTERVAL = 10;
 
 let curvePoolSize = new BigNumber(0);
 let balancerPoolSize = new BigNumber(0);
@@ -91,8 +89,8 @@ async function handleCurvePoolSize(
         name: "⚠️ Significant Curve Pool (stMATIC) size change",
         description: `Curve Pool size has ${
           poolSizeChange > 0
-            ? "increased by " + poolSizeChange.toFixed(2).toString()
-            : "decreased by " + -poolSizeChange.toFixed(2).toString()
+            ? "increased by " + abbreviateNumber(poolSizeChange)
+            : "decreased by " + abbreviateNumber(-poolSizeChange)
         }% since the last block`,
         alertId: "CURVE-POOL-SIZE-CHANGE",
         severity: FindingSeverity.Info,
@@ -142,8 +140,8 @@ async function handleBalancerPoolSize(
         name: "⚠️ Significant Balancer Pool size change",
         description: `Balancer Pool (stMATIC) size has ${
           poolSizeChange > 0
-            ? "increased by " + poolSizeChange.toFixed(2).toString()
-            : "decreased by " + -poolSizeChange.toFixed(2).toString()
+            ? "increased by " + abbreviateNumber(poolSizeChange)
+            : "decreased by " + abbreviateNumber(-poolSizeChange)
         }% since the last block`,
         alertId: "BALANCER-POOL-SIZE-CHANGE",
         severity: FindingSeverity.Info,
