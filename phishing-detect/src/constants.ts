@@ -203,6 +203,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x858646372cc42e1a627fce94aa7a7033e7cf075a", // EigenLayer StrategyManager
   "0x827179dd56d07a7eea32e3873493835da2866976", // Sushiswap stablePoolFactory
   "0xC402D13B0D04867649a632F17528c753d8f6FBD2", // PoolPositionManager
+  "0x37417B2238AA52D0DD2D6252d989E728e8f706e4", // LLAMMA - crvUSD AMM
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
