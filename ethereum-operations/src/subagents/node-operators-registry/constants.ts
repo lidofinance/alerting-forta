@@ -60,7 +60,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     alertId: "NODE-OPERATOR-NAME-SET",
     name: "ℹ️ NO Registry: Node operator name set",
     description: (args: any) =>
-      `Node operator ${args.id} name set to ${args.name}`,
+      `Node operator ${args.nodeOperatorId} name set to ${args.name}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -70,9 +70,9 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
     name: "ℹ️ NO Registry: Node operator reward address set",
     description: (args: any) =>
-      `Node operator ${args.id} reward address set to ${etherscanAddress(
-        args.rewardAddress
-      )}`,
+      `Node operator ${
+        args.nodeOperatorId
+      } reward address set to ${etherscanAddress(args.rewardAddress)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -82,7 +82,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     alertId: "NODE-OPERATOR-KEYS-TRIMMED",
     name: "⚠️ NO Registry: Node operator total keys trimmed",
     description: (args: any) =>
-      `Node operator ${args.id} total keys trimmed ${args.totalKeysTrimmed}`,
+      `Node operator ${args.nodeOperatorId} total keys trimmed ${args.totalKeysTrimmed}`,
     severity: FindingSeverity.Info,
   },
   {
