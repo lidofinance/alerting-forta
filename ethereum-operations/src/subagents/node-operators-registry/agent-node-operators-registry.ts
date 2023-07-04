@@ -40,6 +40,7 @@ const {
 
 let closestPenaltyEndTimestamp = 0;
 let penaltyEndAlertTriggeredAt = 0;
+let noNames = new Map<number, string>();
 
 export const name = "NodeOperatorsRegistry";
 
@@ -108,6 +109,8 @@ export async function initialize(
     });
   }
 
+  await updateNodeOperatorsNames(currentBlock);
+
   return {};
 }
 
@@ -122,7 +125,8 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleEventsOfNotice(
     txEvent,
     findings,
-    NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE
+    NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+    noNames
   );
 
   const stuckEvents = txEvent.filterLog(
@@ -160,7 +164,9 @@ function handleExitedCountChanged(
       findings.push(
         Finding.fromObject({
           name: `⚠️ NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `Operator ID: ${nodeOperatorId}\nNew exited: ${newExited}`,
+          description: `Operator: ${nodeOperatorId} ${noNames.get(
+            Number(nodeOperatorId)
+          )}\nNew exited: ${newExited}`,
           alertId: "NODE-OPERATORS-BIG-EXIT",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -179,7 +185,9 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator exited all stuck keys 🎉",
-            description: `Operator ID: ${nodeOperatorId}\nStuck exited: ${lastDigest.stuck}`,
+            description: `Operator: ${nodeOperatorId} ${noNames.get(
+              Number(nodeOperatorId)
+            )}\nStuck exited: ${lastDigest.stuck}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-EXITED",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -211,7 +219,9 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: "⚠️ NO Registry: operator have new stuck keys",
-            description: `Operator ID: ${nodeOperatorId}\nNew stuck: ${stuckValidatorsCount}`,
+            description: `Operator: ${nodeOperatorId} ${noNames.get(
+              Number(nodeOperatorId)
+            )}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: "NODE-OPERATORS-NEW-STUCK-KEYS",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
@@ -228,7 +238,9 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator refunded all stuck keys 🎉",
-            description: `Operator ID: ${nodeOperatorId}\nRefunded: ${refundedValidatorsCount}`,
+            description: `Operator: ${nodeOperatorId} ${noNames.get(
+              Number(nodeOperatorId)
+            )}\nRefunded: ${refundedValidatorsCount}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-REFUNDED",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -282,10 +294,13 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
     );
     noLimitEvents.forEach((event) => {
       if (motionEnactedEvents.length < 1) {
+        const { nodeOperatorId, approvedValidatorsCount } = event.args;
         findings.push(
           Finding.fromObject({
             name: "🚨 NO Vetted keys set by NON-EasyTrack action",
-            description: `Vetted keys count for node operator ${event.args.nodeOperatorId} was set to ${event.args.approvedValidatorsCount} by NON-EasyTrack motion!`,
+            description: `Vetted keys count for node operator [${nodeOperatorId} ${noNames.get(
+              Number(nodeOperatorId)
+            )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: "NODE-OPERATORS-VETTED-KEYS-SET",
             severity: FindingSeverity.High,
             type: FindingType.Info,
@@ -301,7 +316,41 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   await handleStuckPenaltyEnd(blockEvent, findings);
 
+  if (blockEvent.blockNumber % 100) {
+    // every 100 blocks for sync between nodes
+    await updateNodeOperatorsNames(blockEvent.blockNumber);
+  }
+
   return findings;
+}
+
+async function updateNodeOperatorsNames(block: number) {
+  const stakingRouter = new ethers.Contract(
+    STAKING_ROUTER_ADDRESS,
+    STAKING_ROUTER_ABI,
+    ethersProvider
+  );
+  const nodeOperatorsRegistry = new ethers.Contract(
+    NODE_OPERATORS_REGISTRY_ADDRESS,
+    NODE_OPERATORS_REGISTRY_ABI,
+    ethersProvider
+  );
+
+  const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
+    NODE_OPERATOR_REGISTRY_MODULE_ID,
+    { blockTag: block }
+  );
+
+  await Promise.all(
+    operators.map(async (operator: any) => {
+      const { name } = await nodeOperatorsRegistry.getNodeOperator(
+        String(operator.id),
+        true,
+        { blockTag: block }
+      );
+      noNames.set(Number(operator.id), name);
+    })
+  );
 }
 
 async function handleStuckPenaltyEnd(
@@ -322,9 +371,9 @@ async function handleStuckPenaltyEnd(
         currentClosestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
       }
       const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
-      description += `Operator ID: ${id}: penalty ended ${formatDelay(
-        delay
-      )} ago\n`;
+      description += `Operator: ${id} ${noNames.get(
+        Number(id)
+      )} penalty ended ${formatDelay(delay)} ago\n`;
     }
   }
   if (

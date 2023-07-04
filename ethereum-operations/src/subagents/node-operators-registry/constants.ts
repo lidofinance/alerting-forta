@@ -49,8 +49,10 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
       "event NodeOperatorActiveSet(uint256 indexed nodeOperatorId, bool active)",
     alertId: "NODE-OPERATOR-ACTIVE-SET",
     name: "ℹ️ NO Registry: Node operator active set",
-    description: (args: any) =>
-      `Node operator ${args.nodeOperatorId} active status set to ${args.active}`,
+    description: (args: any, names: Map<number, string>) =>
+      `Node operator [${args.nodeOperatorId} ${names.get(
+        Number(args.nodeOperatorId)
+      )}] active status set to ${args.active}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -59,8 +61,10 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
       "event NodeOperatorNameSet(uint256 indexed nodeOperatorId, string name)",
     alertId: "NODE-OPERATOR-NAME-SET",
     name: "ℹ️ NO Registry: Node operator name set",
-    description: (args: any) =>
-      `Node operator ${args.nodeOperatorId} name set to ${args.name}`,
+    description: (args: any, names: Map<number, string>) =>
+      `Node operator [${args.nodeOperatorId} ${names.get(
+        Number(args.nodeOperatorId)
+      )}] name set to ${args.name}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -69,10 +73,10 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
       "event NodeOperatorRewardAddressSet(uint256 indexed nodeOperatorId, address rewardAddress)",
     alertId: "NODE-OPERATOR-REWARD-ADDRESS-SET",
     name: "ℹ️ NO Registry: Node operator reward address set",
-    description: (args: any) =>
-      `Node operator ${
-        args.nodeOperatorId
-      } reward address set to ${etherscanAddress(args.rewardAddress)}`,
+    description: (args: any, names: Map<number, string>) =>
+      `Node operator [${args.nodeOperatorId} ${names.get(
+        Number(args.nodeOperatorId)
+      )}] reward address set to ${etherscanAddress(args.rewardAddress)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -81,8 +85,10 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
       "event NodeOperatorTotalKeysTrimmed(uint256 indexed nodeOperatorId, uint64 totalKeysTrimmed)",
     alertId: "NODE-OPERATOR-KEYS-TRIMMED",
     name: "⚠️ NO Registry: Node operator total keys trimmed",
-    description: (args: any) =>
-      `Node operator ${args.nodeOperatorId} total keys trimmed ${args.totalKeysTrimmed}`,
+    description: (args: any, names: Map<number, string>) =>
+      `Node operator [${args.nodeOperatorId}: ${names.get(
+        Number(args.nodeOperatorId)
+      )}] total keys trimmed ${args.totalKeysTrimmed}`,
     severity: FindingSeverity.Info,
   },
   {
