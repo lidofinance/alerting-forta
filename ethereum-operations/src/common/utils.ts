@@ -102,7 +102,8 @@ export function requireWithTier<T>(
 export function handleEventsOfNotice(
   txEvent: TransactionEvent,
   findings: Finding[],
-  eventsOfNotice: any[]
+  eventsOfNotice: any[],
+  externalData?: any
 ) {
   eventsOfNotice.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
@@ -111,7 +112,9 @@ export function handleEventsOfNotice(
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
-            description: eventInfo.description(event.args),
+            description: externalData
+              ? eventInfo.description(event.args, externalData)
+              : eventInfo.description(event.args),
             alertId: eventInfo.alertId,
             severity: eventInfo.severity,
             type: FindingType.Info,
