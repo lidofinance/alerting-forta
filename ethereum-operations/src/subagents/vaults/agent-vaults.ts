@@ -63,10 +63,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   );
 
   await Promise.all([
-    handleWithdrawalVaultBalance(
-      currentBlock,
-      findings
-    ),
+    handleWithdrawalVaultBalance(currentBlock, findings),
     handleELVaultBalance(currentBlock, prevBlockElVaultBalance, findings),
     handleNoWithdrawalVaultDrains(
       currentBlock,
@@ -100,8 +97,9 @@ async function handleWithdrawalVaultBalance(
       blockNumber
     );
 
-    const withdrawalVaultBalanceDiff =
-      withdrawalVaultBalance.minus(prevWithdrawalVaultBalance);
+    const withdrawalVaultBalanceDiff = withdrawalVaultBalance.minus(
+      prevWithdrawalVaultBalance
+    );
 
     if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
       findings.push(
