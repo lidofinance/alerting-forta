@@ -17,7 +17,7 @@ import type * as Constants from "./constants";
 
 export const name = "Vaults";
 
-export let lido: ethers.Contract;
+let lido: ethers.Contract;
 
 const {
   WITHDRAWAL_VAULT_ADDRESS,
@@ -65,7 +65,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
   await Promise.all([
     handleWithdrawalVaultBalance(
       currentBlock,
-      prevBlockWithrawalVaultBalance,
       findings
     ),
     handleELVaultBalance(currentBlock, prevBlockElVaultBalance, findings),
@@ -88,17 +87,23 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleWithdrawalVaultBalance(
   blockNumber: number,
-  prevBalance: BigNumber,
   findings: Finding[]
 ) {
   if (blockNumber % WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL === 0) {
+    const prevWithdrawalVaultBalance = await getBalance(
+      WITHDRAWAL_VAULT_ADDRESS,
+      blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL
+    );
+
     const withdrawalVaultBalance = await getBalance(
       WITHDRAWAL_VAULT_ADDRESS,
       blockNumber
     );
 
     const withdrawalVaultBalanceDiff =
-      withdrawalVaultBalance.minus(prevBalance);
+      withdrawalVaultBalance.minus(prevWithdrawalVaultBalance);
+
+    console.log(withdrawalVaultBalanceDiff)
 
     if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
       findings.push(
