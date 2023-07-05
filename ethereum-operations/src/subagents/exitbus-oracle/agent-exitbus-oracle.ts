@@ -63,13 +63,13 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -78,7 +78,7 @@ export async function initialize(
 
   const reportSubmits = await getReportSubmits(
     block48HoursAgo,
-    currentBlock - 1
+    currentBlock - 1,
   );
   let prevReportSubmitTimestamp = 0;
   if (reportSubmits.length > 1) {
@@ -94,27 +94,27 @@ export async function initialize(
 
   log(
     `Prev report submit: ${new Date(
-      prevReportSubmitTimestamp * 1000
-    ).toUTCString()}`
+      prevReportSubmitTimestamp * 1000,
+    ).toUTCString()}`,
   );
   log(
     `Last report submit: ${new Date(
-      lastReportSubmitTimestamp * 1000
-    ).toUTCString()}`
+      lastReportSubmitTimestamp * 1000,
+    ).toUTCString()}`,
   );
 
   await updateMaxValidatorExitRequestsPerReport(currentBlock);
   await updateNoNames(currentBlock);
 
   log(
-    `lastMaxValidatorExitRequestsPerReport: ${lastMaxValidatorExitRequestsPerReport}`
+    `lastMaxValidatorExitRequestsPerReport: ${lastMaxValidatorExitRequestsPerReport}`,
   );
 
   return {
     lastReportTimestamp: String(lastReportSubmitTimestamp) ?? "unknown",
     prevReportTimestamp: String(prevReportSubmitTimestamp) ?? "unknown",
     lastMaxValidatorExitRequestsPerReport: String(
-      lastMaxValidatorExitRequestsPerReport
+      lastMaxValidatorExitRequestsPerReport,
     ),
   };
 }
@@ -123,7 +123,7 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
   const exitbusOracle = new ethers.Contract(
     EXITBUS_ORACLE_ADDRESS,
     EXITBUS_ORACLE_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const oracleReportFilter = exitbusOracle.filters.ReportSubmitted();
@@ -131,7 +131,7 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
   return await exitbusOracle.queryFilter(
     oracleReportFilter,
     blockFrom,
-    blockTo
+    blockTo,
   );
 }
 
@@ -139,7 +139,7 @@ async function updateMaxValidatorExitRequestsPerReport(block: number) {
   const sanityChecker = new ethers.Contract(
     ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
     ORACLE_REPORT_SANITY_CHECKER_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const { maxValidatorExitRequestsPerReport } =
@@ -152,7 +152,7 @@ async function updateNoNames(block: number) {
   const nor = new ethers.Contract(
     NODE_OPERATORS_REGISTRY_ADDRESS,
     NODE_OPERATORS_REGISTRY_ABI,
-    ethersProvider
+    ethersProvider,
   );
   // limit=1000 is times higher than possible number of the NOs in the registry
   const nodeOperatorIDs = await nor.getNodeOperatorIds(0, 1000);
@@ -160,7 +160,7 @@ async function updateNoNames(block: number) {
     nodeOperatorIDs.map(async (id: number) => {
       const { name } = await nor.getNodeOperator(id, true);
       noNames.set(Number(id), name);
-    })
+    }),
   );
 }
 
@@ -182,7 +182,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleReportSubmitted(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   const reportSubmitDelay =
@@ -196,7 +196,7 @@ async function handleReportSubmitted(
     // needed to handle situation with the missed TX with prev report
     const reportSubmits = await getReportSubmits(
       blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
-      blockEvent.blockNumber - 1
+      blockEvent.blockNumber - 1,
     );
     if (reportSubmits.length > 0) {
       lastReportSubmitTimestamp = (
@@ -215,7 +215,7 @@ async function handleReportSubmitted(
         Finding.fromObject({
           name: "🚨 ExitBus Oracle: report submit overdue",
           description: `Time since last report: ${formatDelay(
-            reportSubmitDelayUpdated
+            reportSubmitDelayUpdated,
           )}`,
           alertId: "EXITBUS-ORACLE-OVERDUE",
           severity: severity,
@@ -223,7 +223,7 @@ async function handleReportSubmitted(
           metadata: {
             delay: `${reportSubmitDelayUpdated}`,
           },
-        })
+        }),
       );
       lastReportSubmitOverdueTimestamp = now;
       reportSubmitOverdueCount += 1;
@@ -243,28 +243,28 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleProcessingStarted(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const [processingStarted] = txEvent.filterLog(
     EXITBUS_ORACLE_PROCESSING_STARTED_EVENT,
-    EXITBUS_ORACLE_ADDRESS
+    EXITBUS_ORACLE_ADDRESS,
   );
   if (!processingStarted) return;
   const now = txEvent.timestamp;
   const exitRequests = txEvent.filterLog(
     EXITBUS_ORACLE_VALIDATOR_EXIT_REQUEST_EVENT,
-    EXITBUS_ORACLE_ADDRESS
+    EXITBUS_ORACLE_ADDRESS,
   );
   const exitRequestsSize = MIN_DEPOSIT.times(exitRequests.length);
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWALS_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const { refSlot } = processingStarted.args;
   const reportSlotsDiff =
@@ -277,21 +277,23 @@ async function handleProcessingStarted(
     String(
       await lido.functions.getBufferedEther({
         blockTag: refBlock,
-      })
-    )
+      }),
+    ),
   );
   const elVaultBalance = new BigNumber(
-    String(await ethersProvider.getBalance(EL_REWARDS_VAULT_ADDRESS, refBlock))
+    String(await ethersProvider.getBalance(EL_REWARDS_VAULT_ADDRESS, refBlock)),
   );
   const withdrawalsVaultBalance = new BigNumber(
-    String(await ethersProvider.getBalance(WITHDRAWALS_VAULT_ADDRESS, refBlock))
+    String(
+      await ethersProvider.getBalance(WITHDRAWALS_VAULT_ADDRESS, refBlock),
+    ),
   );
   const withdrawalsQueueSize = new BigNumber(
     String(
       await withdrawalNFT.functions.unfinalizedStETH({
         blockTag: refBlock,
-      })
-    )
+      }),
+    ),
   );
   const forFinalization = elVaultBalance
     .plus(withdrawalsVaultBalance)
@@ -303,7 +305,7 @@ async function handleProcessingStarted(
       findings.push(
         Finding.fromObject({
           name: `🚨 ExitBus Oracle: no validators exits in the report, but withdrawal queue was ${diffRate.toFixed(
-            2
+            2,
           )} times bigger than the buffer for requests finalization on reference slot`,
           description: `Validators exits: ${exitRequestsSize
             .div(ETH_DECIMALS)
@@ -312,7 +314,7 @@ async function handleProcessingStarted(
             .toFixed(3)}\nEL vault balance: ${elVaultBalance
             .div(ETH_DECIMALS)
             .toFixed(
-              3
+              3,
             )} ETH\nWithdrawals vault balance: ${withdrawalsVaultBalance
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\n---\nTotal for finalization: ${forFinalization
@@ -324,13 +326,13 @@ async function handleProcessingStarted(
           // todo: should be reconsidered after several exits
           severity: FindingSeverity.Info,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     } else {
       findings.push(
         Finding.fromObject({
           name: `⚠️ ExitBus Oracle: not enough validators exits in the report, withdrawal queue size was ${diffRate.toFixed(
-            2
+            2,
           )} times bigger than the buffer for requests finalization on reference slot`,
           description: `Validators exits: ${exitRequestsSize
             .div(ETH_DECIMALS)
@@ -339,7 +341,7 @@ async function handleProcessingStarted(
             .toFixed(3)}\nEL vault balance: ${elVaultBalance
             .div(ETH_DECIMALS)
             .toFixed(
-              3
+              3,
             )} ETH\nWithdrawals vault balance: ${withdrawalsVaultBalance
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\n---\nTotal for finalization: ${forFinalization
@@ -351,14 +353,14 @@ async function handleProcessingStarted(
           // todo: should be reconsidered after several exits
           severity: FindingSeverity.Info,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
   } else if (diffRate.gte(EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD)) {
     findings.push(
       Finding.fromObject({
         name: `🤔️ ExitBus Oracle: not enough validators exits in the report, withdrawal queue size was ${diffRate.toFixed(
-          2
+          2,
         )} times bigger than the buffer for requests finalization on reference slot`,
         description: `Validators exits: ${exitRequestsSize
           .div(ETH_DECIMALS)
@@ -376,7 +378,7 @@ async function handleProcessingStarted(
         alertId: "EXITBUS-ORACLE-LOW-BUFFER-SIZE",
         severity: FindingSeverity.Info,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   }
 }
@@ -411,14 +413,14 @@ function prepareExitsDigest(exitRequests: LogDescription[]): string {
 function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
   const [processingStarted] = txEvent.filterLog(
     EXITBUS_ORACLE_PROCESSING_STARTED_EVENT,
-    EXITBUS_ORACLE_ADDRESS
+    EXITBUS_ORACLE_ADDRESS,
   );
   if (!processingStarted) {
     return;
   }
   const exitRequests = txEvent.filterLog(
     EXITBUS_ORACLE_VALIDATOR_EXIT_REQUEST_EVENT,
-    EXITBUS_ORACLE_ADDRESS
+    EXITBUS_ORACLE_ADDRESS,
   );
   let digest = "";
   if (exitRequests.length == 0) {
@@ -433,14 +435,14 @@ function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
       alertId: "EXITBUS-ORACLE-EXIT-REQUESTS-DIGEST",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-    })
+    }),
   );
 
   if (
     exitRequests.length >
     Math.ceil(
       lastMaxValidatorExitRequestsPerReport *
-        EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT
+        EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
     )
   ) {
     findings.push(
@@ -450,7 +452,7 @@ function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
         alertId: "EXITBUS-ORACLE-HUGE-EXIT-REQUESTS",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   }
 }

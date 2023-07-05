@@ -30,7 +30,7 @@ let lastReportedTooManyMints = 0;
 let mintsCache: IMintRecord[] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -48,12 +48,12 @@ async function handleTooManyMints(blockEvent: BlockEvent, findings: Finding[]) {
   const now = blockEvent.block.timestamp;
   // remove old withdrawals records
   mintsCache = mintsCache.filter(
-    (x: IMintRecord) => x.time > now - MINTS_MONITORING_WINDOW
+    (x: IMintRecord) => x.time > now - MINTS_MONITORING_WINDOW,
   );
   if (lastReportedTooManyMints + REPORT_WINDOW_TOO_MANY_MINTS < now) {
     let mintsSum = new BigNumber(0);
     mintsCache.forEach(
-      (x: IMintRecord) => (mintsSum = mintsSum.plus(x.amount))
+      (x: IMintRecord) => (mintsSum = mintsSum.plus(x.amount)),
     );
     if (mintsSum.isGreaterThanOrEqualTo(MAX_MINTS_SUM)) {
       findings.push(
@@ -62,12 +62,12 @@ async function handleTooManyMints(blockEvent: BlockEvent, findings: Finding[]) {
           description:
             `There were ${mintsSum.div(ETH_DECIMALS).toFixed(2)} ` +
             `dwstETH minted during the last ${Math.floor(
-              MINTS_MONITORING_WINDOW / (60 * 60)
+              MINTS_MONITORING_WINDOW / (60 * 60),
             )} hour(s)`,
           alertId: "HIGH-DWSTETH-MINTS-SUM",
           severity: FindingSeverity.Info,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedTooManyMints = now;
     }

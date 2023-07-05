@@ -142,7 +142,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
       },
     ];
     return eventsDesc;
-  }
+  },
 ).reduce((a, b) => [...a, ...b]);
 
 export const THIRD_PARTY_PROXY_EVENTS = [
@@ -287,5 +287,5 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         type: FindingType.Info,
       },
     ];
-  }
+  },
 ).reduce((a, b) => [...a, ...b]);

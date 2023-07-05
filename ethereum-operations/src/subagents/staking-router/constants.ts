@@ -13,7 +13,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     name: "🚨🚨🚨 Staking Router: withdrawal credentials set! 🚨🚨🚨",
     description: (args: any) =>
       `New value: ${args.withdrawalCredentials}\nSet by: ${etherscanAddress(
-        args.setBy
+        args.setBy,
       )}`,
     severity: FindingSeverity.Critical,
   },
@@ -75,9 +75,9 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
     name: "⚠️ Staking Router: new staking module added",
     description: (args: any) =>
       `ID: ${args.stakingModuleId}\nAddress: ${etherscanAddress(
-        args.stakingModule
+        args.stakingModule,
       )}\nStaking module name: ${args.name}\nCreated by: ${etherscanAddress(
-        args.createdBy
+        args.createdBy,
       )}`,
     severity: FindingSeverity.High,
   },
@@ -103,7 +103,7 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
       `ID: ${args.stakingModuleId}\nStaking module fee: ${
         args.stakingModuleFee
       }\nTreasury fee: ${args.treasuryFee}\nSet by: ${etherscanAddress(
-        args.setBy
+        args.setBy,
       )}`,
     severity: FindingSeverity.High,
   },

@@ -17,7 +17,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({
     ...event,
     address: EASY_TRACK_ADDRESS,
-  })
+  }),
 );
 
 export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([

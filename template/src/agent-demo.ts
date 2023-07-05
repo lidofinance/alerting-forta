@@ -20,7 +20,7 @@ let totalPooledEther = new BigNumber(0);
 export const name = "DemoBot";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -41,7 +41,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleTotalPooledEther(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const newTotalPooledEther = await getTotalPooledEther(blockEvent.blockNumber);
   if (newTotalPooledEther.isGreaterThan(totalPooledEther)) {
@@ -59,7 +59,7 @@ async function handleTotalPooledEther(
           prevTotalPooledEther: totalPooledEther.toFixed(),
           newTotalPooledEther: newTotalPooledEther.toFixed(),
         },
-      })
+      }),
     );
     totalPooledEther = newTotalPooledEther;
   }
@@ -91,7 +91,7 @@ function handleSubmitEvent(txEvent: TransactionEvent, findings: Finding[]) {
             amount: amount.toFixed(),
             sender: event.args.sender,
           },
-        })
+        }),
       );
     });
   }
@@ -101,14 +101,14 @@ async function getTotalPooledEther(currentBlock: number): Promise<BigNumber> {
   const lidoContract = new ethers.Contract(
     LIDO_ADDRESS,
     LIDO_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   return new BigNumber(
     String(
       await lidoContract.functions.getTotalPooledEther({
         blockTag: currentBlock,
-      })
-    )
+      }),
+    ),
   );
 }

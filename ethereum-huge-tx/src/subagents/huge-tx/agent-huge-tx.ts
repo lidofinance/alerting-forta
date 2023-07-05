@@ -65,7 +65,7 @@ let lastMakerBVaultBalance = 0;
 const balanceChangeThreshold = 15;
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   [
@@ -94,20 +94,20 @@ async function getVaultsBalances(blockNumber: number) {
   const stETH = new ethers.Contract(
     STETH_TOKEN_ADDRESS,
     ERC20_SHORT_TOKEN_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const wstETH = new ethers.Contract(
     WSTETH_TOKEN_ADDRESS,
     ERC20_SHORT_TOKEN_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const aaveV2VaultBalance = new BigNumber(
     String(
       await stETH.functions.balanceOf(AAVE_V2_VAULT_ADDRESS, {
         blockTag: blockNumber,
-      })
-    )
+      }),
+    ),
   )
     .div(ETH_DECIMALS)
     .toNumber();
@@ -115,8 +115,8 @@ async function getVaultsBalances(blockNumber: number) {
     String(
       await wstETH.functions.balanceOf(AAVE_V3_VAULT_ADDRESS, {
         blockTag: blockNumber,
-      })
-    )
+      }),
+    ),
   )
     .div(ETH_DECIMALS)
     .toNumber();
@@ -124,8 +124,8 @@ async function getVaultsBalances(blockNumber: number) {
     String(
       await wstETH.functions.balanceOf(WSTETH_A_VAULT_ADDRESS, {
         blockTag: blockNumber,
-      })
-    )
+      }),
+    ),
   )
     .div(ETH_DECIMALS)
     .toNumber();
@@ -133,8 +133,8 @@ async function getVaultsBalances(blockNumber: number) {
     String(
       await wstETH.functions.balanceOf(WSTETH_B_VAULT_ADDRESS, {
         blockTag: blockNumber,
-      })
-    )
+      }),
+    ),
   )
     .div(ETH_DECIMALS)
     .toNumber();
@@ -162,19 +162,19 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
 
     const aaveV2Diff = getDiffPercents(
       lastAaveV2VaultBalance,
-      aaveV2VaultBalance
+      aaveV2VaultBalance,
     );
     const aaveV3Diff = getDiffPercents(
       lastAaveV3VaultBalance,
-      aaveV3VaultBalance
+      aaveV3VaultBalance,
     );
     const makerADiff = getDiffPercents(
       lastMakerAVaultBalance,
-      makerAVaultBalance
+      makerAVaultBalance,
     );
     const makerBDiff = getDiffPercents(
       lastMakerBVaultBalance,
-      makerBVaultBalance
+      makerBVaultBalance,
     );
 
     if (Math.abs(aaveV2Diff) > balanceChangeThreshold) {
@@ -191,7 +191,7 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
           alertId: "HUGE-VAULT-BALANCE-CHANGE",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
-        })
+        }),
       );
     }
 
@@ -209,7 +209,7 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
           alertId: "HUGE-VAULT-BALANCE-CHANGE",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
-        })
+        }),
       );
     }
 
@@ -227,7 +227,7 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
           alertId: "HUGE-VAULT-BALANCE-CHANGE",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
-        })
+        }),
       );
     }
 
@@ -245,7 +245,7 @@ async function handleVaultBalance(blockEvent: BlockEvent, findings: Finding[]) {
           alertId: "HUGE-VAULT-BALANCE-CHANGE",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
-        })
+        }),
       );
     }
     lastAaveV2VaultBalance = aaveV2VaultBalance;
@@ -269,19 +269,19 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleCurveLiquidityAdd(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (CURVE_POOL_ADDRESS in txEvent.addresses) {
     const addLiquidityEvents = txEvent.filterLog(
       CURVE_ADD_LIQUIDITY_EVENT,
-      CURVE_POOL_ADDRESS
+      CURVE_POOL_ADDRESS,
     );
     addLiquidityEvents.forEach((event) => {
       const ethAmount = new BigNumber(String(event.args.token_amounts[0])).div(
-        ETH_DECIMALS
+        ETH_DECIMALS,
       );
       const stEthAmount = new BigNumber(
-        String(event.args.token_amounts[1])
+        String(event.args.token_amounts[1]),
       ).div(ETH_DECIMALS);
       if (
         ethAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD) ||
@@ -311,7 +311,7 @@ function handleCurveLiquidityAdd(
             alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
-          })
+          }),
         );
         findings.push(
           Finding.fromObject({
@@ -324,7 +324,7 @@ function handleCurveLiquidityAdd(
             severity: FindingSeverity.Info,
             type: FindingType.Info,
             metadata: metadata,
-          })
+          }),
         );
       }
     });
@@ -333,24 +333,24 @@ function handleCurveLiquidityAdd(
 
 function handleCurveLiquidityRemove(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (CURVE_POOL_ADDRESS in txEvent.addresses) {
     const removeLiquidityEvents = txEvent.filterLog(
       CURVE_REMOVE_LIQUIDITY_EVENT,
-      CURVE_POOL_ADDRESS
+      CURVE_POOL_ADDRESS,
     );
     const removeLiquidityImbalanceEvents = txEvent.filterLog(
       CURVE_REMOVE_LIQUIDITY_IMBALANCE_EVENT,
-      CURVE_POOL_ADDRESS
+      CURVE_POOL_ADDRESS,
     );
     [...removeLiquidityEvents, ...removeLiquidityImbalanceEvents].forEach(
       (event) => {
         const ethAmount = new BigNumber(
-          String(event.args.token_amounts[0])
+          String(event.args.token_amounts[0]),
         ).div(ETH_DECIMALS);
         const stEthAmount = new BigNumber(
-          String(event.args.token_amounts[1])
+          String(event.args.token_amounts[1]),
         ).div(ETH_DECIMALS);
         if (
           ethAmount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD) ||
@@ -361,7 +361,7 @@ function handleCurveLiquidityRemove(
           const descriptionShort =
             `**${abbreviateNumber(ethAmount.toNumber())} ETH** and ` +
             `**${abbreviateNumber(
-              stEthAmount.toNumber()
+              stEthAmount.toNumber(),
             )} stETH** were removed from the Curve LP` +
             `\nBy: ${provider} (${providerName})`;
           const metadata = {
@@ -383,7 +383,7 @@ function handleCurveLiquidityRemove(
               alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
               severity: FindingSeverity.Info,
               type: FindingType.Info,
-            })
+            }),
           );
           findings.push(
             Finding.fromObject({
@@ -396,30 +396,30 @@ function handleCurveLiquidityRemove(
               severity: FindingSeverity.Info,
               type: FindingType.Info,
               metadata: metadata,
-            })
+            }),
           );
         }
-      }
+      },
     );
   }
 }
 
 function handleCurveLiquidityRemoveOne(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (CURVE_POOL_ADDRESS in txEvent.addresses) {
     const transferEvents = txEvent.filterLog(TRANSFER_EVENT);
     let transferInfos = transferEvents.map(
-      (event) => new TransferEventInfo(event)
+      (event) => new TransferEventInfo(event),
     );
     const removeLiquidityEvents = txEvent.filterLog(
       CURVE_REMOVE_LIQUIDITY_ONE_EVENT,
-      CURVE_POOL_ADDRESS
+      CURVE_POOL_ADDRESS,
     );
     removeLiquidityEvents.forEach((event) => {
       const amount = new BigNumber(String(event.args.coin_amount)).div(
-        ETH_DECIMALS
+        ETH_DECIMALS,
       );
 
       if (amount.isGreaterThanOrEqualTo(TX_AMOUNT_THRESHOLD)) {
@@ -458,7 +458,7 @@ function handleCurveLiquidityRemoveOne(
             alertId: "HUGE-CURVE-LIQUIDITY-MOVEMENT",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
-          })
+          }),
         );
         findings.push(
           Finding.fromObject({
@@ -471,7 +471,7 @@ function handleCurveLiquidityRemoveOne(
             severity: FindingSeverity.Info,
             type: FindingType.Info,
             metadata: metadata,
-          })
+          }),
         );
       }
     });
@@ -487,14 +487,14 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
     .filter(
       (event) =>
         MONITORED_TOKENS.get(event.address.toLowerCase()) ||
-        PARTIALLY_MONITORED_TOKENS.get(event.address.toLowerCase())
+        PARTIALLY_MONITORED_TOKENS.get(event.address.toLowerCase()),
     );
 
   let transferInfos = transferEvents.map(
-    (event) => new TransferEventInfo(event)
+    (event) => new TransferEventInfo(event),
   );
   transferInfos = transferInfos.filter((transfer) =>
-    applicableAmount(transfer)
+    applicableAmount(transfer),
   );
 
   let texts: TransferText[];
@@ -509,7 +509,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
     [transferInfos, texts, metas] = handleComplexTransfers(
       transferInfos,
       template,
-      txEvent
+      txEvent,
     );
     transfersTexts = transfersTexts.concat(texts);
     transfersMetadata = transfersMetadata.concat(metas);
@@ -521,7 +521,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
       transfersTexts.push(transferText);
       if (transfer.token != LDO_TOKEN_ADDRESS)
         transfersMetadata.push(
-          prepareTransferMetadata(transfer, txEvent, transferText.text)
+          prepareTransferMetadata(transfer, txEvent, transferText.text),
         );
     }
   });
@@ -536,7 +536,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
         alertId: "HUGE-TOKEN-TRANSFERS-IN-SINGLE-TX",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
-      })
+      }),
     );
   }
   transfersMetadata.forEach((meta) => {
@@ -553,7 +553,7 @@ async function handleHugeTx(txEvent: TransactionEvent, findings: Finding[]) {
         severity: FindingSeverity.Info,
         type: FindingType.Info,
         metadata: meta,
-      })
+      }),
     );
   });
 }

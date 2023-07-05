@@ -33,7 +33,7 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export const name = "GateSeal";
@@ -46,7 +46,7 @@ let lastNoPauseRoleAlertTimestamp = 0;
 let initFindings: Finding[] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -57,12 +57,12 @@ export async function initialize(
       Finding.fromObject({
         name: "⚠️ GateSeal: default GateSeal address in forta agent is expired",
         description: `GateSeal address: ${etherscanAddress(
-          GATE_SEAL_DEFAULT_ADDRESS
+          GATE_SEAL_DEFAULT_ADDRESS,
         )}]`,
         alertId: "GATE-SEAL-DEFAULT-EXPIRED",
         severity: FindingSeverity.High,
         type: FindingType.Info,
-      })
+      }),
     );
   } else {
     const { roleForExitBus, roleForWithdrawalQueue } = status;
@@ -70,22 +70,22 @@ export async function initialize(
       let additionalDesc = "";
       if (!roleForExitBus)
         additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(
-          EXITBUS_ORACLE_ADDRESS
+          EXITBUS_ORACLE_ADDRESS,
         )}`;
       if (!roleForWithdrawalQueue)
         additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${etherscanAddress(
-          WITHDRAWAL_QUEUE_ADDRESS
+          WITHDRAWAL_QUEUE_ADDRESS,
         )}`;
       initFindings.push(
         Finding.fromObject({
           name: "⚠️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts",
           description: `GateSeal address: ${etherscanAddress(
-            GATE_SEAL_DEFAULT_ADDRESS
+            GATE_SEAL_DEFAULT_ADDRESS,
           )}${additionalDesc}`,
           alertId: "GATE-SEAL-DEFAULT-WITHOUT-ROLE",
           severity: FindingSeverity.High,
           type: FindingType.Info,
-        })
+        }),
       );
     }
   }
@@ -122,11 +122,11 @@ async function handlePauseRole(blockEvent: BlockEvent, findings: Finding[]) {
     let additionalDesc = "";
     if (!roleForExitBus)
       additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(
-        EXITBUS_ORACLE_ADDRESS
+        EXITBUS_ORACLE_ADDRESS,
       )}`;
     if (!roleForWithdrawalQueue)
       additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${etherscanAddress(
-        WITHDRAWAL_QUEUE_ADDRESS
+        WITHDRAWAL_QUEUE_ADDRESS,
       )}`;
     if (
       now - lastNoPauseRoleAlertTimestamp >
@@ -136,12 +136,12 @@ async function handlePauseRole(blockEvent: BlockEvent, findings: Finding[]) {
         Finding.fromObject({
           name: "🚨GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
           description: `GateSeal address: ${etherscanAddress(
-            actualGateSeal
+            actualGateSeal,
           )}${additionalDesc}`,
           alertId: "GATE-SEAL-WITHOUT-PAUSE-ROLE",
           severity: FindingSeverity.Critical,
           type: FindingType.Degraded,
-        })
+        }),
       );
       lastNoPauseRoleAlertTimestamp = now;
     }
@@ -150,7 +150,7 @@ async function handlePauseRole(blockEvent: BlockEvent, findings: Finding[]) {
 
 async function handleExpiryGateSeal(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (!actualGateSeal) {
     // No actual GateSeal
@@ -160,7 +160,7 @@ async function handleExpiryGateSeal(
   const gateSeal = new ethers.Contract(
     actualGateSeal,
     GATE_SEAL_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const [expiryTimestamp] = await gateSeal.functions.get_expiry_timestamp({
     blockTag: blockEvent.block.number,
@@ -173,7 +173,7 @@ async function handleExpiryGateSeal(
         alertId: "GATE-SEAL-IS-EXPIRED",
         severity: FindingSeverity.Critical,
         type: FindingType.Degraded,
-      })
+      }),
     );
     actualGateSeal = undefined;
   } else if (
@@ -185,12 +185,12 @@ async function handleExpiryGateSeal(
         Finding.fromObject({
           name: "⚠️ GateSeal: is about to be expired",
           description: `GateSeal address: ${etherscanAddress(
-            actualGateSeal
+            actualGateSeal,
           )}\nExpiry date ${new Date(String(expiryTimestamp))}`,
           alertId: "GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED",
           severity: FindingSeverity.High,
           type: FindingType.Degraded,
-        })
+        }),
       );
       lastExpiryGateSealAlertTimestamp = now;
     }
@@ -208,7 +208,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleSealedGateSeal(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (!actualGateSeal) {
     // No actual GateSeal
@@ -216,7 +216,7 @@ async function handleSealedGateSeal(
   }
   const sealedEvents = txEvent.filterLog(
     GATE_SEAL_SEALED_EVENT,
-    actualGateSeal
+    actualGateSeal,
   );
   if (!sealedEvents) return;
   for (const sealedEvent of sealedEvents) {
@@ -226,25 +226,25 @@ async function handleSealedGateSeal(
       Finding.fromObject({
         name: "🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨",
         description: `GateSeal address: ${etherscanAddress(
-          actualGateSeal
+          actualGateSeal,
         )}\nSealed by: ${etherscanAddress(
-          sealed_by
+          sealed_by,
         )}\nSealed for: ${duration}\nSealable: ${etherscanAddress(sealable)}`,
         alertId: "GATE-SEAL-IS-SEALED",
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
-      })
+      }),
     );
   }
 }
 
 async function handleNewGateSeal(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const newGateSealEvents = txEvent.filterLog(
     GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT,
-    GATE_SEAL_FACTORY_ADDRESS
+    GATE_SEAL_FACTORY_ADDRESS,
   );
   if (!newGateSealEvents) return;
   for (const newGateSealEvent of newGateSealEvents) {
@@ -253,12 +253,12 @@ async function handleNewGateSeal(
       Finding.fromObject({
         name: "🚨 GateSeal: new one created",
         description: `GateSeal address: ${etherscanAddress(
-          gate_seal
+          gate_seal,
         )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,
         alertId: "GATE-SEAL-NEW-ONE-CREATED",
         severity: FindingSeverity.High,
         type: FindingType.Info,
-      })
+      }),
     );
     actualGateSeal = gate_seal;
   }
@@ -266,7 +266,7 @@ async function handleNewGateSeal(
 
 async function checkGateSeal(
   blockNumber: number,
-  gateSealAddress: string
+  gateSealAddress: string,
 ): Promise<
   { roleForWithdrawalQueue: boolean; roleForExitBus: boolean } | undefined
 > {
@@ -275,38 +275,38 @@ async function checkGateSeal(
   const gateSeal = new ethers.Contract(
     gateSealAddress,
     GATE_SEAL_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const [expired] = await gateSeal.functions.is_expired({
     blockTag: blockNumber,
   });
   if (expired) return undefined;
   const keccakPauseRole = ethers.utils.keccak256(
-    ethers.utils.toUtf8Bytes("PAUSE_ROLE")
+    ethers.utils.toUtf8Bytes("PAUSE_ROLE"),
   );
   const withdrawalQueue = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const exitBusOracle = new ethers.Contract(
     EXITBUS_ORACLE_ADDRESS,
     EXITBUS_ORACLE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const [queuePauseRoleMember] = (await withdrawalQueue.functions.hasRole(
     keccakPauseRole,
     gateSealAddress,
     {
       blockTag: blockNumber,
-    }
+    },
   )) as boolean[];
   const [exitBusPauseRoleMember] = (await exitBusOracle.functions.hasRole(
     keccakPauseRole,
     gateSealAddress,
     {
       blockTag: blockNumber,
-    }
+    },
   )) as boolean[];
   roleForWithdrawalQueue = queuePauseRoleMember;
   roleForExitBus = exitBusPauseRoleMember;

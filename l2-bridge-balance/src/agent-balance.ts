@@ -22,7 +22,7 @@ import { ethersProvider } from "./ethers";
 export const name = "BridgeWatcher";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -35,12 +35,12 @@ export async function handleBlock(blockEvent: BlockEvent) {
     handleBridgeBalanceWstETH(
       blockEvent,
       findings,
-      BRIDGE_PARAMS_WSTETH.Arbitrum
+      BRIDGE_PARAMS_WSTETH.Arbitrum,
     ),
     handleBridgeBalanceWstETH(
       blockEvent,
       findings,
-      BRIDGE_PARAMS_WSTETH.Optimism
+      BRIDGE_PARAMS_WSTETH.Optimism,
     ),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Arbitrum),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
@@ -52,24 +52,24 @@ export async function handleBlock(blockEvent: BlockEvent) {
 async function handleBridgeBalanceWstETH(
   blockEvent: BlockEvent,
   findings: Finding[],
-  networkParams: BridgeParamWstETH
+  networkParams: BridgeParamWstETH,
 ) {
   const wstETH = new ethers.Contract(
     WSTETH_ADDRESS,
     ERC20_SHORT_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const l1Balance = new BigNumber(
-    String(await wstETH.functions.balanceOf(networkParams.l1Gateway))
+    String(await wstETH.functions.balanceOf(networkParams.l1Gateway)),
   );
   const l2Provider = new ethers.providers.JsonRpcProvider(networkParams.rpcUrl);
   const bridgedWstETH = new ethers.Contract(
     networkParams.wstEthBridged,
     ERC20_SHORT_ABI,
-    l2Provider
+    l2Provider,
   );
   const l2TotalSupply = new BigNumber(
-    String(await bridgedWstETH.functions.totalSupply())
+    String(await bridgedWstETH.functions.totalSupply()),
   );
   if (l2TotalSupply.isGreaterThan(l1Balance)) {
     findings.push(
@@ -89,7 +89,7 @@ async function handleBridgeBalanceWstETH(
           l2Token: networkParams.wstEthBridged,
           network: networkParams.name,
         },
-      })
+      }),
     );
   }
 }
@@ -97,20 +97,20 @@ async function handleBridgeBalanceWstETH(
 async function handleBridgeBalanceLDO(
   blockEvent: BlockEvent,
   findings: Finding[],
-  networkParams: BridgeParamLDO
+  networkParams: BridgeParamLDO,
 ) {
   const LDO = new ethers.Contract(LDO_ADDRESS, ERC20_SHORT_ABI, ethersProvider);
   const l1Balance = new BigNumber(
-    String(await LDO.functions.balanceOf(networkParams.l1Gateway))
+    String(await LDO.functions.balanceOf(networkParams.l1Gateway)),
   );
   const l2Provider = new ethers.providers.JsonRpcProvider(networkParams.rpcUrl);
   const bridgedLDO = new ethers.Contract(
     networkParams.ldoBridged,
     ERC20_SHORT_ABI,
-    l2Provider
+    l2Provider,
   );
   const l2TotalSupply = new BigNumber(
-    String(await bridgedLDO.functions.totalSupply())
+    String(await bridgedLDO.functions.totalSupply()),
   );
   if (l2TotalSupply.isGreaterThan(l1Balance)) {
     findings.push(
@@ -130,7 +130,7 @@ async function handleBridgeBalanceLDO(
           l2Token: networkParams.ldoBridged,
           network: networkParams.name,
         },
-      })
+      }),
     );
   }
 }

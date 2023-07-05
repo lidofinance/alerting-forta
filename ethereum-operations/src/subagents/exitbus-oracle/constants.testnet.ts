@@ -46,7 +46,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
   (event) => ({
     ...event,
     address: EXITBUS_HASH_CONSENSUS_ADDRESS,
-  })
+  }),
 );
 
 export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = oracleEvents.map((event) => ({

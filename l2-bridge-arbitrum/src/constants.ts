@@ -239,7 +239,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
       },
     ];
     return eventsDesc;
-  }
+  },
 ).reduce((a, b) => [...a, ...b]);
 
 export const L2_BRIDGE_EVENTS: EventOfNotice[] = [

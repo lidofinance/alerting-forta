@@ -14,7 +14,7 @@ import type * as Constants from "./constants";
 const { STORAGE_SLOTS } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export const name = "StorageWatcher";
@@ -25,7 +25,7 @@ let contractsStorageValues: Map<
 > = new Map();
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const findings: Finding[] = [];
@@ -44,7 +44,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 async function handleStorageSlots(
   blockNumber: number,
   findings: Finding[],
-  checkValues: boolean
+  checkValues: boolean,
 ) {
   // TODO: sophisticated attacker can change the storage slot value back to the original one in the single block
   await Promise.all(
@@ -58,14 +58,14 @@ async function handleStorageSlots(
           let value = await getStorageValue(
             contractStorageMap.contract.address,
             slot,
-            blockNumber
+            blockNumber,
           );
           // fetch value one more time in case of null
           if (value == NULL_STORAGE) {
             value = await getStorageValue(
               contractStorageMap.contract.address,
               slot,
-              blockNumber
+              blockNumber,
             );
           }
           if (checkValues) {
@@ -82,15 +82,15 @@ async function handleStorageSlots(
                   alertId: "STORAGE-SLOT-VALUE-CHANGED",
                   severity: FindingSeverity.Critical,
                   type: FindingType.Suspicious,
-                })
+                }),
               );
             }
           }
           contractInfo.set(slot.name, value);
-        })
+        }),
       );
       contractsStorageValues.set(contract.address, contractInfo);
-    })
+    }),
   );
 }
 

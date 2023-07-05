@@ -29,7 +29,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `New ${formatLink(
         `voting #${args.voteId}`,
-        `${VOTING_BASE_URL}${args.voteId}`
+        `${VOTING_BASE_URL}${args.voteId}`,
       )} started 🚀`,
     severity: FindingSeverity.Info,
   },
@@ -41,7 +41,7 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `${formatLink(
         `Voting #${args.voteId}`,
-        `${VOTING_BASE_URL}${args.voteId}`
+        `${VOTING_BASE_URL}${args.voteId}`,
       )} was executed`,
     severity: FindingSeverity.Info,
   },

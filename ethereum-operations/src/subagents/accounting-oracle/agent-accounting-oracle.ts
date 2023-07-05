@@ -41,11 +41,11 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -54,7 +54,7 @@ export async function initialize(
 
   const mainDataSubmits = await getReportMainDataSubmits(
     block48HoursAgo,
-    currentBlock - 1
+    currentBlock - 1,
   );
 
   if (mainDataSubmits.length > 0) {
@@ -64,7 +64,7 @@ export async function initialize(
     lastReportMainDataSubmitTimestamp = reportMainDataSubmitBlock.timestamp;
     const extraDataSubmits = await getReportExtraDataSubmits(
       reportMainDataSubmitBlock.number,
-      currentBlock - 1
+      currentBlock - 1,
     );
     if (extraDataSubmits.length > 0) {
       lastReportExtraDataSubmitTimestamp = (
@@ -80,7 +80,7 @@ async function getReportMainDataSubmits(blockFrom: number, blockTo: number) {
   const accountingOracle = new ethers.Contract(
     ACCOUNTING_ORACLE_ADDRESS,
     ACCOUNTING_ORACLE_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const oracleReportFilter = accountingOracle.filters.ReportSubmitted();
@@ -88,7 +88,7 @@ async function getReportMainDataSubmits(blockFrom: number, blockTo: number) {
   return await accountingOracle.queryFilter(
     oracleReportFilter,
     blockFrom,
-    blockTo
+    blockTo,
   );
 }
 
@@ -96,7 +96,7 @@ async function getReportExtraDataSubmits(blockFrom: number, blockTo: number) {
   const accountingOracle = new ethers.Contract(
     ACCOUNTING_ORACLE_ADDRESS,
     ACCOUNTING_ORACLE_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const oracleReportFilter = accountingOracle.filters.ExtraDataSubmitted();
@@ -104,7 +104,7 @@ async function getReportExtraDataSubmits(blockFrom: number, blockTo: number) {
   return await accountingOracle.queryFilter(
     oracleReportFilter,
     blockFrom,
-    blockTo
+    blockTo,
   );
 }
 
@@ -118,7 +118,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleMainDataReportSubmitted(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   const reportMainDataSubmitDelay =
@@ -135,7 +135,7 @@ async function handleMainDataReportSubmitted(
     // needed to handle situation with the missed TX with prev report
     const mainDataSubmits = await getReportMainDataSubmits(
       blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
-      blockEvent.blockNumber - 1
+      blockEvent.blockNumber - 1,
     );
     if (mainDataSubmits.length > 0) {
       const reportMainDataSubmitBlock = await mainDataSubmits[
@@ -144,7 +144,7 @@ async function handleMainDataReportSubmitted(
       lastReportMainDataSubmitTimestamp = reportMainDataSubmitBlock.timestamp;
       const extraDataSubmits = await getReportExtraDataSubmits(
         reportMainDataSubmitBlock.number,
-        blockEvent.blockNumber - 1
+        blockEvent.blockNumber - 1,
       );
       if (extraDataSubmits.length > 0) {
         lastReportExtraDataSubmitTimestamp = (
@@ -170,7 +170,7 @@ async function handleMainDataReportSubmitted(
         Finding.fromObject({
           name: "🚨 Accounting Oracle: report MAIN data submit overdue",
           description: `Time since last report: ${formatDelay(
-            reportMainDataSubmitDelayUpdated
+            reportMainDataSubmitDelayUpdated,
           )}`,
           alertId: "ACCOUNTING-ORACLE-MAIN-DATA-OVERDUE",
           severity: severity,
@@ -178,7 +178,7 @@ async function handleMainDataReportSubmitted(
           metadata: {
             delay: `${reportMainDataSubmitDelayUpdated}`,
           },
-        })
+        }),
       );
       lastReportMainDataSubmitOverdueTimestamp = now;
       reportMainDataSubmitOverdueCount += 1;
@@ -197,7 +197,7 @@ async function handleMainDataReportSubmitted(
         Finding.fromObject({
           name: "🚨 Accounting Oracle: report EXTRA data submit overdue",
           description: `Time since main data submit: ${formatDelay(
-            reportMainDataSubmitDelayUpdated
+            reportMainDataSubmitDelayUpdated,
           )}`,
           alertId: "ACCOUNTING-ORACLE-EXTRA-DATA-OVERDUE",
           severity: severity,
@@ -205,7 +205,7 @@ async function handleMainDataReportSubmitted(
           metadata: {
             delay: `${reportMainDataSubmitDelayUpdated}`,
           },
-        })
+        }),
       );
       lastReportExtraDataSubmitOverdueTimestamp = now;
       reportExtraDataSubmitOverdueCount += 1;

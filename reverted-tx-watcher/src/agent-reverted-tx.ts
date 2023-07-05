@@ -20,13 +20,13 @@ let contracts: LocatorContracts;
 let addresses: [string, string][] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const locator = new ethers.Contract(
     LIDO_LOCATOR_ADDRESS,
     LIDO_LOCATOR_ABI,
-    ethersProvider
+    ethersProvider,
   );
   contracts = {
     accountingOracle: await locator.accountingOracle(),
@@ -65,18 +65,18 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleRevertedTx(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const eventAddresses = Object.keys(txEvent.addresses).map((a) =>
-    a.toLowerCase()
+    a.toLowerCase(),
   );
   const suitableAddresses = addresses.filter(([, address]) =>
-    eventAddresses.includes(address.toLowerCase())
+    eventAddresses.includes(address.toLowerCase()),
   );
   if (suitableAddresses.length === 0) return;
 
   const receipt = await ethersProvider.getTransactionReceipt(
-    txEvent.transaction.hash
+    txEvent.transaction.hash,
   );
   if (!receipt) return;
   if (receipt.status !== 0) return;
@@ -95,7 +95,7 @@ async function handleRevertedTx(
         metadata: {
           sender: txEvent.from,
         },
-      })
+      }),
     );
   }
 }

@@ -32,14 +32,14 @@ let lastReportedToManyWithdrawals = 0;
 let withdrawalsCache: IWithdrawalRecord[] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const now = (await ethersProvider.getBlock(currentBlock)).timestamp;
   const stMATIC = new ethers.Contract(
     ST_MATIC_TOKEN_ADDRESS,
     ST_MATIC_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const requestWithdrawFilter = stMATIC.filters.RequestWithdrawEvent();
 
@@ -47,7 +47,7 @@ export async function initialize(
   const withdrawEvents = await stMATIC.queryFilter(
     requestWithdrawFilter,
     pastBlock,
-    currentBlock - 1
+    currentBlock - 1,
   );
   await Promise.all(
     withdrawEvents.map(async (evt: Event) => {
@@ -58,7 +58,7 @@ export async function initialize(
           amount: new BigNumber(String(evt.args._amount)),
         });
       }
-    })
+    }),
   );
   return {};
 }
@@ -73,17 +73,17 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleToManyWithdrawals(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
   withdrawalsCache = withdrawalsCache.filter(
-    (x: IWithdrawalRecord) => x.time > now - MAX_WITHDRAWALS_WINDOW
+    (x: IWithdrawalRecord) => x.time > now - MAX_WITHDRAWALS_WINDOW,
   );
   const stMatic = new ethers.Contract(
     ST_MATIC_TOKEN_ADDRESS,
     ST_MATIC_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const totalPooledMatic = new BigNumber(
@@ -92,12 +92,12 @@ async function handleToManyWithdrawals(
         .getTotalPooledMatic({
           blockTag: blockEvent.block.number,
         })
-        .then((value) => new BigNumber(String(value)))
-    )
+        .then((value) => new BigNumber(String(value))),
+    ),
   );
   let withdrawalsSum = new BigNumber(0);
   withdrawalsCache.forEach(
-    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount))
+    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount)),
   );
   const withdrawalsPercent = withdrawalsSum.div(totalPooledMatic).times(100);
   const period =
@@ -120,12 +120,12 @@ async function handleToManyWithdrawals(
         alertId: "HUGE-WITHDRAWALS-REQUESTS-MATIC",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
     lastReportedToManyWithdrawals = now;
     // remove reported withdrawals records
     withdrawalsCache = withdrawalsCache.filter(
-      (x: IWithdrawalRecord) => x.time > lastReportedToManyWithdrawals
+      (x: IWithdrawalRecord) => x.time > lastReportedToManyWithdrawals,
     );
   }
 }
@@ -142,7 +142,7 @@ function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
   if (ST_MATIC_TOKEN_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
       ST_MATIC_REQUEST_WITHDRAWAL_EVENT,
-      ST_MATIC_TOKEN_ADDRESS
+      ST_MATIC_TOKEN_ADDRESS,
     );
     events.forEach((event) => {
       withdrawalsCache.push({

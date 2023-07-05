@@ -53,7 +53,7 @@ export function etherscanNft(address: string, id: number | string): string {
 export function requireWithTier<T>(
   module: NodeModule,
   path: string,
-  mode: RedefineMode = RedefineMode.Strict
+  mode: RedefineMode = RedefineMode.Strict,
 ): T {
   const defaultContent = require(`${module.path}/${path}`);
   if (!RUN_TIER) return defaultContent;
@@ -76,7 +76,7 @@ export function requireWithTier<T>(
     } else {
       throw new Error(
         `Failed to import module: '${module.path}/${path}.${RUN_TIER}' doesn't contain all keys or unmatched types 
-        with '${module.path}/${path}'`
+        with '${module.path}/${path}'`,
       );
     }
   }
@@ -92,7 +92,7 @@ export function requireWithTier<T>(
       return { ...defaultContent, ...tieredContent };
     } else {
       throw new Error(
-        `Failed to import module: '${path}.${RUN_TIER}' unmatched types with '${path}'`
+        `Failed to import module: '${path}.${RUN_TIER}' unmatched types with '${path}'`,
       );
     }
   }
@@ -103,7 +103,7 @@ export function handleEventsOfNotice(
   txEvent: TransactionEvent,
   findings: Finding[],
   eventsOfNotice: any[],
-  externalData?: any
+  externalData?: any,
 ) {
   eventsOfNotice.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
@@ -119,7 +119,7 @@ export function handleEventsOfNotice(
             severity: eventInfo.severity,
             type: FindingType.Info,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }

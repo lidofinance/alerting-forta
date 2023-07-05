@@ -20,7 +20,7 @@ import { abbreviateNumber } from "./helpers";
 export const name = "AAVE";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -50,7 +50,7 @@ function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
             severity: FindingSeverity.Info,
             type: FindingType.Info,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       }
     });
@@ -68,7 +68,7 @@ function handleAaveTransaction(txEvent: TransactionEvent, findings: Finding[]) {
             severity: FindingSeverity.Info,
             type: FindingType.Info,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       }
     });

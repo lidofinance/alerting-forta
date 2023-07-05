@@ -120,7 +120,7 @@ describe("lido-on-polygon", () => {
         alertId: "HUGE-BUFFERED-MATIC",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   });
 
@@ -141,7 +141,7 @@ describe("lido-on-polygon", () => {
         alertId: "STMATIC-REWARDS-DISTRIBUTION-DELAY",
         severity: FindingSeverity.High,
         type: FindingType.Degraded,
-      })
+      }),
     );
   });
 
@@ -168,7 +168,7 @@ describe("lido-on-polygon", () => {
         alertId: "INVALID-PROXY-ADMIN-ADDR",
         severity: FindingSeverity.Critical,
         type: FindingType.Exploit,
-      })
+      }),
     );
   });
 
@@ -195,7 +195,7 @@ describe("lido-on-polygon", () => {
         alertId: "INVALID-PROXY-ADMIN-OWNER",
         severity: FindingSeverity.Critical,
         type: FindingType.Exploit,
-      })
+      }),
     );
   });
 
@@ -221,7 +221,7 @@ describe("lido-on-polygon", () => {
         alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   });
 
@@ -251,7 +251,7 @@ describe("lido-on-polygon", () => {
         alertId: "STMATIC-REWARDS-DECREASED",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   });
 
@@ -280,7 +280,7 @@ describe("lido-on-polygon", () => {
         alertId: "PROXY-ADMIN-OWNER-CHANGE",
         severity: FindingSeverity.Critical,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   });
 
@@ -308,7 +308,7 @@ describe("lido-on-polygon", () => {
         alertId: "STMATIC-CHEKPOINT-REWARD-UPDATE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   });
 });

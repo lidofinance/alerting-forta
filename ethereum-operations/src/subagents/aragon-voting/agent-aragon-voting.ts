@@ -36,7 +36,7 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 interface IVoteInfo {
@@ -58,20 +58,20 @@ enum Outcomes {
 let votes = new Map<number, IVoteInfo>();
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const aragonVoting = new ethers.Contract(
     ARAGON_VOTING_ADDRESS,
     ARAGON_VOTING_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const filterStartVote = aragonVoting.filters.StartVote();
   const startedVotes = (
     await aragonVoting.queryFilter(
       filterStartVote,
       currentBlock - FIVE_DAYS_BLOCKS,
-      currentBlock
+      currentBlock,
     )
   ).map((value: any) => parseInt(String(value.args.voteId)));
 
@@ -81,7 +81,7 @@ export async function initialize(
       if (voteInfo.open) {
         votes.set(voteId, voteInfo);
       }
-    })
+    }),
   );
   return { activeVotes: `${Array.from(votes.keys())}` };
 }
@@ -99,19 +99,19 @@ async function adHocVotesRefresh(blockEvent: BlockEvent, findings: Finding[]) {
     await Promise.all(
       Array.from(votes.keys()).map(async (voteId: number) => {
         await handleNewVoteInfo(voteId, blockEvent.block, findings);
-      })
+      }),
     );
   }
 }
 
 async function getVoteInfo(
   voteId: number,
-  blockNumber: number
+  blockNumber: number,
 ): Promise<IVoteInfo> {
   const aragonVoting = new ethers.Contract(
     ARAGON_VOTING_ADDRESS,
     ARAGON_VOTING_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const voteInfoRaw = await aragonVoting.functions.getVote(voteId, {
     blockTag: blockNumber,
@@ -135,7 +135,7 @@ async function getVoteInfo(
 async function handleNewVoteInfo(
   voteId: number,
   block: Block | TxEventBlock,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const oldVoteInfo = votes.get(voteId);
   const newVoteInfo = await getVoteInfo(voteId, block.number);
@@ -162,7 +162,7 @@ async function handleNewVoteInfo(
           alertId: "ARAGON-VOTE-OUTCOME-CHANGED",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
   }
@@ -174,7 +174,7 @@ function getVoteOutcome(voteInfo: IVoteInfo): Outcomes {
   // quorum not reached
   if (
     voteInfo.yea.isLessThan(
-      voteInfo.votingPower.times(voteInfo.minAcceptQuorum)
+      voteInfo.votingPower.times(voteInfo.minAcceptQuorum),
     )
   ) {
     return Outcomes.Fail;
@@ -182,7 +182,7 @@ function getVoteOutcome(voteInfo: IVoteInfo): Outcomes {
   // it should be more than 50% yea votes
   if (
     voteInfo.yea.isLessThanOrEqualTo(
-      voteInfo.nay.plus(voteInfo.yea).times(voteInfo.supportRequired)
+      voteInfo.nay.plus(voteInfo.yea).times(voteInfo.supportRequired),
     )
   ) {
     return Outcomes.Fail;
@@ -203,7 +203,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleAragonTransaction(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (ARAGON_VOTING_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(CAST_VOTE_EVENT, ARAGON_VOTING_ADDRESS);
@@ -212,7 +212,7 @@ async function handleAragonTransaction(
         await handleNewVoteInfo(
           event.args.voteId.toNumber(),
           txEvent.block,
-          findings
+          findings,
         );
       }
     }

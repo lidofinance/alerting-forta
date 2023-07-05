@@ -173,7 +173,7 @@ export const ST_MATIC_ADMIN_EVENTS: StMaticAdminEvent[] = [
       `${abbreviateNumber(
         new BigNumber(String(args._amountDelegated))
           .div(MATIC_DECIMALS)
-          .toNumber()
+          .toNumber(),
       )}` +
       ` MATIC remained pooled ${args._remainder} wei`,
     severity: FindingSeverity.Info,

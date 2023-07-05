@@ -65,7 +65,7 @@ const subAgents: SubAgent[] = [
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
   console.warn(
-    `Skipping sub-agent [${agent.name}]: unsupported run tier '${RUN_TIER}'`
+    `Skipping sub-agent [${agent.name}]: unsupported run tier '${RUN_TIER}'`,
   );
 });
 
@@ -120,7 +120,7 @@ const initialize = async () => {
           process.exit(1);
         }
       }
-    })
+    }),
   );
 
   metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
@@ -133,7 +133,7 @@ const initialize = async () => {
       severity: FindingSeverity.Info,
       type: FindingType.Info,
       metadata,
-    })
+    }),
   );
   console.log("Bot initialization is done!");
 };
@@ -147,7 +147,7 @@ const timeout = async (agent: SubAgent) =>
   });
 
 const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent
+  blockEvent: BlockEvent,
 ): Promise<Finding[]> => {
   let blockFindings: Finding[] = [];
   // report findings from init. Will be done only for the first block report.
@@ -184,13 +184,13 @@ const handleBlock: HandleBlock = async (
   const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
       return await Promise.race([run(agent, blockEvent), timeout(agent)]);
-    })
+    }),
   );
 
   runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
       blockFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock")
+        errorToFinding(r.reason, subAgents[index], "handleBlock"),
       );
     }
   });
@@ -202,7 +202,7 @@ const handleBlock: HandleBlock = async (
 };
 
 const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent
+  txEvent: TransactionEvent,
 ): Promise<Finding[]> => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
@@ -232,13 +232,13 @@ const handleTransaction: HandleTransaction = async (
   const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
       return await Promise.race([run(agent, txEvent), timeout(agent)]);
-    })
+    }),
   );
 
   runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
       txFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock")
+        errorToFinding(r.reason, subAgents[index], "handleBlock"),
       );
     }
   });

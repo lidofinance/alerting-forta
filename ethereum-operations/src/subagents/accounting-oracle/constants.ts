@@ -31,10 +31,10 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
 ]);
 
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
-  ONE_WEEK / SECONDS_PER_SLOT
+  ONE_WEEK / SECONDS_PER_SLOT,
 );
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (2 * ONE_WEEK) / SECONDS_PER_SLOT
+  (2 * ONE_WEEK) / SECONDS_PER_SLOT,
 );
 
 // max delay between two oracle reports
@@ -131,7 +131,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${etherscanAddress(
-        args.addr
+        args.addr,
       )}\nPrevious address: ${etherscanAddress(args.prevAddr)}`,
     severity: FindingSeverity.Critical,
   },

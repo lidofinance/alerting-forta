@@ -7,5 +7,5 @@ export const ORACLE_DAEMON_CONFIG_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({
     ...event,
     address: ORACLE_DAEMON_CONFIG_ADDRESS,
-  })
+  }),
 );

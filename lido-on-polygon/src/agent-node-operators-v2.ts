@@ -58,13 +58,13 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleNodeOperatorsStatus(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   const nodeOperators = new ethers.Contract(
     NODE_OPERATORS_REGISTRY_ADDRESS,
     NODE_OPERATORS_V2_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const stats = await nodeOperators.functions.getStats({
@@ -83,7 +83,7 @@ async function handleNodeOperatorsStatus(
         alertId: "NO-ACTIVE-NODE-OPERATORS-POLYGON",
         severity: FindingSeverity.Critical,
         type: FindingType.Degraded,
-      })
+      }),
     );
   }
 
@@ -98,7 +98,7 @@ async function handleNodeOperatorsStatus(
         alertId: "BAD-OPERATOR-STATUS-POLYGON",
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
-      })
+      }),
     );
     lastReportedBadOperatorsState = now;
   }
@@ -106,20 +106,20 @@ async function handleNodeOperatorsStatus(
 
 async function handleNodeOperatorsNftOwners(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (lastReportedBadNftOwner + REPORT_WINDOW_NO_NFT_OWNER < now) {
     const nodeOperators = new ethers.Contract(
       NODE_OPERATORS_REGISTRY_ADDRESS,
       NODE_OPERATORS_V2_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const stackingNFT = new ethers.Contract(
       MATIC_STAKING_NFT_ADDRESS,
       MATIC_STAKING_NFT_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const vIds = await nodeOperators.getValidatorIds({
@@ -132,7 +132,7 @@ async function handleNodeOperatorsNftOwners(
           id.toNumber(),
           {
             blockTag: blockEvent.blockNumber,
-          }
+          },
         );
         stackingNFT.functions
           .ownerOf(info.validatorId, {
@@ -147,19 +147,19 @@ async function handleNodeOperatorsNftOwners(
                   alertId: "BAD-OPERATOR-NFT-OWNER-POLYGON",
                   severity: FindingSeverity.Critical,
                   type: FindingType.Suspicious,
-                })
+                }),
               );
               lastReportedBadNftOwner = now;
             }
           });
-      })
+      }),
     );
   }
 }
 
 async function handleNodeOperatorsActiveSet(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   interface IsValidatorResult {
     isValidator: boolean;
@@ -180,7 +180,7 @@ async function handleNodeOperatorsActiveSet(
   const stakeManager = new ethers.Contract(
     POLYGON_STAKE_MANAGER_PROXY,
     STAKE_MANAGER_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const rows: IsValidatorResult[] = await Promise.all(
@@ -193,7 +193,7 @@ async function handleNodeOperatorsActiveSet(
         isValidator: request[0], // why its an array?
         vId,
       };
-    })
+    }),
   );
 
   // first time or every ~ 24 hours otherwise
@@ -215,7 +215,7 @@ async function handleNodeOperatorsActiveSet(
           alertId: "LIDO-VALIDATOR-NOT-IN-ACTIVE-SET",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     });
 
@@ -231,7 +231,7 @@ async function handleNodeOperatorsActiveSet(
           alertId: "LIDO-VALIDATOR-BACK-IN-ACTIVE-SET",
           severity: FindingSeverity.Low,
           type: FindingType.Info,
-        })
+        }),
       );
     }
   });
@@ -257,7 +257,7 @@ function handleNodeOperatorsTx(txEvent: TransactionEvent, findings: Finding[]) {
             severity: severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }

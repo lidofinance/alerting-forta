@@ -46,7 +46,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "🚨 EasyTrack: Role was granted on EasyTrack contract",
     description: (args: any) =>
       `Role ${args.role} was granted to ${etherscanAddress(
-        args.account
+        args.account,
       )} on EasyTrack contract by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.Critical,
   },
@@ -58,7 +58,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "🚨 EasyTrack: Role was revoked on EasyTrack contract",
     description: (args: any) =>
       `Role ${args.role} was revoked from ${etherscanAddress(
-        args.account
+        args.account,
       )} on EasyTrack contract by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.High,
   },
@@ -79,7 +79,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "ℹ️ EasyTrack: Motion objected",
     description: (args: any) =>
       `EasyTrack motion ${args._motionId} was objected by ${etherscanAddress(
-        args._objector
+        args._objector,
       )}`,
     severity: FindingSeverity.Info,
   },
@@ -109,7 +109,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "🚨 Reward Programs: Role was granted on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was granted by ${etherscanAddress(
-        args.account
+        args.account,
       )} on RewardProgramsRegistry by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.Critical,
   },
@@ -121,7 +121,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "🚨 Reward Programs: Role was revoked on RewardProgramsRegistry",
     description: (args: any) =>
       `Role ${args.role} was revoked from ${etherscanAddress(
-        args.account
+        args.account,
       )} on RewardProgramsRegistry by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.High,
   },
@@ -133,7 +133,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "🚨 EasyTrack: EVMScriptExecutor's EasyTrack address changed",
     description: (args: any) =>
       `EVMScriptExecutor's EasyTrack address changed from ${etherscanAddress(
-        args._previousEasyTrack
+        args._previousEasyTrack,
       )} to ${etherscanAddress(args._newEasyTrack)}`,
     severity: FindingSeverity.Critical,
   },
@@ -145,7 +145,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     name: "🚨 EasyTrack: EVMScriptExecutor's ownership transferred",
     description: (args: any) =>
       `EVMScriptExecutor's ownership transferred from ${etherscanAddress(
-        args.previousOwner
+        args.previousOwner,
       )} to ${etherscanAddress(args.newOwner)}`,
     severity: FindingSeverity.Critical,
   },

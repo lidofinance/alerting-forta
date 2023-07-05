@@ -27,7 +27,7 @@ let curvePoolSize = new BigNumber(0);
 let balancerPoolSize = new BigNumber(0);
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -61,24 +61,24 @@ async function getCurvePoolTokens(blockNumber?: number): Promise<BigNumber[]> {
   const curveStableSwap = new ethers.Contract(
     CURVE_POOL_ADDRESS,
     CURVE_POOL_ABI,
-    ethersProvider
+    ethersProvider,
   );
   let overrides = {} as any;
   if (blockNumber) {
     overrides.blockTag = blockNumber;
   }
   const maticBalance = new BigNumber(
-    String(await curveStableSwap.functions.balances(0, overrides))
+    String(await curveStableSwap.functions.balances(0, overrides)),
   );
   const stMaticBalance = new BigNumber(
-    String(await curveStableSwap.functions.balances(1, overrides))
+    String(await curveStableSwap.functions.balances(1, overrides)),
   );
   return [maticBalance, stMaticBalance];
 }
 
 async function handleCurvePoolSize(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const poolTokens = await getCurvePoolTokens(blockEvent.blockNumber);
   const poolSize = poolTokens[0].plus(poolTokens[1]);
@@ -99,19 +99,19 @@ async function handleCurvePoolSize(
           sizeBefore: curvePoolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
-      })
+      }),
     );
   }
   curvePoolSize = poolSize;
 }
 
 async function getBalancerPoolTokens(
-  blockNumber?: number
+  blockNumber?: number,
 ): Promise<BigNumber[]> {
   const balancerVault = new ethers.Contract(
     BALANCER_VAULT_ADDRESS,
     BALANCER_VAULT_ABI,
-    ethersProvider
+    ethersProvider,
   );
   let overrides = {} as any;
   if (blockNumber) {
@@ -119,7 +119,7 @@ async function getBalancerPoolTokens(
   }
   const poolTokens = await balancerVault.functions.getPoolTokens(
     BALANCER_POOL_ID,
-    overrides
+    overrides,
   );
   return [
     new BigNumber(String(poolTokens.balances[1])),
@@ -129,7 +129,7 @@ async function getBalancerPoolTokens(
 
 async function handleBalancerPoolSize(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const poolTokens = await getBalancerPoolTokens(blockEvent.blockNumber);
   const poolSize = poolTokens[0].plus(poolTokens[1]);
@@ -150,7 +150,7 @@ async function handleBalancerPoolSize(
           sizeBefore: balancerPoolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
-      })
+      }),
     );
   }
   balancerPoolSize = poolSize;

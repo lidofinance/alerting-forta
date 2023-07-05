@@ -12,11 +12,11 @@ export const name = "StakingRouter";
 const { STAKING_ROUTER_EVENTS_OF_NOTICE } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};

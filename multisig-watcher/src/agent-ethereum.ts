@@ -20,7 +20,7 @@ const blockchain = Blockchain.ETH;
 const safes = SAFES[blockchain];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -56,7 +56,7 @@ function handleSafeEvents(txEvent: TransactionEvent, findings: Finding[]) {
               severity: eventInfo.severity,
               type: FindingType.Info,
               metadata: { args: String(event.args) },
-            })
+            }),
           );
         });
       });

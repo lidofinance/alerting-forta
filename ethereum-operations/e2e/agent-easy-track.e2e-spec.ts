@@ -22,7 +22,7 @@ describe("agent-easy-track e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/easy-track/agent-easy-track")
+        provideAgentPath("subagents/easy-track/agent-easy-track"),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -41,65 +41,65 @@ describe("agent-easy-track e2e tests", () => {
     "should process tx with new motion created",
     async () => {
       const findings = await runTransaction(
-        "0x6cead5592d65a47dcc099490db2e38b742860a47b04eb83718ca59a7bb1eb28c"
+        "0x6cead5592d65a47dcc099490db2e38b742860a47b04eb83718ca59a7bb1eb28c",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
     "should process tx with granted role",
     async () => {
       const findings = await runTransaction(
-        "0x55c4c7e33eb92da16871944879d52180c1a2e59c2701404abef864c5196ab7f1"
+        "0x55c4c7e33eb92da16871944879d52180c1a2e59c2701404abef864c5196ab7f1",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
     "should process tx with revoked role",
     async () => {
       const findings = await runTransaction(
-        "0x043e04411dd746562fd9c4244ac30570f09a737d73e9523edbdce722de3a2093"
+        "0x043e04411dd746562fd9c4244ac30570f09a737d73e9523edbdce722de3a2093",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
     "should process tx with executed motion",
     async () => {
       const findings = await runTransaction(
-        "0x9bbabb4891f324def5a0b073d89babaf7db84eb89d43afa46319ae7b377048c1"
+        "0x9bbabb4891f324def5a0b073d89babaf7db84eb89d43afa46319ae7b377048c1",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
     "should process tx with objected motion",
     async () => {
       const findings = await runTransaction(
-        "0x3026189f7287678ca31403f77939ae812c9706eaca73d7966b405acebd56b2c4"
+        "0x3026189f7287678ca31403f77939ae812c9706eaca73d7966b405acebd56b2c4",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
     "should process tx with granted role on RewardProgramsRegistry",
     async () => {
       const findings = await runTransaction(
-        "0xd02f92e5a47792082f41ad6ca9e2d05d60f409a63328ac41a5d2704a7eb3fc1c"
+        "0xd02f92e5a47792082f41ad6ca9e2d05d60f409a63328ac41a5d2704a7eb3fc1c",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

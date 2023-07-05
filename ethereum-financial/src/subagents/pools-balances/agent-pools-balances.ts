@@ -118,7 +118,7 @@ let lastReportedUnstakedStEth = new BigNumber(0);
 let lastReportedUnstakedStEthTime = 0;
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -134,7 +134,7 @@ export async function initialize(
   poolsParams.Balancer.lastReportedImbalancePoolDetails.token2.amount =
     balancerPoolTokens[1];
   poolsParams.Balancer.poolSize = balancerPoolTokens[0].plus(
-    balancerPoolTokens[1]
+    balancerPoolTokens[1],
   );
 
   // get initial Curve Pool tokens amount
@@ -149,11 +149,11 @@ export async function initialize(
 
   // get Balancer Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   const balancerPoolTokensPrev = await getBalancerPoolTokens(
-    currentBlock - Math.ceil((5 * 60) / 13)
+    currentBlock - Math.ceil((5 * 60) / 13),
   );
   poolsParams.Balancer.lastReportedImbalance = calcImbalance(
     balancerPoolTokensPrev[0],
-    balancerPoolTokensPrev[1]
+    balancerPoolTokensPrev[1],
   );
   if (
     Math.abs(poolsParams.Balancer.lastReportedImbalance) > IMBALANCE_TOLERANCE
@@ -163,11 +163,11 @@ export async function initialize(
 
   // get Curve Pool imbalance 5 mins ago. If there already was an imbalance do not report on start
   const curvePoolTokensPrev = await getCurvePoolTokens(
-    currentBlock - Math.ceil((5 * 60) / 13)
+    currentBlock - Math.ceil((5 * 60) / 13),
   );
   poolsParams.Curve.lastReportedImbalance = calcImbalance(
     curvePoolTokensPrev[0],
-    curvePoolTokensPrev[1]
+    curvePoolTokensPrev[1],
   );
   if (Math.abs(poolsParams.Curve.lastReportedImbalance) > IMBALANCE_TOLERANCE) {
     poolsParams.Curve.lastReportedImbalanceTime = now;
@@ -198,21 +198,21 @@ export async function initialize(
 
 function getTotalUnstakedStEth() {
   const unstakedStEthCurve = poolsParams.Curve.poolDetails.token2.amount.minus(
-    poolsParams.Curve.poolDetails.token1.amount
+    poolsParams.Curve.poolDetails.token1.amount,
   );
   const unstakedStEthBalancer =
     poolsParams.Balancer.poolDetails.token2.amount.minus(
-      poolsParams.Balancer.poolDetails.token1.amount
+      poolsParams.Balancer.poolDetails.token1.amount,
     );
   return unstakedStEthCurve.plus(unstakedStEthBalancer);
 }
 
 function getTotalPoolsSize() {
   const curve = poolsParams.Curve.poolDetails.token2.amount.plus(
-    poolsParams.Curve.poolDetails.token1.amount
+    poolsParams.Curve.poolDetails.token1.amount,
   );
   const balancer = poolsParams.Balancer.poolDetails.token2.amount.plus(
-    poolsParams.Balancer.poolDetails.token1.amount
+    poolsParams.Balancer.poolDetails.token1.amount,
   );
   return curve.plus(balancer);
 }
@@ -268,33 +268,33 @@ async function getCurvePoolTokens(blockNumber?: number): Promise<BigNumber[]> {
   const curveStableSwap = new ethers.Contract(
     POOLS_PARAMS_BALANCES.Curve.poolContractAddress,
     CURVE_POOL_ABI,
-    ethersProvider
+    ethersProvider,
   );
   let overrides = {} as any;
   if (blockNumber) {
     overrides.blockTag = blockNumber;
   }
   const ethBalance = new BigNumber(
-    String(await curveStableSwap.functions.balances(0, overrides))
+    String(await curveStableSwap.functions.balances(0, overrides)),
   );
   const stethBalance = new BigNumber(
-    String(await curveStableSwap.functions.balances(1, overrides))
+    String(await curveStableSwap.functions.balances(1, overrides)),
   );
   return [ethBalance, stethBalance];
 }
 
 async function handleCurvePoolImbalance(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   let poolParams = poolsParams.Curve;
   const [ethBalance, stEthBalance] = await getCurvePoolTokens(
-    blockEvent.blockNumber
+    blockEvent.blockNumber,
   );
   const curveImbalance = calcImbalance(ethBalance, stEthBalance);
   const prevPoolStateText = poolDetails(
-    poolParams.lastReportedImbalancePoolDetails
+    poolParams.lastReportedImbalancePoolDetails,
   );
   poolParams.poolDetails.token1.amount = ethBalance;
   poolParams.poolDetails.token2.amount = stEthBalance;
@@ -307,12 +307,12 @@ async function handleCurvePoolImbalance(
         Finding.fromObject({
           name: "⚠️ Curve Pool is imbalanced",
           description: `Current pool state:\n${poolDetails(
-            poolParams.poolDetails
+            poolParams.poolDetails,
           )}`,
           alertId: "CURVE-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       poolParams.lastReportedImbalanceTime = now;
       poolParams.lastReportedImbalance = curveImbalance;
@@ -334,7 +334,7 @@ async function handleCurvePoolImbalance(
         alertId: "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
     poolParams.lastReportedImbalanceTime = now;
     poolParams.lastReportedImbalance = curveImbalance;
@@ -345,7 +345,7 @@ async function handleCurvePoolImbalance(
 
 async function handleCurvePoolSize(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   let poolParams = poolsParams.Curve;
   const poolTokens = await getCurvePoolTokens(blockEvent.blockNumber);
@@ -374,7 +374,7 @@ async function handleCurvePoolSize(
           sizeBefore: poolParams.poolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
-      })
+      }),
     );
   }
   poolParams.poolSize = poolSize;
@@ -383,12 +383,12 @@ async function handleCurvePoolSize(
 ///////// BALANCER ////////////
 
 async function getBalancerPoolTokens(
-  blockNumber?: number
+  blockNumber?: number,
 ): Promise<BigNumber[]> {
   const balancerVault = new ethers.Contract(
     POOLS_PARAMS_BALANCES.Balancer.vaultContractAddress,
     BALANCER_POOL_ABI,
-    ethersProvider
+    ethersProvider,
   );
   let overrides = {} as any;
   if (blockNumber) {
@@ -396,7 +396,7 @@ async function getBalancerPoolTokens(
   }
   const poolTokens = await balancerVault.functions.getPoolTokens(
     POOLS_PARAMS_BALANCES.Balancer.poolId,
-    overrides
+    overrides,
   );
   return [
     new BigNumber(String(poolTokens.balances[1])),
@@ -406,17 +406,17 @@ async function getBalancerPoolTokens(
 
 async function handleBalancerPoolImbalance(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   let poolParams = poolsParams.Balancer;
 
   const [ethBalance, wstethBalance] = await getBalancerPoolTokens(
-    blockEvent.blockNumber
+    blockEvent.blockNumber,
   );
   const balancerImbalance = calcImbalance(ethBalance, wstethBalance);
   const prevPoolStateText = poolDetails(
-    poolParams.lastReportedImbalancePoolDetails
+    poolParams.lastReportedImbalancePoolDetails,
   );
   poolParams.poolDetails.token1.amount = ethBalance;
   poolParams.poolDetails.token2.amount = wstethBalance;
@@ -429,12 +429,12 @@ async function handleBalancerPoolImbalance(
         Finding.fromObject({
           name: "⚠️ Balancer Pool is imbalanced",
           description: `Current pool state:\n${poolDetails(
-            poolParams.poolDetails
+            poolParams.poolDetails,
           )}`,
           alertId: "BALANCER-POOL-IMBALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       poolParams.lastReportedImbalanceTime = now;
       poolParams.lastReportedImbalance = balancerImbalance;
@@ -456,7 +456,7 @@ async function handleBalancerPoolImbalance(
         alertId: "BALANCER-POOL-IMBALANCE-RAPID-CHANGE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
     poolParams.lastReportedImbalanceTime = now;
     poolParams.lastReportedImbalance = balancerImbalance;
@@ -467,7 +467,7 @@ async function handleBalancerPoolImbalance(
 
 async function handleBalancerPoolSize(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   let poolParams = poolsParams.Balancer;
   const poolTokens = await getBalancerPoolTokens(blockEvent.blockNumber);
@@ -496,7 +496,7 @@ async function handleBalancerPoolSize(
           sizeBefore: poolParams.poolSize.toFixed(),
           sizeAfter: poolSize.toFixed(),
         },
-      })
+      }),
     );
   }
   poolParams.poolSize = poolSize;
@@ -521,7 +521,7 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
         metadata: {
           peg: peg.toFixed(4),
         },
-      })
+      }),
     );
     lastReportedCurvePegVal = peg;
     lastReportedCurvePegLevel = pegLevel;
@@ -541,7 +541,7 @@ async function handleCurvePeg(blockEvent: BlockEvent, findings: Finding[]) {
         metadata: {
           peg: peg.toFixed(4),
         },
-      })
+      }),
     );
     lastReportedCurvePegTime = now;
   }
@@ -556,7 +556,7 @@ async function getCurvePeg(blockNumber: number) {
   const curveStableSwap = new ethers.Contract(
     POOLS_PARAMS_BALANCES.Curve.poolContractAddress,
     CURVE_POOL_ABI,
-    ethersProvider
+    ethersProvider,
   );
   // 1000 stETH
   const amountStEth = new BigNumber(1000).times(ETH_DECIMALS);
@@ -564,8 +564,8 @@ async function getCurvePeg(blockNumber: number) {
     String(
       await curveStableSwap.functions.get_dy(1, 0, amountStEth.toFixed(), {
         blockTag: blockNumber,
-      })
-    )
+      }),
+    ),
   );
   return amountEth.div(amountStEth).toNumber();
 }
@@ -586,7 +586,7 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
       Finding.fromObject({
         name: "⚠️ stETH PEG on Chainlink decreased",
         description: `stETH PEG on Chainlink decreased to ${peg.toFixed(
-          4
+          4,
         )}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
         alertId: "STETH-CHAINLINK-PEG-DECREASE",
         severity: FindingSeverity.Info,
@@ -594,7 +594,7 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
         metadata: {
           peg: peg.toFixed(4),
         },
-      })
+      }),
     );
     lastReportedChainlinkPegLevel = pegLevel;
   }
@@ -607,7 +607,7 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
       Finding.fromObject({
         name: "🚨🚨🚨 Super low stETH PEG on Chainlink",
         description: `Current stETH PEG on Chainlink - ${peg.toFixed(
-          4
+          4,
         )}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
         alertId: "LOW-STETH-CHAINLINK-PEG",
         severity: FindingSeverity.Critical,
@@ -615,7 +615,7 @@ async function handleChainlinkPeg(blockEvent: BlockEvent, findings: Finding[]) {
         metadata: {
           peg: peg.toFixed(4),
         },
-      })
+      }),
     );
     lastReportedChainlinkPegTime = now;
   }
@@ -629,15 +629,15 @@ async function getChainlinkPeg(blockNumber: number): Promise<number> {
   const chainlinkAggregator = new ethers.Contract(
     CHAINLINK_STETH_PRICE_FEED,
     CHAINLINK_AGGREGATOR_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const peg = new BigNumber(
     String(
       await chainlinkAggregator.functions.latestAnswer({
         blockTag: blockNumber,
-      })
-    )
+      }),
+    ),
   );
 
   return peg.div(ETH_DECIMALS).toNumber();
@@ -653,8 +653,8 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     if (
       newUnstakedStEth.isLessThan(
         lastReportedUnstakedStEth.times(
-          1 - TOTAL_UNSTAKED_STETH_TOLERANCE / 100
-        )
+          1 - TOTAL_UNSTAKED_STETH_TOLERANCE / 100,
+        ),
       )
     ) {
       lastReportedUnstakedStEth = newUnstakedStEth;
@@ -663,15 +663,15 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
     if (
       newUnstakedStEth.isGreaterThanOrEqualTo(
         lastReportedUnstakedStEth.times(
-          1 + TOTAL_UNSTAKED_STETH_TOLERANCE / 100
-        )
+          1 + TOTAL_UNSTAKED_STETH_TOLERANCE / 100,
+        ),
       )
     ) {
       if (
         newUnstakedStEth.isGreaterThanOrEqualTo(
           getTotalPoolsSize().times(
-            TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT / 100
-          )
+            TOTAL_UNSTAKED_STETH_MIN_REPORT_PERCENT / 100,
+          ),
         )
       ) {
         const severity =
@@ -679,7 +679,7 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
             ? FindingSeverity.Info
             : FindingSeverity.High;
         const time = Math.floor(
-          (now - lastReportedUnstakedStEthTime) / ONE_HOUR
+          (now - lastReportedUnstakedStEthTime) / ONE_HOUR,
         );
         findings.push(
           Finding.fromObject({
@@ -700,7 +700,7 @@ function handleUnstakedStEth(blockEvent: BlockEvent, findings: Finding[]) {
               currentTotalUnstaked: newUnstakedStEth.toFixed(2),
               timePeriod: time.toFixed(),
             },
-          })
+          }),
         );
       }
       lastReportedUnstakedStEth = newUnstakedStEth;

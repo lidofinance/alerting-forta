@@ -86,18 +86,18 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   [isBunkerMode] = await withdrawalNFT.functions.isBunkerModeActive({
     blockTag: currentBlock,
@@ -106,7 +106,7 @@ export async function initialize(
     bunkerModeEnabledSinceTimestamp = Number(
       await withdrawalNFT.functions.bunkerModeSinceTimestamp({
         blockTag: currentBlock,
-      })
+      }),
     );
   }
   const lastRequestId = Number(
@@ -114,7 +114,7 @@ export async function initialize(
       await withdrawalNFT.functions.getLastRequestId({
         blockTag: currentBlock,
       })
-    )[0]
+    )[0],
   );
   if (lastRequestId != 0) {
     lastFinalizedRequestId = Number(
@@ -122,16 +122,16 @@ export async function initialize(
         await withdrawalNFT.functions.getLastFinalizedRequestId({
           blockTag: currentBlock,
         })
-      )[0]
+      )[0],
     );
     if (lastFinalizedRequestId != 0) {
       lastFinalizedTimestamp = Number(
         (
           await withdrawalNFT.functions.getWithdrawalStatus(
             [lastFinalizedRequestId],
-            { blockTag: currentBlock }
+            { blockTag: currentBlock },
           )
-        ).statuses[0].timestamp
+        ).statuses[0].timestamp,
       );
     }
     const diff = lastRequestId - lastFinalizedRequestId;
@@ -139,7 +139,7 @@ export async function initialize(
       {
         length: diff > 0 ? lastFinalizedRequestId + 1 : lastFinalizedRequestId,
       },
-      (_, i) => i + 1 // requests start from 1, not 0
+      (_, i) => i + 1, // requests start from 1, not 0
     );
     let requestsStatuses = [];
     const requestsCount = requestsRange.length;
@@ -150,7 +150,7 @@ export async function initialize(
           await withdrawalNFT.functions.getWithdrawalStatus(chunk, {
             blockTag: currentBlock,
           })
-        ).statuses
+        ).statuses,
       );
     }
     for (const [index, reqStatus] of requestsStatuses.entries()) {
@@ -188,7 +188,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleQueueOnParWithStakeLimit(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (
@@ -199,30 +199,30 @@ async function handleQueueOnParWithStakeLimit(
   const lidoContract = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const stakeLimitFullInfo = await lidoContract.functions.getStakeLimitFullInfo(
     {
       blockTag: blockEvent.blockNumber,
-    }
+    },
   );
   const [unfinalizedStETH] = await withdrawalNFT.functions.unfinalizedStETH({
     blockTag: blockEvent.blockNumber,
   });
   if (stakeLimitFullInfo.isStakingPaused || unfinalizedStETH == 0) return;
   const drainedStakeLimit = new BigNumber(
-    String(stakeLimitFullInfo.maxStakeLimit)
+    String(stakeLimitFullInfo.maxStakeLimit),
   ).minus(new BigNumber(String(stakeLimitFullInfo.currentStakeLimit)));
   const drainedStakeLimitRate = drainedStakeLimit.div(
-    new BigNumber(String(stakeLimitFullInfo.maxStakeLimit))
+    new BigNumber(String(stakeLimitFullInfo.maxStakeLimit)),
   );
   const thresholdStakeLimit = new BigNumber(
-    String(stakeLimitFullInfo.maxStakeLimit)
+    String(stakeLimitFullInfo.maxStakeLimit),
   ).times(QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD);
   if (
     drainedStakeLimit.gte(thresholdStakeLimit) &&
@@ -231,10 +231,10 @@ async function handleQueueOnParWithStakeLimit(
     findings.push(
       Finding.fromObject({
         name: `⚠️ Withdrawals: ${drainedStakeLimitRate.times(
-          100
+          100,
         )}% of stake limit is drained and unfinalized queue is on par with drained stake limit`,
         description: `Unfinalized queue: ${new BigNumber(
-          String(unfinalizedStETH)
+          String(unfinalizedStETH),
         )
           .div(ETH_DECIMALS)
           .toFixed(2)} stETH\nDrained stake limit: ${drainedStakeLimit
@@ -243,7 +243,7 @@ async function handleQueueOnParWithStakeLimit(
         alertId: "WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
     lastQueueOnParStakeLimitAlertTimestamp = now;
   }
@@ -251,12 +251,12 @@ async function handleQueueOnParWithStakeLimit(
 
 async function handleUnfinalizedRequestNumber(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const now = blockEvent.block.timestamp;
 
@@ -278,12 +278,12 @@ async function handleUnfinalizedRequestNumber(
           Finding.fromObject({
             name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} stETH`,
             description: `Unfinalized queue is ${unfinalizedStETH.toFixed(
-              2
+              2,
             )} stETH`,
             alertId: "WITHDRAWALS-BIG-UNFINALIZED-QUEUE",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
-          })
+          }),
         );
         lastBigUnfinalizedQueueAlertTimestamp = now;
       }
@@ -305,12 +305,12 @@ async function handleUnfinalizedRequestNumber(
           Finding.fromObject({
             name: "⚠️ Withdrawals: unfinalized queue wait time is too long",
             description: `Unfinalized queue wait time is ${formatDelay(
-              now - firstUnfinalizedRequestTimestamp
+              now - firstUnfinalizedRequestTimestamp,
             )}`,
             alertId: "WITHDRAWALS-LONG-UNFINALIZED-QUEUE",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
-          })
+          }),
         );
         lastLongUnfinalizedQueueAlertTimestamp = now;
       }
@@ -320,14 +320,14 @@ async function handleUnfinalizedRequestNumber(
 
 async function handleUnclaimedRequests(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
 
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const unclaimedReqIds: number[] = [];
@@ -394,7 +394,7 @@ async function handleUnclaimedRequests(
           alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS",
           severity: FindingSeverity.Info,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastUnclaimedRequestsAlertTimestamp = now;
     }
@@ -407,9 +407,9 @@ async function handleUnclaimedRequests(
       String(
         await ethersProvider.getBalance(
           WITHDRAWAL_QUEUE_ADDRESS,
-          blockEvent.blockNumber
-        )
-      )
+          blockEvent.blockNumber,
+        ),
+      ),
     );
     if (unclaimedStETH.gt(withdrawalQueueBalance)) {
       findings.push(
@@ -418,16 +418,16 @@ async function handleUnclaimedRequests(
           description: `Unclaimed: ${unclaimedStETH
             .div(ETH_DECIMALS)
             .toFixed(
-              2
+              2,
             )} stETH\nWithdrawal queue balance: ${withdrawalQueueBalance
             .div(ETH_DECIMALS)
             .toFixed(2)} ETH\nDifference: ${unclaimedStETH.minus(
-            withdrawalQueueBalance
+            withdrawalQueueBalance,
           )} wei`,
           alertId: "WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastUnclaimedMoreThanBalanceAlertTimestamp = now;
     }
@@ -453,7 +453,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
   const [withdrawalEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED,
-    WITHDRAWAL_QUEUE_ADDRESS
+    WITHDRAWAL_QUEUE_ADDRESS,
   );
   if (!withdrawalEvent) return;
   const finalizedIds = Array.from(
@@ -461,7 +461,7 @@ async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
       length:
         Number(withdrawalEvent.args.to) - Number(withdrawalEvent.args.from) + 1,
     },
-    (_, i) => Number(withdrawalEvent.args.from) + i
+    (_, i) => Number(withdrawalEvent.args.from) + i,
   );
   finalizedIds.forEach((reqId) => {
     if (!finalizedWithdrawalRequests.has(reqId)) {
@@ -479,11 +479,11 @@ async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
 
 async function handleWithdrawalClaimed(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const claimedEvents = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED,
-    WITHDRAWAL_QUEUE_ADDRESS
+    WITHDRAWAL_QUEUE_ADDRESS,
   );
   if (!claimedEvents) return;
   const now = txEvent.block.timestamp;
@@ -506,20 +506,20 @@ async function handleWithdrawalClaimed(
             name: `🤔 Withdrawals: claimed amount is more than requested`,
             description: `Request ID: ${etherscanNft(
               WITHDRAWAL_QUEUE_ADDRESS,
-              reqId
+              reqId,
             )}\nClaimed: ${claimedAmount
               .div(ETH_DECIMALS)
               .toFixed(2)} ETH\nRequested: ${(curr.amount as BigNumber)
               .div(ETH_DECIMALS)
               .toFixed(2)} stETH\nDifference: ${claimedAmount.minus(
-              curr.amount as BigNumber
+              curr.amount as BigNumber,
             )} wei\nOwner: ${etherscanAddress(
-              event.args.owner
+              event.args.owner,
             )}\nReceiver: ${etherscanAddress(event.args.receiver)}`,
             alertId: "WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED",
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
-          })
+          }),
         );
         claimedAmountMoreThanRequestedAlertsCount += 1;
         lastClaimedAmountMoreThanRequestedAlertTimestamp = now;
@@ -536,7 +536,7 @@ async function handleWithdrawalClaimed(
 async function handleLastTokenRebase(txEvent: TransactionEvent) {
   const [rebaseEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED,
-    LIDO_STETH_ADDRESS
+    LIDO_STETH_ADDRESS,
   );
   if (!rebaseEvent) return;
   lastTokenRebaseTimestamp = txEvent.timestamp;
@@ -545,11 +545,11 @@ async function handleLastTokenRebase(txEvent: TransactionEvent) {
 
 async function handleWithdrawalRequest(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const requestEvents = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED,
-    WITHDRAWAL_QUEUE_ADDRESS
+    WITHDRAWAL_QUEUE_ADDRESS,
   );
   if (!requestEvents) return;
   if (
@@ -563,8 +563,8 @@ async function handleWithdrawalRequest(
     perRequestorAmounts.set(
       event.args.requestor,
       (perRequestorAmounts.get(event.args.requestor) || new BigNumber(0)).plus(
-        new BigNumber(String(event.args.amountOfStETH)).div(ETH_DECIMALS)
-      )
+        new BigNumber(String(event.args.amountOfStETH)).div(ETH_DECIMALS),
+      ),
     );
   }
   for (const [requestor, amounts] of perRequestorAmounts.entries()) {
@@ -573,12 +573,12 @@ async function handleWithdrawalRequest(
         Finding.fromObject({
           name: `ℹ️ Withdrawals: received withdrawal request in one batch greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH`,
           description: `Requestor: ${etherscanAddress(
-            requestor
+            requestor,
           )}\nAmount: ${amounts.toFixed(2)} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
-        })
+        }),
       );
     }
     amountOfRequestedStETHSinceLastTokenRebase =
@@ -586,7 +586,7 @@ async function handleWithdrawalRequest(
   }
   if (
     amountOfRequestedStETHSinceLastTokenRebase.gte(
-      BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD
+      BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD,
     )
   ) {
     if (lastBigRequestAfterRebaseAlertTimestamp < lastTokenRebaseTimestamp) {
@@ -594,12 +594,12 @@ async function handleWithdrawalRequest(
         Finding.fromObject({
           name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH`,
           description: `Amount: ${amountOfRequestedStETHSinceLastTokenRebase.toFixed(
-            2
+            2,
           )} stETH`,
           alertId: "WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE",
           severity: FindingSeverity.High,
           type: FindingType.Info,
-        })
+        }),
       );
       lastBigRequestAfterRebaseAlertTimestamp = txEvent.timestamp;
     }
@@ -608,11 +608,11 @@ async function handleWithdrawalRequest(
 
 async function handleBunkerStatus(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const [bunkerEnabled] = txEvent.filterLog(
     WITHDRAWALS_BUNKER_MODE_ENABLED,
-    WITHDRAWAL_QUEUE_ADDRESS
+    WITHDRAWAL_QUEUE_ADDRESS,
   );
   if (bunkerEnabled) {
     isBunkerMode = true;
@@ -621,23 +621,23 @@ async function handleBunkerStatus(
       Finding.fromObject({
         name: "🚨 Withdrawals: BUNKER MODE ON! 🚨",
         description: `Started from ${new Date(
-          String(bunkerModeEnabledSinceTimestamp)
+          String(bunkerModeEnabledSinceTimestamp),
         ).toUTCString()}`,
         alertId: "WITHDRAWALS-BUNKER-ENABLED",
         severity: FindingSeverity.Critical,
         type: FindingType.Degraded,
-      })
+      }),
     );
     return;
   }
   const [bunkerDisabled] = txEvent.filterLog(
     WITHDRAWALS_BUNKER_MODE_DISABLED,
-    WITHDRAWAL_QUEUE_ADDRESS
+    WITHDRAWAL_QUEUE_ADDRESS,
   );
   if (bunkerDisabled) {
     isBunkerMode = false;
     const delay = formatDelay(
-      txEvent.block.timestamp - Number(bunkerModeEnabledSinceTimestamp)
+      txEvent.block.timestamp - Number(bunkerModeEnabledSinceTimestamp),
     );
     findings.push(
       Finding.fromObject({
@@ -646,7 +646,7 @@ async function handleBunkerStatus(
         alertId: "WITHDRAWALS-BUNKER-DISABLED",
         severity: FindingSeverity.High,
         type: FindingType.Info,
-      })
+      }),
     );
     return;
   }

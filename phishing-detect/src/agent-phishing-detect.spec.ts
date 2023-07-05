@@ -78,15 +78,15 @@ describe("phishing-detect", () => {
         token,
         new Set(
           Array.from({ length: UNIQ_DELEGATES_THRESHOLD_CONTRACT - 1 }, () =>
-            randomAddress()
-          )
-        )
+            randomAddress(),
+          ),
+        ),
       );
 
     handleTransaction(txEventWithHighApproval);
 
     expect(
-      spenders.get(spender.toLowerCase())?.tokens.get(token)?.size
+      spenders.get(spender.toLowerCase())?.tokens.get(token)?.size,
     ).toEqual(UNIQ_DELEGATES_THRESHOLD_CONTRACT);
   });
 
@@ -106,9 +106,9 @@ describe("phishing-detect", () => {
         token,
         new Set(
           Array.from({ length: UNIQ_DELEGATES_THRESHOLD_CONTRACT }, () =>
-            randomAddress()
-          )
-        )
+            randomAddress(),
+          ),
+        ),
       );
 
     const findings = await handleBlock(dummyBlock);
@@ -120,7 +120,7 @@ describe("phishing-detect", () => {
         severity: forta.FindingSeverity.Medium,
         type: forta.FindingType.Suspicious,
         metadata: { spender: spender.toLowerCase() },
-      })
+      }),
     );
 
     const findingsSecond = await handleBlock(dummyBlock);
@@ -144,15 +144,15 @@ describe("phishing-detect", () => {
         token,
         new Set(
           Array.from({ length: UNIQ_DELEGATES_THRESHOLD_EOA - 1 }, () =>
-            randomAddress()
-          )
-        )
+            randomAddress(),
+          ),
+        ),
       );
 
     handleTransaction(txEventWithHighApproval);
 
     expect(
-      spenders.get(spender.toLowerCase())?.tokens.get(token)?.size
+      spenders.get(spender.toLowerCase())?.tokens.get(token)?.size,
     ).toEqual(UNIQ_DELEGATES_THRESHOLD_EOA);
   });
 
@@ -172,9 +172,9 @@ describe("phishing-detect", () => {
         token,
         new Set(
           Array.from({ length: UNIQ_DELEGATES_THRESHOLD_EOA }, () =>
-            randomAddress()
-          )
-        )
+            randomAddress(),
+          ),
+        ),
       );
     const findings = await handleBlock(dummyBlock);
 
@@ -185,7 +185,7 @@ describe("phishing-detect", () => {
         severity: forta.FindingSeverity.High,
         type: forta.FindingType.Suspicious,
         metadata: { spender: spender.toLowerCase() },
-      })
+      }),
     );
 
     const findingsSecond = await handleBlock(dummyBlock);

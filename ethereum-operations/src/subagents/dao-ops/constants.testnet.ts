@@ -64,21 +64,21 @@ export const DEPOSIT_SECURITY_EVENTS_OF_NOTICE = depositSecurityEvents.map(
   (event) => ({
     ...event,
     address: DEPOSIT_SECURITY_ADDRESS,
-  })
+  }),
 );
 
 export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
   (event) => ({
     ...event,
     address: MEV_ALLOWED_LIST_ADDRESS,
-  })
+  }),
 );
 
 export const INSURANCE_FUND_EVENTS_OF_NOTICE = insuranceFundEvents.map(
   (event) => ({
     ...event,
     address: INSURANCE_FUND_ADDRESS,
-  })
+  }),
 );
 
 export const TRP_EVENTS_OF_NOTICE = trpEvents.map((event) => ({
