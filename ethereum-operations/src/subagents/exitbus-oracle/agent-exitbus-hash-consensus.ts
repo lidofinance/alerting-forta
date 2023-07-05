@@ -51,7 +51,7 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 let fastLaneMembers: Array<string> = [];
@@ -60,7 +60,7 @@ async function getOracleMembers(blockNumber: number): Promise<string[]> {
   const hashConsensus = new ethers.Contract(
     EXITBUS_HASH_CONSENSUS_ADDRESS,
     HASH_CONSENSUS_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const members = await hashConsensus.functions.getMembers({
@@ -70,13 +70,13 @@ async function getOracleMembers(blockNumber: number): Promise<string[]> {
 }
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const hashConsensus = new ethers.Contract(
     EXITBUS_HASH_CONSENSUS_ADDRESS,
     HASH_CONSENSUS_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   membersAddresses = await getOracleMembers(currentBlock);
@@ -87,7 +87,7 @@ export async function initialize(
   const reportReceivedEvents = await hashConsensus.queryFilter(
     memberReportReceivedFilter,
     reportReceivedStartBlock,
-    currentBlock - 1
+    currentBlock - 1,
   );
 
   membersAddresses.forEach((member: string) => {
@@ -136,7 +136,7 @@ async function handleFastLaneMembers(blockEvent: BlockEvent) {
   const hashConsensus = new ethers.Contract(
     EXITBUS_HASH_CONSENSUS_ADDRESS,
     HASH_CONSENSUS_ABI,
-    ethersProvider
+    ethersProvider,
   );
   fastLaneMembers = (
     await hashConsensus.functions.getFastLaneMembers({
@@ -147,26 +147,26 @@ async function handleFastLaneMembers(blockEvent: BlockEvent) {
 
 async function handleMembersBalances(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   membersAddresses = await getOracleMembers(blockEvent.blockNumber);
   await Promise.all(
     membersAddresses.map((member) =>
-      handleMemberBalance(member, blockEvent, findings)
-    )
+      handleMemberBalance(member, blockEvent, findings),
+    ),
   );
 }
 
 async function handleMemberBalance(
   member: string,
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   const lastAlert = membersBalanceLastAlert.get(member) || 0;
   if (now > lastAlert + ONE_WEEK) {
     const balance = new BigNumber(
-      String(await ethersProvider.getBalance(member, blockEvent.blockNumber))
+      String(await ethersProvider.getBalance(member, blockEvent.blockNumber)),
     ).div(ETH_DECIMALS);
     if (balance.isLessThanOrEqualTo(MIN_MEMBER_BALANCE_INFO)) {
       const severity = balance.isLessThanOrEqualTo(MIN_MEMBER_BALANCE_HIGH)
@@ -179,7 +179,7 @@ async function handleMemberBalance(
             `Balance of ${etherscanAddress(member)} ` +
             `(${getMemberName(
               EXITBUS_ORACLE_MEMBERS,
-              member.toLocaleLowerCase()
+              member.toLocaleLowerCase(),
             )}) is ` +
             `${balance.toFixed(4)} ETH. This is rather low!`,
           alertId: "EXITBUS-ORACLE-MEMBER-LOW-BALANCE",
@@ -189,7 +189,7 @@ async function handleMemberBalance(
             oracle: member,
             balance: `${balance}`,
           },
-        })
+        }),
       );
       membersBalanceLastAlert.set(member, now);
     }
@@ -206,7 +206,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleEventsOfNotice(
     txEvent,
     findings,
-    EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE
+    EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE,
   );
 
   return findings;
@@ -215,7 +215,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   const [event] = txEvent.filterLog(
     EXITBUS_HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
-    EXITBUS_HASH_CONSENSUS_ADDRESS
+    EXITBUS_HASH_CONSENSUS_ADDRESS,
   );
   if (!event) return;
   const currentReportHashes = [...membersLastReport.values()]
@@ -234,14 +234,14 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
           `Member ${etherscanAddress(event.args.member)} ` +
           `(${getMemberName(
             EXITBUS_ORACLE_MEMBERS,
-            event.args.member.toLocaleLowerCase()
+            event.args.member.toLocaleLowerCase(),
           )}) has reported a hash unmatched by other members.\nReference slot: ${
             event.args.refSlot
           }\n${receivedReportNumber} of ${membersCount} reports received`,
         alertId: "EXITBUS-ORACLE-REPORT-RECEIVED-ALTERNATIVE-HASH",
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   }
   membersLastReport.set(event.args.member, {
@@ -254,14 +254,14 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
 function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
   const [submitted] = txEvent.filterLog(
     EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
-    EXITBUS_ORACLE_ADDRESS
+    EXITBUS_ORACLE_ADDRESS,
   );
   if (!submitted) return;
   const block = txEvent.blockNumber;
   membersLastReport.forEach((report, member) => {
     const reportDist = block - report.blockNumber;
     const reportDistDays = Math.floor(
-      (reportDist * SECONDS_PER_SLOT) / ONE_DAY
+      (reportDist * SECONDS_PER_SLOT) / ONE_DAY,
     );
     if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM) {
       findings.push(
@@ -271,14 +271,14 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
             `Member ${etherscanAddress(member)} ` +
             `(${getMemberName(
               EXITBUS_ORACLE_MEMBERS,
-              member.toLocaleLowerCase()
+              member.toLocaleLowerCase(),
             )}) ` +
             `has not reported before the submit for more than 2 weeks` +
             ` or have never reported yet`,
           alertId: "SLOPPY-EXITBUS-ORACLE-MEMBER",
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     } else if (fastLaneMembers.includes(member)) {
       if (reportDist > MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO) {
@@ -289,13 +289,13 @@ function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
               `Member ${etherscanAddress(member)} ` +
               `(${getMemberName(
                 EXITBUS_ORACLE_MEMBERS,
-                member.toLocaleLowerCase()
+                member.toLocaleLowerCase(),
               )}) ` +
               `in fast lane and has not reported before the submit for more than ${reportDistDays} days`,
             alertId: "SLOPPY-EXITBUS-ORACLE-FASTLANE-MEMBER",
             severity: FindingSeverity.Info,
             type: FindingType.Suspicious,
-          })
+          }),
         );
       }
     }

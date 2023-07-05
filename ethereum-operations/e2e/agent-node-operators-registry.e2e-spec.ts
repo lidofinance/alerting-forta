@@ -23,8 +23,8 @@ describe("agent-node-operators-registry e2e tests", () => {
     container.register({
       agentPath: asFunction(
         provideAgentPath(
-          "subagents/node-operators-registry/agent-node-operators-registry"
-        )
+          "subagents/node-operators-registry/agent-node-operators-registry",
+        ),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -48,7 +48,7 @@ describe("agent-node-operators-registry e2e tests", () => {
       // );
       // expect(findings).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -60,7 +60,7 @@ describe("agent-node-operators-registry e2e tests", () => {
       // );
       // expect(findings).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -72,6 +72,6 @@ describe("agent-node-operators-registry e2e tests", () => {
       // );
       // expect(findings).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

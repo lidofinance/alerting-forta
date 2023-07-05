@@ -14,7 +14,7 @@ export const LIDO_ORACLE_COMPLETED_EVENT =
 
 // 0.3 ETH
 export const MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE = new BigNumber(0.1).times(
-  ETH_DECIMALS
+  ETH_DECIMALS,
 );
 
 // 4 hours

@@ -28,7 +28,7 @@ const REPORT_WINDOW_GRAPH_BALANCE = 60 * 60 * 24;
 let lastReportedGraphBalance = 0;
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -42,7 +42,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleLidoGraphBalance(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (
@@ -52,11 +52,11 @@ async function handleLidoGraphBalance(
     const billing = new ethers.Contract(
       BILLING_ADDRESS,
       BILLING_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const balance = new BigNumber(
-      String(await billing.functions.userBalances(LIDO_VAULT_ADDRESS))
+      String(await billing.functions.userBalances(LIDO_VAULT_ADDRESS)),
     ).div(ETH_DECIMALS);
 
     if (balance.isLessThanOrEqualTo(GRAPH_BALANCE_THRESHOLD)) {
@@ -71,7 +71,7 @@ async function handleLidoGraphBalance(
             balance: balance.toFixed(2),
             lido_vault_address: LIDO_VAULT_ADDRESS,
           },
-        })
+        }),
       );
       lastReportedGraphBalance = now;
     }

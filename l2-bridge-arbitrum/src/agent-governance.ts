@@ -11,7 +11,7 @@ import { GOV_BRIDGE_EVENTS } from "./constants";
 export const name = "GovBridgeBot";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -38,7 +38,7 @@ function handleGovBridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
             severity: eventInfo.severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }

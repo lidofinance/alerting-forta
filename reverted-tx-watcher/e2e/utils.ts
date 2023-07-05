@@ -11,12 +11,12 @@ import { RunHandlersOnTransaction } from "forta-agent/dist/cli/utils/run.handler
  * @see https://github.dev/forta-network/forta-bot-sdk/blob/d73d5070897c9cbad8c1d356589d53222a9e692d/cli/di.container.ts#L156-L171
  */
 export function provideAgentPath(
-  moduleName: string
+  moduleName: string,
 ): (contextPath: string) => string {
   return (contextPath: string) => {
     const tsConfigPath = join(contextPath, "tsconfig.json");
     const { compilerOptions } = jsonc.parse(
-      fs.readFileSync(tsConfigPath, "utf8")
+      fs.readFileSync(tsConfigPath, "utf8"),
     );
 
     return join(contextPath, compilerOptions.outDir, moduleName);
@@ -32,7 +32,7 @@ export function provideRunTransaction(
   runHandlersOnTransaction: RunHandlersOnTransaction,
   ethersProvider: Provider,
   dynamicImport: any,
-  agentPath: string
+  agentPath: string,
 ) {
   return async function (txHash: string) {
     const agent = await dynamicImport(agentPath);
@@ -40,7 +40,7 @@ export function provideRunTransaction(
       const tx = await ethersProvider.getTransaction(txHash);
       if (!tx?.blockNumber) {
         throw new Error(
-          `Error retrieving block number of transaction ${txHash}`
+          `Error retrieving block number of transaction ${txHash}`,
         );
       }
       await agent.initialize(tx.blockNumber);
@@ -57,11 +57,11 @@ export function provideRunTransaction(
 export function provideRunBlock(
   runHandlersOnBlock: RunHandlersOnBlock,
   dynamicImport: any,
-  agentPath: string
+  agentPath: string,
 ) {
   return async function (
     blockHashOrNumber: string | number,
-    initBlock?: number
+    initBlock?: number,
   ) {
     const agent = await dynamicImport(agentPath);
     if (typeof agent.initialize === "function") {

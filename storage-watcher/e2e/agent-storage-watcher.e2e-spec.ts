@@ -11,7 +11,7 @@ const TEST_TIMEOUT = 60_000; // ms
 describe("agent-storage-watcher e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
-    initBlock?: number
+    initBlock?: number,
   ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -25,7 +25,7 @@ describe("agent-storage-watcher e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/storage-watcher/agent-storage-watcher")
+        provideAgentPath("subagents/storage-watcher/agent-storage-watcher"),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -46,6 +46,6 @@ describe("agent-storage-watcher e2e tests", () => {
       const findings = await runBlock(16398431, 16398430);
       expect(findings).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

@@ -33,7 +33,7 @@ let lastReportedStableStEthSupply = 0;
 let lastReportedVariableStEthSupply = 0;
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -57,27 +57,27 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
     const stETH = new ethers.Contract(
       LIDO_DAO_ADDRESS,
       LIDO_DAO_ABI,
-      ethersProvider
+      ethersProvider,
     );
     const astETH = new ethers.Contract(
       AAVE_ASTETH_ADDRESS,
       ASTETH_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const astEthBalance = new BigNumber(
       String(
         await stETH.functions.balanceOf(AAVE_ASTETH_ADDRESS, {
           blockTag: blockEvent.blockNumber - 1,
-        })
-      )
+        }),
+      ),
     );
     const astEthTotalSupply = new BigNumber(
       String(
         await astETH.functions.totalSupply({
           blockTag: blockEvent.blockNumber - 1,
-        })
-      )
+        }),
+      ),
     );
 
     const difference = astEthBalance.minus(astEthTotalSupply).abs();
@@ -98,7 +98,7 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
           alertId: "ASTETH-BALANCE-AND-SUPPLY-DIFFERENCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedAstEthSupply = now;
     }
@@ -107,18 +107,18 @@ async function handleAstEthSupply(blockEvent: BlockEvent, findings: Finding[]) {
 
 async function handleStableStEthSupply(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (lastReportedStableStEthSupply + REPORT_WINDOW < now) {
     const stableDebtStEth = new ethers.Contract(
       AAVE_STABLE_DEBT_STETH_ADDRESS,
       STABLE_DEBT_STETH_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const stableDebtStEthTotalSupply = new BigNumber(
-      String(await stableDebtStEth.functions.totalSupply())
+      String(await stableDebtStEth.functions.totalSupply()),
     );
 
     if (stableDebtStEthTotalSupply.isGreaterThan(0)) {
@@ -129,7 +129,7 @@ async function handleStableStEthSupply(
           alertId: "STABLE-DEBT-STETH-SUPPLY",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedStableStEthSupply = now;
     }
@@ -138,18 +138,18 @@ async function handleStableStEthSupply(
 
 async function handleVariableStEthSupply(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (lastReportedVariableStEthSupply + REPORT_WINDOW < now) {
     const variableDebtStEth = new ethers.Contract(
       AAVE_VARIABLE_DEBT_STETH_ADDRESS,
       VARIABLE_DEBT_STETH_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const variableDebtStEthTotalSupply = new BigNumber(
-      String(await variableDebtStEth.functions.totalSupply())
+      String(await variableDebtStEth.functions.totalSupply()),
     );
 
     if (variableDebtStEthTotalSupply.isGreaterThan(0)) {
@@ -160,7 +160,7 @@ async function handleVariableStEthSupply(
           alertId: "VARIABLE-DEBT-STETH-SUPPLY",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedVariableStEthSupply = now;
     }

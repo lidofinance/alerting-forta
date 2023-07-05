@@ -346,9 +346,9 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
       `${new BigNumber(String(args._amount))
         .div(ETH_DECIMALS)
         .toFixed(
-          2
+          2,
         )} ETH were transferred from insurance fund to ${etherscanAddress(
-        args._recipient
+        args._recipient,
       )}`,
     severity: FindingSeverity.Info,
   },
@@ -362,7 +362,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
       `ERC721 token (address: ${etherscanAddress(args._token)}, id: ${
         args._tokenId
       }) was transferred form insurance fund to ${etherscanAddress(
-        args._recipient
+        args._recipient,
       )}`,
     severity: FindingSeverity.Info,
   },
@@ -382,7 +382,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
         .toFixed(2)} of ${etherscanAddress(args._token)}(${
         tokenInfo.name
       }) were transferred from insurance fund to ${etherscanAddress(
-        args._recipient
+        args._recipient,
       )}`;
     },
     severity: FindingSeverity.High,
@@ -395,11 +395,11 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     name: "⚠️ Insurance fund: ERC1155 transferred",
     description: (args: any) =>
       `${args._amount} of ERC1155 token (address: ${etherscanAddress(
-        args._token
+        args._token,
       )}, id: ${
         args._tokenId
       }) was transferred form insurance fund to ${etherscanAddress(
-        args._recipient
+        args._recipient,
       )}`,
     severity: FindingSeverity.Info,
   },
@@ -411,7 +411,7 @@ export const INSURANCE_FUND_EVENTS_OF_NOTICE = [
     name: "🚨 Insurance fund: Ownership transferred",
     description: (args: any) =>
       `Owner of the insurance fund was transferred from ${etherscanAddress(
-        args.previousOwner
+        args.previousOwner,
       )} to ${etherscanAddress(args.newOwner)}`,
     severity: FindingSeverity.Critical,
   },
@@ -434,7 +434,7 @@ export const TRP_EVENTS_OF_NOTICE = [
     name: "🚨 TRP Factory: Owner changed",
     description: (args: any) =>
       `Owner of the TRP factory and all vestings was changed to ${etherscanAddress(
-        args.owner
+        args.owner,
       )}`,
     severity: FindingSeverity.High,
   },
@@ -445,7 +445,7 @@ export const TRP_EVENTS_OF_NOTICE = [
     name: "🚨 TRP Factory: Manager changed",
     description: (args: any) =>
       `Manager of the TRP factory and all vestings was changed to ${etherscanAddress(
-        args.manager
+        args.manager,
       )}`,
     severity: FindingSeverity.High,
   },

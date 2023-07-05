@@ -80,7 +80,7 @@ const initialize = async () => {
           process.exit(1);
         }
       }
-    })
+    }),
   );
 
   metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
@@ -93,13 +93,13 @@ const initialize = async () => {
       severity: FindingSeverity.Info,
       type: FindingType.Info,
       metadata,
-    })
+    }),
   );
   console.log("Bot initialization is done!");
 };
 
 const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent
+  blockEvent: BlockEvent,
 ): Promise<Finding[]> => {
   let responseResolve: (value: Finding[]) => void;
   let wasResolved = false;
@@ -112,7 +112,7 @@ const handleBlock: HandleBlock = async (
   // If not all handlers have finished execution we will leave them working in background
   const blockHandlingTimeout = setTimeout(function () {
     console.log(
-      `block ${blockEvent.blockNumber} processing moved to the background due to timeout`
+      `block ${blockEvent.blockNumber} processing moved to the background due to timeout`,
     );
     responseResolve(blockFindingsCache.splice(0, blockFindingsCache.length));
     wasResolved = true;
@@ -145,11 +145,11 @@ const handleBlock: HandleBlock = async (
         }
         if (!success) {
           blockFindingsCache.push(
-            errorToFinding(lastError, agent, "handleBlock")
+            errorToFinding(lastError, agent, "handleBlock"),
           );
         }
       }
-    })
+    }),
   ).then(() => {
     if (wasResolved) return;
     // if all handlers have finished execution drop timeout and resolve promise
@@ -162,7 +162,7 @@ const handleBlock: HandleBlock = async (
 };
 
 const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent
+  txEvent: TransactionEvent,
 ) => {
   let responseResolve: (value: Finding[]) => void;
   let wasResolved = false;
@@ -175,7 +175,7 @@ const handleTransaction: HandleTransaction = async (
   // If not all handlers has finished execution we will left them working in background
   const txHandlingTimeout = setTimeout(function () {
     console.log(
-      `transaction ${txEvent.transaction.hash} processing moved to the background due to timeout`
+      `transaction ${txEvent.transaction.hash} processing moved to the background due to timeout`,
     );
     responseResolve(txFindingsCache.splice(0, txFindingsCache.length));
     wasResolved = true;
@@ -202,11 +202,11 @@ const handleTransaction: HandleTransaction = async (
         }
         if (!success) {
           txFindingsCache.push(
-            errorToFinding(lastError, agent, "handleTransaction")
+            errorToFinding(lastError, agent, "handleTransaction"),
           );
         }
       }
-    })
+    }),
   ).then(() => {
     if (wasResolved) return;
     // if all handlers have finished execution drop timeout and resolve promise

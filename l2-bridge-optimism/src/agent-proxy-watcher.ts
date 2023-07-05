@@ -22,7 +22,7 @@ const lastAdmins = new Map<string, string>();
 export const name = "ProxyWatcher";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   await Promise.all(
@@ -31,7 +31,7 @@ export async function initialize(
       lastImpls.set(proxyInfo.address, lastImpl);
       const lastAdmin = await getProxyAdmin(proxyInfo, currentBlock);
       lastAdmins.set(proxyInfo.address, lastAdmin);
-    })
+    }),
   );
   return {
     lastImpls: JSON.stringify(Object.fromEntries(lastImpls)),
@@ -49,7 +49,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleProxyAdminEvents(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
@@ -63,7 +63,7 @@ function handleProxyAdminEvents(
             severity: eventInfo.severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }
@@ -89,14 +89,14 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
   const proxy = new ethers.Contract(
     proxyInfo.address,
     proxyInfo.shortABI,
-    ethersProvider
+    ethersProvider,
   );
   return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
 }
 
 async function handleProxyImplementationChanges(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
     await Promise.all(
@@ -115,11 +115,11 @@ async function handleProxyImplementationChanges(
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
               metadata: { newImpl: newImpl, lastImpl: lastImpl },
-            })
+            }),
           );
           lastImpls.set(proxyInfo.address, newImpl);
         }
-      })
+      }),
     );
   }
 }
@@ -132,14 +132,14 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   const proxy = new ethers.Contract(
     proxyInfo.address,
     proxyInfo.shortABI,
-    ethersProvider
+    ethersProvider,
   );
   return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
 }
 
 async function handleProxyAdminChanges(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
     await Promise.all(
@@ -158,11 +158,11 @@ async function handleProxyAdminChanges(
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
               metadata: { newAdmin: newAdmin, lastAdmin: lastAdmin },
-            })
+            }),
           );
           lastAdmins.set(proxyInfo.address, newAdmin);
         }
-      })
+      }),
     );
   }
 }

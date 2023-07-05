@@ -11,5 +11,5 @@ export const WITHDRAWALS_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({
     ...event,
     address: WITHDRAWAL_QUEUE_ADDRESS,
-  })
+  }),
 );

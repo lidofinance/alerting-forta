@@ -7,5 +7,5 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({
     ...event,
     address: STAKING_ROUTER_ADDRESS,
-  })
+  }),
 );

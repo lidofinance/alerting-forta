@@ -11,7 +11,7 @@ export async function handleSafeEvents(
   blockchain: Blockchain,
   safes: string[][],
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
 ) {
   await Promise.all(
     safes.map(async (safeInfo) => {
@@ -24,7 +24,7 @@ export async function handleSafeEvents(
       GNOSIS_SAFE_EVENTS_OF_NOTICE.forEach((eventInfo) => {
         let iface = new ethers.utils.Interface([eventInfo.event]);
         const events = logs.filter((log) =>
-          log.topics.includes(utils.id(eventSig(eventInfo.event)))
+          log.topics.includes(utils.id(eventSig(eventInfo.event))),
         );
         events.forEach((event) => {
           const parsedEvent = iface.parseLog(event);
@@ -43,10 +43,10 @@ export async function handleSafeEvents(
               severity: eventInfo.severity,
               type: FindingType.Info,
               metadata: { args: String(parsedEvent.args) },
-            })
+            }),
           );
         });
       });
-    })
+    }),
   );
 }

@@ -11,7 +11,7 @@ const TEST_TIMEOUT = 60_000; // ms
 describe("agent-dwstETH e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
-    initBlock?: number
+    initBlock?: number,
   ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -25,7 +25,7 @@ describe("agent-dwstETH e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/dwstETH/agent-dwstETH")
+        provideAgentPath("subagents/dwstETH/agent-dwstETH"),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -44,11 +44,11 @@ describe("agent-dwstETH e2e tests", () => {
     "should process block with high amount of dwstETH minted",
     async () => {
       await runTransaction(
-        "0x62bd3d31a7b75c098ccf28bc4d4af8c4a191b4b9e451fab4232258079e8b18c4"
+        "0x62bd3d31a7b75c098ccf28bc4d4af8c4a191b4b9e451fab4232258079e8b18c4",
       );
       const findings = await runBlock(16818063);
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

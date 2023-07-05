@@ -35,7 +35,7 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 let closestPenaltyEndTimestamp = 0;
@@ -56,44 +56,44 @@ const nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
 let initFindings: Finding[] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
   const stakingRouter = new ethers.Contract(
     STAKING_ROUTER_ADDRESS,
     STAKING_ROUTER_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const nodeOperatorRegistry = new ethers.Contract(
     NODE_OPERATORS_REGISTRY_ADDRESS,
     NODE_OPERATORS_REGISTRY_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
     NODE_OPERATOR_REGISTRY_MODULE_ID,
-    { blockTag: currentBlock }
+    { blockTag: currentBlock },
   );
 
   const stuckOperators = operators.filter(
-    (digest: any) => Number(digest.summary.stuckValidatorsCount) != 0
+    (digest: any) => Number(digest.summary.stuckValidatorsCount) != 0,
   );
 
   const stuckOperatorsSummaries = await Promise.all(
     stuckOperators.map((digest: any) =>
       nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
         blockTag: currentBlock,
-      })
-    )
+      }),
+    ),
   );
 
   const stuckOperatorsEndTimestampMap = new Map<String, number>(
     stuckOperators.map((digest: any, index: number) => [
       String(digest.id),
       Number(stuckOperatorsSummaries[index].stuckPenaltyEndTimestamp),
-    ])
+    ]),
   );
 
   for (const digest of operators) {
@@ -126,12 +126,12 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     txEvent,
     findings,
     NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-    noNames
+    noNames,
   );
 
   const stuckEvents = txEvent.filterLog(
     NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
-    NODE_OPERATORS_REGISTRY_ADDRESS
+    NODE_OPERATORS_REGISTRY_ADDRESS,
   );
 
   // the order is important
@@ -147,17 +147,17 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 function handleExitedCountChanged(
   txEvent: TransactionEvent,
   stuckEvents: LogDescription[],
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const exitEvents = txEvent.filterLog(
     NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
-    NODE_OPERATORS_REGISTRY_ADDRESS
+    NODE_OPERATORS_REGISTRY_ADDRESS,
   );
   if (!exitEvents) return;
   for (const exit of exitEvents) {
     const { nodeOperatorId, exitedValidatorsCount } = exit.args;
     const lastDigest = nodeOperatorDigests.get(
-      String(nodeOperatorId)
+      String(nodeOperatorId),
     ) as NodeOperatorShortDigest;
     const newExited = Number(exitedValidatorsCount) - lastDigest.exited;
     if (newExited > NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD) {
@@ -165,18 +165,18 @@ function handleExitedCountChanged(
         Finding.fromObject({
           name: `⚠️ NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
           description: `Operator: ${nodeOperatorId} ${noNames.get(
-            Number(nodeOperatorId)
+            Number(nodeOperatorId),
           )}\nNew exited: ${newExited}`,
           alertId: "NODE-OPERATORS-BIG-EXIT",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
-        })
+        }),
       );
     }
     let actualStuckCount = lastDigest.stuck;
     if (newExited > 0) {
       const stuckEvent = stuckEvents.find(
-        (e: any) => String(e.args.nodeOperatorId) == String(nodeOperatorId)
+        (e: any) => String(e.args.nodeOperatorId) == String(nodeOperatorId),
       );
       actualStuckCount = stuckEvent
         ? Number(stuckEvent.args.stuckValidatorsCount)
@@ -186,12 +186,12 @@ function handleExitedCountChanged(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator exited all stuck keys 🎉",
             description: `Operator: ${nodeOperatorId} ${noNames.get(
-              Number(nodeOperatorId)
+              Number(nodeOperatorId),
             )}\nStuck exited: ${lastDigest.stuck}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-EXITED",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
-          })
+          }),
         );
       }
     }
@@ -204,14 +204,14 @@ function handleExitedCountChanged(
 
 function handleStuckStateChanged(
   events: LogDescription[],
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (!events) return;
   for (const event of events) {
     const { nodeOperatorId, stuckValidatorsCount, refundedValidatorsCount } =
       event.args;
     const lastDigest = nodeOperatorDigests.get(
-      String(nodeOperatorId)
+      String(nodeOperatorId),
     ) as NodeOperatorShortDigest;
     const newStuck = Number(stuckValidatorsCount) - lastDigest.stuck;
     if (newStuck > 0) {
@@ -220,12 +220,12 @@ function handleStuckStateChanged(
           Finding.fromObject({
             name: "⚠️ NO Registry: operator have new stuck keys",
             description: `Operator: ${nodeOperatorId} ${noNames.get(
-              Number(nodeOperatorId)
+              Number(nodeOperatorId),
             )}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: "NODE-OPERATORS-NEW-STUCK-KEYS",
             severity: FindingSeverity.Medium,
             type: FindingType.Info,
-          })
+          }),
         );
       }
     }
@@ -239,12 +239,12 @@ function handleStuckStateChanged(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator refunded all stuck keys 🎉",
             description: `Operator: ${nodeOperatorId} ${noNames.get(
-              Number(nodeOperatorId)
+              Number(nodeOperatorId),
             )}\nRefunded: ${refundedValidatorsCount}`,
             alertId: "NODE-OPERATORS-ALL-STUCK-REFUNDED",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
-          })
+          }),
         );
       }
     }
@@ -261,12 +261,12 @@ function handleStuckStateChanged(
 
 function handleSigningKeysRemoved(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
       SIGNING_KEY_REMOVED_EVENT,
-      NODE_OPERATORS_REGISTRY_ADDRESS
+      NODE_OPERATORS_REGISTRY_ADDRESS,
     );
     if (events.length > 0) {
       findings.push(
@@ -276,7 +276,7 @@ function handleSigningKeysRemoved(
           alertId: "NODE-OPERATORS-KEYS-REMOVED",
           severity: FindingSeverity.High,
           type: FindingType.Info,
-        })
+        }),
       );
     }
   }
@@ -286,11 +286,11 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
   if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
     const noLimitEvents = txEvent.filterLog(
       NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
-      NODE_OPERATORS_REGISTRY_ADDRESS
+      NODE_OPERATORS_REGISTRY_ADDRESS,
     );
     const motionEnactedEvents = txEvent.filterLog(
       MOTION_ENACTED_EVENT,
-      EASY_TRACK_ADDRESS
+      EASY_TRACK_ADDRESS,
     );
     noLimitEvents.forEach((event) => {
       if (motionEnactedEvents.length < 1) {
@@ -299,12 +299,12 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
           Finding.fromObject({
             name: "🚨 NO Vetted keys set by NON-EasyTrack action",
             description: `Vetted keys count for node operator [${nodeOperatorId} ${noNames.get(
-              Number(nodeOperatorId)
+              Number(nodeOperatorId),
             )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: "NODE-OPERATORS-VETTED-KEYS-SET",
             severity: FindingSeverity.High,
             type: FindingType.Info,
-          })
+          }),
         );
       }
     });
@@ -328,17 +328,17 @@ async function updateNodeOperatorsNames(block: number) {
   const stakingRouter = new ethers.Contract(
     STAKING_ROUTER_ADDRESS,
     STAKING_ROUTER_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const nodeOperatorsRegistry = new ethers.Contract(
     NODE_OPERATORS_REGISTRY_ADDRESS,
     NODE_OPERATORS_REGISTRY_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
     NODE_OPERATOR_REGISTRY_MODULE_ID,
-    { blockTag: block }
+    { blockTag: block },
   );
 
   await Promise.all(
@@ -346,16 +346,16 @@ async function updateNodeOperatorsNames(block: number) {
       const { name } = await nodeOperatorsRegistry.getNodeOperator(
         String(operator.id),
         true,
-        { blockTag: block }
+        { blockTag: block },
       );
       noNames.set(Number(operator.id), name);
-    })
+    }),
   );
 }
 
 async function handleStuckPenaltyEnd(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   let description = "";
   let currentClosestPenaltyEndTimestamp = 0;
@@ -372,7 +372,7 @@ async function handleStuckPenaltyEnd(
       }
       const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
       description += `Operator: ${id} ${noNames.get(
-        Number(id)
+        Number(id),
       )} penalty ended ${formatDelay(delay)} ago\n`;
     }
   }
@@ -389,7 +389,7 @@ async function handleStuckPenaltyEnd(
         alertId: "NODE-OPERATORS-STUCK-PENALTY-ENDED",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
-      })
+      }),
     );
     closestPenaltyEndTimestamp = currentClosestPenaltyEndTimestamp;
     penaltyEndAlertTriggeredAt = now;

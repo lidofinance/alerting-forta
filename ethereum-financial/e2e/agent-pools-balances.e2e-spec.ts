@@ -11,7 +11,7 @@ const TEST_TIMEOUT = 60_000; // ms
 describe("agent-pools-balances e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
-    initBlock?: number
+    initBlock?: number,
   ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -25,7 +25,7 @@ describe("agent-pools-balances e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/pools-balances/agent-pools-balances")
+        provideAgentPath("subagents/pools-balances/agent-pools-balances"),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -46,7 +46,7 @@ describe("agent-pools-balances e2e tests", () => {
       const findings = await runBlock(16804419);
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -56,12 +56,12 @@ describe("agent-pools-balances e2e tests", () => {
       expect(
         findings
           .filter(
-            (finding) => finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE"
+            (finding) => finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
           )
-          .at(0)
+          .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -70,7 +70,7 @@ describe("agent-pools-balances e2e tests", () => {
       const findings = await runBlock(16870590, 16870589);
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -80,10 +80,10 @@ describe("agent-pools-balances e2e tests", () => {
       expect(
         findings
           .filter((finding) => finding.alertId == "BALANCER-POOL-IMBALANCE")
-          .at(0)
+          .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -92,7 +92,7 @@ describe("agent-pools-balances e2e tests", () => {
       const findings = await runBlock(17000731, 17000000);
       expect(findings.at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -103,12 +103,12 @@ describe("agent-pools-balances e2e tests", () => {
         findings
           .filter(
             (finding) =>
-              finding.alertId == "BALANCER-POOL-IMBALANCE-RAPID-CHANGE"
+              finding.alertId == "BALANCER-POOL-IMBALANCE-RAPID-CHANGE",
           )
-          .at(0)
+          .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -118,10 +118,10 @@ describe("agent-pools-balances e2e tests", () => {
       expect(
         findings
           .filter((finding) => finding.alertId == "LOW-STETH-CHAINLINK-PEG")
-          .at(0)
+          .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   it(
@@ -131,9 +131,9 @@ describe("agent-pools-balances e2e tests", () => {
       expect(
         findings
           .filter((finding) => finding.alertId == "STETH-CURVE-PEG-DECREASE")
-          .at(0)
+          .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

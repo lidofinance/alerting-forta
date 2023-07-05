@@ -12,7 +12,7 @@ describe("agent-proxy-watcher e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
     initBlock?: number,
-    skipInit?: boolean
+    skipInit?: boolean,
   ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -26,7 +26,7 @@ describe("agent-proxy-watcher e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/proxy-watcher/agent-proxy-watcher")
+        provideAgentPath("subagents/proxy-watcher/agent-proxy-watcher"),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
@@ -52,6 +52,6 @@ describe("agent-proxy-watcher e2e tests", () => {
       findings = await runBlock(15018883, undefined, true);
       expect(findings.length).toBe(0);
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

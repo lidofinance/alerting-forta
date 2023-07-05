@@ -9,5 +9,5 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
       ...event,
       address: ARAGON_VOTING_ADDRESS,
     };
-  }
+  },
 );

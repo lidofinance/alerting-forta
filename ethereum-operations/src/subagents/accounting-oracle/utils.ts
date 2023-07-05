@@ -5,7 +5,7 @@ export const byBlockNumberDesc = (e1: Event, e2: Event) =>
 
 export const getMemberName = (
   members: Map<string, string>,
-  memberAdress: string
+  memberAdress: string,
 ) => {
   return members.get(memberAdress) || "Unknown";
 };

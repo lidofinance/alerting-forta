@@ -51,7 +51,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     name: "ℹ️ NO Registry: Node operator active set",
     description: (args: any, names: Map<number, string>) =>
       `Node operator [${args.nodeOperatorId} ${names.get(
-        Number(args.nodeOperatorId)
+        Number(args.nodeOperatorId),
       )}] active status set to ${args.active}`,
     severity: FindingSeverity.Info,
   },
@@ -63,7 +63,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     name: "ℹ️ NO Registry: Node operator name set",
     description: (args: any, names: Map<number, string>) =>
       `Node operator [${args.nodeOperatorId} ${names.get(
-        Number(args.nodeOperatorId)
+        Number(args.nodeOperatorId),
       )}] name set to ${args.name}`,
     severity: FindingSeverity.Info,
   },
@@ -75,7 +75,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     name: "ℹ️ NO Registry: Node operator reward address set",
     description: (args: any, names: Map<number, string>) =>
       `Node operator [${args.nodeOperatorId} ${names.get(
-        Number(args.nodeOperatorId)
+        Number(args.nodeOperatorId),
       )}] reward address set to ${etherscanAddress(args.rewardAddress)}`,
     severity: FindingSeverity.Info,
   },
@@ -87,7 +87,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     name: "⚠️ NO Registry: Node operator total keys trimmed",
     description: (args: any, names: Map<number, string>) =>
       `Node operator [${args.nodeOperatorId}: ${names.get(
-        Number(args.nodeOperatorId)
+        Number(args.nodeOperatorId),
       )}] total keys trimmed ${args.totalKeysTrimmed}`,
     severity: FindingSeverity.Info,
   },
@@ -125,7 +125,7 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     name: "⚠️ NO Registry: Node operator penalized",
     description: (args: any) =>
       `Node operator ${etherscanAddress(
-        args.recipientAddress
+        args.recipientAddress,
       )} penalized with ${args.sharesPenalizedAmount} shares`,
     severity: FindingSeverity.High,
   },

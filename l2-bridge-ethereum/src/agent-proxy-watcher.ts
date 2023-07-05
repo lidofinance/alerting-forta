@@ -23,7 +23,7 @@ const lastAdmins = new Map<string, string>();
 export const name = "ProxyWatcher";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   await Promise.all(
@@ -32,7 +32,7 @@ export async function initialize(
       lastImpls.set(proxyInfo.address, lastImpl);
       const lastAdmin = await getProxyAdmin(proxyInfo, currentBlock);
       lastAdmins.set(proxyInfo.address, lastAdmin);
-    })
+    }),
   );
   return {
     lastImpls: JSON.stringify(Object.fromEntries(lastImpls)),
@@ -51,7 +51,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleProxyAdminEvents(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
@@ -65,7 +65,7 @@ function handleProxyAdminEvents(
             severity: eventInfo.severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }
@@ -74,7 +74,7 @@ function handleProxyAdminEvents(
 
 function handleThirdPartyProxyAdminEvents(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   THIRD_PARTY_PROXY_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
@@ -88,7 +88,7 @@ function handleThirdPartyProxyAdminEvents(
             severity: eventInfo.severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }
@@ -96,7 +96,7 @@ function handleThirdPartyProxyAdminEvents(
   if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
     const events = txEvent.filterLog(
       GATEWAY_SET_EVENT,
-      ARBITRUM_L1_GATEWAY_ROUTER
+      ARBITRUM_L1_GATEWAY_ROUTER,
     );
     events.forEach((event) => {
       if (event.args.l1Token == WSTETH_ADDRESS) {
@@ -108,7 +108,7 @@ function handleThirdPartyProxyAdminEvents(
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       }
     });
@@ -134,14 +134,14 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
   const proxy = new ethers.Contract(
     proxyInfo.address,
     proxyInfo.shortABI,
-    ethersProvider
+    ethersProvider,
   );
   return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
 }
 
 async function handleProxyImplementationChanges(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   await Promise.all(
     LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
@@ -159,11 +159,11 @@ async function handleProxyImplementationChanges(
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
             metadata: { newImpl: newImpl, lastImpl: lastImpl },
-          })
+          }),
         );
         lastImpls.set(proxyInfo.address, newImpl);
       }
-    })
+    }),
   );
 }
 
@@ -175,14 +175,14 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   const proxy = new ethers.Contract(
     proxyInfo.address,
     proxyInfo.shortABI,
-    ethersProvider
+    ethersProvider,
   );
   return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
 }
 
 async function handleProxyAdminChanges(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   await Promise.all(
     LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
@@ -200,10 +200,10 @@ async function handleProxyAdminChanges(
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
             metadata: { newAdmin: newAdmin, lastAdmin: lastAdmin },
-          })
+          }),
         );
         lastAdmins.set(proxyInfo.address, newAdmin);
       }
-    })
+    }),
   );
 }

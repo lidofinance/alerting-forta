@@ -142,13 +142,13 @@ export const MONITORED_TOKENS = new Map<string, string>(
     ["0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0", "STETHETH_C-f-gauge"],
     ["0xdcd90c7f6324cfa40d7169ef80b12031770b4325", "yvCurve-stETH"],
     ["0x9518c9063eb0262d791f38d8d6eb0aca33c63ed0", "cvxsteCRV"],
-  ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
+  ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
 export const PARTIALLY_MONITORED_TOKENS = new Map<string, string>(
   [["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "WETH"]].map(
-    (pair: string[]) => [pair[0].toLowerCase(), pair[1]]
-  )
+    (pair: string[]) => [pair[0].toLowerCase(), pair[1]],
+  ),
 );
 
 export const ADDRESS_TO_NAME = new Map<string, string>(
@@ -416,7 +416,7 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
     ["0x650f9607f1371a4b8f80d2949162aedb3a4a839e", "Gnosis safe"],
     ["0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2", "Aura: Voter Proxy"],
     ["0x7818a1da7bd1e64c199029e86ba244a9798eee10", "Aura: Booster"],
-  ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]])
+  ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
 export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [

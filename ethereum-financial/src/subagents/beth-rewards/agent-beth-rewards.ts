@@ -48,20 +48,20 @@ export const name = "AgentBethRewards";
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   // ~2 hours ago
   const pastBlockOracleReport = currentBlock - Math.ceil((2 * 60 * 60) / 13);
   lastOracleReportTime = await getLastOracleReportTime(
     pastBlockOracleReport,
-    currentBlock - 1
+    currentBlock - 1,
   );
 
   const anchorVault = new ethers.Contract(
     ANCHOR_VAULT_ADDRESS,
     ANCHOR_VAULT_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const rewardsSoldFilter = anchorVault.filters.RewardsCollected();
 
@@ -70,7 +70,7 @@ export async function initialize(
   const sellEvents = await anchorVault.queryFilter(
     rewardsSoldFilter,
     pastBlock,
-    currentBlock - 1
+    currentBlock - 1,
   );
 
   if (sellEvents.length > 0) {
@@ -123,9 +123,9 @@ async function handleAdminBalance(blockEvent: BlockEvent, findings: Finding[]) {
       String(
         await ethersProvider.getBalance(
           rewardsLiquidatorAdminAddress,
-          blockEvent.blockNumber
-        )
-      )
+          blockEvent.blockNumber,
+        ),
+      ),
     );
     if (
       accountBalance.isLessThanOrEqualTo(MIN_REWARDS_LIQUIDATOR_ADMIN_BALANCE)
@@ -139,7 +139,7 @@ async function handleAdminBalance(blockEvent: BlockEvent, findings: Finding[]) {
           alertId: "ANCHOR-REWARDS-ADMIN-LOW-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Degraded,
-        })
+        }),
       );
       lastLowBalanceTriggeredAt = now;
     }
@@ -165,7 +165,7 @@ const TEN_TO_36 = TEN_TO_18.times(TEN_TO_18);
 function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
   const [rewardsCollectedEvent] = txEvent.filterLog(
     ANCHOR_VAULT_REWARDS_COLLECTED_EVENT,
-    ANCHOR_VAULT_ADDRESS
+    ANCHOR_VAULT_ADDRESS,
   );
   if (rewardsCollectedEvent == undefined) {
     return;
@@ -173,15 +173,15 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
 
   const [soldEvent] = txEvent.filterLog(
     ANCHOR_REWARDS_LIQ_SOLD_STETH_EVENT,
-    rewardsLiquidatorAddress
+    rewardsLiquidatorAddress,
   );
   const { steth_eth_price, eth_usdc_price, usdc_ust_price } = soldEvent.args;
 
   const stethAmount = new BigNumber(
-    String(rewardsCollectedEvent.args.steth_amount)
+    String(rewardsCollectedEvent.args.steth_amount),
   );
   const ustAmount = new BigNumber(
-    String(rewardsCollectedEvent.args.ust_amount)
+    String(rewardsCollectedEvent.args.ust_amount),
   ).times(TEN_TO_12);
 
   const stethUstPrice = new BigNumber(String(steth_eth_price))
@@ -228,14 +228,14 @@ function handleAnchorVaultTx(txEvent: TransactionEvent, findings: Finding[]) {
         slippagePercent: `${slippagePercent.toString(10)}`,
         stethUstFeedPrice: `${stethUstPrice.toFixed(0, 3)}`,
       },
-    })
+    }),
   );
 }
 
 function handleOracleTx(txEvent: TransactionEvent, findings: Finding[]) {
   const [reportEvent] = txEvent.filterLog(
     LIDO_ORACLE_COMPLETED_EVENT,
-    LIDO_ORACLE_ADDRESS
+    LIDO_ORACLE_ADDRESS,
   );
   if (reportEvent !== undefined) {
     lastOracleReportTime = txEvent.timestamp;
@@ -246,7 +246,7 @@ async function getLastOracleReportTime(blockFrom: number, blockTo: number) {
   const lidoOracle = new ethers.Contract(
     LIDO_ORACLE_ADDRESS,
     LIDO_ORACLE_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const oracleReportFilter = lidoOracle.filters.Completed();
@@ -254,7 +254,7 @@ async function getLastOracleReportTime(blockFrom: number, blockTo: number) {
   const reportEvents = await lidoOracle.queryFilter(
     oracleReportFilter,
     blockFrom,
-    blockTo
+    blockTo,
   );
 
   reportEvents.sort(byBlockNumberDesc);

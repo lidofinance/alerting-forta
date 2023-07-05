@@ -12,7 +12,7 @@ describe("agent-vaults e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
     initBlock?: number,
-    skipInit?: boolean
+    skipInit?: boolean,
   ) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
@@ -45,6 +45,6 @@ describe("agent-vaults e2e tests", () => {
       let findings = await runBlock(17007842, 17007842);
       expect(findings).toMatchSnapshot();
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 });

@@ -69,13 +69,13 @@ let lastRewardsAmount = new BigNumber(0);
 let lastReportedExecutorBalance = 0;
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
   if (currentBlock === undefined) {
     throw Error(
-      `No block identifier provided to ${name} agent initialize function`
+      `No block identifier provided to ${name} agent initialize function`,
     );
   }
 
@@ -86,27 +86,27 @@ export async function initialize(
     lastRewardsDistributeTime = lastRewardsDistributeBlock.timestamp;
     if (latestDistributeEvent.args) {
       lastRewardsAmount = new BigNumber(
-        String(latestDistributeEvent.args._amount)
+        String(latestDistributeEvent.args._amount),
       );
     }
 
     const prevToLatestDistributeEvent = await getPrevDistributeEvent(
-      lastRewardsDistributeBlock.number
+      lastRewardsDistributeBlock.number,
     );
     if (prevToLatestDistributeEvent) {
       checkpointsInLastInterval = await getCheckpointsCount(
         prevToLatestDistributeEvent.blockNumber,
-        lastRewardsDistributeBlock.number
+        lastRewardsDistributeBlock.number,
       );
 
       console.log(
-        `[${name}] checkpointsInLastInterval: ${checkpointsInLastInterval}`
+        `[${name}] checkpointsInLastInterval: ${checkpointsInLastInterval}`,
       );
     }
   }
 
   console.log(
-    `[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`
+    `[${name}] lastRewardsDistributeTime: ${lastRewardsDistributeTime}`,
   );
 
   return {
@@ -116,12 +116,12 @@ export async function initialize(
 }
 
 async function getPrevDistributeEvent(
-  lastBlock: number
+  lastBlock: number,
 ): Promise<Event | undefined> {
   const stMATIC = new ethers.Contract(
     ST_MATIC_TOKEN_ADDRESS,
     ST_MATIC_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const rewardsDistributedFilter = stMATIC.filters.DistributeRewardsEvent();
@@ -130,7 +130,7 @@ async function getPrevDistributeEvent(
   const distributeEvents = await stMATIC.queryFilter(
     rewardsDistributedFilter,
     pastBlock,
-    lastBlock - 1
+    lastBlock - 1,
   );
 
   distributeEvents.sort(byBlockNumberDesc);
@@ -139,17 +139,17 @@ async function getPrevDistributeEvent(
 
 async function getCheckpointsCount(
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
 ): Promise<number> {
   const rootChain = new ethers.Contract(
     POLYGON_ROOT_CHAIN_PROXY,
     POLYGON_ROOT_CHAIN_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const checkpoints = await rootChain.queryFilter(
     rootChain.filters.NewHeaderBlock(),
     fromBlock,
-    toBlock - 1
+    toBlock - 1,
   );
 
   return checkpoints.length;
@@ -171,20 +171,20 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 export async function handleBufferedMatic(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (lastReportedBufferedMatic + REPORT_WINDOW_BUFFERED_MATIC < now) {
     const matic = new ethers.Contract(
       MATIC_TOKEN_ADDRESS,
       MATIC_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const stMatic = new ethers.Contract(
       ST_MATIC_TOKEN_ADDRESS,
       ST_MATIC_ABI,
-      ethersProvider
+      ethersProvider,
     );
 
     const bufferedMatic = await matic.functions
@@ -205,7 +205,7 @@ export async function handleBufferedMatic(
 
     if (
       bufferedMaticPercent.isGreaterThanOrEqualTo(
-        MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT
+        MAX_BUFFERED_MATIC_IMMEDIATE_PERCENT,
       )
     ) {
       hugePooledMaticStart =
@@ -216,7 +216,7 @@ export async function handleBufferedMatic(
 
     if (
       bufferedMaticPercent.isGreaterThanOrEqualTo(
-        MAX_BUFFERED_MATIC_DAILY_PERCENT
+        MAX_BUFFERED_MATIC_DAILY_PERCENT,
       )
     ) {
       highPooledMaticStart =
@@ -236,7 +236,7 @@ export async function handleBufferedMatic(
           alertId: "HUGE-BUFFERED-MATIC",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedBufferedMatic = now;
     } else if (
@@ -253,7 +253,7 @@ export async function handleBufferedMatic(
           alertId: "HIGH-BUFFERED-MATIC",
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedBufferedMatic = now;
     }
@@ -262,7 +262,7 @@ export async function handleBufferedMatic(
 
 export async function handleRewardsDistribution(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   const rewardsDistributionDelay = now - lastRewardsDistributeTime;
@@ -278,7 +278,7 @@ export async function handleRewardsDistribution(
         `hours passed since last stMATIC rewards distribution. NOTE: Last rewards distribution event was not found. Usually it means that there is a huge delay in rewards distribution!`;
     } else {
       description = `More than ${Math.floor(
-        rewardsDistributionDelay / (60 * 60)
+        rewardsDistributionDelay / (60 * 60),
       )} hours passed since last stMATIC rewards distribution`;
     }
     findings.push(
@@ -288,7 +288,7 @@ export async function handleRewardsDistribution(
         alertId: "STMATIC-REWARDS-DISTRIBUTION-DELAY",
         severity: FindingSeverity.High,
         type: FindingType.Degraded,
-      })
+      }),
     );
     lastReportedRewards = now;
   }
@@ -296,14 +296,14 @@ export async function handleRewardsDistribution(
 
 export async function handleProxyAdmin(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
 
   const proxyAdmin = new ethers.Contract(
     PROXY_ADMIN_ADDRESS,
     PROXY_ADMIN_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   if (lastReportedInvalidProxyAdmin + REPORT_WINDOW_PROXY_ALERTS < now) {
@@ -314,7 +314,7 @@ export async function handleProxyAdmin(
           proxyAdminFor = String(
             await proxyAdmin.functions.getProxyAdmin(contractAddr, {
               blockTag: blockEvent.block.number,
-            })
+            }),
           ).toLowerCase();
         } catch (err) {
           // execution reverted if the given contract is not known to the proxy admin
@@ -331,11 +331,11 @@ export async function handleProxyAdmin(
               alertId: "INVALID-PROXY-ADMIN-ADDR",
               severity: FindingSeverity.Critical,
               type: FindingType.Exploit,
-            })
+            }),
           );
           lastReportedInvalidProxyAdmin = now;
         }
-      }
+      },
     );
 
     await Promise.all(promises);
@@ -344,19 +344,19 @@ export async function handleProxyAdmin(
 
 export async function handleProxyOwner(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
 
   const proxyAdmin = new ethers.Contract(
     PROXY_ADMIN_ADDRESS,
     PROXY_ADMIN_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   if (lastReportedInvalidProxyOwner + REPORT_WINDOW_PROXY_ALERTS < now) {
     const proxyOwner = String(
-      await proxyAdmin.functions.owner({ blockTag: blockEvent.block.number })
+      await proxyAdmin.functions.owner({ blockTag: blockEvent.block.number }),
     ).toLowerCase();
 
     if (proxyOwner != OWNER_MULTISIG_ADDRESS) {
@@ -367,7 +367,7 @@ export async function handleProxyOwner(
           alertId: "INVALID-PROXY-ADMIN-OWNER",
           severity: FindingSeverity.Critical,
           type: FindingType.Exploit,
-        })
+        }),
       );
       lastReportedInvalidProxyOwner = now;
     }
@@ -376,7 +376,7 @@ export async function handleProxyOwner(
 
 export async function handleDepositExecutorBalance(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (
@@ -397,7 +397,7 @@ export async function handleDepositExecutorBalance(
           alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedExecutorBalance = now;
     }
@@ -417,7 +417,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 export async function handleRewardDistributionEvent(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (!(ST_MATIC_TOKEN_ADDRESS in txEvent.addresses)) {
     return;
@@ -425,7 +425,7 @@ export async function handleRewardDistributionEvent(
 
   const events = txEvent.filterLog(
     ST_MATIC_DISTRIBUTE_REWARDS_EVENT,
-    ST_MATIC_TOKEN_ADDRESS
+    ST_MATIC_TOKEN_ADDRESS,
   );
 
   const event = events.at(0);
@@ -451,7 +451,7 @@ export async function handleRewardDistributionEvent(
   // estimate change on checkpoints count
   const checkpointsCount = await getCheckpointsCount(
     lastRewardsDistributeBlock.number,
-    txEvent.blockNumber
+    txEvent.blockNumber,
   );
 
   const estimatedChangePercent =
@@ -470,7 +470,7 @@ export async function handleRewardDistributionEvent(
         name: `⚠️ stMATIC rewards decreased`,
         description:
           `stMATIC rewards has decreased by ${rewardsChangePercent.toFixed(
-            2
+            2,
           )}% from ${lastRewardsAmount
             .div(MATIC_DECIMALS)
             .toFixed(4)} MATIC to ${rewardsAmount
@@ -484,7 +484,7 @@ export async function handleRewardDistributionEvent(
         alertId: "STMATIC-REWARDS-DECREASED",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   }
   lastRewardsDistributeBlock = txEvent.block;
@@ -494,12 +494,12 @@ export async function handleRewardDistributionEvent(
 
 export function handleProxyAdminEvents(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (PROXY_ADMIN_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(
       PROXY_ADMIN_OWNERSHIP_TRANSFERRED_EVENT,
-      PROXY_ADMIN_ADDRESS
+      PROXY_ADMIN_ADDRESS,
     );
     for (const event of events) {
       findings.push(
@@ -509,7 +509,7 @@ export function handleProxyAdminEvents(
           alertId: "PROXY-ADMIN-OWNER-CHANGE",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
   }
@@ -542,7 +542,7 @@ async function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
               const nodeOperatorsRegistry = new ethers.Contract(
                 NODE_OPERATORS_REGISTRY_ADDRESS,
                 NODE_OPERATORS_V2_ABI,
-                ethersProvider
+                ethersProvider,
               );
               const protocolStats =
                 await nodeOperatorsRegistry.functions.getProtocolStats({
@@ -560,18 +560,18 @@ async function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
                 severity: severity,
                 type: eventInfo.type,
                 metadata: { args: String(event.args) },
-              })
+              }),
             );
-          })
+          }),
         );
       }
-    })
+    }),
   );
 }
 
 export function handleChekpointRewardUpdateEvent(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const fmtReward = (v: any) => new BigNumber(v.toString()).div(MATIC_DECIMALS);
   // looks like there is no guaranteed contract to check a transaction against
@@ -594,7 +594,7 @@ export function handleChekpointRewardUpdateEvent(
         alertId: "STMATIC-CHEKPOINT-REWARD-UPDATE",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   }
 }

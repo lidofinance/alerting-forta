@@ -24,18 +24,18 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
   const oracleReportSanityChecker = new ethers.Contract(
     ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
     ORACLE_REPORT_SANITY_CHECKER_ABI,
-    ethersProvider
+    ethersProvider,
   );
   [prevLimits] =
     await oracleReportSanityChecker.functions.getOracleReportLimits({
@@ -55,12 +55,12 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleOracleReportLimits(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const oracleReportSanityChecker = new ethers.Contract(
     ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
     ORACLE_REPORT_SANITY_CHECKER_ABI,
-    ethersProvider
+    ethersProvider,
   );
   let currentLimits: BigNumber[];
 
@@ -85,7 +85,7 @@ async function handleOracleReportLimits(
         alertId: "ORACLE-REPORT-SANITY-CHECKER-LIMITS-CHANGED",
         severity: FindingSeverity.High,
         type: FindingType.Info,
-      })
+      }),
     );
   }
 

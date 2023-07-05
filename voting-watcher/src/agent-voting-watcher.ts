@@ -58,7 +58,7 @@ let objectionsTime: number;
 export const name = "VotingWatcher";
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -139,7 +139,7 @@ async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
             total.minus(lastTotal),
             key,
             vote,
-            findings
+            findings,
           );
           vote.noMorePing = true;
         } else {
@@ -181,7 +181,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleAragonEventsOfNoticeTransaction(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   ARAGON_VOTING_EVENTS_OF_NOTICE.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
@@ -195,7 +195,7 @@ function handleAragonEventsOfNoticeTransaction(
             severity: eventInfo.severity,
             type: FindingType.Info,
             metadata: { args: String(event.args) },
-          })
+          }),
         );
       });
     }
@@ -207,27 +207,27 @@ async function updateVotingDurations(block: number) {
   const voting = new ethers.Contract(
     LIDO_VOTING_ADDRESS,
     VOTING_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   voteLength = new BigNumber(
-    String(await voting.functions.voteTime(blockTag))
+    String(await voting.functions.voteTime(blockTag)),
   ).toNumber();
   objectionsTime = new BigNumber(
-    String(await voting.functions.objectionPhaseTime(blockTag))
+    String(await voting.functions.objectionPhaseTime(blockTag)),
   ).toNumber();
 }
 
 async function getActiveVotes(
   blockNumber: number,
-  init: boolean = false
+  init: boolean = false,
 ): Promise<Map<number, VoteInfo>> {
   const blockTag = { blockTag: blockNumber };
   const block = await ethersProvider.getBlock(blockNumber);
   const voting = new ethers.Contract(
     LIDO_VOTING_ADDRESS,
     VOTING_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const votesInfo = new Map<number, VoteInfo>();
   const votesLength = await voting.functions.votesLength(blockTag);
@@ -250,7 +250,7 @@ async function getActiveVotes(
           .minus(yea.times(ETH_DECIMALS).div(votingPower))
           .times(100000)
           .div(ETH_DECIMALS)
-          .toNumber() / 100
+          .toNumber() / 100,
       ) / 10;
     const passed =
       yea.gte(votingPower.times(minAcceptQuorum).div(ETH_DECIMALS)) &&
@@ -299,7 +299,7 @@ function voteStateChanged(text: string, findings: Finding[]) {
       alertId: "VOTE-STATE-CHANGED",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-    })
+    }),
   );
 }
 
@@ -307,7 +307,7 @@ function reportHugeVotes(
   votesDiff: BigNumber,
   id: number,
   vote: VoteInfo,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   findings.push(
     Finding.fromObject({
@@ -319,7 +319,7 @@ function reportHugeVotes(
       alertId: "HUGE-VOTES",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-    })
+    }),
   );
 }
 
@@ -327,7 +327,7 @@ function reportHugeVotesWithQuorum(
   votesDiff: BigNumber,
   id: number,
   vote: VoteInfo,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   findings.push(
     Finding.fromObject({
@@ -339,7 +339,7 @@ function reportHugeVotesWithQuorum(
       alertId: "HUGE-VOTES",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-    })
+    }),
   );
 }
 
@@ -347,7 +347,7 @@ function votePing(
   id: number,
   vote: VoteInfo,
   blockNumber: number,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const total = vote.total.div(ETH_DECIMALS).toNumber();
   const timeLeftStr =
@@ -360,7 +360,7 @@ function votePing(
       vote.quorumDistance
     }% more required to gather a quorum, ${timeLeftStr}, please, send the votes to ${formatLink(
       `#${id}`,
-      vote.url
+      vote.url,
     )}!`,
     `Please, send votes to ${formatLink(`#${id}`, vote.url)}, ${
       total == 0
@@ -371,7 +371,7 @@ function votePing(
       vote.quorumDistance
     }% more required to obtain a minimum approval ${formatLink(
       `#${id}`,
-      vote.url
+      vote.url,
     )}, ${timeLeftStr} — please, make sure to vote!`,
     `Please, vote on ${formatLink(`#${id}`, vote.url)} 🙏 ${
       vote.quorumDistance
@@ -380,7 +380,7 @@ function votePing(
       vote.quorumDistance
     }% still required, ${timeLeftStr} — please send your votes to ${formatLink(
       `#${id}`,
-      vote.url
+      vote.url,
     )} 🙏`,
   ];
   findings.push(
@@ -390,6 +390,6 @@ function votePing(
       alertId: "VOTE-PING",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-    })
+    }),
   );
 }

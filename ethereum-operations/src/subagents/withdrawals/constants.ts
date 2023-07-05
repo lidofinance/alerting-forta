@@ -11,7 +11,7 @@ export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
 export const BIG_WITHDRAWAL_REQUEST_THRESHOLD = new BigNumber(50000);
 export const BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD = new BigNumber(
-  150000
+  150000,
 );
 
 export const BIG_UNFINALIZED_QUEUE_THRESHOLD = new BigNumber(100000);

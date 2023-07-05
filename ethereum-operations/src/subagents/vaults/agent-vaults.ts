@@ -17,7 +17,7 @@ import type * as Constants from "./constants";
 
 export const name = "Vaults";
 
-export let lido: ethers.Contract;
+let lido: ethers.Contract;
 
 const {
   WITHDRAWAL_VAULT_ADDRESS,
@@ -31,7 +31,7 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export async function initialize(): Promise<{ [key: string]: string }> {
@@ -49,37 +49,33 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   const prevBlockWithrawalVaultBalance = await getBalance(
     WITHDRAWAL_VAULT_ADDRESS,
-    currentBlock - 1
+    currentBlock - 1,
   );
   const prevBlockElVaultBalance = await getBalance(
     EL_VAULT_ADDRESS,
-    currentBlock - 1
+    currentBlock - 1,
   );
 
   const [report] = await lido.queryFilter(
     lido.filters.ETHDistributed(),
     currentBlock,
-    currentBlock
+    currentBlock,
   );
 
   await Promise.all([
-    handleWithdrawalVaultBalance(
-      currentBlock,
-      prevBlockWithrawalVaultBalance,
-      findings
-    ),
+    handleWithdrawalVaultBalance(currentBlock, findings),
     handleELVaultBalance(currentBlock, prevBlockElVaultBalance, findings),
     handleNoWithdrawalVaultDrains(
       currentBlock,
       prevBlockWithrawalVaultBalance,
       report,
-      findings
+      findings,
     ),
     handleNoELVaultDrains(
       currentBlock,
       prevBlockElVaultBalance,
       report,
-      findings
+      findings,
     ),
   ]);
 
@@ -88,29 +84,34 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleWithdrawalVaultBalance(
   blockNumber: number,
-  prevBalance: BigNumber,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (blockNumber % WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL === 0) {
-    const withdrawalVaultBalance = await getBalance(
+    const prevWithdrawalVaultBalance = await getBalance(
       WITHDRAWAL_VAULT_ADDRESS,
-      blockNumber
+      blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
     );
 
-    const withdrawalVaultBalanceDiff =
-      withdrawalVaultBalance.minus(prevBalance);
+    const withdrawalVaultBalance = await getBalance(
+      WITHDRAWAL_VAULT_ADDRESS,
+      blockNumber,
+    );
+
+    const withdrawalVaultBalanceDiff = withdrawalVaultBalance.minus(
+      prevWithdrawalVaultBalance,
+    );
 
     if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
       findings.push(
         Finding.fromObject({
           name: "💵 Withdrawal Vault Balance significant change",
           description: `Withdrawal Vault Balance has increased by ${toEthString(
-            withdrawalVaultBalanceDiff
+            withdrawalVaultBalanceDiff,
           )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} block`,
           alertId: "WITHDRAWAL_VAULT_BALANCE_CHANGE",
           type: FindingType.Info,
           severity: FindingSeverity.Info,
-        })
+        }),
       );
     }
   }
@@ -120,11 +121,11 @@ async function handleNoWithdrawalVaultDrains(
   currentBlock: number,
   prevBalance: BigNumber,
   report: ethers.Event | undefined,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const currentBalance = await getBalance(
     WITHDRAWAL_VAULT_ADDRESS,
-    currentBlock
+    currentBlock,
   );
 
   if (!report) {
@@ -133,12 +134,12 @@ async function handleNoWithdrawalVaultDrains(
         Finding.fromObject({
           name: "🚨 Withdrawal Vault balance mismatch",
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
-            prevBalance.minus(currentBalance)
+            prevBalance.minus(currentBalance),
           )} without Oracle report`,
           alertId: "WITHDRAWAL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
     return;
@@ -153,12 +154,12 @@ async function handleNoWithdrawalVaultDrains(
         Finding.fromObject({
           name: "🚨 Withdrawal Vault balance mismatch",
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
-            expectedBalance.minus(currentBalance)
+            expectedBalance.minus(currentBalance),
           )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
           alertId: "WITHDRAWAL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
   }
@@ -167,7 +168,7 @@ async function handleNoWithdrawalVaultDrains(
 async function handleELVaultBalance(
   blockNumber: number,
   prevBalance: BigNumber,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const elVaultBalance = await getBalance(EL_VAULT_ADDRESS, blockNumber);
   const elVaultBalanceDiff = elVaultBalance.minus(prevBalance);
@@ -177,12 +178,12 @@ async function handleELVaultBalance(
       Finding.fromObject({
         name: "💵 EL Vault Balance significant change",
         description: `EL Vault Balance has increased by ${toEthString(
-          elVaultBalanceDiff
+          elVaultBalanceDiff,
         )}`,
         alertId: "EL_VAULT_BALANCE_CHANGE",
         type: FindingType.Info,
         severity: FindingSeverity.Info,
-      })
+      }),
     );
   }
 }
@@ -191,7 +192,7 @@ async function handleNoELVaultDrains(
   currentBlock: number,
   prevBalance: BigNumber,
   report: ethers.Event | undefined,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const currentBalance = await getBalance(EL_VAULT_ADDRESS, currentBlock);
 
@@ -201,12 +202,12 @@ async function handleNoELVaultDrains(
         Finding.fromObject({
           name: "🚨 EL Vault balance mismatch",
           description: `EL Vault Balance has decreased by ${toEthString(
-            prevBalance.minus(currentBalance)
+            prevBalance.minus(currentBalance),
           )} without Oracle report`,
           alertId: "EL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
     return;
@@ -221,14 +222,14 @@ async function handleNoELVaultDrains(
         Finding.fromObject({
           name: "🚨 EL Vault balance mismatch",
           description: `EL Vault Balance has decreased by ${toEthString(
-            expectedBalance.minus(currentBalance)
+            expectedBalance.minus(currentBalance),
           )} but Oracle report shows ${toEthString(
-            executionLayerRewardsWithdrawn
+            executionLayerRewardsWithdrawn,
           )}`,
           alertId: "EL-VAULT-BALANCE-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
-        })
+        }),
       );
     }
   }
@@ -244,7 +245,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleBurnerSharesTx(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const events = txEvent
     .filterLog(TRANSFER_SHARES_EVENT, LIDO_STETH_ADDRESS)
@@ -258,17 +259,17 @@ async function handleBurnerSharesTx(
         alertId: "BURNER_SHARES_TRANSFER",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
   }
 }
 
 async function getBalance(
   address: string,
-  blockNumber: number
+  blockNumber: number,
 ): Promise<BigNumber> {
   return BigNumber(
-    (await ethersProvider.getBalance(address, blockNumber)).toString()
+    (await ethersProvider.getBalance(address, blockNumber)).toString(),
   );
 }
 

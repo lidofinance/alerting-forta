@@ -41,7 +41,7 @@ describe("the graph", () => {
           metadata: expect.objectContaining({
             balance: "0.00",
           }),
-        })
+        }),
       );
     });
   });

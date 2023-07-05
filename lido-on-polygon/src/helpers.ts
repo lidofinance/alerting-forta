@@ -26,12 +26,12 @@ export function abbreviateNumber(number: number): string {
  * Get version of NodeOperatorsRegistry contract
  */
 export async function getNORVersion(
-  blockTag: number | string
+  blockTag: number | string,
 ): Promise<string> {
   const contract = new ethers.Contract(
     NODE_OPERATORS_REGISTRY_ADDRESS,
     ["function version() view returns (string)"],
-    ethersProvider
+    ethersProvider,
   );
 
   return await contract.version({ blockTag });

@@ -32,14 +32,14 @@ let lastReportedToManyWithdrawals = 0;
 let withdrawalsCache: IWithdrawalRecord[] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   const now = (await ethersProvider.getBlock(currentBlock)).timestamp;
   const l2Bridge = new ethers.Contract(
     L2_ERC20_TOKEN_GATEWAY,
     L2_BRIDGE_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const withdrawalInitiatedFilter = l2Bridge.filters.WithdrawalInitiated();
 
@@ -47,7 +47,7 @@ export async function initialize(
   const withdrawEvents = await l2Bridge.queryFilter(
     withdrawalInitiatedFilter,
     pastBlock,
-    currentBlock - 1
+    currentBlock - 1,
   );
   await Promise.all(
     withdrawEvents.map(async (evt: Event) => {
@@ -58,11 +58,11 @@ export async function initialize(
           amount: new BigNumber(String(evt.args.amount)),
         });
       }
-    })
+    }),
   );
   let withdrawalsSum = new BigNumber(0);
   withdrawalsCache.forEach(
-    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount))
+    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount)),
   );
   return {
     currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
@@ -79,16 +79,16 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleToManyWithdrawals(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
   withdrawalsCache = withdrawalsCache.filter(
-    (x: IWithdrawalRecord) => x.time > now - MAX_WITHDRAWALS_WINDOW
+    (x: IWithdrawalRecord) => x.time > now - MAX_WITHDRAWALS_WINDOW,
   );
   let withdrawalsSum = new BigNumber(0);
   withdrawalsCache.forEach(
-    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount))
+    (x: IWithdrawalRecord) => (withdrawalsSum = withdrawalsSum.plus(x.amount)),
   );
   const period =
     now - lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
@@ -112,12 +112,12 @@ async function handleToManyWithdrawals(
         alertId: "HUGE-WITHDRAWALS-FROM-L2",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
-      })
+      }),
     );
     lastReportedToManyWithdrawals = now;
     // remove reported withdrawals records
     withdrawalsCache = withdrawalsCache.filter(
-      (x: IWithdrawalRecord) => x.time > lastReportedToManyWithdrawals
+      (x: IWithdrawalRecord) => x.time > lastReportedToManyWithdrawals,
     );
   }
 }
@@ -134,7 +134,7 @@ function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
   if (L2_ERC20_TOKEN_GATEWAY in txEvent.addresses) {
     const events = txEvent.filterLog(
       WITHDRAWAL_INITIATED_EVENT,
-      L2_ERC20_TOKEN_GATEWAY
+      L2_ERC20_TOKEN_GATEWAY,
     );
     events.forEach((event) => {
       withdrawalsCache.push({

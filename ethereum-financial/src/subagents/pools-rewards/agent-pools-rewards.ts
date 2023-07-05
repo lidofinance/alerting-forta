@@ -44,7 +44,7 @@ const log = (text: string) => console.log(`[${name}] ${text}`);
 const ldoToken = new ethers.Contract(
   LDO_TOKEN_ADDRESS,
   LDO_TOKEN_ABI,
-  ethersProvider
+  ethersProvider,
 );
 
 //! Don't report if time passed since report moment is greater than REPORT_WINDOW
@@ -55,7 +55,7 @@ let g_pools = {} as any;
 
 function arePeriodsSorted(periods: any) {
   return periods.every(
-    (v: any, i: number, arr: any) => !i || arr[i - 1].period <= v.period
+    (v: any, i: number, arr: any) => !i || arr[i - 1].period <= v.period,
   );
 }
 
@@ -79,12 +79,12 @@ async function readPeriodFinish(poolName: string, block: number) {
 }
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   assert(
     arePeriodsSorted(POOL_REWARDS_ALERTS_PERIODS_PARAMS),
-    "Alert periods parameters must be sorted by period ascending"
+    "Alert periods parameters must be sorted by period ascending",
   );
 
   let metadata: { [key: string]: string } = {};
@@ -95,7 +95,7 @@ export async function initialize(
       manager: new ethers.Contract(
         poolParams.managerAddress,
         rewardContractAbis[poolName].manager,
-        ethersProvider
+        ethersProvider,
       ),
       rewards: undefined,
       periodFinish: 0,
@@ -107,7 +107,7 @@ export async function initialize(
       g_pools[poolName]["rewards"] = new ethers.Contract(
         poolParams.rewardsAddress,
         rewardContractAbis[poolName].rewards,
-        ethersProvider
+        ethersProvider,
       );
     }
 
@@ -116,11 +116,11 @@ export async function initialize(
       g_pools[poolName]["periodFinish"] = periodFinish;
       log(
         `${poolName} reward expiration date is initialized to ${periodFinish}  (${formatTimestamp(
-          periodFinish
-        )})`
+          periodFinish,
+        )})`,
       );
       metadata[poolName] = `periodFinish: ${periodFinish}  (${formatTimestamp(
-        periodFinish
+        periodFinish,
       )})`;
     }
   }
@@ -131,7 +131,7 @@ export async function initialize(
 function handlePeriodFinishChange(
   poolName: string,
   newPeriodFinish: number,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   log(`Rewards prolonged`);
   g_pools[poolName].periodFinish = newPeriodFinish;
@@ -141,24 +141,24 @@ function handlePeriodFinishChange(
     Finding.fromObject({
       name: `ℹ️ ${poolName} rewards prolonged`,
       description: `${poolName} rewards successfully prolonged till ${formatTimestamp(
-        g_pools[poolName].periodFinish
+        g_pools[poolName].periodFinish,
       )}`,
       alertId: `LDO-${poolName.toUpperCase()}-REWARDS-PROLONGED`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-    })
+    }),
   );
 }
 
 async function handleRewardExpire(
   poolName: string,
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   let poolInfo = g_pools[poolName];
   const periodFinishUpdated = await readPeriodFinish(
     poolName,
-    blockEvent.blockNumber
+    blockEvent.blockNumber,
   );
   if (!periodFinishUpdated) return;
 
@@ -170,7 +170,7 @@ async function handleRewardExpire(
         alertId: `LDO-${poolName.toUpperCase()}-REWARDS-STILL-NOT-PROLONGED`,
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
-      })
+      }),
     );
     poolInfo.lastNotification = now;
   };
@@ -185,7 +185,7 @@ async function handleRewardExpire(
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRED-NO-LDO`,
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
-        })
+        }),
       );
     }
     poolInfo.periodExpired = true;
@@ -207,13 +207,13 @@ async function handleRewardExpire(
       !thisPeriodWasAlreadyReported
     ) {
       const poolManagerBalance = await ldoToken.balanceOf(
-        poolInfo.managerAddress
+        poolInfo.managerAddress,
       );
 
       if (minManagerLdoBalance !== null) {
         const minLdo = ethers.utils.parseUnits(
           minManagerLdoBalance,
-          LDO_NUM_DECIMALS
+          LDO_NUM_DECIMALS,
         );
         if (poolManagerBalance.gte(minLdo)) {
           return;
@@ -228,7 +228,7 @@ async function handleRewardExpire(
           alertId: `LDO-${poolName.toUpperCase()}-REWARDS-EXPIRATION`,
           severity: severity,
           type: FindingType.Info,
-        })
+        }),
       );
     }
   };
@@ -264,8 +264,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   await Promise.all(
     Object.keys(g_pools).map(async (key) =>
-      handleRewardExpire(key, blockEvent, findings)
-    )
+      handleRewardExpire(key, blockEvent, findings),
+    ),
   );
 
   return findings;

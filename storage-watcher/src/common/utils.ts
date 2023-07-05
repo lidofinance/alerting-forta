@@ -7,7 +7,7 @@ import { RUN_TIER, StorageSlot } from "./constants";
 export async function getStorageValue(
   address: string,
   slot: StorageSlot,
-  block?: number
+  block?: number,
 ) {
   const blockId = block ? block : "latest";
   const slotAddress = slot.address
@@ -16,7 +16,7 @@ export async function getStorageValue(
 
   if (slot.isArray) {
     const len = BigNumber(
-      await ethersProvider.getStorageAt(address, slotAddress, blockId)
+      await ethersProvider.getStorageAt(address, slotAddress, blockId),
     ).toNumber();
 
     const arrayStart =
@@ -29,8 +29,8 @@ export async function getStorageValue(
         await ethersProvider.getStorageAt(
           address,
           "0x" + BigNumber(keccak256(arrayStart)).plus(i).toString(16),
-          blockId
-        )
+          blockId,
+        ),
       );
     }
 
@@ -56,7 +56,7 @@ export enum RedefineMode {
 export function requireWithTier<T>(
   module: NodeModule,
   path: string,
-  mode: RedefineMode = RedefineMode.Strict
+  mode: RedefineMode = RedefineMode.Strict,
 ): T {
   const defaultContent = require(`${module.path}/${path}`);
   if (!RUN_TIER) return defaultContent;
@@ -79,7 +79,7 @@ export function requireWithTier<T>(
     } else {
       throw new Error(
         `Failed to import module: '${module.path}/${path}.${RUN_TIER}' doesn't contain all keys or unmatched types
-        with '${module.path}/${path}'`
+        with '${module.path}/${path}'`,
       );
     }
   }
@@ -95,7 +95,7 @@ export function requireWithTier<T>(
       return { ...defaultContent, ...tieredContent };
     } else {
       throw new Error(
-        `Failed to import module: '${path}.${RUN_TIER}' unmatched types with '${path}'`
+        `Failed to import module: '${path}.${RUN_TIER}' unmatched types with '${path}'`,
       );
     }
   }

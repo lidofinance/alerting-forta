@@ -24,10 +24,10 @@ const SI_SYMBOL = ["", "k", "M", "G", "T", "P", "E"];
 export function handleComplexTransfers(
   transfers: TransferEventInfo[],
   transferPattern: ComplexTransferPattern,
-  txEvent: TransactionEvent
+  txEvent: TransactionEvent,
 ): [TransferEventInfo[], TransferText[], TransferEventMetadata[]] {
   const mainTransfers = transfers.filter((transfer) =>
-    matchPattern(transferPattern.transferPatterns.mainTransfer, transfer)
+    matchPattern(transferPattern.transferPatterns.mainTransfer, transfer),
   );
   const mainTransfersTexts: TransferText[] = [];
   const mainTransfersMetadata: TransferEventMetadata[] = [];
@@ -38,7 +38,7 @@ export function handleComplexTransfers(
       to: mainTransfer.to,
     };
     let additionalPatterns = Array.from(
-      transferPattern.transferPatterns.additionalTransfers
+      transferPattern.transferPatterns.additionalTransfers,
     );
     if (transferPattern.transferPatterns.mainTransfer.from) {
       additionalPatterns = additionalPatterns.map((pattern) => {
@@ -79,7 +79,7 @@ export function handleComplexTransfers(
           logIndex: mainTransfer.logIndex,
         });
         mainTransfersMetadata.push(
-          prepareTransferMetadata(mainTransfer, txEvent, mainEventText)
+          prepareTransferMetadata(mainTransfer, txEvent, mainEventText),
         );
       }
       transfers = Array.from(transfersNew);
@@ -91,7 +91,7 @@ export function handleComplexTransfers(
 
 export function matchPattern(
   transferPattern: TransferPattern,
-  transferInfo: TransferEventInfo
+  transferInfo: TransferEventInfo,
 ): boolean {
   if (
     transferPattern.contract &&
@@ -117,7 +117,7 @@ export function matchPattern(
 export function prepareTransferMetadata(
   transfer: TransferEventInfo,
   txEvent: TransactionEvent,
-  alertText: string
+  alertText: string,
 ): TransferEventMetadata {
   return {
     timestamp: txEvent.timestamp.toFixed(),
@@ -138,21 +138,21 @@ export function etherscanLink(txHash: string): string {
 
 export function handleCurveExchange(
   transferInfos: TransferEventInfo[],
-  txEvent: TransactionEvent
+  txEvent: TransactionEvent,
 ): [TransferEventInfo[], TransferText[], TransferEventMetadata[]] {
   const exchangeEvents = txEvent.filterLog(
     CURVE_EXCHANGE_EVENT,
-    CURVE_POOL_ADDRESS
+    CURVE_POOL_ADDRESS,
   );
   const exTransfersTexts: TransferText[] = [];
   const exTransfersMetadata: TransferEventMetadata[] = [];
 
   exchangeEvents.forEach((event) => {
     const sold = new BigNumber(String(event.args.tokens_sold)).div(
-      ETH_DECIMALS
+      ETH_DECIMALS,
     );
     const bought = new BigNumber(String(event.args.tokens_bought)).div(
-      ETH_DECIMALS
+      ETH_DECIMALS,
     );
     const buyer = event.args.buyer;
     let text: string;
@@ -162,7 +162,7 @@ export function handleCurveExchange(
       pattern.to = buyer.toLowerCase();
       text =
         `**${sold.toFixed(2)} ETH** traded for **${bought.toFixed(
-          2
+          2,
         )} stETH** in Curve LP.\n` +
         ` Rate 1 ETH = ${bought.div(sold).toFixed(4)} stETH.`;
     } else {
@@ -170,7 +170,7 @@ export function handleCurveExchange(
       pattern.from = buyer.toLowerCase();
       text =
         `**${sold.toFixed(2)} stETH** traded for **${bought.toFixed(
-          2
+          2,
         )} ETH** in Curve LP.\n` +
         ` Rate 1 stETH = ${bought.div(sold).toFixed(4)} ETH.\n`;
     }
@@ -188,7 +188,7 @@ export function handleCurveExchange(
       });
       if (exTransferInfos.length > 1) {
         throw Error(
-          `More than 1 transfer event matched to a single exchange event! tx: ${txEvent.hash}`
+          `More than 1 transfer event matched to a single exchange event! tx: ${txEvent.hash}`,
         );
       }
       const exTransferInfo = exTransferInfos[0];
@@ -198,7 +198,7 @@ export function handleCurveExchange(
         logIndex: exTransferInfo.logIndex,
       });
       exTransfersMetadata.push(
-        prepareTransferMetadata(exTransferInfo, txEvent, text)
+        prepareTransferMetadata(exTransferInfo, txEvent, text),
       );
     }
   });

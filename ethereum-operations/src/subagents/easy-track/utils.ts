@@ -1,6 +1,6 @@
 export const getMotionType = (
   types: Map<string, string>,
-  evmScriptFactory: string
+  evmScriptFactory: string,
 ) => {
   return types.get(evmScriptFactory.toLowerCase()) || "New ";
 };

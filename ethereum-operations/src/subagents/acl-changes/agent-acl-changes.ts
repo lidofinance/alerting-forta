@@ -49,13 +49,13 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export const roleMembersReports = new Map<string, number>();
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -83,13 +83,13 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleSetPermission(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (ARAGON_ACL_ADDRESS in txEvent.addresses) {
     let permissions = new Map<string, IPermission>();
     const setEvents = txEvent.filterLog(
       SET_PERMISSION_EVENT,
-      ARAGON_ACL_ADDRESS
+      ARAGON_ACL_ADDRESS,
     );
     setEvents.sort(byLogIndexAsc);
     setEvents.forEach((event) => {
@@ -106,7 +106,7 @@ async function handleSetPermission(
 
     const setParamsEvents = txEvent.filterLog(
       SET_PERMISSION_PARAMS_EVENT,
-      ARAGON_ACL_ADDRESS
+      ARAGON_ACL_ADDRESS,
     );
     setParamsEvents.forEach((event) => {
       const permissionKey = eventToPermissionKey(event);
@@ -114,7 +114,7 @@ async function handleSetPermission(
       if (permissionObjOld) {
         permissionObjOld.state = permissionObjOld.state.replace(
           "granted",
-          "granted with params"
+          "granted with params",
         );
         permissions.set(permissionKey, permissionObjOld);
       }
@@ -122,14 +122,14 @@ async function handleSetPermission(
     await Promise.all(
       Array.from(permissions.values()).map(async (permission: IPermission) => {
         await handlePermissionChange(permission, findings);
-      })
+      }),
     );
   }
 }
 
 async function handlePermissionChange(
   permission: IPermission,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const shortState = permission.state.replace(" from", "").replace(" to", "");
   const role = LIDO_ROLES.get(permission.role) || "unknown";
@@ -161,7 +161,7 @@ async function handlePermissionChange(
       alertId: "ARAGON-ACL-PERMISSION-CHANGED",
       severity: severity,
       type: FindingType.Info,
-    })
+    }),
   );
 }
 
@@ -180,12 +180,12 @@ function eventToPermissionObj(event: any, state: string): IPermission {
 
 function handleChangePermissionManager(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (ARAGON_ACL_ADDRESS in txEvent.addresses) {
     const managerEvents = txEvent.filterLog(
       CHANGE_PERMISSION_MANAGER_EVENT,
-      ARAGON_ACL_ADDRESS
+      ARAGON_ACL_ADDRESS,
     );
     managerEvents.forEach((event) => {
       const role = LIDO_ROLES.get(event.args.role) || "unknown";
@@ -198,14 +198,14 @@ function handleChangePermissionManager(
           description: `Permission manager for the role ${
             event.args.role
           } (${role}) on the app ${etherscanAddress(
-            event.args.app
+            event.args.app,
           )} (${app}) was set to ${etherscanAddress(
-            event.args.manager
+            event.args.manager,
           )} (${manager})`,
           alertId: "ARAGON-ACL-PERMISSION-MANAGER-CHANGED",
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
-        })
+        }),
       );
     });
   }
@@ -214,7 +214,7 @@ function handleChangePermissionManager(
 async function getOwner(
   address: string,
   method: string,
-  currentBlock: number
+  currentBlock: number,
 ): Promise<any> {
   const abi = [`function ${method}() view returns (address)`];
   const contract = new ethers.Contract(address, abi, ethersProvider);
@@ -230,7 +230,7 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
       if (!data) return;
 
       const curOwner = String(
-        await getOwner(address, data.ownershipMethod, blockEvent.blockNumber)
+        await getOwner(address, data.ownershipMethod, blockEvent.blockNumber),
       );
       if (WHITELISTED_OWNERS.includes(curOwner.toLowerCase())) return;
 
@@ -251,7 +251,7 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
             ? "🚨 Contract owner set to address not in whitelist"
             : "🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨",
           description: `${data.name} contract (${etherscanAddress(
-            address
+            address,
           )}) owner is set to ${
             curOwnerIsContract ? "contract" : "EOA"
           } address ${etherscanAddress(curOwner)}`,
@@ -265,11 +265,11 @@ async function handleOwnerChange(blockEvent: BlockEvent, findings: Finding[]) {
             name: data.name,
             owner: curOwner,
           },
-        })
+        }),
       );
 
       findingsTimestamps.set(key, now);
-    }
+    },
   );
 
   await Promise.all(promises);
@@ -294,7 +294,7 @@ async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
           const curMembers = await getRoleMembers(
             address,
             role.hash,
-            blockEvent.blockNumber
+            blockEvent.blockNumber,
           );
           if (_.isEqual(curMembers, membersInLower)) return;
 
@@ -309,13 +309,13 @@ async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
               alertId: "ACL-ROLE-MEMBERS-CHANGED",
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
-            })
+            }),
           );
 
           roleMembersReports.set(address, now);
-        })
+        }),
       );
-    }
+    },
   );
 
   await Promise.all(promises);
@@ -324,12 +324,12 @@ async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
 export async function getRoleMembers(
   address: string,
   hash: string,
-  currentBlock: BlockTag
+  currentBlock: BlockTag,
 ): Promise<Array<string>> {
   const contract = new ethers.Contract(
     address,
     ACLEnumerableABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const count = await contract.functions.getRoleMemberCount(hash, {

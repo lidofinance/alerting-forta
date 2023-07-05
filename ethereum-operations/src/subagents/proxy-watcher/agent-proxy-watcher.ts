@@ -20,7 +20,7 @@ import type * as Constants from "./constants";
 const { LIDO_PROXY_CONTRACTS_DATA } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 let prevProxyImplementations: Map<string, string> = new Map<string, string>();
@@ -28,7 +28,7 @@ let initFindings: Finding[] = [];
 let proxiesNoCode: string[] = [];
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
@@ -41,12 +41,12 @@ export async function initialize(
           Finding.fromObject({
             name: "🚨 Proxy contract not found",
             description: `Proxy contract ${data?.name} (${etherscanAddress(
-              address
+              address,
             )}) not found`,
             alertId: "PROXY-NOT-FOUND",
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
-          })
+          }),
         );
 
         proxiesNoCode.push(address);
@@ -56,10 +56,10 @@ export async function initialize(
       if (data) {
         prevProxyImplementations.set(
           address,
-          String(await getProxyImplementation(address, data, currentBlock))
+          String(await getProxyImplementation(address, data, currentBlock)),
         );
       }
-    })
+    }),
   );
 
   return {};
@@ -79,7 +79,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleProxyImplementations(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   await Promise.all(
     Array.from(LIDO_PROXY_CONTRACTS_DATA.keys()).map(async (address: any) => {
@@ -94,12 +94,12 @@ async function handleProxyImplementations(
           Finding.fromObject({
             name: `🚨 Proxy contract selfdestructed`,
             description: `Proxy contract ${data?.name} (${etherscanAddress(
-              address
+              address,
             )}) selfdestructed`,
             alertId: `PROXY-SELFDESTRUCTED`,
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
-          })
+          }),
         );
 
         proxiesNoCode.push(address);
@@ -109,38 +109,38 @@ async function handleProxyImplementations(
       if (data) {
         const prevImpl = prevProxyImplementations.get(address);
         const currentImpl = String(
-          await getProxyImplementation(address, data, blockEvent.blockNumber)
+          await getProxyImplementation(address, data, blockEvent.blockNumber),
         );
         if (prevImpl != currentImpl) {
           findings.push(
             Finding.fromObject({
               name: `🚨 Proxy implementation changed`,
               description: `Implementation of ${data.name} (${etherscanAddress(
-                address
+                address,
               )}) changed from ${
                 prevImpl ? etherscanAddress(prevImpl) : prevImpl
               } to ${etherscanAddress(currentImpl)}`,
               alertId: `PROXY-IMPL-CHANGED`,
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
-            })
+            }),
           );
         }
         prevProxyImplementations.set(address, currentImpl);
       }
-    })
+    }),
   );
 }
 
 async function getProxyImplementation(
   address: string,
   data: IProxyContractData,
-  currentBlock: number
+  currentBlock: number,
 ): Promise<string> {
   const proxyContract = new ethers.Contract(
     address,
     data.shortABI,
-    ethersProvider
+    ethersProvider,
   );
   if ("implementation" in proxyContract.functions) {
     return await proxyContract.functions.implementation({
@@ -153,13 +153,13 @@ async function getProxyImplementation(
     });
   }
   throw new Error(
-    `Proxy contract ${address} does not have "implementation" or "proxy__getImplementation" functions`
+    `Proxy contract ${address} does not have "implementation" or "proxy__getImplementation" functions`,
   );
 }
 
 async function isDeployed(
   address: string,
-  blockNumber?: number
+  blockNumber?: number,
 ): Promise<boolean> {
   const code = await ethersProvider.getCode(address, blockNumber);
   return code !== "0x";

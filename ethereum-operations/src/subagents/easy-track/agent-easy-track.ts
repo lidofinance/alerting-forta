@@ -30,11 +30,11 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -50,7 +50,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 async function handleEasyTrackMotionCreated(
   txEvent: TransactionEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (EASY_TRACK_ADDRESS in txEvent.addresses) {
     const events = txEvent.filterLog(MOTION_CREATED_EVENT, EASY_TRACK_ADDRESS);
@@ -61,7 +61,7 @@ async function handleEasyTrackMotionCreated(
         let description =
           `${getMotionType(
             EASY_TRACK_TYPES_BY_FACTORIES,
-            args._evmScriptFactory
+            args._evmScriptFactory,
           )} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`;
         if (
@@ -70,20 +70,20 @@ async function handleEasyTrackMotionCreated(
           const stakingLimitFactory = new ethers.Contract(
             INCREASE_STAKING_LIMIT_ADDRESS,
             INCREASE_STAKING_LIMIT_ABI,
-            ethersProvider
+            ethersProvider,
           );
           const nor = new ethers.Contract(
             NODE_OPERATORS_REGISTRY_ADDRESS,
             NODE_OPERATORS_REGISTRY_ABI,
-            ethersProvider
+            ethersProvider,
           );
           const { _nodeOperatorId, _stakingLimit } =
             await stakingLimitFactory.decodeEVMScriptCallData(
-              args._evmScriptCallData
+              args._evmScriptCallData,
             );
           const { name, totalSigningKeys } = await nor.getNodeOperator(
             _nodeOperatorId,
-            1
+            1,
           );
           description += `\nOperator ${name} wants to increase staking limit to **${_stakingLimit.toNumber()}**.`;
           if (totalSigningKeys.toNumber() < _stakingLimit.toNumber()) {
@@ -104,9 +104,9 @@ async function handleEasyTrackMotionCreated(
             severity: FindingSeverity.Info,
             type: FindingType.Info,
             metadata: { args: String(args) },
-          })
+          }),
         );
-      })
+      }),
     );
   }
 }

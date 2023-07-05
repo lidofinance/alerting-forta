@@ -14,7 +14,7 @@ const { ORACLE_DAEMON_CONFIG_EVENTS_OF_NOTICE } = requireWithTier<
 >(module, `./constants`, RedefineMode.Merge);
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -26,7 +26,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   handleEventsOfNotice(
     txEvent,
     findings,
-    ORACLE_DAEMON_CONFIG_EVENTS_OF_NOTICE
+    ORACLE_DAEMON_CONFIG_EVENTS_OF_NOTICE,
   );
 
   return findings;

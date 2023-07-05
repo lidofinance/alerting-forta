@@ -61,7 +61,7 @@ const {
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
-  RedefineMode.Merge
+  RedefineMode.Merge,
 );
 
 let lastReportedKeysShortage = 0;
@@ -76,16 +76,16 @@ let lastReportedMevCountHigh = 0;
 let lastBufferedEth = new BigNumber(0);
 
 export async function initialize(
-  currentBlock: number
+  currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   let history = await etherscanProvider.getHistory(
     DEPOSIT_SECURITY_ADDRESS,
     currentBlock - Math.floor((60 * 60 * 72) / 13),
-    currentBlock - 1
+    currentBlock - 1,
   );
   const depositorTxTimestamps = history.map((x) =>
-    x.timestamp ? x.timestamp : 0
+    x.timestamp ? x.timestamp : 0,
   );
   if (depositorTxTimestamps.length > 0) {
     depositorTxTimestamps.sort((a, b) => b - a);
@@ -93,10 +93,10 @@ export async function initialize(
   }
   console.log(`[${name}] lastDepositorTxTime=${lastDepositorTxTime}`);
   lastBufferedEth = new BigNumber(
-    String(await ethersProvider.getBalance(LIDO_STETH_ADDRESS, currentBlock))
+    String(await ethersProvider.getBalance(LIDO_STETH_ADDRESS, currentBlock)),
   );
   console.log(
-    `[${name}] lastBufferedEth=${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)}`
+    `[${name}] lastBufferedEth=${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)}`,
   );
   return {};
 }
@@ -118,14 +118,14 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
 async function handleNodeOperatorsKeys(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   if (lastReportedKeysShortage + REPORT_WINDOW < now) {
     const nodeOperatorsRegistry = new ethers.Contract(
       NODE_OPERATORS_REGISTRY_ADDRESS,
       NODE_OPERATORS_REGISTRY_ABI,
-      ethersProvider
+      ethersProvider,
     );
     const nodeOperatorsCount =
       await nodeOperatorsRegistry.functions.getActiveNodeOperatorsCount({
@@ -139,7 +139,7 @@ async function handleNodeOperatorsKeys(
           .getUnusedSigningKeyCount(i, {
             blockTag: blockEvent.block.number,
           })
-          .then((value) => (availableKeysCount += parseInt(String(value))))
+          .then((value) => (availableKeysCount += parseInt(String(value)))),
       );
     }
     await Promise.all(availableKeys);
@@ -151,7 +151,7 @@ async function handleNodeOperatorsKeys(
           alertId: "LOW-OPERATORS-AVAILABLE-KEYS-NUM",
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
-        })
+        }),
       );
       lastReportedKeysShortage = now;
     }
@@ -165,14 +165,14 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const bufferedEthRaw = new BigNumber(
     String(
       await lido.functions.getBufferedEther({
         blockTag: blockEvent.block.number,
-      })
-    )
+      }),
+    ),
   );
   const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber();
   let depositableEtherRaw = bufferedEthRaw;
@@ -182,8 +182,8 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
       String(
         await lido.functions.getDepositableEther({
           blockTag: blockEvent.block.number,
-        })
-      )
+        }),
+      ),
     );
     depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber();
   } catch (e) {}
@@ -192,11 +192,11 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     if (bufferedEthRaw.lt(lastBufferedEth)) {
       const unbufferedEvents = await getUnbufferedEvents(
         blockNumber,
-        blockNumber
+        blockNumber,
       );
       const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
         blockNumber,
-        blockNumber
+        blockNumber,
       );
       if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
         findings.push(
@@ -206,12 +206,12 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
               `Buffered ETH amount decreased from ` +
               `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
               `to ${depositableEther.toFixed(
-                2
+                2,
               )} without Unbuffered or WithdrawalsFinalized events`,
             alertId: "BUFFERED-ETH-DRAIN",
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
-          })
+          }),
         );
       }
     }
@@ -238,12 +238,12 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
               `There are ${depositableEther.toFixed(2)} ` +
               `depositable ETH in DAO for more than ` +
               `${Math.floor(
-                MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME / (60 * 60)
+                MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME / (60 * 60),
               )} hour(s)`,
             alertId: "HUGE-DEPOSITABLE-ETH",
             severity: FindingSeverity.High,
             type: FindingType.Degraded,
-          })
+          }),
         );
         lastReportedDepositableEth = now;
       } else if (
@@ -262,7 +262,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
             alertId: "HIGH-DEPOSITABLE-ETH",
             severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
-          })
+          }),
         );
         lastReportedDepositableEth = now;
       }
@@ -273,7 +273,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
 
 async function handleDepositExecutorBalance(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const blockNumber = blockEvent.block.number;
   if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
@@ -286,9 +286,9 @@ async function handleDepositExecutorBalance(
       String(
         await ethersProvider.getBalance(
           DEPOSIT_EXECUTOR_ADDRESS,
-          blockEvent.blockNumber
-        )
-      )
+          blockEvent.blockNumber,
+        ),
+      ),
     );
     const executorBalance = executorBalanceRaw.div(ETH_DECIMALS).toNumber();
     if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
@@ -301,7 +301,7 @@ async function handleDepositExecutorBalance(
           alertId: "LOW-DEPOSIT-EXECUTOR-BALANCE",
           severity: FindingSeverity.High,
           type: FindingType.Suspicious,
-        })
+        }),
       );
       lastReportedExecutorBalance = now;
     }
@@ -318,16 +318,16 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const stakingLimitInfo = await lido.functions.getStakeLimitFullInfo({
     blockTag: blockEvent.block.number,
   });
   const currentStakingLimit = new BigNumber(
-    String(stakingLimitInfo.currentStakeLimit)
+    String(stakingLimitInfo.currentStakeLimit),
   ).div(ETH_DECIMALS);
   const maxStakingLimit = new BigNumber(
-    String(stakingLimitInfo.maxStakeLimit)
+    String(stakingLimitInfo.maxStakeLimit),
   ).div(ETH_DECIMALS);
   if (
     lastReportedStakingLimit10 + REPORT_WINDOW_STAKING_LIMIT_10 < now &&
@@ -343,7 +343,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
         alertId: "LOW-STAKING-LIMIT",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
-      })
+      }),
     );
     lastReportedStakingLimit10 = now;
   } else if (
@@ -360,7 +360,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
         alertId: "LOW-STAKING-LIMIT",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
-      })
+      }),
     );
     lastReportedStakingLimit30 = now;
   }
@@ -368,7 +368,7 @@ async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
 
 async function handleMevRelayCount(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   const blockNumber = blockEvent.block.number;
   if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
@@ -379,7 +379,7 @@ async function handleMevRelayCount(
   const mevAllowList = new ethers.Contract(
     MEV_ALLOWED_LIST_ADDRESS,
     MEV_ALLOW_LIST_ABI,
-    ethersProvider
+    ethersProvider,
   );
   const mevRelays = await mevAllowList.functions.get_relays({
     blockTag: blockEvent.block.number,
@@ -396,7 +396,7 @@ async function handleMevRelayCount(
         alertId: "MEV-LOW-RELAY-COUNT",
         severity: FindingSeverity.High,
         type: FindingType.Info,
-      })
+      }),
     );
     lastReportedMevCountInfo = now;
     lastReportedMevCountHigh = now;
@@ -411,7 +411,7 @@ async function handleMevRelayCount(
         alertId: "MEV-LOW-RELAY-COUNT",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
-      })
+      }),
     );
     lastReportedMevCountInfo = now;
   }
@@ -419,22 +419,22 @@ async function handleMevRelayCount(
 
 async function handleEnsNamesExpiration(
   blockEvent: BlockEvent,
-  findings: Finding[]
+  findings: Finding[],
 ) {
   if (blockEvent.blockNumber % ENS_CHECK_INTERVAL == 0) {
     const ens = new ethers.Contract(
       ENS_BASE_REGISTRAR_ADDRESS,
       ENS_BASE_REGISTRAR_ABI,
-      ethersProvider
+      ethersProvider,
     );
     await Promise.all(
       LIDO_ENS_NAMES.map(async (name) => {
         const labelHash = ethers.utils.keccak256(
-          ethers.utils.toUtf8Bytes(name)
+          ethers.utils.toUtf8Bytes(name),
         );
         const tokenId = ethers.BigNumber.from(labelHash).toString();
         const expires = new BigNumber(
-          String(await ens.functions.nameExpires(tokenId))
+          String(await ens.functions.nameExpires(tokenId)),
         ).toNumber();
         const leftSec = expires - blockEvent.block.timestamp;
         if (leftSec < ONE_MONTH) {
@@ -450,10 +450,10 @@ async function handleEnsNamesExpiration(
               alertId: "ENS-RENT-EXPIRES",
               severity: severity,
               type: FindingType.Info,
-            })
+            }),
           );
         }
-      })
+      }),
     );
   }
 }
@@ -483,7 +483,7 @@ async function getUnbufferedEvents(blockFrom: number, blockTo: number) {
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const unbufferedFilter = lido.filters.Unbuffered();
@@ -495,7 +495,7 @@ async function getWdRequestFinalizedEvents(blockFrom: number, blockTo: number) {
   const wdQueue = new ethers.Contract(
     WITHDRAWAL_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
-    ethersProvider
+    ethersProvider,
   );
 
   const wdReqFinalized = wdQueue.filters.WithdrawalsFinalized();
