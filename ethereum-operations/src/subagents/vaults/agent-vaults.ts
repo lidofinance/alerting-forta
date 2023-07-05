@@ -103,8 +103,6 @@ async function handleWithdrawalVaultBalance(
     const withdrawalVaultBalanceDiff =
       withdrawalVaultBalance.minus(prevWithdrawalVaultBalance);
 
-    console.log(withdrawalVaultBalanceDiff)
-
     if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
       findings.push(
         Finding.fromObject({
