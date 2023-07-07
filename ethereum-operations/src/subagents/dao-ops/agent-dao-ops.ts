@@ -205,9 +205,8 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
             description:
               `Buffered ETH amount decreased from ` +
               `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
-              `to ${depositableEther.toFixed(
-                2,
-              )} without Unbuffered or WithdrawalsFinalized events`,
+              `to ${bufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
+              `without Unbuffered or WithdrawalsFinalized events`,
             alertId: "BUFFERED-ETH-DRAIN",
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
