@@ -188,32 +188,33 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber();
   } catch (e) {}
 
-  if (blockNumber % BLOCK_CHECK_INTERVAL == 0) {
-    if (bufferedEthRaw.lt(lastBufferedEth)) {
-      const unbufferedEvents = await getUnbufferedEvents(
-        blockNumber,
-        blockNumber,
+  if (bufferedEthRaw.lt(lastBufferedEth)) {
+    const unbufferedEvents = await getUnbufferedEvents(
+      blockNumber,
+      blockNumber,
+    );
+    const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
+      blockNumber,
+      blockNumber,
+    );
+    if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
+      findings.push(
+        Finding.fromObject({
+          name: "🚨🚨🚨 Buffered ETH drain",
+          description:
+            `Buffered ETH amount decreased from ` +
+            `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
+            `to ${bufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
+            `without Unbuffered or WithdrawalsFinalized events`,
+          alertId: "BUFFERED-ETH-DRAIN",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        }),
       );
-      const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
-        blockNumber,
-        blockNumber,
-      );
-      if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
-        findings.push(
-          Finding.fromObject({
-            name: "🚨🚨🚨 Buffered ETH drain",
-            description:
-              `Buffered ETH amount decreased from ` +
-              `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
-              `to ${bufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
-              `without Unbuffered or WithdrawalsFinalized events`,
-            alertId: "BUFFERED-ETH-DRAIN",
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
-        );
-      }
     }
+  }
+
+  if (blockNumber % BLOCK_CHECK_INTERVAL == 0) {
     // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
     if (depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL) {
       criticalDepositableAmountFrom =
