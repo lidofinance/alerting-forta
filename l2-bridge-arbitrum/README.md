@@ -29,7 +29,7 @@ Alert on proxy state changes
 **Alerts:**
 
 - PROXY-UPGRADED - One of the proxies on the Arbitrum side was upgraded
-- PROXY-ADMIN-CHANGED - Admin for of the proxies on the Arbitrum side was changed
+- PROXY-ADMIN-CHANGED - Admin of the proxies on the Arbitrum side was changed
 - Alerts on the admin events in L2-bridge (Arbitrum side)
 
 ### Withdrawals
