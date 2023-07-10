@@ -21,7 +21,7 @@ Alert on proxy state changes
 **Alerts:**
 
 - PROXY-UPGRADED - One of the proxies on the ethereum side was upgraded
-- PROXY-ADMIN-CHANGED - Admin for of the proxies on the ethereum side was changed
+- PROXY-ADMIN-CHANGED - Admin of the proxies on the ethereum side was changed
 - Alerts on the admin events in L2-bridge (ethereum side)
 
 ## Development
