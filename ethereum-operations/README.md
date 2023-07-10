@@ -50,7 +50,7 @@ ETH2 Oracles monitoring
 
 **Alerts:**
 
-- SLOPPY-LIDO-ORACLE - Detect oracles than has not participated in quorum for a long time
+- SLOPPY-LIDO-ORACLE - Detect oracles that has not participated in quorum for a long time
 - LIDO-ORACLE-OVERDUE - Delay in Oracles report
 - LIDO-ORACLE-LOW-BALANCE - Low balance of the Lido Oracle
 - LIDO-ORACLE-REPORT - Details about the latest oracle report
