@@ -8,6 +8,7 @@ import {
   TransactionEvent,
 } from "forta-agent";
 
+import { utils } from "ethers";
 import { ethersProvider } from "../../ethers";
 
 import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
@@ -16,6 +17,7 @@ import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi/OracleReportSanityChecke
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 
 import {
+  eventSig,
   formatDelay,
   handleEventsOfNotice,
   RedefineMode,
@@ -39,12 +41,14 @@ let reportSubmitOverdueCount = 0;
 let lastMaxValidatorExitRequestsPerReport = 0;
 
 let noNames = new Map<number, string>();
+let latestExitCounts = new Array<number[]>();
 
 export const name = "ExitBusOracle";
 
 const {
   CL_GENESIS_TIMESTAMP,
   TRIGGER_PERIOD,
+  MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS,
   REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER,
   EXITBUS_ORACLE_ADDRESS,
   LIDO_STETH_ADDRESS,
@@ -76,10 +80,11 @@ export async function initialize(
   const block48HoursAgo =
     currentBlock - Math.ceil((48 * ONE_HOUR) / SECONDS_PER_SLOT);
 
-  const reportSubmits = await getReportSubmits(
-    block48HoursAgo,
-    currentBlock - 1,
-  );
+  const [reportSubmits, reportProcessingStarted] = await Promise.all([
+    getReportSubmits(block48HoursAgo, currentBlock - 1),
+    getReportProcessingStarted(block48HoursAgo, currentBlock - 1),
+  ]);
+
   let prevReportSubmitTimestamp = 0;
   if (reportSubmits.length > 1) {
     prevReportSubmitTimestamp = (
@@ -90,6 +95,32 @@ export async function initialize(
     lastReportSubmitTimestamp = (
       await reportSubmits[reportSubmits.length - 1].getBlock()
     ).timestamp;
+  }
+
+  if (
+    reportProcessingStarted.length > MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS
+  ) {
+    let iface = new ethers.utils.Interface([
+      EXITBUS_ORACLE_VALIDATOR_EXIT_REQUEST_EVENT,
+    ]);
+    const topic = utils.id(
+      eventSig(EXITBUS_ORACLE_VALIDATOR_EXIT_REQUEST_EVENT),
+    );
+    for (const processingStarted of reportProcessingStarted.slice(
+      reportProcessingStarted.length - MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS,
+    )) {
+      const txReceipt = await processingStarted.getTransactionReceipt();
+      const exitEvents = txReceipt.logs.filter((log) =>
+        log.topics.includes(topic),
+      );
+      let timestamp = 0;
+      let exitCount = 0;
+      if (exitEvents.length > 0) {
+        timestamp = iface.parseLog(exitEvents[0]).args.timestamp;
+        exitCount = exitEvents.length;
+      }
+      latestExitCounts.push([Number(timestamp), exitCount]);
+    }
   }
 
   log(
@@ -127,6 +158,22 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
   );
 
   const oracleReportFilter = exitbusOracle.filters.ReportSubmitted();
+
+  return await exitbusOracle.queryFilter(
+    oracleReportFilter,
+    blockFrom,
+    blockTo,
+  );
+}
+
+async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
+  const exitbusOracle = new ethers.Contract(
+    EXITBUS_ORACLE_ADDRESS,
+    EXITBUS_ORACLE_ABI,
+    ethersProvider,
+  );
+
+  const oracleReportFilter = exitbusOracle.filters.ProcessingStarted();
 
   return await exitbusOracle.queryFilter(
     oracleReportFilter,
@@ -255,7 +302,20 @@ async function handleProcessingStarted(
     EXITBUS_ORACLE_VALIDATOR_EXIT_REQUEST_EVENT,
     EXITBUS_ORACLE_ADDRESS,
   );
-  const exitRequestsSize = MIN_DEPOSIT.times(exitRequests.length);
+  if (latestExitCounts.length < MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS)
+    return;
+  let prevExitsCount = 0;
+  latestExitCounts = latestExitCounts.slice(
+    latestExitCounts.length - MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS,
+  );
+  latestExitCounts.forEach((c) => {
+    if (c[0] != Number(exitRequests[0]?.args.timestamp ?? 0)) {
+      prevExitsCount += c[1];
+    }
+  });
+  const exitRequestsSize = MIN_DEPOSIT.times(
+    exitRequests.length + prevExitsCount,
+  );
   const withdrawalNFT = new ethers.Contract(
     WITHDRAWALS_QUEUE_ADDRESS,
     WITHDRAWAL_QUEUE_ABI,
@@ -304,10 +364,10 @@ async function handleProcessingStarted(
     if (exitRequestsSize.eq(0)) {
       findings.push(
         Finding.fromObject({
-          name: `🚨 ExitBus Oracle: no validators exits in the report, but withdrawal queue was ${diffRate.toFixed(
+          name: `🚨 ExitBus Oracle: no validators exits in the last ${MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS} reports, but withdrawal queue was ${diffRate.toFixed(
             2,
           )} times bigger than the buffer for requests finalization on reference slot`,
-          description: `Validators exits: ${exitRequestsSize
+          description: `Validators exits (last ${MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS} reports): ${exitRequestsSize
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nBuffered ethers: ${bufferedEth
             .div(ETH_DECIMALS)
@@ -331,10 +391,10 @@ async function handleProcessingStarted(
     } else {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ ExitBus Oracle: not enough validators exits in the report, withdrawal queue size was ${diffRate.toFixed(
+          name: `⚠️ ExitBus Oracle: not enough validators exits in the last ${MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS} reports, withdrawal queue size was ${diffRate.toFixed(
             2,
           )} times bigger than the buffer for requests finalization on reference slot`,
-          description: `Validators exits: ${exitRequestsSize
+          description: `Validators exits (last ${MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS} reports): ${exitRequestsSize
             .div(ETH_DECIMALS)
             .toFixed(3)} ETH\nBuffered ethers: ${bufferedEth
             .div(ETH_DECIMALS)
@@ -359,10 +419,10 @@ async function handleProcessingStarted(
   } else if (diffRate.gte(EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD)) {
     findings.push(
       Finding.fromObject({
-        name: `🤔️ ExitBus Oracle: not enough validators exits in the report, withdrawal queue size was ${diffRate.toFixed(
+        name: `🤔️ ExitBus Oracle: not enough validators exits in the last ${MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS} reports, withdrawal queue size was ${diffRate.toFixed(
           2,
         )} times bigger than the buffer for requests finalization on reference slot`,
-        description: `Validators exits: ${exitRequestsSize
+        description: `Validators exits (last ${MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS} reports): ${exitRequestsSize
           .div(ETH_DECIMALS)
           .toFixed(3)} ETH\nBuffered ethers: ${bufferedEth
           .div(ETH_DECIMALS)
@@ -455,6 +515,9 @@ function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
       }),
     );
   }
+
+  const exitTimestamp = Number(exitRequests[0]?.args.timestamp ?? 0);
+  latestExitCounts.push([exitTimestamp, exitRequests.length]);
 }
 
 // required for DI to retrieve handlers in the case of direct agent use

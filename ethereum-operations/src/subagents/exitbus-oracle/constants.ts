@@ -18,6 +18,8 @@ export const CL_GENESIS_TIMESTAMP = 1606824023;
 // trigger each 20 mins for lasting conditions
 export const TRIGGER_PERIOD = 60 * 20;
 
+export const MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS = 3;
+
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
