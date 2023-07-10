@@ -170,7 +170,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
   const bufferedEthRaw = new BigNumber(
     String(
       await lido.functions.getBufferedEther({
-        blockTag: blockEvent.block.number,
+        blockTag: blockNumber,
       }),
     ),
   );
@@ -181,38 +181,57 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
     depositableEtherRaw = new BigNumber(
       String(
         await lido.functions.getDepositableEther({
-          blockTag: blockEvent.block.number,
+          blockTag: blockNumber,
         }),
       ),
     );
     depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber();
   } catch (e) {}
 
-  // if (bufferedEthRaw.lt(lastBufferedEth)) {
-  //   const unbufferedEvents = await getUnbufferedEvents(
-  //     blockNumber,
-  //     blockNumber,
-  //   );
-  //   const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
-  //     blockNumber,
-  //     blockNumber,
-  //   );
-  //   if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
-  //     findings.push(
-  //       Finding.fromObject({
-  //         name: "🚨🚨🚨 Buffered ETH drain",
-  //         description:
-  //           `Buffered ETH amount decreased from ` +
-  //           `${lastBufferedEth.div(ETH_DECIMALS).toFixed(2)} ` +
-  //           `to ${bufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
-  //           `without Unbuffered or WithdrawalsFinalized events`,
-  //         alertId: "BUFFERED-ETH-DRAIN",
-  //         severity: FindingSeverity.Critical,
-  //         type: FindingType.Suspicious,
-  //       }),
-  //     );
-  //   }
-  // }
+  // We use shifted block number to ensure that nodes return correct values
+  const shiftedBlockNumber = blockNumber - 3;
+  const [shiftedBufferedEthRaw, prevShiftedBufferedEthRaw] = await Promise.all([
+    new BigNumber(
+      String(
+        await lido.functions.getBufferedEther({
+          blockTag: shiftedBlockNumber,
+        }),
+      ),
+    ),
+    new BigNumber(
+      String(
+        await lido.functions.getBufferedEther({
+          blockTag: shiftedBlockNumber - 1,
+        }),
+      ),
+    ),
+  ]);
+
+  if (shiftedBufferedEthRaw.lt(prevShiftedBufferedEthRaw)) {
+    const unbufferedEvents = await getUnbufferedEvents(
+      shiftedBlockNumber,
+      shiftedBlockNumber,
+    );
+    const wdReqFinalizedEvents = await getWdRequestFinalizedEvents(
+      shiftedBlockNumber,
+      shiftedBlockNumber,
+    );
+    if (unbufferedEvents.length == 0 && wdReqFinalizedEvents.length == 0) {
+      findings.push(
+        Finding.fromObject({
+          name: "🚨🚨🚨 Buffered ETH drain",
+          description:
+            `Buffered ETH amount decreased from ` +
+            `${prevShiftedBufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
+            `to ${shiftedBufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
+            `without Unbuffered or WithdrawalsFinalized events`,
+          alertId: "BUFFERED-ETH-DRAIN",
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        }),
+      );
+    }
+  }
 
   if (blockNumber % BLOCK_CHECK_INTERVAL == 0) {
     // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
@@ -268,7 +287,6 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
       }
     }
   }
-  lastBufferedEth = bufferedEthRaw;
 }
 
 async function handleDepositExecutorBalance(
