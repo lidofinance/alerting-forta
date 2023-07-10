@@ -224,7 +224,7 @@ async function handleBufferedEth(blockEvent: BlockEvent, findings: Finding[]) {
             `Buffered ETH amount decreased from ` +
             `${prevShiftedBufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
             `to ${shiftedBufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
-            `without Unbuffered or WithdrawalsFinalized events`,
+            `without Unbuffered or WithdrawalsFinalized events\n\nNote: actual handled block number is ${shiftedBlockNumber}`,
           alertId: "BUFFERED-ETH-DRAIN",
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
