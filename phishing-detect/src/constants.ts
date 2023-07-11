@@ -204,6 +204,12 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x827179dd56d07a7eea32e3873493835da2866976", // Sushiswap stablePoolFactory
   "0xC402D13B0D04867649a632F17528c753d8f6FBD2", // PoolPositionManager
   "0x37417B2238AA52D0DD2D6252d989E728e8f706e4", // LLAMMA - crvUSD AMM
+  "0x93c4b944d05dfe6df7645a86cd2206016c51564d", // Eigenlayer stETH strategy
+  "0x2ddf16ba6d0180e5357d5e170ef1917a01b41fc0", // https://www.socket.tech/ 1inch impl
+  "0x2a3dd3eb832af982ec71669e178424b10dca2ede", // Polygon (Matic): zkEVM Bridge
+  "0xc13e21b648a5ee794902342038ff3adab66be987", // SparkProtocolLendingPool
+  "0x3a23f943181408eac424116af7b7790c94cb97a5", // Socket: Gateway
+  "0x6ffd098e92b606b2947b89a08911c00ca06890fa", // https://catinabox.finance/
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
