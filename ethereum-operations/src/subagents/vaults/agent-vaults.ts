@@ -87,6 +87,12 @@ async function handleWithdrawalVaultBalance(
   findings: Finding[],
 ) {
   if (blockNumber % WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL === 0) {
+    const [report] = await lido.queryFilter(
+      lido.filters.ETHDistributed(),
+      blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
+      blockNumber,
+    );
+
     const prevWithdrawalVaultBalance = await getBalance(
       WITHDRAWAL_VAULT_ADDRESS,
       blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
@@ -97,9 +103,9 @@ async function handleWithdrawalVaultBalance(
       blockNumber,
     );
 
-    const withdrawalVaultBalanceDiff = withdrawalVaultBalance.minus(
-      prevWithdrawalVaultBalance,
-    );
+    const withdrawalVaultBalanceDiff = withdrawalVaultBalance
+      .minus(prevWithdrawalVaultBalance)
+      .plus(new BigNumber(String(report?.args?.withdrawalsWithdrawn ?? 0)));
 
     if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
       findings.push(
