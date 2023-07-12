@@ -15,7 +15,7 @@ import LIDO_ABI from "../../abi/Lido.json";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import BURNER_ABI from "../../abi/Burner.json";
 
-import { formatDelay } from "./utils";
+import { formatDelay, formatBN2Str } from "./utils";
 import { RedefineMode, requireWithTier } from "../../common/utils";
 import type * as Constants from "./constants";
 import {
@@ -343,13 +343,15 @@ async function handleRebaseDigest(
   );
   if (!ethDistributedEvent) return;
 
+  let metadata: { [key: string]: string } = {};
+
   const lines = [
-    prepareAPRLines(txEvent, findings),
-    prepareRewardsLines(txEvent, findings),
-    prepareValidatorsCountLines(txEvent),
-    prepareWithdrawnLines(txEvent),
-    await prepareRequestsFinalizationLines(txEvent),
-    prepareSharesBurntLines(txEvent),
+    prepareAPRLines(txEvent, findings, metadata),
+    prepareRewardsLines(txEvent, findings, metadata),
+    prepareValidatorsCountLines(txEvent, metadata),
+    prepareWithdrawnLines(txEvent, metadata),
+    await prepareRequestsFinalizationLines(txEvent, metadata),
+    prepareSharesBurntLines(txEvent, metadata),
   ];
 
   findings.push(
@@ -359,6 +361,7 @@ async function handleRebaseDigest(
       alertId: "LIDO-REPORT-REBASE-DIGEST",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
+      metadata,
     }),
   );
 }
@@ -366,6 +369,7 @@ async function handleRebaseDigest(
 function prepareAPRLines(
   txEvent: TransactionEvent,
   findings: Finding[],
+  metadata: { [key: string]: string },
 ): string | undefined {
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
@@ -373,29 +377,43 @@ function prepareAPRLines(
   );
   lastRebaseEventTimestamp = txEvent.block.timestamp;
   let timeElapsed = new BigNumber(String(tokenRebasedEvent.args.timeElapsed));
+  metadata.timeElapsed = timeElapsed.toFixed(0);
   let preTotalShares = new BigNumber(
     String(tokenRebasedEvent.args.preTotalShares),
   );
+  metadata.preTotalShares = formatBN2Str(preTotalShares.div(ETH_DECIMALS));
+
   let preTotalEther = new BigNumber(
     String(tokenRebasedEvent.args.preTotalEther),
   );
+  metadata.preTotalEther = formatBN2Str(preTotalEther.div(ETH_DECIMALS));
   let postTotalShares = new BigNumber(
     String(tokenRebasedEvent.args.postTotalShares),
   );
+  metadata.postTotalShares = formatBN2Str(postTotalShares.div(ETH_DECIMALS));
   let postTotalEther = new BigNumber(
     String(tokenRebasedEvent.args.postTotalEther),
   );
+  metadata.postTotalEther = formatBN2Str(postTotalEther.div(ETH_DECIMALS));
 
   const sharesDiff = postTotalShares.minus(lastTotalShares).div(ETH_DECIMALS);
   const sharesDiffStr =
     Number(sharesDiff) > 0
       ? `+${sharesDiff.toFixed(2)}`
       : sharesDiff.toFixed(2);
+  metadata.sharesDiff =
+    Number(sharesDiff) > 0
+      ? `+${formatBN2Str(sharesDiff)}`
+      : formatBN2Str(sharesDiff);
   lastTotalShares = postTotalShares;
 
   const etherDiff = postTotalEther.minus(lastTotalEther).div(ETH_DECIMALS);
   const etherDiffStr =
     Number(etherDiff) > 0 ? `+${etherDiff.toFixed(2)}` : etherDiff.toFixed(2);
+  metadata.etherDiff =
+    Number(etherDiff) > 0
+      ? `+${formatBN2Str(etherDiff)}`
+      : formatBN2Str(etherDiff);
   lastTotalEther = postTotalEther;
 
   const apr = calculateAPR(
@@ -405,6 +423,7 @@ function prepareAPRLines(
     postTotalShares,
     postTotalEther,
   );
+  metadata.apr = apr.times(100).toFixed(2);
 
   let findingName: string = "";
   let findingSeverity: FindingSeverity = FindingSeverity.Info;
@@ -458,6 +477,7 @@ function prepareAPRLines(
 function prepareRewardsLines(
   txEvent: TransactionEvent,
   findings: Finding[],
+  metadata: { [key: string]: string },
 ): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
@@ -482,11 +502,14 @@ function prepareRewardsLines(
   const clRewards = clValidatorsBalanceDiff
     .plus(withdrawalsReceived)
     .div(ETH_DECIMALS);
+  metadata.clRewards = formatBN2Str(clRewards);
   const elRewards = elRewardsReceivedEvent
     ? new BigNumber(String(elRewardsReceivedEvent.args.amount)).div(
         ETH_DECIMALS,
       )
     : BN_ZERO;
+  metadata.elRewards = formatBN2Str(elRewards);
+  metadata.totalRewards = formatBN2Str(clRewards.plus(elRewards));
 
   lastCLrewards = lastCLrewards.eq(BN_ZERO) ? clRewards : lastCLrewards;
   lastELrewards = lastELrewards.eq(BN_ZERO) ? elRewards : lastELrewards;
@@ -497,14 +520,17 @@ function prepareRewardsLines(
     Number(clRewardsDiff) > 0
       ? `+${clRewardsDiff.toFixed(2)}`
       : clRewardsDiff.toFixed(2);
+  metadata.clRewardsDiff = strCLRewardsDiff;
   const strELRewardsDiff =
     Number(elRewardsDiff) > 0
       ? `+${elRewardsDiff.toFixed(2)}`
       : elRewardsDiff.toFixed(2);
+  metadata.elRewardsDiff = strELRewardsDiff;
   const strTotalRewardsDiff =
     Number(totalRewardsDiff) > 0
       ? `+${totalRewardsDiff.toFixed(2)}`
       : totalRewardsDiff.toFixed(2);
+  metadata.totalRewardsDiff = strTotalRewardsDiff;
 
   let strCLRewards = `CL rewards: ${clRewards.toFixed(
     2,
@@ -551,18 +577,28 @@ function prepareRewardsLines(
     .toFixed(2)} (${strTotalRewardsDiff}) ETH`;
 }
 
-function prepareValidatorsCountLines(txEvent: TransactionEvent): string {
+function prepareValidatorsCountLines(
+  txEvent: TransactionEvent,
+  metadata: { [key: string]: string },
+): string {
   const [validatorsUpdated] = txEvent.filterLog(
     LIDO_VALIDATORS_UPDATED_EVENT,
     LIDO_STETH_ADDRESS,
   );
   const { preCLValidators, postCLValidators } = validatorsUpdated.args;
+  metadata.postCLValidators = Number(postCLValidators).toLocaleString();
+  metadata.clValidatorsDiff = (
+    Number(postCLValidators) - Number(preCLValidators)
+  ).toLocaleString();
   return `*Validators*\nCount: ${postCLValidators} (${
     Number(postCLValidators) - Number(preCLValidators)
   } newly appeared)`;
 }
 
-function prepareWithdrawnLines(txEvent: TransactionEvent): string {
+function prepareWithdrawnLines(
+  txEvent: TransactionEvent,
+  metadata: { [key: string]: string },
+): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
     LIDO_STETH_ADDRESS,
@@ -581,7 +617,9 @@ function prepareWithdrawnLines(txEvent: TransactionEvent): string {
   const wdWithdrawn = new BigNumber(String(withdrawalsWithdrawn)).div(
     ETH_DECIMALS,
   );
+  metadata.wdWithdrawn = formatBN2Str(wdWithdrawn);
   const elWithdrawn = new BigNumber(String(executionLayerRewardsWithdrawn));
+  metadata.elWithdrawn = formatBN2Str(elWithdrawn.div(ETH_DECIMALS));
   const elWithdrawnReceivedDiff = elRewardsReceived.minus(elWithdrawn);
 
   return (
@@ -600,6 +638,7 @@ function prepareWithdrawnLines(txEvent: TransactionEvent): string {
 
 async function prepareRequestsFinalizationLines(
   txEvent: TransactionEvent,
+  metadata: { [key: string]: string },
 ): Promise<string> {
   const [withdrawalsFinalizedEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
@@ -616,10 +655,13 @@ async function prepareRequestsFinalizationLines(
   const { postTotalEther, postTotalShares } = tokenRebasedEvent.args;
   const { from, to, amountOfETHLocked } = withdrawalsFinalizedEvent.args;
   const ether = new BigNumber(String(amountOfETHLocked)).div(ETH_DECIMALS);
+  metadata.finalizedEth = formatBN2Str(ether);
   const requests = Number(to) - Number(from);
+  metadata.finalizedRequestsCount = requests.toString();
   const shareRate = new BigNumber(String(postTotalEther)).div(
     new BigNumber(String(postTotalShares)),
   );
+  metadata.finalizationShareRate = shareRate.toFixed(5);
 
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
@@ -637,11 +679,14 @@ async function prepareRequestsFinalizationLines(
   const bufferDiff = new BigNumber(String(postBufferedEther)).minus(
     preBufferedEther,
   );
+  metadata.finalizationBufferUsed = bufferDiff.lt(0)
+    ? formatBN2Str(bufferDiff.times(-1).div(ETH_DECIMALS))
+    : "0.00";
 
   if (requests > 0) {
     description =
       `Finalized: ` +
-      `${Number(to) - Number(from)}\nEther: ${ether.toFixed(2)} ETH` +
+      `${requests}\nEther: ${ether.toFixed(2)} ETH` +
       `\nShare rate: ${shareRate.toFixed(5)}` +
       `\nUsed buffer: ${
         bufferDiff.lt(0)
@@ -652,7 +697,10 @@ async function prepareRequestsFinalizationLines(
   return `*Requests finalization*\n${description}`;
 }
 
-function prepareSharesBurntLines(txEvent: TransactionEvent): string {
+function prepareSharesBurntLines(
+  txEvent: TransactionEvent,
+  metadata: { [key: string]: string },
+): string {
   const [sharesBurntEvent] = txEvent.filterLog(
     LIDO_SHARES_BURNT_EVENT,
     LIDO_STETH_ADDRESS,
@@ -665,6 +713,7 @@ function prepareSharesBurntLines(txEvent: TransactionEvent): string {
         ETH_DECIMALS,
       )
     : new BigNumber(0);
+  metadata.sharesBurnt = formatBN2Str(sharesBurnt);
   return `*Shares*\nBurnt: ${sharesBurnt.toFixed(2)} × 1e18`;
 }
 

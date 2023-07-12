@@ -16,7 +16,7 @@ import * as agentAccountingOracle from "./subagents/accounting-oracle/agent-acco
 import * as agentAccountingOracleHashConsensus from "./subagents/accounting-oracle/agent-accounting-hash-consensus";
 import * as agentExitBusOracle from "./subagents/exitbus-oracle/agent-exitbus-oracle";
 import * as agentExitBusOracleHashConsensus from "./subagents/exitbus-oracle/agent-exitbus-hash-consensus";
-import * as agentLidoOracle from "./subagents/lido-report/agent-lido-report";
+import * as agentLidoReport from "./subagents/lido-report/agent-lido-report";
 import * as agentEasyTrack from "./subagents/easy-track/agent-easy-track";
 import * as agentDaoOps from "./subagents/dao-ops/agent-dao-ops";
 import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
@@ -48,7 +48,7 @@ const subAgents: SubAgent[] = [
   agentAccountingOracleHashConsensus,
   agentExitBusOracle,
   agentExitBusOracleHashConsensus,
-  agentLidoOracle,
+  agentLidoReport,
   agentEasyTrack,
   agentDaoOps,
   agentProxy,
