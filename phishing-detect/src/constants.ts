@@ -216,6 +216,18 @@ export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
   (address) => address.toLowerCase(),
 );
 
+const PHISHING_LIST_ADDRESSES_RAW: string[] = [
+  "0x0000c780a030c8c1cc74e8ffd927f08d1c200000", // Phishing EOA
+  "0x1a1c87d9a6f55d3bbb064bff1059ad37b6bdc097", // Phishing EOA
+  "0x63605e53d422c4f1ac0e01390ac59aaf84c44a51", // Phishing EOA
+  "0x0000553f880ffa3728b290e04e819053a3590000", // Phishing EOA
+  "0x00006deacd9ad19db3d81f8410ea2b45ea570000", // Phishing EOA
+  "0x00001f78189be22c3498cff1b8e02272c3220000", // Phishing EOA
+];
+
+export const PHISHING_LIST_ADDRESSES: string[] =
+  PHISHING_LIST_ADDRESSES_RAW.map((address) => address.toLowerCase());
+
 export const WITHDRAWAL_QUEUE_ADDRESS =
   "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1";
 

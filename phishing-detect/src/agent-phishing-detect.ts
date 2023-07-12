@@ -17,6 +17,7 @@ import {
   UNIQ_DELEGATES_THRESHOLD_CONTRACT,
   MONITORED_ERC20_ADDRESSES,
   WHITE_LIST_ADDRESSES,
+  PHISHING_LIST_ADDRESSES,
   BLOCKS_PER_HOUR,
   ERC_20_APPROVAL_EVENT_ABI,
   ERC721_APPROVAL_EVENT_ABI,
@@ -139,6 +140,13 @@ async function handleSpenders(findings: Finding[]) {
         : UNIQ_DELEGATES_THRESHOLD_EOA;
 
       const addressType = spenderInfo.isContract ? "CONTRACT" : "EOA";
+      let severity = spenderInfo.isContract
+        ? FindingSeverity.Medium
+        : FindingSeverity.High;
+      let knownPhishing = PHISHING_LIST_ADDRESSES.includes(spender);
+      if (knownPhishing) {
+        severity = FindingSeverity.Low;
+      }
 
       if (
         uniqApprovers >= UNIQ_DELEGATES_THRESHOLD &&
@@ -146,15 +154,17 @@ async function handleSpenders(findings: Finding[]) {
       ) {
         findings.push(
           Finding.fromObject({
-            name: `🕵️ Suspicious ${addressType.toLocaleLowerCase()} ${spender} detected`,
+            name: knownPhishing
+              ? `🕵️ Known phishing ${addressType.toLocaleLowerCase()} ${spender} detected`
+              : `🕵️ Suspicious ${addressType.toLocaleLowerCase()} ${spender} detected`,
             description:
               `A significant number of addresses has approved Lido tokens to ` +
               `${etherscanLink(spender)} (${addressType}).` +
-              ` Looks like a phishing at a glance`,
+              knownPhishing
+                ? `This address is know as phishing. We need to figure out how to stop it!`
+                : ` Looks like a phishing at a glance`,
             alertId: `PHISHING-${addressType}-DETECTED`,
-            severity: spenderInfo.isContract
-              ? FindingSeverity.Medium
-              : FindingSeverity.High,
+            severity,
             type: FindingType.Suspicious,
             metadata: { spender },
           }),
