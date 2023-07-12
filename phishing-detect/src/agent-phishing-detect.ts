@@ -17,6 +17,7 @@ import {
   UNIQ_DELEGATES_THRESHOLD_CONTRACT,
   MONITORED_ERC20_ADDRESSES,
   WHITE_LIST_ADDRESSES,
+  PHISHING_LIST_ADDRESSES,
   BLOCKS_PER_HOUR,
   ERC_20_APPROVAL_EVENT_ABI,
   ERC721_APPROVAL_EVENT_ABI,
@@ -32,7 +33,7 @@ export const spenders = new Map<string, ISpenderInfo>();
 export const name = "PhishingDetect";
 
 export async function initialize(
-  _: number,
+  _: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -54,34 +55,34 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   txEvent
     .filterLog(ERC_20_APPROVAL_EVENT_ABI)
     .filter((event: LogDescription) =>
-      Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(event.address),
+      Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(event.address)
     )
     .map(handleERC20Approval);
 
   txEvent
     .filterLog(ERC721_APPROVAL_EVENT_ABI)
     .filter(
-      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS,
+      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS
     )
     .map((event: LogDescription) => {
       createOrUpdateSpender(
         event.args.approved.toLowerCase(),
         event.address,
-        event.args.owner.toLowerCase(),
+        event.args.owner.toLowerCase()
       );
     });
 
   txEvent
     .filterLog(ERC721_APPROVAL_FOR_ALL_EVENT_ABI)
     .filter(
-      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS,
+      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS
     )
     .filter((event: LogDescription) => event.args.approved)
     .map((event: LogDescription) => {
       createOrUpdateSpender(
         event.args.operator.toLowerCase(),
         event.address,
-        event.args.owner.toLowerCase(),
+        event.args.owner.toLowerCase()
       );
     });
 
@@ -132,13 +133,20 @@ async function handleSpenders(findings: Finding[]) {
       }
       const uniqApprovers = Array.from(spenderInfo.tokens.values()).reduce(
         (tmpSum, tokenApprovers) => tmpSum + tokenApprovers.size,
-        0,
+        0
       );
       const UNIQ_DELEGATES_THRESHOLD = spenderInfo.isContract
         ? UNIQ_DELEGATES_THRESHOLD_CONTRACT
         : UNIQ_DELEGATES_THRESHOLD_EOA;
 
       const addressType = spenderInfo.isContract ? "CONTRACT" : "EOA";
+      let severity = spenderInfo.isContract
+        ? FindingSeverity.Medium
+        : FindingSeverity.High;
+      let knownPhishing = PHISHING_LIST_ADDRESSES.includes(spender);
+      if (knownPhishing) {
+        severity = FindingSeverity.Low;
+      }
 
       if (
         uniqApprovers >= UNIQ_DELEGATES_THRESHOLD &&
@@ -146,21 +154,23 @@ async function handleSpenders(findings: Finding[]) {
       ) {
         findings.push(
           Finding.fromObject({
-            name: `🕵️ Suspicious ${addressType.toLocaleLowerCase()} ${spender} detected`,
+            name: knownPhishing
+              ? `🕵️ Known phishing ${addressType.toLocaleLowerCase()} ${spender} detected`
+              : `🕵️ Suspicious ${addressType.toLocaleLowerCase()} ${spender} detected`,
             description:
               `A significant number of addresses has approved Lido tokens to ` +
               `${etherscanLink(spender)} (${addressType}).` +
-              ` Looks like a phishing at a glance`,
+              knownPhishing
+                ? `This address is know as phishing. We need to figure out how to stop it!`
+                : ` Looks like a phishing at a glance`,
             alertId: `PHISHING-${addressType}-DETECTED`,
-            severity: spenderInfo.isContract
-              ? FindingSeverity.Medium
-              : FindingSeverity.High,
+            severity,
             type: FindingType.Suspicious,
             metadata: { spender },
-          }),
+          })
         );
         spenderInfo.reportedApproversCount = uniqApprovers;
       }
-    }),
+    })
   );
 }
