@@ -213,7 +213,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
-  (address) => address.toLowerCase()
+  (address) => address.toLowerCase(),
 );
 
 const PHISHING_LIST_ADDRESSES_RAW: string[] = [

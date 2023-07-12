@@ -33,7 +33,7 @@ export const spenders = new Map<string, ISpenderInfo>();
 export const name = "PhishingDetect";
 
 export async function initialize(
-  _: number
+  _: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -55,34 +55,34 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   txEvent
     .filterLog(ERC_20_APPROVAL_EVENT_ABI)
     .filter((event: LogDescription) =>
-      Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(event.address)
+      Array.from(MONITORED_ERC20_ADDRESSES.keys()).includes(event.address),
     )
     .map(handleERC20Approval);
 
   txEvent
     .filterLog(ERC721_APPROVAL_EVENT_ABI)
     .filter(
-      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS
+      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS,
     )
     .map((event: LogDescription) => {
       createOrUpdateSpender(
         event.args.approved.toLowerCase(),
         event.address,
-        event.args.owner.toLowerCase()
+        event.args.owner.toLowerCase(),
       );
     });
 
   txEvent
     .filterLog(ERC721_APPROVAL_FOR_ALL_EVENT_ABI)
     .filter(
-      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS
+      (event: LogDescription) => event.address === WITHDRAWAL_QUEUE_ADDRESS,
     )
     .filter((event: LogDescription) => event.args.approved)
     .map((event: LogDescription) => {
       createOrUpdateSpender(
         event.args.operator.toLowerCase(),
         event.address,
-        event.args.owner.toLowerCase()
+        event.args.owner.toLowerCase(),
       );
     });
 
@@ -133,7 +133,7 @@ async function handleSpenders(findings: Finding[]) {
       }
       const uniqApprovers = Array.from(spenderInfo.tokens.values()).reduce(
         (tmpSum, tokenApprovers) => tmpSum + tokenApprovers.size,
-        0
+        0,
       );
       const UNIQ_DELEGATES_THRESHOLD = spenderInfo.isContract
         ? UNIQ_DELEGATES_THRESHOLD_CONTRACT
@@ -167,10 +167,10 @@ async function handleSpenders(findings: Finding[]) {
             severity,
             type: FindingType.Suspicious,
             metadata: { spender },
-          })
+          }),
         );
         spenderInfo.reportedApproversCount = uniqApprovers;
       }
-    })
+    }),
   );
 }
