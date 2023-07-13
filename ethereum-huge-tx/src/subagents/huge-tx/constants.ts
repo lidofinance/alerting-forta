@@ -547,7 +547,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `was withdrawn from Lybra Finance\n` +
       `by: ${info.from} (${info.fromName})`,
-  }
+  },
 ];
 
 export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
