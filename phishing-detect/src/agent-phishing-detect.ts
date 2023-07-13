@@ -149,7 +149,7 @@ async function handleSpenders(findings: Finding[]) {
         `${etherscanLink(spender)} (${addressType}).`;
       if (knownPhishing) {
         severity = FindingSeverity.Low;
-        description += `This address is know as phishing. We need to figure out how to stop it!`;
+        description += ` This address is know as phishing. We need to figure out how to stop it!`;
       } else {
         description += ` Looks like a phishing at a glance`;
       }
