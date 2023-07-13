@@ -27,7 +27,6 @@ import {
 
 import { isContract } from "./utils/tools";
 import { ISpenderInfo } from "./utils/interfaces";
-import { description } from "../../../lodestar-blocktiming-scrapper/packages/cli/src/cmds/account/cmds/wallet/create";
 
 export const spenders = new Map<string, ISpenderInfo>();
 
