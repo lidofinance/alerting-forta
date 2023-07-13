@@ -6,14 +6,14 @@ Finding {
   "alertId": "LIDO-REPORT-REBASE-DIGEST",
   "description": "*APR stats*
 APR: 5.26%
-Total shares: 5644434.78 (+38326.90) × 1e18
-Total pooled ether: 6348106.24 (+44013.44) ETH
+Total shares: 5,644,434.78 (+38326.90) × 1e18
+Total pooled ether: 6,348,106.24 (+44013.44) ETH
 Time elapsed: 24 hrs 0 sec
 
 *Rewards*
 CL rewards: 623.37 (+0.25) ETH
 EL rewards: 392.92 (+51.69) ETH
-Total: 1016.29 (+51.94) ETH
+Total: 1,016.29 (+51.94) ETH
 
 *Validators*
 Count: 196087 (0 newly appeared)
@@ -24,20 +24,22 @@ EL Vault: 392.92 ETH
 
 *Requests finalization*
 Finalized: 41
-Ether: 1936.70 ETH
+Ether: 1,936.70 ETH
 Share rate: 1.12467
 Used buffer: 787.49 ETH
 
 *Shares*
-Burnt: 1722.27 × 1e18",
+Burnt: 1,722.27 × 1e18",
   "labels": Array [],
   "metadata": Object {
     "apr": "5.26",
     "clRewards": "623.37",
     "clRewardsDiff": "+0.25",
+    "clRewardsDiffPercent": "+0.04",
     "clValidatorsDiff": "0",
     "elRewards": "392.92",
     "elRewardsDiff": "+51.69",
+    "elRewardsDiffPercent": "+15.15",
     "elWithdrawn": "392.92",
     "etherDiff": "+44,013.44",
     "finalizationBufferUsed": "787.49",
@@ -54,6 +56,7 @@ Burnt: 1722.27 × 1e18",
     "timeElapsed": "86400",
     "totalRewards": "1,016.29",
     "totalRewardsDiff": "+51.94",
+    "totalRewardsDiffPercent": "+5.39",
     "wdWithdrawn": "756.29",
   },
   "name": "ℹ️ Lido Report: rebase digest",

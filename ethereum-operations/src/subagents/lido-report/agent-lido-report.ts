@@ -450,11 +450,11 @@ function prepareAPRLines(
 
   const additionalDescription =
     `Total shares: ` +
-    `${postTotalShares
-      .div(ETH_DECIMALS)
-      .toFixed(2)} (${sharesDiffStr}) × 1e18` +
+    `${formatBN2Str(
+      postTotalShares.div(ETH_DECIMALS),
+    )} (${sharesDiffStr}) × 1e18` +
     `\nTotal pooled ether: ` +
-    `${postTotalEther.div(ETH_DECIMALS).toFixed(2)} (${etherDiffStr}) ETH` +
+    `${formatBN2Str(postTotalEther.div(ETH_DECIMALS))} (${etherDiffStr}) ETH` +
     `\nTime elapsed: ${formatDelay(Number(timeElapsed))}`;
 
   if (findingName != "") {
@@ -509,34 +509,58 @@ function prepareRewardsLines(
       )
     : BN_ZERO;
   metadata.elRewards = formatBN2Str(elRewards);
-  metadata.totalRewards = formatBN2Str(clRewards.plus(elRewards));
+  const totalRewards = clRewards.plus(elRewards);
+  metadata.totalRewards = formatBN2Str(totalRewards);
 
   lastCLrewards = lastCLrewards.eq(BN_ZERO) ? clRewards : lastCLrewards;
   lastELrewards = lastELrewards.eq(BN_ZERO) ? elRewards : lastELrewards;
+  const lastTotalRewards = lastCLrewards.plus(lastELrewards);
   const clRewardsDiff = clRewards.minus(lastCLrewards);
   const elRewardsDiff = elRewards.minus(lastELrewards);
   const totalRewardsDiff = clRewardsDiff.plus(elRewardsDiff);
   const strCLRewardsDiff =
     Number(clRewardsDiff) > 0
-      ? `+${clRewardsDiff.toFixed(2)}`
-      : clRewardsDiff.toFixed(2);
+      ? `+${formatBN2Str(clRewardsDiff)}`
+      : formatBN2Str(clRewardsDiff);
   metadata.clRewardsDiff = strCLRewardsDiff;
+  const clRewardsDiffPercent = clRewards.div(lastCLrewards).minus(1).times(100);
+  metadata.clRewardsDiffPercent =
+    Number(clRewardsDiffPercent) > 0
+      ? `+${formatBN2Str(clRewardsDiffPercent)}`
+      : formatBN2Str(clRewardsDiffPercent);
+
   const strELRewardsDiff =
     Number(elRewardsDiff) > 0
-      ? `+${elRewardsDiff.toFixed(2)}`
-      : elRewardsDiff.toFixed(2);
+      ? `+${formatBN2Str(elRewardsDiff)}`
+      : formatBN2Str(elRewardsDiff);
   metadata.elRewardsDiff = strELRewardsDiff;
+  metadata.elRewardsDiffPercent = formatBN2Str(
+    elRewards.div(lastELrewards).minus(1).times(100),
+  );
+  const elRewardsDiffPercent = elRewards.div(lastELrewards).minus(1).times(100);
+  metadata.elRewardsDiffPercent =
+    Number(elRewardsDiffPercent) > 0
+      ? `+${formatBN2Str(elRewardsDiffPercent)}`
+      : formatBN2Str(elRewardsDiffPercent);
+
   const strTotalRewardsDiff =
     Number(totalRewardsDiff) > 0
-      ? `+${totalRewardsDiff.toFixed(2)}`
-      : totalRewardsDiff.toFixed(2);
+      ? `+${formatBN2Str(totalRewardsDiff)}`
+      : formatBN2Str(totalRewardsDiff);
   metadata.totalRewardsDiff = strTotalRewardsDiff;
+  const totalRewardsDiffPercent = totalRewards
+    .div(lastTotalRewards)
+    .minus(1)
+    .times(100);
+  metadata.totalRewardsDiffPercent =
+    Number(totalRewardsDiffPercent) > 0
+      ? `+${formatBN2Str(totalRewardsDiffPercent)}`
+      : formatBN2Str(totalRewardsDiffPercent);
 
-  let strCLRewards = `CL rewards: ${clRewards.toFixed(
-    2,
+  let strCLRewards = `CL rewards: ${formatBN2Str(
+    clRewards,
   )} (${strCLRewardsDiff}) ETH`;
 
-  const clRewardsDiffPercent = clRewardsDiff.div(lastCLrewards).times(100);
   const strCLRewardsDiffPercent =
     Number(clRewardsDiffPercent) > 0
       ? `+${clRewardsDiffPercent.toFixed(2)}`
@@ -546,8 +570,8 @@ function prepareRewardsLines(
     -LIDO_REPORT_CL_REWARDS_DIFF_PERCENT_THRESHOLD_MEDIUM
   ) {
     strCLRewards =
-      `️CL rewards: ${clRewards.toFixed(2)} ETH 🚨️ decreased ` +
-      `by ${clRewardsDiff.toFixed(2)} ETH (${strCLRewardsDiffPercent}%)`;
+      `️CL rewards: ${formatBN2Str(clRewards)} ETH 🚨️ decreased ` +
+      `by ${formatBN2Str(clRewardsDiff)} ETH (${strCLRewardsDiffPercent}%)`;
     const severity =
       Number(clRewardsDiffPercent) <
       -LIDO_REPORT_CL_REWARDS_DIFF_PERCENT_THRESHOLD_HIGH
@@ -557,9 +581,9 @@ function prepareRewardsLines(
       Finding.fromObject({
         name: "🚨 Lido Report: CL rewards decreased",
         description:
-          `Rewards decreased from ${lastCLrewards.toFixed(2)} ` +
-          `ETH to ${clRewards.toFixed(2)} ` +
-          `by ${clRewardsDiff.toFixed(2)} ETH (${strCLRewardsDiffPercent}%)`,
+          `Rewards decreased from ${formatBN2Str(lastCLrewards)} ` +
+          `ETH to ${formatBN2Str(clRewards)} ` +
+          `by ${formatBN2Str(clRewardsDiff)} ETH (${strCLRewardsDiffPercent}%)`,
         alertId: "LIDO-REPORT-CL-REWARDS-DECREASED",
         severity: severity,
         type: FindingType.Degraded,
@@ -570,11 +594,11 @@ function prepareRewardsLines(
   lastCLrewards = clRewards;
   lastELrewards = elRewards;
 
-  return `*Rewards*\n${strCLRewards}\nEL rewards: ${elRewards.toFixed(
-    2,
-  )} (${strELRewardsDiff}) ETH\nTotal: ${clRewards
-    .plus(elRewards)
-    .toFixed(2)} (${strTotalRewardsDiff}) ETH`;
+  return `*Rewards*\n${strCLRewards}\nEL rewards: ${formatBN2Str(
+    elRewards,
+  )} (${strELRewardsDiff}) ETH\nTotal: ${formatBN2Str(
+    clRewards.plus(elRewards),
+  )} (${strTotalRewardsDiff}) ETH`;
 }
 
 function prepareValidatorsCountLines(
@@ -624,13 +648,13 @@ function prepareWithdrawnLines(
 
   return (
     `*Withdrawn from vaults*\nWithdrawal Vault: ` +
-    `${wdWithdrawn.toFixed(2)} ETH` +
-    `\nEL Vault: ${elWithdrawn.div(ETH_DECIMALS).toFixed(2)} ETH` +
+    `${formatBN2Str(wdWithdrawn)} ETH` +
+    `\nEL Vault: ${formatBN2Str(elWithdrawn.div(ETH_DECIMALS))} ETH` +
     `${
       elWithdrawnReceivedDiff.gt(0)
-        ? ` ⚠️ ${elWithdrawnReceivedDiff
-            .div(ETH_DECIMALS)
-            .toFixed(2)} ETH left on the vault`
+        ? ` ⚠️ ${formatBN2Str(
+            elWithdrawnReceivedDiff.div(ETH_DECIMALS),
+          )} ETH left on the vault`
         : ""
     }`
   );
@@ -679,20 +703,17 @@ async function prepareRequestsFinalizationLines(
   const bufferDiff = new BigNumber(String(postBufferedEther)).minus(
     preBufferedEther,
   );
-  metadata.finalizationBufferUsed = bufferDiff.lt(0)
+  const finalizationBufferUsed = bufferDiff.lt(0)
     ? formatBN2Str(bufferDiff.times(-1).div(ETH_DECIMALS))
     : "0.00";
+  metadata.finalizationBufferUsed = finalizationBufferUsed;
 
   if (requests > 0) {
     description =
       `Finalized: ` +
-      `${requests}\nEther: ${ether.toFixed(2)} ETH` +
+      `${requests}\nEther: ${formatBN2Str(ether)} ETH` +
       `\nShare rate: ${shareRate.toFixed(5)}` +
-      `\nUsed buffer: ${
-        bufferDiff.lt(0)
-          ? bufferDiff.times(-1).div(ETH_DECIMALS).toFixed(2)
-          : "0.00"
-      } ETH`;
+      `\nUsed buffer: ${finalizationBufferUsed} ETH`;
   }
   return `*Requests finalization*\n${description}`;
 }
@@ -714,7 +735,7 @@ function prepareSharesBurntLines(
       )
     : new BigNumber(0);
   metadata.sharesBurnt = formatBN2Str(sharesBurnt);
-  return `*Shares*\nBurnt: ${sharesBurnt.toFixed(2)} × 1e18`;
+  return `*Shares*\nBurnt: ${formatBN2Str(sharesBurnt)} × 1e18`;
 }
 
 async function getSummaryDigest(block: number) {
