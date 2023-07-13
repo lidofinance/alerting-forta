@@ -144,8 +144,14 @@ async function handleSpenders(findings: Finding[]) {
         ? FindingSeverity.Medium
         : FindingSeverity.High;
       let knownPhishing = PHISHING_LIST_ADDRESSES.includes(spender);
+      let description =
+        `A significant number of addresses has approved Lido tokens to ` +
+        `${etherscanLink(spender)} (${addressType}).`;
       if (knownPhishing) {
         severity = FindingSeverity.Low;
+        description += ` This address is know as phishing. We need to figure out how to stop it!`;
+      } else {
+        description += ` Looks like a phishing at a glance`;
       }
 
       if (
@@ -157,12 +163,7 @@ async function handleSpenders(findings: Finding[]) {
             name: knownPhishing
               ? `🕵️ Known phishing ${addressType.toLocaleLowerCase()} ${spender} detected`
               : `🕵️ Suspicious ${addressType.toLocaleLowerCase()} ${spender} detected`,
-            description:
-              `A significant number of addresses has approved Lido tokens to ` +
-              `${etherscanLink(spender)} (${addressType}).` +
-              knownPhishing
-                ? `This address is know as phishing. We need to figure out how to stop it!`
-                : ` Looks like a phishing at a glance`,
+            description,
             alertId: `PHISHING-${addressType}-DETECTED`,
             severity,
             type: FindingType.Suspicious,
