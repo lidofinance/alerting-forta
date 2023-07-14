@@ -23,8 +23,8 @@ Withdrawal Vault: 756.29 ETH
 EL Vault: 392.92 ETH
 
 *Requests finalization*
-Finalized: 41
-Ether: 1,936.70 ETH
+Finalized: 41 (1,936.70 ETH)
+Pending: 13
 Share rate: 1.12467
 Used buffer: 787.49 ETH
 
@@ -46,6 +46,7 @@ Burnt: 1,722.27 × 1e18",
     "finalizationShareRate": "1.12467",
     "finalizedEth": "1,936.70",
     "finalizedRequestsCount": "41",
+    "nonFinalizedRequestsCount": "13",
     "postCLValidators": "196,087",
     "postTotalEther": "6,348,106.24",
     "postTotalShares": "5,644,434.78",

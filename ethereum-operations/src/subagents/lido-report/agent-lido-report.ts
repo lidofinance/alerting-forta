@@ -14,6 +14,7 @@ import { ethersProvider } from "../../ethers";
 import LIDO_ABI from "../../abi/Lido.json";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import BURNER_ABI from "../../abi/Burner.json";
+import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
 
 import { formatDelay, formatBN2Str } from "./utils";
 import { RedefineMode, requireWithTier } from "../../common/utils";
@@ -687,6 +688,25 @@ async function prepareRequestsFinalizationLines(
   );
   metadata.finalizationShareRate = shareRate.toFixed(5);
 
+  const withdrawalsQueue = new ethers.Contract(
+    WITHDRAWAL_QUEUE_ADDRESS,
+    WITHDRAWAL_QUEUE_ABI,
+    ethersProvider,
+  );
+
+  const [lastFinalizedId, lastId] = await Promise.all([
+    withdrawalsQueue.functions.getLastFinalizedRequestId({
+      blockTag: txEvent.blockNumber,
+    }),
+    withdrawalsQueue.functions.getLastRequestId({
+      blockTag: txEvent.blockNumber,
+    }),
+  ]);
+
+  metadata.nonFinalizedRequestsCount = (
+    Number(lastId) - Number(lastFinalizedId)
+  ).toString();
+
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
@@ -710,8 +730,9 @@ async function prepareRequestsFinalizationLines(
 
   if (requests > 0) {
     description =
-      `Finalized: ` +
-      `${requests}\nEther: ${formatBN2Str(ether)} ETH` +
+      `Finalized: ${requests} ` +
+      `(${formatBN2Str(ether)} ETH)` +
+      `\nPending: ${Number(lastId) - Number(lastFinalizedId)}` +
       `\nShare rate: ${shareRate.toFixed(5)}` +
       `\nUsed buffer: ${finalizationBufferUsed} ETH`;
   }
