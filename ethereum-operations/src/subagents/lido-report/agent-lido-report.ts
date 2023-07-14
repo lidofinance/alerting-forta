@@ -730,7 +730,7 @@ async function prepareRequestsFinalizationLines(
 
   if (requests > 0) {
     description =
-      `Finalized: ${requests}` +
+      `Finalized: ${requests} ` +
       `(${formatBN2Str(ether)} ETH)` +
       `\nPending: ${Number(lastId) - Number(lastFinalizedId)}` +
       `\nShare rate: ${shareRate.toFixed(5)}` +
