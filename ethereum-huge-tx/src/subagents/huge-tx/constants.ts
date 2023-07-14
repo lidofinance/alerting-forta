@@ -537,7 +537,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     to: "0x97de57eC338AB5d51557DA3434828C5DbFaDA371",
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `were supplied to  Lybra Finance\n` +
+      `were supplied to Lybra Finance\n` +
       `by: ${info.from} (${info.fromName})`,
   },
   {
@@ -546,7 +546,7 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `was withdrawn from Lybra Finance\n` +
-      `by: ${info.from} (${info.fromName})`,
+      `by: ${info.to} (${info.toName})`,
   },
 ];
 
