@@ -210,6 +210,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xc13e21b648a5ee794902342038ff3adab66be987", // SparkProtocolLendingPool
   "0x3a23f943181408eac424116af7b7790c94cb97a5", // Socket: Gateway
   "0x6ffd098e92b606b2947b89a08911c00ca06890fa", // https://catinabox.finance/
+  "0xb2bf4de5a63b2225338cdfdbad045ea62f158b67", // Tempus finance OneStepLeverageStETH
+  "0x2889302a794da87fbf1d6db415c1492194663d13", // CurveTricryptoOptimizedWETH
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
