@@ -76,7 +76,7 @@ export interface TransferText {
 // COMMON CONSTS
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
-export const TX_AMOUNT_THRESHOLD = 10000;
+export const TX_AMOUNT_THRESHOLD = 1000;
 export const TX_AMOUNT_THRESHOLD_LDO = 5000000; // 5 000 000 LDO
 
 export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -420,6 +420,14 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
 );
 
 export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    from: "0x0000000000000000000000000000000000000000",
+    to: "0x97de57eC338AB5d51557DA3434828C5DbFaDA371",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ETH**  ` +
+      `was supplied to Lybra Finance and staked`,
+  },
   {
     from: NULL_ADDRESS,
     description: (info: TransferEventInfo) =>
