@@ -76,7 +76,7 @@ export interface TransferText {
 // COMMON CONSTS
 export const ETH_DECIMALS = new BigNumber(10 ** 18);
 
-export const TX_AMOUNT_THRESHOLD = 1000;
+export const TX_AMOUNT_THRESHOLD = 10000;
 export const TX_AMOUNT_THRESHOLD_LDO = 5000000; // 5 000 000 LDO
 
 export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
