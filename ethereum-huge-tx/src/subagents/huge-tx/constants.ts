@@ -421,6 +421,14 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
 
 export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
   {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    from: "0x0000000000000000000000000000000000000000",
+    to: "0x97de57eC338AB5d51557DA3434828C5DbFaDA371",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ETH**  ` +
+      `was supplied to Lybra Finance and staked`,
+  },
+  {
     from: NULL_ADDRESS,
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
@@ -530,6 +538,22 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Maker(steCRV-A)\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    to: "0x97de57eC338AB5d51557DA3434828C5DbFaDA371",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Lybra Finance\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    from: "0x97de57eC338AB5d51557DA3434828C5DbFaDA371",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Lybra Finance\n` +
       `by: ${info.to} (${info.toName})`,
   },
 ];
