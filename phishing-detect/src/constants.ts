@@ -212,6 +212,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x6ffd098e92b606b2947b89a08911c00ca06890fa", // https://catinabox.finance/
   "0xb2bf4de5a63b2225338cdfdbad045ea62f158b67", // Tempus finance OneStepLeverageStETH
   "0x2889302a794da87fbf1d6db415c1492194663d13", // CurveTricryptoOptimizedWETH
+  "0xf6a94dfd0e6ea9ddfdffe4762ad4236576136613", // HashflowRouter 1
+  "0x9b11bc9fac17c058cab6286b0c785be6a65492ef", // LiFiDiamondImmutable
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -225,6 +227,7 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0x0000553f880ffa3728b290e04e819053a3590000", // Phishing EOA
   "0x00006deacd9ad19db3d81f8410ea2b45ea570000", // Phishing EOA
   "0x00001f78189be22c3498cff1b8e02272c3220000", // Phishing EOA
+  "0xa0ec2733e8aef26dab0be9abfbacd9ef337740e3", // Phishing EOA
 ];
 
 export const PHISHING_LIST_ADDRESSES: string[] =
