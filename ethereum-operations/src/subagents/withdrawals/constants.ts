@@ -9,7 +9,7 @@ import {
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
-export const BIG_WITHDRAWAL_REQUEST_THRESHOLD = new BigNumber(50000);
+export const BIG_WITHDRAWAL_REQUEST_THRESHOLD = new BigNumber(5000);
 export const BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD = new BigNumber(
   150000,
 );

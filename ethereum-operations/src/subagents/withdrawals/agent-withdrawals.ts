@@ -571,7 +571,7 @@ async function handleWithdrawalRequest(
     if (amounts.gte(BIG_WITHDRAWAL_REQUEST_THRESHOLD)) {
       findings.push(
         Finding.fromObject({
-          name: `ℹ️ Withdrawals: received withdrawal request in one batch greater than ${BIG_WITHDRAWAL_REQUEST_THRESHOLD} stETH`,
+          name: `ℹ️ Huge stETH withdrawal requests batch`,
           description: `Requestor: ${etherscanAddress(
             requestor,
           )}\nAmount: ${amounts.toFixed(2)} stETH`,
