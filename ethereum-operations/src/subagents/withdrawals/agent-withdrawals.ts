@@ -1,3 +1,4 @@
+// stETH
 import {
   BlockEvent,
   ethers,
@@ -437,20 +438,17 @@ async function handleUnclaimedRequests(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([
-    handleBunkerStatus(txEvent, findings),
-    handleLastTokenRebase(txEvent),
-    handleWithdrawalFinalized(txEvent),
-    handleWithdrawalRequest(txEvent, findings),
-    handleWithdrawalClaimed(txEvent, findings),
-  ]);
-
+  handleBunkerStatus(txEvent, findings);
+  handleLastTokenRebase(txEvent);
+  handleWithdrawalFinalized(txEvent);
+  handleWithdrawalRequest(txEvent, findings);
+  handleWithdrawalClaimed(txEvent, findings);
   handleEventsOfNotice(txEvent, findings, WITHDRAWALS_EVENTS_OF_NOTICE);
 
   return findings;
 }
 
-async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
+function handleWithdrawalFinalized(txEvent: TransactionEvent) {
   const [withdrawalEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED,
     WITHDRAWAL_QUEUE_ADDRESS,
@@ -477,7 +475,7 @@ async function handleWithdrawalFinalized(txEvent: TransactionEvent) {
   lastFinalizedTimestamp = Number(withdrawalEvent.args.timestamp);
 }
 
-async function handleWithdrawalClaimed(
+function handleWithdrawalClaimed(
   txEvent: TransactionEvent,
   findings: Finding[],
 ) {
@@ -533,7 +531,7 @@ async function handleWithdrawalClaimed(
   }
 }
 
-async function handleLastTokenRebase(txEvent: TransactionEvent) {
+function handleLastTokenRebase(txEvent: TransactionEvent) {
   const [rebaseEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED,
     LIDO_STETH_ADDRESS,
@@ -543,7 +541,7 @@ async function handleLastTokenRebase(txEvent: TransactionEvent) {
   amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0);
 }
 
-async function handleWithdrawalRequest(
+function handleWithdrawalRequest(
   txEvent: TransactionEvent,
   findings: Finding[],
 ) {
@@ -606,10 +604,7 @@ async function handleWithdrawalRequest(
   }
 }
 
-async function handleBunkerStatus(
-  txEvent: TransactionEvent,
-  findings: Finding[],
-) {
+function handleBunkerStatus(txEvent: TransactionEvent, findings: Finding[]) {
   const [bunkerEnabled] = txEvent.filterLog(
     WITHDRAWALS_BUNKER_MODE_ENABLED,
     WITHDRAWAL_QUEUE_ADDRESS,

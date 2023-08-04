@@ -14,6 +14,7 @@ export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 export const EASY_TRACK_ADDRESS = easyTrackAddress;
 export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
+export const BLOCK_INTERVAL = 100;
 
 export const MOTION_ENACTED_EVENT =
   "event MotionEnacted(uint256 indexed _motionId)";

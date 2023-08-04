@@ -1,3 +1,4 @@
+// VS bot
 import {
   BlockEvent,
   ethers,
@@ -64,6 +65,7 @@ const {
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
   EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
   NODE_OPERATORS_REGISTRY_ADDRESS,
+  BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -188,7 +190,7 @@ async function updateMaxValidatorExitRequestsPerReport(block: number) {
     ORACLE_REPORT_SANITY_CHECKER_ABI,
     ethersProvider,
   );
-
+  // move to handleExitRequest
   const { maxValidatorExitRequestsPerReport } =
     await sanityChecker.getOracleReportLimits({ blockTag: block });
 
@@ -220,7 +222,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   ]);
 
   // Update NO names each 100 blocks
-  if (blockEvent.blockNumber % 100) {
+  if (blockEvent.blockNumber % BLOCK_INTERVAL) {
     await updateNoNames(blockEvent.blockNumber);
   }
 

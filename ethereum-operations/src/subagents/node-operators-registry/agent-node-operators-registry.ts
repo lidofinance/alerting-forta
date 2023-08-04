@@ -1,3 +1,4 @@
+// VS bot
 import {
   BlockEvent,
   ethers,
@@ -32,6 +33,7 @@ const {
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
   NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
+  BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -53,7 +55,6 @@ interface NodeOperatorShortDigest {
 }
 
 const nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
-let initFindings: Finding[] = [];
 
 export async function initialize(
   currentBlock: number,
@@ -116,11 +117,6 @@ export async function initialize(
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
-
-  if (initFindings.length > 0) {
-    findings.push(...initFindings);
-    initFindings = [];
-  }
 
   handleEventsOfNotice(
     txEvent,
@@ -314,11 +310,12 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await handleStuckPenaltyEnd(blockEvent, findings);
-
-  if (blockEvent.blockNumber % 100) {
+  if (blockEvent.blockNumber % BLOCK_INTERVAL) {
     // every 100 blocks for sync between nodes
-    await updateNodeOperatorsNames(blockEvent.blockNumber);
+    await Promise.all([
+      handleStuckPenaltyEnd(blockEvent, findings),
+      updateNodeOperatorsNames(blockEvent.blockNumber),
+    ]);
   }
 
   return findings;

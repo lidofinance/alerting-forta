@@ -1,3 +1,4 @@
+// VS bot
 import {
   BlockEvent,
   ethers,

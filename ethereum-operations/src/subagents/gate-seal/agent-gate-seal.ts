@@ -1,3 +1,4 @@
+// stETH
 import {
   BlockEvent,
   ethers,
@@ -103,8 +104,10 @@ export async function handleBlock(blockEvent: BlockEvent) {
     initFindings = [];
   }
 
-  await handlePauseRole(blockEvent, findings);
-  await handleExpiryGateSeal(blockEvent, findings);
+  await Promise.all([
+    handlePauseRole(blockEvent, findings),
+    handleExpiryGateSeal(blockEvent, findings),
+  ]);
 
   return findings;
 }
@@ -200,8 +203,10 @@ async function handleExpiryGateSeal(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  await handleSealedGateSeal(txEvent, findings);
-  await handleNewGateSeal(txEvent, findings);
+  await Promise.all([
+    handleSealedGateSeal(txEvent, findings),
+    handleNewGateSeal(txEvent, findings),
+  ]);
 
   return findings;
 }

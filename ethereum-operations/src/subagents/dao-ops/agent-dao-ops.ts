@@ -1,3 +1,4 @@
+// Split
 import BigNumber from "bignumber.js";
 
 import {
@@ -58,6 +59,7 @@ const {
   TRP_EVENTS_OF_NOTICE,
   BURNER_EVENTS_OF_NOTICE,
   BLOCK_CHECK_INTERVAL,
+  BLOCK_CHECK_INTERVAL_SMAll,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -105,12 +107,12 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleNodeOperatorsKeys(blockEvent, findings),
-    handleBufferedEth(blockEvent, findings),
-    handleDepositExecutorBalance(blockEvent, findings),
-    handleStakingLimit(blockEvent, findings),
-    handleMevRelayCount(blockEvent, findings),
-    handleEnsNamesExpiration(blockEvent, findings),
+    handleNodeOperatorsKeys(blockEvent, findings), // VS bot
+    handleBufferedEth(blockEvent, findings), // stETH bot
+    handleDepositExecutorBalance(blockEvent, findings), // stETH bot
+    handleStakingLimit(blockEvent, findings), // stETH bot
+    handleMevRelayCount(blockEvent, findings), // VS bot
+    handleEnsNamesExpiration(blockEvent, findings), // Gov bot
   ]);
 
   return findings;
@@ -328,7 +330,7 @@ async function handleDepositExecutorBalance(
 
 async function handleStakingLimit(blockEvent: BlockEvent, findings: Finding[]) {
   const blockNumber = blockEvent.block.number;
-  if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
+  if (blockNumber % BLOCK_CHECK_INTERVAL_SMAll !== 0) {
     return;
   }
 
@@ -484,12 +486,12 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   }
 
   for (const eventsOfNotice of [
-    DEPOSIT_SECURITY_EVENTS_OF_NOTICE,
-    LIDO_EVENTS_OF_NOTICE,
-    MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
-    INSURANCE_FUND_EVENTS_OF_NOTICE,
-    TRP_EVENTS_OF_NOTICE,
-    BURNER_EVENTS_OF_NOTICE,
+    DEPOSIT_SECURITY_EVENTS_OF_NOTICE, // stETH bot
+    LIDO_EVENTS_OF_NOTICE, // stETH bot
+    MEV_ALLOWED_LIST_EVENTS_OF_NOTICE, // VS bot
+    INSURANCE_FUND_EVENTS_OF_NOTICE, // stETH bot
+    TRP_EVENTS_OF_NOTICE, // Gov bot
+    BURNER_EVENTS_OF_NOTICE, // stETH bot
   ]) {
     handleEventsOfNotice(txEvent, findings, eventsOfNotice);
   }

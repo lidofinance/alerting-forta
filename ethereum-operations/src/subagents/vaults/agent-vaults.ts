@@ -1,3 +1,4 @@
+// stETH bot
 import { BigNumber } from "bignumber.js";
 import {
   Finding,
@@ -244,15 +245,12 @@ async function handleNoELVaultDrains(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  await handleBurnerSharesTx(txEvent, findings);
+  handleBurnerSharesTx(txEvent, findings);
 
   return findings;
 }
 
-async function handleBurnerSharesTx(
-  txEvent: TransactionEvent,
-  findings: Finding[],
-) {
+function handleBurnerSharesTx(txEvent: TransactionEvent, findings: Finding[]) {
   const events = txEvent
     .filterLog(TRANSFER_SHARES_EVENT, LIDO_STETH_ADDRESS)
     .filter((e) => e.args.from.toLowerCase() === BURNER_ADDRESS.toLowerCase());

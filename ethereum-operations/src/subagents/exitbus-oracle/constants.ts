@@ -17,6 +17,7 @@ export const CL_GENESIS_TIMESTAMP = 1606824023;
 
 // trigger each 20 mins for lasting conditions
 export const TRIGGER_PERIOD = 60 * 20;
+export const BLOCK_INTERVAL = 100;
 
 export const MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS = 3;
 

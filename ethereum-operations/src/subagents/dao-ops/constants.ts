@@ -38,8 +38,10 @@ export const MEV_RELAY_COUNT_THRESHOLD_HIGH = 2;
 export const MEV_RELAY_COUNT_THRESHOLD_INFO = 4;
 // 24 hours
 export const MEV_RELAY_COUNT_REPORT_WINDOW = 60 * 60 * 24;
+// 20 minutes
+export const BLOCK_CHECK_INTERVAL = 100;
 // 5 minutes
-export const BLOCK_CHECK_INTERVAL = 25;
+export const BLOCK_CHECK_INTERVAL_SMAll = 100;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;

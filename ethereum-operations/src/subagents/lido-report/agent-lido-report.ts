@@ -1,3 +1,4 @@
+// VS bot
 import BigNumber from "bignumber.js";
 
 import {
@@ -50,6 +51,7 @@ const {
   LIDO_REPORT_LOW_APR_THRESHOLD,
   OVERFILL_THRESHOLD_PERCENT,
   OVERFILL_ALERT_TRIGGER_EVERY,
+  OVERFILL_CHECK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -72,8 +74,6 @@ let lastRebaseEventTimestamp = 0;
 let lastELOverfillAlertTimestamp = 0;
 let lastWithdrawalsVaultOverfillAlertTimestamp = 0;
 let lastBurnerOverfillAlertTimestamp = 0;
-
-let initFindings: Finding[] = [];
 
 export async function initialize(
   currentBlock: number,
@@ -149,15 +149,12 @@ export async function initialize(
 
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
-
-  if (initFindings.length > 0) {
-    findings.push(...initFindings);
-    initFindings = [];
-  }
-
   const now = blockEvent.block.timestamp;
 
-  if (now >= lastRebaseEventTimestamp) {
+  if (
+    now >= lastRebaseEventTimestamp &&
+    blockEvent.blockNumber % OVERFILL_CHECK_INTERVAL == 0
+  ) {
     const lido = new ethers.Contract(
       LIDO_STETH_ADDRESS,
       LIDO_ABI,
@@ -177,9 +174,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
       ),
     );
 
-    await handleELRewardsVaultOverfill(blockEvent, findings, tvl);
-    await handleWithdrawalsVaultOverfill(blockEvent, findings, tvl);
-    await handleBurnerUnburntSharesOverfill(blockEvent, findings, totalShares);
+    await Promise.all([
+      handleELRewardsVaultOverfill(blockEvent, findings, tvl),
+      handleWithdrawalsVaultOverfill(blockEvent, findings, tvl),
+      handleBurnerUnburntSharesOverfill(blockEvent, findings, totalShares),
+    ]);
   }
 
   return findings;

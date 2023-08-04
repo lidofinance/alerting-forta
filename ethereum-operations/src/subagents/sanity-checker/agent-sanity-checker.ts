@@ -1,3 +1,4 @@
+// VS bot
 import {
   BlockEvent,
   ethers,
@@ -57,6 +58,7 @@ async function handleOracleReportLimits(
   blockEvent: BlockEvent,
   findings: Finding[],
 ) {
+  // check is possible to use events
   const oracleReportSanityChecker = new ethers.Contract(
     ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
     ORACLE_REPORT_SANITY_CHECKER_ABI,

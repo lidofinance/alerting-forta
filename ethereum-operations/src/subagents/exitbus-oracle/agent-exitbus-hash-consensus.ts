@@ -138,6 +138,7 @@ async function handleFastLaneMembers(blockEvent: BlockEvent) {
     HASH_CONSENSUS_ABI,
     ethersProvider,
   );
+  // update only on report submission. Move to handleReportSubmitted
   fastLaneMembers = (
     await hashConsensus.functions.getFastLaneMembers({
       blockTag: blockEvent.blockNumber,
@@ -149,6 +150,7 @@ async function handleMembersBalances(
   blockEvent: BlockEvent,
   findings: Finding[],
 ) {
+  // fetch once per 1000 blocks
   membersAddresses = await getOracleMembers(blockEvent.blockNumber);
   await Promise.all(
     membersAddresses.map((member) =>
