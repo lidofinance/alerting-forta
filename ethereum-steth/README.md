@@ -7,73 +7,63 @@
 
 ## Sub-bots
 
-### ACL-changes
+### Gate-seal
 
-General alerts about Aragon ACL changes.
-
-**Alerts:**
-
-- ARAGON-ACL-PERMISSION-CHANGED - Aragon ACl permission granted / revoked
-- ARAGON-ACL-PERMISSION-MANAGER-CHANGED - Aragon ACl permission manager changed
-
-### Aragon-voting
-
-Alerts on the Aragon votings
+Gate seal related alerts
 
 **Alerts:**
 
-- ARAGON-VOTE-OUTCOME-CHANGED - Expected vote outcome has changed close to the voting end
-- Aragon votes common lifecycle alerts
+- GATE-SEAL-DEFAULT-EXPIRED - Default gate seal default expired
+- GATE-SEAL-DEFAULT-WITHOUT-ROLE - Default gate seal without role
+- GATE-SEAL-WITHOUT-PAUSE-ROLE - Gate seal without pause role
+- GATE-SEAL-IS-EXPIRED - Gate seal is expired
+- GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED - Gate seal is about to be expired
+- GATE-SEAL-IS-SEALED - Gate seal is sealed
+- GATE-SEAL-NEW-ONE-CREATED - New gate seal created
 
-### DAO-OPS
 
-DAO operations related alerts
+### stETH-ops
+
+stETH operations related alerts
 
 **Alerts:**
 
-- LOW-OPERATORS-AVAILABLE-KEYS-NUM - Few available keys left
-- HUGE-BUFFERED-ETH - Too many ETH in the buffer
+- LOW-STAKING-LIMIT - Staking limit is below threshold
+- HIGH-DEPOSITABLE-ETH - Too many ETH in the buffer
+- BUFFERED-ETH-DRAIN - Buffer is being drained unexpectedly
 - LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
 - Alerts on the admin events in Lido DAO contracts
 
-### Easy-track
 
-Notifications about EasyTrack events
+### Vaults
 
-**Alerts:**
-
-- Alerts on the events in EasyTrack contracts
-
-### Lido-oracle
-
-ETH2 Oracles monitoring
+Vaults related alerts
 
 **Alerts:**
 
-- SLOPPY-LIDO-ORACLE - Detect oracles than has not participated in quorum for a long time
-- LIDO-ORACLE-OVERDUE - Delay in Oracles report
-- LIDO-ORACLE-LOW-BALANCE - Low balance of the Lido Oracle
-- LIDO-ORACLE-REPORT - Details about the latest oracle report
-- LIDO-ORACLE-REWARDS-DECREASED - Beacon chain rewards decreased compared to the previous period
-- Alerts on the admin events in Lido Oracle contract
+- WITHDRAWAL-VAULT-BALANCE-CHANGE - Vault balance has changed
+- WITHDRAWAL-VAULT-BALANCE-DRAIN - Vault balance is being drained unexpectedly
+- EL-VAULT-BALANCE_CHANGE - EL vault balance has changed
+- EL-VAULT-BALANCE-DRAIN - EL vault balance is being drained unexpectedly
+- BURNER-SHARES-TRANSFER - Burner shares transfer
 
-### Proxy-watcher
+### Withdrawals
 
-Alerting for the proxy implementation changes
-
-**Alerts:**
-
-- PROXY-IMPL-CHANGED - Implementation of one of the Lido proxies has changed
-
-### Node Operators Registry
-
-Alerting for the Node Operators Registry events
+Withdrawals related alerts
 
 **Alerts:**
 
-- NODE-OPERATORS-KEYS-REMOVED - Operators keys removed
-- NODE-OPERATORS-STAKING-LIMIT-SET - Node Operator staking limit set by non-EasyTrack motion
-- Alerts on the events in Node Operators Registry contract
+- WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT - Stake limit is drained and unfinalized queue is on par with drained stake limit
+- WITHDRAWALS-BIG-UNFINALIZED-QUEUE - Unfinalized queue is too big
+- WITHDRAWALS-LONG-UNFINALIZED-QUEUE - Unfinalized queue is too long
+- WITHDRAWALS-UNCLAIMED-REQUESTS - Unclaimed requests are too many
+- WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE - Unclaimed requests are more than withdrawal queue balance
+- WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED - Claimed amount is more than requested
+- WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH - Withdrawal request batch is too big
+- WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE - Withdrawal request after rebase is too big
+- WITHDRAWALS-BUNKER-ENABLED - Bunker is enabled
+- WITHDRAWALS-BUNKER-DISABLED - Bunker is disabled
+
 
 ## Development
 

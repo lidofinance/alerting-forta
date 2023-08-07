@@ -114,7 +114,7 @@ async function handleWithdrawalVaultBalance(
           description: `Withdrawal Vault Balance has increased by ${toEthString(
             withdrawalVaultBalanceDiff,
           )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} block`,
-          alertId: "WITHDRAWAL_VAULT_BALANCE_CHANGE",
+          alertId: "WITHDRAWAL-VAULT-BALANCE-CHANGE",
           type: FindingType.Info,
           severity: FindingSeverity.Info,
         }),
@@ -186,7 +186,7 @@ async function handleELVaultBalance(
         description: `EL Vault Balance has increased by ${toEthString(
           elVaultBalanceDiff,
         )}`,
-        alertId: "EL_VAULT_BALANCE_CHANGE",
+        alertId: "EL-VAULT-BALANCE-CHANGE",
         type: FindingType.Info,
         severity: FindingSeverity.Info,
       }),
@@ -259,7 +259,7 @@ function handleBurnerSharesTx(txEvent: TransactionEvent, findings: Finding[]) {
       Finding.fromObject({
         name: "🚨 Burner shares transfer",
         description: `Burner shares transfer to ${event.args.to} has occurred`,
-        alertId: "BURNER_SHARES_TRANSFER",
+        alertId: "BURNER-SHARES-TRANSFER",
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
       }),

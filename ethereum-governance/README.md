@@ -25,17 +25,6 @@ Alerts on the Aragon votings
 - ARAGON-VOTE-OUTCOME-CHANGED - Expected vote outcome has changed close to the voting end
 - Aragon votes common lifecycle alerts
 
-### DAO-OPS
-
-DAO operations related alerts
-
-**Alerts:**
-
-- LOW-OPERATORS-AVAILABLE-KEYS-NUM - Few available keys left
-- HUGE-BUFFERED-ETH - Too many ETH in the buffer
-- LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
-- Alerts on the admin events in Lido DAO contracts
-
 ### Easy-track
 
 Notifications about EasyTrack events
@@ -44,18 +33,12 @@ Notifications about EasyTrack events
 
 - Alerts on the events in EasyTrack contracts
 
-### Lido-oracle
+### Ens-names
 
-ETH2 Oracles monitoring
+Alerts on the ENS names
 
 **Alerts:**
-
-- SLOPPY-LIDO-ORACLE - Detect oracles than has not participated in quorum for a long time
-- LIDO-ORACLE-OVERDUE - Delay in Oracles report
-- LIDO-ORACLE-LOW-BALANCE - Low balance of the Lido Oracle
-- LIDO-ORACLE-REPORT - Details about the latest oracle report
-- LIDO-ORACLE-REWARDS-DECREASED - Beacon chain rewards decreased compared to the previous period
-- Alerts on the admin events in Lido Oracle contract
+ENS-RENT-EXPIRES - ENS name rent expires soon
 
 ### Proxy-watcher
 
@@ -65,15 +48,9 @@ Alerting for the proxy implementation changes
 
 - PROXY-IMPL-CHANGED - Implementation of one of the Lido proxies has changed
 
-### Node Operators Registry
+### TRP-changes
 
-Alerting for the Node Operators Registry events
-
-**Alerts:**
-
-- NODE-OPERATORS-KEYS-REMOVED - Operators keys removed
-- NODE-OPERATORS-STAKING-LIMIT-SET - Node Operator staking limit set by non-EasyTrack motion
-- Alerts on the events in Node Operators Registry contract
+Alerting for the TRP changes events
 
 ## Development
 

@@ -1,19 +1,7 @@
-import BigNumber from "bignumber.js";
-
 import {
-  BlockEvent,
-  ethers,
   Finding,
-  FindingSeverity,
-  FindingType,
   TransactionEvent,
 } from "forta-agent";
-
-import { ethersProvider } from "../../ethers";
-
-import ENS_BASE_REGISTRAR_ABI from "../../abi/ENS.json";
-
-import { ONE_MONTH, ONE_WEEK } from "../../common/constants";
 
 import {
   handleEventsOfNotice,

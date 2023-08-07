@@ -7,73 +7,90 @@
 
 ## Sub-bots
 
-### ACL-changes
+### Accounting-oracle
 
-General alerts about Aragon ACL changes.
-
-**Alerts:**
-
-- ARAGON-ACL-PERMISSION-CHANGED - Aragon ACl permission granted / revoked
-- ARAGON-ACL-PERMISSION-MANAGER-CHANGED - Aragon ACl permission manager changed
-
-### Aragon-voting
-
-Alerts on the Aragon votings
+Alerting for the Accounting Oracle events
 
 **Alerts:**
 
-- ARAGON-VOTE-OUTCOME-CHANGED - Expected vote outcome has changed close to the voting end
-- Aragon votes common lifecycle alerts
+- ACCOUNTING-ORACLE-MEMBER-LOW-BALANCE - Member balance is low
+- ACCOUNTING-ORACLE-REPORT-RECEIVED-ALTERNATIVE-HASH - Report received with alternative hash
+- SLOPPY-ACCOUNTING-ORACLE-MEMBER - Member is sloppy
+- SLOPPY-ACCOUNTING-ORACLE-FASTLANE-MEMBER - Fastlane member is sloppy
+- ACCOUNTING-ORACLE-MAIN-DATA-OVERDUE - Main data is overdue
+- ACCOUNTING-ORACLE-EXTRA-DATA-OVERDUE - Extra data is overdue
 
-### DAO-OPS
+### Exitbus-oracle
+
+Alerting for the Exitbus Oracle events
+
+**Alerts:**
+
+- EXITBUS-ORACLE-MEMBER-LOW-BALANCE - Member balance is low
+- EXITBUS-ORACLE-REPORT-RECEIVED-ALTERNATIVE-HASH - Report received with alternative hash
+- SLOPPY-EXITBUS-ORACLE-MEMBER - Member is sloppy
+- SLOPPY-EXITBUS-ORACLE-FASTLANE-MEMBER - Fastlane member is sloppy
+- EXITBUS-ORACLE-EXIT-REQUESTS-DIGEST - Exit requests digest
+- EXITBUS-ORACLE-HUGE-EXIT-REQUESTS - Huge exit requests
+- EXITBUS-ORACLE-OVERDUE - Report is overdue
+- EXITBUS-ORACLE-NO-EXIT-REQUESTS-WHEN-HUGE-QUEUE - No exit requests when huge queue
+- EXITBUS-ORACLE-TOO-LOW-BUFFER-SIZE - Too low buffer size
+
+### Lido-report
+
+Alerting for the Lido Report events
+
+**Alerts:**
+
+- LIDO-EL-REWARDS-VAULT-OVERFILLED - Rewards vault overfilled
+- LIDO-WITHDRAWALS-VAULT-OVERFILLED - Withdrawals vault overfilled
+- LIDO-BURNER-UNBURNT-OVERFILLED - Burner unburnt overfilled
+- LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST - Exited stuck refunded keys digest
+- LIDO-REPORT-REBASE-DIGEST - Rebase digest
+- LIDO-UNUSUAL-REPORT-APR-STATS - Unusual report APR stats
+- LIDO-REPORT-CL-REWARDS-DECREASED - CL rewards decreased
+
+### Node-operators-registry
+
+Alerting for the Node Operators Registry events
+
+**Alerts:**
+
+- NODE-OPERATORS-BIG-EXIT - Big exit
+- NODE-OPERATORS-ALL-STUCK-EXITED - All stuck exited
+- NODE-OPERATORS-NEW-STUCK-KEYS - New stuck keys
+- NODE-OPERATORS-ALL-STUCK-REFUNDED - All stuck refunded
+- NODE-OPERATORS-KEYS-REMOVED - Keys removed
+- NODE-OPERATORS-VETTED-KEYS-SET - Vetted keys set
+- NODE-OPERATORS-STUCK-PENALTY-ENDED - Stuck penalty ended
+
+
+### Oracle-daemon-config
+
+Alerting for the Oracle Daemon Config events
+
+### Sanity-checker
+
+Alerting for the Sanity Checker events
+
+**Alerts:**
+
+- ORACLE-REPORT-SANITY-CHECKER-LIMITS-CHANGED - Oracle report sanity checker limits changed
+
+### Set-ops
 
 DAO operations related alerts
 
 **Alerts:**
 
 - LOW-OPERATORS-AVAILABLE-KEYS-NUM - Few available keys left
-- HUGE-BUFFERED-ETH - Too many ETH in the buffer
-- LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
-- Alerts on the admin events in Lido DAO contracts
+- MEV-LOW-RELAY-COUNT - Low relay count
 
-### Easy-track
 
-Notifications about EasyTrack events
+### Staking-router
 
-**Alerts:**
+Alerting for the Staking Router events
 
-- Alerts on the events in EasyTrack contracts
-
-### Lido-oracle
-
-ETH2 Oracles monitoring
-
-**Alerts:**
-
-- SLOPPY-LIDO-ORACLE - Detect oracles than has not participated in quorum for a long time
-- LIDO-ORACLE-OVERDUE - Delay in Oracles report
-- LIDO-ORACLE-LOW-BALANCE - Low balance of the Lido Oracle
-- LIDO-ORACLE-REPORT - Details about the latest oracle report
-- LIDO-ORACLE-REWARDS-DECREASED - Beacon chain rewards decreased compared to the previous period
-- Alerts on the admin events in Lido Oracle contract
-
-### Proxy-watcher
-
-Alerting for the proxy implementation changes
-
-**Alerts:**
-
-- PROXY-IMPL-CHANGED - Implementation of one of the Lido proxies has changed
-
-### Node Operators Registry
-
-Alerting for the Node Operators Registry events
-
-**Alerts:**
-
-- NODE-OPERATORS-KEYS-REMOVED - Operators keys removed
-- NODE-OPERATORS-STAKING-LIMIT-SET - Node Operator staking limit set by non-EasyTrack motion
-- Alerts on the events in Node Operators Registry contract
 
 ## Development
 
