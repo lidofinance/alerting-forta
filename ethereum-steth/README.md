@@ -21,7 +21,6 @@ Gate seal related alerts
 - GATE-SEAL-IS-SEALED - Gate seal is sealed
 - GATE-SEAL-NEW-ONE-CREATED - New gate seal created
 
-
 ### stETH-ops
 
 stETH operations related alerts
@@ -33,7 +32,6 @@ stETH operations related alerts
 - BUFFERED-ETH-DRAIN - Buffer is being drained unexpectedly
 - LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
 - Alerts on the admin events in Lido DAO contracts
-
 
 ### Vaults
 
@@ -63,7 +61,6 @@ Withdrawals related alerts
 - WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE - Withdrawal request after rebase is too big
 - WITHDRAWALS-BUNKER-ENABLED - Bunker is enabled
 - WITHDRAWALS-BUNKER-DISABLED - Bunker is disabled
-
 
 ## Development
 

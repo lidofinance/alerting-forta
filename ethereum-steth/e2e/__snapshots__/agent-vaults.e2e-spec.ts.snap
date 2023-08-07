@@ -4,7 +4,7 @@ exports[`agent-vaults e2e tests should process block with high EL vault balance 
 Array [
   Finding {
     "addresses": Array [],
-    "alertId": "EL_VAULT_BALANCE_CHANGE",
+    "alertId": "EL-VAULT-BALANCE-CHANGE",
     "description": "EL Vault Balance has increased by 689.017 ETH",
     "labels": Array [],
     "metadata": Object {},

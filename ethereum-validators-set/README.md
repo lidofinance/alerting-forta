@@ -64,7 +64,6 @@ Alerting for the Node Operators Registry events
 - NODE-OPERATORS-VETTED-KEYS-SET - Vetted keys set
 - NODE-OPERATORS-STUCK-PENALTY-ENDED - Stuck penalty ended
 
-
 ### Oracle-daemon-config
 
 Alerting for the Oracle Daemon Config events
@@ -86,11 +85,9 @@ DAO operations related alerts
 - LOW-OPERATORS-AVAILABLE-KEYS-NUM - Few available keys left
 - MEV-LOW-RELAY-COUNT - Low relay count
 
-
 ### Staking-router
 
 Alerting for the Staking Router events
-
 
 ## Development
 
