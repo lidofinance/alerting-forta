@@ -1,4 +1,3 @@
-// stETH
 import {
   BlockEvent,
   ethers,

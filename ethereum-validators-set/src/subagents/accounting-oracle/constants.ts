@@ -30,6 +30,8 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
   ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
 ]);
 
+export const FETCH_BALANCES_BLOCK_INTERVAL = 1000;
+
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
   ONE_WEEK / SECONDS_PER_SLOT,
 );

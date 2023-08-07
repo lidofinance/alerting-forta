@@ -1,4 +1,3 @@
-// Gov bot
 import {
   ethers,
   BlockEvent,

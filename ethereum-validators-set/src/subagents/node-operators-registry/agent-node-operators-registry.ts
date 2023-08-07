@@ -1,4 +1,3 @@
-// VS bot
 import {
   BlockEvent,
   ethers,
@@ -310,7 +309,7 @@ function handleStakeLimitSet(txEvent: TransactionEvent, findings: Finding[]) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  if (blockEvent.blockNumber % BLOCK_INTERVAL) {
+  if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
     // every 100 blocks for sync between nodes
     await Promise.all([
       handleStuckPenaltyEnd(blockEvent, findings),

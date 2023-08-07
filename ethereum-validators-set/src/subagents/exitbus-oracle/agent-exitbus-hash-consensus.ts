@@ -48,6 +48,7 @@ const {
   EXITBUS_HASH_CONSENSUS_ADDRESS,
   EXITBUS_ORACLE_ADDRESS,
   EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
+  FETCH_BALANCES_BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -124,33 +125,16 @@ export async function initialize(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([
-    handleFastLaneMembers(blockEvent),
-    handleMembersBalances(blockEvent, findings),
-  ]);
+  await handleMembersBalances(blockEvent, findings);
 
   return findings;
-}
-
-async function handleFastLaneMembers(blockEvent: BlockEvent) {
-  const hashConsensus = new ethers.Contract(
-    EXITBUS_HASH_CONSENSUS_ADDRESS,
-    HASH_CONSENSUS_ABI,
-    ethersProvider,
-  );
-  // update only on report submission. Move to handleReportSubmitted
-  fastLaneMembers = (
-    await hashConsensus.functions.getFastLaneMembers({
-      blockTag: blockEvent.blockNumber,
-    })
-  ).addresses;
 }
 
 async function handleMembersBalances(
   blockEvent: BlockEvent,
   findings: Finding[],
 ) {
-  // fetch once per 1000 blocks
+  if (blockEvent.blockNumber % FETCH_BALANCES_BLOCK_INTERVAL != 0) return;
   membersAddresses = await getOracleMembers(blockEvent.blockNumber);
   await Promise.all(
     membersAddresses.map((member) =>
@@ -203,7 +187,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
   if (EXITBUS_HASH_CONSENSUS_ADDRESS in txEvent.addresses) {
     handleReportReceived(txEvent, findings);
-    handleReportSubmitted(txEvent, findings);
+    await handleReportSubmitted(txEvent, findings);
   }
   handleEventsOfNotice(
     txEvent,
@@ -253,13 +237,27 @@ function handleReportReceived(txEvent: TransactionEvent, findings: Finding[]) {
   });
 }
 
-function handleReportSubmitted(txEvent: TransactionEvent, findings: Finding[]) {
+async function handleReportSubmitted(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+) {
   const [submitted] = txEvent.filterLog(
     EXITBUS_ORACLE_REPORT_SUBMITTED_EVENT,
     EXITBUS_ORACLE_ADDRESS,
   );
   if (!submitted) return;
   const block = txEvent.blockNumber;
+  const hashConsensus = new ethers.Contract(
+    EXITBUS_HASH_CONSENSUS_ADDRESS,
+    HASH_CONSENSUS_ABI,
+    ethersProvider,
+  );
+  // update only on report submission. Move to handleReportSubmitted
+  fastLaneMembers = (
+    await hashConsensus.functions.getFastLaneMembers({
+      blockTag: block,
+    })
+  ).addresses;
   membersLastReport.forEach((report, member) => {
     const reportDist = block - report.blockNumber;
     const reportDistDays = Math.floor(

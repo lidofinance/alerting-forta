@@ -1,10 +1,9 @@
-// VS bot
 import {
-  BlockEvent,
   ethers,
   Finding,
   FindingSeverity,
   FindingType,
+  TransactionEvent,
 } from "forta-agent";
 
 import { ethersProvider } from "../../ethers";
@@ -15,13 +14,13 @@ import { RedefineMode, requireWithTier } from "../../common/utils";
 import type * as Constants from "./constants";
 import BigNumber from "bignumber.js";
 
-let prevLimits: BigNumber[] = [];
+let prevLimits: any = {};
 
 export const name = "OracleReportSanityChecker";
 
 const {
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
-  ORACLE_REPORT_SANITY_CHECKER_LIMITS,
+  ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -38,44 +37,54 @@ export async function initialize(
     ORACLE_REPORT_SANITY_CHECKER_ABI,
     ethersProvider,
   );
-  [prevLimits] =
+  const [limits] =
     await oracleReportSanityChecker.functions.getOracleReportLimits({
-      blockTag: currentBlock,
+      blockTag: currentBlock - 1,
     });
+
+  (limits as []).forEach((value, index) => {
+    prevLimits[
+      Object.values(ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS)[index]
+    ] = value;
+  });
 
   return {};
 }
 
-export async function handleBlock(blockEvent: BlockEvent) {
+export async function handleTransaction(transactionEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  await handleOracleReportLimits(blockEvent, findings);
+  await handleOracleReportLimits(transactionEvent, findings);
 
   return findings;
 }
 
 async function handleOracleReportLimits(
-  blockEvent: BlockEvent,
+  txEvent: TransactionEvent,
   findings: Finding[],
 ) {
-  // check is possible to use events
-  const oracleReportSanityChecker = new ethers.Contract(
-    ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
-    ORACLE_REPORT_SANITY_CHECKER_ABI,
-    ethersProvider,
+  const changeLimitEvents = Object.keys(
+    ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS,
   );
-  let currentLimits: BigNumber[];
-
-  [currentLimits] =
-    await oracleReportSanityChecker.functions.getOracleReportLimits({
-      blockTag: blockEvent.blockNumber,
-    });
-
+  const filteredEvents = txEvent.filterLog(changeLimitEvents);
+  if (!filteredEvents) return;
   let changed = false;
   let description = "Changed limits:";
-  currentLimits.forEach((value, index) => {
-    if (!value.eq(prevLimits[index])) {
-      description += `${ORACLE_REPORT_SANITY_CHECKER_LIMITS[index]}: ${prevLimits[index]} -> ${value}\n`;
+  filteredEvents.forEach((event) => {
+    const eventSign = changeLimitEvents.find((eventName) =>
+      eventName.includes(event.name),
+    );
+    if (!eventSign) return;
+    const limitName = (ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS as any)[
+      eventSign
+    ];
+    if (
+      limitName &&
+      new BigNumber(String(prevLimits[limitName])) !=
+        new BigNumber(String(event.args[limitName]))
+    ) {
+      description += `\n ${limitName} [${prevLimits[limitName]} -> ${event.args[limitName]}]`;
+      prevLimits[limitName] = event.args[limitName];
       changed = true;
     }
   });
@@ -90,12 +99,10 @@ async function handleOracleReportLimits(
       }),
     );
   }
-
-  prevLimits = currentLimits;
 }
 
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
-  handleBlock,
+  handleTransaction,
   // initialize, // sdk won't provide any arguments to the function
 };

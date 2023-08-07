@@ -1,4 +1,3 @@
-// VS bot
 import {
   BlockEvent,
   ethers,
@@ -184,18 +183,7 @@ async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
   );
 }
 
-async function updateMaxValidatorExitRequestsPerReport(block: number) {
-  const sanityChecker = new ethers.Contract(
-    ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
-    ORACLE_REPORT_SANITY_CHECKER_ABI,
-    ethersProvider,
-  );
-  // move to handleExitRequest
-  const { maxValidatorExitRequestsPerReport } =
-    await sanityChecker.getOracleReportLimits({ blockTag: block });
-
-  lastMaxValidatorExitRequestsPerReport = maxValidatorExitRequestsPerReport;
-}
+async function updateMaxValidatorExitRequestsPerReport(block: number) {}
 
 async function updateNoNames(block: number) {
   const nor = new ethers.Contract(
@@ -216,10 +204,7 @@ async function updateNoNames(block: number) {
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([
-    handleReportSubmitted(blockEvent, findings),
-    updateMaxValidatorExitRequestsPerReport(blockEvent.blockNumber),
-  ]);
+  await handleReportSubmitted(blockEvent, findings);
 
   // Update NO names each 100 blocks
   if (blockEvent.blockNumber % BLOCK_INTERVAL) {
@@ -283,9 +268,12 @@ async function handleReportSubmitted(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleExitRequest(txEvent, findings);
   handleEventsOfNotice(txEvent, findings, EXITBUS_ORACLE_EVENTS_OF_NOTICE);
-  await handleProcessingStarted(txEvent, findings);
+
+  await Promise.all([
+    handleExitRequest(txEvent, findings),
+    handleProcessingStarted(txEvent, findings),
+  ]);
 
   return findings;
 }
@@ -472,7 +460,10 @@ function prepareExitsDigest(exitRequests: LogDescription[]): string {
   return digestStr;
 }
 
-function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
+async function handleExitRequest(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+) {
   const [processingStarted] = txEvent.filterLog(
     EXITBUS_ORACLE_PROCESSING_STARTED_EVENT,
     EXITBUS_ORACLE_ADDRESS,
@@ -500,6 +491,16 @@ function handleExitRequest(txEvent: TransactionEvent, findings: Finding[]) {
     }),
   );
 
+  const sanityChecker = new ethers.Contract(
+    ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
+    ORACLE_REPORT_SANITY_CHECKER_ABI,
+    ethersProvider,
+  );
+  const { maxValidatorExitRequestsPerReport } =
+    await sanityChecker.getOracleReportLimits({
+      blockTag: txEvent.blockNumber,
+    });
+  lastMaxValidatorExitRequestsPerReport = maxValidatorExitRequestsPerReport;
   if (
     exitRequests.length >
     Math.ceil(
