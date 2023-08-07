@@ -1,7 +1,4 @@
-import {
-  Finding,
-  TransactionEvent,
-} from "forta-agent";
+import { Finding, TransactionEvent } from "forta-agent";
 
 import {
   handleEventsOfNotice,
