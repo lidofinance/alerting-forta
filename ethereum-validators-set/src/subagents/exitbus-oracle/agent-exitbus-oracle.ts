@@ -38,7 +38,6 @@ let lastReportSubmitTimestamp = 0;
 let lastReportSubmitOverdueTimestamp = 0;
 
 let reportSubmitOverdueCount = 0;
-let lastMaxValidatorExitRequestsPerReport = 0;
 
 let noNames = new Map<number, string>();
 let latestExitCounts = new Array<number[]>();
@@ -135,19 +134,11 @@ export async function initialize(
     ).toUTCString()}`,
   );
 
-  await updateMaxValidatorExitRequestsPerReport(currentBlock);
   await updateNoNames(currentBlock);
-
-  log(
-    `lastMaxValidatorExitRequestsPerReport: ${lastMaxValidatorExitRequestsPerReport}`,
-  );
 
   return {
     lastReportTimestamp: String(lastReportSubmitTimestamp) ?? "unknown",
     prevReportTimestamp: String(prevReportSubmitTimestamp) ?? "unknown",
-    lastMaxValidatorExitRequestsPerReport: String(
-      lastMaxValidatorExitRequestsPerReport,
-    ),
   };
 }
 
@@ -182,8 +173,6 @@ async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
     blockTo,
   );
 }
-
-async function updateMaxValidatorExitRequestsPerReport(block: number) {}
 
 async function updateNoNames(block: number) {
   const nor = new ethers.Contract(
@@ -500,12 +489,10 @@ async function handleExitRequest(
     await sanityChecker.getOracleReportLimits({
       blockTag: txEvent.blockNumber,
     });
-  lastMaxValidatorExitRequestsPerReport = maxValidatorExitRequestsPerReport;
   if (
     exitRequests.length >
     Math.ceil(
-      lastMaxValidatorExitRequestsPerReport *
-        EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
+      maxValidatorExitRequestsPerReport * EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
     )
   ) {
     findings.push(

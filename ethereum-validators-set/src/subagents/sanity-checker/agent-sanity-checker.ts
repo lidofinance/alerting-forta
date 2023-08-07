@@ -12,7 +12,6 @@ import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi/OracleReportSanityChecke
 
 import { RedefineMode, requireWithTier } from "../../common/utils";
 import type * as Constants from "./constants";
-import BigNumber from "bignumber.js";
 
 let prevLimits: any = {};
 
@@ -80,8 +79,7 @@ async function handleOracleReportLimits(
     ];
     if (
       limitName &&
-      new BigNumber(String(prevLimits[limitName])) !=
-        new BigNumber(String(event.args[limitName]))
+      String(prevLimits[limitName]) != String(event.args[limitName])
     ) {
       description += `\n ${limitName} [${prevLimits[limitName]} -> ${event.args[limitName]}]`;
       prevLimits[limitName] = event.args[limitName];
