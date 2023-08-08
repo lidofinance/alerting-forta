@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-vaults e2e tests should process block with high EL vault balance difference 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "EL-VAULT-BALANCE-CHANGE",
+    "description": "EL Vault Balance has increased by 689.017 ETH",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "💵 EL Vault Balance significant change",
+    "protocol": "ethereum",
+    "severity": 1,
+    "type": 4,
+  },
+]
+`;
