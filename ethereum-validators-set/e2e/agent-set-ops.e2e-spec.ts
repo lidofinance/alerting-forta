@@ -77,30 +77,6 @@ describe("agent-dao-ops e2e tests", () => {
     TEST_TIMEOUT,
   );
 
-  // todo: disabled due to changes in the event signatures.
-  //  uncomment or remove after V2
-  // it(
-  //   "should process tx with paused deposits",
-  //   async () => {
-  //     const findings = await runTransaction(
-  //       "0x878e2a2ff5018e680dfd37031ed8b5d1d7e2ec41a4bd640168f347bbedf31a7b"
-  //     );
-  //     expect(findings.at(0)).toMatchSnapshot();
-  //   },
-  //   TEST_TIMEOUT
-  // );
-
-  // it(
-  //   "should process tx with unpaused deposits",
-  //   async () => {
-  //     const findings = await runTransaction(
-  //       "0xd5ddc8c0e3e24b36ffac6e804894c5c09c012e9079a9d9df24f503f1e75e2f64"
-  //     );
-  //     expect(findings.at(0)).toMatchSnapshot();
-  //   },
-  //   TEST_TIMEOUT
-  // );
-
   it(
     "should process tx with added guardian",
     async () => {

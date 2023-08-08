@@ -3882,9 +3882,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lido-operations-forta-bot@workspace:.":
+"lido-governance-forta-bot@workspace:.":
   version: 0.0.0-use.local
-  resolution: "lido-operations-forta-bot@workspace:."
+  resolution: "lido-governance-forta-bot@workspace:."
   dependencies:
     "@types/jest": ^27.0.1
     "@types/lodash": ^4.14.194

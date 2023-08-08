@@ -23,7 +23,7 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 
-export const name = "stETHops";
+export const name = "stEthOps";
 
 const {
   REPORT_WINDOW,
@@ -91,7 +91,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   await Promise.all([
     handleBufferedEth(blockEvent, findings),
     handleDepositExecutorBalance(blockEvent, findings),
-    handleStakingLimit(blockEvent, findings), //
+    handleStakingLimit(blockEvent, findings),
   ]);
 
   return findings;
