@@ -474,13 +474,6 @@ async function handleBalancerPoolSize(
   const poolSize = poolTokens[0].plus(poolTokens[1]);
   const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
-    let severity = FindingSeverity.Info;
-    if (
-      poolSizeChange < 0 &&
-      Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_HIGH
-    ) {
-      severity = FindingSeverity.High;
-    }
     findings.push(
       Finding.fromObject({
         name: "⚠️ Significant Balancer Pool size change",
@@ -490,7 +483,7 @@ async function handleBalancerPoolSize(
             : "decreased by " + -poolSizeChange.toFixed(2).toString()
         }% since the last block`,
         alertId: "BALANCER-POOL-SIZE-CHANGE",
-        severity: severity,
+        severity: FindingSeverity.Info,
         type: FindingType.Info,
         metadata: {
           sizeBefore: poolParams.poolSize.toFixed(),
