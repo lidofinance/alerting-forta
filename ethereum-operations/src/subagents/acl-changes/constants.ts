@@ -476,7 +476,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Burner",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [roleByName("REQUEST_BURN_MY_STETH_ROLE"), []],
+        [roleByName("REQUEST_BURN_MY_STETH_ROLE"), [ROLES_OWNERS.agent]],
         [roleByName("RECOVER_ASSETS_ROLE"), []],
         [
           roleByName("REQUEST_BURN_SHARES_ROLE"),
