@@ -37,7 +37,7 @@ import {
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60; // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60; // 1h
-export const NEW_ROLE_MEMBERS_REPORT_INTERVAL = 60 * 60; // 1h
+export const NEW_ROLE_MEMBERS_REPORT_INTERVAL = 6 * 60 * 60; // 6h
 
 export const ARAGON_ACL_ADDRESS = aclAddress;
 
