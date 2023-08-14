@@ -305,7 +305,9 @@ async function handleRolesMembers(blockEvent: BlockEvent, findings: Finding[]) {
                 data.name
               } changed to [${curMembers
                 .map((m) => etherscanAddress(m))
-                .join(", ")}]`,
+                .join(
+                  ", ",
+                )}]\nPlease update the constants file if the change was expected.`,
               alertId: "ACL-ROLE-MEMBERS-CHANGED",
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
