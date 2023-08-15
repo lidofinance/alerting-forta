@@ -79,9 +79,8 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  const { allExited, allStuck, allRefunded } = await getSummaryDigest(
-    currentBlock,
-  );
+  const { allExited, allStuck, allRefunded } =
+    await getSummaryDigest(currentBlock);
   lastAllExited = allExited;
   lastAllStuck = allStuck;
   lastAllRefunded = allRefunded;
