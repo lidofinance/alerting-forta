@@ -26,7 +26,6 @@ import {
   ONE_YEAR,
   SECONDS_PER_SLOT,
 } from "../../common/constants";
-import { toNumber } from "lodash";
 const {
   LIDO_STETH_ADDRESS,
   ACCOUNTING_ORACLE_ADDRESS,
