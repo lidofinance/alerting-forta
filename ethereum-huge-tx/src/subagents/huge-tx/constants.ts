@@ -142,6 +142,11 @@ export const MONITORED_TOKENS = new Map<string, string>(
     ["0xf668e6d326945d499e5b35e7cd2e82acfbcfe6f0", "STETHETH_C-f-gauge"],
     ["0xdcd90c7f6324cfa40d7169ef80b12031770b4325", "yvCurve-stETH"],
     ["0x9518c9063eb0262d791f38d8d6eb0aca33c63ed0", "cvxsteCRV"],
+    ["0x0b925ed163218f6662a35e0f0371ac234f9e9371", "Aave: Ethereum wstETH V3"],
+    [
+      "0xc96113eed8cab59cd8a66813bcb0ceb29f06d2e4",
+      "Aave Ethereum Variable Debt wstETH",
+    ],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
@@ -1236,7 +1241,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       },
       additionalTransfers: [
         {
-          contract: "0x0B925eD163218f6662a35e0f0371Ac234f9E9371",
+          contract: "0x0b925ed163218f6662a35e0f0371ac234f9e9371",
           from: NULL_ADDRESS,
         },
       ],
