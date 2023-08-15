@@ -58,9 +58,8 @@ export async function initialize(
   );
 
   if (mainDataSubmits.length > 0) {
-    const reportMainDataSubmitBlock = await mainDataSubmits[
-      mainDataSubmits.length - 1
-    ].getBlock();
+    const reportMainDataSubmitBlock =
+      await mainDataSubmits[mainDataSubmits.length - 1].getBlock();
     lastReportMainDataSubmitTimestamp = reportMainDataSubmitBlock.timestamp;
     const extraDataSubmits = await getReportExtraDataSubmits(
       reportMainDataSubmitBlock.number,
@@ -138,9 +137,8 @@ async function handleMainDataReportSubmitted(
       blockEvent.blockNumber - 1,
     );
     if (mainDataSubmits.length > 0) {
-      const reportMainDataSubmitBlock = await mainDataSubmits[
-        mainDataSubmits.length - 1
-      ].getBlock();
+      const reportMainDataSubmitBlock =
+        await mainDataSubmits[mainDataSubmits.length - 1].getBlock();
       lastReportMainDataSubmitTimestamp = reportMainDataSubmitBlock.timestamp;
       const extraDataSubmits = await getReportExtraDataSubmits(
         reportMainDataSubmitBlock.number,
