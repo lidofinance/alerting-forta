@@ -67,6 +67,7 @@ let lastTotalEther = BN_ZERO;
 let lastAllExited = 0;
 let lastAllStuck = 0;
 let lastAllRefunded = 0;
+let lastNonFinalizedRequestsCount = 0;
 
 let lastRebaseEventTimestamp = 0;
 
@@ -142,6 +143,21 @@ export async function initialize(
       );
     }
   }
+  const withdrawalsQueue = new ethers.Contract(
+    WITHDRAWAL_QUEUE_ADDRESS,
+    WITHDRAWAL_QUEUE_ABI,
+    ethersProvider,
+  );
+
+  const [lastFinalizedId, lastId] = await Promise.all([
+    withdrawalsQueue.functions.getLastFinalizedRequestId({
+      blockTag: currentBlock,
+    }),
+    withdrawalsQueue.functions.getLastRequestId({
+      blockTag: currentBlock,
+    }),
+  ]);
+  lastNonFinalizedRequestsCount = Number(lastId) - Number(lastFinalizedId);
 
   return {};
 }
@@ -663,13 +679,42 @@ async function prepareRequestsFinalizationLines(
   txEvent: TransactionEvent,
   metadata: { [key: string]: string },
 ): Promise<string> {
+  const lido = new ethers.Contract(
+    LIDO_STETH_ADDRESS,
+    LIDO_ABI,
+    ethersProvider,
+  );
+  const withdrawalsQueue = new ethers.Contract(
+    WITHDRAWAL_QUEUE_ADDRESS,
+    WITHDRAWAL_QUEUE_ABI,
+    ethersProvider,
+  );
   const [withdrawalsFinalizedEvent] = txEvent.filterLog(
     WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
     WITHDRAWAL_QUEUE_ADDRESS,
   );
   let description = "No finalized requests";
+  metadata.nonFinalizedRequestsCount = lastNonFinalizedRequestsCount.toString();
+  const [nonFinalizedRequestsAmountRaw] =
+    await withdrawalsQueue.functions.unfinalizedStETH({
+      blockTag: txEvent.blockNumber,
+    });
+  const nonFinalizedRequestsAmount = new BigNumber(
+    String(nonFinalizedRequestsAmountRaw),
+  ).div(ETH_DECIMALS);
+  metadata.nonFinalizedRequestsAmount = formatBN2Str(
+    nonFinalizedRequestsAmount,
+  );
   if (!withdrawalsFinalizedEvent) {
-    return `*Requests finalization*\n${description}`;
+    metadata.finalizedEth = "0";
+    metadata.finalizedRequestsCount = "0";
+    metadata.finalizationBufferUsed = "0";
+    metadata.finalizationShareRate = "0";
+    return (
+      `*Requests finalization*\n${description}` +
+      `\nPending: ${lastNonFinalizedRequestsCount} ` +
+      `(${formatBN2Str(nonFinalizedRequestsAmount)} stETH)`
+    );
   }
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
@@ -686,12 +731,6 @@ async function prepareRequestsFinalizationLines(
   );
   metadata.finalizationShareRate = shareRate.toFixed(5);
 
-  const withdrawalsQueue = new ethers.Contract(
-    WITHDRAWAL_QUEUE_ADDRESS,
-    WITHDRAWAL_QUEUE_ABI,
-    ethersProvider,
-  );
-
   const [lastFinalizedId, lastId] = await Promise.all([
     withdrawalsQueue.functions.getLastFinalizedRequestId({
       blockTag: txEvent.blockNumber,
@@ -701,15 +740,9 @@ async function prepareRequestsFinalizationLines(
     }),
   ]);
 
-  metadata.nonFinalizedRequestsCount = (
-    Number(lastId) - Number(lastFinalizedId)
-  ).toString();
+  lastNonFinalizedRequestsCount = Number(lastId) - Number(lastFinalizedId);
+  metadata.nonFinalizedRequestsCount = lastNonFinalizedRequestsCount.toString();
 
-  const lido = new ethers.Contract(
-    LIDO_STETH_ADDRESS,
-    LIDO_ABI,
-    ethersProvider,
-  );
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
     LIDO_STETH_ADDRESS,
@@ -730,7 +763,8 @@ async function prepareRequestsFinalizationLines(
     description =
       `Finalized: ${requests} ` +
       `(${formatBN2Str(ether)} ETH)` +
-      `\nPending: ${Number(lastId) - Number(lastFinalizedId)}` +
+      `\nPending: ${lastNonFinalizedRequestsCount} ` +
+      `(${formatBN2Str(nonFinalizedRequestsAmount)} stETH)` +
       `\nShare rate: ${shareRate.toFixed(5)}` +
       `\nUsed buffer: ${finalizationBufferUsed} ETH`;
   }
