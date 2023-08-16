@@ -1487,8 +1487,8 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       },
       additionalTransfers: [
         {
-            contract: "0x12b54025c112aa61face2cdb7118740875a566e9",
-            to: NULL_ADDRESS,
+          contract: "0x12b54025c112aa61face2cdb7118740875a566e9",
+          to: NULL_ADDRESS,
         },
       ],
     },
