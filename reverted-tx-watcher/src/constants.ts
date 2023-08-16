@@ -7,7 +7,7 @@ export type LocatorContracts = {
   depositSecurityModule: string;
   elRewardsVault: string;
   legacyOracle: string;
-  lido: string;
+  stETHtoken: string;
   oracleReportSanityChecker: string;
   postTokenRebaseReceiver: string;
   burner: string;
