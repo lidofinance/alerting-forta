@@ -17,12 +17,19 @@ import {
   createMediumSeverityFinding 
 } from "./findings";
 
+interface RevertDictionary {
+  [key: string]: number;
+}
+
 export const name = "RevertedTxWatcher";
 export const HIGH_GAS_THRESHOLD = "600000";
-
+export const MAX_REVERTION_PER_DAY = 20
+let revertedTxPerEOA: RevertDictionary = {};
 let contracts: LocatorContracts;
 let addresses: [string, string][] = [];
 export let gasUsed = ethers.BigNumber.from(0);
+
+startTimer()
 
 export async function initialize(
   currentBlock: number,
@@ -90,6 +97,17 @@ async function handleRevertedTx(
   if (receipt.status !== 0) return;
 
   for (let [name, address] of suitableAddresses) {
+    increaseForEOA(txEvent.from)
+    if (revertedTxPerEOA[txEvent.from] > MAX_REVERTION_PER_DAY) {
+        findings.push(
+          createMediumSeverityFinding(
+            name, 
+            address, 
+            txEvent,
+            revertedTxPerEOA[txEvent.from]
+          )
+        )
+    }
     if (gasUsed.gte(HIGH_GAS_THRESHOLD)) {
       findings.push(
         createLowSeverityFinding(
@@ -106,6 +124,20 @@ async function handleRevertedTx(
     )
   )
 }
+}
+
+function startTimer() {
+  setInterval(resetDictionary, 7 * 24 * 60 * 60 * 1000);
+}
+
+function increaseForEOA(address: string) {
+  if (!revertedTxPerEOA[address]) {
+    revertedTxPerEOA[address] = 0;
+  } revertedTxPerEOA[address]++;
+}
+
+function resetDictionary() {
+  revertedTxPerEOA = {};
 }
 
 export function etherscanLink(txHash: string): string {
