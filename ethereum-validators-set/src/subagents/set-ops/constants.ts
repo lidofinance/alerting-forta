@@ -57,7 +57,7 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     event: "event RelayRemoved (string indexed uri_hash, string uri)",
     alertId: "MEV-RELAY-REMOVED",
     name: "⚠️ MEV Allowed list: Relay removed",
-    description: (args: any) => `MEV relay removed.\nURI: ${args.uri}`,
+    description: (args: any) => `MEV relay removed.\nURI: ${args[1]}`,
     severity: FindingSeverity.Info,
   },
   {
