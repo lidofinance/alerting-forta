@@ -215,6 +215,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xf6a94dfd0e6ea9ddfdffe4762ad4236576136613", // HashflowRouter 1
   "0x9b11bc9fac17c058cab6286b0c785be6a65492ef", // LiFiDiamondImmutable
   "0x58df81babdf15276e761808e872a3838cbecbcf9", // BananaGun: Router
+  "0x02e7b8511831b1b02d9018215a0f8f500ea5c6b3", // ParaSwapRepayAdapter
+  "0xe7b9c7c9ca85340b8c06fb805f7775e3015108db", // AladdinDAO Market
+  "0xcf5540fffcdc3d510b18bfca6d2b9987b0772559", // Odos.xyz router
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
