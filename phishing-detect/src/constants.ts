@@ -26,6 +26,7 @@ export const MONITORED_ERC20_ADDRESSES = new Map<string, string>([
 
 const WHITE_LIST_ADDRESSES_RAW: string[] = [
   // owned by Lido
+  "0xae7ab96520de3a18e5e111b5eaab095312d7fe84", // stETH
   "0xdc24316b9ae028f1497c275eb9192a3ea0f67022", // curvePool
   "0x32296969ef14eb0c6d29669c550d4a0449130230", // balancerPool
   "0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431", // oneInchPool
