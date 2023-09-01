@@ -219,6 +219,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x02e7b8511831b1b02d9018215a0f8f500ea5c6b3", // ParaSwapRepayAdapter
   "0xe7b9c7c9ca85340b8c06fb805f7775e3015108db", // AladdinDAO Market
   "0xcf5540fffcdc3d510b18bfca6d2b9987b0772559", // Odos.xyz router
+  "0x72c590349535ad52e6953744cb2a36b409542719", // prismafinance.com
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
