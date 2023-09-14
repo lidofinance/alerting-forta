@@ -221,6 +221,11 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xcf5540fffcdc3d510b18bfca6d2b9987b0772559", // Odos.xyz router
   "0x72c590349535ad52e6953744cb2a36b409542719", // prismafinance.com
   "0x826e9f2e79ceea850df4d4757e0d12115a720d74", // summer.fi Swap
+  "0xe222fbe074a436145b255442d919e4e3a6c6a480", // KyberSwap
+  "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319", // linea.mirror.xyz
+  "0x8516944e89f296eb6473d79aed1ba12088016c9e", // Sushiswap
+  "0x5e28b5858da2c6fb4e449d69eeb5b82e271c45ce", // lybra.finance wstETH
+  "0xa980d4c0c2e48d305b582aa439a3575e3de06f0e", // lybra.finance stETH
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
