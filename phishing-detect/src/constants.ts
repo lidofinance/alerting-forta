@@ -226,6 +226,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x8516944e89f296eb6473d79aed1ba12088016c9e", // Sushiswap
   "0x5e28b5858da2c6fb4e449d69eeb5b82e271c45ce", // lybra.finance wstETH
   "0xa980d4c0c2e48d305b582aa439a3575e3de06f0e", // lybra.finance stETH
+  "0x13f4ea83d0bd40e75c8222255bc855a974568dd4", // Pancake Swap
+  "0xf0d4c12a5768d806021f80a262b4d39d26c58b8d", // Curve
+  "0x7ded4df8d8a663b8af5933058356b367b5de8f23", // Yearn Zap
+  "0x9ab6b21cdf116f611110b048987e58894786c244", // raft.fi IRPM
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
