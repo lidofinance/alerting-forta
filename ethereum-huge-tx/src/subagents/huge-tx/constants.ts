@@ -147,6 +147,7 @@ export const MONITORED_TOKENS = new Map<string, string>(
       "0xc96113eed8cab59cd8a66813bcb0ceb29f06d2e4",
       "Aave Ethereum Variable Debt wstETH",
     ],
+    ["0x12b54025c112aa61face2cdb7118740875a566e9", "Spark wstETH (spwstETH)"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
@@ -1458,6 +1459,42 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Kyber USDC LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0x12b54025c112aa61face2cdb7118740875a566e9",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x12b54025c112aa61face2cdb7118740875a566e9",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Spark Protocol\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x12b54025c112aa61face2cdb7118740875a566e9",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x12b54025c112aa61face2cdb7118740875a566e9",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Spark Protocol\n` +
       `by: ${info.to} (${info.toName})`,
   },
 ];
