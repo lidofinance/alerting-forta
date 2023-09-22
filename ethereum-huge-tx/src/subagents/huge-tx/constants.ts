@@ -562,6 +562,38 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
       `was withdrawn from Lybra Finance\n` +
       `by: ${info.to} (${info.toName})`,
   },
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    to: "0xa980d4c0C2E48d305b582AA439a3575e3de06f0E",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Lybra_v2 stETH Vault\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    from: "0xa980d4c0C2E48d305b582AA439a3575e3de06f0E",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Lybra_v2 stETH Vault\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    contract: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    to: "0x5e28B5858DA2C6fb4E449D69EEb5B82e271c45Ce",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Lybra_v2 wstETH Vault\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    from: "0x5e28B5858DA2C6fb4E449D69EEb5B82e271c45Ce",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Lybra_v2 wstETH Vault\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
 ];
 
 export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
