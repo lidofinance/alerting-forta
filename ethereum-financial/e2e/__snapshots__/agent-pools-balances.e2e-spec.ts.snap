@@ -106,7 +106,7 @@ exports[`agent-pools-balances e2e tests should process block with significant Ba
 Finding {
   "addresses": Array [],
   "alertId": "BALANCER-POOL-SIZE-CHANGE",
-  "description": "Balancer Pool size has increased by 5.26% since the last block",
+  "description": "Balancer Pool size has increased by 7982.29 ETH (5.26%) since the last block. Prev: 151721.48 ETH, Cur: 159703.77 ETH. Diff: 7982.29 ETH",
   "labels": Array [],
   "metadata": Object {
     "sizeAfter": "159703765204466775027621",
