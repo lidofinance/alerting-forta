@@ -8,4 +8,7 @@ l2-bridge-optimism/* @lidofinance/lido-eth-protocol
 ethereum-financial/* @lidofinance/lido-eth-protocol
 reverted-tx-watcher/* @lidofinance/lido-eth-protocol
 arbitrum/* @lidofinance/lido-eth-protocol
+ethereum-governance/* @lidofinance/lido-governance
+multisig-watcher/* @lidofinance/lido-governance
+voting-watcher/* @lidofinance/lido-governance
 * @lidofinance/automation
