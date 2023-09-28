@@ -230,6 +230,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xf0d4c12a5768d806021f80a262b4d39d26c58b8d", // Curve
   "0x7ded4df8d8a663b8af5933058356b367b5de8f23", // Yearn Zap
   "0x9ab6b21cdf116f611110b048987e58894786c244", // raft.fi IRPM
+  "0xe7583af5121a8f583efd82767cccfeb71069d93a", // MaverickPoolPositionManager
+  "0x648b8d2340842a7040680915c4dab89382eeeda9", // ComptrollerLib proxy enzyme.finance
+  "0x8a5fcd88b4ac70a1939955faea4e12bd0c7b1237", // Neutron GMP Helper (Ethereum)
+  "0x5550d13389bb70f45fcef58f19f6b6e87f6e747d", // Sushiswap routeProcessor
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -244,6 +248,8 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0x00006deacd9ad19db3d81f8410ea2b45ea570000", // Phishing EOA
   "0x00001f78189be22c3498cff1b8e02272c3220000", // Phishing EOA
   "0xa0ec2733e8aef26dab0be9abfbacd9ef337740e3", // Phishing EOA
+  "0xcb394e8f7a652571a83e63c671be74a99ef56925", // Phishing EOA
+  "0xfd1f21a19b49cca24318d73197b625cdb730eabc", // Phishing EOA
 ];
 
 export const PHISHING_LIST_ADDRESSES: string[] =
