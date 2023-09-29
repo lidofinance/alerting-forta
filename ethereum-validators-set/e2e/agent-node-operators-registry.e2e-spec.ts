@@ -42,35 +42,32 @@ describe("agent-node-operators-registry e2e tests", () => {
   it(
     "should process tx with removed signing keys",
     async () => {
-      // todo: should be uncommented after v2
-      // const findings = await runTransaction(
-      //   "0x0397a4af942b58698cce7b5e7610dc7da41309b311318a5bc5ff54356bca74e7"
-      // );
-      // expect(findings).toMatchSnapshot();
+      const findings = await runTransaction(
+        "0x43529ea1c44b6f6134fa045f6af81a1a15be6309a32424ea742fa056977c4010"
+      );
+      expect(findings).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
 
-  it(
-    "should process tx with set NO Stake limit by NON-EasyTrack action",
-    async () => {
-      // todo: should be uncommented after v2
-      // const findings = await runTransaction(
-      //   "0x06c62f1d1fcfe2cd92c9b1e571b7bcc37d9ee541a6fae7be48d3f5bae2e07d3c"
-      // );
-      // expect(findings).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
+  // it(
+  //   "should process tx with set NO Stake limit by NON-EasyTrack action",
+  //   async () => {
+  //     const findings = await runTransaction(
+  //       "0x06c62f1d1fcfe2cd92c9b1e571b7bcc37d9ee541a6fae7be48d3f5bae2e07d3c"
+  //     );
+  //     expect(findings).toMatchSnapshot();
+  //   },
+  //   TEST_TIMEOUT,
+  // );
 
   it(
     "should process tx with added Node operator",
     async () => {
-      // todo: should be uncommented after v2
-      // const findings = await runTransaction(
-      //   "0x05ffd9394c9a28f361b7ff1b135a52c173fe5be55e3e639cf7088f0436903aab"
-      // );
-      // expect(findings).toMatchSnapshot();
+      const findings = await runTransaction(
+        "0xa4629245311d93a11cedb9143d8b7530057685b4b568a026bac194e162002c13"
+      );
+      expect(findings).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

@@ -259,15 +259,26 @@ function handleSigningKeysRemoved(
   findings: Finding[],
 ) {
   if (NODE_OPERATORS_REGISTRY_ADDRESS in txEvent.addresses) {
+    let digest = new Map<string, number>();
     const events = txEvent.filterLog(
       SIGNING_KEY_REMOVED_EVENT,
       NODE_OPERATORS_REGISTRY_ADDRESS,
     );
     if (events.length > 0) {
+      events.forEach((event) => {
+        const noName =
+          noNames.get(Number(event.args.operatorId)) || "undefined";
+        const keysCount = digest.get(noName) || 0;
+        digest.set(noName, keysCount + 1);
+      });
       findings.push(
         Finding.fromObject({
           name: "🚨 NO Registry: Signing keys removed",
-          description: `${events.length} signing keys removed`,
+          description:
+            `Signing keys has been removed for:` +
+            `\n ${Array.from(digest.entries())
+              .map(([name, count]) => `${name}: ${count}`)
+              .join("\n")}`,
           alertId: "NODE-OPERATORS-KEYS-REMOVED",
           severity: FindingSeverity.High,
           type: FindingType.Info,
