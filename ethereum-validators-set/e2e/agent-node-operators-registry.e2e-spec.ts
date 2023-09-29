@@ -43,7 +43,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     "should process tx with removed signing keys",
     async () => {
       const findings = await runTransaction(
-        "0x43529ea1c44b6f6134fa045f6af81a1a15be6309a32424ea742fa056977c4010"
+        "0x43529ea1c44b6f6134fa045f6af81a1a15be6309a32424ea742fa056977c4010",
       );
       expect(findings).toMatchSnapshot();
     },
@@ -65,7 +65,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     "should process tx with added Node operator",
     async () => {
       const findings = await runTransaction(
-        "0xa4629245311d93a11cedb9143d8b7530057685b4b568a026bac194e162002c13"
+        "0xa4629245311d93a11cedb9143d8b7530057685b4b568a026bac194e162002c13",
       );
       expect(findings).toMatchSnapshot();
     },
