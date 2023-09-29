@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-node-operators-registry e2e tests should process tx with added Node operator 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "NODE-OPERATOR-ADDED",
+    "description": "Node operator 30 added
+Name: Launchnodes
+Reward address: [0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561](https://etherscan.io/address/0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561)
+StakingLimit: 0",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "30,Launchnodes,0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561,0",
+    },
+    "name": "ℹ️ NO Registry: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "type": 4,
+  },
+  Finding {
+    "addresses": Array [],
+    "alertId": "NODE-OPERATOR-ADDED",
+    "description": "Node operator 31 added
+Name: SenseiNode
+Reward address: [0xE556Da28015c04F35A52B3111B9F4120E908056e](https://etherscan.io/address/0xE556Da28015c04F35A52B3111B9F4120E908056e)
+StakingLimit: 0",
+    "labels": Array [],
+    "metadata": Object {
+      "args": "31,SenseiNode,0xE556Da28015c04F35A52B3111B9F4120E908056e,0",
+    },
+    "name": "ℹ️ NO Registry: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "type": 4,
+  },
+]
+`;
+
+exports[`agent-node-operators-registry e2e tests should process tx with removed signing keys 1`] = `
+Array [
+  Finding {
+    "addresses": Array [],
+    "alertId": "NODE-OPERATORS-KEYS-REMOVED",
+    "description": "Signing keys has been removed for:
+ Kiln: 50",
+    "labels": Array [],
+    "metadata": Object {},
+    "name": "🚨 NO Registry: Signing keys removed",
+    "protocol": "ethereum",
+    "severity": 4,
+    "type": 4,
+  },
+]
+`;
