@@ -189,6 +189,19 @@ function handleExitedCountChanged(
           }),
         );
       }
+      else if (lastDigest.stuck > 0 && actualStuckCount > 0) {
+        findings.push(
+          Finding.fromObject({
+            name: "ℹ️ NO Registry: operator exited some stuck keys",
+            description: `Operator: ${nodeOperatorId} ${noNames.get(
+              Number(nodeOperatorId),
+            )}\nStuck exited: ${lastDigest.stuck - actualStuckCount} of ${lastDigest.stuck}`,
+            alertId: "NODE-OPERATORS-ALL-STUCK-EXITED",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+          }),
+        );
+      }
     }
     nodeOperatorDigests.set(String(nodeOperatorId), {
       ...lastDigest,

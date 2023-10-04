@@ -324,8 +324,8 @@ async function handleExitedStuckRefundedKeysDigest(
   if (newExited == 0 && newStuck == 0 && newRefunded == 0) return;
   findings.push(
     Finding.fromObject({
-      name: "ℹ️ Lido Report: new exited, stuck and refunded keys digest",
-      description: `New exited: ${newExited}\nNew stuck: ${newStuck}\nNew refunded: ${newRefunded}`,
+      name: "ℹ️ Lido Report: exited, stuck and refunded keys digest",
+      description: `Exited: ${allExited} (+${newExited} validators)\nStuck: ${allStuck} (${newStuck} validators)\nRefunded: ${allRefunded} (${newRefunded} validators)`,
       alertId: "LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
