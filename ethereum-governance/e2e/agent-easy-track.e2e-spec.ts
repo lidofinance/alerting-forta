@@ -74,7 +74,7 @@ describe("agent-easy-track e2e tests", () => {
     "should process tx with executed motion",
     async () => {
       const findings = await runTransaction(
-        "0x9bbabb4891f324def5a0b073d89babaf7db84eb89d43afa46319ae7b377048c1",
+        "0x4f0b1a48a364bed1699979b581908f1f96396fc42b16fad066fa68d002a49580",
       );
       expect(findings.at(0)).toMatchSnapshot();
     },
