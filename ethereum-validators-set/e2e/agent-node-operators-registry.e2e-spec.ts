@@ -54,7 +54,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     "should process tx with set NO target limit set",
     async () => {
       const findings = await runTransaction(
-        "0xcd406d8439cf7b635ede687ea4fbe6d3e3a7d33e1a16c78ca5ba304ac06cb415"
+        "0xcd406d8439cf7b635ede687ea4fbe6d3e3a7d33e1a16c78ca5ba304ac06cb415",
       );
       expect(findings).toMatchSnapshot();
     },
