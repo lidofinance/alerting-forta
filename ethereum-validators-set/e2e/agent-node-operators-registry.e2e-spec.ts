@@ -50,16 +50,16 @@ describe("agent-node-operators-registry e2e tests", () => {
     TEST_TIMEOUT,
   );
 
-  // it(
-  //   "should process tx with set NO Stake limit by NON-EasyTrack action",
-  //   async () => {
-  //     const findings = await runTransaction(
-  //       "0x06c62f1d1fcfe2cd92c9b1e571b7bcc37d9ee541a6fae7be48d3f5bae2e07d3c"
-  //     );
-  //     expect(findings).toMatchSnapshot();
-  //   },
-  //   TEST_TIMEOUT,
-  // );
+  it(
+    "should process tx with set NO target limit set",
+    async () => {
+      const findings = await runTransaction(
+        "0xcd406d8439cf7b635ede687ea4fbe6d3e3a7d33e1a16c78ca5ba304ac06cb415"
+      );
+      expect(findings).toMatchSnapshot();
+    },
+    TEST_TIMEOUT,
+  );
 
   it(
     "should process tx with added Node operator",
