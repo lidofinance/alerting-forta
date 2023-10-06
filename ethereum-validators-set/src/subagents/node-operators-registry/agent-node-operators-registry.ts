@@ -188,7 +188,7 @@ function handleExitedCountChanged(
             type: FindingType.Info,
           }),
         );
-      } else if (lastDigest.stuck > 0 && actualStuckCount > 0) {
+      } else if (lastDigest.stuck - actualStuckCount > 0) {
         findings.push(
           Finding.fromObject({
             name: "ℹ️ NO Registry: operator exited some stuck keys",
