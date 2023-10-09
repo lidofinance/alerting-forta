@@ -234,6 +234,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x648b8d2340842a7040680915c4dab89382eeeda9", // ComptrollerLib proxy enzyme.finance
   "0x8a5fcd88b4ac70a1939955faea4e12bd0c7b1237", // Neutron GMP Helper (Ethereum)
   "0x5550d13389bb70f45fcef58f19f6b6e87f6e747d", // Sushiswap routeProcessor
+  "0xce16f69375520ab01377ce7b88f5ba8c48f8d666", // Squid Router
+  "0x3b95bc951ee0f553ba487327278cac44f29715e5", // Manta L1 Bridge
+  "0xadc0a53095a0af87f3aa29fe0715b5c28016364e", // Aave: Swap Collateral Adapter V3
+  "0x1ebfd36223079dc79fefc62260db9e25f3f5e2c7", // Strike ERC20 delegator
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
