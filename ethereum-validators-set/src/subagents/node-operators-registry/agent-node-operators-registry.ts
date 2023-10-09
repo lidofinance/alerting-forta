@@ -77,12 +77,8 @@ export async function initialize(
     { blockTag: currentBlock },
   );
 
-  const stuckOperators = operators.filter(
-    (digest: any) => Number(digest.summary.stuckValidatorsCount) != 0,
-  );
-
-  const stuckOperatorsSummaries = await Promise.all(
-    stuckOperators.map((digest: any) =>
+  const operatorsSummaries = await Promise.all(
+    operators.map((digest: any) =>
       nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
         blockTag: currentBlock,
       }),
@@ -90,9 +86,9 @@ export async function initialize(
   );
 
   const stuckOperatorsEndTimestampMap = new Map<String, number>(
-    stuckOperators.map((digest: any, index: number) => [
+    operators.map((digest: any, index: number) => [
       String(digest.id),
-      Number(stuckOperatorsSummaries[index].stuckPenaltyEndTimestamp),
+      Number(operatorsSummaries[index].stuckPenaltyEndTimestamp),
     ]),
   );
 
