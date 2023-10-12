@@ -722,7 +722,8 @@ async function prepareRequestsFinalizationLines(
   const { from, to, amountOfETHLocked } = withdrawalsFinalizedEvent.args;
   const ether = new BigNumber(String(amountOfETHLocked)).div(ETH_DECIMALS);
   metadata.finalizedEth = formatBN2Str(ether);
-  const requests = Number(to) - Number(from);
+  // adding 1 to include the last request
+  const requests = Number(to) - Number(from) + 1;
   metadata.finalizedRequestsCount = requests.toString();
   const shareRate = new BigNumber(String(postTotalEther)).div(
     new BigNumber(String(postTotalShares)),
