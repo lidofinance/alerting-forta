@@ -99,7 +99,7 @@ yarn install
 
 ### Mainnet
 
-Edit `~/forta.config.json` and set `jsonRpcUrl` to your Mainnet JSON-RPC provider.
+Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Mainnet JSON-RPC provider.
 
 Running in a live mode:
 
