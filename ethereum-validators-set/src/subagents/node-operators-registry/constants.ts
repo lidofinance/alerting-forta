@@ -2,10 +2,12 @@ import { FindingSeverity } from "forta-agent";
 import { etherscanAddress } from "../../common/utils";
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
+  ETH_DECIMALS,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   ONE_DAY,
   STAKING_ROUTER_ADDRESS as srAddress,
 } from "../../common/constants";
+import BigNumber from "bignumber.js";
 
 export const STUCK_PENALTY_ENDED_TRIGGER_PERIOD = ONE_DAY;
 
@@ -138,7 +140,9 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Node operator ${etherscanAddress(
         args.recipientAddress,
-      )} penalized with ${args.sharesPenalizedAmount} shares`,
+      )} penalized with ${new BigNumber(args.sharesPenalizedAmount.toString())
+        .div(ETH_DECIMALS)
+        .toFixed(2)} × 1e18 shares`,
     severity: FindingSeverity.High,
   },
 ];
