@@ -62,7 +62,7 @@ yarn install
 
 ### Mainnet
 
-Edit `~/forta.config.json` and set `jsonRpcUrl` to your Mainnet JSON-RPC provider.
+Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Mainnet JSON-RPC provider.
 
 Running in a live mode:
 
@@ -107,7 +107,7 @@ For example, you need to add `testnet` tier support for some new sub-agent:
    } = requireWithTier<typeof Constants>(module, "./constants");
    ```
 2. Copy `./constants.ts` file to `./constants.testnet.ts` and change the addresses and other vars to the testnet ones.
-3. Edit `~/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
+3. Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
 4. Run `export FORTA_AGENT_RUN_TIER=testnet && yarn start:dev`
 
 That's it! Only sub-agents that have `testnet` tier support will be run.
