@@ -58,6 +58,17 @@ describe("agent-dao-ops e2e tests", () => {
   );
 
   it(
+    "should ignore tx with checkpoint reward change event on wrong contract",
+    async () => {
+      const findings = await runTransaction(
+        "0x5a47f08254e7590f9b92e00a517cfaaa94742407b8208e660680de44a9e0ebfc",
+      );
+      expect(findings.at(0)).toMatchSnapshot();
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
     "should process tx with pooled MATIC delegation",
     async () => {
       const findings = await runTransaction(

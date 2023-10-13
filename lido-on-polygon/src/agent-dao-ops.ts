@@ -17,6 +17,7 @@ import ST_MATIC_ABI from "./abi/stMaticToken.json";
 import PROXY_ADMIN_ABI from "./abi/ProxyAdmin.json";
 import POLYGON_ROOT_CHAIN_ABI from "./abi/RootChain.json";
 import NODE_OPERATORS_V2_ABI from "./abi/NodeOperatorsV2.json";
+import STAKE_MANAGER_ABI from "./abi/StakeManager.json";
 import {
   MATIC_TOKEN_ADDRESS,
   ST_MATIC_TOKEN_ADDRESS,
@@ -38,6 +39,7 @@ import {
   ONE_HOUR,
   CHEKPOINT_REWARD_UPDATED_EVENT,
   POLYGON_ROOT_CHAIN_PROXY,
+  POLYGON_STAKE_MANAGER_PROXY,
   SECS_PER_BLOCK,
   REWARDS_ESTIMATE_TO_ACTUAL_DIFF,
   NODE_OPERATORS_REGISTRY_ADDRESS,
@@ -569,7 +571,7 @@ async function handleStMaticTx(txEvent: TransactionEvent, findings: Finding[]) {
   );
 }
 
-export function handleChekpointRewardUpdateEvent(
+export async function handleChekpointRewardUpdateEvent(
   txEvent: TransactionEvent,
   findings: Finding[],
 ) {
@@ -577,6 +579,19 @@ export function handleChekpointRewardUpdateEvent(
   // looks like there is no guaranteed contract to check a transaction against
   const events = txEvent.filterLog(CHEKPOINT_REWARD_UPDATED_EVENT);
   for (const event of events) {
+    const stakeManager = new ethers.Contract(
+      POLYGON_STAKE_MANAGER_PROXY,
+      STAKE_MANAGER_ABI,
+      ethersProvider,
+    );
+    const curReward = await stakeManager.functions.CHECKPOINT_REWARD({
+      blockTag: txEvent.blockNumber,
+    });
+    if (curReward.toString() !== event.args.newReward.toString()) {
+      // false positive
+      continue;
+    }
+
     const [oldReward, newReward] = [
       fmtReward(event.args.oldReward),
       fmtReward(event.args.newReward),

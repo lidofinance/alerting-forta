@@ -284,13 +284,13 @@ describe("lido-on-polygon", () => {
     );
   });
 
-  it("should process handleCheckpointRewardUpdateEvent", () => {
+  it("should process handleCheckpointRewardUpdateEvent", async () => {
     const tEvent = {
       filterLog: () => {
         return [
           {
             args: {
-              oldReward: 1,
+              oldReward: 2,
               newReward: 1,
             },
           },
@@ -300,7 +300,13 @@ describe("lido-on-polygon", () => {
 
     const findings: Finding[] = [];
 
-    handleChekpointRewardUpdateEvent(tEvent, findings);
+    (Contract.prototype as any).functions = {
+      CHECKPOINT_REWARD: async () => {
+        return 1;
+      },
+    };
+
+    await handleChekpointRewardUpdateEvent(tEvent, findings);
 
     expect(findings.length).toBe(1);
     expect(findings.at(0)).toEqual(

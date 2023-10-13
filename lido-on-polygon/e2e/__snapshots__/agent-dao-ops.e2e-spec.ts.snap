@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`agent-dao-ops e2e tests should ignore tx with checkpoint reward change event on wrong contract 1`] = `undefined`;
+
 exports[`agent-dao-ops e2e tests should process block with low deposit executor balance 1`] = `
 Finding {
   "addresses": [],
