@@ -16,7 +16,7 @@ Alerts about balance mismatch
 
 ## Development
 
-Edit `~/.forta/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
+Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
 
 ```
 yarn install
