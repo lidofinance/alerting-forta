@@ -36,6 +36,17 @@ export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE = [
   {
     address: NODE_OPERATORS_REGISTRY_ADDRESS,
     event:
+      "event TargetValidatorsCountChanged(uint256 indexed nodeOperatorId, uint256 targetValidatorsCount)",
+    alertId: "NODE-OPERATOR-TARGET-VALIDATORS-COUNT-CHANGED",
+    name: "⚠️ NO Registry: Node operator target validators count changed",
+    description: (args: any) =>
+      `Node operator ${args.nodeOperatorId} ` +
+      `target validators count changed to ${args.targetValidatorsCount}`,
+    severity: FindingSeverity.Medium,
+  },
+  {
+    address: NODE_OPERATORS_REGISTRY_ADDRESS,
+    event:
       "event NodeOperatorAdded(uint256 nodeOperatorId, string name, address rewardAddress, uint64 stakingLimit)",
     alertId: "NODE-OPERATOR-ADDED",
     name: "ℹ️ NO Registry: Node operator added",
