@@ -9,9 +9,9 @@
         "RpcUrlBase64": "aHR0cHM6Ly9wb2x5Z29uLW1haW5uZXQuZy5hbGNoZW15LmNvbS92Mi9OM0dzNlZ0UFNoVGZhRzlFdlI4TFNoNEVFR2FnTHVucQ"
     },
     "Moonriver": {
-        "RpcUrlBase64": "aHR0cHM6Ly9tb29ucml2ZXIuYXBpLm9uZmluYWxpdHkuaW8vcHVibGlj"
+        "RpcUrlBase64": "aHR0cHM6Ly9tb29ucml2ZXItcnBjLmR3ZWxsaXIuY29t"
     },
     "Moonbeam": {
-        "RpcUrlBase64": "aHR0cHM6Ly9tb29uYmVhbS5hcGkub25maW5hbGl0eS5pby9wdWJsaWM="
+        "RpcUrlBase64": "aHR0cHM6Ly8xcnBjLmlvL2dsbXI="
     }
 }
