@@ -343,7 +343,7 @@ async function handleUnclaimedRequests(
   if (unclaimedReqIds.length == 0) return;
 
   let unclaimedRequestsStatuses = [];
-  let unclaimedReqIdsIterator = [...unclaimedReqIds]
+  let unclaimedReqIdsIterator = [...unclaimedReqIds];
   while (unclaimedReqIdsIterator.length > 0) {
     const chunk = unclaimedReqIdsIterator.splice(0, MAX_REQUESTS_CHUNK_SIZE);
     unclaimedRequestsStatuses.push(
