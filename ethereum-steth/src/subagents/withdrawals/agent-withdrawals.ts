@@ -83,6 +83,7 @@ const {
   UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY,
   CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR,
   BLOCK_CHECK_INTERVAL,
+  MAX_REQUESTS_CHUNK_SIZE,
 } = requireWithTier<typeof Constants>(
   module,
   `./constants`,
@@ -144,7 +145,7 @@ export async function initialize(
     let requestsStatuses = [];
     const requestsCount = requestsRange.length;
     while (requestsRange.length > 0) {
-      const chunk = requestsRange.splice(0, 50);
+      const chunk = requestsRange.splice(0, MAX_REQUESTS_CHUNK_SIZE);
       requestsStatuses.push(
         ...(
           await withdrawalNFT.functions.getWithdrawalStatus(chunk, {
@@ -340,11 +341,19 @@ async function handleUnclaimedRequests(
     }
   });
   if (unclaimedReqIds.length == 0) return;
-  const unclaimedRequestsStatuses = (
-    await withdrawalNFT.functions.getWithdrawalStatus(unclaimedReqIds, {
-      blockTag: blockEvent.blockNumber,
-    })
-  ).statuses;
+
+  let unclaimedRequestsStatuses = [];
+  let unclaimedReqIdsIterator = [...unclaimedReqIds]
+  while (unclaimedReqIdsIterator.length > 0) {
+    const chunk = unclaimedReqIdsIterator.splice(0, MAX_REQUESTS_CHUNK_SIZE);
+    unclaimedRequestsStatuses.push(
+      ...(
+        await withdrawalNFT.functions.getWithdrawalStatus(chunk, {
+          blockTag: blockEvent.blockNumber,
+        })
+      ).statuses,
+    );
+  }
   for (const [index, reqStatus] of unclaimedRequestsStatuses.entries()) {
     const reqId = unclaimedReqIds[index];
     const curr = finalizedWithdrawalRequests.get(reqId) as WithdrawalRequest;
