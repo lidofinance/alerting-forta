@@ -39,6 +39,8 @@ export const MAX_WITHDRAWALS_SUM = 10000;
 // 10k blocks
 export const SAFE_BLOCK_INT = 2_000;
 
+export const BLOCK_INTERVAL = 100;
+
 // ADDRESSES AND EVENTS
 
 export const GOV_BRIDGE_ADDRESS = "0x1dca41859cd23b526cbe74da8f48ac96e14b1a29";

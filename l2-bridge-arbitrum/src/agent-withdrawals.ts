@@ -20,6 +20,7 @@ import {
   ETH_DECIMALS,
   WITHDRAWAL_INITIATED_EVENT,
   SAFE_BLOCK_INT,
+  BLOCK_INTERVAL,
 } from "./constants";
 
 export const name = "WithdrawalsMonitor";
@@ -97,7 +98,9 @@ async function getEventsByChunks(
 export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
-  await Promise.all([handleToManyWithdrawals(blockEvent, findings)]);
+  if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
+    await Promise.all([handleToManyWithdrawals(blockEvent, findings)]);
+  }
 
   return findings;
 }
