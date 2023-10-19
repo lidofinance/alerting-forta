@@ -100,7 +100,6 @@ const timeout = async (agent: SubAgent) =>
   new Promise<never>((_, reject) => {
     setTimeout(() => {
       const err = new Error(`Sub-agent ${agent.name} timed out`);
-      console.log(err);
       reject(err);
     }, processingTimeout);
   });
