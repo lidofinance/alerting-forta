@@ -113,7 +113,7 @@ async function handleWithdrawalVaultBalance(
           name: "💵 Withdrawal Vault Balance significant change",
           description: `Withdrawal Vault Balance has increased by ${toEthString(
             withdrawalVaultBalanceDiff,
-          )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} block`,
+          )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} blocks`,
           alertId: "WITHDRAWAL-VAULT-BALANCE-CHANGE",
           type: FindingType.Info,
           severity: FindingSeverity.Info,
