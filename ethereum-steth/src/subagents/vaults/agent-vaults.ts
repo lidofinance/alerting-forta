@@ -49,11 +49,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   const prevBlockWithrawalVaultBalance = await getBalance(
     WITHDRAWAL_VAULT_ADDRESS,
-    currentBlock - 1,
+    blockEvent.block.parentHash,
   );
   const prevBlockElVaultBalance = await getBalance(
     EL_VAULT_ADDRESS,
-    currentBlock - 1,
+    blockEvent.block.parentHash,
   );
 
   const [report] = await lido.queryFilter(
@@ -269,10 +269,10 @@ function handleBurnerSharesTx(txEvent: TransactionEvent, findings: Finding[]) {
 
 async function getBalance(
   address: string,
-  blockNumber: number,
+  blockTag: number | string,
 ): Promise<BigNumber> {
   return BigNumber(
-    (await ethersProvider.getBalance(address, blockNumber)).toString(),
+    (await ethersProvider.getBalance(address, blockTag)).toString(),
   );
 }
 
