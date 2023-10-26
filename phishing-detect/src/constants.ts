@@ -238,6 +238,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x3b95bc951ee0f553ba487327278cac44f29715e5", // Manta L1 Bridge
   "0xadc0a53095a0af87f3aa29fe0715b5c28016364e", // Aave: Swap Collateral Adapter V3
   "0x1ebfd36223079dc79fefc62260db9e25f3f5e2c7", // Strike ERC20 delegator
+  "0x16d104009964e694761c0bf09d7be49b7e3c26fd", // Ipor Router
+  "0xf9ab542616a0c8fa94e41c968622c3b2367f5ad1", // Range Uniswap WETH/WSTETH 0.01% LP
+  "0x03f7f3b8da875881206655d8099b9dacf721f1ef", // Enzyme ComptrollerLib
+  "0xbaa87546cf87b5de1b0b52353a86792d40b8ba70", // Astrid Finance
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
