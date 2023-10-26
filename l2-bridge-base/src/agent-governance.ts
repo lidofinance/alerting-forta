@@ -1,7 +1,4 @@
-import {
-  TransactionEvent,
-  Finding,
-} from "forta-agent";
+import { TransactionEvent, Finding } from "forta-agent";
 import { GOV_BRIDGE_EVENTS } from "./constants";
 
 export const name = "GovBridgeBot";

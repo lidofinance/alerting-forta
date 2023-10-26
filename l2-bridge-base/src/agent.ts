@@ -8,7 +8,7 @@ import {
   FindingSeverity,
 } from "forta-agent";
 
-import { ethersProvider } from "./ethers";
+import { baseProvider } from "./providers";
 
 import { argv } from "process";
 
@@ -57,7 +57,7 @@ const initialize = async () => {
     blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")));
   } else if (argv.includes("--tx")) {
     const txHash = argv[4];
-    const tx = await ethersProvider.getTransaction(txHash);
+    const tx = await baseProvider.getTransaction(txHash);
     if (!tx) {
       throw new Error(`Can't find transaction ${txHash}`);
     }
@@ -68,7 +68,7 @@ const initialize = async () => {
   }
 
   if (blockNumber == -1) {
-    blockNumber = await ethersProvider.getBlockNumber();
+    blockNumber = await baseProvider.getBlockNumber();
   }
 
   await Promise.all(

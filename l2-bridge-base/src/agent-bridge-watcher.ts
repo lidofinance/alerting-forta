@@ -1,7 +1,4 @@
-import {
-  TransactionEvent,
-  Finding,
-} from "forta-agent";
+import { TransactionEvent, Finding } from "forta-agent";
 import { L2_BRIDGE_EVENTS } from "./constants";
 
 export const name = "BridgeWatcher";
