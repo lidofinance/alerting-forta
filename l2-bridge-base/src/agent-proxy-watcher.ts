@@ -12,6 +12,8 @@ import {
   LidoProxy,
 } from "./constants";
 import { baseProvider } from "./providers";
+import { Log } from "@ethersproject/abstract-provider";
+import { TransactionEventHelper } from "./entity/transactionEvent";
 
 // Block interval tp fetch proxy params
 const BLOCK_INTERVAL = 10;
@@ -39,21 +41,24 @@ export async function initialize(
   };
 }
 
-export async function handleTransaction(txEvent: TransactionEvent) {
+export async function handleTransaction(logs: Log[]) {
   const findings: Finding[] = [];
 
-  handleProxyAdminEvents(txEvent, findings);
+  handleProxyAdminEvents(logs, findings);
 
   return findings;
 }
 
-function handleProxyAdminEvents(
-  txEvent: TransactionEvent,
-  findings: Finding[],
-) {
+function handleProxyAdminEvents(logs: Log[], findings: Finding[]) {
+  const addresses = logs.map((log) => log.address);
+
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+    if (eventInfo.address in addresses) {
+      const events = TransactionEventHelper.filterLog(
+        logs,
+        eventInfo.event,
+        eventInfo.address,
+      );
       events.forEach((event) => {
         findings.push(
           Finding.fromObject({
@@ -70,12 +75,12 @@ function handleProxyAdminEvents(
   });
 }
 
-export async function handleBlock(blockEvent: BlockEvent) {
+export async function handleBlock(block: BlockDto) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleProxyImplementationChanges(blockEvent, findings),
-    handleProxyAdminChanges(blockEvent, findings),
+    handleProxyImplementationChanges(block, findings),
+    handleProxyAdminChanges(block, findings),
   ]);
 
   return findings;
@@ -97,13 +102,13 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
 }
 
 async function handleProxyImplementationChanges(
-  blockEvent: BlockEvent,
+  block: BlockDto,
   findings: Finding[],
 ) {
-  if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
+  if (block.number % BLOCK_INTERVAL == 0) {
     await Promise.all(
       LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
-        const newImpl = await getProxyImpl(proxyInfo, blockEvent.blockNumber);
+        const newImpl = await getProxyImpl(proxyInfo, block.number);
         const lastImpl = lastImpls.get(proxyInfo.address) || "";
         if (newImpl != lastImpl) {
           findings.push(
@@ -139,14 +144,11 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
 }
 
-async function handleProxyAdminChanges(
-  blockEvent: BlockEvent,
-  findings: Finding[],
-) {
-  if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
+async function handleProxyAdminChanges(block: BlockDto, findings: Finding[]) {
+  if (block.number % BLOCK_INTERVAL == 0) {
     await Promise.all(
       LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
-        const newAdmin = await getProxyAdmin(proxyInfo, blockEvent.blockNumber);
+        const newAdmin = await getProxyAdmin(proxyInfo, block.number);
         const lastAdmin = lastAdmins.get(proxyInfo.address) || "";
         if (newAdmin != lastAdmin) {
           findings.push(

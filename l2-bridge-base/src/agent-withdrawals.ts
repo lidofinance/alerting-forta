@@ -2,7 +2,6 @@ import BigNumber from "bignumber.js";
 
 import {
   ethers,
-  BlockEvent,
   TransactionEvent,
   Finding,
   FindingType,
@@ -20,6 +19,8 @@ import {
   WITHDRAWAL_INITIATED_EVENT,
 } from "./constants";
 import { baseProvider } from "./providers";
+import { Log } from "@ethersproject/abstract-provider";
+import { TransactionEventHelper } from "./entity/transactionEvent";
 
 export const name = "WithdrawalsMonitor";
 
@@ -69,7 +70,7 @@ export async function initialize(
   };
 }
 
-export async function handleBlock(blockEvent: BlockEvent) {
+export async function handleBlock(blockEvent: BlockDto) {
   const findings: Finding[] = [];
 
   await Promise.all([handleToManyWithdrawals(blockEvent, findings)]);
@@ -77,11 +78,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
   return findings;
 }
 
-async function handleToManyWithdrawals(
-  blockEvent: BlockEvent,
-  findings: Finding[],
-) {
-  const now = blockEvent.block.timestamp;
+async function handleToManyWithdrawals(block: BlockDto, findings: Finding[]) {
+  const now = block.timestamp;
   // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
   withdrawalsCache = withdrawalsCache.filter(
     (x: IWithdrawalRecord) => x.time > now - MAX_WITHDRAWALS_WINDOW,
@@ -99,7 +97,7 @@ async function handleToManyWithdrawals(
     withdrawalsSum
       .div(ETH_DECIMALS)
       .isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) &&
-    blockEvent.blockNumber % 10 == 0
+    block.number % 10 == 0
   ) {
     findings.push(
       Finding.fromObject({
@@ -122,25 +120,30 @@ async function handleToManyWithdrawals(
   }
 }
 
-export async function handleTransaction(txEvent: TransactionEvent) {
+export async function handleTransaction(logs: Log[]) {
   const findings: Finding[] = [];
 
-  handleWithdrawalEvent(txEvent, findings);
+  handleWithdrawalEvent(logs, findings);
 
   return findings;
 }
 
-function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
-  if (L2_ERC20_TOKEN_GATEWAY in txEvent.addresses) {
-    const events = txEvent.filterLog(
+function handleWithdrawalEvent(logs: Log[], findings: Finding[]) {
+  const addresses = logs.map((log) => log.address);
+
+  if (L2_ERC20_TOKEN_GATEWAY in addresses) {
+    const events = TransactionEventHelper.filterLog(
+      logs,
       WITHDRAWAL_INITIATED_EVENT,
       L2_ERC20_TOKEN_GATEWAY,
     );
-    events.forEach((event) => {
-      withdrawalsCache.push({
-        time: txEvent.timestamp,
-        amount: new BigNumber(String(event.args.amount)),
-      });
-    });
+
+    /*events.forEach((event) => {
+            withdrawalsCache.push({
+                // TODO ask where to get txEvent
+                time: txEvent.timestamp,
+                amount: new BigNumber(String(event.args.amount)),
+            });
+        });*/
   }
 }

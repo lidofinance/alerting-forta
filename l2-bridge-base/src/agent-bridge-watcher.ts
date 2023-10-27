@@ -1,5 +1,7 @@
 import { TransactionEvent, Finding } from "forta-agent";
 import { L2_BRIDGE_EVENTS } from "./constants";
+import { TransactionEventHelper } from "./entity/transactionEvent";
+import { Log } from "@ethersproject/abstract-provider";
 
 export const name = "BridgeWatcher";
 
@@ -10,18 +12,24 @@ export async function initialize(
   return {};
 }
 
-export async function handleTransaction(txEvent: TransactionEvent) {
+export async function handleTransaction(logs: Log[]) {
   const findings: Finding[] = [];
 
-  handleL2BridgeEvents(txEvent, findings);
+  handleL2BridgeEvents(logs, findings);
 
   return findings;
 }
 
-function handleL2BridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
+function handleL2BridgeEvents(logs: Log[], findings: Finding[]) {
+  const addresses = logs.map((log) => log.address);
+
   L2_BRIDGE_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+    if (eventInfo.address in addresses) {
+      const events = TransactionEventHelper.filterLog(
+        logs,
+        eventInfo.event,
+        eventInfo.address,
+      );
       events.forEach((event) => {
         findings.push(
           Finding.fromObject({

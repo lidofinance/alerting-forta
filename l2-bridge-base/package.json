@@ -23,8 +23,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.200",
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.24"
+    "forta-agent": "^0.1.24",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",

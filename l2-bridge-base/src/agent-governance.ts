@@ -1,5 +1,7 @@
 import { TransactionEvent, Finding } from "forta-agent";
 import { GOV_BRIDGE_EVENTS } from "./constants";
+import { Log } from "@ethersproject/abstract-provider";
+import { TransactionEventHelper } from "./entity/transactionEvent";
 
 export const name = "GovBridgeBot";
 
@@ -10,18 +12,24 @@ export async function initialize(
   return {};
 }
 
-export async function handleTransaction(txEvent: TransactionEvent) {
+export async function handleTransaction(logs: Log[]) {
   const findings: Finding[] = [];
 
-  handleGovBridgeEvents(txEvent, findings);
+  handleGovBridgeEvents(logs, findings);
 
   return findings;
 }
 
-function handleGovBridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
+function handleGovBridgeEvents(logs: Log[], findings: Finding[]) {
+  const addresses = logs.map((log) => log.address);
+
   GOV_BRIDGE_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+    if (eventInfo.address in addresses) {
+      const events = TransactionEventHelper.filterLog(
+        logs,
+        eventInfo.event,
+        eventInfo.address,
+      );
       events.forEach((event) => {
         findings.push(
           Finding.fromObject({

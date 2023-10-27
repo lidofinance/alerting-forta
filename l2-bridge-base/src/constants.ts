@@ -8,6 +8,9 @@ import proxyShortABI from "./abi/ProxyShortABI.json";
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
+export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+export const LDO_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+
 export const ROLES = new Map<string, string>([
   [
     "0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6",
@@ -35,6 +38,9 @@ export const ROLES = new Map<string, string>([
 export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2;
 // 10k wstETH
 export const MAX_WITHDRAWALS_SUM = 10000;
+export const BASE_L1_GATEWAY = "0x9de443AdC5A411E83F1878Ef24C3F52C61571e72";
+export const BASE_WST_ETH_BRIDGED =
+  "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452 ";
 
 // ADDRESSES AND EVENTS
 
@@ -166,7 +172,7 @@ export interface LidoProxy {
 export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   {
     name: "WstETH ERC20Bridged",
-    address: "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+    address: BASE_WST_ETH_BRIDGED,
     shortABI: JSON.stringify(proxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],

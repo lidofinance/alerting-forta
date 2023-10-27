@@ -26,4 +26,5 @@ COPY --from=builder /app/dist ./src
 COPY version.json ./
 
 ENTRYPOINT ["/sbin/tini", "--"]
+
 CMD ["yarn", "run", "start:prod"]

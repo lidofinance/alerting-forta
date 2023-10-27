@@ -1,12 +1,14 @@
 import {
   BlockEvent,
   TransactionEvent,
-  HandleBlock,
   HandleTransaction,
+  HandleBlock,
   Finding,
   FindingType,
   FindingSeverity,
 } from "forta-agent";
+
+import { Block, Log } from "@ethersproject/abstract-provider";
 
 import { baseProvider } from "./providers";
 
@@ -16,15 +18,17 @@ import * as agentGov from "./agent-governance";
 import * as agentProxy from "./agent-proxy-watcher";
 import * as agentBridge from "./agent-bridge-watcher";
 import * as agentWithdrawals from "./agent-withdrawals";
-
+import * as agentBalance from "./agent-balance";
 import VERSION from "./version";
 
 type Metadata = { [key: string]: string };
+type CustomHandleBlock = (blockEvent: BlockDto) => Promise<Finding[]>;
+type CustomHandleTransaction = (logs: Log[]) => Promise<Finding[]>;
 
 interface SubAgent {
   name: string;
-  handleBlock?: HandleBlock;
-  handleTransaction?: HandleTransaction;
+  handleBlock?: CustomHandleBlock;
+  handleTransaction?: CustomHandleTransaction;
   initialize?: (blockNumber: number) => Promise<Metadata>;
 }
 
@@ -33,6 +37,7 @@ const subAgents: SubAgent[] = [
   agentGov,
   agentProxy,
   agentWithdrawals,
+  agentBalance,
 ];
 
 // block or tx handling should take no more than 120 sec.
@@ -112,6 +117,9 @@ const timeout = async (agent: SubAgent) =>
     }, processingTimeout);
   });
 
+let cachedBlockDto: BlockDto;
+let iteration: number = 0;
+
 const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent,
 ): Promise<Finding[]> => {
@@ -122,34 +130,90 @@ const handleBlock: HandleBlock = async (
     findingsOnInit = [];
   }
 
-  const run = async (agent: SubAgent, blockEvent: BlockEvent) => {
+  let workingBlocks: BlockDto[] = [];
+
+  if (cachedBlockDto === undefined) {
+    const block: Block = await baseProvider.getBlock("latest");
+
+    cachedBlockDto = {
+      number: block.number,
+      timestamp: block.timestamp,
+    };
+
+    workingBlocks.push(cachedBlockDto);
+    iteration += 1;
+  } else {
+    const latestBlock: Block = await baseProvider.getBlock("latest");
+    const range = function (start: number, end: number): number[] {
+      return Array.from(Array(end - start + 1).keys()).map((x) => x + start);
+    };
+
+    const blocksInterval = range(cachedBlockDto.number, latestBlock.number);
+    const blocks = await Promise.all(
+      blocksInterval.map(async (blockNumber: number) => {
+        return await baseProvider.getBlock(blockNumber);
+      }),
+    );
+
+    for (const block of blocks) {
+      workingBlocks.push({
+        number: block.number,
+        timestamp: block.timestamp,
+      });
+    }
+
+    cachedBlockDto = {
+      number: latestBlock.number,
+      timestamp: latestBlock.timestamp,
+    };
+
+    iteration += 1;
+  }
+
+  console.log(
+    `#${iteration} ETH block ${blockEvent.blockNumber.toString()}. Fetching base blocks from ${
+      workingBlocks[0].number
+    } to ${workingBlocks[workingBlocks.length - 1].number}`,
+  );
+  const logs: Log[] = await baseProvider.send("eth_getLogs", [
+    {
+      fromBlock: `0x${workingBlocks[0].number.toString(16)}`,
+      toBlock: `0x${workingBlocks[workingBlocks.length - 1].number.toString(
+        16,
+      )}`,
+    },
+  ]);
+
+  const run = async (agent: SubAgent, blockDtos: BlockDto[]) => {
     if (!agent.handleBlock) return;
+
     let retries = maxHandlerRetries;
     let success = false;
     let lastError;
-    while (retries-- > 0 && !success) {
-      try {
-        const newFindings = await agent.handleBlock(blockEvent);
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings);
-          blockFindings = blockFindings.concat(newFindings);
+
+    for (const blockDto of blockDtos) {
+      while (retries-- > 0 && !success) {
+        try {
+          const newFindings = await agent.handleBlock(blockDto);
+
+          if (newFindings.length) {
+            enrichFindingsMetadata(newFindings);
+            blockFindings = blockFindings.concat(newFindings);
+          }
+          success = true;
+        } catch (err) {
+          lastError = err;
         }
-        success = true;
-      } catch (err) {
-        lastError = err;
       }
-    }
-    if (!success) {
-      blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
+      if (!success) {
+        blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
+      }
     }
   };
 
-  // run agents handlers
-  // wait all results whether success or failure (include timeout errors)
-
   const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, blockEvent), timeout(agent)]);
+      return await Promise.race([run(agent, workingBlocks), timeout(agent)]);
     }),
   );
 
@@ -161,21 +225,20 @@ const handleBlock: HandleBlock = async (
     }
   });
 
-  return blockFindings;
+  const findings = await handleLogs(logs);
+  return [...blockFindings, ...findings];
 };
 
-const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent,
-) => {
+const handleLogs = async (logs: Log[]) => {
   let txFindings: Finding[] = [];
-  const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
+  const run = async (agent: SubAgent, logs: Log[]) => {
     if (!agent.handleTransaction) return;
     let retries = maxHandlerRetries;
     let success = false;
     let lastError;
     while (retries-- > 0 && !success) {
       try {
-        const newFindings = await agent.handleTransaction(txEvent);
+        const newFindings = await agent.handleTransaction(logs);
         if (newFindings.length) {
           enrichFindingsMetadata(newFindings);
           txFindings = txFindings.concat(newFindings);
@@ -194,7 +257,7 @@ const handleTransaction: HandleTransaction = async (
   // wait all results whether success or failure (include timeout errors)
   const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, txEvent), timeout(agent)]);
+      return await Promise.race([run(agent, logs), timeout(agent)]);
     }),
   );
 
@@ -235,5 +298,4 @@ function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
 export default {
   initialize,
   handleBlock,
-  handleTransaction,
 };
