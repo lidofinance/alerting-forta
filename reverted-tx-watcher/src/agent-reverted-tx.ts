@@ -45,7 +45,7 @@ export async function initialize(
     depositSecurityModule: await locator.depositSecurityModule(),
     elRewardsVault: await locator.elRewardsVault(),
     legacyOracle: await locator.legacyOracle(),
-    stETHtoken: await locator.lido(),
+    lido: await locator.lido(),
     oracleReportSanityChecker: await locator.oracleReportSanityChecker(),
     postTokenRebaseReceiver: await locator.postTokenRebaseReceiver(),
     burner: await locator.burner(),
