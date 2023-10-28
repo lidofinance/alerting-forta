@@ -23,7 +23,7 @@ interface RevertDictionary {
 
 export const name = "RevertedTxWatcher";
 export const HIGH_GAS_THRESHOLD = "600000";
-export const MAX_REVERTION_PER_DAY = 20
+export const MAX_REVERTION_PER_DAY = 15
 let revertedTxPerEOA: RevertDictionary = {};
 let contracts: LocatorContracts;
 let addresses: [string, string][] = [];
@@ -127,7 +127,7 @@ async function handleRevertedTx(
 }
 
 function startTimer() {
-  setInterval(resetDictionary, 7 * 24 * 60 * 60 * 1000);
+  setInterval(resetDictionary, 24 * 60 * 60 * 1000);
 }
 
 function increaseForEOA(address: string) {
