@@ -147,6 +147,7 @@ export const MONITORED_TOKENS = new Map<string, string>(
       "0xc96113eed8cab59cd8a66813bcb0ceb29f06d2e4",
       "Aave Ethereum Variable Debt wstETH",
     ],
+    ["0x12b54025c112aa61face2cdb7118740875a566e9", "Spark wstETH (spwstETH)"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
@@ -559,6 +560,38 @@ export const SIMPLE_TRANSFERS: SpecialTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `was withdrawn from Lybra Finance\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    to: "0xa980d4c0C2E48d305b582AA439a3575e3de06f0E",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Lybra_v2 stETH Vault\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    from: "0xa980d4c0C2E48d305b582AA439a3575e3de06f0E",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Lybra_v2 stETH Vault\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    contract: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    to: "0x5e28B5858DA2C6fb4E449D69EEb5B82e271c45Ce",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Lybra_v2 wstETH Vault\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    contract: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    from: "0x5e28B5858DA2C6fb4E449D69EEb5B82e271c45Ce",
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Lybra_v2 wstETH Vault\n` +
       `by: ${info.to} (${info.toName})`,
   },
 ];
@@ -1458,6 +1491,42 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Kyber USDC LP\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0x12b54025c112aa61face2cdb7118740875a566e9",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x12b54025c112aa61face2cdb7118740875a566e9",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were supplied to Spark Protocol\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0x12b54025c112aa61face2cdb7118740875a566e9",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x12b54025c112aa61face2cdb7118740875a566e9",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `were withdrawn from Spark Protocol\n` +
       `by: ${info.to} (${info.toName})`,
   },
 ];

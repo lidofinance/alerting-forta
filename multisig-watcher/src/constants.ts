@@ -94,7 +94,7 @@ export const SAFES = {
     ],
     [
       "0x87d93d9b2c672bf9c9642d853a8682546a5012b5",
-      "reWARDS Committee (Ethereum)",
+      "Liquidity Observation Lab (Ethereum)",
     ],
     ["0x12a43b049a7d330cb8aeab5113032d18ae9a9030", "LEGO Committee"],
     [
@@ -125,23 +125,27 @@ export const SAFES = {
   [Blockchain.POLYGON]: [
     [
       "0x87d93d9b2c672bf9c9642d853a8682546a5012b5",
-      "reWARDS Committee (Polygon)",
+      "Liquidity Observation Lab (Polygon)",
     ],
   ],
   [Blockchain.ARBITRUM]: [
     [
       "0x8c2b8595ea1b627427efe4f29a64b145df439d16",
-      "reWARDS Committee (Arbitrum)",
+      "Liquidity Observation Lab (Arbitrum)",
     ],
     [
       "0xfdcf209a213a0b3c403d543f87e74fcbca11de34",
       "Emergency Brakes (Arbitrum)",
     ],
+    [
+      "0x1840c4D81d2C50B603da5391b6A24c1cD62D0B56",
+      "Liquidity Observation Lab ARB Token Multisig (Arbitrum)",
+    ],
   ],
   [Blockchain.OPTIMISM]: [
     [
       "0x5033823f27c5f977707b58f0351adcd732c955dd",
-      "reWARDS Committee (Optimism)",
+      "Liquidity Observation Lab (Optimism)",
     ],
     [
       "0x4cf8fe0a4c2539f7efdd2047d8a5d46f14613088",
@@ -149,13 +153,17 @@ export const SAFES = {
     ],
     [
       "0x91ce2f083d59b832f95f90aa0997168ae051a98a",
-      "reWARDS Committee OP Token Multisig (Optimism)",
+      "Liquidity Observation Lab OP Token Multisig (Optimism)",
+    ],
+    [
+      "0x75483CE83100890c6bf1718c26052cE44e0F2839",
+      "Liquidity Observation Lab AAVE rewards (Optimism)",
     ],
   ],
   [Blockchain.MOONBEAM]: [
     [
       "0x007132343ca619c5449297507b26c3f85e80d1b1",
-      "reWARDS Committee (Moonbeam)",
+      "Liquidity Observation Lab (Moonbeam)",
     ],
     [
       "0x34fc04fa7e8e142001aaeed25da8cf7dd887a5f3",
@@ -177,7 +185,7 @@ export const SAFES = {
   [Blockchain.MOONRIVER]: [
     [
       "0xdafc1dcb93da415604ac6187638f88a8ff8d77a4",
-      "reWARDS Committee (Moonriver)",
+      "Liquidity Observation Lab (Moonriver)",
     ],
     [
       "0xdafc1dcb93da415604ac6187638f88a8ff8d77a4",

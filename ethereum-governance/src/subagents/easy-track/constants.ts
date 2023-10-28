@@ -66,7 +66,7 @@ export const EASY_TRACK_EVENTS_OF_NOTICE = [
     address: EASY_TRACK_ADDRESS,
     event: MOTION_ENACTED_EVENT,
     alertId: "EASY-TRACK-MOTION-ENACTED",
-    name: "✅ EasyTrack: Motion executed",
+    name: "✅ EasyTrack: Motion executed successfully 🎉",
     description: (args: any) =>
       `EasyTrack motion ${args._motionId} was enacted`,
     severity: FindingSeverity.Info,

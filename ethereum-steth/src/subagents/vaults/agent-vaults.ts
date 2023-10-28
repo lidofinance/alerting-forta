@@ -47,13 +47,13 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   const currentBlock = blockEvent.blockNumber;
 
-  const prevBlockWithrawalVaultBalance = await getBalance(
+  const prevBlockWithrawalVaultBalance = await getBalanceByBlockHash(
     WITHDRAWAL_VAULT_ADDRESS,
-    currentBlock - 1,
+    blockEvent.block.parentHash,
   );
-  const prevBlockElVaultBalance = await getBalance(
+  const prevBlockElVaultBalance = await getBalanceByBlockHash(
     EL_VAULT_ADDRESS,
-    currentBlock - 1,
+    blockEvent.block.parentHash,
   );
 
   const [report] = await lido.queryFilter(
@@ -93,12 +93,12 @@ async function handleWithdrawalVaultBalance(
       blockNumber,
     );
 
-    const prevWithdrawalVaultBalance = await getBalance(
+    const prevWithdrawalVaultBalance = await getBalanceByBlockNumber(
       WITHDRAWAL_VAULT_ADDRESS,
       blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
     );
 
-    const withdrawalVaultBalance = await getBalance(
+    const withdrawalVaultBalance = await getBalanceByBlockNumber(
       WITHDRAWAL_VAULT_ADDRESS,
       blockNumber,
     );
@@ -113,7 +113,7 @@ async function handleWithdrawalVaultBalance(
           name: "💵 Withdrawal Vault Balance significant change",
           description: `Withdrawal Vault Balance has increased by ${toEthString(
             withdrawalVaultBalanceDiff,
-          )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} block`,
+          )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} blocks`,
           alertId: "WITHDRAWAL-VAULT-BALANCE-CHANGE",
           type: FindingType.Info,
           severity: FindingSeverity.Info,
@@ -129,7 +129,7 @@ async function handleNoWithdrawalVaultDrains(
   report: ethers.Event | undefined,
   findings: Finding[],
 ) {
-  const currentBalance = await getBalance(
+  const currentBalance = await getBalanceByBlockNumber(
     WITHDRAWAL_VAULT_ADDRESS,
     currentBlock,
   );
@@ -176,7 +176,10 @@ async function handleELVaultBalance(
   prevBalance: BigNumber,
   findings: Finding[],
 ) {
-  const elVaultBalance = await getBalance(EL_VAULT_ADDRESS, blockNumber);
+  const elVaultBalance = await getBalanceByBlockNumber(
+    EL_VAULT_ADDRESS,
+    blockNumber,
+  );
   const elVaultBalanceDiff = elVaultBalance.minus(prevBalance);
 
   if (elVaultBalanceDiff.gte(EL_VAULT_BALANCE_DIFF_INFO)) {
@@ -200,7 +203,10 @@ async function handleNoELVaultDrains(
   report: ethers.Event | undefined,
   findings: Finding[],
 ) {
-  const currentBalance = await getBalance(EL_VAULT_ADDRESS, currentBlock);
+  const currentBalance = await getBalanceByBlockNumber(
+    EL_VAULT_ADDRESS,
+    currentBlock,
+  );
 
   if (!report) {
     if (currentBalance.lt(prevBalance)) {
@@ -267,12 +273,23 @@ function handleBurnerSharesTx(txEvent: TransactionEvent, findings: Finding[]) {
   }
 }
 
-async function getBalance(
+async function getBalanceByBlockNumber(
   address: string,
   blockNumber: number,
 ): Promise<BigNumber> {
   return BigNumber(
     (await ethersProvider.getBalance(address, blockNumber)).toString(),
+  );
+}
+
+async function getBalanceByBlockHash(
+  address: string,
+  blockHash: string,
+): Promise<BigNumber> {
+  return BigNumber(
+    (
+      await ethersProvider.getBalance(address, { blockHash: blockHash } as any)
+    ).toString(),
   );
 }
 

@@ -4,12 +4,12 @@ exports[`agent-easy-track e2e tests should process tx with executed motion 1`] =
 Finding {
   "addresses": Array [],
   "alertId": "EASY-TRACK-MOTION-ENACTED",
-  "description": "EasyTrack motion 362 was enacted",
+  "description": "EasyTrack motion 495 was enacted",
   "labels": Array [],
   "metadata": Object {
-    "args": "362",
+    "args": "495",
   },
-  "name": "✅ EasyTrack: Motion executed",
+  "name": "✅ EasyTrack: Motion executed successfully 🎉",
   "protocol": "ethereum",
   "severity": 1,
   "type": 4,

@@ -49,11 +49,9 @@ Monitoring and alerting about rewards for the main stETH LPs
 
 ## Development
 
-Edit `~/.forta/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
-
-```
-yarn install
-```
+1. `cp forta.config.example.json forta.config.json`
+2. Provide url to EL node in forta.config.json
+3. `yarn install`
 
 Running in a live mode:
 

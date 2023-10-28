@@ -26,6 +26,7 @@ export const MONITORED_ERC20_ADDRESSES = new Map<string, string>([
 
 const WHITE_LIST_ADDRESSES_RAW: string[] = [
   // owned by Lido
+  "0xae7ab96520de3a18e5e111b5eaab095312d7fe84", // stETH
   "0xdc24316b9ae028f1497c275eb9192a3ea0f67022", // curvePool
   "0x32296969ef14eb0c6d29669c550d4a0449130230", // balancerPool
   "0xc1a900ae76db21dc5aa8e418ac0f4e888a4c7431", // oneInchPool
@@ -215,6 +216,32 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xf6a94dfd0e6ea9ddfdffe4762ad4236576136613", // HashflowRouter 1
   "0x9b11bc9fac17c058cab6286b0c785be6a65492ef", // LiFiDiamondImmutable
   "0x58df81babdf15276e761808e872a3838cbecbcf9", // BananaGun: Router
+  "0x02e7b8511831b1b02d9018215a0f8f500ea5c6b3", // ParaSwapRepayAdapter
+  "0xe7b9c7c9ca85340b8c06fb805f7775e3015108db", // AladdinDAO Market
+  "0xcf5540fffcdc3d510b18bfca6d2b9987b0772559", // Odos.xyz router
+  "0x72c590349535ad52e6953744cb2a36b409542719", // prismafinance.com
+  "0x826e9f2e79ceea850df4d4757e0d12115a720d74", // summer.fi Swap
+  "0xe222fbe074a436145b255442d919e4e3a6c6a480", // KyberSwap
+  "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319", // linea.mirror.xyz
+  "0x8516944e89f296eb6473d79aed1ba12088016c9e", // Sushiswap
+  "0x5e28b5858da2c6fb4e449d69eeb5b82e271c45ce", // lybra.finance wstETH
+  "0xa980d4c0c2e48d305b582aa439a3575e3de06f0e", // lybra.finance stETH
+  "0x13f4ea83d0bd40e75c8222255bc855a974568dd4", // Pancake Swap
+  "0xf0d4c12a5768d806021f80a262b4d39d26c58b8d", // Curve
+  "0x7ded4df8d8a663b8af5933058356b367b5de8f23", // Yearn Zap
+  "0x9ab6b21cdf116f611110b048987e58894786c244", // raft.fi IRPM
+  "0xe7583af5121a8f583efd82767cccfeb71069d93a", // MaverickPoolPositionManager
+  "0x648b8d2340842a7040680915c4dab89382eeeda9", // ComptrollerLib proxy enzyme.finance
+  "0x8a5fcd88b4ac70a1939955faea4e12bd0c7b1237", // Neutron GMP Helper (Ethereum)
+  "0x5550d13389bb70f45fcef58f19f6b6e87f6e747d", // Sushiswap routeProcessor
+  "0xce16f69375520ab01377ce7b88f5ba8c48f8d666", // Squid Router
+  "0x3b95bc951ee0f553ba487327278cac44f29715e5", // Manta L1 Bridge
+  "0xadc0a53095a0af87f3aa29fe0715b5c28016364e", // Aave: Swap Collateral Adapter V3
+  "0x1ebfd36223079dc79fefc62260db9e25f3f5e2c7", // Strike ERC20 delegator
+  "0x16d104009964e694761c0bf09d7be49b7e3c26fd", // Ipor Router
+  "0xf9ab542616a0c8fa94e41c968622c3b2367f5ad1", // Range Uniswap WETH/WSTETH 0.01% LP
+  "0x20273e8c0d83e449ac1d18fea7f56ff3c749d1e0", // Enzyme ComptrollerLib
+  "0xbaa87546cf87b5de1b0b52353a86792d40b8ba70", // Astrid Finance
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -229,6 +256,8 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0x00006deacd9ad19db3d81f8410ea2b45ea570000", // Phishing EOA
   "0x00001f78189be22c3498cff1b8e02272c3220000", // Phishing EOA
   "0xa0ec2733e8aef26dab0be9abfbacd9ef337740e3", // Phishing EOA
+  "0xcb394e8f7a652571a83e63c671be74a99ef56925", // Phishing EOA
+  "0xfd1f21a19b49cca24318d73197b625cdb730eabc", // Phishing EOA
 ];
 
 export const PHISHING_LIST_ADDRESSES: string[] =

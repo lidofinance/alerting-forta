@@ -471,28 +471,44 @@ async function handleBalancerPoolSize(
 ) {
   let poolParams = poolsParams.Balancer;
   const poolTokens = await getBalancerPoolTokens(blockEvent.blockNumber);
-  const poolSize = poolTokens[0].plus(poolTokens[1]);
-  const poolSizeChange = calcChange(poolParams.poolSize, poolSize);
+
+  const curPoolSize = poolTokens[0].plus(poolTokens[1]);
+  const prevPoolSize = poolParams.poolSize;
+
+  const poolSizeChange = calcChange(prevPoolSize, curPoolSize);
   if (Math.abs(poolSizeChange) > POOL_SIZE_CHANGE_TOLERANCE_INFO) {
     findings.push(
       Finding.fromObject({
         name: "⚠️ Significant Balancer Pool size change",
         description: `Balancer Pool size has ${
           poolSizeChange > 0
-            ? "increased by " + poolSizeChange.toFixed(2).toString()
-            : "decreased by " + -poolSizeChange.toFixed(2).toString()
-        }% since the last block`,
+            ? `increased by ${curPoolSize
+                .minus(prevPoolSize)
+                .div(ETH_DECIMALS)
+                .toFixed(2)} ETH (${poolSizeChange.toFixed(2).toString()}%)`
+            : `decreased by ${prevPoolSize
+                .minus(curPoolSize)
+                .div(ETH_DECIMALS)
+                .toFixed(2)} ETH (${-poolSizeChange.toFixed(2).toString()}%)`
+        } since the last block. Prev: ${prevPoolSize
+          .div(ETH_DECIMALS)
+          .toFixed(2)} ETH, Cur: ${curPoolSize
+          .div(ETH_DECIMALS)
+          .toFixed(2)} ETH. Diff: ${curPoolSize
+          .minus(prevPoolSize)
+          .div(ETH_DECIMALS)
+          .toFixed(2)} ETH`,
         alertId: "BALANCER-POOL-SIZE-CHANGE",
         severity: FindingSeverity.Info,
         type: FindingType.Info,
         metadata: {
-          sizeBefore: poolParams.poolSize.toFixed(),
-          sizeAfter: poolSize.toFixed(),
+          sizeBefore: prevPoolSize.toFixed(),
+          sizeAfter: curPoolSize.toFixed(),
         },
       }),
     );
   }
-  poolParams.poolSize = poolSize;
+  poolParams.poolSize = curPoolSize;
 }
 
 ///////// CURVE PEG ////////////

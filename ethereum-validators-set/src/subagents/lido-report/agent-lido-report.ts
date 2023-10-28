@@ -322,10 +322,13 @@ async function handleExitedStuckRefundedKeysDigest(
   const newStuck = allStuck - lastAllStuck;
   const newRefunded = allRefunded - lastAllRefunded;
   if (newExited == 0 && newStuck == 0 && newRefunded == 0) return;
+  // Exited always increases, stuck and refunded can decrease and increase
+  const newStuckStr = newStuck > 0 ? `+${newStuck}` : newStuck;
+  const newRefundedStr = newRefunded > 0 ? `+${newRefunded}` : newRefunded;
   findings.push(
     Finding.fromObject({
-      name: "ℹ️ Lido Report: new exited, stuck and refunded keys digest",
-      description: `New exited: ${newExited}\nNew stuck: ${newStuck}\nNew refunded: ${newRefunded}`,
+      name: "ℹ️ Lido Report: exited, stuck and refunded keys digest",
+      description: `Exited: ${allExited} (+${newExited} validators)\nStuck: ${allStuck} (${newStuckStr} validators)\nRefunded: ${allRefunded} (${newRefundedStr} validators)`,
       alertId: "LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
@@ -719,7 +722,8 @@ async function prepareRequestsFinalizationLines(
   const { from, to, amountOfETHLocked } = withdrawalsFinalizedEvent.args;
   const ether = new BigNumber(String(amountOfETHLocked)).div(ETH_DECIMALS);
   metadata.finalizedEth = formatBN2Str(ether);
-  const requests = Number(to) - Number(from);
+  // adding 1 to include the last request
+  const requests = Number(to) - Number(from) + 1;
   metadata.finalizedRequestsCount = requests.toString();
   const shareRate = new BigNumber(String(postTotalEther)).div(
     new BigNumber(String(postTotalShares)),

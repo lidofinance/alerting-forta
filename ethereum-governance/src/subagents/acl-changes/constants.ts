@@ -527,7 +527,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName("MANAGE_WITHDRAWAL_CREDENTIALS_ROLE"), []],
         [roleByName("STAKING_MODULE_PAUSE_ROLE"), [ROLES_OWNERS.dsm]],
         [roleByName("STAKING_MODULE_RESUME_ROLE"), [ROLES_OWNERS.dsm]],
-        [roleByName("STAKING_MODULE_MANAGE_ROLE"), []],
+        [roleByName("STAKING_MODULE_MANAGE_ROLE"), [ROLES_OWNERS.agent]],
         [
           roleByName("REPORT_EXITED_VALIDATORS_ROLE"),
           [ROLES_OWNERS.accountingOracle],

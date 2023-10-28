@@ -12,7 +12,6 @@ import { ethersProvider } from "./ethers";
 
 import { argv } from "process";
 
-import * as agentBethRewards from "./subagents/beth-rewards/agent-beth-rewards";
 import * as agentPoolsRewards from "./subagents/pools-rewards/agent-pools-rewards";
 import * as agentPoolsBalances from "./subagents/pools-balances/agent-pools-balances";
 import * as agentAave from "./subagents/aave/agent-aave";
@@ -30,7 +29,6 @@ interface SubAgent {
 }
 
 const subAgents: SubAgent[] = [
-  agentBethRewards,
   agentPoolsRewards,
   agentPoolsBalances,
   agentAave,
