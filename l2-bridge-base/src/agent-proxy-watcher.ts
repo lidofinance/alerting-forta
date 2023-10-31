@@ -41,7 +41,7 @@ export async function initialize(
   };
 }
 
-export async function handleTransaction(logs: Log[]) {
+export async function handleTransaction(logs: Log[], blocks: BlockDto[]) {
   const findings: Finding[] = [];
 
   handleProxyAdminEvents(logs, findings);

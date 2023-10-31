@@ -22,11 +22,7 @@ export async function initialize(
 export async function handleBlock(block: BlockDto) {
   const findings: Finding[] = [];
 
-  await Promise.all([
-    handleBridgeBalanceWstETH(block, findings),
-
-    handleBridgeBalanceLDO(block, findings),
-  ]);
+  await Promise.all([handleBridgeBalanceWstETH(block, findings)]);
 
   return findings;
 }
@@ -65,43 +61,6 @@ async function handleBridgeBalanceWstETH(block: BlockDto, findings: Finding[]) {
           l1Balance: l1Balance.toFixed(),
           l1Address: BASE_L1_GATEWAY,
           l2Token: BASE_WST_ETH_BRIDGED,
-          network: "Base",
-        },
-      }),
-    );
-  }
-}
-
-async function handleBridgeBalanceLDO(block: BlockDto, findings: Finding[]) {
-  const LDO = new ethers.Contract(LDO_ADDRESS, ERC20_SHORT_ABI, ethersProvider);
-  const l1Balance = new BigNumber(
-    String(await LDO.functions.balanceOf(BASE_L1_GATEWAY)),
-  );
-
-  const bridgedLDO = new ethers.Contract(
-    networkParams.ldoBridged,
-    ERC20_SHORT_ABI,
-    baseProvider,
-  );
-  const l2TotalSupply = new BigNumber(
-    String(await bridgedLDO.functions.totalSupply()),
-  );
-  if (l2TotalSupply.isGreaterThan(l1Balance)) {
-    findings.push(
-      Finding.fromObject({
-        name: `🚨🚨🚨 Base bridge balance mismatch 🚨🚨🚨`,
-        description:
-          `Total supply of bridged LDO is greater than balanceOf L1 bridge side!\n` +
-          `L2 total supply: ${l2TotalSupply.div(ETH_DECIMALS).toFixed(2)}\n` +
-          `L1 balanceOf: ${l1Balance.div(ETH_DECIMALS).toFixed(2)}\n`,
-        alertId: "BRIDGE-BALANCE-MISMATCH",
-        severity: FindingSeverity.Critical,
-        type: FindingType.Suspicious,
-        metadata: {
-          l2TotalSupply: l2TotalSupply.toFixed(),
-          l1Balance: l1Balance.toFixed(),
-          l1Address: BASE_L1_GATEWAY,
-          l2Token: networkParams.ldoBridged,
           network: "Base",
         },
       }),

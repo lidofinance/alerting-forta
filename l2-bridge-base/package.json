@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Lido Detection Bot for base part of L2 bridge",
   "chainIds": [
-    8453
+    1
   ],
   "scripts": {
     "update-version": "node scripts/write-version.js",

@@ -120,16 +120,31 @@ async function handleToManyWithdrawals(block: BlockDto, findings: Finding[]) {
   }
 }
 
-export async function handleTransaction(logs: Log[]) {
+export async function handleTransaction(logs: Log[], blockEvents: BlockDto[]) {
   const findings: Finding[] = [];
 
-  handleWithdrawalEvent(logs, findings);
+  handleWithdrawalEvent(logs, blockEvents, findings);
 
   return findings;
 }
 
-function handleWithdrawalEvent(logs: Log[], findings: Finding[]) {
-  const addresses = logs.map((log) => log.address);
+function handleWithdrawalEvent(
+  logs: Log[],
+  blockEvents: BlockDto[],
+  findings: Finding[],
+) {
+  const blockNumberToBlock = new Map<number, BlockDto>();
+  const logIndexToLogs = new Map<number, Log>();
+  let addresses = [];
+
+  for (const log of logs) {
+    logIndexToLogs.set(log.logIndex, log);
+    addresses.push(log.address);
+  }
+
+  for (const blockEvent of blockEvents) {
+    blockNumberToBlock.set(blockEvent.number, blockEvent);
+  }
 
   if (L2_ERC20_TOKEN_GATEWAY in addresses) {
     const events = TransactionEventHelper.filterLog(
@@ -138,12 +153,16 @@ function handleWithdrawalEvent(logs: Log[], findings: Finding[]) {
       L2_ERC20_TOKEN_GATEWAY,
     );
 
-    /*events.forEach((event) => {
-            withdrawalsCache.push({
-                // TODO ask where to get txEvent
-                time: txEvent.timestamp,
-                amount: new BigNumber(String(event.args.amount)),
-            });
-        });*/
+    for (const event of events) {
+      // @ts-ignore
+      const log: Log = logIndexToLogs.get(event.logIndex);
+      // @ts-ignore
+      const block: BlockDto = blockNumberToBlock.get(log.blockNumber);
+
+      withdrawalsCache.push({
+        time: block.timestamp,
+        amount: new BigNumber(String(event.args.amount)),
+      });
+    }
   }
 }

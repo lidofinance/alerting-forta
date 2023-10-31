@@ -23,7 +23,10 @@ import VERSION from "./version";
 
 type Metadata = { [key: string]: string };
 type CustomHandleBlock = (blockEvent: BlockDto) => Promise<Finding[]>;
-type CustomHandleTransaction = (logs: Log[]) => Promise<Finding[]>;
+type CustomHandleTransaction = (
+  logs: Log[],
+  blockEvents: BlockDto[],
+) => Promise<Finding[]>;
 
 interface SubAgent {
   name: string;
@@ -225,11 +228,11 @@ const handleBlock: HandleBlock = async (
     }
   });
 
-  const findings = await handleLogs(logs);
+  const findings = await handleLogs(logs, workingBlocks);
   return [...blockFindings, ...findings];
 };
 
-const handleLogs = async (logs: Log[]) => {
+const handleLogs = async (logs: Log[], blocksDTO: BlockDto[]) => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, logs: Log[]) => {
     if (!agent.handleTransaction) return;
@@ -238,7 +241,7 @@ const handleLogs = async (logs: Log[]) => {
     let lastError;
     while (retries-- > 0 && !success) {
       try {
-        const newFindings = await agent.handleTransaction(logs);
+        const newFindings = await agent.handleTransaction(logs, blocksDTO);
         if (newFindings.length) {
           enrichFindingsMetadata(newFindings);
           txFindings = txFindings.concat(newFindings);
