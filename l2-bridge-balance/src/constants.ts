@@ -67,7 +67,7 @@ export const BRIDGE_PARAMS_LDO: BridgeParamsLDO = {
   },
   Optimism: {
     name: "Optimism",
-    l1Gateway: "0x9de443AdC5A411E83F1878Ef24C3F52C61571e72",
+    l1Gateway: "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1",
     ldoBridged: "0xfdb794692724153d1488ccdbe0c56c252596735f",
     rpcUrl: config.Optimism.RpcUrl,
   },
