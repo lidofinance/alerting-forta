@@ -141,7 +141,7 @@ const handleBlock: HandleBlock = async (
   } else {
     const latestBlock: Block = await baseProvider.getBlock("latest");
     const range = function (start: number, end: number): number[] {
-      return Array.from(Array(end - start + 1).keys()).map((x) => x + start);
+      return Array.from(Array(end - start).keys()).map((x) => x + start);
     };
 
     const blocksInterval = range(cachedBlockDto.number, latestBlock.number);
@@ -157,6 +157,13 @@ const handleBlock: HandleBlock = async (
         timestamp: block.timestamp,
       });
     }
+
+    // hint: we requested blocks like [cachedBlockDto.number, latestBlock.number)
+    // and here we do [cachedBlockDto.number, latestBlock.number]
+    workingBlocks.push({
+      number: latestBlock.number,
+      timestamp: latestBlock.timestamp,
+    });
 
     cachedBlockDto = {
       number: latestBlock.number,
