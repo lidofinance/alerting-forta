@@ -1,16 +1,10 @@
 import BigNumber from "bignumber.js";
-
-import {
-  ethers,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
-
 import { Event } from "ethers";
+import { Log } from "@ethersproject/abstract-provider";
+import { ethers, Finding, FindingType, FindingSeverity } from "forta-agent";
 
 import L2_BRIDGE_ABI from "./abi/L2Bridge.json";
+
 import {
   L2_ERC20_TOKEN_GATEWAY,
   MAX_WITHDRAWALS_WINDOW,
@@ -19,7 +13,6 @@ import {
   WITHDRAWAL_INITIATED_EVENT,
 } from "./constants";
 import { baseProvider } from "./providers";
-import { Log } from "@ethersproject/abstract-provider";
 import { TransactionEventHelper } from "./entity/transactionEvent";
 
 export const name = "WithdrawalsMonitor";
@@ -120,17 +113,17 @@ async function handleToManyWithdrawals(block: BlockDto, findings: Finding[]) {
   }
 }
 
-export async function handleTransaction(logs: Log[], blockEvents: BlockDto[]) {
+export async function handleTransaction(logs: Log[], blocksDto: BlockDto[]) {
   const findings: Finding[] = [];
 
-  handleWithdrawalEvent(logs, blockEvents, findings);
+  handleWithdrawalEvent(logs, blocksDto, findings);
 
   return findings;
 }
 
 function handleWithdrawalEvent(
   logs: Log[],
-  blockEvents: BlockDto[],
+  blocksDto: BlockDto[],
   findings: Finding[],
 ) {
   const blockNumberToBlock = new Map<number, BlockDto>();
@@ -142,8 +135,8 @@ function handleWithdrawalEvent(
     addresses.push(log.address);
   }
 
-  for (const blockEvent of blockEvents) {
-    blockNumberToBlock.set(blockEvent.number, blockEvent);
+  for (const blockDto of blocksDto) {
+    blockNumberToBlock.set(blockDto.number, blockDto);
   }
 
   if (L2_ERC20_TOKEN_GATEWAY in addresses) {
@@ -157,10 +150,10 @@ function handleWithdrawalEvent(
       // @ts-ignore
       const log: Log = logIndexToLogs.get(event.logIndex);
       // @ts-ignore
-      const block: BlockDto = blockNumberToBlock.get(log.blockNumber);
+      const blockDto: BlockDto = blockNumberToBlock.get(log.blockNumber);
 
       withdrawalsCache.push({
-        time: block.timestamp,
+        time: blockDto.timestamp,
         amount: new BigNumber(String(event.args.amount)),
       });
     }

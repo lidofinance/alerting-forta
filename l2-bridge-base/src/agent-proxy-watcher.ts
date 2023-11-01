@@ -1,18 +1,12 @@
-import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+import { ethers, Finding, FindingType, FindingSeverity } from "forta-agent";
+import { Log } from "@ethersproject/abstract-provider";
+
 import {
   PROXY_ADMIN_EVENTS,
   LIDO_PROXY_CONTRACTS,
   LidoProxy,
 } from "./constants";
 import { baseProvider } from "./providers";
-import { Log } from "@ethersproject/abstract-provider";
 import { TransactionEventHelper } from "./entity/transactionEvent";
 
 // Block interval tp fetch proxy params
@@ -41,7 +35,7 @@ export async function initialize(
   };
 }
 
-export async function handleTransaction(logs: Log[], blocks: BlockDto[]) {
+export async function handleTransaction(logs: Log[], blocksDto: BlockDto[]) {
   const findings: Finding[] = [];
 
   handleProxyAdminEvents(logs, findings);
@@ -75,12 +69,12 @@ function handleProxyAdminEvents(logs: Log[], findings: Finding[]) {
   });
 }
 
-export async function handleBlock(block: BlockDto) {
+export async function handleBlock(blockDto: BlockDto) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleProxyImplementationChanges(block, findings),
-    handleProxyAdminChanges(block, findings),
+    handleProxyImplementationChanges(blockDto, findings),
+    handleProxyAdminChanges(blockDto, findings),
   ]);
 
   return findings;
@@ -144,11 +138,14 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
 }
 
-async function handleProxyAdminChanges(block: BlockDto, findings: Finding[]) {
-  if (block.number % BLOCK_INTERVAL == 0) {
+async function handleProxyAdminChanges(
+  blockDto: BlockDto,
+  findings: Finding[],
+) {
+  if (blockDto.number % BLOCK_INTERVAL == 0) {
     await Promise.all(
       LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
-        const newAdmin = await getProxyAdmin(proxyInfo, block.number);
+        const newAdmin = await getProxyAdmin(proxyInfo, blockDto.number);
         const lastAdmin = lastAdmins.get(proxyInfo.address) || "";
         if (newAdmin != lastAdmin) {
           findings.push(

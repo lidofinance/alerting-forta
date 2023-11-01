@@ -1,24 +1,20 @@
+import { argv } from "process";
+import { Block, Log } from "@ethersproject/abstract-provider";
+
 import {
   BlockEvent,
-  TransactionEvent,
-  HandleTransaction,
   HandleBlock,
   Finding,
   FindingType,
   FindingSeverity,
 } from "forta-agent";
 
-import { Block, Log } from "@ethersproject/abstract-provider";
-
 import { baseProvider } from "./providers";
-
-import { argv } from "process";
 
 import * as agentGov from "./agent-governance";
 import * as agentProxy from "./agent-proxy-watcher";
 import * as agentBridge from "./agent-bridge-watcher";
 import * as agentWithdrawals from "./agent-withdrawals";
-import * as agentBalance from "./agent-balance";
 import VERSION from "./version";
 
 type Metadata = { [key: string]: string };
@@ -40,16 +36,16 @@ const subAgents: SubAgent[] = [
   agentGov,
   agentProxy,
   agentWithdrawals,
-  agentBalance,
 ];
 
 // block or tx handling should take no more than 120 sec.
 // If not all processing is done it interrupts the execution, sends current findings and errors as findings too
 const processingTimeout = 120_000;
-
 const maxHandlerRetries = 5;
 
 let findingsOnInit: Finding[] = [];
+let cachedBlockDto: BlockDto;
+let iteration: number = 0;
 
 const initialize = async () => {
   const metadata: Metadata = {
@@ -119,9 +115,6 @@ const timeout = async (agent: SubAgent) =>
       reject(err);
     }, processingTimeout);
   });
-
-let cachedBlockDto: BlockDto;
-let iteration: number = 0;
 
 const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent,
@@ -232,7 +225,7 @@ const handleBlock: HandleBlock = async (
   return [...blockFindings, ...findings];
 };
 
-const handleLogs = async (logs: Log[], blocksDTO: BlockDto[]) => {
+const handleLogs = async (logs: Log[], blocksDto: BlockDto[]) => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, logs: Log[]) => {
     if (!agent.handleTransaction) return;
@@ -241,7 +234,7 @@ const handleLogs = async (logs: Log[], blocksDTO: BlockDto[]) => {
     let lastError;
     while (retries-- > 0 && !success) {
       try {
-        const newFindings = await agent.handleTransaction(logs, blocksDTO);
+        const newFindings = await agent.handleTransaction(logs, blocksDto);
         if (newFindings.length) {
           enrichFindingsMetadata(newFindings);
           txFindings = txFindings.concat(newFindings);
