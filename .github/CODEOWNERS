@@ -1,4 +1,4 @@
-* @lidofinance/automation @lidofinance/lido-eth-protocol
+* @lidofinance/automation
 /ethereum-huge-tx/ @lidofinance/lido-analytics
 /ethereum-steth/ @lidofinance/lido-eth-protocol
 /storage-watcher/ @lidofinance/lido-eth-protocol
