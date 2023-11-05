@@ -5,6 +5,7 @@ import {
 } from "forta-agent";
 
 import {
+  DAY,
   LIDO_LOCATOR_ADDRESS,
   LocatorContracts,
   staticContracts,
@@ -13,8 +14,8 @@ import LIDO_LOCATOR_ABI from "./abi/LidoLocator.json";
 import { ethersProvider } from "./ethers";
 import { 
   createInfoSeverityFinding, 
-  createLowSeverityFinding, 
-  createMediumSeverityFinding 
+  createRevertedTxFindingWithHighGas, 
+  createRevertedTxFindingWithPossibleSpam 
 } from "./findings";
 
 interface RevertDictionary {
@@ -29,12 +30,11 @@ let contracts: LocatorContracts;
 let addresses: [string, string][] = [];
 export let gasUsed = ethers.BigNumber.from(0);
 
-startTimer()
-
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
+  startTimer()
   const locator = new ethers.Contract(
     LIDO_LOCATOR_ADDRESS,
     LIDO_LOCATOR_ABI,
@@ -100,7 +100,7 @@ async function handleRevertedTx(
     increaseForEOA(txEvent.from)
     if (revertedTxPerEOA[txEvent.from] > MAX_REVERTION_PER_DAY) {
         findings.push(
-          createMediumSeverityFinding(
+          createRevertedTxFindingWithPossibleSpam(
             name, 
             address, 
             txEvent,
@@ -110,7 +110,7 @@ async function handleRevertedTx(
     }
     if (gasUsed.gte(HIGH_GAS_THRESHOLD)) {
       findings.push(
-        createLowSeverityFinding(
+        createRevertedTxFindingWithHighGas(
           name, 
           address, 
           txEvent
@@ -127,7 +127,7 @@ async function handleRevertedTx(
 }
 
 function startTimer() {
-  setInterval(resetDictionary, 24 * 60 * 60 * 1000);
+  setInterval(resetDictionary, DAY);
 }
 
 function increaseForEOA(address: string) {

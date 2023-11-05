@@ -50,3 +50,5 @@ export const staticContracts = {
   GateSeal: GATE_SEAL_ADDRESS,
   EasyTrack: EASY_TRACK_ADDRESS,
 };
+
+export const DAY = 24 * 60 * 60 * 1000;

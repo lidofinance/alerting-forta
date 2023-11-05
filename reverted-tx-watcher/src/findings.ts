@@ -32,7 +32,7 @@ import {
       })
     };
 
-  export const createLowSeverityFinding = (
+  export const createRevertedTxFindingWithHighGas = (
     name: string,
     address: string,
     txEvent: TransactionEvent,
@@ -43,7 +43,7 @@ import {
         description:
           `Reverted TX ${fromSelf ? "from" : "to"} the ${name} ${etherscanAddress(address)} contract with high gas used. `
            + etherscanLink(txEvent.transaction.hash),
-        alertId: "REVERTED-TX",
+        alertId: "REVERTED-TX-HIGH-GAS",
         severity: FindingSeverity.Low,
         type: FindingType.Suspicious,
         metadata: {
@@ -54,7 +54,7 @@ import {
       })
     };
 
-  export const createMediumSeverityFinding = (
+  export const createRevertedTxFindingWithPossibleSpam = (
     name: string,
     address: string,
     txEvent: TransactionEvent,
@@ -66,7 +66,7 @@ import {
         description:
           `Reverted TX ${fromSelf ? "from" : "to"} the ${name} ${etherscanAddress(address)} contract by ${txEvent.from}. `
            + etherscanLink(txEvent.transaction.hash),
-        alertId: "REVERTED-TX",
+        alertId: "REVERTED-TX-SPAM",
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
         metadata: {
