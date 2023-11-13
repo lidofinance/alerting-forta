@@ -1,7 +1,7 @@
 {
-  "name": "lido-l2-bridge-balance-bot",
+  "name": "lido-l2-bridge-zksync-bot",
   "version": "0.0.1",
-  "description": "Lido Detection Bot for L2 bridges balance",
+  "description": "Lido Detection Bot for the zkSync Era part of the wstETH on L2 bridge",
   "chainIds": [
     1
   ],
@@ -23,8 +23,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.200",
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.45"
+    "forta-agent": "^0.1.45",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
