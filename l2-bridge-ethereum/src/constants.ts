@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { FindingSeverity, FindingType } from "forta-agent";
 
-import proxyShortABI from "./abi/ProxyShortABI.json";
+import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 
 // COMMON CONSTS
 
@@ -38,17 +38,44 @@ export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
 export const ARBITRUM_L1_GATEWAY_ROUTER =
   "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef";
 
-export const GATEWAY_SET_EVENT =
+export const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER =
+  "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1";
+
+export const BASE_L1_CROSS_DOMAIN_MESSENGER =
+  "0x866E82a600A1414e583f7F13623F1aC5d58b0Afa";
+
+export const ZKSYNC_L1_DIAMOND_PROXY =
+  "0x32400084c286cf3e17e7b677ea9583e60a000324";
+
+export const ARBITRUM_L1ERC20_TOKEN_GATEWAY =
+  "0x0F25c1DC2a9922304f2eac71DCa9B07E310e8E5a";
+export const OPTIMISM_L1ERC20_TOKEN_BRIDGE =
+  "0x76943c0d61395d8f2edf9060e1533529cae05de6";
+export const BASE_L1ERC20_TOKEN_BRIDGE =
+  "0x9de443AdC5A411E83F1878Ef24C3F52C61571e72";
+export const ZKSYNC_L1ERC20_BRIDGE =
+  "0x41527B2d03844dB6b0945f25702cB958b6d55989";
+export const ZKSYNC_L1EXECUTOR = "0xFf7F4d05e3247374e86A3f7231A2Ed1CA63647F2";
+
+export const ARBITRUM_GATEWAY_SET_EVENT =
   "event GatewaySet(address indexed l1Token, address indexed gateway)";
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
     name: "Arbitrum",
-    address: "0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a",
+    address: ARBITRUM_L1ERC20_TOKEN_GATEWAY,
   },
   {
     name: "Optimism",
-    address: "0x76943c0d61395d8f2edf9060e1533529cae05de6",
+    address: OPTIMISM_L1ERC20_TOKEN_BRIDGE,
+  },
+  {
+    name: "Base",
+    address: BASE_L1ERC20_TOKEN_BRIDGE,
+  },
+  {
+    name: "ZkSync",
+    address: ZKSYNC_L1ERC20_BRIDGE,
   },
 ];
 
@@ -72,17 +99,44 @@ export interface LidoProxy {
 export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   {
     name: "L1ERC20TokenGateway to Arbitrum",
-    address: "0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a",
-    shortABI: JSON.stringify(proxyShortABI),
+    address: ARBITRUM_L1ERC20_TOKEN_GATEWAY,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
   },
   {
-    name: "L1ERC20TokenGateway to Optimism",
-    address: "0x76943c0d61395d8f2edf9060e1533529cae05de6",
-    shortABI: JSON.stringify(proxyShortABI),
+    name: "L1ERC20TokenBridge to Optimism",
+    address: OPTIMISM_L1ERC20_TOKEN_BRIDGE,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
+    functions: new Map<string, string>([
+      ["admin", "proxy__getAdmin"],
+      ["implementation", "proxy__getImplementation"],
+    ]),
+  },
+  {
+    name: "L1ERC20TokenBridge to BASE",
+    address: BASE_L1ERC20_TOKEN_BRIDGE,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
+    functions: new Map<string, string>([
+      ["admin", "proxy__getAdmin"],
+      ["implementation", "proxy__getImplementation"],
+    ]),
+  },
+  {
+    name: "L1ERC20TokenBridge to ZkSync",
+    address: ZKSYNC_L1ERC20_BRIDGE,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
+    functions: new Map<string, string>([
+      ["admin", "proxy__getAdmin"],
+      ["implementation", "proxy__getImplementation"],
+    ]),
+  },
+  {
+    name: "ZkSync L1Executor",
+    address: ZKSYNC_L1EXECUTOR,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
@@ -147,7 +201,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
 
 export const THIRD_PARTY_PROXY_EVENTS = [
   {
-    address: "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef", // Arbitrum One: L1 Gateway Router
+    address: ARBITRUM_L1_GATEWAY_ROUTER, // Arbitrum One: L1 Gateway Router
     event: "event AdminChanged(address previousAdmin, address newAdmin)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Arbitrum Native Bridge: L1 Gateway Router proxy admin changed",
@@ -158,7 +212,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     type: FindingType.Info,
   },
   {
-    address: "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef", // Arbitrum One: L1 Gateway Router
+    address: ARBITRUM_L1_GATEWAY_ROUTER, // Arbitrum One: L1 Gateway Router
     event: "event Upgraded(address indexed implementation)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "🚨 Arbitrum Native Bridge: L1 Gateway Router proxy upgraded",
@@ -169,7 +223,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     type: FindingType.Info,
   },
   {
-    address: "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1", // Optimism: Proxy OVM L1 Cross Domain Messenger
+    address: OPTIMISM_L1_CROSS_DOMAIN_MESSENGER, // Optimism: Proxy OVM L1 Cross Domain Messenger
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
@@ -181,7 +235,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     type: FindingType.Info,
   },
   {
-    address: "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1", // Optimism: Proxy OVM L1 Cross Domain Messenger
+    address: OPTIMISM_L1_CROSS_DOMAIN_MESSENGER, // Optimism: Proxy OVM L1 Cross Domain Messenger
     event:
       "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
@@ -190,6 +244,42 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       `Proxy for Optimism: Proxy OVM L1 Cross Domain Messenger ` +
       `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
     severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: BASE_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
+    event:
+      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
+    name: "🚨 Base Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
+    description: (args: any) =>
+      `Proxy admin for Base: OVM L1 Cross Domain Messenger ` +
+      `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: BASE_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
+    event:
+      "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
+    alertId: "THIRD-PARTY-PROXY-UPGRADED",
+    name: "🚨 Base Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
+    description: (args: any) =>
+      `Proxy for Base: Proxy OVM L1 Cross Domain Messenger ` +
+      `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: ZKSYNC_L1_DIAMOND_PROXY, // ZkSync: DIAMOND proxy has changed
+    event:
+      "event DiamondCut(FacetCut[] facetCuts, address initAddress, bytes initCalldata)",
+    alertId: "THIRD-PARTY-PROXY-DIAMOND-CUT-CHANGED",
+    name: "🚨 ZkSync Native Bridge: Diamond Proxy changed",
+    description: (args: any) =>
+      `Proxy diamondCut for ZkSync: OVM L1 Cross Domain Messenger ` +
+      `was changed\n: ${args}`,
+    severity: FindingSeverity.Medium,
     type: FindingType.Info,
   },
 ];
