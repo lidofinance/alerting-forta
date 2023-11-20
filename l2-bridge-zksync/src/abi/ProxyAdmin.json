@@ -1,0 +1,53 @@
+[
+  {
+    "name": "getProxyAdmin",
+    "stateMutability": "view",
+    "type": "function",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "address",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "name": "getProxyImplementation",
+    "stateMutability": "view",
+    "type": "function",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "stateMutability": "view",
+    "type": "function",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ]
+  }
+]
