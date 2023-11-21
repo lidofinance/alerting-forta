@@ -243,6 +243,8 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xf9ab542616a0c8fa94e41c968622c3b2367f5ad1", // Range Uniswap WETH/WSTETH 0.01% LP
   "0x20273e8c0d83e449ac1d18fea7f56ff3c749d1e0", // Enzyme ComptrollerLib
   "0xbaa87546cf87b5de1b0b52353a86792d40b8ba70", // Astrid Finance
+  "0x4370e48e610d2e02d3d091a9d79c8eb9a54c5b1c", // https://solidly.com/swap/
+  "0x5f6ae08b8aeb7078cf2f96afb089d7c9f51da47d", // https://blast.io/
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
