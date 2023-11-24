@@ -1,11 +1,7 @@
-import { ethers, Finding, FindingType, FindingSeverity } from "forta-agent";
+import { ethers, Finding, FindingSeverity, FindingType } from "forta-agent";
 import { Log } from "@ethersproject/abstract-provider";
 
-import {
-  PROXY_ADMIN_EVENTS,
-  LIDO_PROXY_CONTRACTS,
-  LidoProxy,
-} from "./constants";
+import { LIDO_PROXY_CONTRACTS, LidoProxy, PROXY_ADMIN_EVENTS } from "./constants";
 import { baseProvider } from "./providers";
 import { TransactionEventHelper } from "./entity/transactionEvent";
 
@@ -18,7 +14,7 @@ const lastAdmins = new Map<string, string>();
 export const name = "ProxyWatcher";
 
 export async function initialize(
-  currentBlock: number,
+  currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   await Promise.all(
@@ -27,11 +23,11 @@ export async function initialize(
       lastImpls.set(proxyInfo.address, lastImpl);
       const lastAdmin = await getProxyAdmin(proxyInfo, currentBlock);
       lastAdmins.set(proxyInfo.address, lastAdmin);
-    }),
+    })
   );
   return {
     lastImpls: JSON.stringify(Object.fromEntries(lastImpls)),
-    lastAdmins: JSON.stringify(Object.fromEntries(lastAdmins)),
+    lastAdmins: JSON.stringify(Object.fromEntries(lastAdmins))
   };
 }
 
@@ -51,7 +47,7 @@ function handleProxyAdminEvents(logs: Log[], findings: Finding[]) {
       const events = TransactionEventHelper.filterLog(
         logs,
         eventInfo.event,
-        eventInfo.address,
+        eventInfo.address
       );
       events.forEach((event) => {
         findings.push(
@@ -61,20 +57,20 @@ function handleProxyAdminEvents(logs: Log[], findings: Finding[]) {
             alertId: eventInfo.alertId,
             severity: eventInfo.severity,
             type: eventInfo.type,
-            metadata: { args: String(event.args) },
-          }),
+            metadata: { args: String(event.args) }
+          })
         );
       });
     }
   });
 }
 
-export async function handleBlock(blockDto: BlockDto) {
+export async function handleLogs(blockDto: BlockDto) {
   const findings: Finding[] = [];
 
   await Promise.all([
     handleProxyImplementationChanges(blockDto, findings),
-    handleProxyAdminChanges(blockDto, findings),
+    handleProxyAdminChanges(blockDto, findings)
   ]);
 
   return findings;
@@ -89,7 +85,7 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
   const proxy = new ethers.Contract(
     proxyInfo.address,
     proxyInfo.shortABI,
-    baseProvider,
+    baseProvider
   );
 
   return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
@@ -97,7 +93,7 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
 
 async function handleProxyImplementationChanges(
   block: BlockDto,
-  findings: Finding[],
+  findings: Finding[]
 ) {
   if (block.number % BLOCK_INTERVAL == 0) {
     await Promise.all(
@@ -115,12 +111,12 @@ async function handleProxyImplementationChanges(
               alertId: "PROXY-UPGRADED",
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
-              metadata: { newImpl: newImpl, lastImpl: lastImpl },
-            }),
+              metadata: { newImpl: newImpl, lastImpl: lastImpl }
+            })
           );
           lastImpls.set(proxyInfo.address, newImpl);
         }
-      }),
+      })
     );
   }
 }
@@ -133,14 +129,14 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   const proxy = new ethers.Contract(
     proxyInfo.address,
     proxyInfo.shortABI,
-    baseProvider,
+    baseProvider
   );
   return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
 }
 
 async function handleProxyAdminChanges(
   blockDto: BlockDto,
-  findings: Finding[],
+  findings: Finding[]
 ) {
   if (blockDto.number % BLOCK_INTERVAL == 0) {
     await Promise.all(
@@ -158,12 +154,12 @@ async function handleProxyAdminChanges(
               alertId: "PROXY-ADMIN-CHANGED",
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
-              metadata: { newAdmin: newAdmin, lastAdmin: lastAdmin },
-            }),
+              metadata: { newAdmin: newAdmin, lastAdmin: lastAdmin }
+            })
           );
           lastAdmins.set(proxyInfo.address, newAdmin);
         }
-      }),
+      })
     );
   }
 }
