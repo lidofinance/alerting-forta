@@ -10,5 +10,8 @@
   },
   "ZkSync": {
     "RpcUrl": "https://mainnet.era.zksync.io"
+  },
+  "Mantle": {
+    "RpcUrl": "https://mantle.publicnode.com"
   }
 }

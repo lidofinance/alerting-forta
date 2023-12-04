@@ -1,20 +1,19 @@
 import BigNumber from "bignumber.js";
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
 } from "forta-agent";
 import {
-  BRIDGE_PARAMS_WSTETH,
   BRIDGE_PARAMS_LDO,
-  WSTETH_ADDRESS,
-  ETH_DECIMALS,
-  BridgeParamWstETH,
+  BRIDGE_PARAMS_WSTETH,
   BridgeParamLDO,
+  BridgeParamWstETH,
+  ETH_DECIMALS,
   LDO_ADDRESS,
+  WSTETH_ADDRESS,
 } from "./constants";
 import ERC20_SHORT_ABI from "./abi/ERC20Short.json";
 import { ethersProvider } from "./ethers";
@@ -48,7 +47,13 @@ export async function handleBlock(blockEvent: BlockEvent) {
       findings,
       BRIDGE_PARAMS_WSTETH.ZkSync,
     ),
+    handleBridgeBalanceWstETH(
+      blockEvent,
+      findings,
+      BRIDGE_PARAMS_WSTETH.Mantle,
+    ),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Arbitrum),
+    handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
   ]);
 

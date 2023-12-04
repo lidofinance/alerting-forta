@@ -1,0 +1,81 @@
+{
+  "name": "lido-l2-bridge-mantle-bot",
+  "displayName": "Forta Agent Starter",
+  "version": "0.0.1",
+  "description": "Lido Detection Bot for mantle part of L2 bridge",
+  "repository": {
+    "type": "git",
+    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/l2-bridge-mantle"
+  },
+  "license": "MIT",
+  "chainIds": [
+    1
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint"
+    }
+  },
+  "scripts": {
+    "update-version": "node ../utils/write-version.js",
+    "build": "tsc && yarn run copy-version",
+    "copy-version": "cp version.json dist",
+    "start": "yarn run update-version && yarn run start:dev",
+    "start:dev": "nodemon --watch src --watch forta.config.json -e js,ts,json  --exec \"yarn run build && yarn run copy-version && forta-agent run\"",
+    "start:prod": "forta-agent run --prod",
+    "tx": "yarn run build && forta-agent run --tx",
+    "block": "yarn run build && forta-agent run --block",
+    "range": "yarn run build && forta-agent run --range",
+    "alert": "yarn run build && forta-agent run --alert",
+    "sequence": "yarn run build && forta-agent run --sequence",
+    "file": "yarn run build && forta-agent run --file",
+    "publish": "yarn run update-version && forta-agent publish",
+    "info": "forta-agent info",
+    "logs": "forta-agent logs",
+    "push": "yarn run update-version && forta-agent push",
+    "disable": "forta-agent disable",
+    "enable": "forta-agent enable",
+    "keyfile": "forta-agent keyfile",
+    "stake": "forta-agent stake",
+    "test": "jest",
+    "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
+    "eslint:lint": "eslint ./src",
+    "eslint:format": "eslint ./src --fix",
+    "prettier:check": "prettier --check .",
+    "prettier:format": "prettier --write .",
+    "lint": "yarn run prettier:check && yarn run eslint:lint",
+    "format": "yarn run eslint:format && yarn run prettier:format"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.202",
+    "bignumber.js": "^9.1.2",
+    "ethers": "^5.5.1",
+    "forta-agent": "^0.1.45",
+    "fp-ts": "^2.16.1",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@typechain/ethers-v5": "^11.1.2",
+    "@ethersproject/abi": "^5.0.0",
+    "@ethersproject/providers": "^5.0.0",
+    "@types/jest": "^29.5.10",
+    "@types/nodemon": "^1.19.0",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.1.0",
+    "ts-generator": "^0.1.1",
+    "ts-jest": "^29.1.1",
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.2",
+    "husky": "^8.0.3"
+  },
+  "packageManager": "yarn@1.22.21"
+}
