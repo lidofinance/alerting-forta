@@ -3,16 +3,17 @@ import {
     FindingSeverity,
     FindingType,
     TransactionEvent,
+    ethers,
   } from "forta-agent";
 import {
     etherscanAddress,
-    etherscanLink,
-    gasUsed
+    etherscanLink
 } from "./agent-reverted-tx"
   
   export const createRevertedTxFinding = (
     name: string,
     address: string,
+    gasUsed: ethers.BigNumber,
     txEvent: TransactionEvent,
   ): Finding => {
     const fromSelf = address.toLowerCase() === txEvent.from.toLowerCase();
@@ -35,6 +36,7 @@ import {
   export const createRevertedTxFindingWithHighGas = (
     name: string,
     address: string,
+    gasUsed: ethers.BigNumber,
     txEvent: TransactionEvent,
   ): Finding => {
     const fromSelf = address.toLowerCase() === txEvent.from.toLowerCase();
@@ -57,6 +59,7 @@ import {
   export const createRevertedTxFindingWithPossibleSpam = (
     name: string,
     address: string,
+    gasUsed: ethers.BigNumber,
     txEvent: TransactionEvent,
     number: number
   ): Finding => {

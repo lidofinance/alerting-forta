@@ -52,3 +52,7 @@ export const staticContracts = {
 };
 
 export const DAY = 24 * 60 * 60 * 1000;
+
+export const HIGH_GAS_THRESHOLD = "600000";
+
+export const MAX_REVERTION_PER_DAY = 15;

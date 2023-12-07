@@ -9,11 +9,13 @@ import {
   LIDO_LOCATOR_ADDRESS,
   LocatorContracts,
   staticContracts,
+  MAX_REVERTION_PER_DAY,
+  HIGH_GAS_THRESHOLD
 } from "./constants";
 import LIDO_LOCATOR_ABI from "./abi/LidoLocator.json";
 import { ethersProvider } from "./ethers";
 import { 
-  createInfoSeverityFinding, 
+  createRevertedTxFinding, 
   createRevertedTxFindingWithHighGas, 
   createRevertedTxFindingWithPossibleSpam 
 } from "./findings";
@@ -23,12 +25,9 @@ interface RevertDictionary {
 }
 
 export const name = "RevertedTxWatcher";
-export const HIGH_GAS_THRESHOLD = "600000";
-export const MAX_REVERTION_PER_DAY = 15
 let revertedTxPerEOA: RevertDictionary = {};
 let contracts: LocatorContracts;
 let addresses: [string, string][] = [];
-export let gasUsed = ethers.BigNumber.from(0);
 
 export async function initialize(
   currentBlock: number,
@@ -91,6 +90,7 @@ async function handleRevertedTx(
     txEvent.transaction.hash,
   );
 
+  let gasUsed = ethers.BigNumber.from(0);
   gasUsed = ethers.BigNumber.from(receipt.gasUsed);
 
   if (!receipt) return;
@@ -102,7 +102,8 @@ async function handleRevertedTx(
         findings.push(
           createRevertedTxFindingWithPossibleSpam(
             name, 
-            address, 
+            address,
+            gasUsed,
             txEvent,
             revertedTxPerEOA[txEvent.from]
           )
@@ -113,13 +114,15 @@ async function handleRevertedTx(
         createRevertedTxFindingWithHighGas(
           name, 
           address, 
+          gasUsed,
           txEvent
         )
       )
   } findings.push(
-    createInfoSeverityFinding(
+    createRevertedTxFinding(
       name, 
-      address, 
+      address,
+      gasUsed,
       txEvent
     )
   )
