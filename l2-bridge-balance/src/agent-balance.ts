@@ -23,7 +23,7 @@ export const name = "BridgeWatcher";
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
-  console.log(`[${name}]`);
+  console.log(`[${name}] on block ${currentBlock}`);
   return {};
 }
 
@@ -53,7 +53,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
       BRIDGE_PARAMS_WSTETH.Mantle,
     ),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Arbitrum),
-    handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
   ]);
 

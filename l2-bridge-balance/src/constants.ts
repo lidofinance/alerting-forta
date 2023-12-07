@@ -54,7 +54,7 @@ export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
     name: "Mantle",
     l1Gateway: "0x2D001d79E5aF5F65a939781FE228B267a8Ed468B",
     wstEthBridged: "0x458ed78EB972a369799fb278c0243b25e5242A83",
-    rpcUrl: config.ZkSync.RpcUrl,
+    rpcUrl: config.Mantle.RpcUrl,
   },
 };
 

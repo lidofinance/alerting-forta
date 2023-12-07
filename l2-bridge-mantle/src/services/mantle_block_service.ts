@@ -14,7 +14,7 @@ export class BlockSrv {
     this.mantleProvider = provider
   }
 
-  public async getBaseBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
+  public async getBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
     try {
       const out: BlockDto[] = []
 
@@ -57,7 +57,7 @@ export class BlockSrv {
 
       return E.right(out)
     } catch (e) {
-      return E.left(errorToFinding(e, BlockSrv.name, this.getBaseBlocks.name))
+      return E.left(errorToFinding(e, BlockSrv.name, this.getBlocks.name))
     }
   }
 

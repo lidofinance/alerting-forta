@@ -5,7 +5,7 @@ export function errorToFinding(e: unknown, className: string, fnName: string): F
 
   return Finding.fromObject({
     name: `Error in ${className}.${fnName}`,
-    description: `${err}`,
+    description: `${err.message}`,
     alertId: 'LIDO-AGENT-ERROR',
     severity: FindingSeverity.High,
     type: FindingType.Degraded,

@@ -65,7 +65,6 @@ export function initialize(outFinding: Finding[]): Initialize {
 }
 
 export const handleBlock = (initFinding: Finding[]): HandleBlock => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
     const app = await App.getInstance()
 
@@ -76,7 +75,7 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
       initFinding = []
     }
 
-    const blocksDto = await app.blockSrv.getBaseBlocks()
+    const blocksDto = await app.blockSrv.getBlocks()
     if (E.isLeft(blocksDto)) {
       return [blocksDto.left]
     }
@@ -121,43 +120,4 @@ const initFinding: Finding[] = []
 export default {
   initialize: initialize(initFinding),
   handleBlock: handleBlock(initFinding),
-  // handleTransaction: handleTransaction(agent),
-  // healthCheck: healthCheck(agent),
-  // handleAlert: handleAlert(agent),
 }
-
-/*
-Uncomment when need to listen to those events
-export function handleTransaction(): HandleTransaction {
-  return async function (txEvent: TransactionEvent): Promise<Finding[]> {
-    try {
-      // return await rootWorker.handleTransaction(txEvent)
-    } catch (e) {
-      console.log(e)
-
-      return []
-    }
-  }
-}
-
-export function healthCheck(): HealthCheck {
-  return async function (): Promise<string[] | void> {
-    try {
-    } catch (e) {
-      console.log(e)
-
-      return []
-    }
-  }
-}
-
-export const handleAlert = (): HandleAlert => {
-  return async function (alertEvent: AlertEvent): Promise<Finding[]> {
-    try {
-    } catch (e) {
-      console.log(e)
-
-      return []
-    }
-  }
-}*/

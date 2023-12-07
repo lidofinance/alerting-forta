@@ -1,5 +1,4 @@
 import { SecretClient } from './clients/secret_client'
-import * as E from 'fp-ts/Either'
 import { ethers } from 'forta-agent'
 import { IMantleProvider, MantleProvider } from './clients/mantle_provider'
 import { EventWatcher } from './services/eventWatcher/event_watcher'
@@ -31,20 +30,10 @@ export class App {
 
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {
-      const secretClient = new SecretClient(process.env.NODE_ENV === 'production')
-
-      const mantleRpcURL = await secretClient.getSecret('mantleUrl')
-      if (E.isLeft(mantleRpcURL)) {
-        console.log(`Error: ${mantleRpcURL.left.message}`)
-        console.log(`Stack: ${mantleRpcURL.left.stack}`)
-
-        process.exit(1)
-      }
-
-      console.log(mantleRpcURL.right)
+      const mantleRpcURL = SecretClient.getSecret()
 
       const baseNetworkID = 5000
-      const nodeClient = new ethers.providers.JsonRpcProvider(mantleRpcURL.right, baseNetworkID)
+      const nodeClient = new ethers.providers.JsonRpcProvider(mantleRpcURL, baseNetworkID)
 
       const mantleClient = new MantleProvider(nodeClient)
 
@@ -55,24 +44,24 @@ export class App {
       const LIDO_PROXY_CONTRACTS: ProxyContract[] = [
         new ProxyContract(
           L2_ERC20_TOKEN_GATEWAY.name,
-          L2_ERC20_TOKEN_GATEWAY.address,
-          OssifiableProxy__factory.connect(L2_ERC20_TOKEN_GATEWAY.address, nodeClient),
+          L2_ERC20_TOKEN_GATEWAY.hash,
+          OssifiableProxy__factory.connect(L2_ERC20_TOKEN_GATEWAY.hash, nodeClient),
         ),
         new ProxyContract(
           MANTLE_WST_ETH_BRIDGED.name,
-          MANTLE_WST_ETH_BRIDGED.address,
-          OssifiableProxy__factory.connect(MANTLE_WST_ETH_BRIDGED.address, nodeClient),
+          MANTLE_WST_ETH_BRIDGED.hash,
+          OssifiableProxy__factory.connect(MANTLE_WST_ETH_BRIDGED.hash, nodeClient),
         ),
       ]
 
       const blockSrv: BlockSrv = new BlockSrv(mantleClient)
       const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS)
 
-      const l2Bridge = L2ERC20TokenBridge__factory.connect(L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
+      const l2Bridge = L2ERC20TokenBridge__factory.connect(L2_ERC20_TOKEN_GATEWAY.hash, nodeClient)
 
       const monitorWithdrawals = new MonitorWithdrawals(
         l2Bridge,
-        L2_ERC20_TOKEN_GATEWAY.address,
+        L2_ERC20_TOKEN_GATEWAY.hash,
         WITHDRAWAL_INITIATED_EVENT,
       )
 
