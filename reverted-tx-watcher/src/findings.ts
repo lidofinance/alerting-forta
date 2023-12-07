@@ -10,7 +10,7 @@ import {
     gasUsed
 } from "./agent-reverted-tx"
   
-  export const createInfoSeverityFinding = (
+  export const createRevertedTxFinding = (
     name: string,
     address: string,
     txEvent: TransactionEvent,
