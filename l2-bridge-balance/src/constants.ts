@@ -20,6 +20,8 @@ export interface BridgeParamWstETH {
 export interface BridgeParamsWstETH {
   Arbitrum: BridgeParamWstETH;
   Optimism: BridgeParamWstETH;
+  Base: BridgeParamWstETH;
+  ZkSync: BridgeParamWstETH;
 }
 
 export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
@@ -34,6 +36,18 @@ export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
     l1Gateway: "0x76943c0d61395d8f2edf9060e1533529cae05de6",
     wstEthBridged: "0x1f32b1c2345538c0c6f582fcb022739c4a194ebb",
     rpcUrl: config.Optimism.RpcUrl,
+  },
+  Base: {
+    name: "Base",
+    l1Gateway: "0x9de443AdC5A411E83F1878Ef24C3F52C61571e72",
+    wstEthBridged: "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+    rpcUrl: config.Base.RpcUrl,
+  },
+  ZkSync: {
+    name: "ZkSync",
+    l1Gateway: "0x41527B2d03844dB6b0945f25702cB958b6d55989",
+    wstEthBridged: "0x703b52F2b28fEbcB60E1372858AF5b18849FE867",
+    rpcUrl: config.ZkSync.RpcUrl,
   },
 };
 

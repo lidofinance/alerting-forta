@@ -11,7 +11,7 @@ import {
   LIDO_PROXY_CONTRACTS,
   LidoProxy,
   ARBITRUM_L1_GATEWAY_ROUTER,
-  GATEWAY_SET_EVENT,
+  ARBITRUM_GATEWAY_SET_EVENT,
   WSTETH_ADDRESS,
 } from "./constants";
 import { ethersProvider } from "./ethers";
@@ -95,7 +95,7 @@ function handleThirdPartyProxyAdminEvents(
   });
   if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
     const events = txEvent.filterLog(
-      GATEWAY_SET_EVENT,
+      ARBITRUM_GATEWAY_SET_EVENT,
       ARBITRUM_L1_GATEWAY_ROUTER,
     );
     events.forEach((event) => {

@@ -35,6 +35,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x828b154032950c8ff7cf8085d841723db2696056", // curveStEthWEthPool
   "0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a", // L2 Arbitrum Bridge
   "0x76943c0d61395d8f2edf9060e1533529cae05de6", // L2 Optimism Bridge
+  "0x9de443AdC5A411E83F1878Ef24C3F52C61571e72", // L2 Base Bridge
   "0x889edc2edab5f40e902b864ad4d7ade8e412f9b1", // unstETH
   // externally owned
   "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9", // aaveLandingPoolV2
@@ -242,6 +243,19 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xf9ab542616a0c8fa94e41c968622c3b2367f5ad1", // Range Uniswap WETH/WSTETH 0.01% LP
   "0x20273e8c0d83e449ac1d18fea7f56ff3c749d1e0", // Enzyme ComptrollerLib
   "0xbaa87546cf87b5de1b0b52353a86792d40b8ba70", // Astrid Finance
+  "0x4370e48e610d2e02d3d091a9d79c8eb9a54c5b1c", // https://solidly.com/swap/
+  "0x5f6ae08b8aeb7078cf2f96afb089d7c9f51da47d", // https://blast.io/
+  "0x2bbbdf97295f73175b12cc087cf446765931e1c3", // https://layerzero.network/
+  "0x20273e8c0d83e449ac1d18fea7f56ff3c749d1e0", // https://enzyme.finance/
+  "0x86355f02119bdbc28ed6a4d5e0ca327ca7730fff", // https://stargate.finance/
+  "0xa950974f64aa33f27f6c5e017eee93bf7588ed07", // https://radiant.capital/
+  "0x2570f1bd5d2735314fc102eb12fc1afe9e6e7193", // Curve wstETH/rETH/sfrxETH pool
+  "0x9de443adc5a411e83f1878ef24c3f52c61571e72", // KyberSwap
+  "0x88ad09518695c6c3712ac10a214be5109a655671", // https://omni.gnosischain.com/bridge
+  "0xe3985e6b61b814f7cdb188766562ba71b446b46d", // https://www.mayaprotocol.com/
+  "0x0a0b7d1eea99e6189995432fec8172bb2dfff847", // https://symbiosis.finance/
+  "0x6db28a0f72ec061137a149ebb90d466a4a6fd45b", // https://app.cega.fi/
+  "0x0439e60f02a8900a951603950d8d4527f400c3f1", // https://hop.exchange/
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(

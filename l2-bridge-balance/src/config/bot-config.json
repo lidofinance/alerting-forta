@@ -1,8 +1,14 @@
 {
-    "Arbitrum": {
-        "RpcUrl": "https://arb1.arbitrum.io/rpc"
-    },
-    "Optimism": {
-        "RpcUrl": "https://mainnet.optimism.io"
-    }
+  "Arbitrum": {
+    "RpcUrl": "https://arb1.arbitrum.io/rpc"
+  },
+  "Optimism": {
+    "RpcUrl": "https://mainnet.optimism.io"
+  },
+  "Base": {
+    "RpcUrl": "https://mainnet.base.org"
+  },
+  "ZkSync": {
+    "RpcUrl": "https://mainnet.era.zksync.io"
+  }
 }

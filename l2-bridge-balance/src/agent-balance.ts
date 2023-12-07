@@ -42,6 +42,12 @@ export async function handleBlock(blockEvent: BlockEvent) {
       findings,
       BRIDGE_PARAMS_WSTETH.Optimism,
     ),
+    handleBridgeBalanceWstETH(blockEvent, findings, BRIDGE_PARAMS_WSTETH.Base),
+    handleBridgeBalanceWstETH(
+      blockEvent,
+      findings,
+      BRIDGE_PARAMS_WSTETH.ZkSync,
+    ),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Arbitrum),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
   ]);
@@ -62,12 +68,14 @@ async function handleBridgeBalanceWstETH(
   const l1Balance = new BigNumber(
     String(await wstETH.functions.balanceOf(networkParams.l1Gateway)),
   );
+
   const l2Provider = new ethers.providers.JsonRpcProvider(networkParams.rpcUrl);
   const bridgedWstETH = new ethers.Contract(
     networkParams.wstEthBridged,
     ERC20_SHORT_ABI,
     l2Provider,
   );
+
   const l2TotalSupply = new BigNumber(
     String(await bridgedWstETH.functions.totalSupply()),
   );
