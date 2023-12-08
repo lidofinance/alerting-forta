@@ -53,7 +53,7 @@ export const OPTIMISM_L1ERC20_TOKEN_BRIDGE =
   "0x76943c0d61395d8f2edf9060e1533529cae05de6";
 export const BASE_L1ERC20_TOKEN_BRIDGE =
   "0x9de443AdC5A411E83F1878Ef24C3F52C61571e72";
-export const ZKSYNC_L1ERC20_TOEKEN_BRIDGE =
+export const ZKSYNC_L1ERC20_TOKEN_BRIDGE =
   "0x41527B2d03844dB6b0945f25702cB958b6d55989";
 export const ZKSYNC_L1EXECUTOR = "0xFf7F4d05e3247374e86A3f7231A2Ed1CA63647F2";
 
@@ -82,7 +82,7 @@ export const L1_ERC20_TOKEN_GATEWAYS = [
   },
   {
     name: "ZkSync",
-    address: ZKSYNC_L1ERC20_TOEKEN_BRIDGE,
+    address: ZKSYNC_L1ERC20_TOKEN_BRIDGE,
   },
   {
     name: "Mantle",
@@ -137,7 +137,7 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   },
   {
     name: "L1ERC20TokenBridge to ZkSync",
-    address: ZKSYNC_L1ERC20_TOEKEN_BRIDGE,
+    address: ZKSYNC_L1ERC20_TOKEN_BRIDGE,
     shortABI: JSON.stringify(ossifiableProxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],

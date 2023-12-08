@@ -2,8 +2,7 @@
 
 How does it work.
 
-This PR introduces a new bot operating on the Mantle network.
-The existing bot functions on two networks: ETH mainnet and Mantle.
+The bot works on two networks: ETH mainnet and Mantle.
 Here's how it operates: The bot monitors new blocks on the ETH mainnet.
 Since Forta doesn't currently support Mantle, the bot reads blocks on the L2 network (Mantle) and stores the latest one
 in an in-memory cache.

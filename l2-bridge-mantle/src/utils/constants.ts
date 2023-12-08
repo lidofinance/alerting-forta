@@ -8,7 +8,7 @@ export const L2_ERC20_TOKEN_GATEWAY_ADDRESS = '0x9c46560D6209743968cC24150893631
 export const MANTLE_WST_ETH_BRIDGED_ADDRESS = '0x458ed78EB972a369799fb278c0243b25e5242A83'
 
 export const WITHDRAWAL_INITIATED_EVENT =
-  'event WithdrawalInitiated( address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)'
+  'event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)'
 
 type ProxyContract = {
   name: string
@@ -48,7 +48,6 @@ export const WITHDRAWALS_DISABLER_ROLE: Role = {
   hash: '0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c',
 }
 
-// TODO ask
 export const DEFAULT_ADMIN_ROLE: Role = {
   name: 'DEFAULT ADMIN ROLE',
   hash: '0x0000000000000000000000000000000000000000000000000000000000000000',
