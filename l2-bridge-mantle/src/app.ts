@@ -1,4 +1,4 @@
-import { SecretClient } from './clients/secret_client'
+import { FortaGuardClient } from './clients/forta_guard_client'
 import { ethers } from 'forta-agent'
 import { IMantleProvider, MantleProvider } from './clients/mantle_provider'
 import { EventWatcher } from './services/eventWatcher/event_watcher'
@@ -29,7 +29,7 @@ export class App {
 
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {
-      const mantleRpcURL = SecretClient.getSecret()
+      const mantleRpcURL = FortaGuardClient.getSecret()
 
       const baseNetworkID = 5000
       const nodeClient = new ethers.providers.JsonRpcProvider(mantleRpcURL, baseNetworkID)

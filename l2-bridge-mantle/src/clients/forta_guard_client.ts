@@ -2,8 +2,8 @@ import { fetchJwt } from 'forta-agent'
 import { verifyJwt } from 'forta-agent/dist/sdk/jwt'
 import * as E from 'fp-ts/Either'
 
-export class SecretClient {
-  private vaultUrl: string = 'http://127.0.0.1/secret'
+export class FortaGuardClient {
+  private fortaGuardURL: string = 'http://127.0.0.1/secret'
   private readonly verifyJwt: boolean
 
   constructor(verifyJwt: boolean) {
@@ -34,7 +34,7 @@ export class SecretClient {
     }
 
     try {
-      const response = await fetch(this.vaultUrl + '/' + key, {
+      const response = await fetch(this.fortaGuardURL + '/' + key, {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + token,
