@@ -20,7 +20,6 @@ export type Container = {
   bridgeWatcher: EventWatcher
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
-  proxyWorker: ProxyWatcher
 }
 
 export class App {
@@ -73,7 +72,6 @@ export class App {
         bridgeWatcher: bridgeEventWatcher,
         govWatcher: govEventWatcher,
         proxyEventWatcher: proxyEventWatcher,
-        proxyWorker: proxyWorker,
       }
     }
 

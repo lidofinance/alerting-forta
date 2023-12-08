@@ -46,7 +46,7 @@ export function initialize(outFinding: Finding[]): Initialize {
     metadata[`${app.monitorWithdrawals.getName()}.currentWithdrawals`] =
       monitorWithdrawalsInitResp.right.currentWithdrawals
 
-    const agents: string[] = [app.proxyWorker.getName(), app.monitorWithdrawals.getName()]
+    const agents: string[] = [app.proxyWatcher.getName(), app.monitorWithdrawals.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
     outFinding.push(
@@ -99,7 +99,7 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     for (const log of logs.right) {
       blockNumbers.push(log.blockNumber)
     }
-    const proxyWatcherFindings = await app.proxyWorker.handleBlocks(blockNumbers)
+    const proxyWatcherFindings = await app.proxyWatcher.handleBlocks(blockNumbers)
 
     app.monitorWithdrawals.handleWithdrawalEvent(logs.right, blocksDto.right)
 
