@@ -10,7 +10,7 @@ export const BASE_WST_ETH_BRIDGED_ADDRESS =
   '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452'
 
 export const WITHDRAWAL_INITIATED_EVENT =
-  'event WithdrawalInitiated(address indexed _l1Token,address indexed _l2Token,address indexed _from,address _to,uint256 _amount,bytes _data)'
+  'event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)'
 
 type ProxyContract = {
   name: string
