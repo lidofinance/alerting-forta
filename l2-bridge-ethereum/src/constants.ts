@@ -57,6 +57,13 @@ export const ZKSYNC_L1ERC20_BRIDGE =
   "0x41527B2d03844dB6b0945f25702cB958b6d55989";
 export const ZKSYNC_L1EXECUTOR = "0xFf7F4d05e3247374e86A3f7231A2Ed1CA63647F2";
 
+// proof of address https://github.com/mantlenetworkio/networks/blob/main/mainnet/addresses.json
+export const MANTLE_L1_CROSS_DOMAIN_MESSENGER =
+  "0x676A795fe6E43C17c668de16730c3F690FEB7120";
+// proof of address https://docs.lido.fi/deployed-contracts/#mantle
+export const MANTLE_L1ERC20_TOKEN_BRIDGE =
+  "0x2D001d79E5aF5F65a939781FE228B267a8Ed468B";
+
 export const ARBITRUM_GATEWAY_SET_EVENT =
   "event GatewaySet(address indexed l1Token, address indexed gateway)";
 
@@ -76,6 +83,10 @@ export const L1_ERC20_TOKEN_GATEWAYS = [
   {
     name: "ZkSync",
     address: ZKSYNC_L1ERC20_BRIDGE,
+  },
+  {
+    name: "Mantle",
+    address: MANTLE_L1ERC20_TOKEN_BRIDGE,
   },
 ];
 
@@ -136,6 +147,15 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   {
     name: "ZkSync L1Executor",
     address: ZKSYNC_L1EXECUTOR,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
+    functions: new Map<string, string>([
+      ["admin", "proxy__getAdmin"],
+      ["implementation", "proxy__getImplementation"],
+    ]),
+  },
+  {
+    name: "L1ERC20TokenBridge to Mantle",
+    address: MANTLE_L1ERC20_TOKEN_BRIDGE,
     shortABI: JSON.stringify(ossifiableProxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
@@ -280,6 +300,30 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       `Proxy diamondCut for ZkSync: OVM L1 Cross Domain Messenger ` +
       `was changed\n: ${args}`,
     severity: FindingSeverity.Medium,
+    type: FindingType.Info,
+  },
+  {
+    address: MANTLE_L1_CROSS_DOMAIN_MESSENGER,
+    event:
+      "event AddressSet(string indexed _name, address _newAddress, address _oldAddress)",
+    alertId: "THIRD-PARTY-PROXY-UPGRADED",
+    name: "🚨 Mantle Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
+    description: (args: any) =>
+      `Proxy for Mantle: Proxy OVM L1 Cross Domain Messenger ` +
+      `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: MANTLE_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
+    event:
+      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
+    name: "🚨 Mantle Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
+    description: (args: any) =>
+      `Proxy admin for Mantle: OVM L1 Cross Domain Messenger ` +
+      `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+    severity: FindingSeverity.High,
     type: FindingType.Info,
   },
 ];
