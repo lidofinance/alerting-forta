@@ -1,16 +1,17 @@
 import {
+  BlockEvent,
   ethers,
   Finding,
   TransactionEvent,
 } from "forta-agent";
 
 import {
-  DAY,
   LIDO_LOCATOR_ADDRESS,
   LocatorContracts,
   staticContracts,
   MAX_REVERTION_PER_DAY,
-  HIGH_GAS_THRESHOLD
+  HIGH_GAS_THRESHOLD,
+  ETHEREUM_BLOCKS_IN_ONE_DAY
 } from "./constants";
 import LIDO_LOCATOR_ABI from "./abi/LidoLocator.json";
 import { ethersProvider } from "./ethers";
@@ -33,7 +34,6 @@ export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-  startTimer()
   const locator = new ethers.Contract(
     LIDO_LOCATOR_ADDRESS,
     LIDO_LOCATOR_ABI,
@@ -72,6 +72,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   await handleRevertedTx(txEvent, findings);
 
   return findings;
+}
+
+async function handleBlock(blockEvent: BlockEvent) {
+  if (blockEvent.blockNumber % ETHEREUM_BLOCKS_IN_ONE_DAY === 0) resetDictionary();
 }
 
 async function handleRevertedTx(
@@ -129,10 +133,6 @@ async function handleRevertedTx(
 }
 }
 
-function startTimer() {
-  setInterval(resetDictionary, DAY);
-}
-
 function increaseForEOA(address: string) {
   if (!revertedTxPerEOA[address]) {
     revertedTxPerEOA[address] = 0;
@@ -156,5 +156,6 @@ export function etherscanAddress(address: string): string {
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleTransaction,
+  handleBlock
   // initialize, // sdk won't provide any arguments to the function
 };
