@@ -11,24 +11,24 @@ export const ETH_DECIMALS = new BigNumber(10).pow(18);
 export const ROLES = new Map<string, string>([
   [
     "0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6",
-    "DEPOSITS DISABLER ROLE"
+    "DEPOSITS DISABLER ROLE",
   ],
   [
     "0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a",
-    "DEPOSITS ENABLER ROLE"
+    "DEPOSITS ENABLER ROLE",
   ],
   [
     "0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c",
-    "WITHDRAWALS DISABLER ROLE"
+    "WITHDRAWALS DISABLER ROLE",
   ],
   [
     "0x9ab8816a3dc0b3849ec1ac00483f6ec815b07eee2fd766a353311c823ad59d0d",
-    "WITHDRAWALS ENABLER ROLE"
+    "WITHDRAWALS ENABLER ROLE",
   ],
   [
     "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "DEFAULT ADMIN ROLE"
-  ]
+    "DEFAULT ADMIN ROLE",
+  ],
 ]);
 
 // 48 hours
@@ -66,7 +66,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
       `Ethereum Governance Executor was updated from ` +
       `${args.oldEthereumGovernanceExecutor} to ${args.newEthereumGovernanceExecutor}`,
     severity: FindingSeverity.Critical,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -77,7 +77,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
       `Guardian was updated from ` +
       `${args.oldGuardian} to ${args.newGuardian}`,
     severity: FindingSeverity.Critical,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -87,7 +87,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     description: (args: any) =>
       `Delay was updated from ` + `${args.oldDelay} to ${args.newDelay}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -99,7 +99,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
       `Grace Period was updated from ` +
       `${args.oldGracePeriod} to ${args.newGracePeriod}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -111,7 +111,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
       `Min Delay was updated from ` +
       `${args.oldMinimumDelay} to ${args.newMinimumDelay}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -123,7 +123,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
       `Max Delay was updated from ` +
       `${args.oldMaximumDelay} to ${args.newMaximumDelay}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -133,7 +133,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "ℹ Optimism Gov Bridge: Action set queued",
     description: (args: any) => `Action set ${args.id} was queued`,
     severity: FindingSeverity.Info,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -143,7 +143,7 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "ℹ Optimism Gov Bridge: Action set executed",
     description: (args: any) => `Action set ${args.id} was executed`,
     severity: FindingSeverity.Info,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: GOV_BRIDGE_ADDRESS,
@@ -152,8 +152,8 @@ export const GOV_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "ℹ Optimism Gov Bridge: Action set canceled",
     description: (args: any) => `Action set ${args.id} was canceled`,
     severity: FindingSeverity.Info,
-    type: FindingType.Info
-  }
+    type: FindingType.Info,
+  },
 ];
 
 export interface LidoProxy {
@@ -170,8 +170,8 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
     shortABI: JSON.stringify(proxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
-      ["implementation", "proxy__getImplementation"]
-    ])
+      ["implementation", "proxy__getImplementation"],
+    ]),
   },
   {
     name: "L2ERC20TokenGateway",
@@ -179,9 +179,9 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
     shortABI: JSON.stringify(proxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
-      ["implementation", "proxy__getImplementation"]
-    ])
-  }
+      ["implementation", "proxy__getImplementation"],
+    ]),
+  },
 ];
 
 export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
@@ -196,7 +196,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) was ossified` +
           `\n(detected by event)`,
         severity: FindingSeverity.High,
-        type: FindingType.Info
+        type: FindingType.Info,
       },
       {
         address: proxyInfo.address,
@@ -208,7 +208,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
           `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
           `\n(detected by event)`,
         severity: FindingSeverity.Critical,
-        type: FindingType.Info
+        type: FindingType.Info,
       },
       {
         address: proxyInfo.address,
@@ -220,7 +220,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
           `was updated to ${args.implementation}` +
           `\n(detected by event)`,
         severity: FindingSeverity.Critical,
-        type: FindingType.Info
+        type: FindingType.Info,
       },
       {
         address: proxyInfo.address,
@@ -232,11 +232,11 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
           `beacon was updated to ${args.beacon}` +
           `\n(detected by event)`,
         severity: FindingSeverity.High,
-        type: FindingType.Info
-      }
+        type: FindingType.Info,
+      },
     ];
     return eventsDesc;
-  }
+  },
 ).reduce((a, b) => [...a, ...b]);
 
 export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
@@ -252,7 +252,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
       }) ` +
       `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -264,7 +264,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
       `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
       `was granted to ${args.account} by ${args.sender}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -276,7 +276,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
       `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
       `was revoked to ${args.account} by ${args.sender}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -285,7 +285,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "✅ Optimism L2 Bridge: Deposits Enabled",
     description: (args: any) => `Deposits were enabled by ${args.enabler}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -294,7 +294,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "❌ Optimism L2 Bridge: Deposits Disabled",
     description: (args: any) => `Deposits were disabled by ${args.disabler}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -303,7 +303,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "✅ Optimism L2 Bridge: Withdrawals Enabled",
     description: (args: any) => `Withdrawals were enabled by ${args.enabler}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -312,7 +312,7 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
     name: "❌ Optimism L2 Bridge: Withdrawals Disabled",
     description: (args: any) => `Withdrawals were disabled by ${args.enabler}`,
     severity: FindingSeverity.High,
-    type: FindingType.Info
+    type: FindingType.Info,
   },
   {
     address: L2_ERC20_TOKEN_GATEWAY,
@@ -324,6 +324,6 @@ export const L2_BRIDGE_EVENTS: EventOfNotice[] = [
       `NOTE: This is not the thing that should be left unacted! ` +
       `Make sure that this call was made by Lido!`,
     severity: FindingSeverity.Critical,
-    type: FindingType.Info
-  }
+    type: FindingType.Info,
+  },
 ];

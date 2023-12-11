@@ -6,8 +6,8 @@ FROM base as builder
 WORKDIR /app
 
 COPY . .
-RUN yarn install --immutable
-
+RUN yarn install --immutable && yarn run build
+# Build app
 RUN yarn run build
 
 # Final stage: copy compiled Javascript from previous stage and install production dependencies
