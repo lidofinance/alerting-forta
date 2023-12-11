@@ -5,10 +5,9 @@ FROM base as builder
 
 WORKDIR /app
 
-COPY package*.json yarn.lock ./
+COPY . .
 RUN yarn install --immutable
 
-COPY . .
 RUN yarn run build
 
 # Final stage: copy compiled Javascript from previous stage and install production dependencies

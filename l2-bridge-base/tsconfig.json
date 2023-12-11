@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "lib": ["es6"],
+    "target": "es5",
     "module": "commonjs",
     "outDir": "dist",
     "strict": true,
@@ -11,9 +10,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "exclude": ["e2e", "node_modules"]
+  "exclude": ["e2e"]
 }
