@@ -1,34 +1,25 @@
-import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
-import { GOV_BRIDGE_EVENTS } from "./constants";
+import { Finding, TransactionEvent } from 'forta-agent'
+import { GOV_BRIDGE_EVENTS } from './constants'
 
-export const name = "GovBridgeBot";
+export const name = 'GovBridgeBot'
 
-export async function initialize(
-  currentBlock: number,
-): Promise<{ [key: string]: string }> {
-  console.log(`[${name}]`);
-  return {};
+export async function initialize(currentBlock: number): Promise<{ [key: string]: string }> {
+  console.log(`[${name}] started on ${currentBlock}`)
+  return {}
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
-  const findings: Finding[] = [];
+  const findings: Finding[] = []
 
-  handleGovBridgeEvents(txEvent, findings);
+  handleGovBridgeEvents(txEvent, findings)
 
-  return findings;
+  return findings
 }
 
 function handleGovBridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
   GOV_BRIDGE_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
-      const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
+      const events = txEvent.filterLog(eventInfo.event, eventInfo.address)
       events.forEach((event) => {
         findings.push(
           Finding.fromObject({
@@ -39,8 +30,8 @@ function handleGovBridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
             type: eventInfo.type,
             metadata: { args: String(event.args) },
           }),
-        );
-      });
+        )
+      })
     }
-  });
+  })
 }
