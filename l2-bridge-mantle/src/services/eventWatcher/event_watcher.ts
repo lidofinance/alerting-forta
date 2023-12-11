@@ -1,7 +1,6 @@
 import { EventOfNotice } from '../../entity/events'
 import { Log } from '@ethersproject/abstract-provider'
-import { Finding } from 'forta-agent'
-import { TransactionEventHelper } from '../../utils/transaction_event'
+import { filterLog, Finding } from 'forta-agent'
 
 export class EventWatcher {
   private readonly name: string
@@ -26,7 +25,7 @@ export class EventWatcher {
     const findings: Finding[] = []
     for (const eventToFinding of this.eventsToFinding) {
       if (eventToFinding.address in addresses) {
-        const filteredEvents = TransactionEventHelper.filterLog(logs, eventToFinding.event, eventToFinding.address)
+        const filteredEvents = filterLog(logs, eventToFinding.event, eventToFinding.address)
 
         for (const event of filteredEvents) {
           findings.push(

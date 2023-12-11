@@ -1,9 +1,8 @@
 import { L2ERC20TokenBridge } from '../generated'
 import BigNumber from 'bignumber.js'
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { BlockDto } from 'src/entity/blockDto'
 import { Block, Log } from '@ethersproject/abstract-provider'
-import { TransactionEventHelper } from '../utils/transaction_event'
 import * as E from 'fp-ts/Either'
 import { WithdrawalInitiatedEvent } from '../generated/L2ERC20TokenBridge'
 
@@ -157,11 +156,7 @@ export class MonitorWithdrawals {
     }
 
     if (this.l2Erc20TokenGatewayAddress in addresses) {
-      const events = TransactionEventHelper.filterLog(
-        logs,
-        this.withdrawalInitiatedEvent,
-        this.l2Erc20TokenGatewayAddress,
-      )
+      const events = filterLog(logs, this.withdrawalInitiatedEvent, this.l2Erc20TokenGatewayAddress)
 
       for (const event of events) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
