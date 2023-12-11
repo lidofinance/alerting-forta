@@ -1,12 +1,19 @@
 {
-  "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
     "outDir": "dist",
+    "strict": true,
+    "moduleResolution": "node",
     "baseUrl": ".",
+    "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "exclude": ["e2e", "node_modules"]
+  "exclude": [
+    "e2e"
+  ]
 }
