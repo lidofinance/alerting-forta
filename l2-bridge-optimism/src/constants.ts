@@ -43,7 +43,7 @@ export const L2_ERC20_TOKEN_GATEWAY =
   "0x8e01013243a96601a86eb3153f0d9fa4fbfb6957";
 
 export const WITHDRAWAL_INITIATED_EVENT =
-  "event WithdrawalInitiated(address l1Token, address indexed from, address indexed to, uint256 indexed l2ToL1Id, uint256 exitNum, uint256 amount)";
+  "event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)";
 
 type EventOfNotice = {
   address: string;

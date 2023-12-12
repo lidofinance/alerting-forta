@@ -8,9 +8,6 @@ import proxyShortABI from "./abi/ProxyShortABI.json";
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
-export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
-export const LDO_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
-
 export const ROLES = new Map<string, string>([
   [
     "0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6",
@@ -48,7 +45,7 @@ export const L2_ERC20_TOKEN_GATEWAY =
   "0xac9D11cD4D7eF6e54F14643a393F68Ca014287AB";
 
 export const WITHDRAWAL_INITIATED_EVENT =
-  "event WithdrawalInitiated(address l1Token, address indexed from, address indexed to, uint256 indexed l2ToL1Id, uint256 exitNum, uint256 amount)";
+  "event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)";
 
 type EventOfNotice = {
   address: string;
