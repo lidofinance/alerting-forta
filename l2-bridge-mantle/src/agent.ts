@@ -72,6 +72,10 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     const app = await App.getInstance()
 
     const findings: Finding[] = []
+    const proxyWatcherFindings = await app.findingsRW.read()
+    if (proxyWatcherFindings.length > 0) {
+      findings.push(...proxyWatcherFindings)
+    }
 
     if (initFinding.length) {
       findings.push(...initFinding)
@@ -86,10 +90,7 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     console.log(
       `#ETH block ${blockEvent.blockNumber.toString()}. Fetching mantle blocks from ${blocksDto.right[0].number} to ${
         blocksDto.right[blocksDto.right.length - 1].number
-      }. Total: ${blocksDto.right[blocksDto.right.length - 1].number - blocksDto.right[0].number}\n${elapsedTime(
-        'app.blockSrv.getBlocks',
-        startTimeFetchBlock,
-      )}`,
+      }. Total: ${blocksDto.right.length}\n${elapsedTime('app.blockSrv.getBlocks', startTimeFetchBlock)}`,
     )
 
     const startTimeFetchLogs = new Date().getTime()
@@ -108,7 +109,12 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     for (const log of logs.right) {
       blockNumbers.push(log.blockNumber)
     }
-    const proxyWatcherFindings = await app.proxyWatcher.handleBlocks(blockNumbers)
+
+    app.proxyWatcher.handleBlocks(blockNumbers).then((findings: Finding[]) => {
+      if (findings.length > 0) {
+        app.findingsRW.write(findings)
+      }
+    })
 
     app.monitorWithdrawals.handleWithdrawalEvent(logs.right, blocksDto.right)
 
@@ -116,7 +122,6 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
       ...bridgeEventFindings,
       ...govEventFindings,
       ...proxyAdminEventFindings,
-      ...proxyWatcherFindings,
       ...monitorWithdrawalsFindings,
     )
 
