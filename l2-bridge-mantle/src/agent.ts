@@ -9,7 +9,7 @@ import VERSION from './utils/version'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
 
-export function initialize(outFinding: Finding[]): Initialize {
+export function initialize(): Initialize {
   const metadata: Metadata = {
     'version.commitHash': VERSION.commitHash,
     'version.commitMsg': VERSION.commitMsg,
@@ -50,7 +50,7 @@ export function initialize(outFinding: Finding[]): Initialize {
     const agents: string[] = [app.proxyWatcher.getName(), app.monitorWithdrawals.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
-    outFinding.push(
+    await app.findingsRW.write([
       Finding.fromObject({
         name: 'Agent launched',
         description: `Version: ${VERSION.desc}`,
@@ -59,32 +59,33 @@ export function initialize(outFinding: Finding[]): Initialize {
         type: FindingType.Info,
         metadata,
       }),
-    )
+    ])
 
     console.log('Bot initialization is done!')
   }
 }
 
-export const handleBlock = (initFinding: Finding[]): HandleBlock => {
+let isHandleBLockRunning: boolean = false
+export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
     const startTime = new Date().getTime()
+    if (isHandleBLockRunning) {
+      return []
+    }
 
+    isHandleBLockRunning = true
     const app = await App.getInstance()
 
     const findings: Finding[] = []
-    const proxyWatcherFindings = await app.findingsRW.read()
-    if (proxyWatcherFindings.length > 0) {
-      findings.push(...proxyWatcherFindings)
-    }
-
-    if (initFinding.length) {
-      findings.push(...initFinding)
-      initFinding = []
+    const findingsAsync = await app.findingsRW.read()
+    if (findingsAsync.length > 0) {
+      findings.push(...findingsAsync)
     }
 
     const startTimeFetchBlock = new Date().getTime()
     const blocksDto = await app.blockSrv.getBlocks()
     if (E.isLeft(blocksDto)) {
+      isHandleBLockRunning = false
       return [blocksDto.left]
     }
     console.log(
@@ -96,6 +97,7 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     const startTimeFetchLogs = new Date().getTime()
     const logs = await app.blockSrv.getLogs(blocksDto.right)
     if (E.isLeft(logs)) {
+      isHandleBLockRunning = false
       return [logs.left]
     }
     console.log(elapsedTime('app.blockSrv.getLogs', startTimeFetchLogs))
@@ -126,14 +128,12 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     )
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
-
+    isHandleBLockRunning = false
     return findings
   }
 }
 
-const initFinding: Finding[] = []
-
 export default {
-  initialize: initialize(initFinding),
-  handleBlock: handleBlock(initFinding),
+  initialize: initialize(),
+  handleBlock: handleBlock(),
 }
