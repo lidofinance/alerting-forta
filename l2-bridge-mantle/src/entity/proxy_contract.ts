@@ -1,5 +1,6 @@
 import { OssifiableProxy } from '../generated'
 import * as E from 'fp-ts/Either'
+import { retryAsync } from 'ts-retry'
 
 export abstract class IShortABIcaller {
   abstract getName(): string
@@ -38,9 +39,14 @@ export class ProxyContract implements IShortABIcaller {
 
   public async getProxyAdmin(blockNumber: number): Promise<E.Either<Error, string>> {
     try {
-      const resp = await this.contract.proxy__getAdmin({
-        blockTag: blockNumber,
-      })
+      const resp = await retryAsync<string>(
+        async (): Promise<string> => {
+          return await this.contract.proxy__getAdmin({
+            blockTag: blockNumber,
+          })
+        },
+        { delay: 500, maxTry: 5 },
+      )
 
       return E.right(resp)
     } catch (e) {
@@ -50,9 +56,14 @@ export class ProxyContract implements IShortABIcaller {
 
   public async getProxyImplementation(blockNumber: number): Promise<E.Either<Error, string>> {
     try {
-      const resp = await this.contract.proxy__getImplementation({
-        blockTag: blockNumber,
-      })
+      const resp = await retryAsync<string>(
+        async (): Promise<string> => {
+          return await this.contract.proxy__getImplementation({
+            blockTag: blockNumber,
+          })
+        },
+        { delay: 500, maxTry: 5 },
+      )
 
       return E.right(resp)
     } catch (e) {

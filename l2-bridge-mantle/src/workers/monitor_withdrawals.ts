@@ -5,6 +5,7 @@ import { BlockDto } from 'src/entity/blockDto'
 import { Block, Log } from '@ethersproject/abstract-provider'
 import * as E from 'fp-ts/Either'
 import { WithdrawalInitiatedEvent } from '../generated/L2ERC20TokenBridge'
+import { retryAsync } from 'ts-retry'
 
 // 48 hours
 const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
@@ -54,7 +55,12 @@ export class MonitorWithdrawals {
 
     let withdrawEvents: WithdrawalInitiatedEvent[] = []
     try {
-      withdrawEvents = await this.L2ERC20TokenBridge.queryFilter(withdrawalInitiatedFilter, pastBlock, currentBlock - 1)
+      withdrawEvents = await retryAsync<WithdrawalInitiatedEvent[]>(
+        async (): Promise<WithdrawalInitiatedEvent[]> => {
+          return await this.L2ERC20TokenBridge.queryFilter(withdrawalInitiatedFilter, pastBlock, currentBlock - 1)
+        },
+        { delay: 500, maxTry: 5 },
+      )
     } catch (e) {
       return E.left(new Error(`Could not fetch withdrawEvents. cause: ${e}`))
     }
@@ -63,7 +69,12 @@ export class MonitorWithdrawals {
       if (withdrawEvent.args) {
         let block: Block
         try {
-          block = await withdrawEvent.getBlock()
+          block = await retryAsync<Block>(
+            async (): Promise<Block> => {
+              return await withdrawEvent.getBlock()
+            },
+            { delay: 500, maxTry: 5 },
+          )
         } catch (e) {
           return E.left(new Error(`Could not fetch block from withdrawEvent. cause: ${e}`))
         }

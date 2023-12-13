@@ -20,7 +20,7 @@ export class BlockSrv {
       const block = await this.mantleProvider.getLatestBlock()
       if (E.isLeft(block)) {
         const f: Finding = Finding.fromObject({
-          name: `Error in ${BlockSrv.name}.${this.getBlocks}:21`,
+          name: `Error in ${BlockSrv.name}.${this.mantleProvider.getLatestBlock.name}:21`,
           description: `${block.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
           severity: FindingSeverity.Low,
@@ -41,7 +41,7 @@ export class BlockSrv {
       const latestBlock = await this.mantleProvider.getLatestBlock()
       if (E.isLeft(latestBlock)) {
         const f: Finding = Finding.fromObject({
-          name: `Error in ${BlockSrv.name}.${this.getBlocks}:42`,
+          name: `Error in ${BlockSrv.name}.${this.mantleProvider.getLatestBlock.name}:42`,
           description: `${latestBlock.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
           severity: FindingSeverity.Low,
@@ -56,7 +56,7 @@ export class BlockSrv {
       const blocks = await this.mantleProvider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
       if (E.isLeft(blocks)) {
         const f: Finding = Finding.fromObject({
-          name: `Error in ${BlockSrv.name}.${this.getBlocks}:56`,
+          name: `Error in ${BlockSrv.name}.${this.mantleProvider.fetchBlocks.name}:56`,
           description: `${blocks.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
           severity: FindingSeverity.Medium,
@@ -98,7 +98,7 @@ export class BlockSrv {
     )
     if (E.isLeft(logs)) {
       const f: Finding = Finding.fromObject({
-        name: `Error in ${BlockSrv.name}.${this.getLogs}:102`,
+        name: `Error in ${BlockSrv.name}.${this.mantleProvider.getLogs}:95`,
         description: `${logs.left.message}`,
         alertId: 'LIDO-AGENT-ERROR',
         severity: FindingSeverity.Medium,
