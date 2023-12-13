@@ -122,7 +122,6 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
       ...bridgeEventFindings,
       ...govEventFindings,
       ...proxyAdminEventFindings,
-      //...proxyWatcherFindings,
       ...monitorWithdrawalsFindings,
     )
 
