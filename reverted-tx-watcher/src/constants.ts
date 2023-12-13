@@ -50,3 +50,11 @@ export const staticContracts = {
   GateSeal: GATE_SEAL_ADDRESS,
   EasyTrack: EASY_TRACK_ADDRESS,
 };
+
+export const HIGH_GAS_THRESHOLD = "600000";
+
+export const MAX_REVERTION_PER_DAY = 15;
+
+const ONE_DAY = 60 * 60 * 24;
+const ETHEREUM_BLOCK_TIME = 12;
+export const ETHEREUM_BLOCKS_IN_ONE_DAY = ONE_DAY / ETHEREUM_BLOCK_TIME;
