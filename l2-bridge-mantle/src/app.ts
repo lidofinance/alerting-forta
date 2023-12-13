@@ -11,6 +11,7 @@ import { L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generat
 import { BlockSrv } from './services/mantle_block_service'
 import { ProxyWatcher } from './workers/proxy_watcher'
 import { MonitorWithdrawals } from './workers/monitor_withdrawals'
+import { FindingsRW } from './utils/mutex'
 
 export type Container = {
   mantleClient: IMantleProvider
@@ -20,6 +21,7 @@ export type Container = {
   bridgeWatcher: EventWatcher
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
+  findingsRW: FindingsRW
 }
 
 export class App {
@@ -72,6 +74,7 @@ export class App {
         bridgeWatcher: bridgeEventWatcher,
         govWatcher: govEventWatcher,
         proxyEventWatcher: proxyEventWatcher,
+        findingsRW: new FindingsRW([]),
       }
     }
 

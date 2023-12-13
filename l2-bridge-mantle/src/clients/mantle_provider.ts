@@ -76,7 +76,9 @@ export class MantleProvider implements IMantleProvider {
           if (result.result === null) {
             for (const r of request) {
               if (r.id === result.id) {
-                console.log(`Warning: missed response from node by reqId: ${result.id}, request: ${r.params}`)
+                console.log(
+                  `Warning: missed response from node by reqId: ${result.id}, request: ${r.params.toString()}`,
+                )
               }
             }
 
