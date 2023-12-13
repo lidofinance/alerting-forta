@@ -1,9 +1,4 @@
-import {
-  BlockEvent,
-  ethers,
-  Finding,
-  TransactionEvent,
-} from "forta-agent";
+import { BlockEvent, ethers, Finding, TransactionEvent } from "forta-agent";
 
 import {
   LIDO_LOCATOR_ADDRESS,
@@ -11,14 +6,14 @@ import {
   staticContracts,
   MAX_REVERTION_PER_DAY,
   HIGH_GAS_THRESHOLD,
-  ETHEREUM_BLOCKS_IN_ONE_DAY
+  ETHEREUM_BLOCKS_IN_ONE_DAY,
 } from "./constants";
 import LIDO_LOCATOR_ABI from "./abi/LidoLocator.json";
 import { ethersProvider } from "./ethers";
-import { 
-  createRevertedTxFinding, 
-  createRevertedTxFindingWithHighGas, 
-  createRevertedTxFindingWithPossibleSpam 
+import {
+  createRevertedTxFinding,
+  createRevertedTxFindingWithHighGas,
+  createRevertedTxFindingWithPossibleSpam,
 } from "./findings";
 
 interface RevertDictionary {
@@ -75,7 +70,8 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 async function handleBlock(blockEvent: BlockEvent) {
-  if (blockEvent.blockNumber % ETHEREUM_BLOCKS_IN_ONE_DAY === 0) resetDictionary();
+  if (blockEvent.blockNumber % ETHEREUM_BLOCKS_IN_ONE_DAY === 0)
+    resetDictionary();
 }
 
 async function handleRevertedTx(
@@ -89,7 +85,7 @@ async function handleRevertedTx(
     eventAddresses.includes(address.toLowerCase()),
   );
   if (suitableAddresses.length === 0) return;
-  
+
   const receipt = await ethersProvider.getTransactionReceipt(
     txEvent.transaction.hash,
   );
@@ -101,42 +97,32 @@ async function handleRevertedTx(
   if (receipt.status !== 0) return;
 
   for (let [name, address] of suitableAddresses) {
-    increaseForEOA(txEvent.from)
+    increaseForEOA(txEvent.from);
     if (revertedTxPerEOA[txEvent.from] > MAX_REVERTION_PER_DAY) {
-        findings.push(
-          createRevertedTxFindingWithPossibleSpam(
-            name, 
-            address,
-            gasUsed,
-            txEvent,
-            revertedTxPerEOA[txEvent.from]
-          )
-        )
+      findings.push(
+        createRevertedTxFindingWithPossibleSpam(
+          name,
+          address,
+          gasUsed,
+          txEvent,
+          revertedTxPerEOA[txEvent.from],
+        ),
+      );
     }
     if (gasUsed.gte(HIGH_GAS_THRESHOLD)) {
       findings.push(
-        createRevertedTxFindingWithHighGas(
-          name, 
-          address, 
-          gasUsed,
-          txEvent
-        )
-      )
-  } findings.push(
-    createRevertedTxFinding(
-      name, 
-      address,
-      gasUsed,
-      txEvent
-    )
-  )
-}
+        createRevertedTxFindingWithHighGas(name, address, gasUsed, txEvent),
+      );
+    }
+    findings.push(createRevertedTxFinding(name, address, gasUsed, txEvent));
+  }
 }
 
 function increaseForEOA(address: string) {
   if (!revertedTxPerEOA[address]) {
     revertedTxPerEOA[address] = 0;
-  } revertedTxPerEOA[address]++;
+  }
+  revertedTxPerEOA[address]++;
 }
 
 function resetDictionary() {
@@ -156,6 +142,6 @@ export function etherscanAddress(address: string): string {
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
   handleTransaction,
-  handleBlock
+  handleBlock,
   // initialize, // sdk won't provide any arguments to the function
 };
