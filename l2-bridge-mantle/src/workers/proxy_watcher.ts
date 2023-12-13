@@ -126,7 +126,7 @@ export class ProxyWatcher {
       if (E.isLeft(newAdmin)) {
         return [
           Finding.fromObject({
-            name: `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:117`,
+            name: `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:125`,
             description: `${newAdmin.left.message}`,
             alertId: 'LIDO-AGENT-ERROR',
             severity: FindingSeverity.Low,
