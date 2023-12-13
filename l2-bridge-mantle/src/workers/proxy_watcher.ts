@@ -1,7 +1,6 @@
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { IShortABIcaller } from '../entity/proxy_contract'
 import * as E from 'fp-ts/Either'
-import { errorToFinding } from '../utils/error'
 import { retry } from 'ts-retry'
 
 export type ProxyWatcherInitResp = {
@@ -83,7 +82,16 @@ export class ProxyWatcher {
 
       const newImpl = await contract.getProxyImplementation(blockNumber)
       if (E.isLeft(newImpl)) {
-        return [errorToFinding(newImpl.left, ProxyWatcher.name, this.handleProxyImplementationChanges.name)]
+        return [
+          Finding.fromObject({
+            name: `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:84`,
+            description: `${newImpl.left.message}`,
+            alertId: 'LIDO-AGENT-ERROR',
+            severity: FindingSeverity.Low,
+            type: FindingType.Degraded,
+            metadata: { stack: `${newImpl.left.stack}` },
+          }),
+        ]
       }
 
       if (newImpl.right != lastImpl) {
@@ -116,7 +124,16 @@ export class ProxyWatcher {
 
       const newAdmin = await contract.getProxyAdmin(blockNumber)
       if (E.isLeft(newAdmin)) {
-        return [errorToFinding(newAdmin.left, ProxyWatcher.name, this.handleProxyAdminChanges.name)]
+        return [
+          Finding.fromObject({
+            name: `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:125`,
+            description: `${newAdmin.left.message}`,
+            alertId: 'LIDO-AGENT-ERROR',
+            severity: FindingSeverity.Low,
+            type: FindingType.Degraded,
+            metadata: { stack: `${newAdmin.left.stack}` },
+          }),
+        ]
       }
 
       if (newAdmin.right != lastAdmin) {

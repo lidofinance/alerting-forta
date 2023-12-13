@@ -23,7 +23,7 @@ export class BlockSrv {
           name: `Error in ${BlockSrv.name}.${this.getBlocks}:21`,
           description: `${block.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Medium,
+          severity: FindingSeverity.Low,
           type: FindingType.Degraded,
           metadata: { stack: `${block.left.stack}` },
         })
@@ -44,7 +44,7 @@ export class BlockSrv {
           name: `Error in ${BlockSrv.name}.${this.getBlocks}:42`,
           description: `${latestBlock.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Medium,
+          severity: FindingSeverity.Low,
           type: FindingType.Degraded,
           metadata: { stack: `${latestBlock.left.stack}` },
         })
