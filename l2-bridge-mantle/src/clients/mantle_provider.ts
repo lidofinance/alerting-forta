@@ -73,6 +73,16 @@ export class MantleProvider implements IMantleProvider {
         const formatter = new ethers.providers.Formatter()
 
         for (const result of results) {
+          if (result.result === null) {
+            for (const r of request) {
+              if (r.id === result.id) {
+                console.log(`Warning: missed response from node by reqId: ${result.id}, request: ${r.params}`)
+              }
+            }
+
+            continue
+          }
+
           out.push(formatter.block(result.result))
         }
       }

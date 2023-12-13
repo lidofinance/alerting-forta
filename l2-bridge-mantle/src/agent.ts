@@ -7,6 +7,7 @@ import { Metadata } from './entity/metadata'
 import * as E from 'fp-ts/Either'
 import VERSION from './utils/version'
 import { App } from './app'
+import { elapsedTime } from './utils/time'
 
 export function initialize(outFinding: Finding[]): Initialize {
   const metadata: Metadata = {
@@ -66,6 +67,8 @@ export function initialize(outFinding: Finding[]): Initialize {
 
 export const handleBlock = (initFinding: Finding[]): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    const startTime = new Date().getTime()
+
     const app = await App.getInstance()
 
     const findings: Finding[] = []
@@ -75,6 +78,7 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
       initFinding = []
     }
 
+    const startTimeFetchBlock = new Date().getTime()
     const blocksDto = await app.blockSrv.getBlocks()
     if (E.isLeft(blocksDto)) {
       return [blocksDto.left]
@@ -82,13 +86,18 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     console.log(
       `#ETH block ${blockEvent.blockNumber.toString()}. Fetching mantle blocks from ${blocksDto.right[0].number} to ${
         blocksDto.right[blocksDto.right.length - 1].number
-      }. Total: ${blocksDto.right[blocksDto.right.length - 1].number - blocksDto.right[0].number}`,
+      }. Total: ${blocksDto.right[blocksDto.right.length - 1].number - blocksDto.right[0].number}\n${elapsedTime(
+        'app.blockSrv.getBlocks',
+        startTimeFetchBlock,
+      )}`,
     )
 
+    const startTimeFetchLogs = new Date().getTime()
     const logs = await app.blockSrv.getLogs(blocksDto.right)
     if (E.isLeft(logs)) {
       return [logs.left]
     }
+    console.log(elapsedTime('app.blockSrv.getLogs', startTimeFetchLogs))
 
     const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
     const govEventFindings = app.govWatcher.handleLogs(logs.right)
@@ -110,6 +119,8 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
       ...proxyWatcherFindings,
       ...monitorWithdrawalsFindings,
     )
+
+    console.log(elapsedTime('handleBlock', startTime) + '\n')
 
     return findings
   }
