@@ -2,6 +2,7 @@ import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { IShortABIcaller } from '../entity/proxy_contract'
 import * as E from 'fp-ts/Either'
 import { errorToFinding } from '../utils/error'
+import { retry } from 'ts-retry'
 
 export type ProxyWatcherInitResp = {
   lastImpls: string
@@ -25,13 +26,18 @@ export class ProxyWatcher {
   }
 
   async initialize(currentBlock: number): Promise<E.Either<Error, ProxyWatcherInitResp>> {
-    console.log(`[${this.name}]`)
+    console.log(`[${this.name}] started on block ${currentBlock}`)
 
     for (const contract of this.contractCallers) {
-      const [lastImpl, lastAdmin] = await Promise.all([
-        contract.getProxyImplementation(currentBlock),
-        contract.getProxyAdmin(currentBlock),
-      ])
+      const [lastImpl, lastAdmin] = await retry(
+        async () => {
+          return await Promise.all([
+            contract.getProxyImplementation(currentBlock),
+            contract.getProxyAdmin(currentBlock),
+          ])
+        },
+        { delay: 1000, maxTry: 5 },
+      )
 
       if (E.isLeft(lastImpl)) {
         return lastImpl
