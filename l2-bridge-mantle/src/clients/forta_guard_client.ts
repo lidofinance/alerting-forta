@@ -11,7 +11,7 @@ export class FortaGuardClient {
   }
 
   public static getSecret(): string {
-    return Buffer.from('aHR0cHM6Ly9tYW50bGUucHVibGljbm9kZS5jb20=', 'base64').toString('utf-8')
+    return Buffer.from('aHR0cHM6Ly9ycGMubWFudGxlLnh5eg==', 'base64').toString('utf-8')
   }
 
   public async getSecret(key: string): Promise<E.Either<Error, string>> {
