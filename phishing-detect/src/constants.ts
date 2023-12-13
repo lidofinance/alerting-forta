@@ -256,6 +256,10 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x0a0b7d1eea99e6189995432fec8172bb2dfff847", // https://symbiosis.finance/
   "0x6db28a0f72ec061137a149ebb90d466a4a6fd45b", // https://app.cega.fi/
   "0x0439e60f02a8900a951603950d8d4527f400c3f1", // https://hop.exchange/
+  "0x2CC440b721d2CaFd6D64908D6d8C4aCC57F8Afc3", // Ethena Mining contract
+  "0xc7372Ab5dd315606dB799246E8aA112405abAeFf", // Cellar Turbo stETH
+  "0x04b9ce11da7323aEf03f6e6c16C0b93cFB44C55c", // Match finance
+  "0x036676389e48133B63a802f8635AD39E752D375D", // Looks like Stader LRT
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -272,6 +276,8 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0xa0ec2733e8aef26dab0be9abfbacd9ef337740e3", // Phishing EOA
   "0xcb394e8f7a652571a83e63c671be74a99ef56925", // Phishing EOA
   "0xfd1f21a19b49cca24318d73197b625cdb730eabc", // Phishing EOA
+  "0x0000fd803b84d314439996f56b517cd92ffa0000", // Phishing Contract
+  "0x00000cad74214b2771b692b1065f9d0ad7b00000", // Phishing EOA
 ];
 
 export const PHISHING_LIST_ADDRESSES: string[] =
