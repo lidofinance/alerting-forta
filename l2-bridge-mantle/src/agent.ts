@@ -82,7 +82,7 @@ export const handleBlock = (initFinding: Finding[]): HandleBlock => {
     console.log(
       `#ETH block ${blockEvent.blockNumber.toString()}. Fetching mantle blocks from ${blocksDto.right[0].number} to ${
         blocksDto.right[blocksDto.right.length - 1].number
-      }`,
+      }. Total: ${blocksDto.right[blocksDto.right.length - 1].number - blocksDto.right[0].number}`,
     )
 
     const logs = await app.blockSrv.getLogs(blocksDto.right)
