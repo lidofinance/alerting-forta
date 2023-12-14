@@ -64,6 +64,13 @@ export const MANTLE_L1_CROSS_DOMAIN_MESSENGER =
 export const MANTLE_L1ERC20_TOKEN_BRIDGE =
   "0x2D001d79E5aF5F65a939781FE228B267a8Ed468B";
 
+// proof of address https://docs.linea.build/use-mainnet/info-contracts
+export const LINEA_L1_CROSS_DOMAIN_MESSENGER =
+  "0xd19d4B5d358258f05D7B411E21A1460D11B0876F";
+
+export const LINEA_L1ERC20_TOKEN_BRIDGE =
+  "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319";
+
 export const ARBITRUM_GATEWAY_SET_EVENT =
   "event GatewaySet(address indexed l1Token, address indexed gateway)";
 
@@ -87,6 +94,10 @@ export const L1_ERC20_TOKEN_GATEWAYS = [
   {
     name: "Mantle",
     address: MANTLE_L1ERC20_TOKEN_BRIDGE,
+  },
+  {
+    name: "Linea",
+    address: LINEA_L1ERC20_TOKEN_BRIDGE,
   },
 ];
 
@@ -156,6 +167,17 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   {
     name: "L1ERC20TokenBridge to Mantle",
     address: MANTLE_L1ERC20_TOKEN_BRIDGE,
+    shortABI: JSON.stringify(ossifiableProxyShortABI),
+    functions: new Map<string, string>([
+      ["admin", "proxy__getAdmin"],
+      ["implementation", "proxy__getImplementation"],
+    ]),
+  },
+  {
+    name: "L1 TokenBridge to Linea",
+    address: LINEA_L1ERC20_TOKEN_BRIDGE,
+    // TODO Does not work. Seems that another contract implementation
+    // https://etherscan.io/address/0x051f1d88f0af5763fb888ec4378b4d8b29ea3319#code
     shortABI: JSON.stringify(ossifiableProxyShortABI),
     functions: new Map<string, string>([
       ["admin", "proxy__getAdmin"],
@@ -322,6 +344,30 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     name: "🚨 Mantle Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
     description: (args: any) =>
       `Proxy admin for Mantle: OVM L1 Cross Domain Messenger ` +
+      `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: LINEA_L1_CROSS_DOMAIN_MESSENGER,
+    event:
+      "event AddressSet(string indexed _name, address _newAddress, address _oldAddress)",
+    alertId: "THIRD-PARTY-PROXY-UPGRADED",
+    name: "🚨 Linea Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
+    description: (args: any) =>
+      `Proxy for Linea: Proxy OVM L1 Cross Domain Messenger ` +
+      `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: LINEA_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
+    event:
+      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
+    name: "🚨 Linea Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
+    description: (args: any) =>
+      `Proxy admin for Linea: OVM L1 Cross Domain Messenger ` +
       `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
