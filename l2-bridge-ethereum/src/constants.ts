@@ -337,7 +337,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     type: FindingType.Info,
   },
   {
-    address: MANTLE_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
+    address: MANTLE_L1_CROSS_DOMAIN_MESSENGER,
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
@@ -361,7 +361,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     type: FindingType.Info,
   },
   {
-    address: LINEA_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
+    address: LINEA_L1_CROSS_DOMAIN_MESSENGER,
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
