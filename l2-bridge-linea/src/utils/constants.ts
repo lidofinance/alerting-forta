@@ -5,6 +5,8 @@ export const LINEA_L2_TOKEN_BRIDGE = '0x353012dc4a9a6cf55c941badc267f82004a8ceb9
 // WstETH ERC20Bridged
 export const LINEA_WST_CUSTOM_BRIDGED_TOKEN = '0xB5beDd42000b71FddE22D3eE8a79Bd49A568fC8F'
 
+export const LINEA_PROXY_ADMIN_FOR_WSTETH = '0xF951d7592e03eDB0Bab3D533935e678Ce64Eb927'
+
 export const WITHDRAWAL_INITIATED_EVENT =
   'event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)'
 
