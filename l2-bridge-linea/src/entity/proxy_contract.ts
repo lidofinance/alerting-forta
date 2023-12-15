@@ -60,7 +60,7 @@ export class ProxyContract implements IShortABIcaller {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
           // TODO: where to get address
-          return await this.contract.getProxyAdmin({
+          return await this.contract.getProxyImplementation({
             blockTag: blockNumber,
           })
         },
