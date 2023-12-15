@@ -7,23 +7,26 @@ export const LINEA_WST_CUSTOM_BRIDGED_TOKEN = '0xB5beDd42000b71FddE22D3eE8a79Bd4
 
 export const LINEA_PROXY_ADMIN_FOR_WSTETH = '0xF951d7592e03eDB0Bab3D533935e678Ce64Eb927'
 
-export const WITHDRAWAL_INITIATED_EVENT =
-  'event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)'
+export const LINEA_TOKEN_BRIDGE = '0x2bfdf4a0d54c93a4baf74f8dcea8a275d8ee97a9'
+
+// 0xf5cc7604a5ef3565b4d2050d65729a06b68aa0bd
+export const BRIDGING_INITIATED_EVENT =
+  'event BridgingInitiated(address indexed sender, address recipient, address indexed token, uint256 indexed amount)'
 
 type ProxyContract = {
   name: string
   hash: string
 }
 
-export type L2_ERC20_TOKEN_GATEWAY_TYPE = ProxyContract
-export type LINEA_WST_ETH_BRIDGED_TYPE = ProxyContract
+export type L2_ERC20_TOKEN_BRIDGE_TYPE = ProxyContract
+export type LINEA_WST_CUSTOM_BRIDGED_TYPE = ProxyContract
 
-export const LINEA_L2_ERC20_TOKEN_GATEWAY: L2_ERC20_TOKEN_GATEWAY_TYPE = {
-  name: 'L2_ERC20_TOKEN_GATEWAY',
+export const LINEA_L2_ERC20_TOKEN_BRIDGE: L2_ERC20_TOKEN_BRIDGE_TYPE = {
+  name: 'L2_ERC20_TOKEN_BRIDGE',
   hash: LINEA_L2_TOKEN_BRIDGE,
 }
 
-export const LINEA_WST_ETH_BRIDGED: LINEA_WST_ETH_BRIDGED_TYPE = {
+export const LINEA_WST_CUSTOM_BRIDGED: LINEA_WST_CUSTOM_BRIDGED_TYPE = {
   name: 'LINEA_WST_ETH_BRIDGED_ADDRESS',
   hash: LINEA_WST_CUSTOM_BRIDGED_TOKEN,
 }

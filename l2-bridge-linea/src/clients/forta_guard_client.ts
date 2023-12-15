@@ -12,7 +12,6 @@ export class FortaGuardClient {
 
   public static getSecret(): string {
     return 'https://linea.blockpi.network/v1/rpc/public'
-    // return Buffer.from('aHR0cHM6Ly9ycGMubWFudGxlLnh5eg==', 'base64').toString('utf-8')
   }
 
   public async getSecret(key: string): Promise<E.Either<Error, string>> {

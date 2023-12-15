@@ -6,8 +6,13 @@ import { L2_BRIDGE_EVENTS } from './utils/events/bridge_events'
 import { GOV_BRIDGE_EVENTS } from './utils/events/gov_events'
 import { PROXY_ADMIN_EVENTS } from './utils/events/proxy_admin_events'
 import { ProxyContract } from './entity/proxy_contract'
-import { LINEA_L2_ERC20_TOKEN_GATEWAY, LINEA_WST_ETH_BRIDGED, WITHDRAWAL_INITIATED_EVENT } from './utils/constants'
-import { L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated'
+import {
+  BRIDGING_INITIATED_EVENT,
+  LINEA_L2_ERC20_TOKEN_BRIDGE,
+  LINEA_TOKEN_BRIDGE,
+  LINEA_WST_CUSTOM_BRIDGED,
+} from './utils/constants'
+import { ProxyAdmin__factory, TokenBridge__factory } from './generated'
 import { BlockSrv } from './services/linea_block_service'
 import { ProxyWatcher } from './workers/proxy_watcher'
 import { MonitorWithdrawals } from './workers/monitor_withdrawals'
@@ -44,27 +49,24 @@ export class App {
 
       const LIDO_PROXY_CONTRACTS: ProxyContract[] = [
         new ProxyContract(
-          LINEA_L2_ERC20_TOKEN_GATEWAY.name,
-          LINEA_L2_ERC20_TOKEN_GATEWAY.hash,
-          OssifiableProxy__factory.connect(LINEA_L2_ERC20_TOKEN_GATEWAY.hash, nodeClient),
+          LINEA_L2_ERC20_TOKEN_BRIDGE.name,
+          LINEA_L2_ERC20_TOKEN_BRIDGE.hash,
+          ProxyAdmin__factory.connect(LINEA_L2_ERC20_TOKEN_BRIDGE.hash, nodeClient),
         ),
         new ProxyContract(
-          LINEA_WST_ETH_BRIDGED.name,
-          LINEA_WST_ETH_BRIDGED.hash,
-          OssifiableProxy__factory.connect(LINEA_WST_ETH_BRIDGED.hash, nodeClient),
+          LINEA_WST_CUSTOM_BRIDGED.name,
+          LINEA_WST_CUSTOM_BRIDGED.hash,
+          ProxyAdmin__factory.connect(LINEA_WST_CUSTOM_BRIDGED.hash, nodeClient),
         ),
       ]
 
       const blockSrv: BlockSrv = new BlockSrv(LineaClient)
       const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS)
 
-      const l2Bridge = L2ERC20TokenBridge__factory.connect(LINEA_L2_ERC20_TOKEN_GATEWAY.hash, nodeClient)
+      // TODO ask what is the contract for here. And where to get it
+      const l2Bridge = TokenBridge__factory.connect(LINEA_TOKEN_BRIDGE, nodeClient)
 
-      const monitorWithdrawals = new MonitorWithdrawals(
-        l2Bridge,
-        LINEA_L2_ERC20_TOKEN_GATEWAY.hash,
-        WITHDRAWAL_INITIATED_EVENT,
-      )
+      const monitorWithdrawals = new MonitorWithdrawals(l2Bridge, LINEA_TOKEN_BRIDGE, BRIDGING_INITIATED_EVENT)
 
       App.instance = {
         LineaClient: LineaClient,

@@ -1,4 +1,4 @@
-import { LINEA_L2_ERC20_TOKEN_GATEWAY, LINEA_WST_ETH_BRIDGED } from '../constants'
+import { LINEA_L2_ERC20_TOKEN_BRIDGE, LINEA_WST_CUSTOM_BRIDGED } from '../constants'
 import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
@@ -11,11 +11,11 @@ type LidoProxy = {
 export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   {
     name: 'WstETH ERC20Bridged',
-    address: LINEA_WST_ETH_BRIDGED.hash,
+    address: LINEA_WST_CUSTOM_BRIDGED.hash,
   },
   {
     name: 'L2ERC20TokenGateway',
-    address: LINEA_L2_ERC20_TOKEN_GATEWAY.hash,
+    address: LINEA_L2_ERC20_TOKEN_BRIDGE.hash,
   },
 ]
 
@@ -24,17 +24,6 @@ function generateProxyAdminEvents(LIDO_PROXY_CONTRACTS: LidoProxy[]): EventOfNot
 
   for (const contract of LIDO_PROXY_CONTRACTS) {
     const contractEvents: EventOfNotice[] = [
-      {
-        address: contract.address,
-        event: 'event ProxyOssified()',
-        alertId: 'PROXY-OSSIFIED',
-        name: '🚨 Linea: Proxy ossified',
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        description: (args: Result) =>
-          `Proxy for ${contract.name}(${contract.address}) was ossified` + `\n(detected by event)`,
-        severity: FindingSeverity.High,
-        type: FindingType.Info,
-      },
       {
         address: contract.address,
         event: 'event AdminChanged(address previousAdmin, address newAdmin)',

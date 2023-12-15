@@ -1,11 +1,11 @@
-import { L2ERC20TokenBridge } from '../generated'
+import { TokenBridge } from '../generated'
 import BigNumber from 'bignumber.js'
 import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { BlockDto } from 'src/entity/blockDto'
 import { Block, Log } from '@ethersproject/abstract-provider'
 import * as E from 'fp-ts/Either'
-import { WithdrawalInitiatedEvent } from '../generated/L2ERC20TokenBridge'
 import { retryAsync } from 'ts-retry'
+import { BridgingInitiatedEvent } from '../generated/TokenBridge'
 
 // 48 hours
 const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
@@ -27,17 +27,14 @@ export class MonitorWithdrawals {
 
   private readonly l2Erc20TokenGatewayAddress: string
   private readonly withdrawalInitiatedEvent: string
-  private readonly L2ERC20TokenBridge: L2ERC20TokenBridge
+  // TODO ASK what it the contract for here
+  private readonly lineaTokenBridge: TokenBridge
 
   private withdrawalsCache: IWithdrawalRecord[] = []
   private lastReportedToManyWithdrawals = 0
 
-  constructor(
-    L2ERC20TokenBridge: L2ERC20TokenBridge,
-    l2Erc20TokenGatewayAddress: string,
-    withdrawalInitiatedEvent: string,
-  ) {
-    this.L2ERC20TokenBridge = L2ERC20TokenBridge
+  constructor(lineaTokenBridge: TokenBridge, l2Erc20TokenGatewayAddress: string, withdrawalInitiatedEvent: string) {
+    this.lineaTokenBridge = lineaTokenBridge
     this.l2Erc20TokenGatewayAddress = l2Erc20TokenGatewayAddress
     this.withdrawalInitiatedEvent = withdrawalInitiatedEvent
   }
@@ -49,15 +46,19 @@ export class MonitorWithdrawals {
   public async initialize(currentBlock: number): Promise<E.Either<Error, MonitorWithdrawalsInitResp>> {
     console.log('[' + this.name + ']')
 
-    const withdrawalInitiatedFilter = this.L2ERC20TokenBridge.filters.WithdrawalInitiated()
+    const bridgingInitiatedEventTypedEventFilter = this.lineaTokenBridge.filters.BridgingInitiated()
 
     const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 13)
 
-    let withdrawEvents: WithdrawalInitiatedEvent[] = []
+    let withdrawEvents: BridgingInitiatedEvent[] = []
     try {
-      withdrawEvents = await retryAsync<WithdrawalInitiatedEvent[]>(
-        async (): Promise<WithdrawalInitiatedEvent[]> => {
-          return await this.L2ERC20TokenBridge.queryFilter(withdrawalInitiatedFilter, pastBlock, currentBlock - 1)
+      withdrawEvents = await retryAsync<BridgingInitiatedEvent[]>(
+        async (): Promise<BridgingInitiatedEvent[]> => {
+          return await this.lineaTokenBridge.queryFilter(
+            bridgingInitiatedEventTypedEventFilter,
+            pastBlock,
+            currentBlock - 1,
+          )
         },
         { delay: 500, maxTry: 5 },
       )
@@ -81,7 +82,7 @@ export class MonitorWithdrawals {
 
         const record: IWithdrawalRecord = {
           time: block.timestamp,
-          amount: new BigNumber(String(withdrawEvent.args._amount)),
+          amount: new BigNumber(String(withdrawEvent.args.amount)),
         }
 
         this.withdrawalsCache.push(record)

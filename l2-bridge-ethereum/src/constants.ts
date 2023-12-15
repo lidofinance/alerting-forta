@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import { FindingSeverity, FindingType } from "forta-agent";
 
 import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
+import proxyAdminABI from "./abi/ProxyAdminABI.json";
 
 // COMMON CONSTS
 
@@ -34,6 +35,7 @@ export const ROLES = new Map<string, string>([
 // ADDRESSES AND EVENTS
 
 export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+export const STETH_ADDRESS = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84";
 
 export const ARBITRUM_L1_GATEWAY_ROUTER =
   "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef";
@@ -68,11 +70,14 @@ export const MANTLE_L1ERC20_TOKEN_BRIDGE =
 export const LINEA_L1_CROSS_DOMAIN_MESSENGER =
   "0xd19d4B5d358258f05D7B411E21A1460D11B0876F";
 
-export const LINEA_L1ERC20_TOKEN_BRIDGE =
+export const LINEA_L1_TOKEN_BRIDGE =
   "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319";
 
 export const ARBITRUM_GATEWAY_SET_EVENT =
   "event GatewaySet(address indexed l1Token, address indexed gateway)";
+
+export const LINEA_CUSTOM_CONTRACT_SET_EVENT =
+  "event CustomContractSet(address indexed nativeToken, address indexed customContract, address indexed setBy);";
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
@@ -97,7 +102,7 @@ export const L1_ERC20_TOKEN_GATEWAYS = [
   },
   {
     name: "Linea",
-    address: LINEA_L1ERC20_TOKEN_BRIDGE,
+    address: LINEA_L1_TOKEN_BRIDGE,
   },
 ];
 
@@ -175,13 +180,12 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   },
   {
     name: "L1 TokenBridge to Linea",
-    address: LINEA_L1ERC20_TOKEN_BRIDGE,
-    // TODO Does not work. Seems that another contract implementation
-    // https://etherscan.io/address/0x051f1d88f0af5763fb888ec4378b4d8b29ea3319#code
-    shortABI: JSON.stringify(ossifiableProxyShortABI),
+    address: LINEA_L1_TOKEN_BRIDGE,
+    // TODO Ask argument for calling getProxyAdmin, getProxyImplementation
+    shortABI: JSON.stringify(proxyAdminABI),
     functions: new Map<string, string>([
-      ["admin", "proxy__getAdmin"],
-      ["implementation", "proxy__getImplementation"],
+      ["admin", "getProxyAdmin"],
+      ["implementation", "getProxyImplementation"],
     ]),
   },
 ];
@@ -351,12 +355,22 @@ export const THIRD_PARTY_PROXY_EVENTS = [
   {
     address: LINEA_L1_CROSS_DOMAIN_MESSENGER,
     event:
-      "event AddressSet(string indexed _name, address _newAddress, address _oldAddress)",
+      "event MessageServiceUpdated(address indexed newMessageService, address indexed oldMessageService,address indexed setBy)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
-    name: "🚨 Linea Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
+    name: "🚨 Linea Native Bridge: L1 Message Service changed",
     description: (args: any) =>
-      `Proxy for Linea: Proxy OVM L1 Cross Domain Messenger ` +
-      `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
+      `Proxy for Linea: L1 Message Service was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
+    severity: FindingSeverity.High,
+    type: FindingType.Info,
+  },
+  {
+    address: LINEA_L1_CROSS_DOMAIN_MESSENGER,
+    event:
+      "event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)",
+    alertId: "THIRD-PARTY-PROXY-ADMIN-STARTED-CHANGE",
+    name: "🚨 Linea Native Bridge: L1 Token Bridge proxy admin started to change",
+    description: (args: any) =>
+      `Proxy admin for Linea: L1 Token Bridge started to change\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
@@ -365,10 +379,9 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
-    name: "🚨 Linea Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
+    name: "🚨 Linea Native Bridge: L1 Token Bridge proxy admin changed",
     description: (args: any) =>
-      `Proxy admin for Linea: OVM L1 Cross Domain Messenger ` +
-      `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+      `Proxy admin for Linea: L1 Token Bridge was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },

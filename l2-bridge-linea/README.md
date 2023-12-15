@@ -16,33 +16,27 @@ the cache.
 ## Alerts
 
 1. Bridge events
-   1. 🚨 Linea L2 Bridge: Role Admin changed
-   2. ⚠️ Linea L2 Bridge: Role granted
-   3. ⚠️ Linea L2 Bridge: Role revoked
-   4. ✅ Linea L2 Bridge: Deposits Enabled
-   5. ❌ Linea L2 Bridge: Deposits Disabled
-   6. ✅ Linea L2 Bridge: Withdrawals Enabled
-   7. ❌ Linea L2 Bridge: Withdrawals Disabled
-   8. 🚨 Linea L2 Bridge: Implementation initialized
+    1. 🚨 Linea L2 Bridge: Paused
+    2. ✅ Linea L2 Bridge: Not paused
+    3. 🚨 Linea L2 Bridge: Implementation initialized
 2. Gov Events
-   1. 🚨 Linea Gov Bridge: Ethereum Governance Executor Updated
-   2. 🚨 Linea Gov Bridge: Guardian Updated
-   3. ⚠️ Linea Gov Bridge: Delay Updated
-   4. ⚠️ Linea Gov Bridge: Grace Period Updated
-   5. ⚠️ Linea Gov Bridge: Min Delay Updated
-   6. ⚠️ Linea Gov Bridge: Max Delay Updated
-   7. ℹ Linea Gov Bridge: Action set queued
-   8. ℹ Linea Gov Bridge: Action set executed
-   9. ℹ Linea Gov Bridge: Action set canceled
+    1. 🚨 Linea Gov Bridge: Ethereum Governance Executor Updated
+    2. 🚨 Linea Gov Bridge: Guardian Updated
+    3. ⚠️ Linea Gov Bridge: Delay Updated
+    4. ⚠️ Linea Gov Bridge: Grace Period Updated
+    5. ⚠️ Linea Gov Bridge: Min Delay Updated
+    6. ⚠️ Linea Gov Bridge: Max Delay Updated
+    7. ℹ Linea Gov Bridge: Action set queued
+    8. ℹ Linea Gov Bridge: Action set executed
+    9. ℹ Linea Gov Bridge: Action set canceled
 3. Proxy events
-   1. 🚨 Linea: Proxy ossified
-   2. 🚨 Linea: Proxy admin changed
-   3. 🚨 Linea: Proxy upgraded
-   4. 🚨 Linea: Proxy beacon upgraded
+    1. 🚨 Linea: Proxy admin changed
+    2. 🚨 Linea: Proxy upgraded
+    3. 🚨 Linea: Proxy beacon upgraded
 4. Monitor Withdrawals
-   1. ⚠️ Linea: Huge withdrawals during the last ...
+    1. ⚠️ Linea: Huge withdrawals during the last ...
 5. Agent balance
-   1. Added wstETH: 🚨🚨🚨 Linea bridge balance mismatch 🚨🚨🚨
+    1. Added wstETH: 🚨🚨🚨 Linea bridge balance mismatch 🚨🚨🚨
 
 ## Development (Forta specific)
 

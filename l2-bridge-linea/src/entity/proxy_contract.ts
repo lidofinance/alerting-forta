@@ -1,6 +1,6 @@
-import { OssifiableProxy } from '../generated'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
+import { ProxyAdmin } from '../generated'
 
 export abstract class IShortABIcaller {
   abstract getName(): string
@@ -15,12 +15,12 @@ export abstract class IShortABIcaller {
 export class ProxyContract implements IShortABIcaller {
   private readonly name: string
   private readonly address: string
-  private readonly contract: OssifiableProxy
+  private readonly contract: ProxyAdmin
 
-  constructor(name: string, address: string, contract: OssifiableProxy) {
+  constructor(name: string, address: string, contract: ProxyAdmin) {
     if (address !== contract.address) {
       throw Error(
-        `Could not create instance of ProxyContract: ${name} . Cause: ${address} != ${contract.address} proxyAddress`,
+        `Could not create instance of ProxyAdmin: ${name} . Cause: ${address} != ${contract.address} proxyAddress`,
       )
     }
 
@@ -41,7 +41,8 @@ export class ProxyContract implements IShortABIcaller {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.proxy__getAdmin({
+          // TODO: where to get address
+          return await this.contract.getProxyAdmin({
             blockTag: blockNumber,
           })
         },
@@ -58,7 +59,8 @@ export class ProxyContract implements IShortABIcaller {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.proxy__getImplementation({
+          // TODO: where to get address
+          return await this.contract.getProxyAdmin({
             blockTag: blockNumber,
           })
         },
