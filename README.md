@@ -38,7 +38,7 @@ mainnet)
 
 [storage-watcher](./storage-watcher) - Detection bot that monitors critical storage changes
 
-[reverted-tx-watcher](./reverted-tx-watcher) - Detection bot that monitors critical storage changes
+[reverted-tx-watcher](./reverted-tx-watcher) - Detection bot that monitors reverted transactions
 
 [template](./template) - Template for bot creation. (Forta version)
 
