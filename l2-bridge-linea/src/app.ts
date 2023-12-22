@@ -7,10 +7,10 @@ import { GOV_BRIDGE_EVENTS } from './utils/events/gov_events'
 import { PROXY_ADMIN_EVENTS } from './utils/events/proxy_admin_events'
 import { ProxyContract } from './entity/proxy_contract'
 import {
+  ADMIN_OF_LINEA_L2_TOKEN_BRIDGE,
   BRIDGING_INITIATED_EVENT,
   LINEA_L2_ERC20_TOKEN_BRIDGE,
   LINEA_TOKEN_BRIDGE,
-  LINEA_WST_CUSTOM_BRIDGED,
 } from './utils/constants'
 import { ProxyAdmin__factory, TokenBridge__factory } from './generated'
 import { BlockSrv } from './services/linea_block_service'
@@ -51,19 +51,20 @@ export class App {
         new ProxyContract(
           LINEA_L2_ERC20_TOKEN_BRIDGE.name,
           LINEA_L2_ERC20_TOKEN_BRIDGE.hash,
-          ProxyAdmin__factory.connect(LINEA_L2_ERC20_TOKEN_BRIDGE.hash, nodeClient),
+          ADMIN_OF_LINEA_L2_TOKEN_BRIDGE,
+          ProxyAdmin__factory.connect(ADMIN_OF_LINEA_L2_TOKEN_BRIDGE, nodeClient),
         ),
-        new ProxyContract(
+        /* TODO check on 14 JAN
+          new ProxyContract(
           LINEA_WST_CUSTOM_BRIDGED.name,
           LINEA_WST_CUSTOM_BRIDGED.hash,
-          ProxyAdmin__factory.connect(LINEA_WST_CUSTOM_BRIDGED.hash, nodeClient),
-        ),
+          LINEA_PROXY_ADMIN_FOR_WSTETH,
+          ProxyAdmin__factory.connect(LINEA_PROXY_ADMIN_FOR_WSTETH, nodeClient),
+        ),*/
       ]
 
       const blockSrv: BlockSrv = new BlockSrv(LineaClient)
       const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS)
-
-      // TODO ask what is the contract for here. And where to get it
       const l2Bridge = TokenBridge__factory.connect(LINEA_TOKEN_BRIDGE, nodeClient)
 
       const monitorWithdrawals = new MonitorWithdrawals(l2Bridge, LINEA_TOKEN_BRIDGE, BRIDGING_INITIATED_EVENT)

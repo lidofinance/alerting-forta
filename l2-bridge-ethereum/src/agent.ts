@@ -1,11 +1,11 @@
 import {
   BlockEvent,
-  TransactionEvent,
+  Finding,
+  FindingSeverity,
+  FindingType,
   HandleBlock,
   HandleTransaction,
-  Finding,
-  FindingType,
-  FindingSeverity,
+  TransactionEvent,
 } from "forta-agent";
 
 import { ethersProvider } from "./ethers";
@@ -65,17 +65,21 @@ const initialize = async () => {
   }
 
   await Promise.all(
-    subAgents.map(async (agent, _) => {
+    subAgents.map(async (agent) => {
       if (agent.initialize) {
         try {
           const agentMeta = await agent.initialize(blockNumber);
           for (const metaKey in agentMeta) {
             metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey];
           }
-        } catch (err: any) {
+        } catch (err) {
           console.log(`Exiting due to init failure on ${agent.name}`);
-          console.log(`Error: ${err}`);
-          console.log(`Stack: ${err.stack}`);
+
+          if (err instanceof Error) {
+            console.log(`Error: ${err}`);
+            console.log(`Stack: ${err.stack}`);
+          }
+
           process.exit(1);
         }
       }
@@ -116,7 +120,9 @@ const handleBlock: HandleBlock = async (
   }
 
   const run = async (agent: SubAgent, blockEvent: BlockEvent) => {
-    if (!agent.handleBlock) return;
+    if (!agent.handleBlock) {
+      return;
+    }
     let retries = maxHandlerRetries;
     let success = false;
     let lastError;
@@ -162,7 +168,9 @@ const handleTransaction: HandleTransaction = async (
 ) => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
-    if (!agent.handleTransaction) return;
+    if (!agent.handleTransaction) {
+      return;
+    }
     let retries = maxHandlerRetries;
     let success = false;
     let lastError;

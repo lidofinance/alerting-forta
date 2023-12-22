@@ -168,12 +168,28 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
   if (!implFunc) {
     return undefined;
   }
+
+  if (proxyInfo.proxyAdminAddress === null) {
+    const proxy = new ethers.Contract(
+      proxyInfo.address,
+      proxyInfo.shortABI,
+      ethersProvider,
+    );
+
+    return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
+  }
+
   const proxy = new ethers.Contract(
-    proxyInfo.address,
+    proxyInfo.proxyAdminAddress,
     proxyInfo.shortABI,
     ethersProvider,
   );
-  return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
+
+  return (
+    await proxy.functions[implFunc](proxyInfo.address, {
+      blockTag: blockNumber,
+    })
+  )[0];
 }
 
 async function handleProxyImplementationChanges(
@@ -209,12 +225,27 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   if (!adminFunc) {
     return undefined;
   }
+  if (proxyInfo.proxyAdminAddress === null) {
+    const proxy = new ethers.Contract(
+      proxyInfo.address,
+      proxyInfo.shortABI,
+      ethersProvider,
+    );
+
+    return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
+  }
+
   const proxy = new ethers.Contract(
-    proxyInfo.address,
+    proxyInfo.proxyAdminAddress,
     proxyInfo.shortABI,
     ethersProvider,
   );
-  return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
+
+  return (
+    await proxy.functions[adminFunc](proxyInfo.address, {
+      blockTag: blockNumber,
+    })
+  )[0];
 }
 
 async function handleProxyAdminChanges(

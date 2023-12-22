@@ -14,18 +14,18 @@ export abstract class IShortABIcaller {
 
 export class ProxyContract implements IShortABIcaller {
   private readonly name: string
-  private readonly address: string
+  private readonly ITransparentUpgradeableProxy: string
   private readonly contract: ProxyAdmin
 
-  constructor(name: string, address: string, contract: ProxyAdmin) {
-    if (address !== contract.address) {
+  constructor(name: string, ITransparentUpgradeableProxy: string, proxyAdminAddress: string, contract: ProxyAdmin) {
+    if (proxyAdminAddress !== contract.address) {
       throw Error(
-        `Could not create instance of ProxyAdmin: ${name} . Cause: ${address} != ${contract.address} proxyAddress`,
+        `Could not create instance of ProxyAdmin: ${name}. Cause: ${proxyAdminAddress} != ${contract.address} proxyAddress`,
       )
     }
 
     this.name = name
-    this.address = address
+    this.ITransparentUpgradeableProxy = ITransparentUpgradeableProxy
     this.contract = contract
   }
 
@@ -34,15 +34,14 @@ export class ProxyContract implements IShortABIcaller {
   }
 
   public getAddress(): string {
-    return this.address
+    return this.ITransparentUpgradeableProxy
   }
 
   public async getProxyAdmin(blockNumber: number): Promise<E.Either<Error, string>> {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          // TODO: where to get address
-          return await this.contract.getProxyAdmin({
+          return await this.contract.getProxyAdmin(this.ITransparentUpgradeableProxy, {
             blockTag: blockNumber,
           })
         },
@@ -59,8 +58,7 @@ export class ProxyContract implements IShortABIcaller {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          // TODO: where to get address
-          return await this.contract.getProxyImplementation({
+          return await this.contract.getProxyImplementation(this.ITransparentUpgradeableProxy, {
             blockTag: blockNumber,
           })
         },

@@ -13,6 +13,8 @@ const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
 const MAX_WITHDRAWALS_SUM = 10000
 
+const LIMIT_BLOCK_RANGE = 1024
+
 type IWithdrawalRecord = {
   time: number
   amount: BigNumber
@@ -27,7 +29,6 @@ export class MonitorWithdrawals {
 
   private readonly l2Erc20TokenGatewayAddress: string
   private readonly withdrawalInitiatedEvent: string
-  // TODO ASK what it the contract for here
   private readonly lineaTokenBridge: TokenBridge
 
   private withdrawalsCache: IWithdrawalRecord[] = []
@@ -49,21 +50,51 @@ export class MonitorWithdrawals {
     const bridgingInitiatedEventTypedEventFilter = this.lineaTokenBridge.filters.BridgingInitiated()
 
     const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 13)
-
     let withdrawEvents: BridgingInitiatedEvent[] = []
-    try {
-      withdrawEvents = await retryAsync<BridgingInitiatedEvent[]>(
-        async (): Promise<BridgingInitiatedEvent[]> => {
-          return await this.lineaTokenBridge.queryFilter(
-            bridgingInitiatedEventTypedEventFilter,
-            pastBlock,
-            currentBlock - 1,
+
+    const diff = currentBlock - 1 - pastBlock
+    if (diff < LIMIT_BLOCK_RANGE) {
+      try {
+        withdrawEvents = await retryAsync<BridgingInitiatedEvent[]>(
+          async (): Promise<BridgingInitiatedEvent[]> => {
+            return await this.lineaTokenBridge.queryFilter(
+              bridgingInitiatedEventTypedEventFilter,
+              pastBlock,
+              currentBlock - 1,
+            )
+          },
+          { delay: 500, maxTry: 5 },
+        )
+      } catch (e) {
+        return E.left(new Error(`Could not fetch withdrawEvents. cause: ${e}`))
+      }
+    } else {
+      const batchSize = LIMIT_BLOCK_RANGE - 1
+      const endBlock = currentBlock - 1
+
+      for (let i = pastBlock; i <= endBlock; i += batchSize) {
+        const start = i
+        const end = Math.min(i + batchSize - 1, endBlock)
+
+        let withdrawEventsBatched: BridgingInitiatedEvent[]
+        try {
+          withdrawEventsBatched = await retryAsync<BridgingInitiatedEvent[]>(
+            async (): Promise<BridgingInitiatedEvent[]> => {
+              return await this.lineaTokenBridge.queryFilter(bridgingInitiatedEventTypedEventFilter, start, end)
+            },
+            { delay: 500, maxTry: 5 },
           )
-        },
-        { delay: 500, maxTry: 5 },
-      )
-    } catch (e) {
-      return E.left(new Error(`Could not fetch withdrawEvents. cause: ${e}`))
+        } catch (e) {
+          console.log(
+            `Warning: Could not fetch withdraw events. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${
+              end - start
+            }`,
+          )
+          continue
+        }
+
+        withdrawEvents.push(...withdrawEventsBatched)
+      }
     }
 
     for (const withdrawEvent of withdrawEvents) {

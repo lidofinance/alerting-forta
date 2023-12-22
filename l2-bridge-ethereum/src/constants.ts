@@ -1,13 +1,7 @@
-import BigNumber from "bignumber.js";
 import { FindingSeverity, FindingType } from "forta-agent";
-
 import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 import proxyAdminABI from "./abi/ProxyAdminABI.json";
-
-// COMMON CONSTS
-
-// 1 ETH
-export const ETH_DECIMALS = new BigNumber(10).pow(18);
+import { Result } from "@ethersproject/abi/lib";
 
 export const ROLES = new Map<string, string>([
   [
@@ -73,6 +67,9 @@ export const LINEA_L1_CROSS_DOMAIN_MESSENGER =
 export const LINEA_L1_TOKEN_BRIDGE =
   "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319";
 
+export const ADMIN_OF_LINEA_L1_TOKEN_BRIDGE =
+  "0x5b0bb17755fba06028530682e2fd5bc373931768";
+
 export const ARBITRUM_GATEWAY_SET_EVENT =
   "event GatewaySet(address indexed l1Token, address indexed gateway)";
 
@@ -121,6 +118,7 @@ export interface LidoProxy {
   address: string;
   shortABI: string;
   functions: Map<string, string>;
+  proxyAdminAddress: string | null;
 }
 
 export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
@@ -132,6 +130,7 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
+    proxyAdminAddress: null,
   },
   {
     name: "L1ERC20TokenBridge to Optimism",
@@ -141,6 +140,7 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
+    proxyAdminAddress: null,
   },
   {
     name: "L1ERC20TokenBridge to BASE",
@@ -150,6 +150,7 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
+    proxyAdminAddress: null,
   },
   {
     name: "L1ERC20TokenBridge to ZkSync",
@@ -159,6 +160,7 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
+    proxyAdminAddress: null,
   },
   {
     name: "ZkSync L1Executor",
@@ -168,6 +170,7 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
+    proxyAdminAddress: null,
   },
   {
     name: "L1ERC20TokenBridge to Mantle",
@@ -177,18 +180,27 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
       ["admin", "proxy__getAdmin"],
       ["implementation", "proxy__getImplementation"],
     ]),
+    proxyAdminAddress: null,
   },
   {
     name: "L1 TokenBridge to Linea",
     address: LINEA_L1_TOKEN_BRIDGE,
-    // TODO Ask argument for calling getProxyAdmin, getProxyImplementation
     shortABI: JSON.stringify(proxyAdminABI),
     functions: new Map<string, string>([
       ["admin", "getProxyAdmin"],
       ["implementation", "getProxyImplementation"],
     ]),
+    proxyAdminAddress: ADMIN_OF_LINEA_L1_TOKEN_BRIDGE,
   },
 ];
+
+export interface LidoZkSyncProxy {
+  name: string;
+  proxyAdminAddress: string;
+  shortABI: string;
+  proxyAddress: string;
+  functions: Map<string, string>;
+}
 
 export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
   (proxyInfo: LidoProxy) => {
@@ -198,7 +210,8 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         event: "event ProxyOssified()",
         alertId: "PROXY-OSSIFIED",
         name: `🚨 ${proxyInfo.name}: Proxy ossified`,
-        description: (args: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        description: (args: Result) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) was ossified` +
           `\n(detected by event)`,
         severity: FindingSeverity.High,
@@ -209,7 +222,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         event: "event AdminChanged(address previousAdmin, address newAdmin)",
         alertId: "PROXY-ADMIN-CHANGED",
         name: `🚨 ${proxyInfo.name}: Proxy admin changed`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Proxy admin for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
           `\n(detected by event)`,
@@ -221,7 +234,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         event: "event Upgraded(address indexed implementation)",
         alertId: "PROXY-UPGRADED",
         name: `🚨 ${proxyInfo.name}: Proxy upgraded`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was updated to ${args.implementation}` +
           `\n(detected by event)`,
@@ -233,7 +246,7 @@ export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
         event: "event BeaconUpgraded(address indexed beacon)",
         alertId: "PROXY-BEACON-UPGRADED",
         name: `🚨 ${proxyInfo.name}: Proxy beacon upgraded`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `beacon was updated to ${args.beacon}` +
           `\n(detected by event)`,
@@ -251,7 +264,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     event: "event AdminChanged(address previousAdmin, address newAdmin)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Arbitrum Native Bridge: L1 Gateway Router proxy admin changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy admin for Arbitrum One: L1 Gateway Router ` +
       `was changed\nfrom: ${args.previousAdmin}\nto: ${args.newAdmin}`,
     severity: FindingSeverity.High,
@@ -262,7 +275,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
     event: "event Upgraded(address indexed implementation)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "🚨 Arbitrum Native Bridge: L1 Gateway Router proxy upgraded",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy for Arbitrum One: L1 Gateway Router ` +
       `was upgraded to ${args.implementation}`,
     severity: FindingSeverity.High,
@@ -274,7 +287,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Optimism Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy admin for Optimism: OVM L1 Cross Domain Messenger ` +
       `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
@@ -286,7 +299,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "🚨 Optimism Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy for Optimism: Proxy OVM L1 Cross Domain Messenger ` +
       `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
     severity: FindingSeverity.High,
@@ -298,7 +311,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Base Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy admin for Base: OVM L1 Cross Domain Messenger ` +
       `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
@@ -310,7 +323,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event AddressSet(string indexed _name, address _newAddress,address _oldAddress)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "🚨 Base Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy for Base: Proxy OVM L1 Cross Domain Messenger ` +
       `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
     severity: FindingSeverity.High,
@@ -322,7 +335,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event DiamondCut(FacetCut[] facetCuts, address initAddress, bytes initCalldata)",
     alertId: "THIRD-PARTY-PROXY-DIAMOND-CUT-CHANGED",
     name: "🚨 ZkSync Native Bridge: Diamond Proxy changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy diamondCut for ZkSync: OVM L1 Cross Domain Messenger ` +
       `was changed\n: ${args}`,
     severity: FindingSeverity.Medium,
@@ -334,7 +347,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event AddressSet(string indexed _name, address _newAddress, address _oldAddress)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "🚨 Mantle Native Bridge: OVM L1 Cross Domain Messenger proxy upgraded",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy for Mantle: Proxy OVM L1 Cross Domain Messenger ` +
       `was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
     severity: FindingSeverity.High,
@@ -346,7 +359,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Mantle Native Bridge: OVM L1 Cross Domain Messenger proxy admin changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy admin for Mantle: OVM L1 Cross Domain Messenger ` +
       `was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
@@ -358,7 +371,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event MessageServiceUpdated(address indexed newMessageService, address indexed oldMessageService,address indexed setBy)",
     alertId: "THIRD-PARTY-PROXY-UPGRADED",
     name: "🚨 Linea Native Bridge: L1 Message Service changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy for Linea: L1 Message Service was upgraded form: ${args._oldAddress} to: ${args._newAddress}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -369,7 +382,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-STARTED-CHANGE",
     name: "🚨 Linea Native Bridge: L1 Token Bridge proxy admin started to change",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy admin for Linea: L1 Token Bridge started to change\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -380,7 +393,7 @@ export const THIRD_PARTY_PROXY_EVENTS = [
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Linea Native Bridge: L1 Token Bridge proxy admin changed",
-    description: (args: any) =>
+    description: (args: Result) =>
       `Proxy admin for Linea: L1 Token Bridge was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
@@ -396,7 +409,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
           "event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)",
         alertId: "L1-BRIDGE-ROLE-ADMIN-CHANGED",
         name: `⚠️ ${gw.name} L1 Bridge: Role Admin changed`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Role Admin for role ${args.role}(${
             ROLES.get(args.role) || "unknown"
           }) ` +
@@ -410,7 +423,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
           "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
         alertId: "L1-BRIDGE-ROLE-GRANTED",
         name: `⚠️ ${gw.name} L1 Bridge: Role granted`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
           `was granted to ${args.account} by ${args.sender}`,
         severity: FindingSeverity.High,
@@ -422,7 +435,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
           "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
         alertId: "L1-BRIDGE-ROLE-REVOKED",
         name: `⚠️ ${gw.name} L1 Bridge: Role revoked`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Role ${args.role}(${ROLES.get(args.role) || "unknown"}) ` +
           `was revoked to ${args.account} by ${args.sender}`,
         severity: FindingSeverity.High,
@@ -433,7 +446,8 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         event: "event DepositsEnabled(address indexed enabler)",
         alertId: "L1-BRIDGE-DEPOSITS-ENABLED",
         name: `✅ ${gw.name} L1 Bridge: Deposits Enabled`,
-        description: (args: any) => `Deposits were enabled by ${args.enabler}`,
+        description: (args: Result) =>
+          `Deposits were enabled by ${args.enabler}`,
         severity: FindingSeverity.High,
         type: FindingType.Info,
       },
@@ -442,7 +456,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         event: "event DepositsDisabled(address indexed disabler)",
         alertId: "L1-BRIDGE-DEPOSITS-DISABLED",
         name: `❌ ${gw.name} L1 Bridge: Deposits Disabled`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Deposits were disabled by ${args.disabler}`,
         severity: FindingSeverity.High,
         type: FindingType.Info,
@@ -452,7 +466,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         event: "event WithdrawalsEnabled(address indexed enabler)",
         alertId: "L1-BRIDGE-WITHDRAWALS-ENABLED",
         name: `✅ ${gw.name} L1 Bridge: Withdrawals Enabled`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Withdrawals were enabled by ${args.enabler}`,
         severity: FindingSeverity.High,
         type: FindingType.Info,
@@ -462,7 +476,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         event: "event WithdrawalsDisabled(address indexed disabler)",
         alertId: "L1-BRIDGE-WITHDRAWALS-DISABLED",
         name: `❌ ${gw.name} L1 Bridge: Withdrawals Disabled`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Withdrawals were disabled by ${args.enabler}`,
         severity: FindingSeverity.High,
         type: FindingType.Info,
@@ -472,7 +486,7 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         event: "event Initialized(address indexed admin)",
         alertId: "L1-BRIDGE-IMPLEMENTATION-INITIALIZED",
         name: `🚨 ${gw.name} L1 Bridge: Implementation initialized`,
-        description: (args: any) =>
+        description: (args: Result) =>
           `Implementation of the ${gw.name} L1 Bridge was initialized by ${args.admin}\n` +
           `NOTE: This is not the thing that should be left unacted! ` +
           `Make sure that this call was made by Lido!`,
