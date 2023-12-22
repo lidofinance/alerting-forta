@@ -194,14 +194,6 @@ export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   },
 ];
 
-export interface LidoZkSyncProxy {
-  name: string;
-  proxyAdminAddress: string;
-  shortABI: string;
-  proxyAddress: string;
-  functions: Map<string, string>;
-}
-
 export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
   (proxyInfo: LidoProxy) => {
     const eventsDesc: EventOfNotice[] = [
