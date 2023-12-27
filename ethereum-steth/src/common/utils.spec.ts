@@ -12,7 +12,7 @@ describe("utils", () => {
   afterAll(() => {
     jest.resetAllMocks();
   });
-  
+
   it("should merge findings", () => {
     const ids = ["SOME-CUTE-ALERT", "SOME-FAKE-ALERT", "SOME-SOSO-ALERT"];
     const wordsList = ["🌷🌷🌷", "🍯🍯🍯", "🌸🌸🌸"];
