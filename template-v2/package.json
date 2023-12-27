@@ -45,7 +45,7 @@
     "@types/lodash": "^4.14.202",
     "bignumber.js": "^9.1.2",
     "ethers": "^5.5.1",
-    "forta-agent": "^0.1.45",
+    "forta-agent": "^0.1.48",
     "fp-ts": "^2.16.1",
     "lodash": "^4.17.21"
   },
