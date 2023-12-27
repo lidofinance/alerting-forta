@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`agent-dao-ops e2e tests should process block with MEV Allow list: Super low relay count 1`] = `Array []`;
+exports[`agent-dao-ops e2e tests should process block with MEV Allow list: Super low relay count 1`] = `[]`;
 
-exports[`agent-dao-ops e2e tests should process block with huge buffered ETH amount and low deposit executor balance 1`] = `Array []`;
+exports[`agent-dao-ops e2e tests should process block with huge buffered ETH amount and low deposit executor balance 1`] = `[]`;
 
 exports[`agent-dao-ops e2e tests should process block with low staking limit (10%) 1`] = `undefined`;
 
 exports[`agent-dao-ops e2e tests should process block with low staking limit (30%) 1`] = `undefined`;
 
-exports[`agent-dao-ops e2e tests should process tx with EL rewards vault set and staking changes 1`] = `Array []`;
+exports[`agent-dao-ops e2e tests should process tx with EL rewards vault set and staking changes 1`] = `[]`;
 
 exports[`agent-dao-ops e2e tests should process tx with EL rewards withdrawal limit set 1`] = `undefined`;
 
@@ -26,4 +26,4 @@ exports[`agent-dao-ops e2e tests should process tx with changed owner of the con
 
 exports[`agent-dao-ops e2e tests should process tx with changed protocol contracts 1`] = `undefined`;
 
-exports[`agent-dao-ops e2e tests should process tx with transferred ownership of Insurance fund 1`] = `Array []`;
+exports[`agent-dao-ops e2e tests should process tx with transferred ownership of Insurance fund 1`] = `[]`;

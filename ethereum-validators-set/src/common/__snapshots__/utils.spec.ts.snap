@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`utils should merge findings 1`] = `
-Array [
+[
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "SOME-CUTE-ALERT",
     "description": "🌷🌷🌷
 ---
@@ -38,17 +38,20 @@ Array [
 🌷🌷🌷
 ---
 🌷🌷🌷",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": ",,,,,,,,,,,,,,,,",
     },
     "name": "🚨 Alert",
     "protocol": "ethereum",
     "severity": 2,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
     "type": 3,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "SOME-FAKE-ALERT",
     "description": "🍯🍯🍯
 ---
@@ -83,17 +86,20 @@ Array [
 🍯🍯🍯
 ---
 🍯🍯🍯",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": ",,,,,,,,,,,,,,,,",
     },
     "name": "🚨 Alert",
     "protocol": "ethereum",
     "severity": 2,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
     "type": 3,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "SOME-SOSO-ALERT",
     "description": "🌸🌸🌸
 ---
@@ -128,14 +134,17 @@ Array [
 🌸🌸🌸
 ---
 🌸🌸🌸",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": ",,,,,,,,,,,,,,,,",
     },
     "name": "🚨 Alert",
     "protocol": "ethereum",
     "severity": 2,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
     "type": 3,
+    "uniqueKey": "",
   },
 ]
 `;

@@ -2,6 +2,17 @@ import { Finding, FindingSeverity, FindingType } from "forta-agent";
 import { mergeFindings } from "./utils";
 
 describe("utils", () => {
+  let timeSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    timeSpy = jest.spyOn(Date, "now");
+    timeSpy.mockImplementation(() => new Date("2023-12-31"));
+  });
+
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
+  
   it("should merge findings", () => {
     const ids = ["SOME-CUTE-ALERT", "SOME-FAKE-ALERT", "SOME-SOSO-ALERT"];
     const wordsList = ["🌷🌷🌷", "🍯🍯🍯", "🌸🌸🌸"];
