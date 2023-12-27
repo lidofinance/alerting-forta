@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -44,7 +45,7 @@ describe("agent-huge-tx e2e tests", () => {
     "should process block with huge change in Maker wstETH-B vault balance",
     async () => {
       const findings = await runBlock(15250794, 15250719);
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -55,7 +56,7 @@ describe("agent-huge-tx e2e tests", () => {
       const findings = await runTransaction(
         "0x535d3848e0fd0715a455900d38816f57e7513663af24d7db0b1f6423cddc7821",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

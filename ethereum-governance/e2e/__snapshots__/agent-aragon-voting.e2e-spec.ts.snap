@@ -2,46 +2,71 @@
 
 exports[`agent-aragon-voting e2e tests should process block with changed outcome 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "ARAGON-VOTE-OUTCOME-CHANGED",
-  "description": "Expected aragon vote 152 outcome changed from 'Fail' to 'Pass' and there is less than 2 hour(s) left till the end of the first voting phase.",
-  "labels": Array [],
-  "metadata": Object {},
+  "description": "Expected aragon vote 165 outcome changed from 'Fail' to 'Pass' and there is less than 2 hour(s) left till the end of the first voting phase.",
+  "labels": [],
+  "metadata": {},
   "name": "⚠️ Expected vote outcome has changed",
   "protocol": "ethereum",
   "severity": 4,
+  "source": {},
   "type": 2,
+  "uniqueKey": "",
 }
 `;
 
 exports[`agent-aragon-voting e2e tests should process tx with executed vote 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "ARAGON-VOTE-EXECUTED",
-  "description": "Aragon vote 22 was executed",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "22",
+  "description": "Aragon vote 165 was executed",
+  "labels": [],
+  "metadata": {
+    "args": "165",
   },
   "name": "✅ Aragon: Vote executed",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;
 
 exports[`agent-aragon-voting e2e tests should process tx with started vote 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "ARAGON-VOTE-STARTED",
-  "description": "Aragon vote 30 was started by [0xf73a1260d222f447210581DDf212D915c09a3249](https://etherscan.io/address/0xf73a1260d222f447210581DDf212D915c09a3249)",
-  "labels": Array [],
-  "metadata": Object {
-    "args": "30,0xf73a1260d222f447210581DDf212D915c09a3249,",
+  "description": "Aragon vote 169 was started by [0xf73a1260d222f447210581DDf212D915c09a3249](https://etherscan.io/address/0xf73a1260d222f447210581DDf212D915c09a3249)",
+  "labels": [],
+  "metadata": {
+    "args": "169,0xf73a1260d222f447210581DDf212D915c09a3249,Omnibus vote: 1) Grant MANAGE_MEMBERS_AND_QUORUM_ROLE on HashConsensus for AccountingOracle on Lido on Ethereum to Agent;
+ 2) Grant MANAGE_MEMBERS_AND_QUORUM_ROLE on HashConsensus for ValidatorsExitBusOracle on Lido on Ethereum to Agent;
+ 3) Remove the oracle member named 'Jump Crypto' with address 0x1d0813bf088be3047d827d98524fbf779bc25f00 from HashConsensus for AccountingOracle on Lido on Ethereum;
+ 4) Remove the oracle member named 'Jump Crypto' with address 0x1d0813bf088be3047d827d98524fbf779bc25f00 from HashConsensus for ValidatorsExitBusOracle on Lido on Ethereum;
+ 5) Add oracle member named 'ChainLayer' with address 0xc79F702202E3A6B0B6310B537E786B9ACAA19BAf to HashConsensus for AccountingOracle on Lido on Ethereum Oracle set;
+ 6) Add oracle member named 'ChainLayer' with address 0xc79F702202E3A6B0B6310B537E786B9ACAA19BAf to HashConsensus for ValidatorsExitBusOracle on Lido on Ethereum Oracle set;
+ 7) Deactivate the node operator named 'Jump Crypto' with id 1 in Curated Node Operator Registry;
+ 8) Deactivate the node operator named 'Anyblock Analytics' with id 12 in Curated Node Operator Registry;
+ 9) Transfer 224 stETH to RCC 0xDE06d17Db9295Fa8c4082D4f73Ff81592A3aC437;
+ 10) Transfer 359 stETH to PML 0x17F6b2C738a63a8D3A113a228cfd0b373244633D;
+ 11) Transfer 314 stETH to ATC 0x9B1cebF7616f2BC73b47D226f90b01a7c9F86956;
+ 12) Remove CREATE_PAYMENTS_ROLE from EVMScriptExecutor 0xFE5986E06210aC1eCC1aDCafc0cc7f8D63B3F977;
+ 13) Add CREATE_PAYMENTS_ROLE to EVMScriptExecutor 0xFE5986E06210aC1eCC1aDCafc0cc7f8D63B3F977 with single transfer limits of 1,000 ETH, 1,000 stETH, 5,000,000 LDO, 2,000,000 DAI, 2,000,000 USDC, 2,000,000 USDT;
+ 14) Remove RCC DAI top up EVM script factory (old ver) 0x84f74733ede9bFD53c1B3Ea96338867C94EC313e from Easy Track;
+ 15) Remove PML DAI top up EVM script factory (old ver) 0x4E6D3A5023A38cE2C4c5456d3760357fD93A22cD from Easy Track;
+ 16) Remove ATC DAI top up EVM script factory (old ver) 0x67Fb97ABB9035E2e93A7e3761a0d0571c5d7CD07 from Easy Track;
+ 17) Add RCC stable top up EVM script factory 0x75bDecbb6453a901EBBB945215416561547dfDD4;
+ 18) Add PML stable top up EVM script factory 0x92a27C4e5e35cFEa112ACaB53851Ec70e2D99a8D;
+ 19) Add ATC stable top up EVM script factory 0x1843Bc35d1fD15AbE1913b9f72852a79457C42Ab.
+lidovoteipfs://bafkreibxxfz3stpvlgap23qkrmlqx4qjr6ax4v6h2gdstal6c4fqfwvhji",
   },
   "name": "🚀 Aragon: Vote started",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;

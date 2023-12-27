@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -41,7 +42,7 @@ describe("agent-dao-ops e2e tests", () => {
       const findings = await runTransaction(
         "0xba6222301a11142cd376ceba48b390d8df97502f776dd4dcb0f180ec87f9cd4e",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -52,7 +53,7 @@ describe("agent-dao-ops e2e tests", () => {
       const findings = await runTransaction(
         "0xfe9ef91c9b05aac2cdad146e90dd8145f8664408c0343504d5dc64077bf9d223",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -63,7 +64,7 @@ describe("agent-dao-ops e2e tests", () => {
       const findings = await runTransaction(
         "0x5a47f08254e7590f9b92e00a517cfaaa94742407b8208e660680de44a9e0ebfc",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -74,7 +75,7 @@ describe("agent-dao-ops e2e tests", () => {
       const findings = await runTransaction(
         "0x95b78c32c06fda9b11facbe40316cb593020a9fee58f56158c6b7481e47afbca",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -83,7 +84,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should process block with low deposit executor balance",
     async () => {
       const findings = await runBlock(17089400);
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -92,7 +93,7 @@ describe("agent-dao-ops e2e tests", () => {
     "should alert on low deposit executor balance only for 100th blocks",
     async () => {
       const findings = await runBlock(16534001);
-      expect(findings.length).toEqual(0);
+      expect(removeTimestamp(findings).length).toEqual(0);
     },
     TEST_TIMEOUT,
   );

@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -42,8 +43,8 @@ describe("agent-vaults e2e tests", () => {
   it(
     "should process block with high EL vault balance difference",
     async () => {
-      let findings = await runBlock(17007842, 17007842);
-      expect(findings).toMatchSnapshot();
+      let findings = await runBlock(18828911, 18828910);
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

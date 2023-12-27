@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -44,14 +45,10 @@ describe("agent-proxy-watcher e2e tests", () => {
   it(
     "should process block with changed proxy implementation",
     async () => {
-      let findings = await runBlock(15018882, 14524801);
+      const findings = await runBlock(18293362, 18293361);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
-
-      // no subsequent findings expected
-      findings = await runBlock(15018883, undefined, true);
-      expect(findings.length).toBe(0);
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 });

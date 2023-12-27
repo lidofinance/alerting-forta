@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -40,11 +41,10 @@ describe("agent-lido-report e2e tests", () => {
   it(
     "should process tx with Lido Oracle report",
     async () => {
-      // todo: should be uncommented after v2
-      // const findings = await runTransaction(
-      //   "0xe949652989ceed222ad1d1a903f7c925d64a7227b6a286451f9a454f753e9241"
-      // );
-      // expect(findings.at(0)).toMatchSnapshot();
+      const findings = await runTransaction(
+        "0xc786c3a7736d63da45447eb5082351d03633febe904ba5401ab59da1e89bd6ee"
+      );
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -52,11 +52,11 @@ describe("agent-lido-report e2e tests", () => {
   it(
     "should process tx with decreased Lido Beacon rewards",
     async () => {
-      // todo: should be uncommented after v2
+      // todo: should be uncommented after v2 and at lest 1 decrease case since v2
       // const findings = await runTransaction(
-      //   "0x1a5eed94c2da9da1ab5d40b723f92c43ce8a06e00b0a369d15561618115ef199"
+      //   "0xc88d1cb05e76f92fc0c57fe41a13b7e8cf8b010e08a535b6f789023c001ccd4d "
       // );
-      // expect(findings.at(1)).toMatchSnapshot();
+      // expect(removeTimestamp(findings).at(1)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -67,7 +67,7 @@ describe("agent-lido-report e2e tests", () => {
       const findings = await runTransaction(
         "0xbf52777e4dd583d52104be96f7da420be977faeee97cc25a89d6c81fa919056f",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

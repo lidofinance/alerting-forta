@@ -1,79 +1,88 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-
 exports[`agent-steth-ops e2e tests should process block with huge buffered ETH amount and low deposit executor balance 1`] = `
-Array [
+[
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "LOW-DEPOSIT-EXECUTOR-BALANCE",
     "description": "Balance of deposit executor is 1.9232. This is extremely low! 😱",
-    "labels": Array [],
-    "metadata": Object {},
+    "labels": [],
+    "metadata": {},
     "name": "⚠️ Low deposit executor balance",
     "protocol": "ethereum",
     "severity": 4,
+    "source": {},
     "type": 2,
+    "uniqueKey": "",
   },
 ]
 `;
 
 exports[`agent-steth-ops e2e tests should process block with low staking limit (10%) 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "LOW-STAKING-LIMIT",
   "description": "Current staking limit is 7237.74 ETH this is lower than 10% of max staking limit 150000.00 ETH",
-  "labels": Array [],
-  "metadata": Object {},
+  "labels": [],
+  "metadata": {},
   "name": "⚠️ Staking limit below 10%",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;
 
 exports[`agent-steth-ops e2e tests should process block with low staking limit (30%) 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "LOW-STAKING-LIMIT",
   "description": "Current staking limit is 7237.74 ETH this is lower than 30% of max staking limit 150000.00 ETH",
-  "labels": Array [],
-  "metadata": Object {},
+  "labels": [],
+  "metadata": {},
   "name": "📉 Staking limit below 30%",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;
 
 exports[`agent-steth-ops e2e tests should process tx with EL rewards vault set and staking changes 1`] = `
-Array [
+[
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "LIDO-STAKING-LIMIT-SET",
     "description": "Staking limit was set with:
 Max staking limit: 150000000000000000000000
 Stake limit increase per block: 23437500000000000000",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "150000000000000000000000,23437500000000000000",
     },
     "name": "⚠️ Lido: Staking limit set",
     "protocol": "ethereum",
     "severity": 4,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "LIDO-STAKING-RESUMED",
     "description": "Staking was resumed!",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "",
     },
     "name": "✅ Lido: Staking resumed",
     "protocol": "ethereum",
     "severity": 4,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
 ]
 `;
@@ -95,32 +104,36 @@ exports[`agent-steth-ops e2e tests should process tx with changed owner of the c
 exports[`agent-steth-ops e2e tests should process tx with changed protocol contracts 1`] = `undefined`;
 
 exports[`agent-steth-ops e2e tests should process tx with transferred ownership of Insurance fund 1`] = `
-Array [
+[
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "INS-FUND-OWNERSHIP-TRANSFERRED",
     "description": "Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "0x0000000000000000000000000000000000000000,0xbD829522d4791b9660f59f5998faE451dACA4E1C",
     },
     "name": "🚨 Insurance fund: Ownership transferred",
     "protocol": "ethereum",
     "severity": 5,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "INS-FUND-OWNERSHIP-TRANSFERRED",
     "description": "Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "0xbD829522d4791b9660f59f5998faE451dACA4E1C,0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c",
     },
     "name": "🚨 Insurance fund: Ownership transferred",
     "protocol": "ethereum",
     "severity": 5,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
 ]
 `;

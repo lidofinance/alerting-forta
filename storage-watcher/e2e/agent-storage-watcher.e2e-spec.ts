@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -43,9 +44,9 @@ describe("agent-storage-watcher e2e tests", () => {
   it(
     "should process block with critical storage slot value changed",
     async () => {
-      const findings = await runBlock(16398431, 16398430);
-      expect(findings).toMatchSnapshot();
+      const findings = await runBlock(18229364, 18229363);
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 });

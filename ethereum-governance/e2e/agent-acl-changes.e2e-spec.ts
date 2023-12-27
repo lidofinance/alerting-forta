@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 import { getRoleMembers } from "../src/subagents/acl-changes/agent-acl-changes";
@@ -46,7 +47,7 @@ describe("agent-acl-changes e2e tests", () => {
       const findings = await runTransaction(
         "0x46d937a9bb533feaf3b7936d230822eecc65d7ff4f6e38a4e17d3ca59cdf0799",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -57,7 +58,7 @@ describe("agent-acl-changes e2e tests", () => {
       const findings = await runTransaction(
         "0x11a48020ae69cf08bd063f1fbc8ecf65bd057015aaa991bf507dbc598aadb68e",
       );
-      expect(findings.at(2)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(2)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

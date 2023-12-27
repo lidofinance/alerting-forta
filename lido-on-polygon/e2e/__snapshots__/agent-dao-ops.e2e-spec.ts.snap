@@ -12,7 +12,9 @@ Finding {
   "name": "⚠️ Low deposit executor balance (Lido on Polygon)",
   "protocol": "ethereum",
   "severity": 4,
+  "source": {},
   "type": 2,
+  "uniqueKey": "",
 }
 `;
 
@@ -28,7 +30,9 @@ old reward: 50739",
   "name": "ℹ Polygon checkpoint reward was changed",
   "protocol": "ethereum",
   "severity": 4,
+  "source": {},
   "type": 2,
+  "uniqueKey": "",
 }
 `;
 
@@ -45,7 +49,9 @@ Protocol is balanced ✅",
   "name": "✅ stMATIC: Pooled MATIC delegated",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;
 
@@ -62,6 +68,8 @@ Protocol is balanced ✅",
   "name": "✅ stMATIC: Rewards distributed",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;

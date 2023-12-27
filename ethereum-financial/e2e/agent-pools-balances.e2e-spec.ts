@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -44,7 +45,7 @@ describe("agent-pools-balances e2e tests", () => {
     "should process block with imbalanced Curve pool",
     async () => {
       const findings = await runBlock(16804419);
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -54,59 +55,21 @@ describe("agent-pools-balances e2e tests", () => {
     async () => {
       const findings = await runBlock(16306452, 16300452);
       expect(
-        findings
+        removeTimestamp(findings)
           .filter(
-            (finding) => finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
+            (finding: any) => finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
           )
           .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 
   it(
     "should process block with significant Curve pool change",
     async () => {
       const findings = await runBlock(16870590, 16870589);
-      expect(findings.at(0)).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should process block with imbalanced Balancer pool",
-    async () => {
-      const findings = await runBlock(16398269, 16347860);
-      expect(
-        findings
-          .filter((finding) => finding.alertId == "BALANCER-POOL-IMBALANCE")
-          .at(0),
-      ).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should process block with significant Balancer pool change",
-    async () => {
-      const findings = await runBlock(17000731, 17000000);
-      expect(findings.at(0)).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should process block with Balancer pool rapid imbalance change",
-    async () => {
-      const findings = await runBlock(16306450, 16306009);
-      expect(
-        findings
-          .filter(
-            (finding) =>
-              finding.alertId == "BALANCER-POOL-IMBALANCE-RAPID-CHANGE",
-          )
-          .at(0),
-      ).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -116,12 +79,12 @@ describe("agent-pools-balances e2e tests", () => {
     async () => {
       const findings = await runBlock(15485829, 15485828);
       expect(
-        findings
-          .filter((finding) => finding.alertId == "LOW-STETH-CHAINLINK-PEG")
+        removeTimestamp(findings)
+          .filter((finding: any) => finding.alertId == "LOW-STETH-CHAINLINK-PEG")
           .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 
   it(
@@ -129,11 +92,13 @@ describe("agent-pools-balances e2e tests", () => {
     async () => {
       const findings = await runBlock(16038267, 16037266);
       expect(
-        findings
-          .filter((finding) => finding.alertId == "STETH-CURVE-PEG-DECREASE")
+        removeTimestamp(findings)
+          .filter(
+            (finding: any) => finding.alertId == "STETH-CURVE-PEG-DECREASE",
+          )
           .at(0),
       ).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 });

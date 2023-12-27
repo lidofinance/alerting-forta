@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -44,7 +45,7 @@ describe("agent-reverted-tx e2e tests", () => {
       const findings = await runTransaction(
         "0x99912053494d59ec0d0957f5e76e17f4e7d28baa6d5bbf886ef8b9356dc68425",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

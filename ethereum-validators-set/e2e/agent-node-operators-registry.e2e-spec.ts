@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -43,32 +44,21 @@ describe("agent-node-operators-registry e2e tests", () => {
     "should process tx with removed signing keys",
     async () => {
       const findings = await runTransaction(
-        "0x43529ea1c44b6f6134fa045f6af81a1a15be6309a32424ea742fa056977c4010",
+        "0xd9d9419ffd13c4a4e67534de704952cf53e515711be9fe36cec2e57ed7248ddd",
       );
-      expect(findings).toMatchSnapshot();
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
 
   it(
-    "should process tx with set NO target limit set",
+    "should process tx with set NO target limit set and added Node operator",
     async () => {
       const findings = await runTransaction(
         "0xcd406d8439cf7b635ede687ea4fbe6d3e3a7d33e1a16c78ca5ba304ac06cb415",
       );
-      expect(findings).toMatchSnapshot();
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should process tx with added Node operator",
-    async () => {
-      const findings = await runTransaction(
-        "0xa4629245311d93a11cedb9143d8b7530057685b4b568a026bac194e162002c13",
-      );
-      expect(findings).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 });

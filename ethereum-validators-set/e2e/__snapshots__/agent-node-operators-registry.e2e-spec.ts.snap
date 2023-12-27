@@ -1,185 +1,179 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`agent-node-operators-registry e2e tests should process tx with added Node operator 1`] = `
-Array [
-  Finding {
-    "addresses": Array [],
-    "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 30 added
-Name: Launchnodes
-Reward address: [0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561](https://etherscan.io/address/0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561)
-StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
-      "args": "30,Launchnodes,0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561,0",
-    },
-    "name": "ℹ️ NO Registry: Node operator added",
-    "protocol": "ethereum",
-    "severity": 1,
-    "type": 4,
-  },
-  Finding {
-    "addresses": Array [],
-    "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 31 added
-Name: SenseiNode
-Reward address: [0xE556Da28015c04F35A52B3111B9F4120E908056e](https://etherscan.io/address/0xE556Da28015c04F35A52B3111B9F4120E908056e)
-StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
-      "args": "31,SenseiNode,0xE556Da28015c04F35A52B3111B9F4120E908056e,0",
-    },
-    "name": "ℹ️ NO Registry: Node operator added",
-    "protocol": "ethereum",
-    "severity": 1,
-    "type": 4,
-  },
-]
-`;
-
 exports[`agent-node-operators-registry e2e tests should process tx with removed signing keys 1`] = `
-Array [
+[
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATORS-KEYS-REMOVED",
     "description": "Signing keys has been removed for:
- Kiln: 50",
-    "labels": Array [],
-    "metadata": Object {},
+ InfStones: 1",
+    "labels": [],
+    "metadata": {},
     "name": "🚨 NO Registry: Signing keys removed",
     "protocol": "ethereum",
     "severity": 4,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "NODE-OPERATORS-VETTED-KEYS-SET",
+    "description": "Vetted keys count for node operator [19 InfStones] was set to 10001 by NON-EasyTrack motion!",
+    "labels": [],
+    "metadata": {},
+    "name": "🚨 NO Vetted keys set by NON-EasyTrack action",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "type": 4,
+    "uniqueKey": "",
   },
 ]
 `;
 
-exports[`agent-node-operators-registry e2e tests should process tx with set NO target limit set 1`] = `
-Array [
+exports[`agent-node-operators-registry e2e tests should process tx with set NO target limit set and added Node operator 1`] = `
+[
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-TARGET-VALIDATORS-COUNT-CHANGED",
     "description": "Node operator 1 target validators count changed to 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "1,0",
     },
     "name": "⚠️ NO Registry: Node operator target validators count changed",
     "protocol": "ethereum",
     "severity": 3,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 32 added
 Name: A41
 Reward address: [0x2A64944eBFaFF8b6A0d07B222D3d83ac29c241a7](https://etherscan.io/address/0x2A64944eBFaFF8b6A0d07B222D3d83ac29c241a7)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "32,A41,0x2A64944eBFaFF8b6A0d07B222D3d83ac29c241a7,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 33 added
 Name: Develp GmbH
 Reward address: [0x0a6a0b60fFeF196113b3530781df6e747DdC565e](https://etherscan.io/address/0x0a6a0b60fFeF196113b3530781df6e747DdC565e)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "33,Develp GmbH,0x0a6a0b60fFeF196113b3530781df6e747DdC565e,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 34 added
 Name: Ebunker
 Reward address: [0x2A2245d1f47430b9f60adCFC63D158021E80A728](https://etherscan.io/address/0x2A2245d1f47430b9f60adCFC63D158021E80A728)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "34,Ebunker,0x2A2245d1f47430b9f60adCFC63D158021E80A728,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 35 added
 Name: Gateway.fm AS
 Reward address: [0x78CEE97C23560279909c0215e084dB293F036774](https://etherscan.io/address/0x78CEE97C23560279909c0215e084dB293F036774)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "35,Gateway.fm AS,0x78CEE97C23560279909c0215e084dB293F036774,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 36 added
 Name: Numic
 Reward address: [0x0209a89b6d9F707c14eB6cD4C3Fb519280a7E1AC](https://etherscan.io/address/0x0209a89b6d9F707c14eB6cD4C3Fb519280a7E1AC)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "36,Numic,0x0209a89b6d9F707c14eB6cD4C3Fb519280a7E1AC,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 37 added
 Name: ParaFi Technologies LLC
 Reward address: [0x5Ee590eFfdf9456d5666002fBa05fbA8C3752CB7](https://etherscan.io/address/0x5Ee590eFfdf9456d5666002fBa05fbA8C3752CB7)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "37,ParaFi Technologies LLC,0x5Ee590eFfdf9456d5666002fBa05fbA8C3752CB7,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
   Finding {
-    "addresses": Array [],
+    "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
     "description": "Node operator 38 added
 Name: RockawayX Infra
 Reward address: [0xcA6817DAb36850D58375A10c78703CE49d41D25a](https://etherscan.io/address/0xcA6817DAb36850D58375A10c78703CE49d41D25a)
 StakingLimit: 0",
-    "labels": Array [],
-    "metadata": Object {
+    "labels": [],
+    "metadata": {
       "args": "38,RockawayX Infra,0xcA6817DAb36850D58375A10c78703CE49d41D25a,0",
     },
     "name": "ℹ️ NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
+    "source": {},
     "type": 4,
+    "uniqueKey": "",
   },
 ]
 `;

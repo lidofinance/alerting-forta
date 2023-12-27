@@ -85,3 +85,14 @@ export function log(obj: any): void {
 
   process.stderr.write(JSON.stringify(obj, null, 4));
 }
+
+/**
+ * Remove timestamp property from findings
+ */
+
+export function removeTimestamp(findings: Array<object>): Array<object> {
+  findings.map((item: any) => {
+    delete item.timestamp;
+  });
+  return findings;
+}

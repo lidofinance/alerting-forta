@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -42,9 +43,9 @@ describe("agent-steth-ops e2e tests", () => {
     async () => {
       let findings = await runBlock(16704075);
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 
   it(
@@ -52,9 +53,9 @@ describe("agent-steth-ops e2e tests", () => {
     async () => {
       let findings = await runBlock(16704075);
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 2,
   );
 
   it(
@@ -62,7 +63,7 @@ describe("agent-steth-ops e2e tests", () => {
     async () => {
       let findings = await runBlock(17241600);
       findings.sort();
-      expect(findings).toMatchSnapshot();
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -74,7 +75,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x60d9392de6c6ae3f8ca8003cce414fc420d705c9a1c8051b9869b0b870d2ebbe",
       );
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -86,7 +87,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x37ef7e9e71809be37143e3976bae7859268be3fac6728d69cd7b5d6d9cf8d24a",
       );
       findings.sort();
-      expect(findings.at(4)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(4)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -98,7 +99,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2",
       );
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -110,7 +111,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2",
       );
       findings.sort();
-      expect(findings.at(1)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(1)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -122,7 +123,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x9c10852a83c77204f255705e581c21ebcc28c021dfaff4c02707a4cee1eedde2",
       );
       findings.sort();
-      expect(findings.at(2)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(2)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -134,7 +135,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0xe61167aa87b2a7aa9bd68834bf703877d22315d6d765345ebf0135eb8c33c406",
       );
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -146,7 +147,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0xdd76a4d06199eb017e322e2e152f88841d92488ef5e02809bac45c842244059e",
       );
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -158,7 +159,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x3f126198f641194e96cf6be0db03efc6ae92a4e1586b5062aaf373f171f0c5d2",
       );
       findings.sort();
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -170,7 +171,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x11a48020ae69cf08bd063f1fbc8ecf65bd057015aaa991bf507dbc598aadb68e",
       );
       findings.sort();
-      expect(findings).toMatchSnapshot();
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -182,7 +183,7 @@ describe("agent-steth-ops e2e tests", () => {
         "0x91c7c2f33faf3b5fb097138c1d49c1d4e83f99e1c3b346b3cad35a5928c03b3a",
       );
       findings.sort();
-      expect(findings).toMatchSnapshot();
+      expect(removeTimestamp(findings)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

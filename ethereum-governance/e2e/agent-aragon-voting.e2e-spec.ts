@@ -4,6 +4,7 @@ import {
   provideAgentPath,
   provideRunBlock,
   provideRunTransaction,
+  removeTimestamp,
 } from "./utils";
 
 const TEST_TIMEOUT = 60_000; // ms
@@ -44,9 +45,9 @@ describe("agent-aragon-voting e2e tests", () => {
     "should process tx with started vote",
     async () => {
       const findings = await runTransaction(
-        "0x69987bf8c4352c40e0429c8492d4842011071524171cd382ea7327d808b37858",
+        "0xb6f8116321f3cb3d63f9727af0e24fba0f7088f228adb640ef91a51924faa42f",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -55,9 +56,9 @@ describe("agent-aragon-voting e2e tests", () => {
     "should process tx with executed vote",
     async () => {
       const findings = await runTransaction(
-        "0x4cc1911b3016ceec169db5b73714b02ee155fb03b6e018fc66a1063a9c1e15fa",
+        "0xcd406d8439cf7b635ede687ea4fbe6d3e3a7d33e1a16c78ca5ba304ac06cb415",
       );
-      expect(findings.at(0)).toMatchSnapshot();
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -65,8 +66,8 @@ describe("agent-aragon-voting e2e tests", () => {
   it(
     "should process block with changed outcome",
     async () => {
-      const findings = await runBlock(16691599, 16691598);
-      expect(findings.at(0)).toMatchSnapshot();
+      const findings = await runBlock(18285394, 18285393);
+      expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

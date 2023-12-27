@@ -2,35 +2,39 @@
 
 exports[`agent-huge-tx e2e tests should process block with huge change in Maker wstETH-B vault balance 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "HUGE-VAULT-BALANCE-CHANGE",
   "description": "**Maker wstETH-B** vault balance has **increased by 18.36%** during last 15 min.
 Previous balance: 100848.31 wstETH
 Current balance: 119359.57 wstETH
 ",
-  "labels": Array [],
-  "metadata": Object {},
+  "labels": [],
+  "metadata": {},
   "name": "Huge change in Maker wstETH-B vault balance",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;
 
 exports[`agent-huge-tx e2e tests should process tx with huge token(s) transfer of Lido interest in a single TX 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "HUGE-TOKEN-TRANSFERS-IN-SINGLE-TX",
   "description": "**17.4k B-stETH-STABLE** were deposited to Aura Finance
 by: 0x3f3429d28438cc14133966820b8a9ea61cf1d4f0 (unknown)
 **17.4k B-stETH-STABLE** were deposited to Balancer Gauge
 by: 0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2 (Aura: Voter Proxy)
 https://etherscan.io/tx/0x535d3848e0fd0715a455900d38816f57e7513663af24d7db0b1f6423cddc7821",
-  "labels": Array [],
-  "metadata": Object {},
+  "labels": [],
+  "metadata": {},
   "name": "Huge token(s) transfer of Lido interest in a single TX",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
   "type": 4,
+  "uniqueKey": "",
 }
 `;
