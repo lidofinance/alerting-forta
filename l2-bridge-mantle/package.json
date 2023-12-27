@@ -11,6 +11,12 @@
   "chainIds": [
     1
   ],
+  "chainSettings": {
+    "default": {
+      "shards": 1,
+      "target": 5
+    }
+  },
   "husky": {
     "hooks": {
       "pre-commit": "yarn run lint"

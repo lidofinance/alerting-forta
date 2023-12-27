@@ -2,7 +2,7 @@
 
 exports[`agent-lido-report e2e tests should process tx with Lido rebase digest 1`] = `
 Finding {
-  "addresses": Array [],
+  "addresses": [],
   "alertId": "LIDO-REPORT-REBASE-DIGEST",
   "description": "*APR stats*
 APR: 5.26%
@@ -30,8 +30,8 @@ Used buffer: 787.49 ETH
 
 *Shares*
 Burnt: 1,722.27 × 1e18",
-  "labels": Array [],
-  "metadata": Object {
+  "labels": [],
+  "metadata": {
     "apr": "5.26",
     "clRewards": "623.37",
     "clRewardsDiff": "+0.25",
@@ -64,6 +64,9 @@ Burnt: 1,722.27 × 1e18",
   "name": "ℹ️ Lido Report: rebase digest",
   "protocol": "ethereum",
   "severity": 1,
+  "source": {},
+  "timestamp": 2023-12-31T00:00:00.000Z,
   "type": 4,
+  "uniqueKey": "",
 }
 `;
