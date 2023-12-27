@@ -57,7 +57,8 @@ describe("agent-pools-balances e2e tests", () => {
       expect(
         removeTimestamp(findings)
           .filter(
-            (finding: any) => finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
+            (finding: any) =>
+              finding.alertId == "CURVE-POOL-IMBALANCE-RAPID-CHANGE",
           )
           .at(0),
       ).toMatchSnapshot();
@@ -80,7 +81,9 @@ describe("agent-pools-balances e2e tests", () => {
       const findings = await runBlock(15485829, 15485828);
       expect(
         removeTimestamp(findings)
-          .filter((finding: any) => finding.alertId == "LOW-STETH-CHAINLINK-PEG")
+          .filter(
+            (finding: any) => finding.alertId == "LOW-STETH-CHAINLINK-PEG",
+          )
           .at(0),
       ).toMatchSnapshot();
     },

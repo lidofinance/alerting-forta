@@ -42,7 +42,7 @@ describe("agent-lido-report e2e tests", () => {
     "should process tx with Lido Oracle report",
     async () => {
       const findings = await runTransaction(
-        "0xc786c3a7736d63da45447eb5082351d03633febe904ba5401ab59da1e89bd6ee"
+        "0xc786c3a7736d63da45447eb5082351d03633febe904ba5401ab59da1e89bd6ee",
       );
       expect(removeTimestamp(findings).at(0)).toMatchSnapshot();
     },
