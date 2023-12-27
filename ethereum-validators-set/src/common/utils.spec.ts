@@ -1,5 +1,5 @@
 import { Finding, FindingSeverity, FindingType } from "forta-agent";
-import { mergeFindings } from "./utils";
+import { mergeFindings, removeTimestamp } from "./utils";
 
 describe("utils", () => {
   it("should merge findings", () => {
@@ -17,7 +17,7 @@ describe("utils", () => {
     });
 
     const reducedFindings = mergeFindings(findings);
-    expect(reducedFindings).toMatchSnapshot();
+    expect(removeTimestamp(reducedFindings)).toMatchSnapshot();
     expect(reducedFindings.length).toBe(3);
   });
 });
