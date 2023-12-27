@@ -151,14 +151,3 @@ export function eventSig(abi: string) {
   argsRaw.map((arg) => args.push(arg.trim().split(" ")[0]));
   return `${name}(${args.join(",")})`;
 }
-
-/**
- * Remove timestamp property from findings
- */
-
-export function removeTimestamp(findings: Array<object>): Array<object> {
-  findings.map((item: any) => {
-    delete item.timestamp;
-  });
-  return findings;
-}
