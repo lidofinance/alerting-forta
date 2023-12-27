@@ -5,6 +5,12 @@
   "chainIds": [
     1
   ],
+  "chainSettings": {
+    "default": {
+      "shards": 1,
+      "target": 5
+    }
+  },
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",

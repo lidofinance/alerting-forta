@@ -11,6 +11,12 @@
   "chainIds": [
     1
   ],
+  "chainSettings": {
+    "default": {
+      "shards": 1,
+      "target": 5
+    }
+  },
   "scripts": {
     "update-version": "node ../utils/write-version.js",
     "build": "tsc && yarn run copy-version",
