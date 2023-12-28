@@ -152,7 +152,12 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
 
   const oracleReportFilter = exitbusOracle.filters.ReportSubmitted();
 
-  return getLogsByChunks(exitbusOracle, oracleReportFilter, blockFrom, blockTo);
+  return await getLogsByChunks(
+    exitbusOracle,
+    oracleReportFilter,
+    blockFrom,
+    blockTo,
+  );
 }
 
 async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
@@ -163,7 +168,13 @@ async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
   );
 
   const oracleReportFilter = exitbusOracle.filters.ProcessingStarted();
-  return getLogsByChunks(exitbusOracle, oracleReportFilter, blockFrom, blockTo);
+
+  return await getLogsByChunks(
+    exitbusOracle,
+    oracleReportFilter,
+    blockFrom,
+    blockTo,
+  );
 }
 
 async function updateNoNames(block: number) {
