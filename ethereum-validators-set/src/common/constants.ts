@@ -106,6 +106,8 @@ export const ETH_DECIMALS = new BigNumber(10).pow(18);
 // 32 ETH
 export const MIN_DEPOSIT = ETH_DECIMALS.times(32);
 
+export const LOG_FILTER_CHUNK = 2000;
+
 export interface IProxyContractData {
   name: string;
   shortABI: string;

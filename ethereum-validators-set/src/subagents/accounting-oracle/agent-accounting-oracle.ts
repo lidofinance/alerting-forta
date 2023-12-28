@@ -13,6 +13,7 @@ import ACCOUNTING_ORACLE_ABI from "../../abi/AccountingOracle.json";
 
 import { formatDelay } from "./utils";
 import {
+  getLogsByChunks,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -84,7 +85,8 @@ async function getReportMainDataSubmits(blockFrom: number, blockTo: number) {
 
   const oracleReportFilter = accountingOracle.filters.ReportSubmitted();
 
-  return await accountingOracle.queryFilter(
+  return await getLogsByChunks(
+    accountingOracle,
     oracleReportFilter,
     blockFrom,
     blockTo,
@@ -100,7 +102,8 @@ async function getReportExtraDataSubmits(blockFrom: number, blockTo: number) {
 
   const oracleReportFilter = accountingOracle.filters.ExtraDataSubmitted();
 
-  return await accountingOracle.queryFilter(
+  return await getLogsByChunks(
+    accountingOracle,
     oracleReportFilter,
     blockFrom,
     blockTo,
