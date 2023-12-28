@@ -164,8 +164,8 @@ export async function getLogsByChunks(
   let startBlockChunk = startblock;
   do {
     endBlockChunk =
-      endBlock > startBlockChunk + LOG_FILTER_CHUNK
-        ? startBlockChunk + LOG_FILTER_CHUNK
+      endBlock > startBlockChunk + LOG_FILTER_CHUNK - 1
+        ? startBlockChunk + LOG_FILTER_CHUNK - 1
         : endBlock;
     const eventsChunk = await contract.queryFilter(
       filter,
