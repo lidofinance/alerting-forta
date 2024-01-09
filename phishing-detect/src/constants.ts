@@ -262,6 +262,9 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x036676389e48133B63a802f8635AD39E752D375D", // Looks like Stader LRT
   "0x55084ee0fef03f14a305cd24286359a35d735151", // HashFlow
   "0x33333aea097c193e66081e930c33020272b33333", // Aave v3 Morpho
+  "0xd37bbe5744d730a1d98d8dc97c42f0ca46ad7146", // THORChain: THORChain Router v4.1.1
+  "0x00000000005bbb0ef59571e58418f9a4357b68a0", // PendleRouterV3
+  "0xead050515e10fdb3540ccd6f8236c46790508a76", // Native: Router V1
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -280,6 +283,8 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0xfd1f21a19b49cca24318d73197b625cdb730eabc", // Phishing EOA
   "0x0000fd803b84d314439996f56b517cd92ffa0000", // Phishing Contract
   "0x00000cad74214b2771b692b1065f9d0ad7b00000", // Phishing EOA
+  "0x111118a36f4f051fc9b35169c92b761a18100000", // Phishing EOA
+  "0x00004ffE101ebAD2a0232D1ff7ecBd08cA560000", // Phishing Contract
 ];
 
 export const PHISHING_LIST_ADDRESSES: string[] =
