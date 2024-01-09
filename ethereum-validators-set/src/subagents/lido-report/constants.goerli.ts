@@ -8,7 +8,7 @@ import {
   BURNER_ADDRESS as burnerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;

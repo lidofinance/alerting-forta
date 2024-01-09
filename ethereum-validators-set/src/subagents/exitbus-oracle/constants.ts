@@ -4,7 +4,7 @@ import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,

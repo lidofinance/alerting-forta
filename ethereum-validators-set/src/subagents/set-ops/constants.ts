@@ -3,7 +3,7 @@ import BigNumber from "bignumber.js";
 import { etherscanAddress } from "../../common/utils";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   DEPOSIT_EXECUTOR_ADDRESS as deAddress,

@@ -1,7 +1,7 @@
 import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   ACCOUNTING_HASH_CONSENSUS_ADDRESS as accountingHashConsensusAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 import {
   ACCOUNTING_HASH_CONSENSUS_EVENTS_OF_NOTICE as hashConsensusEvents,
   ACCOUNTING_ORACLE_EVENTS_OF_NOTICE as oracleEvents,

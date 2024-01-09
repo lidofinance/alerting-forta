@@ -11,7 +11,7 @@ import {
   BURNER_ADDRESS as burnerAddress,
   TRP_FACTORY_ADDRESS as trpFactoryAddress,
   ENS_BASE_REGISTRAR_ADDRESS as ensRegistrarAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export interface ERC20 {
   decimals: number;

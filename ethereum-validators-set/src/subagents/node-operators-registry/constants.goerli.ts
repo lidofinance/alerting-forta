@@ -1,9 +1,9 @@
-import { NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
+import { CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
 import {
   EASY_TRACK_ADDRESS as etAddress,
   NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export const EASY_TRACK_ADDRESS = etAddress;
 export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;

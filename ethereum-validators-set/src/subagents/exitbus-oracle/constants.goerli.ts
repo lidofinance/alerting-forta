@@ -12,7 +12,7 @@ import {
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export const CL_GENESIS_TIMESTAMP = 1616508000;
 
