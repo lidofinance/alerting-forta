@@ -44,8 +44,8 @@ export function etherscanNft(address: string, id: number | string): string {
 
 /**
  * Special wrapper under `require` function that allows to
- * redefine variables from a file with the same name and `.<tier>` suffix.
- * `<tier>` is a string that is passed by `FORTA_AGENT_RUN_TIER` environment variable.
+ * redefine variables from a file with the same name and `.<tier.ts>` suffix.
+ * `<tier.ts>` is a string that is passed by `FORTA_AGENT_RUN_TIER` environment variable.
  * @param module module object to get the path from.
  * @param path relative to module path to the main file to import.
  * @param mode `strict` or `merge`. Default: `strict`.
@@ -56,7 +56,9 @@ export function requireWithTier<T>(
   mode: RedefineMode = RedefineMode.Strict,
 ): T {
   const defaultContent = require(`${module.path}/${path}`);
-  if (!RUN_TIER) return defaultContent;
+  if (!RUN_TIER) {
+    return defaultContent;
+  }
   let tieredContent: any;
   try {
     tieredContent = require(`${module.path}/${path}.${RUN_TIER}`);

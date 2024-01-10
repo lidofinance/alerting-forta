@@ -2,21 +2,21 @@ import { TransactionEvent } from "forta-agent";
 import BigNumber from "bignumber.js";
 
 import {
-  TransferEventInfo,
   ComplexTransferPattern,
-  TransferPattern,
-  TransferText,
-  TransferEventMetadata,
-  ETH_DECIMALS,
   CURVE_EXCHANGE_EVENT,
+  CURVE_POOL_ADDRESS,
+  ETH_DECIMALS,
   EXCHANGE_ETH_TO_STETH_CURVE_PATTERN,
   EXCHANGE_STETH_TO_ETH_CURVE_PATTERN,
-  TX_AMOUNT_THRESHOLD,
+  LDO_TOKEN_ADDRESS,
   PARTIALLY_MONITORED_TOKENS,
   SIMPLE_TRANSFERS,
+  TransferEventInfo,
+  TransferEventMetadata,
+  TransferPattern,
+  TransferText,
+  TX_AMOUNT_THRESHOLD,
   TX_AMOUNT_THRESHOLD_LDO,
-  LDO_TOKEN_ADDRESS,
-  CURVE_POOL_ADDRESS,
 } from "../subagents/huge-tx/constants";
 
 const SI_SYMBOL = ["", "k", "M", "G", "T", "P", "E"];
@@ -235,11 +235,13 @@ export function applicableAmount(transferInfo: TransferEventInfo) {
 }
 
 export function abbreviateNumber(number: number): string {
-  // what tier? (determines SI symbol)
+  // what tier.ts? (determines SI symbol)
   const tier = (Math.log10(Math.abs(number)) / 3) | 0;
 
   // if zero, we don't need a suffix
-  if (tier == 0) return Math.round(number).toString();
+  if (tier == 0) {
+    return Math.round(number).toString();
+  }
 
   // get suffix and determine scale
   const suffix = SI_SYMBOL[tier];
