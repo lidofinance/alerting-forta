@@ -1,4 +1,4 @@
-import { CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
+import { CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE as mainnetCuratedEventsOfNotice } from "./constants";
 import {
   EASY_TRACK_ADDRESS as etAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
@@ -12,8 +12,8 @@ export const STAKING_ROUTER_ADDRESS = srAddress;
 export const NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD = 1;
 export const NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD = 5;
 
-export const NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE =
-  mainnetEventsOfNotice.map((event) => ({
+export const CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE =
+  mainnetCuratedEventsOfNotice.map((event) => ({
     ...event,
     address: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
   }));

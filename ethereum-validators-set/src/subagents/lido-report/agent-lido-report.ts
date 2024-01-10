@@ -200,6 +200,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
+  stakingModulesOperatorRegistry.length = 0;
   stakingModulesOperatorRegistry.push(
     new NodeOperatorsRegistryModuleContext({
       moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,

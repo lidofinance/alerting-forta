@@ -52,7 +52,7 @@ exports[`agent-node-operators-registry e2e tests should process tx with removed 
  Kiln: 50",
     "labels": [],
     "metadata": {},
-    "name": "🚨 NO Registry: Signing keys removed",
+    "name": "🚨 Curated NO Registry: Signing keys removed",
     "protocol": "ethereum",
     "severity": 4,
     "source": {},

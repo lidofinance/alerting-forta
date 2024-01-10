@@ -162,6 +162,7 @@ export async function initialize(
     ethersProvider,
   );
 
+  stakingModulesOperatorRegistry.length = 0;
   stakingModulesOperatorRegistry.push(
     new NodeOperatorsRegistryModuleContext(
       {
