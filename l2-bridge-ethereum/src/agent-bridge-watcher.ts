@@ -1,11 +1,4 @@
-import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+import { Finding, TransactionEvent } from "forta-agent";
 import { L1_BRIDGE_EVENTS } from "./constants";
 
 export const name = "BridgeWatcher";
@@ -13,7 +6,7 @@ export const name = "BridgeWatcher";
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
-  console.log(`[${name}]`);
+  console.log(`[${name}] started on ${currentBlock}`);
   return {};
 }
 

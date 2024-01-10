@@ -13,5 +13,8 @@
   },
   "Mantle": {
     "RpcUrl": "https://mantle.publicnode.com"
+  },
+  "Linea": {
+    "RpcUrl": "https://linea.blockpi.network/v1/rpc/public"
   }
 }
