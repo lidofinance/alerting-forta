@@ -214,6 +214,8 @@ export async function initialize(
         alertPrefix: 'SDVT-'
       })
     );
+  } else {
+    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   await Promise.all(stakingModulesOperatorRegistry.map((nor) => nor.initialize(currentBlock)));

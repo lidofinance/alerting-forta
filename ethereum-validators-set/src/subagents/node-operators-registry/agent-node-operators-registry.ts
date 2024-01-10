@@ -91,8 +91,6 @@ class NodeOperatorsRegistryModuleContext {
       { blockTag: currentBlock },
     );
 
-    console.log(this.params.moduleName, operators.length);
-
     const operatorsSummaries = await Promise.all(
       operators.map((digest: any) =>
         nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
@@ -188,6 +186,8 @@ export async function initialize(
         stakingRouter,
       )
     );
+  } else {
+    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   await Promise.all(

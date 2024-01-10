@@ -106,6 +106,8 @@ export async function initialize(
         moduleName: 'SimpleDVT',
       })
     );
+  } else {
+    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   const block48HoursAgo =
