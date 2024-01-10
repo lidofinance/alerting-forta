@@ -1,5 +1,5 @@
 # Build stage: compile Typescript to Javascript
-FROM node:20.9.0-alpine3.18 AS base
+FROM node:20.10.0-alpine3.18 AS base
 
 FROM base as builder
 

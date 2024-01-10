@@ -10,7 +10,9 @@ import {
   ADMIN_OF_LINEA_L2_TOKEN_BRIDGE,
   BRIDGING_INITIATED_EVENT,
   LINEA_L2_ERC20_TOKEN_BRIDGE,
+  LINEA_PROXY_ADMIN_FOR_WSTETH,
   LINEA_TOKEN_BRIDGE,
+  LINEA_WST_CUSTOM_BRIDGED,
 } from './utils/constants'
 import { ProxyAdmin__factory, TokenBridge__factory } from './generated'
 import { BlockSrv } from './services/linea_block_service'
@@ -54,13 +56,12 @@ export class App {
           ADMIN_OF_LINEA_L2_TOKEN_BRIDGE,
           ProxyAdmin__factory.connect(ADMIN_OF_LINEA_L2_TOKEN_BRIDGE, nodeClient),
         ),
-        /* TODO check on 14 JAN
-          new ProxyContract(
+        new ProxyContract(
           LINEA_WST_CUSTOM_BRIDGED.name,
           LINEA_WST_CUSTOM_BRIDGED.hash,
           LINEA_PROXY_ADMIN_FOR_WSTETH,
           ProxyAdmin__factory.connect(LINEA_PROXY_ADMIN_FOR_WSTETH, nodeClient),
-        ),*/
+        ),
       ]
 
       const blockSrv: BlockSrv = new BlockSrv(LineaClient)

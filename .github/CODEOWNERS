@@ -9,6 +9,7 @@
 /l2-bridge-base/ @lidofinance/lido-eth-protocol
 /l2-bridge-zksync/ @lidofinance/lido-eth-protocol
 /l2-bridge-mantle/ @lidofinance/lido-eth-protocol
+/l2-bridge-linea/ @lidofinance/lido-eth-protocol
 /ethereum-financial/ @lidofinance/lido-eth-protocol
 /reverted-tx-watcher/ @lidofinance/lido-eth-protocol
 /arbitrum/ @lidofinance/lido-eth-protocol
