@@ -5,21 +5,23 @@ import {
 
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
-} from "../../common/constants.goerli";
+} from "../../common/constants.holesky";
 
 export const CL_GENESIS_TIMESTAMP = 1616508000;
 
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
-export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtAddress;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 

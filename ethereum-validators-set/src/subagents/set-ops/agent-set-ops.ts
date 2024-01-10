@@ -53,25 +53,30 @@ class NodeOperatorsRegistryModuleContext {
   constructor(public readonly params: NodeOperatorModuleParams) {}
 }
 
-let curatedOperatorsRegistry: NodeOperatorsRegistryModuleContext;
-let simpleDvtOperatorsRegistry: NodeOperatorsRegistryModuleContext;
+const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
 
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  curatedOperatorsRegistry = new NodeOperatorsRegistryModuleContext({
-    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: 'Curated',
-    alertPrefix: '',
-  });
+  stakingModulesOperatorRegistry.push(
+    new NodeOperatorsRegistryModuleContext({
+      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: 'Curated',
+      alertPrefix: '',
+    })
+  );
 
-  simpleDvtOperatorsRegistry = new NodeOperatorsRegistryModuleContext({
-    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: 'SimpleDVT',
-    alertPrefix: 'SDVT-',
-  });
+  if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
+    stakingModulesOperatorRegistry.push(
+      new NodeOperatorsRegistryModuleContext({
+        moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+        moduleName: 'SimpleDVT',
+        alertPrefix: 'SDVT-',
+      })
+    );
+  }
 
   return {};
 }
@@ -80,8 +85,9 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleNodeOperatorsKeys(blockEvent, findings, curatedOperatorsRegistry),
-    handleNodeOperatorsKeys(blockEvent, findings, simpleDvtOperatorsRegistry),
+    ...stakingModulesOperatorRegistry.map(
+      (nodeOperatorRegistry) => handleNodeOperatorsKeys(blockEvent, findings, nodeOperatorRegistry),
+    ),
     handleMevRelayCount(blockEvent, findings),
   ]);
 

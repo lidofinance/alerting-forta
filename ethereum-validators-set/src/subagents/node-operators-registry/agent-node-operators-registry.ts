@@ -74,7 +74,6 @@ class NodeOperatorsRegistryModuleContext {
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
 
-
   constructor(
     public readonly params: NodeOperatorModuleParams,
     private readonly stakingRouter: ethers.Contract,
@@ -150,8 +149,7 @@ class NodeOperatorsRegistryModuleContext {
   }
 }
 
-let curatedOperatorsRegistry: NodeOperatorsRegistryModuleContext;
-let simpleDvtOperatorsRegistry: NodeOperatorsRegistryModuleContext;
+const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = []
 
 export async function initialize(
   currentBlock: number,
@@ -164,32 +162,38 @@ export async function initialize(
     ethersProvider,
   );
 
-  curatedOperatorsRegistry = new NodeOperatorsRegistryModuleContext(
-    {
-      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-      moduleName: 'Curated',
-      alertPrefix: '',
-      eventsOfNotice: CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-    },
-    stakingRouter,
+  stakingModulesOperatorRegistry.push(
+    new NodeOperatorsRegistryModuleContext(
+      {
+        moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+        moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
+        moduleName: 'Curated',
+        alertPrefix: '',
+        eventsOfNotice: CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+      },
+      stakingRouter,
+    )
   );
 
-  simpleDvtOperatorsRegistry = new NodeOperatorsRegistryModuleContext(
-    {
-      moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-      moduleName: 'SimpleDVT',
-      alertPrefix: 'SDVT-',
-      eventsOfNotice: SIMPLEDVT_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-    },
-    stakingRouter,
-  )
+  if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
+    stakingModulesOperatorRegistry.push(
+      new NodeOperatorsRegistryModuleContext(
+        {
+          moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+          moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+          moduleName: 'SimpleDVT',
+          alertPrefix: 'SDVT-',
+          eventsOfNotice: SIMPLEDVT_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+        },
+        stakingRouter,
+      )
+    );
+  }
 
-  await Promise.all([
-    curatedOperatorsRegistry.initialize(currentBlock),
-    simpleDvtOperatorsRegistry.initialize(currentBlock),
-  ]);
+  await Promise.all(
+    stakingModulesOperatorRegistry
+      .map((nodeOperatorRegistry) => nodeOperatorRegistry.initialize(currentBlock))
+  );
 
   return {};
 }
@@ -197,7 +201,7 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  [curatedOperatorsRegistry, simpleDvtOperatorsRegistry].forEach((norContext) => {
+  stakingModulesOperatorRegistry.forEach((norContext) => {
     handleEventsOfNotice(
       txEvent,
       findings,
@@ -428,12 +432,14 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
     // every 100 blocks for sync between nodes
-    await Promise.all([
-      handleStuckPenaltyEnd(blockEvent, findings, curatedOperatorsRegistry),
-      handleStuckPenaltyEnd(blockEvent, findings, simpleDvtOperatorsRegistry),
-      curatedOperatorsRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
-      simpleDvtOperatorsRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
-    ]);
+    const stuckPenaltyHandlers = stakingModulesOperatorRegistry.map(
+      (nodeOperatorRegistry) => handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry)
+    );
+    const nodeOperatorsNamesUpdaters = stakingModulesOperatorRegistry.map(
+      (nodeOperatorRegistry) => nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber)
+    );
+
+    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsNamesUpdaters]);
   }
 
   return findings;
