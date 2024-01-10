@@ -5,7 +5,7 @@ import {
 
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,

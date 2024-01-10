@@ -3,7 +3,8 @@ import BigNumber from "bignumber.js";
 import { etherscanAddress } from "../../common/utils";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   DEPOSIT_EXECUTOR_ADDRESS as deAddress,
@@ -33,7 +34,8 @@ export const INSURANCE_FUND_ADDRESS = insuranceAddress;
 export const BURNER_ADDRESS = burnerAddress;
 export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
-export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000;
 

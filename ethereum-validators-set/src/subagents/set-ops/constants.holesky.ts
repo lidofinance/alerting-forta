@@ -3,6 +3,7 @@ import { MEV_ALLOWED_LIST_EVENTS_OF_NOTICE as mevAllowedListEvents } from "./con
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   DEPOSIT_EXECUTOR_ADDRESS as deAddress,
@@ -11,7 +12,7 @@ import {
   BURNER_ADDRESS as burnerAddress,
   TRP_FACTORY_ADDRESS as trpFactoryAddress,
   ENS_BASE_REGISTRAR_ADDRESS as ensRegistrarAddress,
-} from "../../common/constants.goerli";
+} from "../../common/constants.holesky";
 
 export interface ERC20 {
   decimals: number;
@@ -28,6 +29,7 @@ export const BURNER_ADDRESS = burnerAddress;
 export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 
 export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
   (event) => ({
