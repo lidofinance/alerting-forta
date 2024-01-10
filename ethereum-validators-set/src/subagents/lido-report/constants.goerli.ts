@@ -12,7 +12,7 @@ import {
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
-export const NODE_OPERATOR_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
 export const EL_REWARDS_VAULT_ADDRESS = elVaultAddress;

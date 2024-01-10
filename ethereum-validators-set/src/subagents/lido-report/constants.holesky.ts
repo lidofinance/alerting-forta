@@ -2,8 +2,8 @@ import { ONE_HOUR } from "../../common/constants";
 import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedModuleAddress,
-  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtModuleAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   BURNER_ADDRESS as burnerAddress,
@@ -13,8 +13,8 @@ import {
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 export const ACCOUNTING_ORACLE_ADDRESS = accountingOracleAddress;
-export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedModuleAddress;
-export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtModuleAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const WITHDRAWAL_QUEUE_ADDRESS = wqAddress;
 export const EL_REWARDS_VAULT_ADDRESS = elVaultAddress;

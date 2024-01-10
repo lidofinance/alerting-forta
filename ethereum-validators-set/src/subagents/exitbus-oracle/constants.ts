@@ -4,8 +4,8 @@ import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedAddress,
-  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,
@@ -25,8 +25,8 @@ export const MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS = 3;
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
-export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedAddress;
-export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
