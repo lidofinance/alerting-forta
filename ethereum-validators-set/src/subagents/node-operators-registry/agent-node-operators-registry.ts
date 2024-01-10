@@ -86,10 +86,11 @@ class NodeOperatorsRegistryModuleContext {
       ethersProvider,
     );
 
-    const [operators] = await this.stakingRouter.functions.getAllNodeOperatorDigests(
-      this.params.moduleId,
-      { blockTag: currentBlock },
-    );
+    const [operators] =
+      await this.stakingRouter.functions.getAllNodeOperatorDigests(
+        this.params.moduleId,
+        { blockTag: currentBlock },
+      );
 
     const operatorsSummaries = await Promise.all(
       operators.map((digest: any) =>
@@ -129,10 +130,11 @@ class NodeOperatorsRegistryModuleContext {
       ethersProvider,
     );
 
-    const [operators] = await this.stakingRouter.functions.getAllNodeOperatorDigests(
-      this.params.moduleId,
-      { blockTag: block },
-    );
+    const [operators] =
+      await this.stakingRouter.functions.getAllNodeOperatorDigests(
+        this.params.moduleId,
+        { blockTag: block },
+      );
 
     await Promise.all(
       operators.map(async (operator: any) => {
@@ -147,7 +149,7 @@ class NodeOperatorsRegistryModuleContext {
   }
 }
 
-const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = []
+const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
 
 export async function initialize(
   currentBlock: number,
@@ -165,12 +167,12 @@ export async function initialize(
       {
         moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
         moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-        moduleName: 'Curated',
-        alertPrefix: '',
+        moduleName: "Curated",
+        alertPrefix: "",
         eventsOfNotice: CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
       },
       stakingRouter,
-    )
+    ),
   );
 
   if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
@@ -179,20 +181,21 @@ export async function initialize(
         {
           moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
           moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-          moduleName: 'SimpleDVT',
-          alertPrefix: 'SDVT-',
+          moduleName: "SimpleDVT",
+          alertPrefix: "SDVT-",
           eventsOfNotice: SIMPLEDVT_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
         },
         stakingRouter,
-      )
+      ),
     );
   } else {
     console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   await Promise.all(
-    stakingModulesOperatorRegistry
-      .map((nodeOperatorRegistry) => nodeOperatorRegistry.initialize(currentBlock))
+    stakingModulesOperatorRegistry.map((nodeOperatorRegistry) =>
+      nodeOperatorRegistry.initialize(currentBlock),
+    ),
   );
 
   return {};
@@ -202,11 +205,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   stakingModulesOperatorRegistry.forEach((norContext) => {
-    handleEventsOfNotice(
-      txEvent,
-      findings,
-      norContext.params.eventsOfNotice,
-    );
+    handleEventsOfNotice(txEvent, findings, norContext.params.eventsOfNotice);
 
     const stuckEvents = txEvent.filterLog(
       NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
@@ -363,14 +362,12 @@ function handleSigningKeysRemoved(
   const moduleAddress = norContext.params.moduleAddress;
   if (moduleAddress in txEvent.addresses) {
     let digest = new Map<string, number>();
-    const events = txEvent.filterLog(
-      SIGNING_KEY_REMOVED_EVENT,
-      moduleAddress,
-    );
+    const events = txEvent.filterLog(SIGNING_KEY_REMOVED_EVENT, moduleAddress);
     if (events.length > 0) {
       events.forEach((event) => {
         const noName =
-          norContext.nodeOperatorNames.get(Number(event.args.operatorId)) || "undefined";
+          norContext.nodeOperatorNames.get(Number(event.args.operatorId)) ||
+          "undefined";
         const keysCount = digest.get(noName) || 0;
         digest.set(noName, keysCount + 1);
       });
@@ -412,11 +409,9 @@ function handleStakeLimitSet(
         findings.push(
           Finding.fromObject({
             name: `🚨 ${norContext.params.moduleName} NO Vetted keys set by NON-EasyTrack action`,
-            description: `Vetted keys count for node operator [${nodeOperatorId} ${
-              norContext.nodeOperatorNames.get(
-                Number(nodeOperatorId),
-              )
-            }] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
+            description: `Vetted keys count for node operator [${nodeOperatorId} ${norContext.nodeOperatorNames.get(
+              Number(nodeOperatorId),
+            )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-VETTED-KEYS-SET`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
@@ -433,10 +428,12 @@ export async function handleBlock(blockEvent: BlockEvent) {
   if (blockEvent.blockNumber % BLOCK_INTERVAL == 0) {
     // every 100 blocks for sync between nodes
     const stuckPenaltyHandlers = stakingModulesOperatorRegistry.map(
-      (nodeOperatorRegistry) => handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry)
+      (nodeOperatorRegistry) =>
+        handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
     const nodeOperatorsNamesUpdaters = stakingModulesOperatorRegistry.map(
-      (nodeOperatorRegistry) => nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber)
+      (nodeOperatorRegistry) =>
+        nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
     );
 
     await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsNamesUpdaters]);
@@ -471,7 +468,8 @@ async function handleStuckPenaltyEnd(
   }
   if (
     (currentClosestPenaltyEndTimestamp != 0 &&
-      now - norContext.penaltyEndAlertTriggeredAt > STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
+      now - norContext.penaltyEndAlertTriggeredAt >
+        STUCK_PENALTY_ENDED_TRIGGER_PERIOD) ||
     currentClosestPenaltyEndTimestamp > norContext.closestPenaltyEndTimestamp
   ) {
     description += "\nNote: don't forget to call `clearNodeOperatorPenalty`";

@@ -63,18 +63,18 @@ export async function initialize(
   stakingModulesOperatorRegistry.push(
     new NodeOperatorsRegistryModuleContext({
       moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleName: 'Curated',
-      alertPrefix: '',
-    })
+      moduleName: "Curated",
+      alertPrefix: "",
+    }),
   );
 
   if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({
         moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-        moduleName: 'SimpleDVT',
-        alertPrefix: 'SDVT-',
-      })
+        moduleName: "SimpleDVT",
+        alertPrefix: "SDVT-",
+      }),
     );
   } else {
     console.log(`SimpleDVT is not supported on this network for ${name}`);
@@ -87,8 +87,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    ...stakingModulesOperatorRegistry.map(
-      (nodeOperatorRegistry) => handleNodeOperatorsKeys(blockEvent, findings, nodeOperatorRegistry),
+    ...stakingModulesOperatorRegistry.map((nodeOperatorRegistry) =>
+      handleNodeOperatorsKeys(blockEvent, findings, nodeOperatorRegistry),
     ),
     handleMevRelayCount(blockEvent, findings),
   ]);

@@ -130,7 +130,9 @@ class NodeOperatorsRegistryModuleContext {
         this.lastCLrewards = new BigNumber(String(postCLBalance))
           .minus(String(preCLBalance))
           .plus(
-            String(new BigNumber(String(withdrawalsReceivedEvent.args?.amount))),
+            String(
+              new BigNumber(String(withdrawalsReceivedEvent.args?.amount)),
+            ),
           )
           .div(ETH_DECIMALS);
       }
@@ -201,24 +203,26 @@ export async function initialize(
   stakingModulesOperatorRegistry.push(
     new NodeOperatorsRegistryModuleContext({
       moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-      moduleName: 'Curated',
-      alertPrefix: '',
-    })
+      moduleName: "Curated",
+      alertPrefix: "",
+    }),
   );
 
   if (SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID) {
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({
         moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-        moduleName: 'SimpleDVT',
-        alertPrefix: 'SDVT-'
-      })
+        moduleName: "SimpleDVT",
+        alertPrefix: "SDVT-",
+      }),
     );
   } else {
     console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
-  await Promise.all(stakingModulesOperatorRegistry.map((nor) => nor.initialize(currentBlock)));
+  await Promise.all(
+    stakingModulesOperatorRegistry.map((nor) => nor.initialize(currentBlock)),
+  );
 
   return {};
 }
@@ -379,7 +383,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   );
   if (extraDataSubmittedEvent) {
     await Promise.all(
-      stakingModulesOperatorRegistry.map((nor) => handleExitedStuckRefundedKeysDigest(txEvent, findings, nor)),
+      stakingModulesOperatorRegistry.map((nor) =>
+        handleExitedStuckRefundedKeysDigest(txEvent, findings, nor),
+      ),
     );
   }
 
@@ -389,7 +395,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   );
   if (ethDistributedEvent) {
     await Promise.all(
-      stakingModulesOperatorRegistry.map((nor) => handleRebaseDigest(txEvent, findings, nor)),
+      stakingModulesOperatorRegistry.map((nor) =>
+        handleRebaseDigest(txEvent, findings, nor),
+      ),
     );
   }
 
@@ -401,9 +409,8 @@ async function handleExitedStuckRefundedKeysDigest(
   findings: Finding[],
   norContext: NodeOperatorsRegistryModuleContext,
 ) {
-  const { allExited, allStuck, allRefunded } = await norContext.getSummaryDigest(
-    txEvent.blockNumber,
-  );
+  const { allExited, allStuck, allRefunded } =
+    await norContext.getSummaryDigest(txEvent.blockNumber);
   const newExited = allExited - norContext.lastAllExited;
   const newStuck = allStuck - norContext.lastAllStuck;
   const newRefunded = allRefunded - norContext.lastAllRefunded;
@@ -484,7 +491,9 @@ function prepareAPRLines(
   );
   metadata.postTotalEther = formatBN2Str(postTotalEther.div(ETH_DECIMALS));
 
-  const sharesDiff = postTotalShares.minus(norContext.lastTotalShares).div(ETH_DECIMALS);
+  const sharesDiff = postTotalShares
+    .minus(norContext.lastTotalShares)
+    .div(ETH_DECIMALS);
   const sharesDiffStr =
     Number(sharesDiff) > 0
       ? `+${sharesDiff.toFixed(2)}`
@@ -495,7 +504,9 @@ function prepareAPRLines(
       : formatBN2Str(sharesDiff);
   norContext.lastTotalShares = postTotalShares;
 
-  const etherDiff = postTotalEther.minus(norContext.lastTotalEther).div(ETH_DECIMALS);
+  const etherDiff = postTotalEther
+    .minus(norContext.lastTotalEther)
+    .div(ETH_DECIMALS);
   const etherDiffStr =
     Number(etherDiff) > 0 ? `+${etherDiff.toFixed(2)}` : etherDiff.toFixed(2);
   metadata.etherDiff =
@@ -517,21 +528,23 @@ function prepareAPRLines(
   let findingSeverity: FindingSeverity = FindingSeverity.Info;
   let digestAprStr = `APR: ${apr.times(100).toFixed(2)}%`;
   if (apr.gte(LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD)) {
-    findingName = `🚨️ Lido Report (${norContext.params.moduleName}): APR is greater than ${
+    findingName = `🚨️ Lido Report (${
+      norContext.params.moduleName
+    }): APR is greater than ${
       LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100
     }% limit`;
     digestAprStr += ` 🚨️ > ${LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.High;
   } else if (apr.gte(LIDO_REPORT_HIGH_APR_THRESHOLD)) {
-    findingName = `⚠️ Lido Report (${norContext.params.moduleName}): APR is greater than ${
-      LIDO_REPORT_HIGH_APR_THRESHOLD * 100
-    }%`;
+    findingName = `⚠️ Lido Report (${
+      norContext.params.moduleName
+    }): APR is greater than ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
     digestAprStr += ` ⚠️ > ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.Medium;
   } else if (apr.lte(LIDO_REPORT_LOW_APR_THRESHOLD)) {
-    findingName = `🚨️️ Lido Report (${norContext.params.moduleName}): APR is less than ${
-      LIDO_REPORT_LOW_APR_THRESHOLD * 100
-    }%`;
+    findingName = `🚨️️ Lido Report (${
+      norContext.params.moduleName
+    }): APR is less than ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
     digestAprStr += ` 🚨 < ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.High;
   }
@@ -601,9 +614,15 @@ function prepareRewardsLines(
   const totalRewards = clRewards.plus(elRewards);
   metadata.totalRewards = formatBN2Str(totalRewards);
 
-  norContext.lastCLrewards = norContext.lastCLrewards.eq(BN_ZERO) ? clRewards : norContext.lastCLrewards;
-  norContext.lastELrewards = norContext.lastELrewards.eq(BN_ZERO) ? elRewards : norContext.lastELrewards;
-  const lastTotalRewards = norContext.lastCLrewards.plus(norContext.lastELrewards);
+  norContext.lastCLrewards = norContext.lastCLrewards.eq(BN_ZERO)
+    ? clRewards
+    : norContext.lastCLrewards;
+  norContext.lastELrewards = norContext.lastELrewards.eq(BN_ZERO)
+    ? elRewards
+    : norContext.lastELrewards;
+  const lastTotalRewards = norContext.lastCLrewards.plus(
+    norContext.lastELrewards,
+  );
   const clRewardsDiff = clRewards.minus(norContext.lastCLrewards);
   const elRewardsDiff = elRewards.minus(norContext.lastELrewards);
   const totalRewardsDiff = clRewardsDiff.plus(elRewardsDiff);
@@ -612,7 +631,10 @@ function prepareRewardsLines(
       ? `+${formatBN2Str(clRewardsDiff)}`
       : formatBN2Str(clRewardsDiff);
   metadata.clRewardsDiff = strCLRewardsDiff;
-  const clRewardsDiffPercent = clRewards.div(norContext.lastCLrewards).minus(1).times(100);
+  const clRewardsDiffPercent = clRewards
+    .div(norContext.lastCLrewards)
+    .minus(1)
+    .times(100);
   metadata.clRewardsDiffPercent =
     Number(clRewardsDiffPercent) > 0
       ? `+${formatBN2Str(clRewardsDiffPercent)}`
@@ -626,7 +648,10 @@ function prepareRewardsLines(
   metadata.elRewardsDiffPercent = formatBN2Str(
     elRewards.div(norContext.lastELrewards).minus(1).times(100),
   );
-  const elRewardsDiffPercent = elRewards.div(norContext.lastELrewards).minus(1).times(100);
+  const elRewardsDiffPercent = elRewards
+    .div(norContext.lastELrewards)
+    .minus(1)
+    .times(100);
   metadata.elRewardsDiffPercent =
     Number(elRewardsDiffPercent) > 0
       ? `+${formatBN2Str(elRewardsDiffPercent)}`

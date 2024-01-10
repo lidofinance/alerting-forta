@@ -32,9 +32,9 @@ export function mergeFindings(findings: Finding[]): Finding[] {
 }
 
 function getSubpathForNetwork(): string {
-  let subpathForNetwork = '';
+  let subpathForNetwork = "";
   if (!process.env.FORTA_AGENT_RUN_TIER) {
-    subpathForNetwork = `${subpathForNetwork}.`
+    subpathForNetwork = `${subpathForNetwork}.`;
   }
 
   return subpathForNetwork;

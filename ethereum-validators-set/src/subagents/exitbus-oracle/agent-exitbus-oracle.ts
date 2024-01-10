@@ -95,16 +95,16 @@ export async function initialize(
   stakingModulesOperatorRegistry.push(
     new NodeOperatorsRegistryModuleContext({
       moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleName: 'Curated',
-    })
+      moduleName: "Curated",
+    }),
   );
 
   if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({
         moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-        moduleName: 'SimpleDVT',
-      })
+        moduleName: "SimpleDVT",
+      }),
     );
   } else {
     console.log(`SimpleDVT is not supported on this network for ${name}`);
@@ -168,8 +168,8 @@ export async function initialize(
   );
 
   await Promise.all(
-    stakingModulesOperatorRegistry.map(
-      (nor) => updateNoNames(currentBlock, nor)
+    stakingModulesOperatorRegistry.map((nor) =>
+      updateNoNames(currentBlock, nor),
     ),
   );
 
@@ -213,7 +213,10 @@ async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
   );
 }
 
-async function updateNoNames(block: number, norContext: NodeOperatorsRegistryModuleContext) {
+async function updateNoNames(
+  block: number,
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
   const nor = new ethers.Contract(
     norContext.params.moduleAddress,
     NODE_OPERATORS_REGISTRY_ABI,
@@ -237,8 +240,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
   // Update NO names each 100 blocks
   if (blockEvent.blockNumber % BLOCK_INTERVAL) {
     await Promise.all(
-      stakingModulesOperatorRegistry.map(
-        (nor) => updateNoNames(blockEvent.blockNumber, nor)
+      stakingModulesOperatorRegistry.map((nor) =>
+        updateNoNames(blockEvent.blockNumber, nor),
       ),
     );
   }

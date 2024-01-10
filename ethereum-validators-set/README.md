@@ -4,6 +4,7 @@
 
 - Ethereum mainnet
 - Ethereum Goerli testnet (dev)
+- Ethereum Holesky testnet (dev)
 
 ## Sub-bots
 
