@@ -1,6 +1,11 @@
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
 import { ethers, getEthersProvider } from 'forta-agent'
-import { DEPOSIT_SECURITY_ADDRESS, LIDO_STETH_ADDRESS, WITHDRAWAL_QUEUE_ADDRESS } from './utils/constants'
+import {
+  DEPOSIT_EXECUTOR_ADDRESS,
+  DEPOSIT_SECURITY_ADDRESS,
+  LIDO_STETH_ADDRESS,
+  WITHDRAWAL_QUEUE_ADDRESS,
+} from './utils/constants'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { ETHProvider, IETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
@@ -39,6 +44,7 @@ export class App {
         ethClient,
         DEPOSIT_SECURITY_ADDRESS,
         LIDO_STETH_ADDRESS,
+        DEPOSIT_EXECUTOR_ADDRESS,
         lidoContact,
         wdQueueContact,
       )

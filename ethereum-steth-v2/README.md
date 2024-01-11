@@ -19,6 +19,9 @@ the cache.
     1. 🚨🚨🚨 Buffered ETH drain
     2. 🚨 Huge depositable ETH amount
     3. ⚠️ High depositable ETH amount
+    4. ⚠️ Low deposit executor balance
+    5. ⚠️ Staking limit below 10%
+    6. 📉 Staking limit below 30%
 
 ## Development (Forta specific)
 

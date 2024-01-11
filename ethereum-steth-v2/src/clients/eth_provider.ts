@@ -16,7 +16,9 @@ export abstract class IETHProvider {
     endBlock: number,
   ): Promise<E.Either<Error, TransactionResponse[]>>
 
-  public abstract getBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, EtherBigNumber>>
+  public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, EtherBigNumber>>
+
+  public abstract getDepositorBalance(depositorAddress: string, block: number): Promise<E.Either<Error, EtherBigNumber>>
 }
 
 interface IEtherscanProvider {
@@ -122,7 +124,7 @@ export class ETHProvider implements IETHProvider {
     return E.right(out)
   }
 
-  public async getBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, EtherBigNumber>> {
+  public async getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, EtherBigNumber>> {
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
@@ -134,6 +136,21 @@ export class ETHProvider implements IETHProvider {
       return E.right(out)
     } catch (e) {
       return E.left(new Error(`Could not fetch Steth balance. cause: ${e}`))
+    }
+  }
+
+  public async getDepositorBalance(depositorAddress: string, block: number): Promise<E.Either<Error, EtherBigNumber>> {
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          return await this.jsonRpcProvider.getBalance(depositorAddress, block)
+        },
+        { delay: 500, maxTry: 5 },
+      )
+
+      return E.right(out)
+    } catch (e) {
+      return E.left(new Error(`Could not fetch depositor balance. cause: ${e}`))
     }
   }
 }

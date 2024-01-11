@@ -1,4 +1,4 @@
-import { BlockEvent, Finding, FindingSeverity, FindingType, HandleBlock } from 'forta-agent'
+import { BlockEvent, Finding, HandleBlock } from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
@@ -6,7 +6,6 @@ import { Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
-import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
 
 export function initialize(): Initialize {
   /*  const metadata: Metadata = {
@@ -52,21 +51,11 @@ export const handleBlock = (): HandleBlock => {
     const app = await App.getInstance()
 
     const out: Finding[] = []
-    const startHandleBufferedEth = new Date().getTime()
-    const bufferedEth = await app.StethOperationSrv.handleBufferedEth(blockEvent)
-    if (E.isLeft(bufferedEth)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${app.StethOperationSrv.handleBufferedEth.name}:55`,
-        description: `Handle handleBufferedEth is failed. Cause: ${bufferedEth.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
-        type: FindingType.Degraded,
-        metadata: { stack: `${bufferedEth.left.stack}` },
-      })
+    const startStethOpHandleBlock = new Date().getTime()
+    const bufferedEthFindings = await app.StethOperationSrv.handleBlock(blockEvent)
+    console.log(elapsedTime('app.StethOperationSrv.handleBlock', startStethOpHandleBlock))
 
-      out.push(f)
-    }
-    console.log(elapsedTime('app.StethOperationSrv.handleBufferedEth', startHandleBufferedEth))
+    out.push(...bufferedEthFindings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
     isHandleBLockRunning = false
