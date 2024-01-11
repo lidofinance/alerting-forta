@@ -5,6 +5,12 @@
   "chainIds": [
     1
   ],
+  "chainSettings": {
+    "default": {
+      "shards": 1,
+      "target": 5
+    }
+  },
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
@@ -25,7 +31,7 @@
   "dependencies": {
     "@types/lodash": "^4.14.200",
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.45",
+    "forta-agent": "^0.1.48",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

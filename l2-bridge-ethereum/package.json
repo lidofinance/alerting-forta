@@ -5,6 +5,12 @@
   "chainIds": [
     1
   ],
+  "chainSettings": {
+    "default": {
+      "shards": 1,
+      "target": 5
+    }
+  },
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
@@ -30,7 +36,7 @@
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.45"
+    "forta-agent": "^0.1.48"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
@@ -41,9 +47,9 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-prettier": "^5.0.1",
-    "prettier": "^3.1.0",
     "jest": "^27.0.6",
     "nodemon": "^2.0.8",
+    "prettier": "^3.1.0",
     "ts-jest": "^27.0.3",
     "typescript": "^4.3.4"
   },

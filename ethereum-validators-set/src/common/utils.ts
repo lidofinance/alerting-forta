@@ -1,5 +1,6 @@
 import { Finding, FindingType, TransactionEvent } from "forta-agent";
-import { RUN_TIER } from "./constants";
+import { RUN_TIER, LOG_FILTER_CHUNK } from "./constants";
+import { Contract, EventFilter, Event } from "ethers";
 
 export enum RedefineMode {
   Strict = "strict",
@@ -150,4 +151,29 @@ export function eventSig(abi: string) {
   let args: string[] = [];
   argsRaw.map((arg) => args.push(arg.trim().split(" ")[0]));
   return `${name}(${args.join(",")})`;
+}
+
+export async function getLogsByChunks(
+  contract: Contract,
+  filter: EventFilter,
+  startblock: number,
+  endBlock: number,
+) {
+  let events: Event[] = [];
+  let endBlockChunk;
+  let startBlockChunk = startblock;
+  do {
+    endBlockChunk =
+      endBlock > startBlockChunk + LOG_FILTER_CHUNK - 1
+        ? startBlockChunk + LOG_FILTER_CHUNK - 1
+        : endBlock;
+    const eventsChunk = await contract.queryFilter(
+      filter,
+      startBlockChunk,
+      endBlockChunk,
+    );
+    events.push(...eventsChunk);
+    startBlockChunk = endBlockChunk + 1;
+  } while (endBlockChunk < endBlock);
+  return events;
 }

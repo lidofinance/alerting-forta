@@ -19,6 +19,7 @@ import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import {
   eventSig,
   formatDelay,
+  getLogsByChunks,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -151,7 +152,8 @@ async function getReportSubmits(blockFrom: number, blockTo: number) {
 
   const oracleReportFilter = exitbusOracle.filters.ReportSubmitted();
 
-  return await exitbusOracle.queryFilter(
+  return await getLogsByChunks(
+    exitbusOracle,
     oracleReportFilter,
     blockFrom,
     blockTo,
@@ -167,7 +169,8 @@ async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
 
   const oracleReportFilter = exitbusOracle.filters.ProcessingStarted();
 
-  return await exitbusOracle.queryFilter(
+  return await getLogsByChunks(
+    exitbusOracle,
     oracleReportFilter,
     blockFrom,
     blockTo,

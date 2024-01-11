@@ -17,7 +17,11 @@ import BURNER_ABI from "../../abi/Burner.json";
 import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
 
 import { formatDelay, formatBN2Str } from "./utils";
-import { RedefineMode, requireWithTier } from "../../common/utils";
+import {
+  getLogsByChunks,
+  RedefineMode,
+  requireWithTier,
+} from "../../common/utils";
 import type * as Constants from "./constants";
 import {
   BN_ZERO,
@@ -92,11 +96,13 @@ export async function initialize(
   );
   const block48HoursAgo =
     currentBlock - Math.ceil((2 * ONE_DAY) / SECONDS_PER_SLOT);
-  const ethDistributedEvents = await lido.queryFilter(
+  const ethDistributedEvents = await getLogsByChunks(
+    lido,
     lido.filters.ETHDistributed(),
     block48HoursAgo,
     currentBlock - 1,
   );
+
   if (ethDistributedEvents.length > 0) {
     const lastEvent = ethDistributedEvents[ethDistributedEvents.length - 1];
 

@@ -12,10 +12,13 @@ describe("agent-node-operators-registry e2e tests", () => {
   let runBlock: (blockHashOrNumber: string | number) => Promise<Finding[]>;
   let runTransaction: (txHash: string) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
+  let timeSpy: jest.SpyInstance;
 
   beforeAll(() => {
     logSpy = jest.spyOn(console, "log");
     logSpy.mockImplementation(() => {});
+    timeSpy = jest.spyOn(Date, "now");
+    timeSpy.mockImplementation(() => new Date("2023-12-31"));
   });
 
   beforeEach(async () => {

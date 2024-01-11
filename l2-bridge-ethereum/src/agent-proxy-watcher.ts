@@ -1,21 +1,24 @@
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
+  ethers,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
 } from "forta-agent";
 import {
-  PROXY_ADMIN_EVENTS,
+  ARBITRUM_GATEWAY_SET_EVENT,
+  ARBITRUM_L1_GATEWAY_ROUTER,
   LIDO_PROXY_CONTRACTS,
   LidoProxy,
-  ARBITRUM_L1_GATEWAY_ROUTER,
-  ARBITRUM_GATEWAY_SET_EVENT,
+  LINEA_CUSTOM_CONTRACT_SET_EVENT,
+  LINEA_L1_CROSS_DOMAIN_MESSENGER,
+  PROXY_ADMIN_EVENTS,
+  STETH_ADDRESS,
+  THIRD_PARTY_PROXY_EVENTS,
   WSTETH_ADDRESS,
 } from "./constants";
 import { ethersProvider } from "./ethers";
-import { THIRD_PARTY_PROXY_EVENTS } from "./constants";
 
 const lastImpls = new Map<string, string>();
 const lastAdmins = new Map<string, string>();
@@ -113,6 +116,40 @@ function handleThirdPartyProxyAdminEvents(
       }
     });
   }
+
+  if (LINEA_L1_CROSS_DOMAIN_MESSENGER in txEvent.addresses) {
+    const events = txEvent.filterLog(
+      LINEA_CUSTOM_CONTRACT_SET_EVENT,
+      LINEA_L1_CROSS_DOMAIN_MESSENGER,
+    );
+    events.forEach((event) => {
+      if (event.args.nativeToken == WSTETH_ADDRESS) {
+        findings.push(
+          Finding.fromObject({
+            name: "🚨 Linea: Custom contract set changed",
+            description: `Linea native bridge gateway for wstETH changed to: ${event.args.gateway}`,
+            alertId: "LINEA-WSTETH-GATEWAY-CHANGED",
+            severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+            metadata: { args: String(event.args) },
+          }),
+        );
+      }
+
+      if (event.args.nativeToken == STETH_ADDRESS) {
+        findings.push(
+          Finding.fromObject({
+            name: "🚨 Linea: Custom contract set changed",
+            description: `Linea native bridge gateway for stETH changed to: ${event.args.gateway}`,
+            alertId: "LINEA-stETH-GATEWAY-CHANGED",
+            severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+            metadata: { args: String(event.args) },
+          }),
+        );
+      }
+    });
+  }
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
@@ -131,12 +168,28 @@ async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
   if (!implFunc) {
     return undefined;
   }
+
+  if (proxyInfo.proxyAdminAddress === null) {
+    const proxy = new ethers.Contract(
+      proxyInfo.address,
+      proxyInfo.shortABI,
+      ethersProvider,
+    );
+
+    return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
+  }
+
   const proxy = new ethers.Contract(
-    proxyInfo.address,
+    proxyInfo.proxyAdminAddress,
     proxyInfo.shortABI,
     ethersProvider,
   );
-  return (await proxy.functions[implFunc]({ blockTag: blockNumber }))[0];
+
+  return (
+    await proxy.functions[implFunc](proxyInfo.address, {
+      blockTag: blockNumber,
+    })
+  )[0];
 }
 
 async function handleProxyImplementationChanges(
@@ -172,12 +225,27 @@ async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
   if (!adminFunc) {
     return undefined;
   }
+  if (proxyInfo.proxyAdminAddress === null) {
+    const proxy = new ethers.Contract(
+      proxyInfo.address,
+      proxyInfo.shortABI,
+      ethersProvider,
+    );
+
+    return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
+  }
+
   const proxy = new ethers.Contract(
-    proxyInfo.address,
+    proxyInfo.proxyAdminAddress,
     proxyInfo.shortABI,
     ethersProvider,
   );
-  return (await proxy.functions[adminFunc]({ blockTag: blockNumber }))[0];
+
+  return (
+    await proxy.functions[adminFunc](proxyInfo.address, {
+      blockTag: blockNumber,
+    })
+  )[0];
 }
 
 async function handleProxyAdminChanges(

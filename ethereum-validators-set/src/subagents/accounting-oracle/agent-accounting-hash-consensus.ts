@@ -16,6 +16,7 @@ import HASH_CONSENSUS_ABI from "../../abi/HashConsensus.json";
 import { getMemberName } from "./utils";
 import {
   etherscanAddress,
+  getLogsByChunks,
   handleEventsOfNotice,
   RedefineMode,
   requireWithTier,
@@ -85,7 +86,8 @@ export async function initialize(
   // ~14 days ago
   const reportReceivedStartBlock =
     currentBlock - Math.ceil((2 * ONE_WEEK) / SECONDS_PER_SLOT);
-  const reportReceivedEvents = await hashConsensus.queryFilter(
+  const reportReceivedEvents = await getLogsByChunks(
+    hashConsensus,
     memberReportReceivedFilter,
     reportReceivedStartBlock,
     currentBlock - 1,
