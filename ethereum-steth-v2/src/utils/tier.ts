@@ -54,3 +54,8 @@ export function requireWithTier<T>(module: NodeModule, path: string, mode: Redef
   }
   throw new Error(`Unknown require mode: ${mode}`)
 }
+
+export function etherscanAddress(address: string): string {
+  const subpath = process.env.FORTA_AGENT_RUN_TIER == 'testnet' ? 'goerli.' : ''
+  return `[${address}](https://${subpath}etherscan.io/address/${address})`
+}

@@ -1,4 +1,4 @@
-import { BlockEvent, Finding, HandleBlock } from 'forta-agent'
+import { BlockEvent, Finding, HandleBlock, HandleTransaction } from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
@@ -6,6 +6,7 @@ import { Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
+import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 
 export function initialize(): Initialize {
   /*  const metadata: Metadata = {
@@ -63,7 +64,31 @@ export const handleBlock = (): HandleBlock => {
   }
 }
 
+let isHandleTrasactionRunning: boolean = false
+export const handleTransaction = (): HandleTransaction => {
+  return async function (txEvent: TransactionEvent): Promise<Finding[]> {
+    const startTime = new Date().getTime()
+    if (isHandleTrasactionRunning) {
+      return []
+    }
+    isHandleTrasactionRunning = true
+    const app = await App.getInstance()
+    const out: Finding[] = []
+
+    const startStethOpTrx = new Date().getTime()
+    const stethOperationFidings = app.StethOperationSrv.handleTransaction(txEvent)
+    console.log(elapsedTime('app.StethOperationSrv.handleTransaction', startStethOpTrx))
+
+    out.push(...stethOperationFidings)
+
+    console.log(elapsedTime('handleTransaction', startTime) + '\n')
+    isHandleTrasactionRunning = false
+    return out
+  }
+}
+
 export default {
   initialize: initialize(),
   handleBlock: handleBlock(),
+  handleTransaction: handleTransaction(),
 }

@@ -10,6 +10,10 @@ import { StethOperationCache } from './services/steth_operation/StethOperation.c
 import { ETHProvider, IETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
 import { Lido__factory, WithdrawalQueueERC721__factory } from './generated'
+import { DEPOSIT_SECURITY_EVENTS } from './utils/events/deposit_security_events'
+import { LIDO_EVENTS } from './utils/events/lido_events'
+import { INSURANCE_FUND_EVENTS } from './utils/events/insurance_fund_events'
+import { BURNER_EVENTS } from './utils/events/burner_events'
 
 export type Container = {
   ethClient: IETHProvider
@@ -47,6 +51,10 @@ export class App {
         DEPOSIT_EXECUTOR_ADDRESS,
         lidoContact,
         wdQueueContact,
+        DEPOSIT_SECURITY_EVENTS,
+        LIDO_EVENTS,
+        INSURANCE_FUND_EVENTS,
+        BURNER_EVENTS,
       )
 
       App.instance = {

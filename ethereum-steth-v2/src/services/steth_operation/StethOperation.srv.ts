@@ -3,11 +3,13 @@ import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
 import { IETHProvider } from '../../clients/eth_provider'
-import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { Lido as LidoContract, WithdrawalQueueERC721 as WithdrawalQueue } from '../../generated'
 import { retryAsync } from 'ts-retry'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import { Event as EthersEvent } from 'ethers'
+import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
+import { EventOfNotice } from '../../entity/events'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
@@ -38,6 +40,11 @@ export class StethOperationSrv {
   private readonly lidoContract: LidoContract
   private readonly wdQueueContract: WithdrawalQueue
 
+  private readonly depositSecurityEvents: EventOfNotice[]
+  private readonly lidoEvents: EventOfNotice[]
+  private readonly insuranceFundEvents: EventOfNotice[]
+  private readonly burnerEvents: EventOfNotice[]
+
   constructor(
     cache: StethOperationCache,
     ethProvider: IETHProvider,
@@ -46,6 +53,10 @@ export class StethOperationSrv {
     lidoDepositExecutorAddress: string,
     lidoContract: LidoContract,
     wdQueueContract: WithdrawalQueue,
+    depositSecurityEvents: EventOfNotice[],
+    lidoEvents: EventOfNotice[],
+    insuranceFundEvents: EventOfNotice[],
+    burnerEvents: EventOfNotice[],
   ) {
     this.cache = cache
     this.ethProvider = ethProvider
@@ -54,6 +65,11 @@ export class StethOperationSrv {
     this.lidoDepositExecutorAddress = lidoDepositExecutorAddress
     this.lidoContract = lidoContract
     this.wdQueueContract = wdQueueContract
+
+    this.depositSecurityEvents = depositSecurityEvents
+    this.lidoEvents = lidoEvents
+    this.insuranceFundEvents = insuranceFundEvents
+    this.burnerEvents = burnerEvents
   }
 
   public async initialize(currentBlock: number): Promise<Error | null> {
@@ -108,6 +124,47 @@ export class StethOperationSrv {
     findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings)
 
     return findings
+  }
+
+  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+    const out: Finding[] = []
+
+    if (txEvent.to == this.depositSecurityAddress) {
+      this.cache.setLastDepositorTxTime(txEvent.timestamp)
+    }
+
+    const depositSecFindings = this.handleEventsOfNotice(txEvent, this.depositSecurityEvents)
+    const lidoFindings = this.handleEventsOfNotice(txEvent, this.lidoEvents)
+    const insuranceFundFindings = this.handleEventsOfNotice(txEvent, this.insuranceFundEvents)
+    const burnerFindings = this.handleEventsOfNotice(txEvent, this.burnerEvents)
+
+    out.push(...depositSecFindings, ...lidoFindings, ...insuranceFundFindings, ...burnerFindings)
+
+    return out
+  }
+
+  public handleEventsOfNotice(txEvent: TransactionEvent, eventsOfNotice: EventOfNotice[]) {
+    const out: Finding[] = []
+    for (const eventInfo of eventsOfNotice) {
+      if (eventInfo.address in txEvent.addresses) {
+        const filteredEvents = filterLog(txEvent.logs, eventInfo.event, eventInfo.address)
+
+        for (const filteredEvent of filteredEvents) {
+          out.push(
+            Finding.fromObject({
+              name: eventInfo.name,
+              description: eventInfo.description(filteredEvent.args),
+              alertId: eventInfo.alertId,
+              severity: eventInfo.severity,
+              type: eventInfo.type,
+              metadata: { args: String(filteredEvent.args) },
+            }),
+          )
+        }
+      }
+    }
+
+    return out
   }
 
   public async handleBufferedEth(blockEvent: BlockEvent): Promise<Finding[]> {
