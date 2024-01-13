@@ -1,17 +1,19 @@
 import { EASY_TRACK_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
 import {
   EASY_TRACK_ADDRESS as etAddress,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakingLimitAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmScriptExecutorsAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegistryAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.holesky";
 
 export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakingLimitAddress;
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = evmScriptExecutorsAddress;
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS = rewardProgramRegistryAddress;
 export const EASY_TRACK_ADDRESS = etAddress;
-export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 
 export const EASY_TRACK_EVENTS_OF_NOTICE = mainnetEventsOfNotice.map(
   (event) => ({

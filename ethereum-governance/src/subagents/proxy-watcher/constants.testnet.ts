@@ -3,7 +3,7 @@ import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -36,7 +36,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
     [
       norAddress,
       {
-        name: "Node Operators Registry",
+        name: "Curated NO Registry",
         shortABI: implementationFuncShortABI,
       },
     ],

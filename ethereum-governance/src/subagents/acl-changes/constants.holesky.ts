@@ -6,6 +6,7 @@ import {
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
   LIDO_STETH_ADDRESS as lidoStethAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -32,7 +33,7 @@ import {
   CURVE_LIQUIDITY_FARMING_MANAGER_ADDRESS as curveManagerAddress,
   EMERGENCY_BRAKES_MS_ADDRESS as emergencyMsAddress,
   DEV_MS_ADDRESS as devMsAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.holesky";
 
 export const DEV_EOAs = [
   "0xa5f1d7d49f581136cf6e58b32cbe9a2039c48ba1",
@@ -59,6 +60,7 @@ export const LIDO_APPS = new Map([
   [evmExecutorAddress, "EVMScriptExecutor"],
   [dsAddress, "Deposit Security module"],
   [curatedNorAddress, "Curated NO registry"],
+  [simpleDvtNorAddress, "SimpleDVT NO registry"],
   [legacyOracleAddress, "Legacy Oracle"],
   [lidoStethAddress, "stETH token"],
 ]);

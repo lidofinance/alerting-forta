@@ -2,7 +2,8 @@ import { FindingSeverity } from "forta-agent";
 import { etherscanAddress } from "../../common/utils";
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakinigLimitAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegAddress,
@@ -12,7 +13,8 @@ export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakinigLimitAddress;
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = evmExecutorAddress;
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS = rewardProgramRegAddress;
 export const EASY_TRACK_ADDRESS = easyTrackAddress;
-export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 
 export const MOTION_ENACTED_EVENT =
   "event MotionEnacted(uint256 indexed _motionId)";
