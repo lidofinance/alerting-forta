@@ -46,13 +46,6 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      simpleDvtNorAddress,
-      {
-        name: "SimpleDVT NO Registry",
-        shortABI: implementationFuncShortABI,
-      },
-    ],
-    [
       legacyOracleAddress,
       {
         name: "Legacy Oracle",
