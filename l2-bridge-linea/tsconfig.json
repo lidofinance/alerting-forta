@@ -1,0 +1,12 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitAny": true,
+    "resolveJsonModule": true
+  },
+  "exclude": ["e2e", "node_modules"]
+}
