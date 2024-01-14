@@ -47,7 +47,7 @@ exports[`agent-proxy-watcher e2e tests should process block with changed proxy i
   Finding {
     "addresses": [],
     "alertId": "PROXY-IMPL-CHANGED",
-    "description": "Implementation of Node Operators Registry ([0x55032650b14df07b85bf18a3a3ec8e0af2e028d5](https://etherscan.io/address/0x55032650b14df07b85bf18a3a3ec8e0af2e028d5)) changed from [0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe](https://etherscan.io/address/0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe) to [0x5d39ABaa161e622B99D45616afC8B837E9F19a25](https://etherscan.io/address/0x5d39ABaa161e622B99D45616afC8B837E9F19a25)",
+    "description": "Implementation of Curated NO Registry ([0x55032650b14df07b85bf18a3a3ec8e0af2e028d5](https://etherscan.io/address/0x55032650b14df07b85bf18a3a3ec8e0af2e028d5)) changed from [0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe](https://etherscan.io/address/0xec3567ae258639a0FF5A02F7eAF4E4aE4416C5fe) to [0x5d39ABaa161e622B99D45616afC8B837E9F19a25](https://etherscan.io/address/0x5d39ABaa161e622B99D45616afC8B837E9F19a25)",
     "labels": [],
     "metadata": {},
     "name": "🚨 Proxy implementation changed",
