@@ -16,7 +16,7 @@ import {
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appRepoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
-  NO_REPO_ADDRESS as noRepoAddress,
+  CURATED_NO_REPO_ADDRESS as curatedNoRepoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
   ARAGON_FINANCE_ADDRESS as financeAddress,
   LIDO_DAO_ADDRESS as daoAddress,
@@ -41,7 +41,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
     [
       curatedNorAddress,
       {
-        name: "Curated NO Registry",
+        name: "NO Registry of Curated Module",
         shortABI: implementationFuncShortABI,
       },
     ],
@@ -109,9 +109,9 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      noRepoAddress,
+      curatedNoRepoAddress,
       {
-        name: "Node Operators Registry Repo",
+        name: "Curated NO Registry Repo",
         shortABI: implementationFuncShortABI,
       },
     ],

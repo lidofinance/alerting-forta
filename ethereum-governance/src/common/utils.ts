@@ -33,10 +33,6 @@ export function mergeFindings(findings: Finding[]): Finding[] {
 function getSubpathForNetwork(): string {
   let subpathForNetwork = "";
 
-  if (process.env.FORTA_AGENT_RUN_TIER === "testnet") {
-    return `goerli.`;
-  }
-
   if (process.env.FORTA_AGENT_RUN_TIER) {
     return `${subpathForNetwork}.`;
   }

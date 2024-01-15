@@ -1,6 +1,6 @@
 import { TRP_EVENTS_OF_NOTICE as trpEvents } from "./constants";
 
-import { TRP_FACTORY_ADDRESS as trpFactoryAddress } from "../../common/constants.testnet";
+import { TRP_FACTORY_ADDRESS as trpFactoryAddress } from "../../common/constants.goerli";
 
 export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 

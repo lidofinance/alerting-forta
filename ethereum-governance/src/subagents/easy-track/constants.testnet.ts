@@ -5,7 +5,7 @@ import {
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakingLimitAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmScriptExecutorsAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegistryAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakingLimitAddress;
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = evmScriptExecutorsAddress;

@@ -18,7 +18,7 @@ import {
   NO_REPO_ADDRESS as noRepoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
   ARAGON_FINANCE_ADDRESS as financeAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 import {
   implementationFuncShortABI,
   ossifiableProxyImplABI,
@@ -36,7 +36,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
     [
       norAddress,
       {
-        name: "Curated NO Registry",
+        name: "NO Registry of Curated Module",
         shortABI: implementationFuncShortABI,
       },
     ],
