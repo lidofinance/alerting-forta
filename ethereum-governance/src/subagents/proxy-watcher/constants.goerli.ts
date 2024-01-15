@@ -15,7 +15,7 @@ import {
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appRepoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
-  NO_REPO_ADDRESS as noRepoAddress,
+  CURATED_NO_REPO_ADDRESS as noRepoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
   ARAGON_FINANCE_ADDRESS as financeAddress,
 } from "../../common/constants.goerli";

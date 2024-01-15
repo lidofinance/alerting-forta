@@ -24,7 +24,7 @@ import {
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appREpoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
-  NO_REPO_ADDRESS as noRepoAddress,
+  CURATED_NO_REPO_ADDRESS as noRepoAddress,
   LIDO_DAO_ADDRESS as daoAddress,
   LDO_ADDRESS as ldoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,

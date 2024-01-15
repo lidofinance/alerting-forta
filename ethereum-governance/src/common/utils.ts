@@ -31,13 +31,17 @@ export function mergeFindings(findings: Finding[]): Finding[] {
 }
 
 function getSubpathForNetwork(): string {
-  let subpathForNetwork = "";
+  const runTier = process.env.FORTA_AGENT_RUN_TIER;
 
-  if (process.env.FORTA_AGENT_RUN_TIER) {
-    return `${subpathForNetwork}.`;
+  if (runTier === "testnet") {
+    return `goerli.`;
   }
 
-  return subpathForNetwork;
+  if (runTier) {
+    return `${runTier}.`;
+  }
+
+  return "";
 }
 
 export function etherscanAddress(address: string): string {
