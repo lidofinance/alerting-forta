@@ -15,7 +15,7 @@ import {
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
 } from "../../common/constants.holesky";
 
-export const CL_GENESIS_TIMESTAMP = 1616508000;
+export const CL_GENESIS_TIMESTAMP = 1695902400;
 
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;

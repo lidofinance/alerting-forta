@@ -32,12 +32,13 @@ export function mergeFindings(findings: Finding[]): Finding[] {
 }
 
 function getSubpathForNetwork(): string {
-  let subpathForNetwork = "";
-  if (process.env.FORTA_AGENT_RUN_TIER) {
-    subpathForNetwork = `${subpathForNetwork}.`;
+  const runTier = process.env.FORTA_AGENT_RUN_TIER;
+
+  if (runTier) {
+    return `${runTier}.`;
   }
 
-  return subpathForNetwork;
+  return "";
 }
 
 export function etherscanAddress(address: string): string {
@@ -45,7 +46,7 @@ export function etherscanAddress(address: string): string {
 }
 
 export function etherscanNft(address: string, id: number | string): string {
-  return `[${id}](https://${getSubpathForNetwork}etherscan.io/nft/${address}/${id})`;
+  return `[${id}](https://${getSubpathForNetwork()}etherscan.io/nft/${address}/${id})`;
 }
 
 /**
