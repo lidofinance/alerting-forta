@@ -33,15 +33,9 @@ export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD = 2;
 export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD = 4;
 
 export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
-  ["0xa8af49fb44aaa8eeca9ae918bb7c05e2e71c9de9", "Chorus One"],
-  ["0x1a13648ee85386cc101d2d7762e2848372068bc3", "jumpcrypto"],
-  ["0xb29dd2f6672c0dff2d2f173087739a42877a5172", "Staking Facilities"],
-  ["0xfda7e01b2718c511bf016030010572e833c7ae6a", "P2P Validator"],
-  ["0xd3b1e36a372ca250eeff61f90e833ca070559970", "Stakefish"],
-  ["0x3799bda7b884d33f79cec926af21160dc47fbe05", "Rated"],
-  ["0x4c75fa734a39f3a21c57e583c1c29942f021c6b7", "bloXroute"],
-  ["0x81e411f1bfda43493d7994f82fb61a415f6b8fd4", "Instadapp"],
-  ["0x3ff28f2ede8358e288798afc23ee299a503ad5c9", "Kyber Network"],
+  ["0x12A1D74F8697b9f4F1eEBb0a9d0FB6a751366399", "oracle1"],
+  ["0xD892c09b556b547c80B7d8c8cB8d75bf541B2284", "oracle2"],
+  ["0xf7aE520e99ed3C41180B5E12681d31Aa7302E4e5", "oracle3"],
 ]);
 
 export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
