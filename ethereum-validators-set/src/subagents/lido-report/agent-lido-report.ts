@@ -72,13 +72,10 @@ interface NodeOperatorModuleParams {
 
 class NodeOperatorsRegistryModuleContext {
   // re-fetched from history on startup
-  public lastTotalShares = BN_ZERO;
-  public lastTotalEther = BN_ZERO;
   public lastAllExited = 0;
   public lastAllStuck = 0;
   public lastAllRefunded = 0;
-  public lastCLrewards = BN_ZERO;
-  public lastELrewards = BN_ZERO;
+
   public nodeOperatorNames = new Map<number, string>();
 
   constructor(public readonly params: NodeOperatorModuleParams) {}
@@ -90,66 +87,6 @@ class NodeOperatorsRegistryModuleContext {
     this.lastAllStuck = allStuck;
     this.lastAllRefunded = allRefunded;
 
-    const lido = new ethers.Contract(
-      LIDO_STETH_ADDRESS,
-      LIDO_ABI,
-      ethersProvider,
-    );
-    const block48HoursAgo =
-      currentBlock - Math.ceil((2 * ONE_DAY) / SECONDS_PER_SLOT);
-    const ethDistributedEvents = await getLogsByChunks(
-      lido,
-      lido.filters.ETHDistributed(),
-      block48HoursAgo,
-      currentBlock - 1,
-    );
-
-    if (ethDistributedEvents.length > 0) {
-      const lastEvent = ethDistributedEvents[ethDistributedEvents.length - 1];
-
-      const [withdrawalsReceivedEvent] = await lido.queryFilter(
-        lido.filters.WithdrawalsReceived(),
-        lastEvent.blockNumber,
-        lastEvent.blockNumber,
-      );
-      const [elRewardsReceivedEvent] = await lido.queryFilter(
-        lido.filters.ELRewardsReceived(),
-        lastEvent.blockNumber,
-        lastEvent.blockNumber,
-      );
-      const [tokenRebasedEvent] = await lido.queryFilter(
-        lido.filters.TokenRebased(),
-        lastEvent.blockNumber,
-        lastEvent.blockNumber,
-      );
-      if (withdrawalsReceivedEvent) {
-        const { preCLBalance, postCLBalance } = ethDistributedEvents[
-          ethDistributedEvents.length - 1
-        ].args as any;
-
-        this.lastCLrewards = new BigNumber(String(postCLBalance))
-          .minus(String(preCLBalance))
-          .plus(
-            String(
-              new BigNumber(String(withdrawalsReceivedEvent.args?.amount)),
-            ),
-          )
-          .div(ETH_DECIMALS);
-      }
-      if (elRewardsReceivedEvent) {
-        this.lastELrewards = new BigNumber(
-          String(elRewardsReceivedEvent.args?.amount),
-        ).div(ETH_DECIMALS);
-      }
-      if (tokenRebasedEvent) {
-        this.lastTotalShares = new BigNumber(
-          String(tokenRebasedEvent.args?.postTotalShares),
-        );
-        this.lastTotalEther = new BigNumber(
-          String(tokenRebasedEvent.args?.postTotalEther),
-        );
-      }
-    }
     const withdrawalsQueue = new ethers.Contract(
       WITHDRAWAL_QUEUE_ADDRESS,
       WITHDRAWAL_QUEUE_ABI,
@@ -190,10 +127,14 @@ class NodeOperatorsRegistryModuleContext {
 const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
 
 let lastRebaseEventTimestamp = 0;
-
 let lastELOverfillAlertTimestamp = 0;
 let lastWithdrawalsVaultOverfillAlertTimestamp = 0;
 let lastBurnerOverfillAlertTimestamp = 0;
+// re-fetched from history on startup
+let lastCLrewards = BN_ZERO;
+let lastELrewards = BN_ZERO;
+let lastTotalShares = BN_ZERO;
+let lastTotalEther = BN_ZERO;
 
 export async function initialize(
   currentBlock: number,
@@ -224,6 +165,8 @@ export async function initialize(
   await Promise.all(
     stakingModulesOperatorRegistry.map((nor) => nor.initialize(currentBlock)),
   );
+
+  await initCommonParams(currentBlock);
 
   return {};
 }
@@ -263,6 +206,67 @@ export async function handleBlock(blockEvent: BlockEvent) {
   }
 
   return findings;
+}
+
+async function initCommonParams(currentBlock: number) {
+  const lido = new ethers.Contract(
+    LIDO_STETH_ADDRESS,
+    LIDO_ABI,
+    ethersProvider,
+  );
+  const block48HoursAgo =
+    currentBlock - Math.ceil((2 * ONE_DAY) / SECONDS_PER_SLOT);
+  const ethDistributedEvents = await getLogsByChunks(
+    lido,
+    lido.filters.ETHDistributed(),
+    block48HoursAgo,
+    currentBlock - 1,
+  );
+
+  if (ethDistributedEvents.length > 0) {
+    const lastEvent = ethDistributedEvents[ethDistributedEvents.length - 1];
+
+    const [withdrawalsReceivedEvent] = await lido.queryFilter(
+      lido.filters.WithdrawalsReceived(),
+      lastEvent.blockNumber,
+      lastEvent.blockNumber,
+    );
+    const [elRewardsReceivedEvent] = await lido.queryFilter(
+      lido.filters.ELRewardsReceived(),
+      lastEvent.blockNumber,
+      lastEvent.blockNumber,
+    );
+    const [tokenRebasedEvent] = await lido.queryFilter(
+      lido.filters.TokenRebased(),
+      lastEvent.blockNumber,
+      lastEvent.blockNumber,
+    );
+    if (withdrawalsReceivedEvent) {
+      const { preCLBalance, postCLBalance } = ethDistributedEvents[
+        ethDistributedEvents.length - 1
+      ].args as any;
+
+      lastCLrewards = new BigNumber(String(postCLBalance))
+        .minus(String(preCLBalance))
+        .plus(
+          String(new BigNumber(String(withdrawalsReceivedEvent.args?.amount))),
+        )
+        .div(ETH_DECIMALS);
+    }
+    if (elRewardsReceivedEvent) {
+      lastELrewards = new BigNumber(
+        String(elRewardsReceivedEvent.args?.amount),
+      ).div(ETH_DECIMALS);
+    }
+    if (tokenRebasedEvent) {
+      lastTotalShares = new BigNumber(
+        String(tokenRebasedEvent.args?.postTotalShares),
+      );
+      lastTotalEther = new BigNumber(
+        String(tokenRebasedEvent.args?.postTotalEther),
+      );
+    }
+  }
 }
 
 async function handleELRewardsVaultOverfill(
@@ -390,17 +394,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     );
   }
 
-  const [ethDistributedEvent] = txEvent.filterLog(
-    LIDO_ETHDESTRIBUTED_EVENT,
-    LIDO_STETH_ADDRESS,
-  );
-  if (ethDistributedEvent) {
-    await Promise.all(
-      stakingModulesOperatorRegistry.map((nor) =>
-        handleRebaseDigest(txEvent, findings, nor),
-      ),
-    );
-  }
+  handleRebaseDigest(txEvent, findings);
 
   return findings;
 }
@@ -436,13 +430,19 @@ async function handleExitedStuckRefundedKeysDigest(
 async function handleRebaseDigest(
   txEvent: TransactionEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
 ) {
+  const [ethDistributedEvent] = txEvent.filterLog(
+    LIDO_ETHDESTRIBUTED_EVENT,
+    LIDO_STETH_ADDRESS,
+  );
+  if (!ethDistributedEvent) {
+    return;
+  }
   let metadata: { [key: string]: string } = {};
 
   const lines = [
-    prepareAPRLines(txEvent, findings, metadata, norContext),
-    prepareRewardsLines(txEvent, findings, metadata, norContext),
+    prepareAPRLines(txEvent, findings, metadata),
+    prepareRewardsLines(txEvent, findings, metadata),
     prepareValidatorsCountLines(txEvent, metadata),
     prepareWithdrawnLines(txEvent, metadata),
     await prepareRequestsFinalizationLines(txEvent, metadata),
@@ -451,9 +451,9 @@ async function handleRebaseDigest(
 
   findings.push(
     Finding.fromObject({
-      name: `ℹ️ Lido Report (${norContext.params.moduleName}): rebase digest`,
+      name: "ℹ️ Lido Report: rebase digest",
       description: lines.filter((l) => l != undefined).join("\n\n"),
-      alertId: `${norContext.params.alertPrefix}LIDO-REPORT-REBASE-DIGEST`,
+      alertId: "LIDO-REPORT-REBASE-DIGEST",
       severity: FindingSeverity.Info,
       type: FindingType.Info,
       metadata,
@@ -465,7 +465,6 @@ function prepareAPRLines(
   txEvent: TransactionEvent,
   findings: Finding[],
   metadata: { [key: string]: string },
-  norContext: NodeOperatorsRegistryModuleContext,
 ): string | undefined {
   const [tokenRebasedEvent] = txEvent.filterLog(
     LIDO_TOKEN_REBASED_EVENT,
@@ -492,9 +491,7 @@ function prepareAPRLines(
   );
   metadata.postTotalEther = formatBN2Str(postTotalEther.div(ETH_DECIMALS));
 
-  const sharesDiff = postTotalShares
-    .minus(norContext.lastTotalShares)
-    .div(ETH_DECIMALS);
+  const sharesDiff = postTotalShares.minus(lastTotalShares).div(ETH_DECIMALS);
   const sharesDiffStr =
     Number(sharesDiff) > 0
       ? `+${sharesDiff.toFixed(2)}`
@@ -503,18 +500,16 @@ function prepareAPRLines(
     Number(sharesDiff) > 0
       ? `+${formatBN2Str(sharesDiff)}`
       : formatBN2Str(sharesDiff);
-  norContext.lastTotalShares = postTotalShares;
+  lastTotalShares = postTotalShares;
 
-  const etherDiff = postTotalEther
-    .minus(norContext.lastTotalEther)
-    .div(ETH_DECIMALS);
+  const etherDiff = postTotalEther.minus(lastTotalEther).div(ETH_DECIMALS);
   const etherDiffStr =
     Number(etherDiff) > 0 ? `+${etherDiff.toFixed(2)}` : etherDiff.toFixed(2);
   metadata.etherDiff =
     Number(etherDiff) > 0
       ? `+${formatBN2Str(etherDiff)}`
       : formatBN2Str(etherDiff);
-  norContext.lastTotalEther = postTotalEther;
+  lastTotalEther = postTotalEther;
 
   const apr = calculateAPR(
     timeElapsed,
@@ -529,23 +524,17 @@ function prepareAPRLines(
   let findingSeverity: FindingSeverity = FindingSeverity.Info;
   let digestAprStr = `APR: ${apr.times(100).toFixed(2)}%`;
   if (apr.gte(LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD)) {
-    findingName = `🚨️ Lido Report (${
-      norContext.params.moduleName
-    }): APR is greater than ${
+    findingName = `🚨️ Lido Report: APR is greater than ${
       LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100
     }% limit`;
     digestAprStr += ` 🚨️ > ${LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.High;
   } else if (apr.gte(LIDO_REPORT_HIGH_APR_THRESHOLD)) {
-    findingName = `⚠️ Lido Report (${
-      norContext.params.moduleName
-    }): APR is greater than ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
+    findingName = `⚠️ Lido Report: APR is greater than ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
     digestAprStr += ` ⚠️ > ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.Medium;
   } else if (apr.lte(LIDO_REPORT_LOW_APR_THRESHOLD)) {
-    findingName = `🚨️️ Lido Report (${
-      norContext.params.moduleName
-    }): APR is less than ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
+    findingName = `🚨️️ Lido Report: APR is less than ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
     digestAprStr += ` 🚨 < ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.High;
   }
@@ -563,7 +552,7 @@ function prepareAPRLines(
     findings.push(
       Finding.fromObject({
         name: findingName,
-        alertId: `${norContext.params.alertPrefix}LIDO-UNUSUAL-REPORT-APR-STATS`,
+        alertId: "LIDO-UNUSUAL-REPORT-APR-STATS",
         description: `APR: ${apr
           .times(100)
           .toFixed(2)}%\n${additionalDescription}`,
@@ -580,7 +569,6 @@ function prepareRewardsLines(
   txEvent: TransactionEvent,
   findings: Finding[],
   metadata: { [key: string]: string },
-  norContext: NodeOperatorsRegistryModuleContext,
 ): string {
   const [ethDistributedEvent] = txEvent.filterLog(
     LIDO_ETHDESTRIBUTED_EVENT,
@@ -615,27 +603,18 @@ function prepareRewardsLines(
   const totalRewards = clRewards.plus(elRewards);
   metadata.totalRewards = formatBN2Str(totalRewards);
 
-  norContext.lastCLrewards = norContext.lastCLrewards.eq(BN_ZERO)
-    ? clRewards
-    : norContext.lastCLrewards;
-  norContext.lastELrewards = norContext.lastELrewards.eq(BN_ZERO)
-    ? elRewards
-    : norContext.lastELrewards;
-  const lastTotalRewards = norContext.lastCLrewards.plus(
-    norContext.lastELrewards,
-  );
-  const clRewardsDiff = clRewards.minus(norContext.lastCLrewards);
-  const elRewardsDiff = elRewards.minus(norContext.lastELrewards);
+  lastCLrewards = lastCLrewards.eq(BN_ZERO) ? clRewards : lastCLrewards;
+  lastELrewards = lastELrewards.eq(BN_ZERO) ? elRewards : lastELrewards;
+  const lastTotalRewards = lastCLrewards.plus(lastELrewards);
+  const clRewardsDiff = clRewards.minus(lastCLrewards);
+  const elRewardsDiff = elRewards.minus(lastELrewards);
   const totalRewardsDiff = clRewardsDiff.plus(elRewardsDiff);
   const strCLRewardsDiff =
     Number(clRewardsDiff) > 0
       ? `+${formatBN2Str(clRewardsDiff)}`
       : formatBN2Str(clRewardsDiff);
   metadata.clRewardsDiff = strCLRewardsDiff;
-  const clRewardsDiffPercent = clRewards
-    .div(norContext.lastCLrewards)
-    .minus(1)
-    .times(100);
+  const clRewardsDiffPercent = clRewards.div(lastCLrewards).minus(1).times(100);
   metadata.clRewardsDiffPercent =
     Number(clRewardsDiffPercent) > 0
       ? `+${formatBN2Str(clRewardsDiffPercent)}`
@@ -647,12 +626,9 @@ function prepareRewardsLines(
       : formatBN2Str(elRewardsDiff);
   metadata.elRewardsDiff = strELRewardsDiff;
   metadata.elRewardsDiffPercent = formatBN2Str(
-    elRewards.div(norContext.lastELrewards).minus(1).times(100),
+    elRewards.div(lastELrewards).minus(1).times(100),
   );
-  const elRewardsDiffPercent = elRewards
-    .div(norContext.lastELrewards)
-    .minus(1)
-    .times(100);
+  const elRewardsDiffPercent = elRewards.div(lastELrewards).minus(1).times(100);
   metadata.elRewardsDiffPercent =
     Number(elRewardsDiffPercent) > 0
       ? `+${formatBN2Str(elRewardsDiffPercent)}`
@@ -694,20 +670,20 @@ function prepareRewardsLines(
         : FindingSeverity.Medium;
     findings.push(
       Finding.fromObject({
-        name: `🚨 Lido Report (${norContext.params.moduleName}): CL rewards decreased`,
+        name: "🚨 Lido Report: CL rewards decreased",
         description:
-          `Rewards decreased from ${formatBN2Str(norContext.lastCLrewards)} ` +
+          `Rewards decreased from ${formatBN2Str(lastCLrewards)} ` +
           `ETH to ${formatBN2Str(clRewards)} ` +
           `by ${formatBN2Str(clRewardsDiff)} ETH (${strCLRewardsDiffPercent}%)`,
-        alertId: `${norContext.params.alertPrefix}LIDO-REPORT-CL-REWARDS-DECREASED`,
+        alertId: "LIDO-REPORT-CL-REWARDS-DECREASED",
         severity: severity,
         type: FindingType.Degraded,
       }),
     );
   }
 
-  norContext.lastCLrewards = clRewards;
-  norContext.lastELrewards = elRewards;
+  lastCLrewards = clRewards;
+  lastELrewards = elRewards;
 
   return `*Rewards*\n${strCLRewards}\nEL rewards: ${formatBN2Str(
     elRewards,
