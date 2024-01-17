@@ -31,7 +31,7 @@ export const getEventsOfNoticeForStakingModule = (
       address: moduleAddress,
       event:
         "event NodeOperatorAdded(uint256 nodeOperatorId, string name, address rewardAddress, uint64 stakingLimit)",
-      alertId: `${alertPrefix}-NODE-OPERATOR-ADDED`,
+      alertId: `${alertPrefix}NODE-OPERATOR-ADDED`,
       name: `ℹ️ ${moduleName} NO Registry: Node operator added`,
       description: (args: any) =>
         `${moduleName} module ` +

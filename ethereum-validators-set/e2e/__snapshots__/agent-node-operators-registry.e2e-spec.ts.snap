@@ -68,12 +68,12 @@ exports[`agent-node-operators-registry e2e tests should process tx with set NO t
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-TARGET-VALIDATORS-COUNT-CHANGED",
-    "description": "Node operator 1 target validators count changed to 0",
+    "description": "Curated module Node operator 1 target validators count changed to 0",
     "labels": [],
     "metadata": {
       "args": "1,0",
     },
-    "name": "⚠️ NO Registry: Node operator target validators count changed",
+    "name": "⚠️ Curated NO Registry: Node operator target validators count changed",
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
@@ -92,7 +92,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "32,A41,0x2A64944eBFaFF8b6A0d07B222D3d83ac29c241a7,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -111,7 +111,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "33,Develp GmbH,0x0a6a0b60fFeF196113b3530781df6e747DdC565e,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -130,7 +130,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "34,Ebunker,0x2A2245d1f47430b9f60adCFC63D158021E80A728,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -149,7 +149,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "35,Gateway.fm AS,0x78CEE97C23560279909c0215e084dB293F036774,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -160,7 +160,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 36 added
+    "description": "Curated module Node operator 36 added
 Name: Numic
 Reward address: [0x0209a89b6d9F707c14eB6cD4C3Fb519280a7E1AC](https://etherscan.io/address/0x0209a89b6d9F707c14eB6cD4C3Fb519280a7E1AC)
 StakingLimit: 0",
@@ -168,7 +168,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "36,Numic,0x0209a89b6d9F707c14eB6cD4C3Fb519280a7E1AC,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -179,7 +179,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 37 added
+    "description": "Curated module Node operator 37 added
 Name: ParaFi Technologies LLC
 Reward address: [0x5Ee590eFfdf9456d5666002fBa05fbA8C3752CB7](https://etherscan.io/address/0x5Ee590eFfdf9456d5666002fBa05fbA8C3752CB7)
 StakingLimit: 0",
@@ -187,7 +187,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "37,ParaFi Technologies LLC,0x5Ee590eFfdf9456d5666002fBa05fbA8C3752CB7,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -198,7 +198,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 38 added
+    "description": "Curated module Node operator 38 added
 Name: RockawayX Infra
 Reward address: [0xcA6817DAb36850D58375A10c78703CE49d41D25a](https://etherscan.io/address/0xcA6817DAb36850D58375A10c78703CE49d41D25a)
 StakingLimit: 0",
@@ -206,7 +206,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "38,RockawayX Infra,0xcA6817DAb36850D58375A10c78703CE49d41D25a,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
