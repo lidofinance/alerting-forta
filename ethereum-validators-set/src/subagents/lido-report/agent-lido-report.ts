@@ -394,7 +394,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     );
   }
 
-  handleRebaseDigest(txEvent, findings);
+  await handleRebaseDigest(txEvent, findings);
 
   return findings;
 }
