@@ -13,6 +13,7 @@ import {
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
 } from "../../common/constants";
+import { CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID } from "../node-operators-registry/constants";
 
 export const CL_GENESIS_TIMESTAMP = 1606824023;
 
@@ -56,6 +57,18 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x1ca0fec59b86f549e1f1184d97cb47794c8af58d", "Instadapp"],
   ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
 ]);
+
+export const STAKING_MODULES: { moduleAddress: string; moduleName: string }[] =
+  [
+    {
+      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: "Curated",
+    },
+    {
+      moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: "SimpleDVT",
+    },
+  ];
 
 export const FETCH_BALANCES_BLOCK_INTERVAL = 1000;
 

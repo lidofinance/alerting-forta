@@ -63,8 +63,7 @@ const {
   EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD,
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
   EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+  STAKING_MODULES,
   BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
@@ -93,22 +92,18 @@ export async function initialize(
   console.log(`[${name}]`);
 
   stakingModulesOperatorRegistry.length = 0;
-  stakingModulesOperatorRegistry.push(
-    new NodeOperatorsRegistryModuleContext({
-      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleName: "Curated",
-    }),
-  );
+  for (const { moduleAddress, moduleName } of STAKING_MODULES) {
+    if (!moduleAddress) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
 
-  if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({
-        moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-        moduleName: "SimpleDVT",
+        moduleAddress,
+        moduleName,
       }),
     );
-  } else {
-    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   const block48HoursAgo =

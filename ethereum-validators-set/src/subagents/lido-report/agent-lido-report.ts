@@ -38,8 +38,7 @@ const {
   EL_REWARDS_VAULT_ADDRESS,
   WITHDRAWALS_VAULT_ADDRESS,
   BURNER_ADDRESS,
-  CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-  SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+  STAKING_MODULES,
   ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
   LIDO_ETHDESTRIBUTED_EVENT,
   LIDO_ELREWARDSRECEIVED_EVENT,
@@ -142,24 +141,19 @@ export async function initialize(
   console.log(`[${name}]`);
 
   stakingModulesOperatorRegistry.length = 0;
-  stakingModulesOperatorRegistry.push(
-    new NodeOperatorsRegistryModuleContext({
-      moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-      moduleName: "Curated",
-      alertPrefix: "",
-    }),
-  );
+  for (const { moduleId, moduleName, alertPrefix } of STAKING_MODULES) {
+    if (!moduleId) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
 
-  if (SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID) {
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({
-        moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-        moduleName: "SimpleDVT",
-        alertPrefix: "SDVT-",
+        moduleId,
+        moduleName,
+        alertPrefix,
       }),
     );
-  } else {
-    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   await Promise.all(

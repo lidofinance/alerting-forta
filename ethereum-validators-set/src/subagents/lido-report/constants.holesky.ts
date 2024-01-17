@@ -22,3 +22,22 @@ export const WITHDRAWALS_VAULT_ADDRESS = wdVaultAddress;
 export const BURNER_ADDRESS = burnerAddress;
 
 export const OVERFILL_ALERT_TRIGGER_EVERY = 2 * ONE_HOUR;
+
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const STAKING_MODULES: {
+  moduleId: number;
+  moduleName: string;
+  alertPrefix: string;
+}[] = [
+  {
+    moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
+    moduleName: "Curated",
+    alertPrefix: "",
+  },
+  {
+    moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+    moduleName: "SimpleDVT",
+    alertPrefix: "SDVT-",
+  },
+];

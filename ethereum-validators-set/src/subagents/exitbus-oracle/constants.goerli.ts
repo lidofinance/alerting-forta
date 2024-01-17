@@ -42,6 +42,14 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x3ff28f2ede8358e288798afc23ee299a503ad5c9", "Kyber Network"],
 ]);
 
+export const STAKING_MODULES: { moduleAddress: string; moduleName: string }[] =
+  [
+    {
+      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: "Curated",
+    },
+  ];
+
 export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
   (event) => ({
     ...event,
