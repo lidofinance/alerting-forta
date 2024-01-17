@@ -27,8 +27,7 @@ const {
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
   MEV_ALLOWED_LIST_ADDRESS,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+  STAKING_MODULES,
   MIN_AVAILABLE_KEYS_COUNT,
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   BLOCK_CHECK_INTERVAL,
@@ -61,24 +60,20 @@ export async function initialize(
   console.log(`[${name}]`);
 
   stakingModulesOperatorRegistry.length = 0;
-  stakingModulesOperatorRegistry.push(
-    new NodeOperatorsRegistryModuleContext({
-      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleName: "Curated",
-      alertPrefix: "",
-    }),
-  );
+  stakingModulesOperatorRegistry.length = 0;
+  for (const { moduleAddress, moduleName, alertPrefix } of STAKING_MODULES) {
+    if (!moduleAddress) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
 
-  if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({
-        moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-        moduleName: "SimpleDVT",
-        alertPrefix: "SDVT-",
+        moduleAddress,
+        moduleName,
+        alertPrefix,
       }),
     );
-  } else {
-    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   return {};

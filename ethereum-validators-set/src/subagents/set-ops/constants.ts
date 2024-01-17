@@ -95,3 +95,15 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.High,
   },
 ];
+
+export const STAKING_MODULES: {
+  moduleAddress: string;
+  moduleName: string;
+  alertPrefix: string;
+}[] = [
+  {
+    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+    moduleName: "Curated",
+    alertPrefix: "",
+  },
+];
