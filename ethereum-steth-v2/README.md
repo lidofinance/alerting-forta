@@ -8,12 +8,12 @@
 
 1. StETH operations
     1. HandleBlock
-        1. 🚨🚨🚨 Buffered ETH drain
-        2. 🚨 Huge depositable ETH amount
-        3. ⚠️ High depositable ETH amount
-        4. ⚠️ Low deposit executor balance
-        5. ⚠️ Staking limit below 10%
-        6. 📉 Staking limit below 30%
+        1. 🚨🚨🚨 Buffered ETH drain (checks each block)
+        2. 🚨 Huge depositable ETH amount (checks every 100 blocks)
+        3. ⚠️ High depositable ETH amount (checks every 100 blocks)
+        4. ⚠️ Low deposit executor balance (checks every 100 blocks)
+        5. ⚠️ Staking limit below 10% (checks every 25 blocks)
+        6. 📉 Staking limit below 30% (checks every 25 blocks)
     2. HandleTransaction
         1. Deposit Security events
             1. 🚨 Deposit Security: Deposits paused
@@ -43,6 +43,40 @@
         4. Burner events
             1. ℹ️ Lido Burner: ERC20 recovered
             2. ℹ️ Lido Burner: ERC721 recovered
+2. Withdrawals.
+    1. HandleBlock runs on each 100-th block or one per 20 minutes
+        1. ⚠️ Withdrawals: <limitRate>% of stake limit is drained and unfinalized queue is on par with drained stake
+           limit
+        2. ⚠️ Withdrawals: unfinalized queue is more than 100_000 stETH
+        3. ⚠️ Withdrawals: unfinalized queue wait time is too long
+        4. 🤔 Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed
+        5. 🤔 Withdrawals: unclaimed requests size is more than withdrawal queue balance
+    2. HandleTransaction
+        1. 🚨 Withdrawals: BUNKER MODE ON! 🚨
+        2. ✅ Withdrawals: BUNKER MODE OFF! ✅
+        3. ℹ️ Huge stETH withdrawal requests batch
+        4. ⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than 150_000 stETH
+        5. 🤔 Withdrawals: claimed amount is more than requested
+        6. ✅ Withdrawals: contract was unpaused
+        7. 🚨 Withdrawals: contract was paused
+3. GateSeal
+    1. HandleBlock runs on each next block
+        1. ⚠️ GateSeal: default GateSeal address in forta agent is expired
+        2. ⚠️️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts
+        3. 🚨GateSeal: actual address doesn't have PAUSE_ROLE for contracts
+        4. 🚨🚨🚨 GateSeal: is expired! 🚨🚨🚨
+        5. ⚠️ GateSeal: is about to be expired
+    2. HandleTransaction
+        1. 🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨
+        2. 🚨 GateSeal: new one created
+4. Vaults
+    1. Handleblock
+        1. 💵 Withdrawal Vault Balance significant change (checks every on 100-th block)
+        2. 💵 EL Vault Balance significant change
+        3. 🚨 Withdrawal Vault balance mismatch
+        4. 🚨 EL Vault balance mismatch
+    2. HandleTransaction
+        1. 🚨 Burner shares transfer
 
 ## Development (Forta specific)
 

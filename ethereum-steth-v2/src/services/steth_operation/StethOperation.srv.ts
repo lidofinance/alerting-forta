@@ -4,12 +4,13 @@ import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
 import { IETHProvider } from '../../clients/eth_provider'
 import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { Lido as LidoContract, WithdrawalQueueERC721 as WithdrawalQueue } from '../../generated'
+import { Lido as LidoContract, WithdrawalQueueERC721 as WithdrawalQueueContract } from '../../generated'
 import { retryAsync } from 'ts-retry'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import { Event as EthersEvent } from 'ethers'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { EventOfNotice } from '../../entity/events'
+import { elapsedTime } from '../../utils/time'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
@@ -25,20 +26,15 @@ const MIN_DEPOSIT_EXECUTOR_BALANCE = 2 // 2 ETH
 const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12 // 12 hours
 const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12 // 12 hours
 
-type StakingLimitInfo = {
-  maxStakeLimit: BigNumber
-  currentStakeLimit: BigNumber
-}
-
 export class StethOperationSrv {
-  private readonly name = 'StethOperation'
+  private readonly name = 'StethOperationSrv'
   private readonly cache: StethOperationCache
   private readonly ethProvider: IETHProvider
   private readonly depositSecurityAddress: string
   private readonly lidoStethAddress: string
   private readonly lidoDepositExecutorAddress: string
   private readonly lidoContract: LidoContract
-  private readonly wdQueueContract: WithdrawalQueue
+  private readonly wdQueueContract: WithdrawalQueueContract
 
   private readonly depositSecurityEvents: EventOfNotice[]
   private readonly lidoEvents: EventOfNotice[]
@@ -52,7 +48,7 @@ export class StethOperationSrv {
     lidoStethAddress: string,
     lidoDepositExecutorAddress: string,
     lidoContract: LidoContract,
-    wdQueueContract: WithdrawalQueue,
+    wdQueueContract: WithdrawalQueueContract,
     depositSecurityEvents: EventOfNotice[],
     lidoEvents: EventOfNotice[],
     insuranceFundEvents: EventOfNotice[],
@@ -73,14 +69,14 @@ export class StethOperationSrv {
   }
 
   public async initialize(currentBlock: number): Promise<Error | null> {
-    console.log(`[${this.name}] started on block ${currentBlock}`)
-
+    const start = new Date().getTime()
     const history = await this.ethProvider.getHistory(
       this.depositSecurityAddress,
       currentBlock - HISTORY_BLOCK_OFFSET,
       currentBlock - 1,
     )
     if (E.isLeft(history)) {
+      console.log(elapsedTime(`[${this.name}.initialize]`, start))
       return history.left
     }
 
@@ -96,23 +92,22 @@ export class StethOperationSrv {
 
     const bufferedEthRaw = await this.ethProvider.getStethBalance(this.lidoStethAddress, currentBlock)
     if (E.isLeft(bufferedEthRaw)) {
+      console.log(elapsedTime(`[${this.name}.initialize]`, start))
       return bufferedEthRaw.left
     }
 
-    this.cache.setLastBufferedEth(new BigNumber(String(bufferedEthRaw.right)))
+    this.cache.setLastBufferedEth(bufferedEthRaw.right)
 
-    console.log(`[${this.name}] Last Depositor TxTime: ${this.cache.getLastDepositorTxTime()}`)
-    console.log(
-      `[${this.name}] Buffered Eth: ${this.cache
-        .getLastBufferedEth()
-        .div(ETH_DECIMALS)
-        .toFixed(2)} on ${currentBlock} block`,
-    )
-
+    console.log(elapsedTime(`[${this.name}.initialize]`, start) + ` on block ${currentBlock}`)
     return null
   }
 
+  public getName(): string {
+    return this.name
+  }
+
   public async handleBlock(blockEvent: BlockEvent) {
+    const start = new Date().getTime()
     const findings: Finding[] = []
 
     const [bufferedEthFindings, depositorBalanceFindings, stakingLimitFindings] = await Promise.all([
@@ -122,6 +117,7 @@ export class StethOperationSrv {
     ])
 
     findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings)
+    console.log(elapsedTime(StethOperationSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
   }
@@ -171,32 +167,21 @@ export class StethOperationSrv {
     const blockNumber = blockEvent.block.number
     const blockTimestamp = blockEvent.block.timestamp
 
-    let bufferedEthRaw: BigNumber
-    try {
-      const resp = await retryAsync<EtherBigNumber>(
-        async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getBufferedEther({
-            blockTag: blockNumber,
-          })
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      bufferedEthRaw = new BigNumber(resp.toString())
-    } catch (e) {
+    const bufferedEthRaw = await this.ethProvider.getBufferedEther(blockNumber)
+    if (E.isLeft(bufferedEthRaw)) {
       const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:108`,
-        description: `Could not call "lidoContract.getBufferedEther. Cause ${e instanceof Error ? e.message : ''}`,
+        name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:178`,
+        description: `Could not call "lidoContract.getBufferedEther. Cause ${bufferedEthRaw.left.message}`,
         alertId: 'LIDO-AGENT-ERROR',
         severity: FindingSeverity.Low,
         type: FindingType.Degraded,
-        metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
+        metadata: { stack: `${bufferedEthRaw.left.stack}` },
       })
 
       return [f]
     }
 
-    const bufferedEth = bufferedEthRaw.div(ETH_DECIMALS).toNumber()
+    const bufferedEth = bufferedEthRaw.right.div(ETH_DECIMALS).toNumber()
     let depositableEther: number
 
     try {
@@ -226,7 +211,7 @@ export class StethOperationSrv {
 
     // We use shifted block number to ensure that nodes return correct values
     const shiftedBlockNumber = blockNumber - 3
-    const shifte3dBufferedEthRaw = await this.getBufferedEther(shiftedBlockNumber)
+    const shifte3dBufferedEthRaw = await this.ethProvider.getBufferedEther(shiftedBlockNumber)
     if (E.isLeft(shifte3dBufferedEthRaw)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:159`,
@@ -241,7 +226,7 @@ export class StethOperationSrv {
 
       return [f]
     }
-    const shifte4dBufferedEthRaw = await this.getBufferedEther(shiftedBlockNumber - 1)
+    const shifte4dBufferedEthRaw = await this.ethProvider.getBufferedEther(shiftedBlockNumber - 1)
     if (E.isLeft(shifte4dBufferedEthRaw)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:174`,
@@ -385,43 +370,45 @@ export class StethOperationSrv {
   public async handleDepositExecutorBalance(blockEvent: BlockEvent): Promise<Finding[]> {
     const blockNumber = blockEvent.block.number
     const out: Finding[] = []
-    if (blockNumber % BLOCK_CHECK_INTERVAL !== 0) {
-      return out
-    }
-
-    const currentBlockTimestamp = blockEvent.block.timestamp
-    if (this.cache.getLastReportedExecutorBalanceTimestamp() + REPORT_WINDOW_EXECUTOR_BALANCE < currentBlockTimestamp) {
-      const executorBalanceRaw = await this.ethProvider.getDepositorBalance(
-        this.lidoDepositExecutorAddress,
-        blockEvent.blockNumber,
-      )
-      if (E.isLeft(executorBalanceRaw)) {
-        out.push(
-          Finding.fromObject({
-            name: `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:329`,
-            description: `Could not fetch depositorBalance. Cause ${executorBalanceRaw.left.message}`,
-            alertId: 'LIDO-AGENT-ERROR',
-            severity: FindingSeverity.Low,
-            type: FindingType.Degraded,
-            metadata: { stack: `${executorBalanceRaw.left.stack}` },
-          }),
+    if (blockNumber % BLOCK_CHECK_INTERVAL) {
+      const currentBlockTimestamp = blockEvent.block.timestamp
+      if (
+        this.cache.getLastReportedExecutorBalanceTimestamp() + REPORT_WINDOW_EXECUTOR_BALANCE <
+        currentBlockTimestamp
+      ) {
+        const executorBalanceRaw = await this.ethProvider.getBalance(
+          this.lidoDepositExecutorAddress,
+          blockEvent.blockNumber,
         )
+        if (E.isLeft(executorBalanceRaw)) {
+          out.push(
+            Finding.fromObject({
+              name: `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:329`,
+              description: `Could not fetch depositorBalance. Cause ${executorBalanceRaw.left.message}`,
+              alertId: 'LIDO-AGENT-ERROR',
+              severity: FindingSeverity.Low,
+              type: FindingType.Degraded,
+              metadata: { stack: `${executorBalanceRaw.left.stack}` },
+            }),
+          )
 
-        return out
-      }
+          return out
+        }
 
-      const executorBalance = new BigNumber(String(executorBalanceRaw.right)).div(ETH_DECIMALS).toNumber()
-      if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
-        this.cache.setLastReportedExecutorBalanceTimestamp(currentBlockTimestamp)
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ Low deposit executor balance',
-            description: `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` + `This is extremely low! 😱`,
-            alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
-            severity: FindingSeverity.High,
-            type: FindingType.Suspicious,
-          }),
-        )
+        const executorBalance = new BigNumber(String(executorBalanceRaw.right)).div(ETH_DECIMALS).toNumber()
+        if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
+          this.cache.setLastReportedExecutorBalanceTimestamp(currentBlockTimestamp)
+          out.push(
+            Finding.fromObject({
+              name: '⚠️ Low deposit executor balance',
+              description:
+                `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` + `This is extremely low! 😱`,
+              alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
+              severity: FindingSeverity.High,
+              type: FindingType.Suspicious,
+            }),
+          )
+        }
       }
     }
 
@@ -432,94 +419,66 @@ export class StethOperationSrv {
     const blockNumber = blockEvent.block.number
     const out: Finding[] = []
     if (blockNumber % BLOCK_CHECK_INTERVAL_SMAll !== 0) {
-      return out
-    }
+      const currentBlockTimestamp = blockEvent.block.timestamp
 
-    const currentBlockTimestamp = blockEvent.block.timestamp
+      const stakingLimitInfo = await this.ethProvider.getStakingLimitInfo(blockNumber)
+      if (E.isLeft(stakingLimitInfo)) {
+        const f: Finding = Finding.fromObject({
+          name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:385`,
+          description: `Could not call "lidoContract.getStakeLimitFullInfo. Cause ${stakingLimitInfo.left.message}`,
+          alertId: 'LIDO-AGENT-ERROR',
+          severity: FindingSeverity.Low,
+          type: FindingType.Degraded,
+          metadata: { stack: `${stakingLimitInfo.left.stack}` },
+        })
 
-    let stakingLimitInfo: StakingLimitInfo
-    try {
-      stakingLimitInfo = await retryAsync<StakingLimitInfo>(
-        async (): Promise<StakingLimitInfo> => {
-          const resp = await this.lidoContract.functions.getStakeLimitFullInfo({
-            blockTag: blockNumber,
-          })
+        return [f]
+      }
 
-          return {
-            currentStakeLimit: new BigNumber(String(resp.currentStakeLimit)).div(ETH_DECIMALS),
-            maxStakeLimit: new BigNumber(String(resp.maxStakeLimit)).div(ETH_DECIMALS),
-          }
-        },
-        { delay: 500, maxTry: 5 },
-      )
-    } catch (e) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:385`,
-        description: `Could not call "lidoContract.getStakeLimitFullInfo. Cause ${e instanceof Error ? e.message : ''}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
-        type: FindingType.Degraded,
-        metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
-      })
+      const currentStakingLimit = stakingLimitInfo.right.currentStakeLimit
+      const maxStakingLimit = stakingLimitInfo.right.maxStakeLimit
 
-      return [f]
-    }
-
-    const currentStakingLimit = stakingLimitInfo.currentStakeLimit
-    const maxStakingLimit = stakingLimitInfo.maxStakeLimit
-    if (
-      this.cache.getLastReportedStakingLimit10Timestamp() + REPORT_WINDOW_STAKING_LIMIT_10 < currentBlockTimestamp &&
-      currentStakingLimit.isLessThan(maxStakingLimit.times(0.1))
-    ) {
-      out.push(
-        Finding.fromObject({
-          name: '⚠️ Staking limit below 10%',
-          description:
-            `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
-            `this is lower than 10% of max staking limit ` +
-            `${maxStakingLimit.toFixed(2)} ETH`,
-          alertId: 'LOW-STAKING-LIMIT',
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-        }),
-      )
-      this.cache.setLastReportedStakingLimit10Timestamp(currentBlockTimestamp)
-    } else if (
-      this.cache.getLastReportedStakingLimit30Timestamp() + REPORT_WINDOW_STAKING_LIMIT_30 < currentBlockTimestamp &&
-      currentStakingLimit.isLessThan(maxStakingLimit.times(0.3))
-    ) {
-      out.push(
-        Finding.fromObject({
-          name: '📉 Staking limit below 30%',
-          description:
-            `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
-            `this is lower than 30% of max staking limit ` +
-            `${maxStakingLimit.toFixed(2)} ETH`,
-          alertId: 'LOW-STAKING-LIMIT',
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-        }),
-      )
-      this.cache.setLastReportedStakingLimit30Timestamp(currentBlockTimestamp)
+      if (
+        this.cache.getLastReportedStakingLimit10Timestamp() + REPORT_WINDOW_STAKING_LIMIT_10 < currentBlockTimestamp &&
+        currentStakingLimit.isLessThan(maxStakingLimit.times(0.1))
+      ) {
+        out.push(
+          Finding.fromObject({
+            name: '⚠️ Staking limit below 10%',
+            description:
+              `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
+              `this is lower than 10% of max staking limit ` +
+              `${maxStakingLimit.toFixed(2)} ETH`,
+            alertId: 'LOW-STAKING-LIMIT',
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+          }),
+        )
+        this.cache.setLastReportedStakingLimit10Timestamp(currentBlockTimestamp)
+      } else if (
+        this.cache.getLastReportedStakingLimit30Timestamp() + REPORT_WINDOW_STAKING_LIMIT_30 < currentBlockTimestamp &&
+        currentStakingLimit.isLessThan(maxStakingLimit.times(0.3))
+      ) {
+        out.push(
+          Finding.fromObject({
+            name: '📉 Staking limit below 30%',
+            description:
+              `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
+              `this is lower than 30% of max staking limit ` +
+              `${maxStakingLimit.toFixed(2)} ETH`,
+            alertId: 'LOW-STAKING-LIMIT',
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+          }),
+        )
+        this.cache.setLastReportedStakingLimit30Timestamp(currentBlockTimestamp)
+      }
     }
 
     return out
   }
 
-  private async getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
-    try {
-      const resp = await retryAsync<EtherBigNumber>(
-        async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getBufferedEther({
-            blockTag: blockNumber,
-          })
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(new BigNumber(resp.toString()))
-    } catch (e) {
-      return E.left(new Error(`Could not call "lidoContract.getBufferedEther". Cause: ${e}`))
-    }
+  public getStorage(): StethOperationCache {
+    return this.cache
   }
 }
