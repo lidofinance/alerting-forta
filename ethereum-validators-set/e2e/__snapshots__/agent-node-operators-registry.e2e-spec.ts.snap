@@ -5,7 +5,7 @@ exports[`agent-node-operators-registry e2e tests should process tx with added No
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 30 added
+    "description": "Curated module Node operator 30 added
 Name: Launchnodes
 Reward address: [0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561](https://etherscan.io/address/0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561)
 StakingLimit: 0",
@@ -13,7 +13,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "30,Launchnodes,0x5a8B929EDBf3CE44526465DD2087EC7EFB59A561,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -24,7 +24,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 31 added
+    "description": "Curated module Node operator 31 added
 Name: SenseiNode
 Reward address: [0xE556Da28015c04F35A52B3111B9F4120E908056e](https://etherscan.io/address/0xE556Da28015c04F35A52B3111B9F4120E908056e)
 StakingLimit: 0",
@@ -32,7 +32,7 @@ StakingLimit: 0",
     "metadata": {
       "args": "31,SenseiNode,0xE556Da28015c04F35A52B3111B9F4120E908056e,0",
     },
-    "name": "ℹ️ NO Registry: Node operator added",
+    "name": "ℹ️ Curated NO Registry: Node operator added",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -84,7 +84,7 @@ exports[`agent-node-operators-registry e2e tests should process tx with set NO t
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 32 added
+    "description": "Curated module Node operator 32 added
 Name: A41
 Reward address: [0x2A64944eBFaFF8b6A0d07B222D3d83ac29c241a7](https://etherscan.io/address/0x2A64944eBFaFF8b6A0d07B222D3d83ac29c241a7)
 StakingLimit: 0",
@@ -103,7 +103,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 33 added
+    "description": "Curated module Node operator 33 added
 Name: Develp GmbH
 Reward address: [0x0a6a0b60fFeF196113b3530781df6e747DdC565e](https://etherscan.io/address/0x0a6a0b60fFeF196113b3530781df6e747DdC565e)
 StakingLimit: 0",
@@ -122,7 +122,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 34 added
+    "description": "Curated module Node operator 34 added
 Name: Ebunker
 Reward address: [0x2A2245d1f47430b9f60adCFC63D158021E80A728](https://etherscan.io/address/0x2A2245d1f47430b9f60adCFC63D158021E80A728)
 StakingLimit: 0",
@@ -141,7 +141,7 @@ StakingLimit: 0",
   Finding {
     "addresses": [],
     "alertId": "NODE-OPERATOR-ADDED",
-    "description": "Node operator 35 added
+    "description": "Curated module Node operator 35 added
 Name: Gateway.fm AS
 Reward address: [0x78CEE97C23560279909c0215e084dB293F036774](https://etherscan.io/address/0x78CEE97C23560279909c0215e084dB293F036774)
 StakingLimit: 0",
