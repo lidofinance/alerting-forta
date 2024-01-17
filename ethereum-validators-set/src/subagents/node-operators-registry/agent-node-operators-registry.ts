@@ -18,18 +18,14 @@ import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { ethersProvider } from "../../ethers";
+import { getEventsOfNoticeForStakingModule } from "./utils";
 const {
-  CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-  SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
   EASY_TRACK_ADDRESS,
   STAKING_ROUTER_ADDRESS,
   MOTION_ENACTED_EVENT,
   SIGNING_KEY_REMOVED_EVENT,
   NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
-  CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-  SIMPLEDVT_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+  STAKING_MODULES,
   NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
@@ -163,34 +159,35 @@ export async function initialize(
   );
 
   stakingModulesOperatorRegistry.length = 0;
-  stakingModulesOperatorRegistry.push(
-    new NodeOperatorsRegistryModuleContext(
-      {
-        moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-        moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-        moduleName: "Curated",
-        alertPrefix: "",
-        eventsOfNotice: CURATED_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-      },
-      stakingRouter,
-    ),
-  );
 
-  if (SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS) {
+  for (const {
+    moduleId,
+    moduleAddress,
+    moduleName,
+    alertPrefix,
+  } of STAKING_MODULES) {
+    if (!moduleId) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext(
         {
-          moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-          moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-          moduleName: "SimpleDVT",
-          alertPrefix: "SDVT-",
-          eventsOfNotice: SIMPLEDVT_NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
+          moduleId,
+          moduleAddress,
+          moduleName,
+          alertPrefix,
+          eventsOfNotice: getEventsOfNoticeForStakingModule({
+            moduleId,
+            moduleAddress,
+            moduleName,
+            alertPrefix,
+          }),
         },
         stakingRouter,
       ),
     );
-  } else {
-    console.log(`SimpleDVT is not supported on this network for ${name}`);
   }
 
   await Promise.all(
