@@ -530,11 +530,15 @@ function prepareAPRLines(
     digestAprStr += ` 🚨️ > ${LIDO_REPORT_LIMIT_REACHED_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.High;
   } else if (apr.gte(LIDO_REPORT_HIGH_APR_THRESHOLD)) {
-    findingName = `⚠️ Lido Report: APR is greater than ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
+    findingName = `⚠️ Lido Report: APR is greater than ${
+      LIDO_REPORT_HIGH_APR_THRESHOLD * 100
+    }%`;
     digestAprStr += ` ⚠️ > ${LIDO_REPORT_HIGH_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.Medium;
   } else if (apr.lte(LIDO_REPORT_LOW_APR_THRESHOLD)) {
-    findingName = `🚨️️ Lido Report: APR is less than ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
+    findingName = `🚨️️ Lido Report: APR is less than ${
+      LIDO_REPORT_LOW_APR_THRESHOLD * 100
+    }%`;
     digestAprStr += ` 🚨 < ${LIDO_REPORT_LOW_APR_THRESHOLD * 100}%`;
     findingSeverity = FindingSeverity.High;
   }
