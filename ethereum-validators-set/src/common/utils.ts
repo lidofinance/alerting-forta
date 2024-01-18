@@ -91,15 +91,6 @@ export function requireWithTier<T>(
     const valid = (key: string) => {
       if (key in defaultContent) {
         const result = typeof defaultContent[key] == typeof tieredContent[key];
-        if (!result) {
-          console.log(
-            ">>>>>>",
-            key,
-            defaultContent[key],
-            typeof tieredContent[key],
-          );
-        }
-
         return result;
       } else {
         return true;
