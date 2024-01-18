@@ -90,8 +90,7 @@ export function requireWithTier<T>(
   if (mode == RedefineMode.Merge) {
     const valid = (key: string) => {
       if (key in defaultContent) {
-        const result = typeof defaultContent[key] == typeof tieredContent[key];
-        return result;
+        return typeof defaultContent[key] == typeof tieredContent[key];
       } else {
         return true;
       }
