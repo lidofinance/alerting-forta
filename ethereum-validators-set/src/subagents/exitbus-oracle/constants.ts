@@ -13,7 +13,6 @@ import {
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
 } from "../../common/constants";
-import { CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID } from "../node-operators-registry/constants";
 
 export const CL_GENESIS_TIMESTAMP = 1606824023;
 
