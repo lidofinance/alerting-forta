@@ -22,6 +22,7 @@ import { DataRW } from './utils/mutex'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
 import { VaultSrv } from './services/vault/vault.srv'
 import { TestNetAddress } from './utils/constants.testnet'
+import * as Winston from 'winston'
 
 export type Container = {
   ethClient: IETHProvider
@@ -71,8 +72,14 @@ export class App {
         exitBusOracleContract,
       )
 
+      const logger: Winston.Logger = Winston.createLogger({
+        format: Winston.format.simple(),
+        transports: [new Winston.transports.Console()],
+      })
+
       const stethOperationCache = new StethOperationCache()
       const stethOperationSrv = new StethOperationSrv(
+        logger,
         stethOperationCache,
         ethClient,
         address.DEPOSIT_SECURITY_ADDRESS,

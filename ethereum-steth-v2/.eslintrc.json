@@ -9,5 +9,13 @@
   "rules": {
     "prettier/prettier": "error",
     "curly": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*", "*.spec.ts"],
+      "env": {
+        "jest": true
+      }
+    }
+  ]
 }

@@ -87,7 +87,7 @@ export class GateSealSrv {
       out.push(f)
     }
 
-    console.log(elapsedTime(`[${this.name}.initialize]`, start) + ` on block ${currentBlock}`)
+    console.log(elapsedTime(`[${this.name}.initialize]`, start))
     return out
   }
 

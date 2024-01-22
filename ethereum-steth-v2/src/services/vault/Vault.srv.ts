@@ -41,7 +41,7 @@ export class VaultSrv {
 
   public initialize(currentBlock: number): null {
     const start = new Date().getTime()
-    console.log(elapsedTime(`[${this.name}.initialize]`, start) + ` on block ${currentBlock}`)
+    console.log(elapsedTime(`[${this.name}.initialize]`, start))
 
     return null
   }

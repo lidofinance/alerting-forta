@@ -27,11 +27,11 @@ export class StethOperationCache {
     this._lastBufferedEth = value
   }
 
-  public getCriticalDepositableAmountTime(): number {
+  public getCriticalDepositableAmountTimestamp(): number {
     return this._criticalDepositableAmountTime
   }
 
-  public setCriticalDepositableAmountTime(blockTimestamp: number) {
+  public setCriticalDepositableAmountTimestamp(blockTimestamp: number) {
     this._criticalDepositableAmountTime = blockTimestamp
   }
 

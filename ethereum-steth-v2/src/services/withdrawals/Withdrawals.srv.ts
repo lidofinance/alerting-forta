@@ -201,7 +201,7 @@ export class WithdrawalsSrv {
       }
     }
 
-    console.log(elapsedTime(`[${this.name}.initialize]`, start) + ` on block ${currentBlock}`)
+    console.log(elapsedTime(`[${this.name}.initialize]`, start))
     return null
   }
 
