@@ -27,7 +27,7 @@ const {
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
   MEV_ALLOWED_LIST_ADDRESS,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
+  STAKING_MODULES,
   MIN_AVAILABLE_KEYS_COUNT,
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   BLOCK_CHECK_INTERVAL,
@@ -37,14 +37,45 @@ const {
   RedefineMode.Merge,
 );
 
-let lastReportedKeysShortage = 0;
 let lastReportedMevCountInfo = 0;
 let lastReportedMevCountHigh = 0;
+
+interface NodeOperatorModuleParams {
+  moduleAddress: string;
+  alertPrefix: string;
+  moduleName: string;
+}
+
+class NodeOperatorsRegistryModuleContext {
+  public lastReportedKeysShortage = 0;
+
+  constructor(public readonly params: NodeOperatorModuleParams) {}
+}
+
+const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
 
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
+
+  stakingModulesOperatorRegistry.length = 0;
+  stakingModulesOperatorRegistry.length = 0;
+  for (const { moduleAddress, moduleName, alertPrefix } of STAKING_MODULES) {
+    if (!moduleAddress) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
+    stakingModulesOperatorRegistry.push(
+      new NodeOperatorsRegistryModuleContext({
+        moduleAddress,
+        moduleName,
+        alertPrefix,
+      }),
+    );
+  }
+
   return {};
 }
 
@@ -52,7 +83,9 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await Promise.all([
-    handleNodeOperatorsKeys(blockEvent, findings),
+    ...stakingModulesOperatorRegistry.map((nodeOperatorRegistry) =>
+      handleNodeOperatorsKeys(blockEvent, findings, nodeOperatorRegistry),
+    ),
     handleMevRelayCount(blockEvent, findings),
   ]);
 
@@ -62,11 +95,12 @@ export async function handleBlock(blockEvent: BlockEvent) {
 async function handleNodeOperatorsKeys(
   blockEvent: BlockEvent,
   findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
 ) {
   const now = blockEvent.block.timestamp;
-  if (lastReportedKeysShortage + REPORT_WINDOW < now) {
+  if (norContext.lastReportedKeysShortage + REPORT_WINDOW < now) {
     const nodeOperatorsRegistry = new ethers.Contract(
-      NODE_OPERATORS_REGISTRY_ADDRESS,
+      norContext.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
       ethersProvider,
     );
@@ -89,14 +123,14 @@ async function handleNodeOperatorsKeys(
     if (availableKeysCount < MIN_AVAILABLE_KEYS_COUNT) {
       findings.push(
         Finding.fromObject({
-          name: "⚠️ Few available keys count",
+          name: `⚠️ ${norContext.params.moduleName} Few available keys count`,
           description: `There are only ${availableKeysCount} available keys left`,
-          alertId: "LOW-OPERATORS-AVAILABLE-KEYS-NUM",
+          alertId: `${norContext.params.alertPrefix}LOW-OPERATORS-AVAILABLE-KEYS-NUM`,
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
         }),
       );
-      lastReportedKeysShortage = now;
+      norContext.lastReportedKeysShortage = now;
     }
   }
 }

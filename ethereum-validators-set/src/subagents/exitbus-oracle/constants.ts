@@ -4,7 +4,8 @@ import { ONE_HOUR, ONE_WEEK, SECONDS_PER_SLOT } from "../../common/constants";
 import { etherscanAddress } from "../../common/utils";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,
@@ -24,7 +25,8 @@ export const MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS = 3;
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
-export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
+export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
@@ -54,6 +56,18 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x1ca0fec59b86f549e1f1184d97cb47794c8af58d", "Instadapp"],
   ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
 ]);
+
+export const STAKING_MODULES: { moduleAddress: string; moduleName: string }[] =
+  [
+    {
+      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: "Curated",
+    },
+    {
+      moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: "SimpleDVT",
+    },
+  ];
 
 export const FETCH_BALANCES_BLOCK_INTERVAL = 1000;
 

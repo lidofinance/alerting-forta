@@ -63,7 +63,7 @@ const {
   EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD,
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
   EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
+  STAKING_MODULES,
   BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
@@ -73,10 +73,38 @@ const {
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
+interface NodeOperatorModuleParams {
+  moduleAddress: string;
+  moduleName: string;
+}
+
+class NodeOperatorsRegistryModuleContext {
+  public nodeOperatorNames = new Map<number, string>();
+
+  constructor(public readonly params: NodeOperatorModuleParams) {}
+}
+
+const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
+
+  stakingModulesOperatorRegistry.length = 0;
+  for (const { moduleAddress, moduleName } of STAKING_MODULES) {
+    if (!moduleAddress) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
+    stakingModulesOperatorRegistry.push(
+      new NodeOperatorsRegistryModuleContext({
+        moduleAddress,
+        moduleName,
+      }),
+    );
+  }
 
   const block48HoursAgo =
     currentBlock - Math.ceil((48 * ONE_HOUR) / SECONDS_PER_SLOT);
@@ -135,7 +163,11 @@ export async function initialize(
     ).toUTCString()}`,
   );
 
-  await updateNoNames(currentBlock);
+  await Promise.all(
+    stakingModulesOperatorRegistry.map((nor) =>
+      updateNoNames(currentBlock, nor),
+    ),
+  );
 
   return {
     lastReportTimestamp: String(lastReportSubmitTimestamp) ?? "unknown",
@@ -177,9 +209,12 @@ async function getReportProcessingStarted(blockFrom: number, blockTo: number) {
   );
 }
 
-async function updateNoNames(block: number) {
+async function updateNoNames(
+  block: number,
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
   const nor = new ethers.Contract(
-    NODE_OPERATORS_REGISTRY_ADDRESS,
+    norContext.params.moduleAddress,
     NODE_OPERATORS_REGISTRY_ABI,
     ethersProvider,
   );
@@ -200,7 +235,11 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   // Update NO names each 100 blocks
   if (blockEvent.blockNumber % BLOCK_INTERVAL) {
-    await updateNoNames(blockEvent.blockNumber);
+    await Promise.all(
+      stakingModulesOperatorRegistry.map((nor) =>
+        updateNoNames(blockEvent.blockNumber, nor),
+      ),
+    );
   }
 
   return findings;
