@@ -27,7 +27,7 @@ export function getWithdrawalsEvents(WITHDRAWAL_QUEUE_ADDRESS: string): EventOfN
       address: WITHDRAWAL_QUEUE_ADDRESS,
       event: 'event Resumed()',
       alertId: 'WITHDRAWALS-UNPAUSED',
-      name: '✅ Withdrawals: contract was unpaused',
+      name: '⚠️ Withdrawals: contract was unpaused',
       description: () => 'Contract was resumed',
       severity: FindingSeverity.High,
       type: FindingType.Info,

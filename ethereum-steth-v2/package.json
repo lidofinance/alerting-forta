@@ -1,6 +1,6 @@
 {
   "name": "lido-steth-forta-bot",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Forta Bot for Lido stETH",
   "repository": {
     "type": "git",

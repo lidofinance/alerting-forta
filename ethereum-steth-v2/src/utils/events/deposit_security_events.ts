@@ -21,7 +21,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
       address: DEPOSIT_SECURITY_ADDRESS,
       event: 'event DepositsUnpaused(uint24 indexed stakingModuleId)',
       alertId: 'LIDO-DEPOSITS-UNPAUSED',
-      name: '✅ Deposit Security: Deposits resumed',
+      name: '⚠️ Deposit Security: Deposits resumed',
       description: (args: Result) => `Deposits were resumed for ${args.stakingModuleId} staking module`,
       severity: FindingSeverity.High,
       type: FindingType.Info,

@@ -482,7 +482,7 @@ export class WithdrawalsSrv {
       if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
         out.push(
           Finding.fromObject({
-            name: `🤔 Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
+            name: `⚠️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
             description: `Unclaimed (for all time): ${unclaimedStETH
               .div(ETH_DECIMALS)
               .toFixed(2)} stETH\nClaimed (for 2 weeks): ${claimedStETH
@@ -520,7 +520,7 @@ export class WithdrawalsSrv {
       if (unclaimedStETH.gt(withdrawalQueueBalance.right)) {
         out.push(
           Finding.fromObject({
-            name: `🤔 Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
+            name: `⚠️ Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
             description: `Unclaimed: ${unclaimedStETH
               .div(ETH_DECIMALS)
               .toFixed(2)} stETH\nWithdrawal queue balance: ${withdrawalQueueBalance.right
@@ -572,7 +572,7 @@ export class WithdrawalsSrv {
       const delay = formatDelay(txEvent.block.timestamp - Number(this.cache.getBunkerModeEnabledSinceTimestamp()))
       out.push(
         Finding.fromObject({
-          name: '✅ Withdrawals: BUNKER MODE OFF! ✅',
+          name: '⚠️ Withdrawals: BUNKER MODE OFF! ✅',
           description: `Bunker lasted ${delay}`,
           alertId: 'WITHDRAWALS-BUNKER-DISABLED',
           severity: FindingSeverity.High,
@@ -635,7 +635,7 @@ export class WithdrawalsSrv {
       if (this.cache.getLastBigRequestAfterRebaseAlertTimestamp() < this.cache.getLastTokenRebaseTimestamp()) {
         out.push(
           Finding.fromObject({
-            name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH`,
+            name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH (max staking limit)`,
             description: `Amount: ${this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE',
             severity: FindingSeverity.High,

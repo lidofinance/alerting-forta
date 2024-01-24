@@ -764,7 +764,7 @@ describe('StethOperationSrv', () => {
       expect(result[0].type).toEqual(expected.type)
     })
 
-    test('⚠️ Staking limit below 10%', async () => {
+    test('⚠️ Unspent staking limit below 10%', async () => {
       const getStakingLimitInfo: StakingLimitInfo = {
         currentStakeLimit: new BigNumber(9),
         isStakingPaused: false,
@@ -795,7 +795,7 @@ describe('StethOperationSrv', () => {
       const expected = Finding.fromObject({
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is 9.00 ETH this is lower than 10% of max staking limit 100.00 ETH`,
-        name: '⚠️ Staking limit below 10%',
+        name: '⚠️ Unspent staking limit below 10%',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
       })
@@ -841,7 +841,7 @@ describe('StethOperationSrv', () => {
       const expected = Finding.fromObject({
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is 250.00 ETH this is lower than 30% of max staking limit 1000.00 ETH`,
-        name: '📉 Staking limit below 30%',
+        name: '📉 Unspent staking limit below 30%',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
       })

@@ -423,7 +423,7 @@ async function handleUnclaimedRequests(
     if (unclaimedStETH.gt(withdrawalQueueBalance)) {
       findings.push(
         Finding.fromObject({
-          name: `🤔 Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
+          name: `⚠️ Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
           description: `Unclaimed: ${unclaimedStETH
             .div(ETH_DECIMALS)
             .toFixed(

@@ -151,5 +151,5 @@ export const handleTransaction = (): HandleTransaction => {
 export default {
   initialize: initialize(),
   handleBlock: handleBlock(),
-  // handleTransaction: handleTransaction(),
+  handleTransaction: handleTransaction(),
 }

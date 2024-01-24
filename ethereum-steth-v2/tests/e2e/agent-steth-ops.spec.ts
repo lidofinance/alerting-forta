@@ -25,7 +25,7 @@ describe('agent-steth-ops e2e tests', () => {
       const expected = Finding.fromObject({
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is 7237.74 ETH this is lower than 10% of max staking limit 150000.00 ETH`,
-        name: '⚠️ Staking limit below 10%',
+        name: '⚠️ Unspent staking limit below 10%',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
       })
@@ -88,7 +88,7 @@ describe('agent-steth-ops e2e tests', () => {
 
       const expected = [
         {
-          name: '✅ Lido: Staking resumed',
+          name: '⚠️ Lido: Staking resumed',
           description: 'Staking was resumed!',
           alertId: 'LIDO-STAKING-RESUMED',
           protocol: 'ethereum',

@@ -169,7 +169,7 @@ export class GateSealSrv {
       ) {
         out.push(
           Finding.fromObject({
-            name: "🚨GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
+            name: "🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
             description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`,
             alertId: 'GATE-SEAL-WITHOUT-PAUSE-ROLE',
             severity: FindingSeverity.Critical,
@@ -209,7 +209,7 @@ export class GateSealSrv {
     if (expiryTimestamp.right.eq(0) || Number(expiryTimestamp.right) <= currentBlockTimestamp) {
       out.push(
         Finding.fromObject({
-          name: '🚨🚨🚨 GateSeal: is expired! 🚨🚨🚨',
+          name: '🚨 GateSeal: is expired!',
           description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}}`,
           alertId: 'GATE-SEAL-IS-EXPIRED',
           severity: FindingSeverity.Critical,
@@ -295,7 +295,7 @@ export class GateSealSrv {
       const { gate_seal } = newGateSealEvent.args
       out.push(
         Finding.fromObject({
-          name: '🚨 GateSeal: new one created',
+          name: 'ℹ️ GateSeal: is expired',
           description: `GateSeal address: ${etherscanAddress(
             gate_seal,
           )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,

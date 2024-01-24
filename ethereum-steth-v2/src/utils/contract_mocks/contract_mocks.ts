@@ -12,8 +12,8 @@ export const LidoContractMock = (): jest.Mocked<LidoContract> => ({
   filters: {
     Unbuffered: () => {
       return {
-        address: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
-        topics: ['0x76a397bea5768d4fca97ef47792796e35f98dc81b16c1de84e28a818e1f97108'],
+        address: faker.finance.ethereumAddress(),
+        topics: [faker.finance.ethereumAddress()],
       }
     },
   },
@@ -24,8 +24,8 @@ export const WithdrawalQueueContractMock = (): jest.Mocked<WithdrawalQueueContra
   filters: {
     WithdrawalsFinalized: () => {
       return {
-        address: '0x889edc2edab5f40e902b864ad4d7ade8e412f9b1',
-        topics: ['0x197874c72af6a06fb0aa4fab45fd39c7cb61ac0992159872dc3295207da7e9eb'],
+        address: faker.finance.ethereumAddress(),
+        topics: [faker.finance.ethereumAddress()],
       }
     },
   },

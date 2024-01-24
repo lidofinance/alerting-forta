@@ -6,7 +6,12 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitAny": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "tests"],
+  "exclude": [
+    "node_modules",
+    "tests",
+    "dist",
+    "**/*spec.ts"
+  ]
 }

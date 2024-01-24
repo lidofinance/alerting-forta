@@ -138,7 +138,7 @@ async function handleNoWithdrawalVaultDrains(
     if (currentBalance.lt(prevBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "🚨 Withdrawal Vault balance mismatch",
+          name: "🚨🚨🚨 Withdrawal Vault balance mismatch",
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance),
           )} without Oracle report`,
@@ -158,7 +158,7 @@ async function handleNoWithdrawalVaultDrains(
     if (currentBalance.lt(expectedBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "🚨 Withdrawal Vault balance mismatch",
+          name: "🚨🚨🚨 Withdrawal Vault balance mismatch",
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance),
           )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
@@ -212,7 +212,7 @@ async function handleNoELVaultDrains(
     if (currentBalance.lt(prevBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "🚨 EL Vault balance mismatch",
+          name: "🚨🚨🚨 EL Vault balance mismatch",
           description: `EL Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance),
           )} without Oracle report`,
@@ -232,7 +232,7 @@ async function handleNoELVaultDrains(
     if (currentBalance.lt(expectedBalance)) {
       findings.push(
         Finding.fromObject({
-          name: "🚨 EL Vault balance mismatch",
+          name: "🚨🚨🚨 EL Vault balance mismatch",
           description: `EL Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance),
           )} but Oracle report shows ${toEthString(

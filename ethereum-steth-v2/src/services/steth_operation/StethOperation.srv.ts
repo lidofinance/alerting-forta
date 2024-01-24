@@ -434,7 +434,7 @@ export class StethOperationSrv {
       ) {
         out.push(
           Finding.fromObject({
-            name: '⚠️ Staking limit below 10%',
+            name: '⚠️ Unspent staking limit below 10%',
             description:
               `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
               `this is lower than 10% of max staking limit ` +
@@ -451,7 +451,7 @@ export class StethOperationSrv {
       ) {
         out.push(
           Finding.fromObject({
-            name: '📉 Staking limit below 30%',
+            name: '📉 Unspent staking limit below 30%',
             description:
               `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
               `this is lower than 30% of max staking limit ` +

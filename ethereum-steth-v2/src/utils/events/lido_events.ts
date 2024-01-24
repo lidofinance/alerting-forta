@@ -20,7 +20,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       address: LIDO_STETH_ADDRESS,
       event: 'event Resumed()',
       alertId: 'LIDO-RESUMED',
-      name: '✅ Lido: Resumed',
+      name: '⚠️ Lido: Resumed',
       description: () => `Lido DAO contract was resumed`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
@@ -38,7 +38,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       address: LIDO_STETH_ADDRESS,
       event: 'event StakingResumed()',
       alertId: 'LIDO-STAKING-RESUMED',
-      name: '✅ Lido: Staking resumed',
+      name: '⚠️ Lido: Staking resumed',
       description: () => `Staking was resumed!`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
@@ -77,7 +77,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       address: LIDO_STETH_ADDRESS,
       event: 'event RecoverToVault(address vault, address token, uint256 amount)',
       alertId: 'LIDO-RECOVER-TO-VAULT',
-      name: 'ℹ️ Lido: Funds recovered to vault',
+      name: '⚠️ Lido: Funds recovered to vault',
       description: (args: Result) =>
         `Funds recovered to vault:\n` +
         `Vault: ${etherscanAddress(args.vault)}\n` +
@@ -90,7 +90,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       address: LIDO_STETH_ADDRESS,
       event: 'event ContractVersionSet(uint256 version)',
       alertId: 'LIDO-CONTRACT-VERSION-SET',
-      name: 'ℹ️ Lido: Contract version set',
+      name: '⚠️ Lido: Contract version set',
       description: (args: Result) => `Contract version set:\n` + `Version: ${args.version}`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
