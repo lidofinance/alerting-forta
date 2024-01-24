@@ -1,7 +1,9 @@
-import { FindingSeverity, FindingType } from 'forta-agent'
+import { FindingSeverity, FindingType, LogDescription } from 'forta-agent'
 import BigNumber from 'bignumber.js'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../entity/events'
+import { faker } from '@faker-js/faker'
+import { createLogDescriptionMock } from './helper/event_helper'
 
 export const WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT = 'event BunkerModeEnabled(uint256 _sinceTimestamp)'
 
@@ -40,4 +42,22 @@ export function getWithdrawalsEvents(WITHDRAWAL_QUEUE_ADDRESS: string): EventOfN
       type: FindingType.Info,
     },
   ]
+}
+
+export function getFilteredWithdrawalsEventsMock(): LogDescription[] {
+  const descriptions = [
+    {},
+    {
+      ['duration']: faker.number.int(),
+    },
+  ]
+
+  const out: LogDescription[] = []
+  for (const desc of descriptions) {
+    // eslint-disable-next-line
+    // @ts-expect-error
+    out.push(createLogDescriptionMock(desc))
+  }
+
+  return out
 }

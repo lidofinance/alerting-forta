@@ -2,6 +2,7 @@ import type { BigNumber, BigNumberish, CallOverrides } from 'ethers'
 import type { TypedEvent, TypedEventFilter } from '../../generated/common'
 import { UnbufferedEventFilter } from '../../generated/Lido'
 import { WithdrawalsFinalizedEventFilter } from '../../generated/WithdrawalQueueERC721'
+import { Log, LogDescription } from 'forta-agent'
 
 export interface LidoContract {
   getDepositableEther(overrides?: CallOverrides): Promise<BigNumber>
@@ -33,4 +34,14 @@ export interface WithdrawalQueueContract {
       timestamp?: null,
     ): WithdrawalsFinalizedEventFilter
   }
+}
+
+export type TransactionEventContract = {
+  addresses: {
+    [key: string]: boolean
+  }
+  logs: Log[]
+  filterLog: (eventAbi: string | string[], contractAddress?: string | string[]) => LogDescription[]
+  to: string | null
+  timestamp: number
 }

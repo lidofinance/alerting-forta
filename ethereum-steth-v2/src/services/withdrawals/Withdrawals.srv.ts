@@ -18,6 +18,7 @@ import {
 } from '../../utils/events/withdrawals_events'
 import { etherscanAddress, etherscanNft } from '../../utils/string'
 import { EventOfNotice } from '../../entity/events'
+import { Logger } from 'winston'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -43,6 +44,7 @@ const CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR = 5
 export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
 
+  private readonly logger: Logger
   private readonly lidoContract: LidoContract
   private readonly wdQueueContract: WithdrawalQueueContract
   private readonly cache: WithdrawalsCache
@@ -50,12 +52,14 @@ export class WithdrawalsSrv {
   private readonly withdrawalsEvents: EventOfNotice[]
 
   constructor(
+    logger: Logger,
     ethProvider: IETHProvider,
     wdQueueContract: WithdrawalQueueContract,
     lidoContract: LidoContract,
     cache: WithdrawalsCache,
     withdrawalsEvents: EventOfNotice[],
   ) {
+    this.logger = logger
     this.ethProvider = ethProvider
     this.wdQueueContract = wdQueueContract
     this.lidoContract = lidoContract
@@ -80,7 +84,7 @@ export class WithdrawalsSrv {
 
       this.cache.setIsBunkerMode(isBunkerMode)
     } catch (e) {
-      console.log(elapsedTime(`[${this.name}.initialize]`, start))
+      this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
       return new Error(`Could not call "isBunkerModeActive. Cause ${e}`)
     }
 
@@ -100,7 +104,7 @@ export class WithdrawalsSrv {
 
         this.cache.setBunkerModeEnabledSinceTimestamp(bunkerModeSinceTimestamp)
       } catch (e) {
-        console.log(elapsedTime(`[${this.name}.initialize]`, start))
+        this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
         return new Error(`Could not call "bunkerModeSinceTimestamp. Cause ${e}`)
       }
     }
@@ -118,7 +122,7 @@ export class WithdrawalsSrv {
         { delay: 500, maxTry: 5 },
       )
     } catch (e) {
-      console.log(elapsedTime(`[${this.name}.initialize]`, start))
+      this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
       return new Error(`Could not call "getLastRequestId. Cause ${e}`)
     }
 
@@ -137,7 +141,7 @@ export class WithdrawalsSrv {
 
         this.cache.setLastFinalizedRequestId(lastFinalizedRequestId)
       } catch (e) {
-        console.log(elapsedTime(`[${this.name}.initialize]`, start))
+        this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
         return new Error(`Could not call "getLastFinalizedRequestId. Cause ${e}`)
       }
 
@@ -159,7 +163,7 @@ export class WithdrawalsSrv {
 
           this.cache.setLastFinalizedTimestamp(lastFinalizedTimestamp)
         } catch (e) {
-          console.log(elapsedTime(`[${this.name}.initialize]`, start))
+          this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
 
           return new Error(`Could not call "getWithdrawalStatus. Cause ${e}`)
         }
@@ -178,7 +182,7 @@ export class WithdrawalsSrv {
 
       const requestsStatuses = await this.ethProvider.getWithdrawalStatuses(requestsRange, currentBlock)
       if (E.isLeft(requestsStatuses)) {
-        console.log(elapsedTime(`[${this.name}.initialize]`, start))
+        this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
 
         return requestsStatuses.left
       }
@@ -201,7 +205,7 @@ export class WithdrawalsSrv {
       }
     }
 
-    console.log(elapsedTime(`[${this.name}.initialize]`, start))
+    this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return null
   }
 
@@ -228,7 +232,7 @@ export class WithdrawalsSrv {
       )
     }
 
-    console.log(elapsedTime(WithdrawalsSrv.name + '.' + this.handleBlock.name, start))
+    this.logger.info(elapsedTime(WithdrawalsSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
   }

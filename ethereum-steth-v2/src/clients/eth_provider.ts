@@ -2,7 +2,6 @@ import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
-import { BlockTag } from '@ethersproject/providers'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../utils/constants'
@@ -17,6 +16,7 @@ import { WithdrawalQueueBase } from '../generated/WithdrawalQueueERC721'
 import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
 import { ETHDistributedEvent } from '../generated/Lido'
 import { DataRW } from '../utils/mutex'
+import { IEtherscanProvider } from './contracts'
 
 export abstract class IETHProvider {
   public abstract getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>>
@@ -54,16 +54,6 @@ export abstract class IETHProvider {
     fromBlockNumber: number,
     toBlockNumber: number,
   ): Promise<E.Either<Error, ETHDistributedEvent | null>>
-}
-
-interface IEtherscanProvider {
-  getHistory(
-    addressOrName: string | Promise<string>,
-    startBlock?: BlockTag,
-    endBlock?: BlockTag,
-  ): Promise<Array<TransactionResponse>>
-
-  getBalance(addressOrName: string | Promise<string>, blockTag?: BlockTag | Promise<BlockTag>): Promise<EtherBigNumber>
 }
 
 export class ETHProvider implements IETHProvider {
@@ -178,7 +168,6 @@ export class ETHProvider implements IETHProvider {
 
       batchPromises.push(promise)
     }
-    console.log('Info: count history requests: ', batchPromises.length)
 
     try {
       await Promise.all(batchPromises)
@@ -318,7 +307,6 @@ export class ETHProvider implements IETHProvider {
 
       chunkPromises.push(promise)
     }
-    console.log('Info: count withdrawals requests: ', chunkPromises.length)
 
     try {
       await Promise.all(chunkPromises)

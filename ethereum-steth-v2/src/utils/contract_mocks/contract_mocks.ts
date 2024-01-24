@@ -1,5 +1,10 @@
-import { LidoContract, WithdrawalQueueContract } from '../../services/steth_operation/contracts'
+import {
+  LidoContract,
+  TransactionEventContract,
+  WithdrawalQueueContract,
+} from '../../services/steth_operation/contracts'
 import { TypedEvent } from '../../generated/common'
+import { faker } from '@faker-js/faker'
 
 export const LidoContractMock = (): jest.Mocked<LidoContract> => ({
   getDepositableEther: jest.fn(),
@@ -41,4 +46,12 @@ export const TypedEventMock = (): jest.Mocked<TypedEvent> => ({
   topics: [],
   transactionHash: '',
   transactionIndex: 0,
+})
+
+export const TransactionEventContractMock = (): jest.Mocked<TransactionEventContract> => ({
+  addresses: {},
+  logs: [],
+  filterLog: jest.fn(),
+  to: faker.finance.ethereumAddress(),
+  timestamp: faker.date.past().getTime(),
 })

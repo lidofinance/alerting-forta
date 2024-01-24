@@ -20,9 +20,9 @@ import { getWithdrawalsEvents } from './utils/events/withdrawals_events'
 import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
 import { DataRW } from './utils/mutex'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
-import { VaultSrv } from './services/vault/vault.srv'
 import { TestNetAddress } from './utils/constants.testnet'
 import * as Winston from 'winston'
+import { VaultSrv } from './services/vault/Vault.srv'
 
 export type Container = {
   ethClient: IETHProvider
@@ -94,6 +94,7 @@ export class App {
       )
 
       const withdrawalsSrv = new WithdrawalsSrv(
+        logger,
         ethClient,
         wdQueueContact,
         lidoContact,
@@ -102,6 +103,7 @@ export class App {
       )
 
       const gateSealSrv = new GateSealSrv(
+        logger,
         ethClient,
         new GateSealCache(),
         address.GATE_SEAL_DEFAULT_ADDRESS,
@@ -109,6 +111,7 @@ export class App {
       )
 
       const vaultSrv = new VaultSrv(
+        logger,
         ethClient,
         lidoContact,
         address.WITHDRAWALS_VAULT_ADDRESS,

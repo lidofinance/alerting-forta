@@ -3,19 +3,24 @@ import {
   MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME,
   MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM,
   MAX_DEPOSITOR_TX_DELAY,
+  MIN_DEPOSIT_EXECUTOR_BALANCE,
   StethOperationSrv,
 } from './StethOperation.srv'
 import { IETHProvider } from '../../clients/eth_provider'
 import { StethOperationCache } from './StethOperation.cache'
 import * as E from 'fp-ts/Either'
 import { Address, ETH_DECIMALS } from '../../utils/constants'
-import { getDepositSecurityEvents } from '../../utils/events/deposit_security_events'
-import { getLidoEvents } from '../../utils/events/lido_events'
-import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
-import { getBurnerEvents } from '../../utils/events/burner_events'
+import {
+  getDepositSecurityEvents,
+  getFilteredDepositSecurityEventsMock,
+} from '../../utils/events/deposit_security_events'
+import { getFilteredLidoEventsMock, getLidoEvents } from '../../utils/events/lido_events'
+import { getFilteredInsuranceFundEventsMock, getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
+import { getBurnerEvents, getFilteredBurnerEventsMock } from '../../utils/events/burner_events'
 import { ETHProviderMock } from '../../clients/mocks/eth_provider_mock'
 import {
   LidoContractMock,
+  TransactionEventContractMock,
   TypedEventMock,
   WithdrawalQueueContractMock,
 } from '../../utils/contract_mocks/contract_mocks'
@@ -25,9 +30,10 @@ import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { faker } from '@faker-js/faker'
 import { BigNumber as EtherBigNumber } from 'ethers'
 import BigNumber from 'bignumber.js'
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-agent'
 import * as Winston from 'winston'
 import { TypedEvent } from '../../generated/common'
+import { StakingLimitInfo } from '../../entity/stakingLimitInfo'
 
 describe('StethOperationSrv', () => {
   let ethProviderMock: jest.Mocked<IETHProvider>
@@ -45,7 +51,7 @@ describe('StethOperationSrv', () => {
     wdQueueContractMock = WithdrawalQueueContractMock()
   })
 
-  describe('initialize function tests', () => {
+  describe('initialize', () => {
     test(`ethProvider.getHistory error`, async () => {
       const want = new Error(`getHistory error`)
       ethProviderMock.getHistory.mockResolvedValue(E.left(want))
@@ -172,7 +178,7 @@ describe('StethOperationSrv', () => {
     })
   })
 
-  describe('handleBufferedEth function tests', () => {
+  describe('handleBufferedEth', () => {
     test(`ethProvider.getBufferedEther error`, async () => {
       const getBufferedEtherErr = new Error(`getBufferedEther error`)
       ethProviderMock.getBufferedEther.mockResolvedValue(E.left(getBufferedEtherErr))
@@ -232,7 +238,7 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
+      const currentBlock = 19061500
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
@@ -630,6 +636,288 @@ describe('StethOperationSrv', () => {
       expect(result[0].type).toEqual(expected.type)
 
       expect(cache.getLastReportedDepositableEthTimestamp()).toEqual(currentBlockTimestamp)
+    })
+  })
+
+  describe('handleDepositExecutorBalance', () => {
+    test('getBalanceErr', async () => {
+      const executorBalanceRaw = new Error('getBalanceErr')
+      ethProviderMock.getBalance.mockResolvedValueOnce(E.left(executorBalanceRaw))
+
+      const cache = new StethOperationCache()
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const blockNumber = 19061500
+      const currentBlockDate = new Date('2022-01-21')
+      const result = await srv.handleDepositExecutorBalance(blockNumber, currentBlockDate.getTime())
+
+      const expected = Finding.fromObject({
+        alertId: 'LIDO-AGENT-ERROR',
+        description: `Could not fetch depositorBalance. Cause getBalanceErr`,
+        name: 'Error in StethOperationSrv.handleDepositExecutorBalance:376',
+        severity: FindingSeverity.Low,
+        type: FindingType.Degraded,
+      })
+
+      expect(result.length).toEqual(1)
+      expect(result[0].alertId).toEqual(expected.alertId)
+      expect(result[0].description).toEqual(expected.description)
+      expect(result[0].name).toEqual(expected.name)
+      expect(result[0].severity).toEqual(expected.severity)
+      expect(result[0].type).toEqual(expected.type)
+    })
+
+    test('⚠️ Low deposit executor balance', async () => {
+      const executorBalanceRaw = new BigNumber(MIN_DEPOSIT_EXECUTOR_BALANCE - 1).multipliedBy(ETH_DECIMALS)
+      ethProviderMock.getBalance.mockResolvedValueOnce(E.right(executorBalanceRaw))
+
+      const cache = new StethOperationCache()
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const blockNumber = 19061500
+      const currentBlockDate = new Date('2022-01-21')
+      const result = await srv.handleDepositExecutorBalance(blockNumber, currentBlockDate.getTime())
+
+      const expected = Finding.fromObject({
+        alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
+        description: `Balance of deposit executor is 1.0000. This is extremely low! 😱`,
+        name: '⚠️ Low deposit executor balance',
+        severity: FindingSeverity.High,
+        type: FindingType.Suspicious,
+      })
+
+      expect(result.length).toEqual(1)
+      expect(result[0].alertId).toEqual(expected.alertId)
+      expect(result[0].description).toEqual(expected.description)
+      expect(result[0].name).toEqual(expected.name)
+      expect(result[0].severity).toEqual(expected.severity)
+      expect(result[0].type).toEqual(expected.type)
+
+      expect(cache.getLastReportedExecutorBalanceTimestamp()).toEqual(currentBlockDate.getTime())
+    })
+  })
+
+  describe('handleStakingLimit', () => {
+    test('getStakingLimitInfoErr', async () => {
+      const getStakingLimitInfo = new Error('getStakingLimitInfoErr')
+      ethProviderMock.getStakingLimitInfo.mockResolvedValueOnce(E.left(getStakingLimitInfo))
+
+      const cache = new StethOperationCache()
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const blockNumber = 19061500
+      const currentBlockDate = new Date('2022-01-21')
+      const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
+
+      const expected = Finding.fromObject({
+        alertId: 'LIDO-AGENT-ERROR',
+        description: `Could not call "lidoContract.getStakeLimitFullInfo. Cause getStakingLimitInfoErr`,
+        name: 'Error in StethOperationSrv.handleStakingLimit:418',
+        severity: FindingSeverity.Low,
+        type: FindingType.Degraded,
+      })
+
+      expect(result.length).toEqual(1)
+      expect(result[0].alertId).toEqual(expected.alertId)
+      expect(result[0].description).toEqual(expected.description)
+      expect(result[0].name).toEqual(expected.name)
+      expect(result[0].severity).toEqual(expected.severity)
+      expect(result[0].type).toEqual(expected.type)
+    })
+
+    test('⚠️ Staking limit below 10%', async () => {
+      const getStakingLimitInfo: StakingLimitInfo = {
+        currentStakeLimit: new BigNumber(9),
+        isStakingPaused: false,
+        maxStakeLimit: new BigNumber(100),
+      }
+      ethProviderMock.getStakingLimitInfo.mockResolvedValueOnce(E.right(getStakingLimitInfo))
+
+      const cache = new StethOperationCache()
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const blockNumber = 19061500
+      const currentBlockDate = new Date('2022-01-21')
+      const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
+
+      const expected = Finding.fromObject({
+        alertId: 'LOW-STAKING-LIMIT',
+        description: `Current staking limit is 9.00 ETH this is lower than 10% of max staking limit 100.00 ETH`,
+        name: '⚠️ Staking limit below 10%',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+
+      expect(result.length).toEqual(1)
+      expect(result[0].alertId).toEqual(expected.alertId)
+      expect(result[0].description).toEqual(expected.description)
+      expect(result[0].name).toEqual(expected.name)
+      expect(result[0].severity).toEqual(expected.severity)
+      expect(result[0].type).toEqual(expected.type)
+
+      expect(cache.getLastReportedStakingLimit10Timestamp()).toEqual(currentBlockDate.getTime())
+    })
+
+    test('⚠️ Staking limit below 30%', async () => {
+      const getStakingLimitInfo: StakingLimitInfo = {
+        currentStakeLimit: new BigNumber(250),
+        isStakingPaused: false,
+        maxStakeLimit: new BigNumber(1000),
+      }
+      ethProviderMock.getStakingLimitInfo.mockResolvedValueOnce(E.right(getStakingLimitInfo))
+
+      const cache = new StethOperationCache()
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const blockNumber = 19061500
+      const currentBlockDate = new Date('2022-01-21')
+      const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
+
+      const expected = Finding.fromObject({
+        alertId: 'LOW-STAKING-LIMIT',
+        description: `Current staking limit is 250.00 ETH this is lower than 30% of max staking limit 1000.00 ETH`,
+        name: '📉 Staking limit below 30%',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      })
+
+      expect(result.length).toEqual(1)
+      expect(result[0].alertId).toEqual(expected.alertId)
+      expect(result[0].description).toEqual(expected.description)
+      expect(result[0].name).toEqual(expected.name)
+      expect(result[0].severity).toEqual(expected.severity)
+      expect(result[0].type).toEqual(expected.type)
+
+      expect(srv.getStorage().getLastReportedStakingLimit30Timestamp()).toEqual(currentBlockDate.getTime())
+    })
+  })
+
+  describe('handleTransaction', () => {
+    test('success', async () => {
+      const cache = new StethOperationCache()
+
+      const depositEvents = getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS)
+      const lidoEvents = getLidoEvents(address.LIDO_STETH_ADDRESS)
+      const insuranceFundEvents = getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20)
+      const burnerEvents = getBurnerEvents(address.BURNER_ADDRESS)
+
+      const events = [...depositEvents, ...lidoEvents, ...insuranceFundEvents, ...burnerEvents]
+
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        depositEvents,
+        lidoEvents,
+        insuranceFundEvents,
+        burnerEvents,
+      )
+
+      const txEventMock = TransactionEventContractMock()
+      txEventMock.addresses = {
+        [address.DEPOSIT_SECURITY_ADDRESS]: true,
+        [address.LIDO_STETH_ADDRESS]: true,
+        [address.INSURANCE_FUND_ADDRESS]: true,
+        [address.BURNER_ADDRESS]: true,
+      }
+
+      txEventMock.to = address.DEPOSIT_SECURITY_ADDRESS
+
+      const filteredEvents: LogDescription[] = []
+      for (const logDescription of [
+        ...getFilteredDepositSecurityEventsMock(),
+        ...getFilteredLidoEventsMock(),
+        ...getFilteredInsuranceFundEventsMock(),
+        ...getFilteredBurnerEventsMock(),
+      ]) {
+        filteredEvents.push(logDescription)
+        txEventMock.filterLog.mockReturnValueOnce([logDescription])
+      }
+
+      const result = srv.handleTransaction(txEventMock)
+
+      for (let i = 0; i < result.length; i++) {
+        const expected: Finding = Finding.fromObject({
+          name: events[i].name,
+          description: events[i].description(filteredEvents[i].args),
+          alertId: events[i].alertId,
+          severity: events[i].severity,
+          type: events[i].type,
+          metadata: { args: String(filteredEvents[i].args) },
+        })
+
+        expect(result[i]).toEqual(expected)
+      }
     })
   })
 })

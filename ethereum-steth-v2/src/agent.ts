@@ -80,7 +80,9 @@ export function initialize(): Initialize {
     console.log(elapsedTime('Agent.initialize', startTime) + '\n')
 
     console.log(
-      `[${app.StethOperationSrv.getName()}] Last Depositor TxTime: ${app.StethOperationSrv.getStorage().getLastDepositorTxTime()}`,
+      `[${app.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
+        app.StethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,
+      ).toUTCString()}`,
     )
     console.log(
       `[${app.StethOperationSrv.getName()}] Buffered Eth: ${app.StethOperationSrv.getStorage()
@@ -149,5 +151,5 @@ export const handleTransaction = (): HandleTransaction => {
 export default {
   initialize: initialize(),
   handleBlock: handleBlock(),
-  handleTransaction: handleTransaction(),
+  // handleTransaction: handleTransaction(),
 }

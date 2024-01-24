@@ -7,6 +7,7 @@ import { GateSealCache } from './GateSeal.cache'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT, GATE_SEAL_SEALED_EVENT } from '../../utils/events/gate_seal_events'
 import { etherscanAddress } from '../../utils/string'
+import { Logger } from 'winston'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
@@ -19,6 +20,7 @@ const GATE_SEAL_EXPIRY_THRESHOLD = ONE_MONTH
 
 export class GateSealSrv {
   private readonly name = 'GateSealSrv'
+  private readonly logger: Logger
 
   private readonly ethProvider: IETHProvider
   private readonly cache: GateSealCache
@@ -27,11 +29,13 @@ export class GateSealSrv {
   private gateSealAddress: string | undefined
 
   constructor(
+    logger: Logger,
     ethProvider: IETHProvider,
     cache: GateSealCache,
     gateSealAddress: string,
     gateSealFactoryAddress: string,
   ) {
+    this.logger = logger
     this.ethProvider = ethProvider
     this.cache = cache
     this.gateSealAddress = gateSealAddress
@@ -57,7 +61,7 @@ export class GateSealSrv {
         })
 
         out.push(f)
-        console.log(elapsedTime(`[${this.name}.initialize]`, start) + `on block ${currentBlock}`)
+        this.logger.info(elapsedTime(`[${this.name}.initialize]`, start) + `on block ${currentBlock}`)
 
         return out
       }
@@ -87,7 +91,7 @@ export class GateSealSrv {
       out.push(f)
     }
 
-    console.log(elapsedTime(`[${this.name}.initialize]`, start))
+    this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return out
   }
 
@@ -105,7 +109,7 @@ export class GateSealSrv {
     ])
 
     findings.push(...pauseRoleFindings, ...expiryGateSealFindings)
-    console.log(elapsedTime(GateSealSrv.name + '.' + this.handleBlock.name, start))
+    this.logger.info(elapsedTime(GateSealSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
   }

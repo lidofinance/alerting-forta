@@ -3,14 +3,13 @@ import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
 import { IETHProvider } from '../../clients/eth_provider'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { retryAsync } from 'ts-retry'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import { Event as EthersEvent } from 'ethers'
-import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { EventOfNotice } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
-import { LidoContract, WithdrawalQueueContract } from './contracts'
+import { LidoContract, TransactionEventContract, WithdrawalQueueContract } from './contracts'
 import { Logger } from 'winston'
 import { TypedEvent } from '../../generated/common'
 
@@ -25,7 +24,7 @@ export const MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME = 60 * 60 // 1 hour
 
 export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72 // 72 Hours
 const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4 // 4 Hours
-const MIN_DEPOSIT_EXECUTOR_BALANCE = 2 // 2 ETH
+export const MIN_DEPOSIT_EXECUTOR_BALANCE = 2 // 2 ETH
 const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12 // 12 hours
 const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12 // 12 hours
 
@@ -118,8 +117,8 @@ export class StethOperationSrv {
 
     const [bufferedEthFindings, depositorBalanceFindings, stakingLimitFindings] = await Promise.all([
       this.handleBufferedEth(blockEvent.block.number, blockEvent.block.timestamp),
-      this.handleDepositExecutorBalance(blockEvent),
-      this.handleStakingLimit(blockEvent),
+      this.handleDepositExecutorBalance(blockEvent.block.number, blockEvent.block.timestamp),
+      this.handleStakingLimit(blockEvent.block.number, blockEvent.block.timestamp),
     ])
 
     findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings)
@@ -128,7 +127,7 @@ export class StethOperationSrv {
     return findings
   }
 
-  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+  public handleTransaction(txEvent: TransactionEventContract): Finding[] {
     const out: Finding[] = []
 
     if (txEvent.to == this.depositSecurityAddress) {
@@ -145,11 +144,11 @@ export class StethOperationSrv {
     return out
   }
 
-  public handleEventsOfNotice(txEvent: TransactionEvent, eventsOfNotice: EventOfNotice[]) {
+  public handleEventsOfNotice(txEvent: TransactionEventContract, eventsOfNotice: EventOfNotice[]) {
     const out: Finding[] = []
     for (const eventInfo of eventsOfNotice) {
       if (eventInfo.address in txEvent.addresses) {
-        const filteredEvents = filterLog(txEvent.logs, eventInfo.event, eventInfo.address)
+        const filteredEvents = txEvent.filterLog(eventInfo.event, eventInfo.address)
 
         for (const filteredEvent of filteredEvents) {
           out.push(
@@ -179,33 +178,6 @@ export class StethOperationSrv {
         severity: FindingSeverity.Low,
         type: FindingType.Degraded,
         metadata: { stack: `${bufferedEthRaw.left.stack}` },
-      })
-
-      return [f]
-    }
-
-    let depositableEther: number
-
-    try {
-      const resp = await retryAsync<EtherBigNumber>(
-        async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getDepositableEther({
-            blockTag: blockNumber,
-          })
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      const depositableEtherRaw = new BigNumber(resp.toString())
-      depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber()
-    } catch (e) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:189`,
-        description: `Could not call "lidoContract.getDepositableEther. Cause ${e instanceof Error ? e.message : ''}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
-        type: FindingType.Degraded,
-        metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
       })
 
       return [f]
@@ -311,6 +283,32 @@ export class StethOperationSrv {
     }
 
     if (blockNumber % BLOCK_CHECK_INTERVAL === 0) {
+      let depositableEther: number
+
+      try {
+        const resp = await retryAsync<EtherBigNumber>(
+          async (): Promise<EtherBigNumber> => {
+            return await this.lidoContract.getDepositableEther({
+              blockTag: blockNumber,
+            })
+          },
+          { delay: 500, maxTry: 5 },
+        )
+
+        const depositableEtherRaw = new BigNumber(resp.toString())
+        depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber()
+      } catch (e) {
+        const f: Finding = Finding.fromObject({
+          name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:189`,
+          description: `Could not call "lidoContract.getDepositableEther. Cause ${e instanceof Error ? e.message : ''}`,
+          alertId: 'LIDO-AGENT-ERROR',
+          severity: FindingSeverity.Low,
+          type: FindingType.Degraded,
+          metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
+        })
+
+        return [f]
+      }
       // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
       if (depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL) {
         if (this.cache.getCriticalDepositableAmountTimestamp() === 0) {
@@ -367,23 +365,18 @@ export class StethOperationSrv {
     return out
   }
 
-  public async handleDepositExecutorBalance(blockEvent: BlockEvent): Promise<Finding[]> {
-    const blockNumber = blockEvent.block.number
+  public async handleDepositExecutorBalance(blockNumber: number, currentBlockTimestamp: number): Promise<Finding[]> {
     const out: Finding[] = []
-    if (blockNumber % BLOCK_CHECK_INTERVAL) {
-      const currentBlockTimestamp = blockEvent.block.timestamp
+    if (blockNumber % BLOCK_CHECK_INTERVAL === 0) {
       if (
         this.cache.getLastReportedExecutorBalanceTimestamp() + REPORT_WINDOW_EXECUTOR_BALANCE <
         currentBlockTimestamp
       ) {
-        const executorBalanceRaw = await this.ethProvider.getBalance(
-          this.lidoDepositExecutorAddress,
-          blockEvent.blockNumber,
-        )
+        const executorBalanceRaw = await this.ethProvider.getBalance(this.lidoDepositExecutorAddress, blockNumber)
         if (E.isLeft(executorBalanceRaw)) {
           out.push(
             Finding.fromObject({
-              name: `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:329`,
+              name: `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:376`,
               description: `Could not fetch depositorBalance. Cause ${executorBalanceRaw.left.message}`,
               alertId: 'LIDO-AGENT-ERROR',
               severity: FindingSeverity.Low,
@@ -395,7 +388,7 @@ export class StethOperationSrv {
           return out
         }
 
-        const executorBalance = new BigNumber(String(executorBalanceRaw.right)).div(ETH_DECIMALS).toNumber()
+        const executorBalance = executorBalanceRaw.right.div(ETH_DECIMALS).toNumber()
         if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
           this.cache.setLastReportedExecutorBalanceTimestamp(currentBlockTimestamp)
           out.push(
@@ -415,16 +408,13 @@ export class StethOperationSrv {
     return out
   }
 
-  public async handleStakingLimit(blockEvent: BlockEvent): Promise<Finding[]> {
-    const blockNumber = blockEvent.block.number
+  public async handleStakingLimit(blockNumber: number, currentBlockTimestamp: number): Promise<Finding[]> {
     const out: Finding[] = []
-    if (blockNumber % BLOCK_CHECK_INTERVAL_SMAll !== 0) {
-      const currentBlockTimestamp = blockEvent.block.timestamp
-
+    if (blockNumber % BLOCK_CHECK_INTERVAL_SMAll === 0) {
       const stakingLimitInfo = await this.ethProvider.getStakingLimitInfo(blockNumber)
       if (E.isLeft(stakingLimitInfo)) {
         const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:385`,
+          name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:418`,
           description: `Could not call "lidoContract.getStakeLimitFullInfo. Cause ${stakingLimitInfo.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
           severity: FindingSeverity.Low,

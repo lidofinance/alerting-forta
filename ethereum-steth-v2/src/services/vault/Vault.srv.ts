@@ -9,12 +9,14 @@ import { toEthString } from '../../utils/string'
 import { ETHDistributedEvent } from '../../generated/Lido'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
+import { Logger } from 'winston'
 
 const WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL = 100
 const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(1000)
 const EL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(50)
 
 export class VaultSrv {
+  private readonly logger: Logger
   private readonly name = 'VaultSrv'
   private readonly ethProvider: IETHProvider
 
@@ -26,12 +28,14 @@ export class VaultSrv {
   private readonly burnerAddress: string
 
   constructor(
+    logger: Logger,
     ethProvider: IETHProvider,
     lidoContract: LidoContract,
     withdrawalsVaultAddress: string,
     elRewardsVaultAddress: string,
     burnerAddress: string,
   ) {
+    this.logger = logger
     this.ethProvider = ethProvider
     this.lidoContract = lidoContract
     this.elRewardsVaultAddress = elRewardsVaultAddress
@@ -41,7 +45,7 @@ export class VaultSrv {
 
   public initialize(currentBlock: number): null {
     const start = new Date().getTime()
-    console.log(elapsedTime(`[${this.name}.initialize]`, start))
+    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
 
     return null
   }
@@ -121,7 +125,7 @@ export class VaultSrv {
       ...noELVaultDrainsFindings,
     )
 
-    console.log(elapsedTime(VaultSrv.name + '.' + this.handleBlock.name, start))
+    this.logger.info(elapsedTime(VaultSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
   }

@@ -1,7 +1,9 @@
-import { FindingSeverity, FindingType } from 'forta-agent'
+import { FindingSeverity, FindingType, LogDescription } from 'forta-agent'
 import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
+import { faker } from '@faker-js/faker'
+import { createLogDescriptionMock } from './helper/event_helper'
 
 export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
   return [
@@ -94,4 +96,37 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       type: FindingType.Info,
     },
   ]
+}
+
+export function getFilteredLidoEventsMock(): LogDescription[] {
+  const descriptions = [
+    {},
+    {},
+    {},
+    {},
+    {
+      ['maxStakeLimit']: faker.number.int(),
+      ['stakeLimitIncreasePerBlock']: faker.number.int(),
+    },
+    {},
+    {
+      ['lidoLocator']: faker.finance.ethereumAddress(),
+    },
+    {
+      ['vault']: faker.finance.ethereumAddress(),
+      ['token']: faker.finance.ethereumAddress(),
+    },
+    {
+      ['version']: faker.system.semver(),
+    },
+  ]
+
+  const out: LogDescription[] = []
+  for (const desc of descriptions) {
+    // eslint-disable-next-line
+    // @ts-expect-error
+    out.push(createLogDescriptionMock(desc))
+  }
+
+  return out
 }
