@@ -12,6 +12,7 @@ import { elapsedTime } from '../../utils/time'
 import { LidoContract, TransactionEventContract, WithdrawalQueueContract } from './contracts'
 import { Logger } from 'winston'
 import { TypedEvent } from '../../generated/common'
+import { alertId_token_rebased } from '../../utils/events/lido_events'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
@@ -127,7 +128,56 @@ export class StethOperationSrv {
     return findings
   }
 
-  public handleTransaction(txEvent: TransactionEventContract): Finding[] {
+  public async handleInvariants(blockNumber: number): Promise<Finding[]> {
+    const start = new Date().getTime()
+    const findings: Finding[] = []
+
+    if (this.cache.getShareRate().blockNumber !== 0) {
+      const shareRate = await this.ethProvider.getShareRate(blockNumber)
+      if (E.isLeft(shareRate)) {
+        const f: Finding = Finding.fromObject({
+          name: `Error in ${StethOperationSrv.name}.${this.handleInvariants.name}:136`,
+          description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
+          alertId: 'LIDO-AGENT-ERROR',
+          severity: FindingSeverity.Low,
+          type: FindingType.Degraded,
+          metadata: {
+            stack: `${shareRate.left.stack}`,
+          },
+        })
+
+        return [f]
+      }
+
+      const shareRateFromReport = this.cache.getShareRate()
+      if (!shareRate.right.eq(shareRateFromReport.amount)) {
+        const percentsFromReporedShareRate = shareRate.right.div(shareRateFromReport.amount).multipliedBy(100)
+        const deviation = 100.0 - percentsFromReporedShareRate.toNumber()
+
+        // deviation by 0.0001 (1 bp or 0.01%)
+        if (Math.abs(deviation) >= 0.01) {
+          findings.push(
+            Finding.fromObject({
+              name: `🚨 Share rate unexpected has changed`,
+              description:
+                `Prev.shareRate(${shareRateFromReport.blockNumber}) = ${shareRateFromReport.amount.toNumber()} \n` +
+                `Curr.shareRate(${blockNumber}) = ${shareRate.right.toNumber()} \n` +
+                `Diff: ${shareRate.right.minus(shareRateFromReport.amount).toNumber()}`,
+              alertId: 'LIDO-INVARIANT-ERROR',
+              severity: FindingSeverity.Critical,
+              type: FindingType.Suspicious,
+            }),
+          )
+        }
+      }
+    }
+
+    this.logger.info(elapsedTime(StethOperationSrv.name + '.' + this.handleInvariants.name, start))
+
+    return findings
+  }
+
+  public async handleTransaction(txEvent: TransactionEventContract, blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
     if (txEvent.to == this.depositSecurityAddress) {
@@ -138,8 +188,32 @@ export class StethOperationSrv {
     const lidoFindings = this.handleEventsOfNotice(txEvent, this.lidoEvents)
     const insuranceFundFindings = this.handleEventsOfNotice(txEvent, this.insuranceFundEvents)
     const burnerFindings = this.handleEventsOfNotice(txEvent, this.burnerEvents)
-
     out.push(...depositSecFindings, ...lidoFindings, ...insuranceFundFindings, ...burnerFindings)
+
+    for (const f of lidoFindings) {
+      if (f.alertId === alertId_token_rebased) {
+        const shareRate = await this.ethProvider.getShareRate(blockNumber)
+        if (E.isLeft(shareRate)) {
+          const f: Finding = Finding.fromObject({
+            name: `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:146`,
+            description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
+            alertId: 'LIDO-AGENT-ERROR',
+            severity: FindingSeverity.Low,
+            type: FindingType.Degraded,
+            metadata: {
+              stack: `${shareRate.left.stack}`,
+            },
+          })
+
+          out.push(f)
+        } else {
+          this.cache.setShareRate({
+            amount: shareRate.right,
+            blockNumber: blockNumber,
+          })
+        }
+      }
+    }
 
     return out
   }

@@ -112,6 +112,7 @@ export const handleBlock = (): HandleBlock => {
 
     const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings] = await Promise.all([
       app.StethOperationSrv.handleBlock(blockEvent),
+      app.StethOperationSrv.handleInvariants(blockEvent.blockNumber),
       app.WithdrawalsSrv.handleBlock(blockEvent),
       app.GateSealSrv.handleBlock(blockEvent),
       app.VaultSrv.handleBlock(blockEvent),
@@ -135,7 +136,7 @@ export const handleTransaction = (): HandleTransaction => {
     const app = await App.getInstance()
     const out: Finding[] = []
 
-    const stethOperationFindings = app.StethOperationSrv.handleTransaction(txEvent)
+    const stethOperationFindings = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.block.number)
     const withdrawalsFindings = app.WithdrawalsSrv.handleTransaction(txEvent)
     const gateSealFindings = app.GateSealSrv.handleTransaction(txEvent)
     const vaultFindings = app.VaultSrv.handleTransaction(txEvent)

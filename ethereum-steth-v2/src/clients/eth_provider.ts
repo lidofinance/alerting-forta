@@ -54,6 +54,12 @@ export abstract class IETHProvider {
     fromBlockNumber: number,
     toBlockNumber: number,
   ): Promise<E.Either<Error, ETHDistributedEvent | null>>
+
+  public abstract getTotalPooledEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getTotalShares(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 }
 
 export class ETHProvider implements IETHProvider {
@@ -480,5 +486,56 @@ export class ETHProvider implements IETHProvider {
     } catch (e) {
       return E.left(new Error(`Could not call "this.exitBusContract.functions.hasRole". Cause: ${e}`))
     }
+  }
+
+  public async getTotalPooledEther(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          return await this.lidoContract.getTotalPooledEther({
+            blockTag: blockNumber,
+          })
+        },
+        { delay: 500, maxTry: 5 },
+      )
+
+      return E.right(new BigNumber(out.toString()))
+    } catch (e) {
+      return E.left(new Error(`Could not call "this.getTotalPooledEther". Cause: ${e}`))
+    }
+  }
+
+  public async getTotalShares(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          return await this.lidoContract.getTotalShares({
+            blockTag: blockNumber,
+          })
+        },
+        { delay: 500, maxTry: 5 },
+      )
+
+      return E.right(new BigNumber(out.toString()))
+    } catch (e) {
+      return E.left(new Error(`Could not call "this.getTotalShares". Cause: ${e}`))
+    }
+  }
+
+  public async getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const [totalPooledEth, totalShares] = await Promise.all([
+      this.getTotalPooledEther(blockNumber),
+      this.getTotalShares(blockNumber),
+    ])
+
+    if (E.isLeft(totalPooledEth)) {
+      return E.left(totalPooledEth.left)
+    }
+
+    if (E.isLeft(totalShares)) {
+      return E.left(totalShares.left)
+    }
+    // Formula: shareRate = (totalPooledEth * 10**27) / totalShares
+    return E.right(totalPooledEth.right.multipliedBy(new BigNumber(10).pow(27)).div(totalShares.right))
   }
 }

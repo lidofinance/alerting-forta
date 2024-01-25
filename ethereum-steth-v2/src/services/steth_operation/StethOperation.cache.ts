@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js'
+import { ShareRate } from '../../entity/share_rate'
 
 export class StethOperationCache {
   private _lastDepositorTxTime = 0
@@ -8,8 +9,14 @@ export class StethOperationCache {
   private _lastReportedExecutorBalanceTimestamp = 0
   private _lastReportedStakingLimit10Timestamp = 0
   private _lastReportedStakingLimit30Timestamp = 0
+  private _shareRate: ShareRate
 
-  constructor() {}
+  constructor() {
+    this._shareRate = {
+      amount: new BigNumber(0),
+      blockNumber: 0,
+    }
+  }
 
   public getLastDepositorTxTime(): number {
     return this._lastDepositorTxTime
@@ -65,5 +72,13 @@ export class StethOperationCache {
 
   public setLastReportedStakingLimit30Timestamp(blockTimestamp: number) {
     this._lastReportedStakingLimit30Timestamp = blockTimestamp
+  }
+
+  public getShareRate(): ShareRate {
+    return this._shareRate
+  }
+
+  public setShareRate(shareRate: ShareRate) {
+    this._shareRate = shareRate
   }
 }

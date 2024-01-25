@@ -34,6 +34,8 @@
          7. 🚨 Lido: Locator set
          8. ⚠️Lido: Funds recovered to vault
          9. ⚠️Lido: Contract version set
+         10. ⚠️ Lido: Token rebased
+         11. 🚨 Share rate unexpected has changed
       3. Insurance fund events
          1. ⚠️ Insurance fund: ETH transferred
          2. ⚠️ Insurance fund: ERC721 transferred
@@ -48,7 +50,7 @@
       1. ⚠️ Withdrawals: <limitRate>% of stake limit is spent and unfinalized queue is on par with drained stake
          limit
       2. ⚠️ Withdrawals: unfinalized queue is more than 100_000 stETH
-      3. ⚠️ Withdrawals: unfinalized queue wait time is too long
+      3. ⚠️ Withdrawals: unfinalized queue wait time is <hours> more then 1 day
       4. ⚠️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed
       5. ⚠️ Withdrawals: unclaimed requests size is more than withdrawal queue balance
    2. HandleTransaction

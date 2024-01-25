@@ -15,4 +15,7 @@ export const ETHProviderMock = (): jest.Mocked<IETHProvider> => ({
   checkGateSeal: jest.fn(),
   getExpiryTimestamp: jest.fn(),
   getETHDistributedEvent: jest.fn(),
+  getTotalPooledEther: jest.fn(),
+  getTotalShares: jest.fn(),
+  getShareRate: jest.fn(),
 })

@@ -868,6 +868,9 @@ describe('StethOperationSrv', () => {
 
       const events = [...depositEvents, ...lidoEvents, ...insuranceFundEvents, ...burnerEvents]
 
+      const shareRateMock = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
+      ethProviderMock.getShareRate.mockResolvedValue(E.right(shareRateMock))
+
       const srv = new StethOperationSrv(
         logger,
         cache,
@@ -904,7 +907,8 @@ describe('StethOperationSrv', () => {
         txEventMock.filterLog.mockReturnValueOnce([logDescription])
       }
 
-      const result = srv.handleTransaction(txEventMock)
+      const blockNumber = 19061521
+      const result = await srv.handleTransaction(txEventMock, blockNumber)
 
       for (let i = 0; i < result.length; i++) {
         const expected: Finding = Finding.fromObject({
@@ -918,6 +922,260 @@ describe('StethOperationSrv', () => {
 
         expect(result[i]).toEqual(expected)
       }
+
+      expect(srv.getStorage().getShareRate().amount).toEqual(shareRateMock)
+      expect(srv.getStorage().getShareRate().blockNumber).toEqual(19061521)
+    })
+
+    test('get shareRate error', async () => {
+      const cache = new StethOperationCache()
+
+      const depositEvents = getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS)
+      const lidoEvents = getLidoEvents(address.LIDO_STETH_ADDRESS)
+      const insuranceFundEvents = getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20)
+      const burnerEvents = getBurnerEvents(address.BURNER_ADDRESS)
+
+      const events = [...depositEvents, ...lidoEvents, ...insuranceFundEvents, ...burnerEvents]
+
+      ethProviderMock.getShareRate.mockResolvedValue(E.left(new Error('shareRateErr')))
+
+      const srv = new StethOperationSrv(
+        logger,
+        cache,
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        depositEvents,
+        lidoEvents,
+        insuranceFundEvents,
+        burnerEvents,
+      )
+
+      const txEventMock = TransactionEventContractMock()
+      txEventMock.addresses = {
+        [address.DEPOSIT_SECURITY_ADDRESS]: true,
+        [address.LIDO_STETH_ADDRESS]: true,
+        [address.INSURANCE_FUND_ADDRESS]: true,
+        [address.BURNER_ADDRESS]: true,
+      }
+
+      txEventMock.to = address.DEPOSIT_SECURITY_ADDRESS
+
+      const filteredEvents: LogDescription[] = []
+      for (const logDescription of [
+        ...getFilteredDepositSecurityEventsMock(),
+        ...getFilteredLidoEventsMock(),
+        ...getFilteredInsuranceFundEventsMock(),
+        ...getFilteredBurnerEventsMock(),
+      ]) {
+        filteredEvents.push(logDescription)
+        txEventMock.filterLog.mockReturnValueOnce([logDescription])
+      }
+
+      const blockNumber = 19061521
+      const result = await srv.handleTransaction(txEventMock, blockNumber)
+
+      for (let i = 0; i < result.length - 1; i++) {
+        const expected: Finding = Finding.fromObject({
+          name: events[i].name,
+          description: events[i].description(filteredEvents[i].args),
+          alertId: events[i].alertId,
+          severity: events[i].severity,
+          type: events[i].type,
+          metadata: { args: String(filteredEvents[i].args) },
+        })
+
+        expect(result[i]).toEqual(expected)
+      }
+
+      const expectedShareRateErrFinding = Finding.fromObject({
+        alertId: 'LIDO-AGENT-ERROR',
+        description: `Could not call "ethProvider.getShareRate". Cause shareRateErr`,
+        name: 'Error in StethOperationSrv.handleTransaction:146',
+        severity: FindingSeverity.Low,
+        type: FindingType.Degraded,
+      })
+
+      expect(result[result.length - 1].name).toEqual(expectedShareRateErrFinding.name)
+      expect(result[result.length - 1].description).toEqual(expectedShareRateErrFinding.description)
+      expect(result[result.length - 1].alertId).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[result.length - 1].severity).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[result.length - 1].type).toEqual(expectedShareRateErrFinding.type)
+    })
+  })
+
+  describe('handleInvariants', () => {
+    test(`ethProviderErr`, async () => {
+      const want = new Error(`getShareRateErr`)
+      ethProviderMock.getShareRate.mockResolvedValue(E.left(want))
+
+      const srv = new StethOperationSrv(
+        logger,
+        new StethOperationCache(),
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const currentBlock = 19061449
+
+      srv.getStorage().setShareRate({
+        blockNumber: currentBlock + 1,
+        amount: new BigNumber('1.15490045560519776042410219381324898101464198621e+27'),
+      })
+
+      const result = await srv.handleInvariants(currentBlock)
+
+      const expectedShareRateErrFinding = Finding.fromObject({
+        alertId: 'LIDO-AGENT-ERROR',
+        description: `Could not call "ethProvider.getShareRate". Cause getShareRateErr`,
+        name: 'Error in StethOperationSrv.handleInvariants:136',
+        severity: FindingSeverity.Low,
+        type: FindingType.Degraded,
+      })
+
+      expect(result[0].name).toEqual(expectedShareRateErrFinding.name)
+      expect(result[0].description).toEqual(expectedShareRateErrFinding.description)
+      expect(result[0].alertId).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[0].severity).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[0].type).toEqual(expectedShareRateErrFinding.type)
+    })
+
+    test(`should found invariant on +0.15`, async () => {
+      const cachedShareRate = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
+
+      ethProviderMock.getShareRate.mockResolvedValue(
+        E.right(cachedShareRate.plus(new BigNumber('0.15490045560519776042410219381324898101464198621e+27'))),
+      )
+
+      const srv = new StethOperationSrv(
+        logger,
+        new StethOperationCache(),
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const currentBlock = 19061449
+
+      srv.getStorage().setShareRate({
+        blockNumber: currentBlock - 1,
+        amount: cachedShareRate,
+      })
+
+      const result = await srv.handleInvariants(currentBlock)
+
+      const expectedShareRateErrFinding = Finding.fromObject({
+        alertId: 'LIDO-INVARIANT-ERROR',
+        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
+Curr.shareRate(19061449) = 1.3098009112103954e+27 
+Diff: 1.5490045560519778e+26`,
+        name: '🚨 Share rate unexpected has changed',
+        severity: FindingSeverity.Critical,
+        type: FindingType.Suspicious,
+      })
+
+      expect(result[0].name).toEqual(expectedShareRateErrFinding.name)
+      expect(result[0].description).toEqual(expectedShareRateErrFinding.description)
+      expect(result[0].alertId).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[0].severity).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[0].type).toEqual(expectedShareRateErrFinding.type)
+    })
+
+    test(`should found invariant on -0.15`, async () => {
+      const cachedShareRate = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
+
+      ethProviderMock.getShareRate.mockResolvedValue(
+        E.right(cachedShareRate.minus(new BigNumber('0.15490045560519776042410219381324898101464198621e+27'))),
+      )
+
+      const srv = new StethOperationSrv(
+        logger,
+        new StethOperationCache(),
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const currentBlock = 19061449
+
+      srv.getStorage().setShareRate({
+        blockNumber: currentBlock - 1,
+        amount: cachedShareRate,
+      })
+
+      const result = await srv.handleInvariants(currentBlock)
+
+      const expectedShareRateErrFinding = Finding.fromObject({
+        alertId: 'LIDO-INVARIANT-ERROR',
+        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
+Curr.shareRate(19061449) = 1e+27 
+Diff: -1.5490045560519778e+26`,
+        name: '🚨 Share rate unexpected has changed',
+        severity: FindingSeverity.Critical,
+        type: FindingType.Suspicious,
+      })
+
+      expect(result[0].name).toEqual(expectedShareRateErrFinding.name)
+      expect(result[0].description).toEqual(expectedShareRateErrFinding.description)
+      expect(result[0].alertId).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[0].severity).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[0].type).toEqual(expectedShareRateErrFinding.type)
+    })
+
+    test(`should not found invariant on 0.00001`, async () => {
+      const cachedShareRate = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
+
+      ethProviderMock.getShareRate.mockResolvedValue(E.right(cachedShareRate.plus(new BigNumber('0.00001'))))
+
+      const srv = new StethOperationSrv(
+        logger,
+        new StethOperationCache(),
+        ethProviderMock,
+        address.DEPOSIT_SECURITY_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
+        address.DEPOSIT_EXECUTOR_ADDRESS,
+        lidoContractMock,
+        wdQueueContractMock,
+        getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+        getLidoEvents(address.LIDO_STETH_ADDRESS),
+        getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+        getBurnerEvents(address.BURNER_ADDRESS),
+      )
+
+      const currentBlock = 19061449
+
+      srv.getStorage().setShareRate({
+        blockNumber: currentBlock - 1,
+        amount: cachedShareRate,
+      })
+
+      const result = await srv.handleInvariants(currentBlock)
+      expect(result.length).toEqual(0)
     })
   })
 })

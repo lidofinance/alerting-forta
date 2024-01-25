@@ -5,6 +5,8 @@ import { etherscanAddress } from '../string'
 import { faker } from '@faker-js/faker'
 import { createLogDescriptionMock } from './helper/event_helper'
 
+export const alertId_token_rebased = 'LIDO-TOKEN-REBASED'
+
 export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
   return [
     {
@@ -95,9 +97,18 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       severity: FindingSeverity.Info,
       type: FindingType.Info,
     },
+    {
+      address: LIDO_STETH_ADDRESS,
+      event:
+        'event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)',
+      alertId: alertId_token_rebased,
+      name: '⚠️ Lido: Token rebased',
+      description: (args: Result) => `reportTimestamp: ${args.reportTimestamp}`,
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+    },
   ]
 }
-
 export function getFilteredLidoEventsMock(): LogDescription[] {
   const descriptions = [
     {},
@@ -118,6 +129,9 @@ export function getFilteredLidoEventsMock(): LogDescription[] {
     },
     {
       ['version']: faker.system.semver(),
+    },
+    {
+      ['amount']: faker.number.int(),
     },
   ]
 

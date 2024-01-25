@@ -20,7 +20,6 @@ import { getWithdrawalsEvents } from './utils/events/withdrawals_events'
 import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
 import { DataRW } from './utils/mutex'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
-import { TestNetAddress } from './utils/constants.testnet'
 import * as Winston from 'winston'
 import { VaultSrv } from './services/vault/Vault.srv'
 
@@ -41,19 +40,12 @@ export class App {
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
-
-      const etherscanProvider = new ethers.providers.EtherscanProvider(
-        process.env.FORTA_AGENT_RUN_TIER == 'testnet' ? 'goerli' : undefined,
-        etherscanKey,
-      )
-
-      let address: Address = Address
-      if (process.env.FORTA_AGENT_RUN_TIER === 'testnet') {
-        address = TestNetAddress
-      }
-
       const ethersProvider = getEthersProvider()
       ethersProvider.formatter = new FormatterWithEIP1898()
+
+      const etherscanProvider = new ethers.providers.EtherscanProvider(ethersProvider.network, etherscanKey)
+
+      const address: Address = Address
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
       const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethersProvider)

@@ -2,6 +2,8 @@ import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider, Netwo
 import { App } from '../../src/app'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { createTransactionEvent, etherBlockToFortaBlockEvent } from './utils'
+import BigNumber from 'bignumber.js'
+
 const TEST_TIMEOUT = 60_000 // ms
 
 describe('agent-steth-ops e2e tests', () => {
@@ -84,7 +86,7 @@ describe('agent-steth-ops e2e tests', () => {
 
       const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
 
-      const results = app.StethOperationSrv.handleTransaction(txEvent)
+      const results = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.blockNumber)
 
       const expected = [
         {
@@ -139,7 +141,7 @@ describe('agent-steth-ops e2e tests', () => {
 
       const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
 
-      const results = app.StethOperationSrv.handleTransaction(txEvent)
+      const results = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.blockNumber)
 
       const expected = [
         {
@@ -174,6 +176,46 @@ describe('agent-steth-ops e2e tests', () => {
       expect(results[1].name).toEqual(expected[1].name)
       expect(results[1].severity).toEqual(expected[1].severity)
       expect(results[1].type).toEqual(expected[1].type)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    'Share rate',
+    async () => {
+      const app = await App.getInstance()
+      const txHash = '0xe71ac8b9f8f7b360f5defd3f6738f8482f8c15f1dd5f6827544bef8b7b4fbd37'
+
+      const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
+      const block = await ethProvider.send('eth_getBlockByNumber', [
+        ethers.utils.hexValue(parseInt(receipt.blockNumber)),
+        true,
+      ])
+      const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
+      const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
+      const results = await app.StethOperationSrv.handleTransaction(txEvent, parseInt(receipt.blockNumber))
+
+      const expected: Finding = Finding.fromObject({
+        name: '⚠️ Lido: Token rebased',
+        description: 'reportTimestamp: 1706011211',
+        alertId: 'LIDO-TOKEN-REBASED',
+        severity: 1,
+        type: 4,
+      })
+
+      expect(results[0].alertId).toEqual(expected.alertId)
+      expect(results[0].description).toEqual(expected.description)
+      expect(results[0].name).toEqual(expected.name)
+      expect(results[0].severity).toEqual(expected.severity)
+      expect(results[0].type).toEqual(expected.type)
+
+      expect(app.StethOperationSrv.getStorage().getShareRate().blockNumber).toEqual(19069339)
+      expect(app.StethOperationSrv.getStorage().getShareRate().amount).toEqual(
+        new BigNumber('1.15469003182482499409518734333781126194978625178e+27'),
+      )
+
+      const findings = await app.StethOperationSrv.handleInvariants(19069340)
+      expect(findings.length).toEqual(0)
     },
     TEST_TIMEOUT,
   )

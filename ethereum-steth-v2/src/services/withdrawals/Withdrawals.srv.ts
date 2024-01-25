@@ -373,11 +373,15 @@ export class WithdrawalsSrv {
           currentBlockTimestamp - this.cache.getLastLongUnfinalizedQueueAlertTimestamp() >
           LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY
         ) {
+          const waitTime = currentBlockTimestamp - this.cache.getLastLongUnfinalizedQueueAlertTimestamp()
+
           // if we are in turbo mode and unfinalized queue is not finalized for 5 days
           // and alert hasn't been sent for 1 day
           out.push(
             Finding.fromObject({
-              name: '⚠️ Withdrawals: unfinalized queue wait time is too long',
+              name: `⚠️ Withdrawals: unfinalized queue wait time is ${new Date(
+                waitTime * 1000,
+              ).getHours()} more then 1 day`,
               description: `Unfinalized queue wait time is ${formatDelay(
                 currentBlockTimestamp - this.cache.getFirstUnfinalizedRequestTimestamp(),
               )}`,
