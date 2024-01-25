@@ -17,13 +17,13 @@ import {
 import { getFilteredLidoEventsMock, getLidoEvents } from '../../utils/events/lido_events'
 import { getFilteredInsuranceFundEventsMock, getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
 import { getBurnerEvents, getFilteredBurnerEventsMock } from '../../utils/events/burner_events'
-import { ETHProviderMock } from '../../clients/mocks/eth_provider_mock'
+import { ETHProviderMock } from '../../clients/mocks/eth_provider.mock'
 import {
   LidoContractMock,
   TransactionEventContractMock,
   TypedEventMock,
   WithdrawalQueueContractMock,
-} from '../../utils/contract_mocks/contract_mocks'
+} from '../../utils/contract_mocks/contract.mock'
 import { LidoContract, WithdrawalQueueContract } from './contracts'
 import { expect } from '@jest/globals'
 import { TransactionResponse } from '@ethersproject/abstract-provider'

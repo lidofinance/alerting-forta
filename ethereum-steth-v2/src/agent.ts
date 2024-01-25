@@ -1,4 +1,12 @@
-import { BlockEvent, Finding, FindingSeverity, FindingType, HandleBlock, HandleTransaction } from 'forta-agent'
+import {
+  BlockEvent,
+  decodeJwt,
+  Finding,
+  FindingSeverity,
+  FindingType,
+  HandleBlock,
+  HandleTransaction,
+} from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
@@ -20,6 +28,14 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const startTime = new Date().getTime()
     const app = await App.getInstance()
+
+    const token = await App.getJwt()
+    if (E.isLeft(token)) {
+      console.log(`Error: ${token.left.message}`)
+      console.log(`Stack: ${token.left.stack}`)
+
+      process.exit(1)
+    }
 
     const latestBlockNumber = await app.ethClient.getStartedBlockForApp(argv)
     if (E.isLeft(latestBlockNumber)) {
@@ -66,9 +82,11 @@ export function initialize(): Initialize {
     ]
     metadata.agents = '[' + agents.toString() + ']'
 
+    const decodedJwt = decodeJwt(token.right)
+
     await app.findingsRW.write([
       Finding.fromObject({
-        name: 'Agent launched',
+        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
         description: `Version: ${Version.desc}`,
         alertId: 'LIDO-AGENT-LAUNCHED',
         severity: FindingSeverity.Info,
@@ -78,7 +96,6 @@ export function initialize(): Initialize {
     ])
 
     console.log(elapsedTime('Agent.initialize', startTime) + '\n')
-
     console.log(
       `[${app.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
         app.StethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,

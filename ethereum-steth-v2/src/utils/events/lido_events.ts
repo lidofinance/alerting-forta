@@ -3,7 +3,7 @@ import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
 import { faker } from '@faker-js/faker'
-import { createLogDescriptionMock } from './helper/event_helper'
+import { createLogDescriptionMock } from '../contract_mocks/log_description.mock'
 
 export const alertId_token_rebased = 'LIDO-TOKEN-REBASED'
 

@@ -1,5 +1,5 @@
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
-import { ethers, Finding, getEthersProvider } from 'forta-agent'
+import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
 import { Address } from './utils/constants'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { ETHProvider, IETHProvider } from './clients/eth_provider'
@@ -22,6 +22,7 @@ import { DataRW } from './utils/mutex'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
 import * as Winston from 'winston'
 import { VaultSrv } from './services/vault/Vault.srv'
+import * as E from 'fp-ts/Either'
 
 export type Container = {
   ethClient: IETHProvider
@@ -36,6 +37,28 @@ export class App {
   private static instance: Container
 
   private constructor() {}
+
+  public static async getJwt(): Promise<E.Either<Error, string>> {
+    let token: string
+    try {
+      token = await fetchJwt({})
+    } catch (e) {
+      return E.left(new Error(`Could not fetch jwt. cause ${e}`))
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const isTokenOk = await verifyJwt(token)
+        if (!isTokenOk) {
+          return E.left(new Error(`Token verification failed`))
+        }
+      } catch (e) {
+        return E.left(new Error(`Token verification failed`))
+      }
+    }
+
+    return E.right(token)
+  }
 
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {

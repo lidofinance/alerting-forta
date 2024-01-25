@@ -5,7 +5,7 @@ import { FindingSeverity, FindingType, LogDescription } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
 import { faker } from '@faker-js/faker'
-import { createLogDescriptionMock } from './helper/event_helper'
+import { createLogDescriptionMock } from '../contract_mocks/log_description.mock'
 
 export function getInsuranceFundEvents(
   INSURANCE_FUND_ADDRESS: string,

@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../entity/events'
 import { faker } from '@faker-js/faker'
-import { createLogDescriptionMock } from './helper/event_helper'
+import { createLogDescriptionMock } from '../contract_mocks/log_description.mock'
 
 export const WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT = 'event BunkerModeEnabled(uint256 _sinceTimestamp)'
 
