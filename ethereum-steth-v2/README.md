@@ -58,7 +58,7 @@
       2. ⚠️Withdrawals: BUNKER MODE OFF! ✅
       3. ℹ️ Huge stETH withdrawal requests batch
       4. ⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than 150_000 stETH (max staking limit)
-      5. 🤔 Withdrawals: claimed amount is more than requested
+      5. ⚠️Withdrawals: claimed amount is more than requested
       6. ⚠️Withdrawals: contract was unpaused
       7. 🚨 Withdrawals: contract was paused
 3. GateSeal

@@ -728,7 +728,7 @@ export class WithdrawalsSrv {
         if (claimedAmount.gt(currAmount)) {
           out.push(
             Finding.fromObject({
-              name: `🤔 Withdrawals: claimed amount is more than requested`,
+              name: `⚠️Withdrawals: claimed amount is more than requested`,
               description: `Request ID: ${etherscanNft(this.wdQueueContract.address, reqId)}\nClaimed: ${claimedAmount
                 .div(ETH_DECIMALS)
                 .toFixed(2)} ETH\nRequested: ${(curr.amount as BigNumber)
