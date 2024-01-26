@@ -18,6 +18,9 @@ import { ETHDistributedEvent } from '../generated/Lido'
 import { DataRW } from '../utils/mutex'
 import { IEtherscanProvider } from './contracts'
 
+const DELAY_IN_500MS = 500
+const ATTEMPTS_5 = 5
+
 export abstract class IETHProvider {
   public abstract getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>>
 
@@ -109,7 +112,7 @@ export class ETHProvider implements IETHProvider {
       try {
         latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
       } catch (e) {
-        return E.left(new Error(`Could not fetch latest block number. cause: ${e}`))
+        return E.left(new Error(`Could not fetch latest block number. Cause: ${e}`))
       }
     }
 
@@ -132,12 +135,12 @@ export class ETHProvider implements IETHProvider {
 
           return tx
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch transaction. cause: ${e}`))
+      return E.left(new Error(`Could not fetch transaction. Cause: ${e}`))
     }
   }
 
@@ -152,7 +155,7 @@ export class ETHProvider implements IETHProvider {
           async (): Promise<TransactionResponse[]> => {
             return await this.etherscanProvider.getHistory(depositSecurityAddress, start, end)
           },
-          { delay: 500, maxTry: 5 },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
       } catch (e) {
         throw new Error(`Could not fetch transaction history between ${start} and ${end} blocks. Cause: ${e}`)
@@ -161,7 +164,6 @@ export class ETHProvider implements IETHProvider {
 
     const batchPromises: Promise<void>[] = []
     const out = new DataRW<TransactionResponse>([])
-    // const out: TransactionResponse[] = []
     const batchSize = 10_000
 
     for (let i = startBlock; i <= endBlock; i += batchSize) {
@@ -180,7 +182,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(await out.read())
     } catch (error) {
-      return E.left(new Error(`Could not fetch transaction history for last 3 days. Cause ${error}`))
+      return E.left(new Error(`Could not fetch transaction history. Cause ${error}`))
     }
   }
 
@@ -190,12 +192,12 @@ export class ETHProvider implements IETHProvider {
         async (): Promise<EtherBigNumber> => {
           return await this.etherscanProvider.getBalance(lidoStethAddress, block)
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new Error(`Could not fetch Steth balance. cause: ${e}`))
+      return E.left(new Error(`Could not fetch Steth balance. Cause: ${e}`))
     }
   }
 
@@ -205,12 +207,12 @@ export class ETHProvider implements IETHProvider {
         async (): Promise<EtherBigNumber> => {
           return await this.jsonRpcProvider.getBalance(address, block)
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new Error(`Could not fetch balance by address ${address}. cause: ${e}`))
+      return E.left(new Error(`Could not fetch balance by address ${address}. Cause: ${e}`))
     }
   }
 
@@ -222,12 +224,12 @@ export class ETHProvider implements IETHProvider {
             blockHash: blockHash,
           } as never)
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new Error(`Could not fetch balance by address ${address} and blockHash ${blockHash}. cause: ${e}`))
+      return E.left(new Error(`Could not fetch balance by address ${address} and blockHash ${blockHash}. Cause: ${e}`))
     }
   }
 
@@ -245,12 +247,12 @@ export class ETHProvider implements IETHProvider {
             isStakingPaused: resp.isStakingPaused,
           }
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not call "lidoContract.getStakeLimitFullInfo. Cause ${e}`))
+      return E.left(new Error(`Could not call "lidoContract.getStakeLimitFullInfo". Cause ${e}`))
     }
   }
 
@@ -264,7 +266,7 @@ export class ETHProvider implements IETHProvider {
 
           return new BigNumber(String(out))
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(out)
@@ -289,7 +291,7 @@ export class ETHProvider implements IETHProvider {
 
             return resp.statuses
           },
-          { delay: 500, maxTry: 5 },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
       } catch (e) {
         throw new Error(
@@ -330,7 +332,7 @@ export class ETHProvider implements IETHProvider {
             blockTag: blockNumber,
           })
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(resp.toString()))
@@ -365,7 +367,7 @@ export class ETHProvider implements IETHProvider {
     const out: GateSeal = {
       roleForWithdrawalQueue: isGateSealHasPauseRole.right,
       roleForExitBus: isGateSealHasExitBusPauseRoleMember.right,
-      exitbusOracleAddress: this.exitBusContract.address,
+      exitBusOracleAddress: this.exitBusContract.address,
       withdrawalQueueAddress: this.wdQueueContract.address,
     }
 
@@ -382,7 +384,7 @@ export class ETHProvider implements IETHProvider {
 
           return new BigNumber(String(resp))
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(expiryTimestamp)
@@ -410,7 +412,7 @@ export class ETHProvider implements IETHProvider {
 
           return resp
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(report)
@@ -431,7 +433,7 @@ export class ETHProvider implements IETHProvider {
 
           return resp
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(isExpired)
@@ -455,7 +457,7 @@ export class ETHProvider implements IETHProvider {
 
           return resp
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(queuePauseRoleMember)
@@ -479,7 +481,7 @@ export class ETHProvider implements IETHProvider {
 
           return resp
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(exitBusPauseRoleMember)
@@ -496,7 +498,7 @@ export class ETHProvider implements IETHProvider {
             blockTag: blockNumber,
           })
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(out.toString()))
@@ -513,7 +515,7 @@ export class ETHProvider implements IETHProvider {
             blockTag: blockNumber,
           })
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(out.toString()))

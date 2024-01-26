@@ -43,7 +43,7 @@ export class App {
     try {
       token = await fetchJwt({})
     } catch (e) {
-      return E.left(new Error(`Could not fetch jwt. cause ${e}`))
+      return E.left(new Error(`Could not fetch jwt. Cause ${e}`))
     }
 
     if (process.env.NODE_ENV === 'production') {
@@ -75,7 +75,7 @@ export class App {
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
-        address.EXITBUS_ORACLE_ADDRESS,
+        address.EXIT_BUS_ORACLE_ADDRESS,
         ethersProvider,
       )
       const ethClient = new ETHProvider(

@@ -1,7 +1,7 @@
 export type GateSeal = {
   roleForWithdrawalQueue: boolean
   roleForExitBus: boolean
-  exitbusOracleAddress: string
+  exitBusOracleAddress: string
   withdrawalQueueAddress: string
 }
 

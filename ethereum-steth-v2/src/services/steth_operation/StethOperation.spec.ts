@@ -74,7 +74,9 @@ describe('StethOperationSrv', () => {
       const currentBlock = 19061449
       const result = await srv.initialize(currentBlock)
 
-      expect(result).toStrictEqual(want)
+      expect(result).toStrictEqual(
+        new Error('Could not fetch transaction history for last 3 days. Cause getHistory error'),
+      )
     })
 
     test(`ethProvider.getStethBalance error`, async () => {
@@ -750,7 +752,7 @@ describe('StethOperationSrv', () => {
 
       const expected = Finding.fromObject({
         alertId: 'LIDO-AGENT-ERROR',
-        description: `Could not call "lidoContract.getStakeLimitFullInfo. Cause getStakingLimitInfoErr`,
+        description: `Could not call "lidoContract.getStakeLimitFullInfo". Cause getStakingLimitInfoErr`,
         name: 'Error in StethOperationSrv.handleStakingLimit:418',
         severity: FindingSeverity.Low,
         type: FindingType.Degraded,

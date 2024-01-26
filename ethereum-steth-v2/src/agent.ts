@@ -110,15 +110,15 @@ export function initialize(): Initialize {
   }
 }
 
-let isHandleBLockRunning: boolean = false
+let isHandleBlockRunning: boolean = false
 export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
     const startTime = new Date().getTime()
-    if (isHandleBLockRunning) {
+    if (isHandleBlockRunning) {
       return []
     }
 
-    isHandleBLockRunning = true
+    isHandleBlockRunning = true
     const app = await App.getInstance()
 
     const out: Finding[] = []
@@ -134,10 +134,11 @@ export const handleBlock = (): HandleBlock => {
       app.GateSealSrv.handleBlock(blockEvent),
       app.VaultSrv.handleBlock(blockEvent),
     ])
+
     out.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
-    isHandleBLockRunning = false
+    isHandleBlockRunning = false
     return out
   }
 }

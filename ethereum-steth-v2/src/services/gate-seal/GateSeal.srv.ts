@@ -72,7 +72,7 @@ export class GateSealSrv {
     if (!status.right.roleForExitBus || !status.right.roleForWithdrawalQueue) {
       let additionalDesc = ''
       if (!status.right.roleForExitBus) {
-        additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(status.right.exitbusOracleAddress)}`
+        additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(status.right.exitBusOracleAddress)}`
       }
       if (!status.right.roleForWithdrawalQueue) {
         additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${etherscanAddress(
@@ -156,7 +156,7 @@ export class GateSealSrv {
     if (!status.right.roleForExitBus || !status.right.roleForWithdrawalQueue) {
       let additionalDesc = ''
       if (!status.right.roleForExitBus) {
-        additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(status.right.exitbusOracleAddress)}`
+        additionalDesc += `\nNo PAUSE_ROLE for ExitBus address: ${etherscanAddress(status.right.exitBusOracleAddress)}`
       }
       if (!status.right.roleForWithdrawalQueue) {
         additionalDesc += `\nNo PAUSE_ROLE for WithdrawalQueue address: ${etherscanAddress(

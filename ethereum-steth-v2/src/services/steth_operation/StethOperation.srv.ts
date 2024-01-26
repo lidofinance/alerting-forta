@@ -83,7 +83,7 @@ export class StethOperationSrv {
     )
     if (E.isLeft(history)) {
       this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-      return history.left
+      return new Error(`Could not fetch transaction history for last 3 days. Cause ${history.left.message}`)
     }
 
     const depositorTxTimestamps: number[] = []
@@ -489,7 +489,7 @@ export class StethOperationSrv {
       if (E.isLeft(stakingLimitInfo)) {
         const f: Finding = Finding.fromObject({
           name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:418`,
-          description: `Could not call "lidoContract.getStakeLimitFullInfo. Cause ${stakingLimitInfo.left.message}`,
+          description: `Could not call "lidoContract.getStakeLimitFullInfo". Cause ${stakingLimitInfo.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
           severity: FindingSeverity.Low,
           type: FindingType.Degraded,
