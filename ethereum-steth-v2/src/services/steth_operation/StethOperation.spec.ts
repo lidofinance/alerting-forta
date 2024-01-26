@@ -10,13 +10,10 @@ import { IETHProvider } from '../../clients/eth_provider'
 import { StethOperationCache } from './StethOperation.cache'
 import * as E from 'fp-ts/Either'
 import { Address, ETH_DECIMALS } from '../../utils/constants'
-import {
-  getDepositSecurityEvents,
-  getFilteredDepositSecurityEventsMock,
-} from '../../utils/events/deposit_security_events'
-import { getFilteredLidoEventsMock, getLidoEvents } from '../../utils/events/lido_events'
-import { getFilteredInsuranceFundEventsMock, getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
-import { getBurnerEvents, getFilteredBurnerEventsMock } from '../../utils/events/burner_events'
+import { getDepositSecurityEvents } from '../../utils/events/deposit_security_events'
+import { getLidoEvents } from '../../utils/events/lido_events'
+import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
+import { getBurnerEvents } from '../../utils/events/burner_events'
 import { ETHProviderMock } from '../../clients/mocks/eth_provider.mock'
 import {
   LidoContractMock,
@@ -34,6 +31,12 @@ import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-age
 import * as Winston from 'winston'
 import { TypedEvent } from '../../generated/common'
 import { StakingLimitInfo } from '../../entity/stakingLimitInfo'
+import {
+  getFilteredBurnerEventsMock,
+  getFilteredDepositSecurityEventsMock,
+  getFilteredInsuranceFundEventsMock,
+  getFilteredLidoEventsMock,
+} from '../../utils/events/mocks/events.mock'
 
 describe('StethOperationSrv', () => {
   let ethProviderMock: jest.Mocked<IETHProvider>
