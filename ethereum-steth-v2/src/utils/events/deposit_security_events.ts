@@ -1,9 +1,7 @@
 import { EventOfNotice } from '../../entity/events'
-import { FindingSeverity, FindingType, LogDescription } from 'forta-agent'
+import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
-import { faker } from '@faker-js/faker'
-import { createLogDescriptionMock } from '../contract_mocks/log_description.mock'
 
 export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): EventOfNotice[] {
   return [
@@ -81,29 +79,4 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
       type: FindingType.Info,
     },
   ]
-}
-
-export function getFilteredDepositSecurityEventsMock(): LogDescription[] {
-  const descriptions = [
-    {
-      ['guardian']: faker.finance.ethereumAddress(),
-      ['stakingModuleId']: 1,
-    },
-    { ['stakingModuleId']: 1 },
-    { ['guardian']: faker.finance.ethereumAddress() },
-    { ['newValue']: faker.number.int() },
-    { ['newValue']: faker.number.int() },
-    { ['newValue']: faker.number.int() },
-    { ['newValue']: faker.number.int() },
-    { ['newValue']: faker.number.int() },
-  ]
-
-  const out: LogDescription[] = []
-  for (const desc of descriptions) {
-    // eslint-disable-next-line
-    // @ts-expect-error
-    out.push(createLogDescriptionMock(desc))
-  }
-
-  return out
 }

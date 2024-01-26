@@ -1,11 +1,9 @@
 import { EventOfNotice } from '../../entity/events'
-import { Address, ERC20, ETH_DECIMALS } from '../constants'
+import { ERC20, ETH_DECIMALS } from '../constants'
 import BigNumber from 'bignumber.js'
-import { FindingSeverity, FindingType, LogDescription } from 'forta-agent'
+import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
-import { faker } from '@faker-js/faker'
-import { createLogDescriptionMock } from '../contract_mocks/log_description.mock'
 
 export function getInsuranceFundEvents(
   INSURANCE_FUND_ADDRESS: string,
@@ -80,40 +78,4 @@ export function getInsuranceFundEvents(
       type: FindingType.Info,
     },
   ]
-}
-
-export function getFilteredInsuranceFundEventsMock(): LogDescription[] {
-  const descriptions = [
-    {
-      ['_amount']: Address.DAI_ADDRESS,
-      ['_recipient']: faker.finance.ethereumAddress(),
-    },
-    {
-      ['_token']: Address.DAI_ADDRESS,
-      ['_recipient']: faker.finance.ethereumAddress(),
-    },
-    {
-      ['_token']: Address.DAI_ADDRESS,
-      ['_amount']: faker.number.bigInt(),
-      ['_recipient']: faker.finance.ethereumAddress(),
-    },
-    {
-      ['_token']: Address.DAI_ADDRESS,
-      ['_amount']: faker.number.bigInt(),
-      ['_recipient']: faker.finance.ethereumAddress(),
-    },
-    {
-      ['previousOwner']: faker.finance.ethereumAddress(),
-      ['newOwner']: faker.finance.ethereumAddress(),
-    },
-  ]
-
-  const out: LogDescription[] = []
-  for (const desc of descriptions) {
-    // eslint-disable-next-line
-    // @ts-expect-error
-    out.push(createLogDescriptionMock(desc))
-  }
-
-  return out
 }
