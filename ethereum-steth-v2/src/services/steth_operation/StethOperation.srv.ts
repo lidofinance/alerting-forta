@@ -120,6 +120,7 @@ export class StethOperationSrv {
       this.handleBufferedEth(blockEvent.block.number, blockEvent.block.timestamp),
       this.handleDepositExecutorBalance(blockEvent.block.number, blockEvent.block.timestamp),
       this.handleStakingLimit(blockEvent.block.number, blockEvent.block.timestamp),
+      this.handleShareRateChange(blockEvent.block.number),
     ])
 
     findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings)
@@ -128,7 +129,7 @@ export class StethOperationSrv {
     return findings
   }
 
-  public async handleInvariants(blockNumber: number): Promise<Finding[]> {
+  public async handleShareRateChange(blockNumber: number): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
@@ -136,7 +137,7 @@ export class StethOperationSrv {
       const shareRate = await this.ethProvider.getShareRate(blockNumber)
       if (E.isLeft(shareRate)) {
         const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleInvariants.name}:136`,
+          name: `Error in ${StethOperationSrv.name}.${this.handleShareRateChange.name}:136`,
           description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
           alertId: 'LIDO-AGENT-ERROR',
           severity: FindingSeverity.Low,
@@ -172,7 +173,7 @@ export class StethOperationSrv {
       }
     }
 
-    this.logger.info(elapsedTime(StethOperationSrv.name + '.' + this.handleInvariants.name, start))
+    this.logger.info(elapsedTime(StethOperationSrv.name + '.' + this.handleShareRateChange.name, start))
 
     return findings
   }

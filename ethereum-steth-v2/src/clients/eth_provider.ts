@@ -5,7 +5,7 @@ import { retryAsync } from 'ts-retry'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../utils/constants'
-import { StakingLimitInfo } from '../entity/stakingLimitInfo'
+import { StakingLimitInfo } from '../entity/staking_limit_info'
 import {
   GateSeal as GateSealContract,
   Lido as LidoContract,

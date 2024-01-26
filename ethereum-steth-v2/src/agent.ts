@@ -129,7 +129,6 @@ export const handleBlock = (): HandleBlock => {
 
     const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings] = await Promise.all([
       app.StethOperationSrv.handleBlock(blockEvent),
-      app.StethOperationSrv.handleInvariants(blockEvent.blockNumber),
       app.WithdrawalsSrv.handleBlock(blockEvent),
       app.GateSealSrv.handleBlock(blockEvent),
       app.VaultSrv.handleBlock(blockEvent),
@@ -146,7 +145,6 @@ export const handleBlock = (): HandleBlock => {
 let isHandleTransactionRunning: boolean = false
 export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
-    const startTime = new Date().getTime()
     if (isHandleTransactionRunning) {
       return []
     }
@@ -161,7 +159,6 @@ export const handleTransaction = (): HandleTransaction => {
 
     out.push(...stethOperationFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
-    console.log(elapsedTime('handleTransaction', startTime) + '\n')
     isHandleTransactionRunning = false
     return out
   }

@@ -30,7 +30,7 @@ import BigNumber from 'bignumber.js'
 import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-agent'
 import * as Winston from 'winston'
 import { TypedEvent } from '../../generated/common'
-import { StakingLimitInfo } from '../../entity/stakingLimitInfo'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import {
   getFilteredBurnerEventsMock,
   getFilteredDepositSecurityEventsMock,
@@ -1012,7 +1012,7 @@ describe('StethOperationSrv', () => {
     })
   })
 
-  describe('handleInvariants', () => {
+  describe('handleShareRateChange', () => {
     test(`ethProviderErr`, async () => {
       const want = new Error(`getShareRateErr`)
       ethProviderMock.getShareRate.mockResolvedValue(E.left(want))
@@ -1039,12 +1039,12 @@ describe('StethOperationSrv', () => {
         amount: new BigNumber('1.15490045560519776042410219381324898101464198621e+27'),
       })
 
-      const result = await srv.handleInvariants(currentBlock)
+      const result = await srv.handleShareRateChange(currentBlock)
 
       const expectedShareRateErrFinding = Finding.fromObject({
         alertId: 'LIDO-AGENT-ERROR',
         description: `Could not call "ethProvider.getShareRate". Cause getShareRateErr`,
-        name: 'Error in StethOperationSrv.handleInvariants:136',
+        name: 'Error in StethOperationSrv.handleShareRateChange:136',
         severity: FindingSeverity.Low,
         type: FindingType.Degraded,
       })
@@ -1085,7 +1085,7 @@ describe('StethOperationSrv', () => {
         amount: cachedShareRate,
       })
 
-      const result = await srv.handleInvariants(currentBlock)
+      const result = await srv.handleShareRateChange(currentBlock)
 
       const expectedShareRateErrFinding = Finding.fromObject({
         alertId: 'LIDO-INVARIANT-ERROR',
@@ -1133,7 +1133,7 @@ Diff: 1.5490045560519778e+26`,
         amount: cachedShareRate,
       })
 
-      const result = await srv.handleInvariants(currentBlock)
+      const result = await srv.handleShareRateChange(currentBlock)
 
       const expectedShareRateErrFinding = Finding.fromObject({
         alertId: 'LIDO-INVARIANT-ERROR',
@@ -1179,7 +1179,7 @@ Diff: -1.5490045560519778e+26`,
         amount: cachedShareRate,
       })
 
-      const result = await srv.handleInvariants(currentBlock)
+      const result = await srv.handleShareRateChange(currentBlock)
       expect(result.length).toEqual(0)
     })
   })

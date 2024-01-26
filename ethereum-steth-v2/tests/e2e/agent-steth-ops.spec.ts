@@ -214,7 +214,7 @@ describe('agent-steth-ops e2e tests', () => {
         new BigNumber('1.15469003182482499409518734333781126194978625178e+27'),
       )
 
-      const findings = await app.StethOperationSrv.handleInvariants(19069340)
+      const findings = await app.StethOperationSrv.handleShareRateChange(19069340)
       expect(findings.length).toEqual(0)
     },
     TEST_TIMEOUT,

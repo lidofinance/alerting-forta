@@ -1,5 +1,5 @@
 import { Block as EtherBlock } from '@ethersproject/abstract-provider'
-import { Block, BlockEvent, ethers, EventType, Log, LogDescription, Network, Trace } from 'forta-agent'
+import { Block, BlockEvent, EventType, Network, Trace } from 'forta-agent'
 import { formatAddress, isZeroAddress } from 'forta-agent/dist/cli/utils'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { getContractAddress } from 'ethers/lib/utils'
