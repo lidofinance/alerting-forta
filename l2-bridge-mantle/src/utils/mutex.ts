@@ -1,16 +1,15 @@
-import { Mutex } from 'async-mutex'
-import { Finding } from 'forta-agent'
+import { Mutex, MutexInterface, withTimeout } from 'async-mutex'
 
-export class FindingsRW {
-  private mutex: Mutex
-  private value: Finding[]
+export class DataRW<T> {
+  private mutex: MutexInterface
+  private value: T[]
 
-  constructor(initialValue: Finding[]) {
-    this.mutex = new Mutex()
+  constructor(initialValue: T[]) {
+    this.mutex = withTimeout(new Mutex(), 100)
     this.value = initialValue
   }
 
-  async read(): Promise<Finding[]> {
+  async read(): Promise<T[]> {
     await this.mutex.acquire()
     try {
       const out = this.value
@@ -22,10 +21,19 @@ export class FindingsRW {
     }
   }
 
-  async write(newValue: Finding[]): Promise<void> {
+  async write(newValue: T[]): Promise<void> {
     await this.mutex.acquire()
     try {
       this.value.push(...newValue)
+    } finally {
+      this.mutex.release()
+    }
+  }
+
+  async append(newValue: T): Promise<void> {
+    await this.mutex.acquire()
+    try {
+      this.value.push(newValue)
     } finally {
       this.mutex.release()
     }
