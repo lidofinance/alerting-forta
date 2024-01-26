@@ -151,8 +151,8 @@ export class StethOperationSrv {
 
       const shareRateFromReport = this.cache.getShareRate()
       if (!shareRate.right.eq(shareRateFromReport.amount)) {
-        const percentsFromReporedShareRate = shareRate.right.div(shareRateFromReport.amount).multipliedBy(100)
-        const deviation = 100.0 - percentsFromReporedShareRate.toNumber()
+        const percentsFromReportedShareRate = shareRate.right.div(shareRateFromReport.amount).multipliedBy(100)
+        const deviation = 100.0 - percentsFromReportedShareRate.toNumber()
 
         // deviation by 0.0001 (1 bp or 0.01%)
         if (Math.abs(deviation) >= 0.01) {
