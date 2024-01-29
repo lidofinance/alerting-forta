@@ -267,7 +267,7 @@ export class WithdrawalsSrv {
       return []
     }
 
-    const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockEvent.blockNumber)
+    const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockEvent.block.number)
     if (E.isLeft(stakeLimitFullInfo)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:213`,
@@ -281,7 +281,7 @@ export class WithdrawalsSrv {
       return [f]
     }
 
-    const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockEvent.blockNumber)
+    const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
     if (E.isLeft(unfinalizedStETH)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:232`,
@@ -418,7 +418,7 @@ export class WithdrawalsSrv {
     }
     const unclaimedRequestsStatuses = await this.ethProvider.getWithdrawalStatuses(
       unclaimedReqIds,
-      blockEvent.blockNumber,
+      blockEvent.block.number,
     )
     if (E.isLeft(unclaimedRequestsStatuses)) {
       const f: Finding = Finding.fromObject({

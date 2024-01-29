@@ -190,7 +190,7 @@ export class GateSealSrv {
     }
 
     const currentBlockTimestamp = blockEvent.block.timestamp
-    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockEvent.blockNumber)
+    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockEvent.block.number)
     if (E.isLeft(expiryTimestamp)) {
       const f = Finding.fromObject({
         name: `Error in ${GateSealSrv.name}.${this.handleExpiryGateSeal.name}:172`,

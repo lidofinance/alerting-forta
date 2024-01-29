@@ -58,7 +58,7 @@ export class VaultSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const currentBlock = blockEvent.blockNumber
+    const currentBlock = blockEvent.block.number
     const prevBlockWithdrawalVaultBalance = await this.ethProvider.getBalanceByBlockHash(
       this.withdrawalsVaultAddress,
       blockEvent.block.parentHash,

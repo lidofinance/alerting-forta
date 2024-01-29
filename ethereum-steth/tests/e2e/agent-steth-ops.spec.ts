@@ -51,7 +51,7 @@ describe('agent-steth-ops e2e tests', () => {
 
       const blockEvent = etherBlockToFortaBlockEvent(block)
 
-      const result = await app.StethOperationSrv.handleDepositExecutorBalance(blockEvent.blockNumber, block.timestamp)
+      const result = await app.StethOperationSrv.handleDepositExecutorBalance(blockEvent.block.number, block.timestamp)
 
       const expected = Finding.fromObject({
         alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
