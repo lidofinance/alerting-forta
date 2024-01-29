@@ -265,7 +265,7 @@ export class VaultSrv {
       if (currentBalance.right.lt(prevBalance)) {
         out.push(
           Finding.fromObject({
-            name: '🚨🚨🚨 Withdrawal Vault balance mismatch',
+            name: '🚨🚨🚨 Withdrawal Vault balance mismatch. [without oracle report]',
             description: `Withdrawal Vault Balance has decreased by ${toEthString(
               prevBalance.minus(currentBalance.right),
             )} without Oracle report`,
@@ -285,7 +285,7 @@ export class VaultSrv {
     if (currentBalance.right.lt(expectedBalance)) {
       out.push(
         Finding.fromObject({
-          name: '🚨🚨🚨 Withdrawal Vault balance mismatch',
+          name: '🚨🚨🚨 Withdrawal Vault balance mismatch. [within oracle report]',
           description: `Withdrawal Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance.right),
           )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
@@ -323,7 +323,7 @@ export class VaultSrv {
       if (currentBalance.right.lt(prevBalance)) {
         out.push(
           Finding.fromObject({
-            name: '🚨🚨🚨 EL Vault balance mismatch',
+            name: '🚨🚨🚨 EL Vault balance mismatch. [without oracle report]',
             description: `EL Vault Balance has decreased by ${toEthString(
               prevBalance.minus(currentBalance.right),
             )} without Oracle report`,
@@ -343,7 +343,7 @@ export class VaultSrv {
     if (currentBalance.right.lt(expectedBalance)) {
       out.push(
         Finding.fromObject({
-          name: '🚨🚨🚨 EL Vault balance mismatch',
+          name: '🚨🚨🚨 EL Vault balance mismatch. [within oracle report]',
           description: `EL Vault Balance has decreased by ${toEthString(
             expectedBalance.minus(currentBalance.right),
           )} but Oracle report shows ${toEthString(executionLayerRewardsWithdrawn)}`,

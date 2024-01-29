@@ -159,7 +159,7 @@ export class StethOperationSrv {
         if (Math.abs(deviation) >= 0.01) {
           findings.push(
             Finding.fromObject({
-              name: `🚨 Share rate unexpected has changed`,
+              name: `🚨🚨🚨 Share rate unexpected has changed`,
               description:
                 `Prev.shareRate(${shareRateFromReport.blockNumber}) = ${shareRateFromReport.amount.toNumber()} \n` +
                 `Curr.shareRate(${blockNumber}) = ${shareRate.right.toNumber()} \n` +
@@ -510,10 +510,7 @@ export class StethOperationSrv {
         out.push(
           Finding.fromObject({
             name: '⚠️ Unspent staking limit below 10%',
-            description:
-              `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
-              `this is lower than 10% of max staking limit ` +
-              `${maxStakingLimit.toFixed(2)} ETH`,
+            description: `Current staking limit is lower than 10% of max staking limit`,
             alertId: 'LOW-STAKING-LIMIT',
             severity: FindingSeverity.Info,
             type: FindingType.Info,

@@ -295,7 +295,7 @@ export class GateSealSrv {
       const { gate_seal } = newGateSealEvent.args
       out.push(
         Finding.fromObject({
-          name: 'ℹ️ GateSeal: is expired',
+          name: '🚨️ GateSeal: is expired. Update code!',
           description: `GateSeal address: ${etherscanAddress(
             gate_seal,
           )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,

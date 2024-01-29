@@ -255,7 +255,7 @@ async function handleNewGateSeal(
     const { gate_seal } = newGateSealEvent.args;
     findings.push(
       Finding.fromObject({
-        name: "ℹ️ GateSeal: is expired",
+        name: "🚨 GateSeal: is expired",
         description: `GateSeal address: ${etherscanAddress(
           gate_seal,
         )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,

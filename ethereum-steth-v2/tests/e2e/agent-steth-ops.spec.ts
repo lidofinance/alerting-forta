@@ -26,7 +26,7 @@ describe('agent-steth-ops e2e tests', () => {
 
       const expected = Finding.fromObject({
         alertId: 'LOW-STAKING-LIMIT',
-        description: `Current staking limit is 7237.74 ETH this is lower than 10% of max staking limit 150000.00 ETH`,
+        description: `Current staking limit is lower than 10% of max staking limit`,
         name: '⚠️ Unspent staking limit below 10%',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -196,7 +196,7 @@ describe('agent-steth-ops e2e tests', () => {
       const results = await app.StethOperationSrv.handleTransaction(txEvent, parseInt(receipt.blockNumber))
 
       const expected: Finding = Finding.fromObject({
-        name: '⚠️ Lido: Token rebased',
+        name: 'ℹ️ Lido: Token rebased',
         description: 'reportTimestamp: 1706011211',
         alertId: 'LIDO-TOKEN-REBASED',
         severity: 1,

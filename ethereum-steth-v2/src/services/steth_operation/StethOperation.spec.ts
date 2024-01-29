@@ -799,7 +799,7 @@ describe('StethOperationSrv', () => {
 
       const expected = Finding.fromObject({
         alertId: 'LOW-STAKING-LIMIT',
-        description: `Current staking limit is 9.00 ETH this is lower than 10% of max staking limit 100.00 ETH`,
+        description: `Current staking limit is lower than 10% of max staking limit`,
         name: '⚠️ Unspent staking limit below 10%',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
@@ -815,7 +815,7 @@ describe('StethOperationSrv', () => {
       expect(cache.getLastReportedStakingLimit10Timestamp()).toEqual(currentBlockDate.getTime())
     })
 
-    test('⚠️ Staking limit below 30%', async () => {
+    test('📉 Staking limit below 30%', async () => {
       const getStakingLimitInfo: StakingLimitInfo = {
         currentStakeLimit: new BigNumber(250),
         isStakingPaused: false,
@@ -1092,7 +1092,7 @@ describe('StethOperationSrv', () => {
         description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
 Curr.shareRate(19061449) = 1.3098009112103954e+27 
 Diff: 1.5490045560519778e+26`,
-        name: '🚨 Share rate unexpected has changed',
+        name: '🚨🚨🚨 Share rate unexpected has changed',
         severity: FindingSeverity.Critical,
         type: FindingType.Suspicious,
       })
@@ -1140,7 +1140,7 @@ Diff: 1.5490045560519778e+26`,
         description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
 Curr.shareRate(19061449) = 1e+27 
 Diff: -1.5490045560519778e+26`,
-        name: '🚨 Share rate unexpected has changed',
+        name: '🚨🚨🚨 Share rate unexpected has changed',
         severity: FindingSeverity.Critical,
         type: FindingType.Suspicious,
       })
