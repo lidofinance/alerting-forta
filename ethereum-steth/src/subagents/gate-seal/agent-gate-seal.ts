@@ -136,7 +136,7 @@ async function handlePauseRole(blockEvent: BlockEvent, findings: Finding[]) {
     ) {
       findings.push(
         Finding.fromObject({
-          name: "🚨GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
+          name: "🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
           description: `GateSeal address: ${etherscanAddress(
             actualGateSeal,
           )}${additionalDesc}`,
@@ -170,7 +170,7 @@ async function handleExpiryGateSeal(
   if (expiryTimestamp == "0" || Number(expiryTimestamp) <= now) {
     findings.push(
       Finding.fromObject({
-        name: "🚨🚨🚨 GateSeal: is expired! 🚨🚨🚨",
+        name: "🚨 GateSeal: is expired!",
         description: `GateSeal address: ${etherscanAddress(actualGateSeal)}}`,
         alertId: "GATE-SEAL-IS-EXPIRED",
         severity: FindingSeverity.Critical,
@@ -255,7 +255,7 @@ async function handleNewGateSeal(
     const { gate_seal } = newGateSealEvent.args;
     findings.push(
       Finding.fromObject({
-        name: "🚨 GateSeal: new one created",
+        name: "🚨 GateSeal: is expired",
         description: `GateSeal address: ${etherscanAddress(
           gate_seal,
         )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,
