@@ -281,12 +281,13 @@ export class ETHProvider implements IETHProvider {
   ): Promise<E.Either<Error, WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]>> {
     const fetchStatusesChunk = async (
       request: number[],
+      blockNumber: number,
     ): Promise<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]> => {
       try {
         return await retryAsync<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]>(
           async (): Promise<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]> => {
             const resp = await this.wdQueueContract.functions.getWithdrawalStatus(request, {
-              blockTag: currentBlock,
+              blockTag: blockNumber,
             })
 
             return resp.statuses
@@ -295,21 +296,21 @@ export class ETHProvider implements IETHProvider {
         )
       } catch (e) {
         throw new Error(
-          `Could not call "getWithdrawalStatus between  ${request[0]} and ${request[request.length - 1]}. Total: ${
-            request.length
-          }. Cause ${e} `,
+          `Could not call "getWithdrawalStatus on ${blockNumber} between ${request[0]} and ${
+            request[request.length - 1]
+          }. Total: ${request.length}. Cause ${e} `,
         )
       }
     }
 
     const chunkPromises: Promise<void>[] = []
-    const MAX_REQUESTS_CHUNK_SIZE = 1750
+    const MAX_REQUESTS_CHUNK_SIZE = 750
     const out = new DataRW<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput>([])
 
     for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
       const requestChunk = requestsRange.slice(i, i + MAX_REQUESTS_CHUNK_SIZE)
 
-      const promise = fetchStatusesChunk(requestChunk).then((statuses) => {
+      const promise = fetchStatusesChunk(requestChunk, currentBlock).then((statuses) => {
         out.write(statuses)
       })
 
