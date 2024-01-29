@@ -1,253 +1,171 @@
 import {
   BlockEvent,
-  TransactionEvent,
+  decodeJwt,
+  Finding,
+  FindingSeverity,
+  FindingType,
   HandleBlock,
   HandleTransaction,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+} from 'forta-agent'
+import * as process from 'process'
+import { argv } from 'process'
+import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
+import { Initialize } from 'forta-agent/dist/sdk/handlers'
+import * as E from 'fp-ts/Either'
+import { App } from './app'
+import { elapsedTime } from './utils/time'
+import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
+import { Metadata } from './entity/metadata'
+import Version from './utils/version'
+import { ETH_DECIMALS } from './utils/constants'
 
-import { ethersProvider } from "./ethers";
-
-import { argv } from "process";
-
-import * as agentstETHOps from "./subagents/steth-ops/agent-steth-ops";
-import * as agentWithdrawals from "./subagents/withdrawals/agent-withdrawals";
-import * as agentGateSeal from "./subagents/gate-seal/agent-gate-seal";
-import * as agentVaults from "./subagents/vaults/agent-vaults";
-
-import VERSION from "./version";
-import { mergeFindings } from "./common/utils";
-import { RUN_TIER } from "./common/constants";
-
-type Metadata = { [key: string]: string };
-interface SubAgent {
-  __tier__?: string;
-  name: string;
-  handleBlock?: HandleBlock;
-  handleTransaction?: HandleTransaction;
-  initialize?: (blockNumber: number) => Promise<Metadata>;
-}
-
-const subAgents: SubAgent[] = [
-  agentstETHOps,
-  agentWithdrawals,
-  agentGateSeal,
-  agentVaults,
-].filter((agent: SubAgent) => {
-  if (!RUN_TIER) return true;
-  if (agent.__tier__ == RUN_TIER) return true;
-  console.warn(
-    `Skipping sub-agent [${agent.name}]: unsupported run tier '${RUN_TIER}'`,
-  );
-});
-
-// block or tx handling should take no more than 240 sec.
-// If not all processing is done it interrupts the execution, sends current findings and errors as findings too
-const processingTimeout = 240_000;
-
-const maxHandlerRetries = 5;
-
-let findingsOnInit: Finding[] = [];
-
-const initialize = async () => {
-  let blockNumber: number = -1;
-
-  if (argv.includes("--block")) {
-    blockNumber = parseInt(argv[4]);
-  } else if (argv.includes("--range")) {
-    blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")));
-  } else if (argv.includes("--tx")) {
-    const txHash = argv[4];
-    const tx = await ethersProvider.getTransaction(txHash);
-    if (!tx) {
-      throw new Error(`Can't find transaction ${txHash}`);
-    }
-    if (!tx.blockNumber) {
-      throw new Error(`Transaction ${txHash} was not yet included into block`);
-    }
-    blockNumber = tx.blockNumber;
-  }
-
-  if (blockNumber == -1) {
-    blockNumber = await ethersProvider.getBlockNumber();
-  }
-
+export function initialize(): Initialize {
   const metadata: Metadata = {
-    "version.commitHash": VERSION.commitHash,
-    "version.commitMsg": VERSION.commitMsg,
-  };
-
-  await Promise.all(
-    subAgents.map(async (agent, _) => {
-      if (agent.initialize) {
-        try {
-          const agentMeta = await agent.initialize(blockNumber);
-          for (const metaKey in agentMeta) {
-            metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey];
-          }
-        } catch (err: any) {
-          console.log(`Exiting due to init failure on ${agent.name}`);
-          console.log(`Error: ${err}`);
-          console.log(`Stack: ${err.stack}`);
-          process.exit(1);
-        }
-      }
-    }),
-  );
-
-  metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
-
-  findingsOnInit.push(
-    Finding.fromObject({
-      name: "Agent launched",
-      description: `Version: ${VERSION.desc}`,
-      alertId: "LIDO-AGENT-LAUNCHED",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-      metadata,
-    }),
-  );
-  console.log("Bot initialization is done!");
-};
-
-const timeout = async (agent: SubAgent) =>
-  new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      const err = new Error(`Sub-agent ${agent.name} timed out`);
-      reject(err);
-    }, processingTimeout);
-  });
-
-const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent,
-): Promise<Finding[]> => {
-  let blockFindings: Finding[] = [];
-  // report findings from init. Will be done only for the first block report.
-  if (findingsOnInit.length) {
-    blockFindings = blockFindings.concat(findingsOnInit);
-    findingsOnInit = [];
+    'version.commitHash': Version.commitHash,
+    'version.commitMsg': Version.commitMsg,
   }
 
-  const run = async (agent: SubAgent, blockEvent: BlockEvent) => {
-    if (!agent.handleBlock) return;
-    let retries = maxHandlerRetries;
-    let success = false;
-    let lastError;
-    while (retries-- > 0 && !success) {
-      try {
-        const newFindings = await agent.handleBlock(blockEvent);
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings);
-          blockFindings = blockFindings.concat(newFindings);
-        }
-        success = true;
-      } catch (err) {
-        lastError = err;
-      }
+  return async function (): Promise<InitializeResponse | void> {
+    const startTime = new Date().getTime()
+    const app = await App.getInstance()
+
+    const token = await App.getJwt()
+    if (E.isLeft(token)) {
+      console.log(`Error: ${token.left.message}`)
+      console.log(`Stack: ${token.left.stack}`)
+
+      process.exit(1)
     }
-    if (!success) {
-      blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
+
+    const latestBlockNumber = await app.ethClient.getStartedBlockForApp(argv)
+    if (E.isLeft(latestBlockNumber)) {
+      console.log(`Error: ${latestBlockNumber.left.message}`)
+      console.log(`Stack: ${latestBlockNumber.left.stack}`)
+
+      process.exit(1)
     }
-  };
 
-  // run agents handlers
-  // wait all results whether success or failure (include timeout errors)
+    const [stethOperationSrvErr, withdrawalsSrvErr, gateSealSrvErr] = await Promise.all([
+      app.StethOperationSrv.initialize(latestBlockNumber.right),
+      app.WithdrawalsSrv.initialize(latestBlockNumber.right),
+      app.GateSealSrv.initialize(latestBlockNumber.right),
+      app.VaultSrv.initialize(latestBlockNumber.right),
+    ])
+    if (stethOperationSrvErr !== null) {
+      console.log(`Error: ${stethOperationSrvErr.message}`)
+      console.log(`Stack: ${stethOperationSrvErr.stack}`)
 
-  const runs = await Promise.allSettled(
-    subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, blockEvent), timeout(agent)]);
-    }),
-  );
-
-  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
-    if (r.status == "rejected") {
-      blockFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
-      );
+      process.exit(1)
     }
-  });
 
-  if (blockFindings.length > 50) {
-    blockFindings = mergeFindings(blockFindings);
+    if (withdrawalsSrvErr !== null) {
+      console.log(`Error: ${withdrawalsSrvErr.message}`)
+      console.log(`Stack: ${withdrawalsSrvErr.stack}`)
+
+      process.exit(1)
+    }
+
+    if (gateSealSrvErr instanceof Error) {
+      console.log(`Error: ${gateSealSrvErr.message}`)
+      console.log(`Stack: ${gateSealSrvErr.stack}`)
+
+      process.exit(1)
+    } else {
+      await app.findingsRW.write(gateSealSrvErr)
+    }
+
+    const agents: string[] = [
+      app.StethOperationSrv.getName(),
+      app.WithdrawalsSrv.getName(),
+      app.GateSealSrv.getName(),
+      app.VaultSrv.getName(),
+    ]
+    metadata.agents = '[' + agents.toString() + ']'
+
+    const decodedJwt = decodeJwt(token.right)
+
+    await app.findingsRW.write([
+      Finding.fromObject({
+        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
+        description: `Version: ${Version.desc}`,
+        alertId: 'LIDO-AGENT-LAUNCHED',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata,
+      }),
+    ])
+
+    console.log(elapsedTime('Agent.initialize', startTime) + '\n')
+    console.log(
+      `[${app.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
+        app.StethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,
+      ).toUTCString()}`,
+    )
+    console.log(
+      `[${app.StethOperationSrv.getName()}] Buffered Eth: ${app.StethOperationSrv.getStorage()
+        .getLastBufferedEth()
+        .div(ETH_DECIMALS)
+        .toFixed(2)} on ${latestBlockNumber.right} block`,
+    )
   }
-  return blockFindings;
-};
-
-const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent,
-): Promise<Finding[]> => {
-  let txFindings: Finding[] = [];
-  const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
-    if (!agent.handleTransaction) return;
-    let retries = maxHandlerRetries;
-    let success = false;
-    let lastError;
-    while (retries-- > 0 && !success) {
-      try {
-        const newFindings = await agent.handleTransaction(txEvent);
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings);
-          txFindings = txFindings.concat(newFindings);
-        }
-        success = true;
-      } catch (err) {
-        lastError = err;
-      }
-    }
-    if (!success) {
-      txFindings.push(errorToFinding(lastError, agent, "handleTransaction"));
-    }
-  };
-
-  // run agents handlers
-  // wait all results whether success or failure (include timeout errors)
-  const runs = await Promise.allSettled(
-    subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, txEvent), timeout(agent)]);
-    }),
-  );
-
-  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
-    if (r.status == "rejected") {
-      txFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
-      );
-    }
-  });
-
-  if (txFindings.length > 50) {
-    txFindings = mergeFindings(txFindings);
-  }
-  return txFindings;
-};
-
-function enrichFindingsMetadata(findings: Finding[]) {
-  return findings.forEach(enrichFindingMetadata);
 }
 
-function enrichFindingMetadata(finding: Finding) {
-  finding.metadata["version.commitHash"] = VERSION.commitHash;
+let isHandleBlockRunning: boolean = false
+export const handleBlock = (): HandleBlock => {
+  return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    const startTime = new Date().getTime()
+    if (isHandleBlockRunning) {
+      return []
+    }
+
+    isHandleBlockRunning = true
+    const app = await App.getInstance()
+
+    const out: Finding[] = []
+    const findingsAsync = await app.findingsRW.read()
+    if (findingsAsync.length > 0) {
+      out.push(...findingsAsync)
+    }
+
+    const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings] = await Promise.all([
+      app.StethOperationSrv.handleBlock(blockEvent),
+      app.WithdrawalsSrv.handleBlock(blockEvent),
+      app.GateSealSrv.handleBlock(blockEvent),
+      app.VaultSrv.handleBlock(blockEvent),
+    ])
+
+    out.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
+
+    console.log(elapsedTime('handleBlock', startTime) + '\n')
+    isHandleBlockRunning = false
+    return out
+  }
 }
 
-function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
-  const err: Error =
-    e instanceof Error ? e : new Error(`non-Error thrown: ${e}`);
-  const finding = Finding.fromObject({
-    name: `Error in ${agent.name}.${fnName}`,
-    description: `${err}`,
-    alertId: "LIDO-AGENT-ERROR",
-    severity: FindingSeverity.High,
-    type: FindingType.Degraded,
-    metadata: { stack: `${err.stack}` },
-  });
-  enrichFindingMetadata(finding);
-  return finding;
+let isHandleTransactionRunning: boolean = false
+export const handleTransaction = (): HandleTransaction => {
+  return async function (txEvent: TransactionEvent): Promise<Finding[]> {
+    if (isHandleTransactionRunning) {
+      return []
+    }
+    isHandleTransactionRunning = true
+    const app = await App.getInstance()
+    const out: Finding[] = []
+
+    const stethOperationFindings = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.block.number)
+    const withdrawalsFindings = app.WithdrawalsSrv.handleTransaction(txEvent)
+    const gateSealFindings = app.GateSealSrv.handleTransaction(txEvent)
+    const vaultFindings = app.VaultSrv.handleTransaction(txEvent)
+
+    out.push(...stethOperationFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
+
+    isHandleTransactionRunning = false
+    return out
+  }
 }
 
 export default {
-  initialize,
-  handleBlock,
-  handleTransaction,
-};
+  initialize: initialize(),
+  handleBlock: handleBlock(),
+  handleTransaction: handleTransaction(),
+}
