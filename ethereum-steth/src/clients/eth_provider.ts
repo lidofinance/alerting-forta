@@ -304,7 +304,7 @@ export class ETHProvider implements IETHProvider {
     }
 
     const chunkPromises: Promise<void>[] = []
-    const MAX_REQUESTS_CHUNK_SIZE = 750
+    const MAX_REQUESTS_CHUNK_SIZE = 1750
     const out = new DataRW<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput>([])
 
     for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
