@@ -41,7 +41,7 @@
     "eslint:lint": "eslint ./src ./tests",
     "eslint:format": "eslint ./src ./tests --fix",
     "prettier:check": "prettier --check ./src ./tests",
-    "prettier:format": "prettier --write ./src ./tests",
+    "prettier:format": "prettier --write ./src ./tests README.md",
     "lint": "yarn run prettier:check && yarn run eslint:lint",
     "format": "yarn run eslint:format && yarn run prettier:format",
     "postinstall": "yarn generate-types"
