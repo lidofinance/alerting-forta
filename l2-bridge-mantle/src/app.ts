@@ -1,5 +1,5 @@
 import { FortaGuardClient } from './clients/forta_guard_client'
-import { ethers } from 'forta-agent'
+import { ethers, Finding } from 'forta-agent'
 import { IMantleProvider, MantleProvider } from './clients/mantle_provider'
 import { EventWatcher } from './services/eventWatcher/event_watcher'
 import { L2_BRIDGE_EVENTS } from './utils/events/bridge_events'
@@ -11,7 +11,7 @@ import { L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generat
 import { BlockSrv } from './services/mantle_block_service'
 import { ProxyWatcher } from './workers/proxy_watcher'
 import { MonitorWithdrawals } from './workers/monitor_withdrawals'
-import { FindingsRW } from './utils/mutex'
+import { DataRW } from './utils/mutex'
 
 export type Container = {
   mantleClient: IMantleProvider
@@ -21,7 +21,7 @@ export type Container = {
   bridgeWatcher: EventWatcher
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
-  findingsRW: FindingsRW
+  findingsRW: DataRW<Finding>
 }
 
 export class App {
@@ -74,7 +74,7 @@ export class App {
         bridgeWatcher: bridgeEventWatcher,
         govWatcher: govEventWatcher,
         proxyEventWatcher: proxyEventWatcher,
-        findingsRW: new FindingsRW([]),
+        findingsRW: new DataRW<Finding>([]),
       }
     }
 

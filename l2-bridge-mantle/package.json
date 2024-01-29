@@ -45,10 +45,10 @@
     "stake": "forta-agent stake",
     "test": "jest",
     "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
-    "eslint:lint": "eslint ./src",
-    "eslint:format": "eslint ./src --fix",
-    "prettier:check": "prettier --check .",
-    "prettier:format": "prettier --write .",
+    "eslint:lint": "eslint ./src ./tests",
+    "eslint:format": "eslint ./src ./tests --fix",
+    "prettier:check": "prettier --check ./src ./tests",
+    "prettier:format": "prettier --write ./src ./tests",
     "lint": "yarn run prettier:check && yarn run eslint:lint",
     "format": "yarn run eslint:format && yarn run prettier:format",
     "postinstall": "yarn generate-types"
@@ -66,6 +66,7 @@
   "devDependencies": {
     "@ethersproject/abi": "^5.0.0",
     "@ethersproject/providers": "^5.0.0",
+    "@jest/globals": "^29.7.0",
     "@tsconfig/node20": "^20.1.2",
     "@typechain/ethers-v5": "^11.1.2",
     "@types/jest": "^29.5.10",
