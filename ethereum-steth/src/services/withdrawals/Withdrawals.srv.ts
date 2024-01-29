@@ -330,7 +330,7 @@ export class WithdrawalsSrv {
 
     const out: Finding[] = []
     if (currentBlockTimestamp >= this.cache.getLastFinalizedTimestamp()) {
-      const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockEvent.blockNumber)
+      const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
       if (E.isLeft(unfinalizedStETHraw)) {
         const f: Finding = Finding.fromObject({
           name: `Error in ${WithdrawalsSrv.name}.${this.handleUnfinalizedRequestNumber.name}:292`,
