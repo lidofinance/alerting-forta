@@ -121,7 +121,7 @@ export class GateSealSrv {
     }
 
     const currentBlockTimestamp = blockEvent.block.timestamp
-    const status = await this.ethProvider.checkGateSeal(blockEvent.blockNumber, this.gateSealAddress)
+    const status = await this.ethProvider.checkGateSeal(blockEvent.block.number, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
         const f = Finding.fromObject({
