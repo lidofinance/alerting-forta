@@ -208,10 +208,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: 'Could not call "ethProvider.getBufferedEther. Cause getBufferedEther error',
         name: 'Error in StethOperationSrv.handleBufferedEth:174',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -248,10 +248,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: 'Could not call "lidoContract.getDepositableEther. Cause getDepositableEtherErr',
         name: 'Error in StethOperationSrv.handleBufferedEth:189',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -290,10 +290,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: 'Could not call "ethProvider.getBufferedEther". Cause shifte3dBufferedEthRawErr',
         name: 'Error in StethOperationSrv.handleBufferedEth:215',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -334,10 +334,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: 'Could not call "ethProvider.getBufferedEther". Cause shifte4dBufferedEthRawErr',
         name: 'Error in StethOperationSrv.handleBufferedEth:230',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -384,10 +384,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: 'Could not fetch unbufferedEvents. Cause UnbufferedEventsErr',
         name: 'Error in StethOperationSrv.handleBufferedEth:251',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -437,10 +437,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: 'Could not fetch wdReqFinalizedEvents. Cause wdReqFinalizedEventsErr',
         name: 'Error in StethOperationSrv.handleBufferedEth:222',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -670,10 +670,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleDepositExecutorBalance(blockNumber, currentBlockDate.getTime())
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: `Could not fetch depositorBalance. Cause getBalanceErr`,
         name: 'Error in StethOperationSrv.handleDepositExecutorBalance:376',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -754,10 +754,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
 
       const expected = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: `Could not call "lidoContract.getStakeLimitFullInfo". Cause getStakingLimitInfoErr`,
         name: 'Error in StethOperationSrv.handleStakingLimit:418',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -997,10 +997,10 @@ describe('StethOperationSrv', () => {
       }
 
       const expectedShareRateErrFinding = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: `Could not call "ethProvider.getShareRate". Cause shareRateErr`,
         name: 'Error in StethOperationSrv.handleTransaction:146',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 
@@ -1042,10 +1042,10 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleShareRateChange(currentBlock)
 
       const expectedShareRateErrFinding = Finding.fromObject({
-        alertId: 'LIDO-AGENT-ERROR',
+        alertId: 'STETH-OP-NETWORK-ERR',
         description: `Could not call "ethProvider.getShareRate". Cause getShareRateErr`,
         name: 'Error in StethOperationSrv.handleShareRateChange:136',
-        severity: FindingSeverity.Low,
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
 

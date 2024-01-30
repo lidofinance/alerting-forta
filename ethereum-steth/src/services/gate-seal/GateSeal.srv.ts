@@ -140,9 +140,9 @@ export class GateSealSrv {
       const f = Finding.fromObject({
         name: 'Could not check gateSeal.',
         description: `Could not call "ethProvider.checkGateSeal. Cause ${status.left.message}`,
-        alertId: 'GATE-SEAL-DEFAULT-EXPIRED',
-        severity: FindingSeverity.Low,
-        type: FindingType.Info,
+        alertId: 'GATE-SEAL-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
+        type: FindingType.Degraded,
         metadata: {
           stack: `${status.left.stack}`,
         },
@@ -195,9 +195,9 @@ export class GateSealSrv {
       const f = Finding.fromObject({
         name: `Error in ${GateSealSrv.name}.${this.handleExpiryGateSeal.name}:172`,
         description: `Could not call "ethProvider.getExpiryTimestamp. Cause ${expiryTimestamp.left.message}`,
-        alertId: 'GATE-SEAL-DEFAULT-EXPIRED',
-        severity: FindingSeverity.Low,
-        type: FindingType.Info,
+        alertId: 'GATE-SEAL-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
+        type: FindingType.Degraded,
         metadata: {
           stack: `${expiryTimestamp.left.stack}`,
         },
