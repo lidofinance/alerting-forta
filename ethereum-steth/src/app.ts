@@ -71,7 +71,12 @@ export class App {
       const address: Address = Address
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
-      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethersProvider)
+
+      const drpcProvider = `https://eth.drpc.org`
+
+      const mainnet = 1
+      const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(

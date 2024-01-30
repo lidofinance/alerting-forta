@@ -139,8 +139,8 @@ export class StethOperationSrv {
         const f: Finding = Finding.fromObject({
           name: `Error in ${StethOperationSrv.name}.${this.handleShareRateChange.name}:136`,
           description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'STETH-OP-NETWORK-ERR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: {
             stack: `${shareRate.left.stack}`,
@@ -198,8 +198,8 @@ export class StethOperationSrv {
           const f: Finding = Finding.fromObject({
             name: `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:146`,
             description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
-            alertId: 'LIDO-AGENT-ERROR',
-            severity: FindingSeverity.Low,
+            alertId: 'STETH-OP-NETWORK-ERR',
+            severity: FindingSeverity.Unknown,
             type: FindingType.Degraded,
             metadata: {
               stack: `${shareRate.left.stack}`,
@@ -249,8 +249,8 @@ export class StethOperationSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:174`,
         description: `Could not call "ethProvider.getBufferedEther. Cause ${bufferedEthRaw.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'STETH-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${bufferedEthRaw.left.stack}` },
       })
@@ -265,8 +265,8 @@ export class StethOperationSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:215`,
         description: `Could not call "ethProvider.getBufferedEther". Cause ${shifte3dBufferedEthRaw.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'STETH-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: {
           stack: `${shifte3dBufferedEthRaw.left.stack}`,
@@ -280,8 +280,8 @@ export class StethOperationSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:230`,
         description: `Could not call "ethProvider.getBufferedEther". Cause ${shifte4dBufferedEthRaw.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'STETH-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: {
           stack: `${shifte4dBufferedEthRaw.left.stack}`,
@@ -308,8 +308,8 @@ export class StethOperationSrv {
         const f: Finding = Finding.fromObject({
           name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:251`,
           description: `Could not fetch unbufferedEvents. Cause ${e instanceof Error ? e.message : ''}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'STETH-OP-NETWORK-ERR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
         })
@@ -331,8 +331,8 @@ export class StethOperationSrv {
         const f: Finding = Finding.fromObject({
           name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:222`,
           description: `Could not fetch wdReqFinalizedEvents. Cause ${e instanceof Error ? e.message : ''}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'STETH-OP-NETWORK-ERR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
         })
@@ -376,8 +376,8 @@ export class StethOperationSrv {
         const f: Finding = Finding.fromObject({
           name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:189`,
           description: `Could not call "lidoContract.getDepositableEther. Cause ${e instanceof Error ? e.message : ''}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'STETH-OP-NETWORK-ERR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
         })
@@ -453,8 +453,8 @@ export class StethOperationSrv {
             Finding.fromObject({
               name: `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:376`,
               description: `Could not fetch depositorBalance. Cause ${executorBalanceRaw.left.message}`,
-              alertId: 'LIDO-AGENT-ERROR',
-              severity: FindingSeverity.Low,
+              alertId: 'STETH-OP-NETWORK-ERR',
+              severity: FindingSeverity.Unknown,
               type: FindingType.Degraded,
               metadata: { stack: `${executorBalanceRaw.left.stack}` },
             }),
@@ -491,8 +491,8 @@ export class StethOperationSrv {
         const f: Finding = Finding.fromObject({
           name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:418`,
           description: `Could not call "lidoContract.getStakeLimitFullInfo". Cause ${stakingLimitInfo.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'STETH-OP-NETWORK-ERR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: { stack: `${stakingLimitInfo.left.stack}` },
         })

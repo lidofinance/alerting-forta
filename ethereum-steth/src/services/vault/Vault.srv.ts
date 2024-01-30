@@ -58,7 +58,7 @@ export class VaultSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const currentBlock = blockEvent.blockNumber
+    const currentBlock = blockEvent.block.number
     const prevBlockWithdrawalVaultBalance = await this.ethProvider.getBalanceByBlockHash(
       this.withdrawalsVaultAddress,
       blockEvent.block.parentHash,
@@ -67,8 +67,8 @@ export class VaultSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:56`,
         description: `Could not call "ethProvider.getBalanceByBlockTag. Cause ${prevBlockWithdrawalVaultBalance.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'VAULT-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${prevBlockWithdrawalVaultBalance.left.stack}` },
       })
@@ -83,8 +83,8 @@ export class VaultSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:72`,
         description: `Could not call "ethProvider.getBalanceByBlockTag. Cause ${prevBlockElVaultBalance.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'VAULT-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${prevBlockElVaultBalance.left.stack}` },
       })
@@ -97,8 +97,8 @@ export class VaultSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:81`,
         description: `Could not call "ethProvider.getETHDistributedEvent. Cause ${report.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'VAULT-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${report.left.stack}` },
       })
@@ -252,8 +252,8 @@ export class VaultSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:228`,
         description: `Could not call "ethProvider.getBalance. Cause ${currentBalance.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'VAULT-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${currentBalance.left.stack}` },
       })
@@ -309,8 +309,8 @@ export class VaultSrv {
       const f: Finding = Finding.fromObject({
         name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:291`,
         description: `Could not call "ethProvider.getBalance. Cause ${currentBalance.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'VAULT-OP-NETWORK-ERR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${currentBalance.left.stack}` },
       })

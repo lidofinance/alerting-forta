@@ -113,6 +113,7 @@ export function initialize(): Initialize {
 let isHandleBlockRunning: boolean = false
 export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    console.log(`#ETH block: ${blockEvent.block.number}`)
     const startTime = new Date().getTime()
     if (isHandleBlockRunning) {
       return []

@@ -97,7 +97,7 @@ export class WithdrawalsSrv {
               blockTag: currentBlock,
             })
 
-            return Number(resp)
+            return resp.toNumber()
           },
           { delay: 500, maxTry: 5 },
         )
@@ -117,7 +117,7 @@ export class WithdrawalsSrv {
             blockTag: currentBlock,
           })
 
-          return Number(resp)
+          return resp.toNumber()
         },
         { delay: 500, maxTry: 5 },
       )
@@ -134,7 +134,7 @@ export class WithdrawalsSrv {
               blockTag: currentBlock,
             })
 
-            return Number(resp)
+            return resp.toNumber()
           },
           { delay: 500, maxTry: 5 },
         )
@@ -156,7 +156,7 @@ export class WithdrawalsSrv {
                 },
               )
 
-              return Number(resp.statuses[0].timestamp)
+              return resp.statuses[0].timestamp.toNumber()
             },
             { delay: 500, maxTry: 5 },
           )
@@ -267,13 +267,13 @@ export class WithdrawalsSrv {
       return []
     }
 
-    const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockEvent.blockNumber)
+    const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockEvent.block.number)
     if (E.isLeft(stakeLimitFullInfo)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:213`,
         description: `Could not call "ethProvider.getStakingLimitInfo. Cause ${stakeLimitFullInfo.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'WITHDRAWALS-NETWORK-ERROR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${stakeLimitFullInfo.left.stack}` },
       })
@@ -281,13 +281,13 @@ export class WithdrawalsSrv {
       return [f]
     }
 
-    const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockEvent.blockNumber)
+    const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
     if (E.isLeft(unfinalizedStETH)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:232`,
         description: `Could not call "wdQueueContract.unfinalizedStETH. Cause ${unfinalizedStETH.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'WITHDRAWALS-NETWORK-ERROR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${unfinalizedStETH.left.stack}` },
       })
@@ -330,13 +330,13 @@ export class WithdrawalsSrv {
 
     const out: Finding[] = []
     if (currentBlockTimestamp >= this.cache.getLastFinalizedTimestamp()) {
-      const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockEvent.blockNumber)
+      const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
       if (E.isLeft(unfinalizedStETHraw)) {
         const f: Finding = Finding.fromObject({
           name: `Error in ${WithdrawalsSrv.name}.${this.handleUnfinalizedRequestNumber.name}:292`,
           description: `Could not call "wdQueueContract.unfinalizedStETH. Cause ${unfinalizedStETHraw.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'WITHDRAWALS-NETWORK-ERROR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: { stack: `${unfinalizedStETHraw.left.stack}` },
         })
@@ -418,14 +418,14 @@ export class WithdrawalsSrv {
     }
     const unclaimedRequestsStatuses = await this.ethProvider.getWithdrawalStatuses(
       unclaimedReqIds,
-      blockEvent.blockNumber,
+      blockEvent.block.number,
     )
     if (E.isLeft(unclaimedRequestsStatuses)) {
       const f: Finding = Finding.fromObject({
         name: `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:363`,
         description: `Could not call "wdQueueContract.getWithdrawalStatuses. Cause ${unclaimedRequestsStatuses.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
+        alertId: 'WITHDRAWALS-NETWORK-ERROR',
+        severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
         metadata: { stack: `${unclaimedRequestsStatuses.left.stack}` },
       })
@@ -512,8 +512,8 @@ export class WithdrawalsSrv {
         const f: Finding = Finding.fromObject({
           name: `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:452`,
           description: `Could not get withdrawalQueueBalance. Cause ${withdrawalQueueBalance.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
+          alertId: 'WITHDRAWALS-NETWORK-ERROR',
+          severity: FindingSeverity.Unknown,
           type: FindingType.Degraded,
           metadata: { stack: `${withdrawalQueueBalance.left.stack}` },
         })
