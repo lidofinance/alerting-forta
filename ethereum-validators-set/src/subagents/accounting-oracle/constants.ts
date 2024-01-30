@@ -20,7 +20,7 @@ export const ACCOUNTING_HASH_CONSENSUS_REPORT_RECEIVED_EVENT =
 
 export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
   ["0x140bd8fbdc884f48da7cb1c09be8a2fadfea776e", "Chorus One"],
-  ["0x1d0813bf088be3047d827d98524fbf779bc25f00", "jumpcrypto"],
+  ["0xc79F702202E3A6B0B6310B537E786B9ACAA19BAf", "ChainLayer"],
   ["0x404335bce530400a5814375e7ec1fb55faff3ea2", "Staking Facilities"],
   ["0x007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5", "P2P Validator"],
   ["0x946d3b081ed19173dc83cd974fc69e1e760b7d78", "Stakefish"],
