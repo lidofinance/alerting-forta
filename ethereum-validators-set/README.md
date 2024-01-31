@@ -148,3 +148,27 @@ For example, you need to add `testnet` tier support for some new sub-agent:
 4. Run `export FORTA_AGENT_RUN_TIER=testnet && yarn start:dev`
 
 That's it! Only sub-agents that have `testnet` tier support will be run.
+
+
+# Deployment
+
+## Prepare configuration
+First of all, the private key with passphrase of the wallet (usually it's Metamask) must be received from the application owners. The wallet will be used to sign into https://app.forta.network/bots as well as deploying bots.
+
+Then, prepare `forta.config.json` in the root of the agent based on the following format:
+```json
+{
+  "jsonRpcUrl": "<jsonRpcUrl>",
+  "keyfilePassword": "<passphrase from the wallet>",
+  "agentId": "0x399792adf7b57c0adc8de54ee27284d8ef70b0af2ff3c2c97f69ae894f66759a"
+}
+```
+
+Beside that, place into `~/.forta` directory the private key with name: `UTC--2024-01-31T01:37:55.270Z--123.json`
+
+## Build docker image and push it into IPFS
+1. `yarn push`, write the docker image id down
+2. Open `My Detection Bots` section with [the list of bots](https://app.forta.network/profile/0x6aea36C4a9Cf8AC053c07E662fa27e8BDF047121/bots)
+3. Find `lido-validator-set-alerts` item in the list of bots, click `Edit` and paste the new docker image id
+4. Sign the new changes and wait for updating completion
+5. Enjoy!
