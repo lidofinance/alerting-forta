@@ -2,6 +2,7 @@
   "name": "lido-validators-set-forta-bot",
   "version": "0.0.1",
   "description": "Forta Bot for Lido validators set",
+  "license": "MIT",
   "chainIds": [
     1
   ],
@@ -42,5 +43,5 @@
     "ts-jest": "^29.1.1",
     "typescript": "^4.3.4"
   },
-  "packageManager": "yarn@3.3.0"
+  "packageManager": "yarn@1.22.21"
 }
