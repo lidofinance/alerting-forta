@@ -3,14 +3,8 @@ import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 
-interface BlockResponse {
-  jsonrpc: string
-  id: number
-  result: Block
-}
-
 export abstract class IMantleProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<E.Either<Error, Block[]>>
+  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
 
   public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<Error, Log[]>>
 
@@ -30,7 +24,7 @@ export class MantleProvider implements IMantleProvider {
     this.jsonRpcProvider = jsonRpcProvider
   }
 
-  public async fetchBlocks(startBlock: number, endBlock: number): Promise<E.Either<Error, Block[]>> {
+  public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
     const batchRequests = []
     for (let i = startBlock; i <= endBlock; i++) {
       batchRequests.push({
@@ -40,62 +34,64 @@ export class MantleProvider implements IMantleProvider {
         id: i, // Use a unique identifier for each request
       })
     }
-    const chunkSize = 15
-    const out: Block[] = []
+    const formatter = new ethers.providers.Formatter()
+    const doRequest = (request: unknown[]): Promise<Block[]> => {
+      return retryAsync<Block[]>(
+        async (): Promise<Block[]> => {
+          const response = await fetch(this.jsonRpcProvider.connection.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request),
+          })
 
-    for (let i = 0; i < batchRequests.length; i += chunkSize) {
-      const request = batchRequests.slice(i, i + chunkSize)
-      let response: Response
-      try {
-        response = await retryAsync<Response>(
-          async (): Promise<Response> => {
-            const out = await fetch(this.jsonRpcProvider.connection.url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(request),
-            })
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}, request: ${JSON.stringify(request)}`)
+          }
 
-            if (!out.ok) {
-              throw new Error(`HTTP error! Status: ${out.status}, request: ${request}`)
-            }
+          const result: Block[] = []
+          const objects = (await response.json()) as unknown[]
 
-            return out
-          },
-          { delay: 500, maxTry: 5 },
-        )
-      } catch (e) {
-        console.log(
-          `Warning: Could not fetch blocks number. cause: ${e}, startBlock: ${startBlock}, endBlock: ${endBlock}. Total: ${
-            endBlock - startBlock
-          }`,
-        )
-        continue
-      }
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      const results: BlockResponse[] = await response.json()
-
-      const formatter = new ethers.providers.Formatter()
-
-      for (const result of results) {
-        if (result.result === null) {
-          for (const r of request) {
-            if (r.id === result.id) {
-              console.log(`Warning: missed response from node by reqId: ${result.id}, request: ${r.params.join(', ')}`)
+          for (const obj of objects) {
+            if (Object.prototype.hasOwnProperty.call(obj, 'result')) {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-expect-error
+              result.push(formatter.block(obj.result))
+            } else {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-expect-error
+              throw new Error(obj.error.message)
             }
           }
 
-          continue
+          return result
+        },
+        { delay: 500, maxTry: 5 },
+      )
+    }
+
+    const chunkSize = 25
+    const out: Block[] = []
+
+    let allowedExtraRequest: number = 30
+    for (let i = 0; i < batchRequests.length; i += chunkSize) {
+      const request = batchRequests.slice(i, i + chunkSize)
+      try {
+        const blocks = await doRequest(request)
+        out.push(...blocks)
+      } catch (e) {
+        console.log(e)
+        if (allowedExtraRequest === 0) {
+          break
         }
 
-        out.push(formatter.block(result.result))
+        batchRequests.push(...request)
+        allowedExtraRequest -= 1
       }
     }
 
-    return E.right(out)
+    return out
   }
 
   public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<Error, Log[]>> {
