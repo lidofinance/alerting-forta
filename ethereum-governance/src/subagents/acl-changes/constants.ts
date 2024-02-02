@@ -422,7 +422,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Accounting HashConsensus",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), []],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), [ROLES_OWNERS.agent]],
         [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
         [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
         [roleByName("MANAGE_FRAME_CONFIG_ROLE"), []],
@@ -436,7 +436,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Validators Exit Bus HashConsensus",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), []],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), [ROLES_OWNERS.agent]],
         [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
         [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
         [roleByName("MANAGE_FRAME_CONFIG_ROLE"), []],
