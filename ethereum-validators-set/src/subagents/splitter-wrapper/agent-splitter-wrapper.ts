@@ -22,7 +22,7 @@ import {
 export const name = "SplitterWrapper";
 
 const {
-  OBOL_LIDO_SPLIT_FACTORY_ADDRESS,
+  OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
   SPLIT_MAIN_0XSPLIT_ADDRESS,
   STAKING_ROUTER_ADDRESS,
   STAKING_MODULES,
@@ -81,18 +81,64 @@ class NodeOperatorsRegistryModuleContext {
   }
 }
 
+class ObolLidoSplitFactoryCluster {
+  public readonly contract: ethers.Contract;
+
+  constructor(
+    public readonly clusterName: string,
+    public readonly contractAddress: string,
+  ) {
+    this.contract = new ethers.Contract(
+      contractAddress,
+      OBOL_LIDO_SPLIT_FACTORY_ABI,
+      ethersProvider,
+    );
+  }
+
+  public async handleTransaction(
+    txEvent: TransactionEvent,
+  ): Promise<Finding[]> {
+    const findings: Finding[] = [];
+
+    if (!(this.contractAddress in txEvent.addresses)) {
+      return [];
+    }
+
+    const transDescriptions = txEvent.filterFunction(
+      "function createSplit(address splitWallet)",
+    );
+    for (const transDescription of transDescriptions) {
+      const [splitWalletAddress] = transDescription.args;
+      if (!splitWalletAddress) {
+        continue;
+      }
+
+      const malformedSplitWalletParams =
+        await handleCreateObolLidoSplitEvent(splitWalletAddress);
+      if (malformedSplitWalletParams) {
+        findings.push(
+          getFindingOfBadSplitWalletParams(
+            splitWalletAddress,
+            malformedSplitWalletParams,
+          ),
+        );
+      }
+    }
+
+    return findings;
+  }
+}
+
 const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
+
 const createSplitForSplitWalletIface = new ethers.utils.Interface([
   "function createSplit(address splitWallet)",
 ]);
 const createSplitWalletIface = new ethers.utils.Interface([
   "function createSplit(address[] accounts,uint32[] percentAllocations,uint32 distributorFee,address controller)",
 ]);
-const obolLidoSplitFactoryContract = new ethers.Contract(
-  OBOL_LIDO_SPLIT_FACTORY_ADDRESS,
-  OBOL_LIDO_SPLIT_FACTORY_ABI,
-  ethersProvider,
-);
+
 const splitWalletContract = new ethers.Contract(
   SPLIT_MAIN_0XSPLIT_ADDRESS,
   SPLIT_MAIN_ABI,
@@ -142,6 +188,15 @@ export async function initialize(
     ),
   );
 
+  for (const {
+    clusterName,
+    factoryAddress,
+  } of OBOL_LIDO_SPLIT_FACTORY_CLUSTERS) {
+    clusterSplitWalletFactories.push(
+      new ObolLidoSplitFactoryCluster(clusterName, factoryAddress),
+    );
+  }
+
   return {};
 }
 
@@ -160,7 +215,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     findings.push(stakingModuleFindings);
   }
 
-  findings.push(await handleCreateObolLidoSplitContract(txEvent));
+  for (const splitWalletFactory of clusterSplitWalletFactories) {
+    findings.push(await splitWalletFactory.handleTransaction(txEvent));
+  }
 
   return findings.flat();
 }
@@ -181,53 +238,30 @@ async function handleStakingModule(
   const findings: Finding[][] = [];
 
   for (const nodeOperatorFullInfo of stakingModule.nodeOperatorMap.values()) {
-    findings.push(await handleRewardAddressObolLidoSplit(nodeOperatorFullInfo));
-  }
-
-  return findings.flat();
-}
-
-async function handleCreateObolLidoSplitContract(txEvent: TransactionEvent) {
-  const findings: Finding[] = [];
-
-  if (!(OBOL_LIDO_SPLIT_FACTORY_ADDRESS in txEvent.addresses)) {
-    return [];
-  }
-
-  const transDescriptions = txEvent.filterFunction(
-    "function createSplit(address splitWallet)",
-  );
-  for (const transDescription of transDescriptions) {
-    const [splitWalletAddress] = transDescription.args;
-    if (!splitWalletAddress) {
-      continue;
-    }
-
-    const malformedSplitWalletParams =
-      await handleCreateObolLidoSplitEvent(splitWalletAddress);
-    if (malformedSplitWalletParams) {
+    for (const splitWalletFactory of clusterSplitWalletFactories) {
       findings.push(
-        getFindingOfBadSplitWalletParams(
-          splitWalletAddress,
-          malformedSplitWalletParams,
+        await handleRewardAddressObolLidoSplit(
+          nodeOperatorFullInfo,
+          splitWalletFactory,
         ),
       );
     }
   }
 
-  return findings;
+  return findings.flat();
 }
 
 async function handleRewardAddressObolLidoSplit(
   nodeOperator: NodeOperatorFullInfo,
+  splitWalletFactory: ObolLidoSplitFactoryCluster,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
   const { rewardAddress } = nodeOperator;
 
   const filterCreateObolLidoSplit =
-    obolLidoSplitFactoryContract.filters.CreateObolLidoSplit();
+    splitWalletFactory.contract.filters.CreateObolLidoSplit();
   const createObolLidoSplitEvents =
-    await obolLidoSplitFactoryContract.queryFilter(filterCreateObolLidoSplit);
+    await splitWalletFactory.contract.queryFilter(filterCreateObolLidoSplit);
 
   const createRewardAddressEvent = createObolLidoSplitEvents.find(
     (event) => event.args?.[0] === rewardAddress,
@@ -235,8 +269,8 @@ async function handleRewardAddressObolLidoSplit(
   if (!createRewardAddressEvent) {
     return [
       Finding.from({
-        alertId: "MALFORMED-REWARD-ADDRESS",
-        name: "⚠️ SplitterWrapper: Malformed Reward address provided",
+        alertId: `MALFORMED-REWARD-ADDRESS`,
+        name: `⚠️ SplitterWrapper: Malformed Reward address provided"`,
         description: `RewardAddress (${rewardAddress}) of "${name}" NodeOperator created not via ObolSplitFactory`,
         severity: FindingSeverity.High,
         type: FindingType.Info,
@@ -258,6 +292,7 @@ async function handleRewardAddressObolLidoSplit(
       getFindingOfBadSplitWalletParams(
         splitWalletAddress,
         malformedSplitWalletParams,
+        splitWalletFactory.clusterName,
         nodeOperator,
       ),
     );
