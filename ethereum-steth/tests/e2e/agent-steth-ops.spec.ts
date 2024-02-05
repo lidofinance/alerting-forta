@@ -28,7 +28,7 @@ describe('agent-steth-ops e2e tests', () => {
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is lower than 10% of max staking limit`,
         name: '⚠️ Unspent staking limit below 10%',
-        severity: FindingSeverity.Info,
+        severity: FindingSeverity.Medium,
         type: FindingType.Info,
       })
 
@@ -57,7 +57,7 @@ describe('agent-steth-ops e2e tests', () => {
         alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
         description: `Balance of deposit executor is 1.9232. This is extremely low! 😱`,
         name: '⚠️ Low deposit executor balance',
-        severity: FindingSeverity.High,
+        severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
       })
 

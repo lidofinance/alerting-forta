@@ -1,19 +1,8 @@
 import BigNumber from 'bignumber.js'
 
-export type WithdrawalRequest = {
-  id: number
-  amount: BigNumber | undefined
-  claimed: boolean
-  timestamp: string
-}
-
 export class WithdrawalsCache {
   private _bunkerModeEnabledSinceTimestamp = 0
   private _isBunkerMode = false
-  private _lastFinalizedRequestId = 0
-  private _lastFinalizedTimestamp = 0
-  private _firstUnfinalizedRequestTimestamp: number
-  private readonly _finalizedWithdrawalRequestsMap: Map<number, WithdrawalRequest>
 
   private _lastQueueOnParStakeLimitAlertTimestamp = 0
   private _lastBigUnfinalizedQueueAlertTimestamp = 0
@@ -27,10 +16,7 @@ export class WithdrawalsCache {
 
   private _amountOfRequestedStETHSinceLastTokenRebase = new BigNumber(0)
 
-  constructor() {
-    this._finalizedWithdrawalRequestsMap = new Map<number, WithdrawalRequest>()
-    this._firstUnfinalizedRequestTimestamp = 0
-  }
+  constructor() {}
 
   public getBunkerModeEnabledSinceTimestamp(): number {
     return this._bunkerModeEnabledSinceTimestamp
@@ -46,34 +32,6 @@ export class WithdrawalsCache {
 
   public setIsBunkerMode(isBunkerMode: boolean) {
     this._isBunkerMode = isBunkerMode
-  }
-
-  public getLastFinalizedRequestId(): number {
-    return this._lastFinalizedRequestId
-  }
-
-  public setLastFinalizedRequestId(lastFinalizedRequestId: number) {
-    this._lastFinalizedRequestId = lastFinalizedRequestId
-  }
-
-  public getLastFinalizedTimestamp(): number {
-    return this._lastFinalizedTimestamp
-  }
-
-  public setLastFinalizedTimestamp(lastFinalizedTimestamp: number) {
-    this._lastFinalizedTimestamp = lastFinalizedTimestamp
-  }
-
-  public getFinalizedWithdrawalRequestsMap(): Map<number, WithdrawalRequest> {
-    return this._finalizedWithdrawalRequestsMap
-  }
-
-  public getFirstUnfinalizedRequestTimestamp(): number {
-    return this._firstUnfinalizedRequestTimestamp
-  }
-
-  public setFirstUnfinalizedRequestTimestamp(firstUnfinalizedRequestTimestamp: number) {
-    this._firstUnfinalizedRequestTimestamp = firstUnfinalizedRequestTimestamp
   }
 
   public getLastQueueOnParStakeLimitAlertTimestamp(): number {

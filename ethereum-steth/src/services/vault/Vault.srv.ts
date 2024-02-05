@@ -1,15 +1,15 @@
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { IETHProvider } from '../../clients/eth_provider'
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { Lido as LidoContract } from '../../generated'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
 import { ETHDistributedEvent } from '../../generated/Lido'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
+import { networkAlert } from '../../utils/errors'
+import { IVaultClient } from './contract'
 
 const WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL = 100
 const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(1000)
@@ -18,29 +18,27 @@ const EL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(50)
 export class VaultSrv {
   private readonly logger: Logger
   private readonly name = 'VaultSrv'
-  private readonly ethProvider: IETHProvider
-
-  private readonly lidoContract: LidoContract
+  private readonly ethProvider: IVaultClient
 
   private readonly withdrawalsVaultAddress: string
   private readonly elRewardsVaultAddress: string
-
+  private readonly lidoStethAddress: string
   private readonly burnerAddress: string
 
   constructor(
     logger: Logger,
-    ethProvider: IETHProvider,
-    lidoContract: LidoContract,
+    ethProvider: IVaultClient,
     withdrawalsVaultAddress: string,
     elRewardsVaultAddress: string,
     burnerAddress: string,
+    lidoStethAddress: string,
   ) {
     this.logger = logger
     this.ethProvider = ethProvider
-    this.lidoContract = lidoContract
     this.elRewardsVaultAddress = elRewardsVaultAddress
     this.withdrawalsVaultAddress = withdrawalsVaultAddress
     this.burnerAddress = burnerAddress
+    this.lidoStethAddress = lidoStethAddress
   }
 
   public initialize(currentBlock: number): null {
@@ -64,46 +62,37 @@ export class VaultSrv {
       blockEvent.block.parentHash,
     )
     if (E.isLeft(prevBlockWithdrawalVaultBalance)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:56`,
-        description: `Could not call "ethProvider.getBalanceByBlockTag. Cause ${prevBlockWithdrawalVaultBalance.left.message}`,
-        alertId: 'VAULT-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${prevBlockWithdrawalVaultBalance.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          prevBlockWithdrawalVaultBalance.left,
+          `Error in ${VaultSrv.name}.${this.handleBlock.name}:63`,
+          `Could not call ethProvider.getBalanceByBlockHash`,
+        ),
+      ]
     }
     const prevBlockElVaultBalance = await this.ethProvider.getBalanceByBlockHash(
       this.elRewardsVaultAddress,
       blockEvent.block.parentHash,
     )
     if (E.isLeft(prevBlockElVaultBalance)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:72`,
-        description: `Could not call "ethProvider.getBalanceByBlockTag. Cause ${prevBlockElVaultBalance.left.message}`,
-        alertId: 'VAULT-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${prevBlockElVaultBalance.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          prevBlockElVaultBalance.left,
+          `Error in ${VaultSrv.name}.${this.handleBlock.name}:76`,
+          `Could not call ethProvider.getBalanceByBlockHash`,
+        ),
+      ]
     }
 
     const report = await this.ethProvider.getETHDistributedEvent(currentBlock, currentBlock)
     if (E.isLeft(report)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:81`,
-        description: `Could not call "ethProvider.getETHDistributedEvent. Cause ${report.left.message}`,
-        alertId: 'VAULT-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${report.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          report.left,
+          `Error in ${VaultSrv.name}.${this.handleBlock.name}:90`,
+          `Could not call ethProvider.getETHDistributedEvent`,
+        ),
+      ]
     }
 
     const [
@@ -138,16 +127,13 @@ export class VaultSrv {
         blockNumber,
       )
       if (E.isLeft(report)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:125`,
-          description: `Could not call "ethProvider.getETHDistributedEvent. Cause ${report.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
-          type: FindingType.Degraded,
-          metadata: { stack: `${report.left.stack}` },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            report.left,
+            `Error in ${VaultSrv.name}.${this.handleWithdrawalVaultBalance.name}:128`,
+            `Could not call ethProvider.getETHDistributedEvent`,
+          ),
+        ]
       }
 
       const prevWithdrawalVaultBalance = await this.ethProvider.getBalance(
@@ -155,30 +141,24 @@ export class VaultSrv {
         blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
       )
       if (E.isLeft(prevWithdrawalVaultBalance)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:143`,
-          description: `Could not call "ethProvider.getBalance. Cause ${prevWithdrawalVaultBalance.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
-          type: FindingType.Degraded,
-          metadata: { stack: `${prevWithdrawalVaultBalance.left.stack}` },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            prevWithdrawalVaultBalance.left,
+            `Error in ${VaultSrv.name}.${this.handleWithdrawalVaultBalance.name}:142`,
+            `Could not call ethProvider.getBalance`,
+          ),
+        ]
       }
 
       const withdrawalVaultBalance = await this.ethProvider.getBalance(this.withdrawalsVaultAddress, blockNumber)
       if (E.isLeft(withdrawalVaultBalance)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:159`,
-          description: `Could not call "ethProvider.getBalance. Cause ${withdrawalVaultBalance.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Low,
-          type: FindingType.Degraded,
-          metadata: { stack: `${withdrawalVaultBalance.left.stack}` },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            withdrawalVaultBalance.left,
+            `Error in ${VaultSrv.name}.${this.handleWithdrawalVaultBalance.name}:156`,
+            `Could not call ethProvider.getBalance`,
+          ),
+        ]
       }
 
       let withdrawalsWithdrawn = new BigNumber(0)
@@ -211,16 +191,13 @@ export class VaultSrv {
   public async handleELVaultBalance(blockNumber: number, prevBalance: BigNumber): Promise<Finding[]> {
     const elVaultBalance = await this.ethProvider.getBalance(this.elRewardsVaultAddress, blockNumber)
     if (E.isLeft(elVaultBalance)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:190`,
-        description: `Could not call "ethProvider.getBalance. Cause ${elVaultBalance.left.message}`,
-        alertId: 'LIDO-AGENT-ERROR',
-        severity: FindingSeverity.Low,
-        type: FindingType.Degraded,
-        metadata: { stack: `${elVaultBalance.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          elVaultBalance.left,
+          `Error in ${VaultSrv.name}.${this.handleELVaultBalance.name}:195`,
+          `Could not call ethProvider.getBalance`,
+        ),
+      ]
     }
 
     const elVaultBalanceDiff = elVaultBalance.right.minus(prevBalance)
@@ -249,16 +226,13 @@ export class VaultSrv {
     const out: Finding[] = []
     const currentBalance = await this.ethProvider.getBalance(this.withdrawalsVaultAddress, currentBlock)
     if (E.isLeft(currentBalance)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:228`,
-        description: `Could not call "ethProvider.getBalance. Cause ${currentBalance.left.message}`,
-        alertId: 'VAULT-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${currentBalance.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          currentBalance.left,
+          `Error in ${VaultSrv.name}.${this.handleNoWithdrawalVaultDrains.name}:230`,
+          `Could not call ethProvider.getBalance`,
+        ),
+      ]
     }
 
     if (report === null) {
@@ -306,16 +280,13 @@ export class VaultSrv {
   ): Promise<Finding[]> {
     const currentBalance = await this.ethProvider.getBalance(this.elRewardsVaultAddress, currentBlock)
     if (E.isLeft(currentBalance)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${VaultSrv.name}.${this.handleBlock.name}:291`,
-        description: `Could not call "ethProvider.getBalance. Cause ${currentBalance.left.message}`,
-        alertId: 'VAULT-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${currentBalance.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          currentBalance.left,
+          `Error in ${VaultSrv.name}.${this.handleNoELVaultDrains.name}:284`,
+          `Could not call ethProvider.getBalance`,
+        ),
+      ]
     }
 
     const out: Finding[] = []
@@ -363,7 +334,7 @@ export class VaultSrv {
 
   public handleBurnerSharesTx(txEvent: TransactionEvent): Finding[] {
     const events = txEvent
-      .filterLog(TRANSFER_SHARES_EVENT, this.lidoContract.address)
+      .filterLog(TRANSFER_SHARES_EVENT, this.lidoStethAddress)
       .filter((e) => e.args.from.toLowerCase() === this.burnerAddress.toLowerCase())
 
     const out: Finding[] = []

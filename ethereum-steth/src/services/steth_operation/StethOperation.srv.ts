@@ -1,18 +1,13 @@
-import BigNumber from 'bignumber.js'
 import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { IETHProvider } from '../../clients/eth_provider'
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { retryAsync } from 'ts-retry'
-import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { Event as EthersEvent } from 'ethers'
 import { EventOfNotice } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
-import { LidoContract, TransactionEventContract, WithdrawalQueueContract } from './contracts'
+import { IStethClient, TransactionEventContract } from './contracts'
 import { Logger } from 'winston'
-import { TypedEvent } from '../../generated/common'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
+import { networkAlert } from '../../utils/errors'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
@@ -33,12 +28,10 @@ export class StethOperationSrv {
   private readonly name = 'StethOperationSrv'
   private readonly logger: Logger
   private readonly cache: StethOperationCache
-  private readonly ethProvider: IETHProvider
+  private readonly ethProvider: IStethClient
   private readonly depositSecurityAddress: string
   private readonly lidoStethAddress: string
   private readonly lidoDepositExecutorAddress: string
-  private readonly lidoContract: LidoContract
-  private readonly wdQueueContract: WithdrawalQueueContract
 
   private readonly depositSecurityEvents: EventOfNotice[]
   private readonly lidoEvents: EventOfNotice[]
@@ -48,12 +41,10 @@ export class StethOperationSrv {
   constructor(
     logger: Logger,
     cache: StethOperationCache,
-    ethProvider: IETHProvider,
+    ethProvider: IStethClient,
     depositSecurityAddress: string,
     lidoStethAddress: string,
     lidoDepositExecutorAddress: string,
-    lidoContract: LidoContract,
-    wdQueueContract: WithdrawalQueueContract,
     depositSecurityEvents: EventOfNotice[],
     lidoEvents: EventOfNotice[],
     insuranceFundEvents: EventOfNotice[],
@@ -65,8 +56,6 @@ export class StethOperationSrv {
     this.depositSecurityAddress = depositSecurityAddress
     this.lidoStethAddress = lidoStethAddress
     this.lidoDepositExecutorAddress = lidoDepositExecutorAddress
-    this.lidoContract = lidoContract
-    this.wdQueueContract = wdQueueContract
 
     this.depositSecurityEvents = depositSecurityEvents
     this.lidoEvents = lidoEvents
@@ -83,7 +72,7 @@ export class StethOperationSrv {
     )
     if (E.isLeft(history)) {
       this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-      return new Error(`Could not fetch transaction history for last 3 days. Cause ${history.left.message}`)
+      return history.left
     }
 
     const depositorTxTimestamps: number[] = []
@@ -136,18 +125,13 @@ export class StethOperationSrv {
     if (this.cache.getShareRate().blockNumber !== 0) {
       const shareRate = await this.ethProvider.getShareRate(blockNumber)
       if (E.isLeft(shareRate)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleShareRateChange.name}:136`,
-          description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
-          alertId: 'STETH-OP-NETWORK-ERR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: {
-            stack: `${shareRate.left.stack}`,
-          },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            shareRate.left,
+            `Error in ${StethOperationSrv.name}.${this.handleShareRateChange.name}:137`,
+            `Could not call ethProvider.getShareRate`,
+          ),
+        ]
       }
 
       const shareRateFromReport = this.cache.getShareRate()
@@ -195,16 +179,11 @@ export class StethOperationSrv {
       if (f.alertId === alertId_token_rebased) {
         const shareRate = await this.ethProvider.getShareRate(blockNumber)
         if (E.isLeft(shareRate)) {
-          const f: Finding = Finding.fromObject({
-            name: `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:146`,
-            description: `Could not call "ethProvider.getShareRate". Cause ${shareRate.left.message}`,
-            alertId: 'STETH-OP-NETWORK-ERR',
-            severity: FindingSeverity.Unknown,
-            type: FindingType.Degraded,
-            metadata: {
-              stack: `${shareRate.left.stack}`,
-            },
-          })
+          const f: Finding = networkAlert(
+            shareRate.left,
+            `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:192`,
+            `Could not call ethProvider.getShareRate`,
+          )
 
           out.push(f)
         } else {
@@ -244,103 +223,71 @@ export class StethOperationSrv {
   }
 
   public async handleBufferedEth(blockNumber: number, blockTimestamp: number): Promise<Finding[]> {
-    const bufferedEthRaw = await this.ethProvider.getBufferedEther(blockNumber)
-    if (E.isLeft(bufferedEthRaw)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:174`,
-        description: `Could not call "ethProvider.getBufferedEther. Cause ${bufferedEthRaw.left.message}`,
-        alertId: 'STETH-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${bufferedEthRaw.left.stack}` },
-      })
-
-      return [f]
-    }
-
-    // We use shifted block number to ensure that nodes return correct values
     const shiftedBlockNumber = blockNumber - 3
-    const shifte3dBufferedEthRaw = await this.ethProvider.getBufferedEther(shiftedBlockNumber)
-    if (E.isLeft(shifte3dBufferedEthRaw)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:215`,
-        description: `Could not call "ethProvider.getBufferedEther". Cause ${shifte3dBufferedEthRaw.left.message}`,
-        alertId: 'STETH-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: {
-          stack: `${shifte3dBufferedEthRaw.left.stack}`,
-        },
-      })
+    const [bufferedEthRaw, shifte3dBufferedEthRaw, shifte4dBufferedEthRaw] = await Promise.all([
+      this.ethProvider.getBufferedEther(blockNumber),
+      this.ethProvider.getBufferedEther(shiftedBlockNumber),
+      this.ethProvider.getBufferedEther(shiftedBlockNumber - 1),
+    ])
 
-      return [f]
+    if (E.isLeft(bufferedEthRaw)) {
+      return [
+        networkAlert(
+          bufferedEthRaw.left,
+          `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:240`,
+          `Could not call ethProvider.bufferedEthRaw`,
+        ),
+      ]
     }
-    const shifte4dBufferedEthRaw = await this.ethProvider.getBufferedEther(shiftedBlockNumber - 1)
-    if (E.isLeft(shifte4dBufferedEthRaw)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:230`,
-        description: `Could not call "ethProvider.getBufferedEther". Cause ${shifte4dBufferedEthRaw.left.message}`,
-        alertId: 'STETH-OP-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: {
-          stack: `${shifte4dBufferedEthRaw.left.stack}`,
-        },
-      })
 
-      return [f]
+    if (E.isLeft(shifte3dBufferedEthRaw)) {
+      return [
+        networkAlert(
+          shifte3dBufferedEthRaw.left,
+          `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:241`,
+          `Could not call ethProvider.shifte3dBufferedEthRaw`,
+        ),
+      ]
+    }
+
+    if (E.isLeft(shifte4dBufferedEthRaw)) {
+      return [
+        networkAlert(
+          shifte4dBufferedEthRaw.left,
+          `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:242`,
+          `Could not call ethProvider.shifte4dBufferedEthRaw`,
+        ),
+      ]
     }
 
     const out: Finding[] = []
     if (shifte3dBufferedEthRaw.right.lt(shifte4dBufferedEthRaw.right)) {
-      let unbufferedEvents: TypedEvent[]
+      const [unbufferedEvents, wdReqFinalizedEvents] = await Promise.all([
+        this.ethProvider.getUnbufferedEvents(shiftedBlockNumber, shiftedBlockNumber),
+        this.ethProvider.getWithdrawalsFinalizedEvents(shiftedBlockNumber, shiftedBlockNumber),
+      ])
 
-      try {
-        unbufferedEvents = await retryAsync<TypedEvent[]>(
-          async (): Promise<TypedEvent[]> => {
-            const filter = this.lidoContract.filters.Unbuffered()
-
-            return await this.lidoContract.queryFilter(filter, shiftedBlockNumber, shiftedBlockNumber)
-          },
-          { delay: 500, maxTry: 5 },
-        )
-      } catch (e) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:251`,
-          description: `Could not fetch unbufferedEvents. Cause ${e instanceof Error ? e.message : ''}`,
-          alertId: 'STETH-OP-NETWORK-ERR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
-        })
-
-        return [f]
+      if (E.isLeft(unbufferedEvents)) {
+        return [
+          networkAlert(
+            unbufferedEvents.left,
+            `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:278`,
+            `Could not call ethProvider.getUnbufferedEvents`,
+          ),
+        ]
       }
 
-      let wdReqFinalizedEvents: EthersEvent[]
-      try {
-        wdReqFinalizedEvents = await retryAsync<EthersEvent[]>(
-          async (): Promise<EthersEvent[]> => {
-            const filter = this.wdQueueContract.filters.WithdrawalsFinalized()
-
-            return await this.wdQueueContract.queryFilter(filter, shiftedBlockNumber, shiftedBlockNumber)
-          },
-          { delay: 500, maxTry: 5 },
-        )
-      } catch (e) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:222`,
-          description: `Could not fetch wdReqFinalizedEvents. Cause ${e instanceof Error ? e.message : ''}`,
-          alertId: 'STETH-OP-NETWORK-ERR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
-        })
-
-        return [f]
+      if (E.isLeft(wdReqFinalizedEvents)) {
+        return [
+          networkAlert(
+            wdReqFinalizedEvents.left,
+            `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:279`,
+            `Could not call ethProvider.getWithdrawalsFinalizedEvents`,
+          ),
+        ]
       }
 
-      if (unbufferedEvents.length === 0 && wdReqFinalizedEvents.length === 0) {
+      if (unbufferedEvents.right.length === 0 && wdReqFinalizedEvents.right.length === 0) {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Buffered ETH drain',
@@ -348,7 +295,8 @@ export class StethOperationSrv {
               `Buffered ETH amount decreased from ` +
               `${shifte4dBufferedEthRaw.right.div(ETH_DECIMALS).toFixed(2)} ` +
               `to ${shifte3dBufferedEthRaw.right.div(ETH_DECIMALS).toFixed(2)} ` +
-              `without Unbuffered or WithdrawalsFinalized events\n\nNote: actual handled block number is ${shiftedBlockNumber}`,
+              `without Unbuffered or WithdrawalsFinalized events\n\n` +
+              `Note: actual handled block number is ${shiftedBlockNumber}`,
             alertId: 'BUFFERED-ETH-DRAIN',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
@@ -358,32 +306,18 @@ export class StethOperationSrv {
     }
 
     if (blockNumber % BLOCK_CHECK_INTERVAL === 0) {
-      let depositableEther: number
-
-      try {
-        const resp = await retryAsync<EtherBigNumber>(
-          async (): Promise<EtherBigNumber> => {
-            return await this.lidoContract.getDepositableEther({
-              blockTag: blockNumber,
-            })
-          },
-          { delay: 500, maxTry: 5 },
-        )
-
-        const depositableEtherRaw = new BigNumber(resp.toString())
-        depositableEther = depositableEtherRaw.div(ETH_DECIMALS).toNumber()
-      } catch (e) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:189`,
-          description: `Could not call "lidoContract.getDepositableEther. Cause ${e instanceof Error ? e.message : ''}`,
-          alertId: 'STETH-OP-NETWORK-ERR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: { stack: e instanceof Error ? `${e.stack}` : 'null' },
-        })
-
-        return [f]
+      const depositableEtherRaw = await this.ethProvider.getDepositableEther(blockNumber)
+      if (E.isLeft(depositableEtherRaw)) {
+        return [
+          networkAlert(
+            depositableEtherRaw.left,
+            `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:321`,
+            `Could not call ethProvider.getDepositableEther`,
+          ),
+        ]
       }
+      const depositableEther = depositableEtherRaw.right.div(ETH_DECIMALS).toNumber()
+
       // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
       if (depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL) {
         if (this.cache.getCriticalDepositableAmountTimestamp() === 0) {
@@ -449,18 +383,13 @@ export class StethOperationSrv {
       ) {
         const executorBalanceRaw = await this.ethProvider.getBalance(this.lidoDepositExecutorAddress, blockNumber)
         if (E.isLeft(executorBalanceRaw)) {
-          out.push(
-            Finding.fromObject({
-              name: `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:376`,
-              description: `Could not fetch depositorBalance. Cause ${executorBalanceRaw.left.message}`,
-              alertId: 'STETH-OP-NETWORK-ERR',
-              severity: FindingSeverity.Unknown,
-              type: FindingType.Degraded,
-              metadata: { stack: `${executorBalanceRaw.left.stack}` },
-            }),
-          )
-
-          return out
+          return [
+            networkAlert(
+              executorBalanceRaw.left,
+              `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:396`,
+              `Could not call ethProvider.getBalance`,
+            ),
+          ]
         }
 
         const executorBalance = executorBalanceRaw.right.div(ETH_DECIMALS).toNumber()
@@ -472,7 +401,7 @@ export class StethOperationSrv {
               description:
                 `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` + `This is extremely low! 😱`,
               alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
-              severity: FindingSeverity.High,
+              severity: FindingSeverity.Medium,
               type: FindingType.Suspicious,
             }),
           )
@@ -488,16 +417,13 @@ export class StethOperationSrv {
     if (blockNumber % BLOCK_CHECK_INTERVAL_SMAll === 0) {
       const stakingLimitInfo = await this.ethProvider.getStakingLimitInfo(blockNumber)
       if (E.isLeft(stakingLimitInfo)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:418`,
-          description: `Could not call "lidoContract.getStakeLimitFullInfo". Cause ${stakingLimitInfo.left.message}`,
-          alertId: 'STETH-OP-NETWORK-ERR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: { stack: `${stakingLimitInfo.left.stack}` },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            stakingLimitInfo.left,
+            `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:430`,
+            `Could not call ethProvider.getStakingLimitInfo`,
+          ),
+        ]
       }
 
       const currentStakingLimit = stakingLimitInfo.right.currentStakeLimit
@@ -512,7 +438,7 @@ export class StethOperationSrv {
             name: '⚠️ Unspent staking limit below 10%',
             description: `Current staking limit is lower than 10% of max staking limit`,
             alertId: 'LOW-STAKING-LIMIT',
-            severity: FindingSeverity.Info,
+            severity: FindingSeverity.Medium,
             type: FindingType.Info,
           }),
         )

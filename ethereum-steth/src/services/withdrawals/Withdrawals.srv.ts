@@ -1,9 +1,6 @@
-import { Lido as LidoContract, WithdrawalQueueERC721 as WithdrawalQueueContract } from '../../generated'
 import BigNumber from 'bignumber.js'
-import { retryAsync } from 'ts-retry'
-import { WithdrawalRequest, WithdrawalsCache } from './Withdrawals.cache'
+import { WithdrawalsCache } from './Withdrawals.cache'
 import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { IETHProvider } from '../../clients/eth_provider'
 import * as E from 'fp-ts/Either'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { elapsedTime, formatDelay } from '../../utils/time'
@@ -19,6 +16,10 @@ import {
 import { etherscanAddress, etherscanNft } from '../../utils/string'
 import { EventOfNotice } from '../../entity/events'
 import { Logger } from 'winston'
+import { WithdrawalRequest } from '../../entity/withdrawal_request'
+import { WithdrawalsRepo } from './Withdrawals.repo'
+import { dbAlert, networkAlert } from '../../utils/errors'
+import { IWithdrawalsClient } from './contract'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -45,167 +46,84 @@ export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
 
   private readonly logger: Logger
-  private readonly lidoContract: LidoContract
-  private readonly wdQueueContract: WithdrawalQueueContract
+  private readonly repo: WithdrawalsRepo
   private readonly cache: WithdrawalsCache
-  private readonly ethProvider: IETHProvider
+  private readonly ethProvider: IWithdrawalsClient
   private readonly withdrawalsEvents: EventOfNotice[]
+
+  private readonly withdrawalsQueueAddress: string
+  private readonly lidoStethAddress: string
 
   constructor(
     logger: Logger,
-    ethProvider: IETHProvider,
-    wdQueueContract: WithdrawalQueueContract,
-    lidoContract: LidoContract,
+    repo: WithdrawalsRepo,
+    ethProvider: IWithdrawalsClient,
     cache: WithdrawalsCache,
     withdrawalsEvents: EventOfNotice[],
+    withdrawalsQueueAddress: string,
+    lidoStethAddress: string,
   ) {
     this.logger = logger
+    this.repo = repo
     this.ethProvider = ethProvider
-    this.wdQueueContract = wdQueueContract
-    this.lidoContract = lidoContract
     this.cache = cache
     this.withdrawalsEvents = withdrawalsEvents
+    this.withdrawalsQueueAddress = withdrawalsQueueAddress
+    this.lidoStethAddress = lidoStethAddress
   }
 
   async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
 
-    try {
-      const isBunkerMode = await retryAsync<boolean>(
-        async (): Promise<boolean> => {
-          const [isBunkerMode] = await this.wdQueueContract.functions.isBunkerModeActive({
-            blockTag: currentBlock,
-          })
-
-          return isBunkerMode
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      this.cache.setIsBunkerMode(isBunkerMode)
-    } catch (e) {
+    const isBunkerMode = await this.ethProvider.isBunkerModeActive(currentBlock)
+    if (E.isLeft(isBunkerMode)) {
       this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-      return new Error(`Could not call "isBunkerModeActive. Cause ${e}`)
+      return isBunkerMode.left
     }
+
+    this.cache.setIsBunkerMode(isBunkerMode.right)
 
     if (this.cache.getIsBunkerMode()) {
-      let bunkerModeSinceTimestamp: number
-      try {
-        bunkerModeSinceTimestamp = await retryAsync<number>(
-          async (): Promise<number> => {
-            const [resp] = await this.wdQueueContract.functions.bunkerModeSinceTimestamp({
-              blockTag: currentBlock,
-            })
-
-            return resp.toNumber()
-          },
-          { delay: 500, maxTry: 5 },
-        )
-
-        this.cache.setBunkerModeEnabledSinceTimestamp(bunkerModeSinceTimestamp)
-      } catch (e) {
+      const bunkerModeSinceTimestamp = await this.ethProvider.getBunkerTimestamp(currentBlock)
+      if (E.isLeft(bunkerModeSinceTimestamp)) {
         this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-        return new Error(`Could not call "bunkerModeSinceTimestamp. Cause ${e}`)
+        return bunkerModeSinceTimestamp.left
       }
+
+      this.cache.setBunkerModeEnabledSinceTimestamp(bunkerModeSinceTimestamp.right)
     }
 
-    let lastRequestId: number
-    try {
-      lastRequestId = await retryAsync<number>(
-        async (): Promise<number> => {
-          const [resp] = await this.wdQueueContract.functions.getLastRequestId({
-            blockTag: currentBlock,
-          })
-
-          return resp.toNumber()
-        },
-        { delay: 500, maxTry: 5 },
-      )
-    } catch (e) {
+    const err = await this.fillUpWithdrawalStatusesTable(currentBlock)
+    if (err !== null) {
       this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-      return new Error(`Could not call "getLastRequestId. Cause ${e}`)
-    }
-
-    if (lastRequestId !== 0) {
-      try {
-        const lastFinalizedRequestId = await retryAsync<number>(
-          async (): Promise<number> => {
-            const [resp] = await this.wdQueueContract.functions.getLastFinalizedRequestId({
-              blockTag: currentBlock,
-            })
-
-            return resp.toNumber()
-          },
-          { delay: 500, maxTry: 5 },
-        )
-
-        this.cache.setLastFinalizedRequestId(lastFinalizedRequestId)
-      } catch (e) {
-        this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-        return new Error(`Could not call "getLastFinalizedRequestId. Cause ${e}`)
-      }
-
-      if (this.cache.getLastFinalizedRequestId() !== 0) {
-        try {
-          const lastFinalizedTimestamp = await retryAsync<number>(
-            async (): Promise<number> => {
-              const resp = await this.wdQueueContract.functions.getWithdrawalStatus(
-                [this.cache.getLastFinalizedRequestId()],
-                {
-                  blockTag: currentBlock,
-                },
-              )
-
-              return resp.statuses[0].timestamp.toNumber()
-            },
-            { delay: 500, maxTry: 5 },
-          )
-
-          this.cache.setLastFinalizedTimestamp(lastFinalizedTimestamp)
-        } catch (e) {
-          this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-
-          return new Error(`Could not call "getWithdrawalStatus. Cause ${e}`)
-        }
-      }
-
-      const diff = lastRequestId - this.cache.getLastFinalizedRequestId()
-      let endValue = this.cache.getLastFinalizedRequestId()
-      if (diff > 0) {
-        endValue += 1
-      }
-
-      const requestsRange: number[] = []
-      for (let i = 1; i <= endValue; i++) {
-        requestsRange.push(i)
-      }
-
-      const requestsStatuses = await this.ethProvider.getWithdrawalStatuses(requestsRange, currentBlock)
-      if (E.isLeft(requestsStatuses)) {
-        this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-
-        return requestsStatuses.left
-      }
-
-      for (const [index, reqStatus] of requestsStatuses.right.entries()) {
-        const reqId = index + 1
-        if (reqStatus.isFinalized) {
-          this.cache.getFinalizedWithdrawalRequestsMap().set(reqId, {
-            id: reqId,
-            amount: new BigNumber(String(reqStatus.amountOfStETH)),
-            claimed: reqStatus.isClaimed,
-            timestamp: String(reqStatus.timestamp),
-          })
-        }
-      }
-      if (diff > 0) {
-        this.cache.setFirstUnfinalizedRequestTimestamp(
-          requestsStatuses.right[requestsRange.length - 1].timestamp.toNumber(),
-        )
-      }
+      return err
     }
 
     this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
+    return null
+  }
+
+  async fillUpWithdrawalStatusesTable(currentBlock: number): Promise<Error | null> {
+    const lastRequestId = await this.ethProvider.getWithdrawalLastRequestId(currentBlock)
+    if (E.isLeft(lastRequestId)) {
+      return lastRequestId.left
+    }
+
+    const requests: number[] = []
+    for (let i = 1; i <= lastRequestId.right; i++) {
+      requests.push(i)
+    }
+
+    const requestStatuses = await this.ethProvider.getWithdrawalStatuses(requests, currentBlock)
+    if (E.isLeft(requestStatuses)) {
+      return requestStatuses.left
+    }
+
+    const insertErr = await this.repo.createOrUpdate(requestStatuses.right)
+    if (insertErr !== null) {
+      return insertErr
+    }
+
     return null
   }
 
@@ -217,7 +135,60 @@ export class WithdrawalsSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    if (blockEvent.block.number % BLOCK_CHECK_INTERVAL == 0) {
+    const chainLastRequestId = await this.ethProvider.getWithdrawalLastRequestId(blockEvent.block.number)
+    if (E.isLeft(chainLastRequestId)) {
+      return [
+        networkAlert(
+          chainLastRequestId.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleBlock.name}:138`,
+          `Could not call ethProvider.getWithdrawalLastRequestId`,
+        ),
+      ]
+    }
+
+    const dbLastRequestId = await this.repo.getLastRequestId()
+    if (E.isLeft(dbLastRequestId)) {
+      return [
+        dbAlert(
+          dbLastRequestId.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleBlock.name}:149`,
+          `Could not call repo.getLastRequestId`,
+        ),
+      ]
+    }
+
+    // db is outdated
+    // fetch requests and store them in db
+    if (chainLastRequestId.right > dbLastRequestId.right) {
+      const requestIds: number[] = []
+      for (let i = dbLastRequestId.right; i <= chainLastRequestId.right; i++) {
+        requestIds.push(i)
+      }
+
+      const requests = await this.ethProvider.getWithdrawalStatuses(requestIds, blockEvent.block.number)
+      if (E.isLeft(requests)) {
+        return [
+          networkAlert(
+            requests.left,
+            `Error in ${WithdrawalsSrv.name}.${this.handleBlock.name}:168`,
+            `Could not call ethProvider.getWithdrawalStatuses`,
+          ),
+        ]
+      }
+
+      const insErr = await this.repo.createOrUpdate(requests.right)
+      if (insErr !== null) {
+        return [
+          dbAlert(
+            insErr,
+            `Error in ${WithdrawalsSrv.name}.${this.handleBlock.name}:179`,
+            `Could not call repo.createOrUpdate`,
+          ),
+        ]
+      }
+    }
+
+    if (blockEvent.block.number % BLOCK_CHECK_INTERVAL === 0) {
       const [queueOnParWithStakeLimitFindings, unfinalizedRequestNumberFindings, unclaimedRequestsFindings] =
         await Promise.all([
           this.handleQueueOnParWithStakeLimit(blockEvent),
@@ -237,18 +208,20 @@ export class WithdrawalsSrv {
     return findings
   }
 
-  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+  public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
     const out: Finding[] = []
 
     const bunkerStatusFindings = this.handleBunkerStatus(txEvent)
     this.handleLastTokenRebase(txEvent)
-    this.handleWithdrawalFinalized(txEvent)
-    const withdrawalRequestFindings = this.handleWithdrawalRequest(txEvent)
-    const withdrawalClaimedFindings = this.handleWithdrawalClaimed(txEvent)
+
+    const finalizedFindings = await this.handleWithdrawalFinalized(txEvent)
+    const withdrawalRequestFindings = await this.handleWithdrawalRequest(txEvent)
+    const withdrawalClaimedFindings = await this.handleWithdrawalClaimed(txEvent)
     const withdrawalsEventsFindings = this.handleEventsOfNotice(txEvent, this.withdrawalsEvents)
 
     out.push(
       ...bunkerStatusFindings,
+      ...finalizedFindings,
       ...withdrawalRequestFindings,
       ...withdrawalClaimedFindings,
       ...withdrawalsEventsFindings,
@@ -269,30 +242,24 @@ export class WithdrawalsSrv {
 
     const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockEvent.block.number)
     if (E.isLeft(stakeLimitFullInfo)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:213`,
-        description: `Could not call "ethProvider.getStakingLimitInfo. Cause ${stakeLimitFullInfo.left.message}`,
-        alertId: 'WITHDRAWALS-NETWORK-ERROR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${stakeLimitFullInfo.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          stakeLimitFullInfo.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:243`,
+          `Could not call ethProvider.getStakingLimitInfo`,
+        ),
+      ]
     }
 
     const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
     if (E.isLeft(unfinalizedStETH)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:232`,
-        description: `Could not call "wdQueueContract.unfinalizedStETH. Cause ${unfinalizedStETH.left.message}`,
-        alertId: 'WITHDRAWALS-NETWORK-ERROR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${unfinalizedStETH.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          unfinalizedStETH.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleQueueOnParWithStakeLimit.name}:254`,
+          `Could not call ethProvider.getUnfinalizedStETH`,
+        ),
+      ]
     }
 
     if (stakeLimitFullInfo.right.isStakingPaused || unfinalizedStETH.right.eq(0)) {
@@ -309,11 +276,10 @@ export class WithdrawalsSrv {
           name: `⚠️ Withdrawals: ${drainedStakeLimitRate.times(
             100,
           )}% of stake limit is drained and unfinalized queue is on par with drained stake limit`,
-          description: `Unfinalized queue: ${unfinalizedStETH.right
-            .div(ETH_DECIMALS)
-            .toFixed(2)} stETH\nDrained stake limit: ${drainedStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
+          description: `Unfinalized queue: ${unfinalizedStETH.right.div(ETH_DECIMALS).toFixed(2)} stETH\n
+          Drained stake limit: ${drainedStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
           alertId: 'WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT',
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
         }),
       )
@@ -329,19 +295,38 @@ export class WithdrawalsSrv {
     let unfinalizedStETH = new BigNumber(0)
 
     const out: Finding[] = []
-    if (currentBlockTimestamp >= this.cache.getLastFinalizedTimestamp()) {
+    const lastFinalizedRequest = await this.repo.getLastFinalizedRequest()
+    if (E.isLeft(lastFinalizedRequest)) {
+      return [
+        dbAlert(
+          lastFinalizedRequest.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnfinalizedRequestNumber.name}:298`,
+          `Could not call repo.getLastFinalizedRequest`,
+        ),
+      ]
+    }
+
+    const firstUnfinalizedRequest = await this.repo.getFirstUnfinalizedRequest()
+    if (E.isLeft(firstUnfinalizedRequest)) {
+      return [
+        dbAlert(
+          firstUnfinalizedRequest.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnfinalizedRequestNumber.name}:309`,
+          `Could not call repo.getFirstUnfinalizedRequest`,
+        ),
+      ]
+    }
+
+    if (currentBlockTimestamp >= lastFinalizedRequest.right.timestamp) {
       const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
       if (E.isLeft(unfinalizedStETHraw)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${WithdrawalsSrv.name}.${this.handleUnfinalizedRequestNumber.name}:292`,
-          description: `Could not call "wdQueueContract.unfinalizedStETH. Cause ${unfinalizedStETHraw.left.message}`,
-          alertId: 'WITHDRAWALS-NETWORK-ERROR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: { stack: `${unfinalizedStETHraw.left.stack}` },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            unfinalizedStETHraw.left,
+            `Error in ${WithdrawalsSrv.name}.${this.handleUnfinalizedRequestNumber.name}:309`,
+            `Could not call ethProvider.getUnfinalizedStETH`,
+          ),
+        ]
       }
 
       unfinalizedStETH = unfinalizedStETHraw.right.div(ETH_DECIMALS)
@@ -368,7 +353,7 @@ export class WithdrawalsSrv {
     }
 
     if (!this.cache.getIsBunkerMode() && unfinalizedStETH.gt(0)) {
-      if (currentBlockTimestamp - LONG_UNFINALIZED_QUEUE_THRESHOLD > this.cache.getFirstUnfinalizedRequestTimestamp()) {
+      if (currentBlockTimestamp - LONG_UNFINALIZED_QUEUE_THRESHOLD > firstUnfinalizedRequest.right.timestamp) {
         if (
           currentBlockTimestamp - this.cache.getLastLongUnfinalizedQueueAlertTimestamp() >
           LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY
@@ -383,7 +368,7 @@ export class WithdrawalsSrv {
                 waitTime * 1000,
               ).getHours()} more then 1 day`,
               description: `Unfinalized queue wait time is ${formatDelay(
-                currentBlockTimestamp - this.cache.getFirstUnfinalizedRequestTimestamp(),
+                currentBlockTimestamp - firstUnfinalizedRequest.right.timestamp,
               )}`,
               alertId: 'WITHDRAWALS-LONG-UNFINALIZED-QUEUE',
               severity: FindingSeverity.Medium,
@@ -407,74 +392,74 @@ export class WithdrawalsSrv {
     let unclaimedStETH = new BigNumber(0)
     let claimedStETH = new BigNumber(0)
 
-    const unclaimedReqIds: number[] = []
-    for (const [id, req] of this.cache.getFinalizedWithdrawalRequestsMap().entries()) {
-      if (!req.claimed) {
-        unclaimedReqIds.push(id)
-      }
-    }
-    if (unclaimedReqIds.length == 0) {
-      return []
+    const unclaimedReqIds = await this.repo.getUnclaimedReqIds()
+    if (E.isLeft(unclaimedReqIds)) {
+      return [
+        dbAlert(
+          unclaimedReqIds.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:395`,
+          `Could not call repo.getUnclaimedReqIds`,
+        ),
+      ]
     }
     const unclaimedRequestsStatuses = await this.ethProvider.getWithdrawalStatuses(
-      unclaimedReqIds,
+      unclaimedReqIds.right,
       blockEvent.block.number,
     )
     if (E.isLeft(unclaimedRequestsStatuses)) {
-      const f: Finding = Finding.fromObject({
-        name: `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:363`,
-        description: `Could not call "wdQueueContract.getWithdrawalStatuses. Cause ${unclaimedRequestsStatuses.left.message}`,
-        alertId: 'WITHDRAWALS-NETWORK-ERROR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: { stack: `${unclaimedRequestsStatuses.left.stack}` },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          unclaimedRequestsStatuses.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:405`,
+          `Could not call ethProvider.getWithdrawalStatuses`,
+        ),
+      ]
     }
 
-    for (const [index, reqStatus] of unclaimedRequestsStatuses.right.entries()) {
-      const reqId = unclaimedReqIds[index]
-      const curr = this.cache.getFinalizedWithdrawalRequestsMap().get(reqId)
-      if (curr === undefined) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:377`,
-          description: `FinalizedWithdrawalRequestsMap is broken. FinalizedWithdrawalRequestsMap(${reqId}) does not contain value.`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.High,
-          type: FindingType.Unknown,
-        })
-
-        return [f]
-      }
-
-      const withdrawalRequest: WithdrawalRequest = {
-        id: curr.id,
-        amount: new BigNumber(String(reqStatus.amountOfStETH)),
-        claimed: reqStatus.isClaimed,
-        timestamp: curr.timestamp,
-      }
-
-      this.cache.getFinalizedWithdrawalRequestsMap().set(reqId, withdrawalRequest)
+    const updateErr = await this.repo.createOrUpdate(unclaimedRequestsStatuses.right)
+    if (updateErr !== null) {
+      return [
+        networkAlert(
+          updateErr,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:419`,
+          `Could not call repo.createOrUpdate`,
+        ),
+      ]
     }
 
-    for (const [id, req] of this.cache.getFinalizedWithdrawalRequestsMap()) {
-      const isOutdated = currentBlockTimestamp - Number(req.timestamp) > UNCLAIMED_REQUESTS_TIME_WINDOW
-      if (isOutdated) {
-        if (req.claimed) {
-          outdatedClaimedReqIds.push(id)
-        }
+    const finalizedRequests = await this.repo.getFinalizedRequests()
+    if (E.isLeft(finalizedRequests)) {
+      return [
+        dbAlert(
+          finalizedRequests.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:430`,
+          `Could not call repo.getFinalizedRequests`,
+        ),
+      ]
+    }
+
+    for (const request of finalizedRequests.right) {
+      const isOutdated = currentBlockTimestamp - request.timestamp > UNCLAIMED_REQUESTS_TIME_WINDOW
+      if (isOutdated && request.isClaimed) {
+        outdatedClaimedReqIds.push(request.id)
       }
-      if (!isOutdated && req.claimed) {
-        claimedStETH = claimedStETH.plus(req.amount as BigNumber)
+      if (!isOutdated && request.isClaimed) {
+        claimedStETH = claimedStETH.plus(request.amountOfStETH)
       }
-      if (!req.claimed) {
-        unclaimedStETH = unclaimedStETH.plus(req.amount as BigNumber)
+      if (!request.isClaimed) {
+        unclaimedStETH = unclaimedStETH.plus(request.amountOfStETH)
       }
     }
 
-    for (const id of outdatedClaimedReqIds) {
-      this.cache.getFinalizedWithdrawalRequestsMap().delete(id)
+    const removeErr = await this.repo.removeByIds(outdatedClaimedReqIds)
+    if (removeErr !== null) {
+      return [
+        dbAlert(
+          removeErr,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:454`,
+          `Could not call repo.removeByIds`,
+        ),
+      ]
     }
 
     const totalFinalizedSize = claimedStETH.plus(unclaimedStETH)
@@ -487,13 +472,11 @@ export class WithdrawalsSrv {
         out.push(
           Finding.fromObject({
             name: `⚠️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
-            description: `Unclaimed (for all time): ${unclaimedStETH
-              .div(ETH_DECIMALS)
-              .toFixed(2)} stETH\nClaimed (for 2 weeks): ${claimedStETH
-              .div(ETH_DECIMALS)
-              .toFixed(2)} stETH\nTotal finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
+            description: `Unclaimed (for all time): ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
+            Claimed (for 2 weeks): ${claimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
+            Total finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS',
-            severity: FindingSeverity.Info,
+            severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
           }),
         )
@@ -505,33 +488,28 @@ export class WithdrawalsSrv {
       UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY
     ) {
       const withdrawalQueueBalance = await this.ethProvider.getBalance(
-        this.wdQueueContract.address,
+        this.withdrawalsQueueAddress,
         blockEvent.block.number,
       )
       if (E.isLeft(withdrawalQueueBalance)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:452`,
-          description: `Could not get withdrawalQueueBalance. Cause ${withdrawalQueueBalance.left.message}`,
-          alertId: 'WITHDRAWALS-NETWORK-ERROR',
-          severity: FindingSeverity.Unknown,
-          type: FindingType.Degraded,
-          metadata: { stack: `${withdrawalQueueBalance.left.stack}` },
-        })
-
-        return [f]
+        return [
+          networkAlert(
+            withdrawalQueueBalance.left,
+            `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:490`,
+            `Could not call ethProvider.getBalance`,
+          ),
+        ]
       }
 
       if (unclaimedStETH.gt(withdrawalQueueBalance.right)) {
         out.push(
           Finding.fromObject({
             name: `⚠️ Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
-            description: `Unclaimed: ${unclaimedStETH
-              .div(ETH_DECIMALS)
-              .toFixed(2)} stETH\nWithdrawal queue balance: ${withdrawalQueueBalance.right
-              .div(ETH_DECIMALS)
-              .toFixed(2)} ETH\nDifference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
+            description: `Unclaimed: ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
+            Withdrawal queue balance: ${withdrawalQueueBalance.right.div(ETH_DECIMALS).toFixed(2)} ETH\n
+            Difference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
             alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE',
-            severity: FindingSeverity.Critical,
+            severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
           }),
         )
@@ -543,7 +521,7 @@ export class WithdrawalsSrv {
   }
 
   public handleBunkerStatus(txEvent: TransactionEvent): Finding[] {
-    const [bunkerEnabled] = filterLog(txEvent.logs, WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT, this.wdQueueContract.address)
+    const [bunkerEnabled] = filterLog(txEvent.logs, WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT, this.withdrawalsQueueAddress)
 
     const out: Finding[] = []
 
@@ -569,7 +547,7 @@ export class WithdrawalsSrv {
     const [bunkerDisabled] = filterLog(
       txEvent.logs,
       WITHDRAWALS_BUNKER_MODE_DISABLED_EVENT,
-      this.wdQueueContract.address,
+      this.withdrawalsQueueAddress,
     )
     if (bunkerDisabled) {
       this.cache.setIsBunkerMode(false)
@@ -579,7 +557,7 @@ export class WithdrawalsSrv {
           name: '⚠️ Withdrawals: BUNKER MODE OFF! ✅',
           description: `Bunker lasted ${delay}`,
           alertId: 'WITHDRAWALS-BUNKER-DISABLED',
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Info,
         }),
       )
@@ -589,24 +567,18 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public handleWithdrawalRequest(txEvent: TransactionEvent): Finding[] {
+  public async handleWithdrawalRequest(txEvent: TransactionEvent): Promise<Finding[]> {
     const requestEvents = filterLog(
       txEvent.logs,
       WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED_EVENT,
-      this.wdQueueContract.address,
+      this.withdrawalsQueueAddress,
     )
     if (!requestEvents) {
       return []
     }
 
-    if (
-      this.cache.getFirstUnfinalizedRequestTimestamp() < this.cache.getLastFinalizedTimestamp() &&
-      txEvent.timestamp >= this.cache.getLastFinalizedTimestamp()
-    ) {
-      this.cache.setFirstUnfinalizedRequestTimestamp(txEvent.timestamp)
-    }
-
     const perRequesterAmounts = new Map<string, BigNumber>()
+    const withdrawalRequestIds: number[] = []
     for (const event of requestEvents) {
       perRequesterAmounts.set(
         event.args.requestor,
@@ -614,6 +586,30 @@ export class WithdrawalsSrv {
           new BigNumber(String(event.args.amountOfStETH)).div(ETH_DECIMALS),
         ),
       )
+
+      withdrawalRequestIds.push(Number(event.args.requestId))
+    }
+
+    const withdrawalRequests = await this.ethProvider.getWithdrawalStatuses(withdrawalRequestIds, txEvent.block.number)
+    if (E.isLeft(withdrawalRequests)) {
+      return [
+        networkAlert(
+          withdrawalRequests.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:593`,
+          `Could not call ethProvider.getWithdrawalStatuses`,
+        ),
+      ]
+    }
+
+    const updateErr = await this.repo.createOrUpdate(withdrawalRequests.right)
+    if (updateErr !== null) {
+      return [
+        dbAlert(
+          updateErr,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:604`,
+          `Could not call repo.createOrUpdate`,
+        ),
+      ]
     }
 
     const out: Finding[] = []
@@ -622,7 +618,8 @@ export class WithdrawalsSrv {
         out.push(
           Finding.fromObject({
             name: `ℹ️ Huge stETH withdrawal requests batch`,
-            description: `Requester: ${etherscanAddress(requester)}\nAmount: ${amounts.toFixed(2)} stETH`,
+            description: `Requester: ${etherscanAddress(requester)}\n
+            Amount: ${amounts.toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH',
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -642,7 +639,7 @@ export class WithdrawalsSrv {
             name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH (max staking limit)`,
             description: `Amount: ${this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE',
-            severity: FindingSeverity.High,
+            severity: FindingSeverity.Medium,
             type: FindingType.Info,
           }),
         )
@@ -655,7 +652,7 @@ export class WithdrawalsSrv {
   }
 
   public handleLastTokenRebase(txEvent: TransactionEvent): void {
-    const [rebaseEvent] = filterLog(txEvent.logs, LIDO_TOKEN_REBASED_EVENT, this.lidoContract.address)
+    const [rebaseEvent] = filterLog(txEvent.logs, LIDO_TOKEN_REBASED_EVENT, this.lidoStethAddress)
     if (!rebaseEvent) {
       return
     }
@@ -664,14 +661,14 @@ export class WithdrawalsSrv {
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
   }
 
-  public handleWithdrawalFinalized(txEvent: TransactionEvent): void {
+  public async handleWithdrawalFinalized(txEvent: TransactionEvent): Promise<Finding[]> {
     const [withdrawalEvent] = filterLog(
       txEvent.logs,
       WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
-      this.wdQueueContract.address,
+      this.withdrawalsQueueAddress,
     )
     if (!withdrawalEvent) {
-      return
+      return []
     }
 
     const finalizedIds: number[] = []
@@ -679,26 +676,36 @@ export class WithdrawalsSrv {
       finalizedIds.push(i)
     }
 
-    for (const reqId of finalizedIds) {
-      if (!this.cache.getFinalizedWithdrawalRequestsMap().has(reqId)) {
-        this.cache.getFinalizedWithdrawalRequestsMap().set(reqId, {
-          id: reqId,
-          amount: undefined, // will be set in `handleUnclaimedRequests`
-          claimed: false,
-          timestamp: String(withdrawalEvent.args.timestamp),
-        })
-      }
+    const finalizedStatuses = await this.ethProvider.getWithdrawalStatuses(finalizedIds, txEvent.block.number)
+    if (E.isLeft(finalizedStatuses)) {
+      return [
+        networkAlert(
+          finalizedStatuses.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:679`,
+          `Could not call ethProvider.getWithdrawalStatuses`,
+        ),
+      ]
     }
 
-    this.cache.setLastFinalizedRequestId(Number(withdrawalEvent.args.to))
-    this.cache.setLastFinalizedTimestamp(Number(withdrawalEvent.args.timestamp))
+    const updErr = await this.repo.createOrUpdate(finalizedStatuses.right)
+    if (updErr !== null) {
+      return [
+        dbAlert(
+          updErr,
+          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:690`,
+          `Could not call repo.createOrUpdate`,
+        ),
+      ]
+    }
+
+    return []
   }
 
-  public handleWithdrawalClaimed(txEvent: TransactionEvent): Finding[] {
+  public async handleWithdrawalClaimed(txEvent: TransactionEvent): Promise<Finding[]> {
     const claimedEvents = filterLog(
       txEvent.logs,
       WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
-      this.wdQueueContract.address,
+      this.withdrawalsQueueAddress,
     )
     if (claimedEvents.length === 0) {
       return []
@@ -717,27 +724,40 @@ export class WithdrawalsSrv {
     }
 
     const out: Finding[] = []
+    const claimedRequestIds: number[] = []
+    for (const event of claimedEvents) {
+      claimedRequestIds.push(Number(event.args.requestId))
+    }
+
+    const claimedRequestMap = await this.repo.getRequestMapByIds(claimedRequestIds)
+    if (E.isLeft(claimedRequestMap)) {
+      return [
+        dbAlert(
+          claimedRequestMap.left,
+          `Error in ${WithdrawalsSrv.name}.${this.handleWithdrawalClaimed.name}:732`,
+          `Could not call repo.getRequestMapByIds`,
+        ),
+      ]
+    }
+
     for (const event of claimedEvents) {
       const reqId = Number(event.args.requestId)
-      if (this.cache.getFinalizedWithdrawalRequestsMap().has(reqId)) {
-        const curr = this.cache.getFinalizedWithdrawalRequestsMap().get(reqId) as WithdrawalRequest
+      if (claimedRequestMap.right.has(reqId)) {
+        const withdrawalRequest = claimedRequestMap.right.get(reqId) as WithdrawalRequest
         const claimedAmount = new BigNumber(String(event.args.amountOfETH))
 
-        const currAmount = curr.amount === undefined ? new BigNumber(0) : curr.amount
-
-        if (claimedAmount.gt(currAmount)) {
+        if (claimedAmount.gt(withdrawalRequest.amountOfStETH)) {
           out.push(
             Finding.fromObject({
-              name: `⚠️Withdrawals: claimed amount is more than requested`,
-              description: `Request ID: ${etherscanNft(this.wdQueueContract.address, reqId)}\nClaimed: ${claimedAmount
-                .div(ETH_DECIMALS)
-                .toFixed(2)} ETH\nRequested: ${(curr.amount as BigNumber)
-                .div(ETH_DECIMALS)
-                .toFixed(2)} stETH\nDifference: ${claimedAmount.minus(
-                curr.amount as BigNumber,
-              )} wei\nOwner: ${etherscanAddress(event.args.owner)}\nReceiver: ${etherscanAddress(event.args.receiver)}`,
+              name: `⚠️ Withdrawals: claimed amount is more than requested`,
+              description: `Request ID: ${etherscanNft(this.withdrawalsQueueAddress, reqId)}\n
+              Claimed: ${claimedAmount.div(ETH_DECIMALS).toFixed(2)} ETH\n
+              Requested: ${withdrawalRequest.amountOfStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
+              Difference: ${claimedAmount.minus(withdrawalRequest.amountOfStETH)} wei\n
+              Owner: ${etherscanAddress(event.args.owner)}\n
+              Receiver: ${etherscanAddress(event.args.receiver)}`,
               alertId: 'WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED',
-              severity: FindingSeverity.Critical,
+              severity: FindingSeverity.Medium,
               type: FindingType.Suspicious,
             }),
           )
@@ -749,12 +769,8 @@ export class WithdrawalsSrv {
           this.cache.setLastClaimedAmountMoreThanRequestedAlertTimestamp(currentBlockTimestamp)
         }
 
-        this.cache.getFinalizedWithdrawalRequestsMap().set(reqId, {
-          id: curr.id,
-          amount: new BigNumber(String(event.args.amountOfETH)),
-          claimed: true,
-          timestamp: curr.timestamp,
-        })
+        withdrawalRequest.isClaimed = true
+        withdrawalRequest.amountOfStETH = new BigNumber(String(event.args.amountOfETH))
       }
     }
 

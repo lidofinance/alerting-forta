@@ -6,6 +6,7 @@ import {
   FindingType,
   HandleBlock,
   HandleTransaction,
+  HealthCheck,
 } from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
@@ -28,6 +29,15 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const startTime = new Date().getTime()
     const app = await App.getInstance()
+
+    try {
+      await app.db.migrate.latest()
+
+      console.log('Migrations have been run successfully.')
+    } catch (error) {
+      console.error('Error running migrations:', error)
+      process.exit(1)
+    }
 
     const token = await App.getJwt()
     if (E.isLeft(token)) {
@@ -137,6 +147,8 @@ export const handleBlock = (): HandleBlock => {
 
     out.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
+    app.healthChecker.check(out)
+
     console.log(elapsedTime('handleBlock', startTime) + '\n')
     isHandleBlockRunning = false
     return out
@@ -154,14 +166,28 @@ export const handleTransaction = (): HandleTransaction => {
     const out: Finding[] = []
 
     const stethOperationFindings = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.block.number)
-    const withdrawalsFindings = app.WithdrawalsSrv.handleTransaction(txEvent)
+    const withdrawalsFindings = await app.WithdrawalsSrv.handleTransaction(txEvent)
     const gateSealFindings = app.GateSealSrv.handleTransaction(txEvent)
     const vaultFindings = app.VaultSrv.handleTransaction(txEvent)
 
     out.push(...stethOperationFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
+    app.healthChecker.check(out)
+
     isHandleTransactionRunning = false
     return out
+  }
+}
+
+export const healthCheck = (): HealthCheck => {
+  return async function (): Promise<string[] | void> {
+    const app = await App.getInstance()
+
+    if (!app.healthChecker.isHealth()) {
+      return ['There is too much network errors']
+    }
+
+    return []
   }
 }
 
@@ -169,4 +195,5 @@ export default {
   initialize: initialize(),
   handleBlock: handleBlock(),
   handleTransaction: handleTransaction(),
+  healthCheck: healthCheck(),
 }

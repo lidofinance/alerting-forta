@@ -1,39 +1,38 @@
-import type { BigNumber, BigNumberish, CallOverrides } from 'ethers'
-import type { TypedEvent, TypedEventFilter } from '../../generated/common'
-import { UnbufferedEventFilter } from '../../generated/Lido'
-import { WithdrawalsFinalizedEventFilter } from '../../generated/WithdrawalQueueERC721'
+import type { BigNumber } from 'bignumber.js'
+import type { TypedEvent } from '../../generated/common'
 import { Log, LogDescription } from 'forta-agent'
+import { TransactionResponse } from '@ethersproject/abstract-provider'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
+import * as E from 'fp-ts/Either'
 
-export interface LidoContract {
-  getDepositableEther(overrides?: CallOverrides): Promise<BigNumber>
+export abstract class IStethClient {
+  public abstract getHistory(
+    depositSecurityAddress: string,
+    startBlock: number,
+    endBlock: number,
+  ): Promise<E.Either<Error, TransactionResponse[]>>
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined,
-  ): Promise<Array<TEvent>>
+  public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>>
 
-  filters: {
-    Unbuffered(amount?: null): UnbufferedEventFilter
-  }
-}
+  public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
-export interface WithdrawalQueueContract {
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined,
-  ): Promise<Array<TEvent>>
+  public abstract getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
-  filters: {
-    WithdrawalsFinalized(
-      from?: BigNumberish | null,
-      to?: BigNumberish | null,
-      amountOfETHLocked?: null,
-      sharesToBurn?: null,
-      timestamp?: null,
-    ): WithdrawalsFinalizedEventFilter
-  }
+  public abstract getUnbufferedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>>
+
+  public abstract getWithdrawalsFinalizedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>>
+
+  public abstract getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
 }
 
 export type TransactionEventContract = {

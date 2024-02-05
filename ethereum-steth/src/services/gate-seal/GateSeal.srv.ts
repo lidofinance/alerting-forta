@@ -1,6 +1,4 @@
 import { elapsedTime, formatDelay } from '../../utils/time'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { IETHProvider } from '../../clients/eth_provider'
 import * as E from 'fp-ts/Either'
 import { GateSealExpiredErr } from '../../entity/gate_seal'
 import { GateSealCache } from './GateSeal.cache'
@@ -8,6 +6,9 @@ import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT, GATE_SEAL_SEALED_EVENT } from '../../utils/events/gate_seal_events'
 import { etherscanAddress } from '../../utils/string'
 import { Logger } from 'winston'
+import { networkAlert } from '../../utils/errors'
+import { IGateSealClient } from './contract'
+import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
@@ -22,7 +23,7 @@ export class GateSealSrv {
   private readonly name = 'GateSealSrv'
   private readonly logger: Logger
 
-  private readonly ethProvider: IETHProvider
+  private readonly ethProvider: IGateSealClient
   private readonly cache: GateSealCache
   private readonly gateSealFactoryAddress: string
 
@@ -30,7 +31,7 @@ export class GateSealSrv {
 
   constructor(
     logger: Logger,
-    ethProvider: IETHProvider,
+    ethProvider: IGateSealClient,
     cache: GateSealCache,
     gateSealAddress: string,
     gateSealFactoryAddress: string,
@@ -56,7 +57,7 @@ export class GateSealSrv {
           name: '⚠️ GateSeal: default GateSeal address in forta agent is expired',
           description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}]`,
           alertId: 'GATE-SEAL-DEFAULT-EXPIRED',
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Info,
         })
 
@@ -84,7 +85,7 @@ export class GateSealSrv {
         name: "⚠️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts",
         description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`,
         alertId: 'GATE-SEAL-DEFAULT-WITHOUT-ROLE',
-        severity: FindingSeverity.High,
+        severity: FindingSeverity.Medium,
         type: FindingType.Info,
       })
 
@@ -137,18 +138,13 @@ export class GateSealSrv {
         return out
       }
 
-      const f = Finding.fromObject({
-        name: 'Could not check gateSeal.',
-        description: `Could not call "ethProvider.checkGateSeal. Cause ${status.left.message}`,
-        alertId: 'GATE-SEAL-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: {
-          stack: `${status.left.stack}`,
-        },
-      })
-
-      out.push(f)
+      out.push(
+        networkAlert(
+          status.left,
+          `Error in ${GateSealSrv.name}.${this.handlePauseRole.name}:125`,
+          `Could not call ethProvider.checkGateSeal`,
+        ),
+      )
 
       return out
     }
@@ -172,7 +168,7 @@ export class GateSealSrv {
             name: "🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
             description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`,
             alertId: 'GATE-SEAL-WITHOUT-PAUSE-ROLE',
-            severity: FindingSeverity.Critical,
+            severity: FindingSeverity.High,
             type: FindingType.Degraded,
           }),
         )
@@ -192,18 +188,13 @@ export class GateSealSrv {
     const currentBlockTimestamp = blockEvent.block.timestamp
     const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockEvent.block.number)
     if (E.isLeft(expiryTimestamp)) {
-      const f = Finding.fromObject({
-        name: `Error in ${GateSealSrv.name}.${this.handleExpiryGateSeal.name}:172`,
-        description: `Could not call "ethProvider.getExpiryTimestamp. Cause ${expiryTimestamp.left.message}`,
-        alertId: 'GATE-SEAL-NETWORK-ERR',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-        metadata: {
-          stack: `${expiryTimestamp.left.stack}`,
-        },
-      })
-
-      return [f]
+      return [
+        networkAlert(
+          expiryTimestamp.left,
+          `Error in ${GateSealSrv.name}.${this.handleExpiryGateSeal.name}:189`,
+          `Could not call ethProvider.getExpiryTimestamp`,
+        ),
+      ]
     }
     const out: Finding[] = []
     if (expiryTimestamp.right.eq(0) || Number(expiryTimestamp.right) <= currentBlockTimestamp) {
@@ -229,7 +220,7 @@ export class GateSealSrv {
               String(expiryTimestamp),
             )}`,
             alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
-            severity: FindingSeverity.High,
+            severity: FindingSeverity.Medium,
             type: FindingType.Degraded,
           }),
         )
