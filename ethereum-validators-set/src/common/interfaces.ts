@@ -1,25 +1,28 @@
 import { Finding, TransactionEvent, ethers } from "forta-agent";
 
-export interface ContractMethodOrEventHandler<PARAMS> {
+export interface ContractMethodOrEventHandler<ContractParams> {
   initialize(currentBlock: number): Promise<{ [key: string]: string }>;
   handleTransaction(
     txEvent: TransactionEvent,
     contract: ethers.Contract,
-    additionalParams: PARAMS,
+    additionalParams: ContractParams,
   ): Promise<Finding[]>;
 }
 
-export abstract class BaseContractHandler<PARAMS> {
-  protected readonly eventHandlers: ContractMethodOrEventHandler<PARAMS>[] = [];
+export abstract class BaseContractHandler<ContractParams> {
+  protected readonly eventHandlers: ContractMethodOrEventHandler<ContractParams>[] =
+    [];
 
   constructor(
     protected readonly contract: ethers.Contract,
-    protected readonly contractParams: PARAMS,
+    protected readonly contractParams: ContractParams,
   ) {}
 
   abstract initialize(currentBlock: number): Promise<{ [key: string]: string }>;
 
-  public addEventHandler(eventHandler: ContractMethodOrEventHandler<PARAMS>) {
+  public addEventHandler(
+    eventHandler: ContractMethodOrEventHandler<ContractParams>,
+  ) {
     this.eventHandlers.push(eventHandler);
   }
 
@@ -46,10 +49,10 @@ export abstract class BaseContractHandler<PARAMS> {
   }
 }
 
-export class ContractGroupHandler<PARAMS> {
+export class ContractGroupHandler<ContractParams> {
   constructor(
     public readonly groupName: string,
-    public readonly contractHandlers: BaseContractHandler<PARAMS>[] = [],
+    public readonly contractHandlers: BaseContractHandler<ContractParams>[] = [],
   ) {}
 
   public async initialize(
