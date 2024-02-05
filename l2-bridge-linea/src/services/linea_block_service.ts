@@ -54,21 +54,8 @@ export class BlockSrv {
       }
 
       const blocks = await this.lineaProvider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
-      if (E.isLeft(blocks)) {
-        const f: Finding = Finding.fromObject({
-          name: `Error in ${BlockSrv.name}.${this.lineaProvider.fetchBlocks.name}:56`,
-          description: `${blocks.left.message}`,
-          alertId: 'LIDO-AGENT-ERROR',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Degraded,
-          metadata: { stack: `${blocks.left.stack}` },
-        })
 
-        this.cachedBlockDto = undefined
-        return E.left(f)
-      }
-
-      for (const block of blocks.right) {
+      for (const block of blocks) {
         out.push({
           number: block.number,
           timestamp: block.timestamp,
