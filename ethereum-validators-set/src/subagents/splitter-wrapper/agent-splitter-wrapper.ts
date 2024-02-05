@@ -30,7 +30,7 @@ class ObolLidoSplitFactoryCluster {
     txEvent: TransactionEvent,
   ): Promise<Finding[]> {
     const findings: Finding[] = [];
-    console.log(this.contractAddress, txEvent.addresses);
+
     if (!(this.contractAddress in txEvent.addresses)) {
       return [];
     }

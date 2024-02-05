@@ -14,16 +14,11 @@ export const getFindingOfBadSplitWalletParams = (
 ): Finding => {
   const { accounts, percentAllocations, distributorFee, controller } =
     splitWalletParams;
-  let nodeOperatorDescription = "";
-  let clusterMessage = "";
-  if (clusterName) {
-    clusterMessage = ` (${clusterName})`;
-  }
 
   return Finding.from({
     alertId: "MALFORMED-REWARD-ADDRESS-PARAMS",
-    name: `⚠️ SplitterWrapper${clusterMessage}: SplitWallet has wrong params`,
-    description: `${nodeOperatorDescription}splitWallet: ${splitWalletAddress}\n
+    name: `⚠️ SplitterWrapper (${clusterName}): SplitWallet has wrong params`,
+    description: `splitWallet: ${splitWalletAddress}\n
     accounts: ${accounts.join(", ")}\n
     percentAllocations: ${percentAllocations.join(", ")}\n
     distributorFee: ${distributorFee}\n
