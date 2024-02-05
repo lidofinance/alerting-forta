@@ -272,6 +272,7 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0x41527b2d03844db6b0945f25702cb958b6d55989", // zkSynk Era: Lido Bridge
   "0x57891966931eb4bb6fb81430e6ce0a03aabde063", // zkSync Era Bridge
   "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6", // pxETH/stETH (pxsteth)
+  "0xa479582c8b64533102f6f528774c536e354b8d32", // primestaked.com LRT deposit pool
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -295,6 +296,7 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0x0000f224becadfbee49354113e44166c06b10000", // Phishing Contract
   "0x00002ddee5038f25d1f73702c5c3bd905b8a0000", // Phishing Contract
   "0x00004ffe101ebad2a0232d1ff7ecbd08ca560000", // Phishing Contract
+  "0x0000b96d1aca0c7d555deae4da6d9d5813e60000", // Phishing Contract
   "0x8f146a0802a7710203aef9bc2fa3d59dd855f4d3", // Phishing EOA
 ];
 
