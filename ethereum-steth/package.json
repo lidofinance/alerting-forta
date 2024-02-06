@@ -17,7 +17,8 @@
   },
   "scripts": {
     "update-version": "node ../utils/write-version.js",
-    "build": "tsc && yarn run copy-version",
+    "move-migrations": "mkdir -p dist/db/migrations && cp src/db/migrations/* dist/db/migrations/",
+    "build": "tsc && yarn run copy-version && yarn run move-migrations",
     "copy-version": "cp version.json dist",
     "start": "yarn run update-version && yarn run start:dev",
     "start:dev": "nodemon --watch src --watch forta.config.json -e js,ts,json  --exec \"yarn run build && yarn run copy-version && forta-agent run\"",
