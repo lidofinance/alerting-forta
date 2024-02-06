@@ -6,7 +6,6 @@ import {
   MIN_DEPOSIT_EXECUTOR_BALANCE,
   StethOperationSrv,
 } from './StethOperation.srv'
-import { IETHProvider } from '../../clients/eth_provider'
 import { StethOperationCache } from './StethOperation.cache'
 import * as E from 'fp-ts/Either'
 import { Address, ETH_DECIMALS } from '../../utils/constants'
@@ -14,14 +13,6 @@ import { getDepositSecurityEvents } from '../../utils/events/deposit_security_ev
 import { getLidoEvents } from '../../utils/events/lido_events'
 import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
 import { getBurnerEvents } from '../../utils/events/burner_events'
-import { ETHProviderMock } from '../../clients/mocks/eth_provider.mock'
-import {
-  LidoContractMock,
-  TransactionEventContractMock,
-  TypedEventMock,
-  WithdrawalQueueContractMock,
-} from '../../utils/contract_mocks/contract.mock'
-import { LidoContract, WithdrawalQueueContract } from './contracts'
 import { expect } from '@jest/globals'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { faker } from '@faker-js/faker'
@@ -37,11 +28,13 @@ import {
   getFilteredInsuranceFundEventsMock,
   getFilteredLidoEventsMock,
 } from '../../utils/events/mocks/events.mock'
+import { IStethClient } from './contracts'
+import { StethClientMock } from './mocks/mock'
+import { TransactionEventContractMock, TypedEventMock } from './mocks/eth_evnt.mock'
 
 describe('StethOperationSrv', () => {
-  let ethProviderMock: jest.Mocked<IETHProvider>
-  let lidoContractMock: jest.Mocked<LidoContract>
-  let wdQueueContractMock: jest.Mocked<WithdrawalQueueContract>
+  let ethProviderMock: jest.Mocked<IStethClient>
+
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
@@ -49,9 +42,7 @@ describe('StethOperationSrv', () => {
 
   const address = Address
   beforeEach(() => {
-    ethProviderMock = ETHProviderMock()
-    lidoContractMock = LidoContractMock()
-    wdQueueContractMock = WithdrawalQueueContractMock()
+    ethProviderMock = StethClientMock()
   })
 
   describe('initialize', () => {
@@ -66,8 +57,6 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -77,9 +66,7 @@ describe('StethOperationSrv', () => {
       const currentBlock = 19061449
       const result = await srv.initialize(currentBlock)
 
-      expect(result).toStrictEqual(
-        new Error('Could not fetch transaction history for last 3 days. Cause getHistory error'),
-      )
+      expect(result).toStrictEqual(new Error('getHistory error'))
     })
 
     test(`ethProvider.getStethBalance error`, async () => {
@@ -108,8 +95,6 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -166,8 +151,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -195,8 +179,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -208,9 +191,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: 'Could not call "ethProvider.getBufferedEther. Cause getBufferedEther error',
-        name: 'Error in StethOperationSrv.handleBufferedEth:174',
+        alertId: 'NETWORK-ERROR',
+        description: 'Could not call ethProvider.bufferedEthRaw',
+        name: 'Error in StethOperationSrv.handleBufferedEth:240',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -225,8 +208,9 @@ describe('StethOperationSrv', () => {
 
     test(`lidoContract.getDepositableEther error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
+
       ethProviderMock.getBufferedEther.mockResolvedValue(E.right(getBufferedEther))
-      lidoContractMock.getDepositableEther.mockRejectedValue(new Error('getDepositableEtherErr'))
+      ethProviderMock.getDepositableEther.mockResolvedValue(E.left(new Error('getDepositableEtherErr')))
 
       const srv = new StethOperationSrv(
         logger,
@@ -235,8 +219,6 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -248,9 +230,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: 'Could not call "lidoContract.getDepositableEther. Cause getDepositableEtherErr',
-        name: 'Error in StethOperationSrv.handleBufferedEth:189',
+        alertId: 'NETWORK-ERROR',
+        description: 'Could not call ethProvider.getDepositableEther',
+        name: 'Error in StethOperationSrv.handleBufferedEth:321',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -265,7 +247,7 @@ describe('StethOperationSrv', () => {
     test(`lidoContract.shifte3dBufferedEthRaw error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      lidoContractMock.getDepositableEther.mockResolvedValue(EtherBigNumber.from(faker.number.int()))
+      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
       ethProviderMock.getBufferedEther.mockResolvedValue(E.left(new Error('shifte3dBufferedEthRawErr')))
@@ -277,8 +259,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -290,9 +271,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: 'Could not call "ethProvider.getBufferedEther". Cause shifte3dBufferedEthRawErr',
-        name: 'Error in StethOperationSrv.handleBufferedEth:215',
+        alertId: 'NETWORK-ERROR',
+        description: 'Could not call ethProvider.shifte3dBufferedEthRaw',
+        name: 'Error in StethOperationSrv.handleBufferedEth:241',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -307,7 +288,7 @@ describe('StethOperationSrv', () => {
     test(`lidoContract.shifte4dBufferedEthRaw error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      lidoContractMock.getDepositableEther.mockResolvedValue(EtherBigNumber.from(faker.number.int()))
+      ethProviderMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
@@ -321,8 +302,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -334,9 +314,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: 'Could not call "ethProvider.getBufferedEther". Cause shifte4dBufferedEthRawErr',
-        name: 'Error in StethOperationSrv.handleBufferedEth:230',
+        alertId: 'NETWORK-ERROR',
+        description: 'Could not call ethProvider.shifte4dBufferedEthRaw',
+        name: 'Error in StethOperationSrv.handleBufferedEth:242',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -352,7 +332,7 @@ describe('StethOperationSrv', () => {
     test(`unbufferedEventsErr error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      lidoContractMock.getDepositableEther.mockResolvedValueOnce(EtherBigNumber.from(faker.number.int()))
+      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(faker.number.int())
@@ -362,7 +342,7 @@ describe('StethOperationSrv', () => {
       ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       // lidoContractMock.filters.Unbuffered.mockResolvedValue()
-      lidoContractMock.queryFilter.mockRejectedValue(new Error('UnbufferedEventsErr'))
+      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.left(new Error('UnbufferedEventsErr')))
 
       const srv = new StethOperationSrv(
         logger,
@@ -371,8 +351,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -384,9 +363,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: 'Could not fetch unbufferedEvents. Cause UnbufferedEventsErr',
-        name: 'Error in StethOperationSrv.handleBufferedEth:251',
+        alertId: 'NETWORK-ERROR',
+        description: 'Could not call ethProvider.getUnbufferedEvents',
+        name: 'Error in StethOperationSrv.handleBufferedEth:278',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -402,7 +381,8 @@ describe('StethOperationSrv', () => {
     test(`wdReqFinalizedEvents error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      lidoContractMock.getDepositableEther.mockResolvedValueOnce(EtherBigNumber.from(faker.number.int()))
+      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
+      ethProviderMock.getUnbufferedEvents.mockResolvedValueOnce(E.right([]))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(faker.number.int())
@@ -413,9 +393,9 @@ describe('StethOperationSrv', () => {
 
       const unbufferedEvents: TypedEvent[] = [TypedEventMock(), TypedEventMock()]
 
-      lidoContractMock.queryFilter.mockResolvedValue(unbufferedEvents)
+      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
 
-      wdQueueContractMock.queryFilter.mockRejectedValue(new Error('wdReqFinalizedEventsErr'))
+      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.left(new Error('wdReqFinalizedEventsErr')))
 
       const srv = new StethOperationSrv(
         logger,
@@ -424,8 +404,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -437,9 +416,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: 'Could not fetch wdReqFinalizedEvents. Cause wdReqFinalizedEventsErr',
-        name: 'Error in StethOperationSrv.handleBufferedEth:222',
+        alertId: 'NETWORK-ERROR',
+        description: 'Could not call ethProvider.getWithdrawalsFinalizedEvents',
+        name: 'Error in StethOperationSrv.handleBufferedEth:279',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -455,7 +434,7 @@ describe('StethOperationSrv', () => {
     test(`unbufferedEvents.length === 0 && wdReqFinalizedEvents.length === 0`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      lidoContractMock.getDepositableEther.mockResolvedValueOnce(EtherBigNumber.from(faker.number.int()))
+      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(faker.number.int())
@@ -465,9 +444,9 @@ describe('StethOperationSrv', () => {
       ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = []
-      lidoContractMock.queryFilter.mockResolvedValue(unbufferedEvents)
+      ethProviderMock.getUnbufferedEvents.mockResolvedValueOnce(E.right(unbufferedEvents))
       const wdReqFinalizedEvents: TypedEvent[] = []
-      wdQueueContractMock.queryFilter.mockResolvedValue(wdReqFinalizedEvents)
+      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValueOnce(E.right(wdReqFinalizedEvents))
 
       const srv = new StethOperationSrv(
         logger,
@@ -476,8 +455,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -516,7 +494,7 @@ describe('StethOperationSrv', () => {
       const mockDepositableEther = EtherBigNumber.from(MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM + 1).mul(
         EtherBigNumber.from(ETH_DECIMALS.toString()),
       )
-      lidoContractMock.getDepositableEther.mockResolvedValueOnce(EtherBigNumber.from(mockDepositableEther.toString()))
+      ethProviderMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(mockDepositableEther.toString())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(200)
@@ -526,9 +504,9 @@ describe('StethOperationSrv', () => {
       ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = [TypedEventMock()]
-      lidoContractMock.queryFilter.mockResolvedValue(unbufferedEvents)
+      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
       const wdReqFinalizedEvents: TypedEvent[] = [TypedEventMock()]
-      wdQueueContractMock.queryFilter.mockResolvedValue(wdReqFinalizedEvents)
+      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.right(wdReqFinalizedEvents))
 
       const currentBlock = 19061500
       const date = new Date('2024-01-22')
@@ -544,8 +522,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -584,7 +561,7 @@ describe('StethOperationSrv', () => {
       const mockDepositableEther = EtherBigNumber.from(MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL + 1).mul(
         EtherBigNumber.from(ETH_DECIMALS.toString()),
       )
-      lidoContractMock.getDepositableEther.mockResolvedValueOnce(EtherBigNumber.from(mockDepositableEther.toString()))
+      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(mockDepositableEther.toString())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(200)
@@ -594,9 +571,9 @@ describe('StethOperationSrv', () => {
       ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = [TypedEventMock()]
-      lidoContractMock.queryFilter.mockResolvedValue(unbufferedEvents)
+      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
       const wdReqFinalizedEvents: TypedEvent[] = [TypedEventMock()]
-      wdQueueContractMock.queryFilter.mockResolvedValue(wdReqFinalizedEvents)
+      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.right(wdReqFinalizedEvents))
 
       const currentBlock = 19061500
       const date = new Date('2024-01-22')
@@ -613,8 +590,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -657,8 +633,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -670,9 +645,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleDepositExecutorBalance(blockNumber, currentBlockDate.getTime())
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: `Could not fetch depositorBalance. Cause getBalanceErr`,
-        name: 'Error in StethOperationSrv.handleDepositExecutorBalance:376',
+        alertId: 'NETWORK-ERROR',
+        description: `Could not call ethProvider.getBalance`,
+        name: 'Error in StethOperationSrv.handleDepositExecutorBalance:396',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -697,8 +672,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -713,7 +687,7 @@ describe('StethOperationSrv', () => {
         alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
         description: `Balance of deposit executor is 1.0000. This is extremely low! 😱`,
         name: '⚠️ Low deposit executor balance',
-        severity: FindingSeverity.High,
+        severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
       })
 
@@ -741,8 +715,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -754,9 +727,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
 
       const expected = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: `Could not call "lidoContract.getStakeLimitFullInfo". Cause getStakingLimitInfoErr`,
-        name: 'Error in StethOperationSrv.handleStakingLimit:418',
+        alertId: 'NETWORK-ERROR',
+        description: `Could not call ethProvider.getStakingLimitInfo`,
+        name: 'Error in StethOperationSrv.handleStakingLimit:430',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -785,8 +758,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -801,7 +773,7 @@ describe('StethOperationSrv', () => {
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is lower than 10% of max staking limit`,
         name: '⚠️ Unspent staking limit below 10%',
-        severity: FindingSeverity.Info,
+        severity: FindingSeverity.Medium,
         type: FindingType.Info,
       })
 
@@ -831,8 +803,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -883,8 +854,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         depositEvents,
         lidoEvents,
         insuranceFundEvents,
@@ -951,8 +921,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         depositEvents,
         lidoEvents,
         insuranceFundEvents,
@@ -997,9 +966,9 @@ describe('StethOperationSrv', () => {
       }
 
       const expectedShareRateErrFinding = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: `Could not call "ethProvider.getShareRate". Cause shareRateErr`,
-        name: 'Error in StethOperationSrv.handleTransaction:146',
+        alertId: 'NETWORK-ERROR',
+        description: `Could not call ethProvider.getShareRate`,
+        name: 'Error in StethOperationSrv.handleTransaction:192',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -1024,8 +993,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -1042,9 +1010,9 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleShareRateChange(currentBlock)
 
       const expectedShareRateErrFinding = Finding.fromObject({
-        alertId: 'STETH-OP-NETWORK-ERR',
-        description: `Could not call "ethProvider.getShareRate". Cause getShareRateErr`,
-        name: 'Error in StethOperationSrv.handleShareRateChange:136',
+        alertId: 'NETWORK-ERROR',
+        description: `Could not call ethProvider.getShareRate`,
+        name: 'Error in StethOperationSrv.handleShareRateChange:137',
         severity: FindingSeverity.Unknown,
         type: FindingType.Degraded,
       })
@@ -1070,8 +1038,7 @@ describe('StethOperationSrv', () => {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -1118,8 +1085,7 @@ Diff: 1.5490045560519778e+26`,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -1164,8 +1130,7 @@ Diff: -1.5490045560519778e+26`,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContractMock,
-        wdQueueContractMock,
+
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),

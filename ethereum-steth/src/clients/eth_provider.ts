@@ -12,60 +12,22 @@ import {
   ValidatorsExitBusOracle as ExitBusContract,
   WithdrawalQueueERC721 as WithdrawalQueueContract,
 } from '../generated'
-import { WithdrawalQueueBase } from '../generated/WithdrawalQueueERC721'
 import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
 import { ETHDistributedEvent } from '../generated/Lido'
 import { DataRW } from '../utils/mutex'
 import { IEtherscanProvider } from './contracts'
+import { WithdrawalRequest } from '../entity/withdrawal_request'
+import { TypedEvent } from '../generated/common'
+import { NetworkError } from '../utils/errors'
+import { IGateSealClient } from '../services/gate-seal/contract'
+import { IStethClient } from '../services/steth_operation/contracts'
+import { IVaultClient } from '../services/vault/contract'
+import { IWithdrawalsClient } from '../services/withdrawals/contract'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
-export abstract class IETHProvider {
-  public abstract getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>>
-
-  public abstract getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>>
-
-  public abstract getHistory(
-    depositSecurityAddress: string,
-    startBlock: number,
-    endBlock: number,
-  ): Promise<E.Either<Error, TransactionResponse[]>>
-
-  public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
-
-  public abstract getUnfinalizedStETH(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getWithdrawalStatuses(
-    requestsRange: number[],
-    currentBlock: number,
-  ): Promise<E.Either<Error, WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]>>
-
-  public abstract getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract checkGateSeal(blockNumber: number, gateSealAddress: string): Promise<E.Either<Error, GateSeal>>
-
-  public abstract getExpiryTimestamp(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getETHDistributedEvent(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<Error, ETHDistributedEvent | null>>
-
-  public abstract getTotalPooledEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getTotalShares(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-}
-
-export class ETHProvider implements IETHProvider {
+export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient, IWithdrawalsClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private etherscanProvider: IEtherscanProvider
 
@@ -112,7 +74,7 @@ export class ETHProvider implements IETHProvider {
       try {
         latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
       } catch (e) {
-        return E.left(new Error(`Could not fetch latest block number. Cause: ${e}`))
+        return E.left(new NetworkError(e, `Could not fetch latest block number`))
       }
     }
 
@@ -140,7 +102,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch transaction. Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call getTransaction`))
     }
   }
 
@@ -157,8 +119,8 @@ export class ETHProvider implements IETHProvider {
           },
           { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
-      } catch (e) {
-        throw new Error(`Could not fetch transaction history between ${start} and ${end} blocks. Cause: ${e}`)
+      } catch (err) {
+        throw new NetworkError(err, `Could not fetch transaction history between ${start} and ${end} blocks`)
       }
     }
 
@@ -181,8 +143,8 @@ export class ETHProvider implements IETHProvider {
       await Promise.all(batchPromises)
 
       return E.right(await out.read())
-    } catch (error) {
-      return E.left(new Error(`Could not fetch transaction history. Cause ${error}`))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch transaction history`))
     }
   }
 
@@ -197,7 +159,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new Error(`Could not fetch Steth balance. Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch Steth balance`))
     }
   }
 
@@ -212,7 +174,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new Error(`Could not fetch balance by address ${address}. Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch balance by address ${address}`))
     }
   }
 
@@ -229,7 +191,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new Error(`Could not fetch balance by address ${address} and blockHash ${blockHash}. Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch balance by address ${address} and blockHash ${blockHash}`))
     }
   }
 
@@ -252,7 +214,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not call "lidoContract.getStakeLimitFullInfo". Cause ${e}`))
+      return E.left(new NetworkError(e, `Could not call lidoContract.getStakeLimitFullInfo`))
     }
   }
 
@@ -271,41 +233,48 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not call "wdQueueContract.unfinalizedStETH. Cause ${e}`))
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.unfinalizedStETH`))
     }
   }
 
   public async getWithdrawalStatuses(
     requestsRange: number[],
     currentBlock: number,
-  ): Promise<E.Either<Error, WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]>> {
-    const fetchStatusesChunk = async (
-      request: number[],
-      blockNumber: number,
-    ): Promise<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]> => {
+  ): Promise<E.Either<Error, WithdrawalRequest[]>> {
+    const fetchStatusesChunk = async (requestIds: number[], blockNumber: number): Promise<WithdrawalRequest[]> => {
       try {
-        return await retryAsync<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]>(
-          async (): Promise<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput[]> => {
-            const resp = await this.wdQueueContract.functions.getWithdrawalStatus(request, {
+        return await retryAsync<WithdrawalRequest[]>(
+          async (): Promise<WithdrawalRequest[]> => {
+            const resp = await this.wdQueueContract.functions.getWithdrawalStatus(requestIds, {
               blockTag: blockNumber,
             })
 
-            return resp.statuses
+            const out: WithdrawalRequest[] = []
+            for (let i = 0; i < requestIds.length; i++) {
+              const requestId = requestIds[i]
+
+              const requestStatus = resp.statuses[i]
+              const withdrawalRequest = WithdrawalRequest.toWithdrawalRequest(requestStatus, requestId)
+              out.push(withdrawalRequest)
+            }
+
+            return out
           },
           { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
       } catch (e) {
-        throw new Error(
-          `Could not call "getWithdrawalStatus on ${blockNumber} between ${request[0]} and ${
-            request[request.length - 1]
-          }. Total: ${request.length}. Cause ${e} `,
+        throw new NetworkError(
+          e,
+          `Could not call wdQueueContract.getWithdrawalStatus on ${blockNumber} between ${requestIds[0]} and ${
+            requestIds[requestIds.length - 1]
+          }. Total: ${requestIds.length}`,
         )
       }
     }
 
     const chunkPromises: Promise<void>[] = []
     const MAX_REQUESTS_CHUNK_SIZE = 1750
-    const out = new DataRW<WithdrawalQueueBase.WithdrawalRequestStatusStructOutput>([])
+    const out = new DataRW<WithdrawalRequest>([])
 
     for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
       const requestChunk = requestsRange.slice(i, i + MAX_REQUESTS_CHUNK_SIZE)
@@ -320,8 +289,8 @@ export class ETHProvider implements IETHProvider {
     try {
       await Promise.all(chunkPromises)
       return E.right(await out.read())
-    } catch (error) {
-      return E.left(error as Error)
+    } catch (e) {
+      return E.left(new NetworkError(e))
     }
   }
 
@@ -338,7 +307,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(new BigNumber(resp.toString()))
     } catch (e) {
-      return E.left(new Error(`Could not call "lidoContract.getBufferedEther". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call lidoContract.getBufferedEther`))
     }
   }
 
@@ -390,7 +359,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(expiryTimestamp)
     } catch (e) {
-      return E.left(new Error(`Could not call "gateSeal.functions.get_expiry_timestamp". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call gateSeal.functions.get_expiry_timestamp`))
     }
   }
 
@@ -418,7 +387,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(report)
     } catch (e) {
-      return E.left(new Error(`Could not call "this.lidoContract.filters.ETHDistributed". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call this.lidoContract.filters.ETHDistributed"`))
     }
   }
 
@@ -439,7 +408,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(isExpired)
     } catch (e) {
-      return E.left(new Error(`Could not call "gateSeal.functions.is_expired". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call gateSeal.functions.is_expired`))
     }
   }
 
@@ -463,7 +432,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(queuePauseRoleMember)
     } catch (e) {
-      return E.left(new Error(`Could not call "wdQueueContract.functions.hasRole". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.functions.hasRole`))
     }
   }
 
@@ -487,7 +456,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(exitBusPauseRoleMember)
     } catch (e) {
-      return E.left(new Error(`Could not call "this.exitBusContract.functions.hasRole". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call this.exitBusContract.functions.hasRole`))
     }
   }
 
@@ -504,7 +473,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
-      return E.left(new Error(`Could not call "this.getTotalPooledEther". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call this.getTotalPooledEther`))
     }
   }
 
@@ -521,7 +490,7 @@ export class ETHProvider implements IETHProvider {
 
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
-      return E.left(new Error(`Could not call "this.getTotalShares". Cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not call lidoContract.getTotalShares`))
     }
   }
 
@@ -540,5 +509,141 @@ export class ETHProvider implements IETHProvider {
     }
     // Formula: shareRate = (totalPooledEth * 10**27) / totalShares
     return E.right(totalPooledEth.right.multipliedBy(new BigNumber(10).pow(27)).div(totalShares.right))
+  }
+
+  public async isBunkerModeActive(blockNumber: number): Promise<E.Either<Error, boolean>> {
+    try {
+      const isBunkerMode = await retryAsync<boolean>(
+        async (): Promise<boolean> => {
+          const [isBunkerMode] = await this.wdQueueContract.functions.isBunkerModeActive({
+            blockTag: blockNumber,
+          })
+
+          return isBunkerMode
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(isBunkerMode)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.isBunkerModeActive`))
+    }
+  }
+
+  public async getBunkerTimestamp(blockNumber: number): Promise<E.Either<Error, number>> {
+    try {
+      const bunkerModeSinceTimestamp = await retryAsync<number>(
+        async (): Promise<number> => {
+          const [resp] = await this.wdQueueContract.functions.bunkerModeSinceTimestamp({
+            blockTag: blockNumber,
+          })
+
+          return resp.toNumber()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(bunkerModeSinceTimestamp)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.bunkerModeSinceTimestamp`))
+    }
+  }
+
+  public async getWithdrawalLastRequestId(blockNumber: number): Promise<E.Either<Error, number>> {
+    try {
+      const lastRequestId = await retryAsync<number>(
+        async (): Promise<number> => {
+          const [resp] = await this.wdQueueContract.functions.getLastRequestId({
+            blockTag: blockNumber,
+          })
+
+          return resp.toNumber()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(lastRequestId)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.getLastRequestId`))
+    }
+  }
+
+  public async getWithdrawalStatus(
+    requestId: number,
+    blockNumber: number,
+  ): Promise<E.Either<Error, WithdrawalRequest>> {
+    try {
+      const out = await retryAsync<WithdrawalRequest>(
+        async (): Promise<WithdrawalRequest> => {
+          const resp = await this.wdQueueContract.functions.getWithdrawalStatus([requestId], {
+            blockTag: blockNumber,
+          })
+
+          return WithdrawalRequest.toWithdrawalRequest(resp.statuses[0], requestId)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.getWithdrawalStatus`))
+    }
+  }
+
+  public async getUnbufferedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>> {
+    try {
+      const out = await retryAsync<TypedEvent[]>(
+        async (): Promise<TypedEvent[]> => {
+          const filter = this.lidoContract.filters.Unbuffered()
+
+          return await this.lidoContract.queryFilter(filter, fromBlockNumber, toBlockNumber)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call lidoContract.queryFilter`))
+    }
+  }
+
+  public async getWithdrawalsFinalizedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>> {
+    try {
+      const out = await retryAsync<TypedEvent[]>(
+        async (): Promise<TypedEvent[]> => {
+          const filter = this.wdQueueContract.filters.WithdrawalsFinalized()
+
+          return await this.wdQueueContract.queryFilter(filter, fromBlockNumber, toBlockNumber)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call wdQueueContract.queryFilter`))
+    }
+  }
+
+  public async getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          return await this.lidoContract.getDepositableEther({
+            blockTag: blockNumber,
+          })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(out.toString()))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call lidoContract.getDepositableEther"`))
+    }
   }
 }

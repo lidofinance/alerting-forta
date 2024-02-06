@@ -2,7 +2,7 @@ import { StethOperationSrv } from './services/steth_operation/StethOperation.srv
 import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
 import { Address } from './utils/constants'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
-import { ETHProvider, IETHProvider } from './clients/eth_provider'
+import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
 import {
   GateSeal__factory,
@@ -23,14 +23,19 @@ import { GateSealCache } from './services/gate-seal/GateSeal.cache'
 import * as Winston from 'winston'
 import { VaultSrv } from './services/vault/Vault.srv'
 import * as E from 'fp-ts/Either'
+import { Knex, knex } from 'knex'
+import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
+import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 
 export type Container = {
-  ethClient: IETHProvider
+  ethClient: ETHProvider
   StethOperationSrv: StethOperationSrv
   WithdrawalsSrv: WithdrawalsSrv
   GateSealSrv: GateSealSrv
   VaultSrv: VaultSrv
   findingsRW: DataRW<Finding>
+  db: Knex
+  healthChecker: HealthChecker
 }
 
 export class App {
@@ -60,8 +65,27 @@ export class App {
     return E.right(token)
   }
 
+  private static getConnection(): Knex {
+    const config: knex.Knex.Config = {
+      client: 'sqlite3',
+      connection: {
+        filename: ':memory:',
+        // filename: '/tmp/dbdatabase.db',
+      },
+      migrations: {
+        tableName: 'knex_migrations',
+        directory: './src/db/migrations',
+      },
+      useNullAsDefault: false,
+    }
+
+    return knex(config)
+  }
+
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {
+      const db = App.getConnection()
+
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
       const ethersProvider = getEthersProvider()
       ethersProvider.formatter = new FormatterWithEIP1898()
@@ -105,8 +129,6 @@ export class App {
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
-        lidoContact,
-        wdQueueContact,
         getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
         getLidoEvents(address.LIDO_STETH_ADDRESS),
         getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
@@ -115,11 +137,12 @@ export class App {
 
       const withdrawalsSrv = new WithdrawalsSrv(
         logger,
+        new WithdrawalsRepo(db),
         ethClient,
-        wdQueueContact,
-        lidoContact,
         new WithdrawalsCache(),
         getWithdrawalsEvents(address.WITHDRAWALS_QUEUE_ADDRESS),
+        address.WITHDRAWALS_QUEUE_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
       )
 
       const gateSealSrv = new GateSealSrv(
@@ -133,10 +156,10 @@ export class App {
       const vaultSrv = new VaultSrv(
         logger,
         ethClient,
-        lidoContact,
         address.WITHDRAWALS_VAULT_ADDRESS,
         address.EL_REWARDS_VAULT_ADDRESS,
         address.BURNER_ADDRESS,
+        address.LIDO_STETH_ADDRESS,
       )
 
       App.instance = {
@@ -146,6 +169,8 @@ export class App {
         GateSealSrv: gateSealSrv,
         VaultSrv: vaultSrv,
         findingsRW: new DataRW([]),
+        db: db,
+        healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
       }
     }
 
