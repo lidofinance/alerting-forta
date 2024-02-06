@@ -265,19 +265,19 @@ export class WithdrawalsSrv {
     if (stakeLimitFullInfo.right.isStakingPaused || unfinalizedStETH.right.eq(0)) {
       return []
     }
-    const drainedStakeLimit = stakeLimitFullInfo.right.maxStakeLimit.minus(stakeLimitFullInfo.right.currentStakeLimit)
-    const drainedStakeLimitRate = drainedStakeLimit.div(stakeLimitFullInfo.right.maxStakeLimit)
+    const spentStakeLimit = stakeLimitFullInfo.right.maxStakeLimit.minus(stakeLimitFullInfo.right.currentStakeLimit)
+    const spentStakeLimitRate = spentStakeLimit.div(stakeLimitFullInfo.right.maxStakeLimit)
     const thresholdStakeLimit = stakeLimitFullInfo.right.maxStakeLimit.times(QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD)
 
     const findings: Finding[] = []
-    if (drainedStakeLimit.gte(thresholdStakeLimit) && unfinalizedStETH.right.gte(thresholdStakeLimit)) {
+    if (spentStakeLimit.gte(thresholdStakeLimit) && unfinalizedStETH.right.gte(thresholdStakeLimit)) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ Withdrawals: ${drainedStakeLimitRate.times(
+          name: `⚠️ Withdrawals: ${spentStakeLimitRate.times(
             100,
           )}% of stake limit is drained and unfinalized queue is on par with drained stake limit`,
           description: `Unfinalized queue: ${unfinalizedStETH.right.div(ETH_DECIMALS).toFixed(2)} stETH\n
-          Drained stake limit: ${drainedStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
+          Spent stake limit: ${spentStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
           alertId: 'WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
@@ -466,12 +466,12 @@ export class WithdrawalsSrv {
       if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
         out.push(
           Finding.fromObject({
-            name: `⚠️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
+            name: `ℹ️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
             description: `Unclaimed (for all time): ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
             Claimed (for 2 weeks): ${claimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
             Total finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS',
-            severity: FindingSeverity.Medium,
+            severity: FindingSeverity.Info,
             type: FindingType.Suspicious,
           }),
         )
@@ -499,12 +499,12 @@ export class WithdrawalsSrv {
       if (unclaimedStETH.gt(withdrawalQueueBalance.right)) {
         out.push(
           Finding.fromObject({
-            name: `⚠️ Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
+            name: `🚨🚨🚨 Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
             description: `Unclaimed: ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
             Withdrawal queue balance: ${withdrawalQueueBalance.right.div(ETH_DECIMALS).toFixed(2)} ETH\n
             Difference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
             alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE',
-            severity: FindingSeverity.Medium,
+            severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
           }),
         )
@@ -744,7 +744,7 @@ export class WithdrawalsSrv {
         if (claimedAmount.gt(withdrawalRequest.amountOfStETH)) {
           out.push(
             Finding.fromObject({
-              name: `⚠️ Withdrawals: claimed amount is more than requested`,
+              name: `🚨🚨🚨 Withdrawals: claimed amount is more than requested`,
               description: `Request ID: ${etherscanNft(this.withdrawalsQueueAddress, reqId)}\n
               Claimed: ${claimedAmount.div(ETH_DECIMALS).toFixed(2)} ETH\n
               Requested: ${withdrawalRequest.amountOfStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
@@ -752,7 +752,7 @@ export class WithdrawalsSrv {
               Owner: ${etherscanAddress(event.args.owner)}\n
               Receiver: ${etherscanAddress(event.args.receiver)}`,
               alertId: 'WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED',
-              severity: FindingSeverity.Medium,
+              severity: FindingSeverity.Critical,
               type: FindingType.Suspicious,
             }),
           )

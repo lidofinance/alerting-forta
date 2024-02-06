@@ -69,8 +69,8 @@ export class App {
     const config: knex.Knex.Config = {
       client: 'sqlite3',
       connection: {
-        // filename: ':memory:',
-        filename: '/tmp/dbdatabase.db',
+        filename: ':memory:',
+        // filename: '/tmp/dbdatabase.db',
       },
       migrations: {
         tableName: 'knex_migrations',
