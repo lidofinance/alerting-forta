@@ -141,6 +141,10 @@ export const SAFES = {
       "0x1840c4D81d2C50B603da5391b6A24c1cD62D0B56",
       "Liquidity Observation Lab ARB Token Multisig (Arbitrum)",
     ],
+    [
+      "0x421eB124FCbF69CE9B26C13719D7c288e6D6A94c",
+      "Subgraph Arbitrum multisig (Arbitrum)",
+    ],
   ],
   [Blockchain.OPTIMISM]: [
     [
