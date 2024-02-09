@@ -106,7 +106,6 @@ export const SAFES = {
       "0x5181d5d56af4f823b96fe05f062d7a09761a5a53",
       "Depositor bot gas funding (Ethereum)",
     ],
-    ["0x14cef290c79fc84fddfdf4129ba335972aac7f41", "Lido Subgraph NFT owner"],
     [
       "0x73b047fe6337183A454c5217241D780a932777bD",
       "Emergency Brakes (Ethereum)",
@@ -143,7 +142,7 @@ export const SAFES = {
     ],
     [
       "0x421eB124FCbF69CE9B26C13719D7c288e6D6A94c",
-      "Subgraph Arbitrum multisig (Arbitrum)",
+      "Lido Subgraph NFT owner (Arbitrum)",
     ],
   ],
   [Blockchain.OPTIMISM]: [
