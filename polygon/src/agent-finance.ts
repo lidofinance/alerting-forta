@@ -183,7 +183,9 @@ async function handleFortaDeployerBalance(
       Finding.fromObject({
         name: "⚠️ Forta deployer wallet low FORT balance",
         description:
-          `FORT token balance of ${polygonscanLink(FORTA_DEPLOYER_ADDRESS)} is ${deployerBalance.toFixed(2)} FORT/n` +
+          `FORT token balance of ${polygonscanLink(
+            FORTA_DEPLOYER_ADDRESS,
+          )} is ${deployerBalance.toFixed(2)} FORT/n` +
           `The balance will be drained in less than 2 month. Please refill!`,
         alertId: "LOW-FORTA-DEPLOYER-BALANCE",
         severity: FindingSeverity.High,
