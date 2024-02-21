@@ -25,7 +25,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       description: (args: Result) =>
         `Ethereum Governance Executor was updated from ` +
         `${args.oldEthereumGovernanceExecutor} to ${args.newEthereumGovernanceExecutor}`,
-      severity: FindingSeverity.Critical,
+      severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[0],
     },
@@ -35,7 +35,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       alertId: 'GOV-BRIDGE-GUARDIAN-UPDATED',
       name: '🚨 Mantle Gov Bridge: Guardian Updated',
       description: (args: Result) => `Guardian was updated from ` + `${args.oldGuardian} to ${args.newGuardian}`,
-      severity: FindingSeverity.Critical,
+      severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[1],
     },

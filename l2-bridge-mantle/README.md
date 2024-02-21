@@ -43,7 +43,6 @@ the cache.
 4. Monitor Withdrawals
    1. ⚠️ Mantle: Huge withdrawals during the last ...
 5. Agent balance
-   1. Added wstETH: 🚨🚨🚨 Mantle bridge balance mismatch 🚨🚨🚨
 
 ## Development (Forta specific)
 
