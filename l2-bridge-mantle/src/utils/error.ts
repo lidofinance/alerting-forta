@@ -1,14 +1,17 @@
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+export class NetworkError extends Error {
+  constructor(e: unknown, name?: string) {
+    super()
 
-export function errorToFinding(e: unknown, className: string, fnName: string): Finding {
-  const err: Error = e instanceof Error ? e : new Error(`non-Error thrown: ${e}`)
+    if (name !== undefined) {
+      this.name = name
+    }
 
-  return Finding.fromObject({
-    name: `Error in ${className}.${fnName}`,
-    description: `${err.message}`,
-    alertId: 'LIDO-AGENT-ERROR',
-    severity: FindingSeverity.High,
-    type: FindingType.Degraded,
-    metadata: { stack: `${err.stack}` },
-  })
+    if (e instanceof Error) {
+      this.stack = e.stack
+      this.message = e.message
+      this.cause = e.cause
+    } else {
+      this.message = `${e}`
+    }
+  }
 }

@@ -61,7 +61,8 @@
     "forta-agent": "^0.1.48",
     "fp-ts": "^2.16.1",
     "lodash": "^4.17.21",
-    "ts-retry": "^4.2.4"
+    "ts-retry": "^4.2.4",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.0.0",
