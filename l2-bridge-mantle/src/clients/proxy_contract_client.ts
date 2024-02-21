@@ -1,8 +1,9 @@
 import { OssifiableProxy } from '../generated'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
+import { NetworkError } from '../utils/error'
 
-export abstract class IShortABIcaller {
+export abstract class IProxyContractClient {
   abstract getName(): string
 
   abstract getAddress(): string
@@ -12,7 +13,7 @@ export abstract class IShortABIcaller {
   abstract getProxyImplementation(blockNumber: number): Promise<E.Either<Error, string>>
 }
 
-export class ProxyContract implements IShortABIcaller {
+export class ProxyContractClient implements IProxyContractClient {
   private readonly name: string
   private readonly address: string
   private readonly contract: OssifiableProxy
@@ -50,7 +51,7 @@ export class ProxyContract implements IShortABIcaller {
 
       return E.right(resp)
     } catch (e) {
-      return E.left(new Error(`Could not fetch admin. cause ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch admin`))
     }
   }
 
@@ -67,7 +68,7 @@ export class ProxyContract implements IShortABIcaller {
 
       return E.right(resp)
     } catch (e) {
-      return E.left(new Error(`Could not fetch implementation. cause ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch implementation`))
     }
   }
 }
