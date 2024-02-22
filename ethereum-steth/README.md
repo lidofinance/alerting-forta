@@ -29,8 +29,8 @@
          2. 🚨🚨🚨 Share rate unexpected has changed
          3. 🚨 Lido: Staking limit removed
          4. 🚨 Lido: Locator set
-         5. ⚠️ Lido: Resumed
-         6. 🚨 Lido: Staking paused
+         5. 🚨 Lido: Staking paused
+         6. ⚠️ Lido: Resumed
          7. ⚠️ Lido: Staking resumed
          8. ⚠️ Lido: Staking limit set
          9. ⚠️ Lido: Funds recovered to vault
@@ -58,10 +58,10 @@
       2. 🚨 Withdrawals: BUNKER MODE ON! 🚨
       3. 🚨 Withdrawals: contract was paused
       4. ⚠️ Withdrawals: BUNKER MODE OFF! ✅
-      5. ℹ️ Huge stETH withdrawal requests batch
+      5. ⚠️ Withdrawals: contract was unpaused
       6. ⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than 150_000 stETH (max
          staking limit)
-      7. ⚠️ Withdrawals: contract was unpaused
+      7. ℹ️ Huge stETH withdrawal requests batch
 3. GateSeal
    1. HandleBlock runs on each next block
       1. 🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts
