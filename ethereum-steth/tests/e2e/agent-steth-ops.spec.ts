@@ -94,7 +94,7 @@ describe('agent-steth-ops e2e tests', () => {
           description: 'Staking was resumed!',
           alertId: 'LIDO-STAKING-RESUMED',
           protocol: 'ethereum',
-          severity: 4,
+          severity: 3,
           type: 4,
         },
         {
@@ -105,7 +105,7 @@ describe('agent-steth-ops e2e tests', () => {
             'Stake limit increase per block: 23437500000000000000',
           alertId: 'LIDO-STAKING-LIMIT-SET',
           protocol: 'ethereum',
-          severity: 4,
+          severity: 3,
           type: 4,
         },
       ]
@@ -150,7 +150,7 @@ describe('agent-steth-ops e2e tests', () => {
             'Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)',
           alertId: 'INS-FUND-OWNERSHIP-TRANSFERRED',
           protocol: 'ethereum',
-          severity: 5,
+          severity: 4,
           type: 4,
         },
         {
@@ -159,7 +159,7 @@ describe('agent-steth-ops e2e tests', () => {
             'Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)',
           alertId: 'INS-FUND-OWNERSHIP-TRANSFERRED',
           protocol: 'ethereum',
-          severity: 5,
+          severity: 4,
           type: 4,
         },
       ]

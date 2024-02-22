@@ -71,6 +71,15 @@ export function getFilteredDepositSecurityEventsMock(): LogDescription[] {
 export function getFilteredInsuranceFundEventsMock(): LogDescription[] {
   const descriptions = [
     {
+      ['_token']: Address.DAI_ADDRESS,
+      ['_recipient']: faker.finance.ethereumAddress(),
+      ['_amount']: faker.number.bigInt(),
+    },
+    {
+      ['previousOwner']: faker.finance.ethereumAddress(),
+      ['newOwner']: faker.finance.ethereumAddress(),
+    },
+    {
       ['_amount']: Address.DAI_ADDRESS,
       ['_recipient']: faker.finance.ethereumAddress(),
     },
@@ -82,15 +91,6 @@ export function getFilteredInsuranceFundEventsMock(): LogDescription[] {
       ['_token']: Address.DAI_ADDRESS,
       ['_amount']: faker.number.bigInt(),
       ['_recipient']: faker.finance.ethereumAddress(),
-    },
-    {
-      ['_token']: Address.DAI_ADDRESS,
-      ['_amount']: faker.number.bigInt(),
-      ['_recipient']: faker.finance.ethereumAddress(),
-    },
-    {
-      ['previousOwner']: faker.finance.ethereumAddress(),
-      ['newOwner']: faker.finance.ethereumAddress(),
     },
   ]
 

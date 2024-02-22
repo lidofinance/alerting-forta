@@ -129,7 +129,7 @@ export class GateSealSrv {
           name: '⚠️ GateSeal: default GateSeal address in forta agent is expired',
           description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}]`,
           alertId: 'GATE-SEAL-DEFAULT-EXPIRED',
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Info,
         })
 
@@ -203,7 +203,7 @@ export class GateSealSrv {
           name: '🚨 GateSeal: is expired!',
           description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}}`,
           alertId: 'GATE-SEAL-IS-EXPIRED',
-          severity: FindingSeverity.Critical,
+          severity: FindingSeverity.High,
           type: FindingType.Degraded,
         }),
       )

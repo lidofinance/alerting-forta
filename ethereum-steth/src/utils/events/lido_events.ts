@@ -18,45 +18,6 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event Resumed()',
-      alertId: 'LIDO-RESUMED',
-      name: '⚠️ Lido: Resumed',
-      description: () => `Lido DAO contract was resumed`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
-    },
-    {
-      address: LIDO_STETH_ADDRESS,
-      event: 'event StakingPaused()',
-      alertId: 'LIDO-STAKING-PAUSED',
-      name: '🚨 Lido: Staking paused',
-      description: () => `Staking was paused!`,
-      severity: FindingSeverity.Critical,
-      type: FindingType.Info,
-    },
-    {
-      address: LIDO_STETH_ADDRESS,
-      event: 'event StakingResumed()',
-      alertId: 'LIDO-STAKING-RESUMED',
-      name: '⚠️ Lido: Staking resumed',
-      description: () => `Staking was resumed!`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
-    },
-    {
-      address: LIDO_STETH_ADDRESS,
-      event: 'event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)',
-      alertId: 'LIDO-STAKING-LIMIT-SET',
-      name: '⚠️ Lido: Staking limit set',
-      description: (args: Result) =>
-        `Staking limit was set with:\n` +
-        `Max staking limit: ${args.maxStakeLimit}\n` +
-        `Stake limit increase per block: ${args.stakeLimitIncreasePerBlock}`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
-    },
-    {
-      address: LIDO_STETH_ADDRESS,
       event: 'event StakingLimitRemoved()',
       alertId: 'LIDO-STAKING-LIMIT-REMOVED',
       name: '🚨 Lido: Staking limit removed',
@@ -70,7 +31,46 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-LOCATOR-SET',
       name: '🚨 Lido: Locator set',
       description: (args: Result) => `Lido locator was set to: ${etherscanAddress(args.lidoLocator)}`,
-      severity: FindingSeverity.Critical,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+    },
+    {
+      address: LIDO_STETH_ADDRESS,
+      event: 'event StakingPaused()',
+      alertId: 'LIDO-STAKING-PAUSED',
+      name: '🚨 Lido: Staking paused',
+      description: () => `Staking was paused!`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+    },
+    {
+      address: LIDO_STETH_ADDRESS,
+      event: 'event Resumed()',
+      alertId: 'LIDO-RESUMED',
+      name: '⚠️ Lido: Resumed',
+      description: () => `Lido DAO contract was resumed`,
+      severity: FindingSeverity.Medium,
+      type: FindingType.Info,
+    },
+    {
+      address: LIDO_STETH_ADDRESS,
+      event: 'event StakingResumed()',
+      alertId: 'LIDO-STAKING-RESUMED',
+      name: '⚠️ Lido: Staking resumed',
+      description: () => `Staking was resumed!`,
+      severity: FindingSeverity.Medium,
+      type: FindingType.Info,
+    },
+    {
+      address: LIDO_STETH_ADDRESS,
+      event: 'event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)',
+      alertId: 'LIDO-STAKING-LIMIT-SET',
+      name: '⚠️ Lido: Staking limit set',
+      description: (args: Result) =>
+        `Staking limit was set with:\n` +
+        `Max staking limit: ${args.maxStakeLimit}\n` +
+        `Stake limit increase per block: ${args.stakeLimitIncreasePerBlock}`,
+      severity: FindingSeverity.Medium,
       type: FindingType.Info,
     },
     {
@@ -83,7 +83,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
         `Vault: ${etherscanAddress(args.vault)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
         `Amount: ${args.amount}`,
-      severity: FindingSeverity.Info,
+      severity: FindingSeverity.Medium,
       type: FindingType.Info,
     },
     {
@@ -92,7 +92,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-CONTRACT-VERSION-SET',
       name: '⚠️ Lido: Contract version set',
       description: (args: Result) => `Contract version set:\n` + `Version: ${args.version}`,
-      severity: FindingSeverity.Info,
+      severity: FindingSeverity.Medium,
       type: FindingType.Info,
     },
     {

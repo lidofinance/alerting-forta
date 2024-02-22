@@ -276,8 +276,9 @@ export class WithdrawalsSrv {
           name: `⚠️ Withdrawals: ${spentStakeLimitRate.times(
             100,
           )}% of stake limit is drained and unfinalized queue is on par with drained stake limit`,
-          description: `Unfinalized queue: ${unfinalizedStETH.right.div(ETH_DECIMALS).toFixed(2)} stETH\n
-          Spent stake limit: ${spentStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
+          description:
+            `Unfinalized queue: ${unfinalizedStETH.right.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+            `Spent stake limit: ${spentStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
           alertId: 'WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
@@ -467,9 +468,10 @@ export class WithdrawalsSrv {
         out.push(
           Finding.fromObject({
             name: `ℹ️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
-            description: `Unclaimed (for all time): ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
-            Claimed (for 2 weeks): ${claimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
-            Total finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
+            description:
+              `Unclaimed (for all time): ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+              `Claimed (for 2 weeks): ${claimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+              `Total finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS',
             severity: FindingSeverity.Info,
             type: FindingType.Suspicious,
@@ -500,9 +502,10 @@ export class WithdrawalsSrv {
         out.push(
           Finding.fromObject({
             name: `🚨🚨🚨 Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
-            description: `Unclaimed: ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
-            Withdrawal queue balance: ${withdrawalQueueBalance.right.div(ETH_DECIMALS).toFixed(2)} ETH\n
-            Difference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
+            description:
+              `Unclaimed: ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+              `Withdrawal queue balance: ${withdrawalQueueBalance.right.div(ETH_DECIMALS).toFixed(2)} ETH\n` +
+              `Difference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
             alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
@@ -613,8 +616,7 @@ export class WithdrawalsSrv {
         out.push(
           Finding.fromObject({
             name: `ℹ️ Huge stETH withdrawal requests batch`,
-            description: `Requester: ${etherscanAddress(requester)}\n
-            Amount: ${amounts.toFixed(2)} stETH`,
+            description: `Requester: ${etherscanAddress(requester)}\n` + `Amount: ${amounts.toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH',
             severity: FindingSeverity.Info,
             type: FindingType.Info,
@@ -745,12 +747,13 @@ export class WithdrawalsSrv {
           out.push(
             Finding.fromObject({
               name: `🚨🚨🚨 Withdrawals: claimed amount is more than requested`,
-              description: `Request ID: ${etherscanNft(this.withdrawalsQueueAddress, reqId)}\n
-              Claimed: ${claimedAmount.div(ETH_DECIMALS).toFixed(2)} ETH\n
-              Requested: ${withdrawalRequest.amountOfStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n
-              Difference: ${claimedAmount.minus(withdrawalRequest.amountOfStETH)} wei\n
-              Owner: ${etherscanAddress(event.args.owner)}\n
-              Receiver: ${etherscanAddress(event.args.receiver)}`,
+              description:
+                `Request ID: ${etherscanNft(this.withdrawalsQueueAddress, reqId)}\n` +
+                `Claimed: ${claimedAmount.div(ETH_DECIMALS).toFixed(2)} ETH\n` +
+                `Requested: ${withdrawalRequest.amountOfStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+                `Difference: ${claimedAmount.minus(withdrawalRequest.amountOfStETH)} wei\n` +
+                `Owner: ${etherscanAddress(event.args.owner)}\n` +
+                `Receiver: ${etherscanAddress(event.args.receiver)}`,
               alertId: 'WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED',
               severity: FindingSeverity.Critical,
               type: FindingType.Suspicious,
