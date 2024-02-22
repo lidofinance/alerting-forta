@@ -20,6 +20,7 @@ import { Metadata } from './entity/metadata'
 import Version from './utils/version'
 import { ETH_DECIMALS } from './utils/constants'
 
+let onInitErr = false
 export function initialize(): Initialize {
   const metadata: Metadata = {
     'version.commitHash': Version.commitHash,
@@ -36,7 +37,9 @@ export function initialize(): Initialize {
       console.log('Migrations have been run successfully.')
     } catch (error) {
       console.error('Error running migrations:', error)
-      process.exit(1)
+      // process.exit(1)
+      onInitErr = true
+      return
     }
 
     const token = await App.getJwt()
@@ -44,7 +47,9 @@ export function initialize(): Initialize {
       console.log(`Error: ${token.left.message}`)
       console.log(`Stack: ${token.left.stack}`)
 
-      process.exit(1)
+      //process.exit(1)
+      onInitErr = true
+      return
     }
 
     const latestBlockNumber = await app.ethClient.getStartedBlockForApp(argv)
@@ -52,7 +57,9 @@ export function initialize(): Initialize {
       console.log(`Error: ${latestBlockNumber.left.message}`)
       console.log(`Stack: ${latestBlockNumber.left.stack}`)
 
-      process.exit(1)
+      // process.exit(1)
+      onInitErr = true
+      return
     }
 
     const [stethOperationSrvErr, withdrawalsSrvErr, gateSealSrvErr] = await Promise.all([
@@ -65,21 +72,27 @@ export function initialize(): Initialize {
       console.log(`Error: ${stethOperationSrvErr.message}`)
       console.log(`Stack: ${stethOperationSrvErr.stack}`)
 
-      process.exit(1)
+      // process.exit(1)
+      onInitErr = true
+      return
     }
 
     if (withdrawalsSrvErr !== null) {
       console.log(`Error: ${withdrawalsSrvErr.message}`)
       console.log(`Stack: ${withdrawalsSrvErr.stack}`)
 
-      process.exit(1)
+      onInitErr = true
+      return
+      // process.exit(1)
     }
 
     if (gateSealSrvErr instanceof Error) {
       console.log(`Error: ${gateSealSrvErr.message}`)
       console.log(`Stack: ${gateSealSrvErr.stack}`)
 
-      process.exit(1)
+      // process.exit(1)
+      onInitErr = true
+      return
     } else {
       await app.findingsRW.write(gateSealSrvErr)
     }
@@ -181,6 +194,10 @@ export const handleTransaction = (): HandleTransaction => {
 
 export const healthCheck = (): HealthCheck => {
   return async function (): Promise<string[] | void> {
+    if (onInitErr) {
+      return ['Could not start app']
+    }
+
     const app = await App.getInstance()
 
     if (!app.healthChecker.isHealth()) {

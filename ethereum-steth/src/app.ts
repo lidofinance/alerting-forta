@@ -99,8 +99,8 @@ export class App {
       const drpcProvider = `https://eth.drpc.org`
 
       const mainnet = 1
-      const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
-      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
+      // const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethersProvider)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
