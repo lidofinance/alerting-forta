@@ -136,6 +136,18 @@ export function initialize(): Initialize {
 let isHandleBlockRunning: boolean = false
 export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    if (onInitErr) {
+      return [
+        Finding.fromObject({
+          name: `Agent is not launched`,
+          description: `On init err. There is no sense to run handleBlock`,
+          alertId: 'LIDO-AGENT-IS-NOT-LAUNCHED',
+          severity: FindingSeverity.Critical,
+          type: FindingType.Info,
+        }),
+      ]
+    }
+
     console.log(`#ETH block: ${blockEvent.block.number}`)
     const startTime = new Date().getTime()
     if (isHandleBlockRunning) {
@@ -171,6 +183,18 @@ export const handleBlock = (): HandleBlock => {
 let isHandleTransactionRunning: boolean = false
 export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
+    if (onInitErr) {
+      return [
+        Finding.fromObject({
+          name: `Agent is not launched`,
+          description: `On init err. There is no sense to run handleTransaction`,
+          alertId: 'LIDO-AGENT-IS-NOT-LAUNCHED',
+          severity: FindingSeverity.Critical,
+          type: FindingType.Info,
+        }),
+      ]
+    }
+
     if (isHandleTransactionRunning) {
       return []
     }
