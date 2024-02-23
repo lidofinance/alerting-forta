@@ -140,10 +140,26 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
+  const stakingRouter = new ethers.Contract(
+     STAKING_ROUTER_ADDRESS,
+     STAKING_ROUTER_ABI,
+     ethersProvider,
+  );
+
   stakingModulesOperatorRegistry.length = 0;
+
+  const moduleIds: { stakingModuleIds: BigNumber[] } = await stakingRouter.functions.getStakingModuleIds({
+     blockTag: currentBlock,
+  });
+
   for (const { moduleId, moduleName, alertPrefix } of STAKING_MODULES) {
     if (!moduleId) {
       console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
+    const moduleExists = moduleIds.stakingModuleIds.some((stakingModuleId) => stakingModuleId.toString() === moduleId.toString());
+    if (!moduleExists) {
       continue;
     }
 

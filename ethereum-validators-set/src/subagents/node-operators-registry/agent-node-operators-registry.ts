@@ -19,6 +19,7 @@ import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { ethersProvider } from "../../ethers";
 import { getEventsOfNoticeForStakingModule } from "./utils";
+import BigNumber from "bignumber.js";
 const {
   EASY_TRACK_ADDRESS,
   STAKING_ROUTER_ADDRESS,
@@ -160,6 +161,10 @@ export async function initialize(
 
   stakingModulesOperatorRegistry.length = 0;
 
+  const moduleIds: { stakingModuleIds: BigNumber[] } = await stakingRouter.functions.getStakingModuleIds({
+    blockTag: currentBlock,
+  });
+
   for (const {
     moduleId,
     moduleAddress,
@@ -170,6 +175,12 @@ export async function initialize(
       console.log(`${moduleName} is not supported on this network for ${name}`);
       continue;
     }
+
+    const moduleExists = moduleIds.stakingModuleIds.some((stakingModuleId) => stakingModuleId.toString() === moduleId.toString());
+    if (!moduleExists) {
+      continue;
+    }
+
 
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext(

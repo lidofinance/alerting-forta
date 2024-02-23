@@ -3,6 +3,7 @@ import {
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
 } from "../../common/constants.goerli";
+import {SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID} from "../lido-report/constants";
 
 export const EASY_TRACK_ADDRESS = etAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
@@ -21,7 +22,7 @@ export const STAKING_MODULES = [
     alertPrefix: "",
   },
   {
-    moduleId: null,
+    moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
     moduleAddress: "",
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",

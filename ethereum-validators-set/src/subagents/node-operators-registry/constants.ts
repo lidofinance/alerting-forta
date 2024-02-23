@@ -5,6 +5,7 @@ import {
   ONE_DAY,
   STAKING_ROUTER_ADDRESS as srAddress,
 } from "../../common/constants";
+import {SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID} from "../lido-report/constants";
 
 export const STUCK_PENALTY_ENDED_TRIGGER_PERIOD = ONE_DAY;
 
@@ -38,7 +39,7 @@ export const STAKING_MODULES = [
     alertPrefix: "",
   },
   {
-    moduleId: null,
+    moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
     moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",

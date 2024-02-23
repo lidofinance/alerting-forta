@@ -6,6 +6,7 @@ import {
   STAKING_ROUTER_ADDRESS as srAddress,
   MODULE_MANAGER_MULTISIG_ADDRESS as moduleManagerMultisigAddress,
 } from "../../common/constants";
+import {SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID} from "../lido-report/constants";
 
 export const ARAGON_ACL_ADDRESS = aclContractAddress;
 export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
@@ -16,7 +17,7 @@ export const MODULE_MANAGER_MULTISIG_ADDRESS = moduleManagerMultisigAddress;
 
 export const STAKING_MODULES = [
   {
-    moduleId: null,
+    moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
     moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",
