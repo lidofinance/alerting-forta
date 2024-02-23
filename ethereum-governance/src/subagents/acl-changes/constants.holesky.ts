@@ -5,7 +5,8 @@ import {
   ACCOUNTING_HASH_CONSENSUS_ADDRESS as accountingHashConsensusAddress,
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
+  SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -24,7 +25,8 @@ import {
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appREpoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
-  NO_REPO_ADDRESS as noRepoAddress,
+  CURATED_NO_REPO_ADDRESS as curatedNoRepoAddress,
+  SIMPLEDVT_NO_REPO_ADDRESS as simpleDvtNoRepoAddress,
   LIDO_DAO_ADDRESS as daoAddress,
   LDO_ADDRESS as ldoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
@@ -32,7 +34,7 @@ import {
   CURVE_LIQUIDITY_FARMING_MANAGER_ADDRESS as curveManagerAddress,
   EMERGENCY_BRAKES_MS_ADDRESS as emergencyMsAddress,
   DEV_MS_ADDRESS as devMsAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.holesky";
 
 export const DEV_EOAs = [
   "0xa5f1d7d49f581136cf6e58b32cbe9a2039c48ba1",
@@ -54,11 +56,13 @@ export const LIDO_APPS = new Map([
   [aclAddress, "Aragon ACL"],
   [appREpoAddress, "Lido App Repo"],
   [oracleRepoAddress, "Lido Oracle Repo"],
-  [noRepoAddress, "NO registry Repo"],
+  [curatedNoRepoAddress, "Curated NO registry Repo"],
+  [simpleDvtNoRepoAddress, "SimpleDVT NO Registry Repo"],
   [votingRepoAddress, "Voting Repo"],
   [evmExecutorAddress, "EVMScriptExecutor"],
   [dsAddress, "Deposit Security module"],
-  [norAddress, "Node Operators registry"],
+  [curatedNorAddress, "NO Registry of Curated Module"],
+  [simpleDvtNorAddress, "NO Registry of SimpleDVT Module"],
   [legacyOracleAddress, "Legacy Oracle"],
   [lidoStethAddress, "stETH token"],
 ]);
@@ -149,7 +153,7 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
 export const ROLES_OWNERS = {
   agent: agentAddress,
   dsm: dsAddress,
-  nor: norAddress,
+  curatedNor: curatedNorAddress,
   accountingOracle: accountingOracleAddress,
   lido: lidoStethAddress,
   gateSeal: gsAddress,
@@ -172,10 +176,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Accounting HashConsensus",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [
-          roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"),
-          [DEV_EOAs[0], ROLES_OWNERS.agent],
-        ],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), [DEV_EOAs[0]]],
         [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
         [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
         [roleByName("MANAGE_FRAME_CONFIG_ROLE"), [DEV_EOAs[0]]],
@@ -189,10 +190,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       name: "Validators Exit Bus HashConsensus",
       roles: new Map<INamedRole, string[]>([
         [roleByName("DEFAULT_ADMIN_ROLE"), [ROLES_OWNERS.agent]],
-        [
-          roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"),
-          [DEV_EOAs[0], ROLES_OWNERS.agent],
-        ],
+        [roleByName("MANAGE_MEMBERS_AND_QUORUM_ROLE"), [DEV_EOAs[0]]],
         [roleByName("MANAGE_FAST_LANE_CONFIG_ROLE"), []],
         [roleByName("MANAGE_REPORT_PROCESSOR_ROLE"), []],
         [roleByName("MANAGE_FRAME_CONFIG_ROLE"), [DEV_EOAs[0]]],
@@ -236,7 +234,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName("RECOVER_ASSETS_ROLE"), []],
         [
           roleByName("REQUEST_BURN_SHARES_ROLE"),
-          [ROLES_OWNERS.lido, ROLES_OWNERS.nor],
+          [ROLES_OWNERS.lido, ROLES_OWNERS.curatedNor],
         ],
       ]),
     },

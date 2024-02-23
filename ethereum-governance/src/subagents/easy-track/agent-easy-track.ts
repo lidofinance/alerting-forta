@@ -23,7 +23,7 @@ export const name = "EasyTrack";
 const {
   EASY_TRACK_ADDRESS,
   EASY_TRACK_TYPES_BY_FACTORIES,
-  NODE_OPERATORS_REGISTRY_ADDRESS,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
   INCREASE_STAKING_LIMIT_ADDRESS,
   EASY_TRACK_EVENTS_OF_NOTICE,
   MOTION_CREATED_EVENT,
@@ -73,7 +73,7 @@ async function handleEasyTrackMotionCreated(
             ethersProvider,
           );
           const nor = new ethers.Contract(
-            NODE_OPERATORS_REGISTRY_ADDRESS,
+            CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
             NODE_OPERATORS_REGISTRY_ABI,
             ethersProvider,
           );

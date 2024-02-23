@@ -3,7 +3,7 @@ import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -15,10 +15,10 @@ import {
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appRepoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
-  NO_REPO_ADDRESS as noRepoAddress,
+  CURATED_NO_REPO_ADDRESS as noRepoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
   ARAGON_FINANCE_ADDRESS as financeAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 import {
   implementationFuncShortABI,
   ossifiableProxyImplABI,
@@ -36,7 +36,7 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
     [
       norAddress,
       {
-        name: "Node Operators Registry",
+        name: "NO Registry of Curated Module",
         shortABI: implementationFuncShortABI,
       },
     ],

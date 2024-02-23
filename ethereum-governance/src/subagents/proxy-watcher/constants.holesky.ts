@@ -1,4 +1,4 @@
-import { IProxyContractData } from "../../common/constants";
+import { IProxyContractData } from "src/common/constants";
 import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
@@ -7,27 +7,24 @@ import {
   SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
-  WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
+  WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
+  ARAGON_ACL_ADDRESS as aclAddress,
   LEGACY_ORACLE_ADDRESS as legacyOracleAddress,
   ARAGON_AGENT_ADDRESS as agentAddress,
-  ARAGON_ACL_ADDRESS as aclAddress,
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appRepoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
   CURATED_NO_REPO_ADDRESS as curatedNoRepoAddress,
+  SIMPLEDVT_NO_REPO_ADDRESS as simpleDvtNoRepoAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
   ARAGON_FINANCE_ADDRESS as financeAddress,
-  LIDO_DAO_ADDRESS as daoAddress,
-  ANCHOR_VAULT_ADDRESS as anchorVaultAddress,
-} from "../../common/constants";
-
-export const implementationFuncShortABI =
-  '[{"constant":true,"inputs":[],"name":"implementation","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}]';
-
-export const ossifiableProxyImplABI =
-  '[{"inputs":[],"name":"proxy__getImplementation","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]';
+} from "../../common/constants.holesky";
+import {
+  implementationFuncShortABI,
+  ossifiableProxyImplABI,
+} from "./constants";
 
 export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
   new Map<string, IProxyContractData>([
@@ -46,16 +43,16 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      legacyOracleAddress,
+      simpleDvtNorAddress,
       {
-        name: "Legacy Oracle",
+        name: "NO Registry of SimpleDVT Module",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      daoAddress,
+      legacyOracleAddress,
       {
-        name: "Lido Deployer 2",
+        name: "Legacy Oracle",
         shortABI: implementationFuncShortABI,
       },
     ],
@@ -116,16 +113,16 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> =
       },
     ],
     [
-      votingRepoAddress,
+      simpleDvtNoRepoAddress,
       {
-        name: "Voting Repo",
+        name: "SimpleDVT NO Registry Repo",
         shortABI: implementationFuncShortABI,
       },
     ],
     [
-      anchorVaultAddress,
+      votingRepoAddress,
       {
-        name: "Anchor Protocol: AnchorVault",
+        name: "Voting Repo",
         shortABI: implementationFuncShortABI,
       },
     ],
