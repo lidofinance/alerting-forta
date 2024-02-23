@@ -1,0 +1,50 @@
+[
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_feeRecipient", "type": "address" },
+      { "internalType": "uint256", "name": "_feeShare", "type": "uint256" },
+      { "internalType": "contract ERC20", "name": "_stETH", "type": "address" },
+      { "internalType": "contract ERC20", "name": "_wstETH", "type": "address" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  { "inputs": [], "name": "Invalid_Wallet", "type": "error" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "split",
+        "type": "address"
+      }
+    ],
+    "name": "CreateObolLidoSplit",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "splitWallet", "type": "address" }
+    ],
+    "name": "createSplit",
+    "outputs": [
+      { "internalType": "address", "name": "lidoSplit", "type": "address" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lidoSplitImpl",
+    "outputs": [
+      {
+        "internalType": "contract ObolLidoSplit",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

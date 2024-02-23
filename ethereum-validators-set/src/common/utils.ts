@@ -31,16 +31,22 @@ export function mergeFindings(findings: Finding[]): Finding[] {
   return mergedFindingsList;
 }
 
+function getSubpathForNetwork(): string {
+  const runTier = process.env.FORTA_AGENT_RUN_TIER;
+
+  if (runTier) {
+    return `${runTier}.`;
+  }
+
+  return "";
+}
+
 export function etherscanAddress(address: string): string {
-  const subpath =
-    process.env.FORTA_AGENT_RUN_TIER == "testnet" ? "goerli." : "";
-  return `[${address}](https://${subpath}etherscan.io/address/${address})`;
+  return `[${address}](https://${getSubpathForNetwork()}etherscan.io/address/${address})`;
 }
 
 export function etherscanNft(address: string, id: number | string): string {
-  const subpath =
-    process.env.FORTA_AGENT_RUN_TEAR == "testnet" ? "goerli." : "";
-  return `[${id}](https://${subpath}etherscan.io/nft/${address}/${id})`;
+  return `[${id}](https://${getSubpathForNetwork()}etherscan.io/nft/${address}/${id})`;
 }
 
 /**

@@ -4,6 +4,7 @@
 
 - Ethereum mainnet
 - Ethereum Goerli testnet (dev)
+- Ethereum Holesky testnet (dev)
 
 ## Sub-bots
 
@@ -145,7 +146,8 @@ For example, you need to add `testnet` tier support for some new sub-agent:
    ```
 2. Copy `./constants.ts` file to `./constants.testnet.ts` and change the addresses and other vars to the testnet ones.
 3. Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
-4. Run `export FORTA_AGENT_RUN_TIER=testnet && yarn start:dev`
+4. Change `chainId` in `package.json`.
+5. Run `export FORTA_AGENT_RUN_TIER=testnet && yarn start:dev`
 
 That's it! Only sub-agents that have `testnet` tier support will be run.
 

@@ -2,7 +2,7 @@ import { MEV_ALLOWED_LIST_EVENTS_OF_NOTICE as mevAllowedListEvents } from "./con
 
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   DEPOSIT_EXECUTOR_ADDRESS as deAddress,
@@ -11,7 +11,7 @@ import {
   BURNER_ADDRESS as burnerAddress,
   TRP_FACTORY_ADDRESS as trpFactoryAddress,
   ENS_BASE_REGISTRAR_ADDRESS as ensRegistrarAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export interface ERC20 {
   decimals: number;
@@ -27,7 +27,7 @@ export const INSURANCE_FUND_ADDRESS = insuranceAddress;
 export const BURNER_ADDRESS = burnerAddress;
 export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
-export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
 
 export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
   (event) => ({
@@ -35,3 +35,15 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
     address: MEV_ALLOWED_LIST_ADDRESS,
   }),
 );
+
+export const STAKING_MODULES: {
+  moduleAddress: string;
+  moduleName: string;
+  alertPrefix: string;
+}[] = [
+  {
+    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+    moduleName: "Curated",
+    alertPrefix: "",
+  },
+];

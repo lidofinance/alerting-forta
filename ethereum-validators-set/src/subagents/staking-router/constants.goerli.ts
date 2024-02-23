@@ -1,5 +1,5 @@
 import { STAKING_ROUTER_EVENTS_OF_NOTICE as mainnetEventsOfNotice } from "./constants";
-import { STAKING_ROUTER_ADDRESS as srAddress } from "../../common/constants.testnet";
+import { STAKING_ROUTER_ADDRESS as srAddress } from "../../common/constants.goerli";
 
 export const STAKING_ROUTER_ADDRESS = srAddress;
 

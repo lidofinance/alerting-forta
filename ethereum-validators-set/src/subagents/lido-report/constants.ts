@@ -17,7 +17,25 @@ export const EL_REWARDS_VAULT_ADDRESS = elVaultAddress;
 export const WITHDRAWALS_VAULT_ADDRESS = wdVaultAddress;
 export const BURNER_ADDRESS = burnerAddress;
 
-export const NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+
+export const STAKING_MODULES: {
+  moduleId: number | null;
+  moduleName: string;
+  alertPrefix: string;
+}[] = [
+  {
+    moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
+    moduleName: "Curated",
+    alertPrefix: "",
+  },
+  {
+    moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+    moduleName: "SimpleDVT",
+    alertPrefix: "SDVT-",
+  },
+];
 
 export const LIDO_ETHDESTRIBUTED_EVENT =
   "event ETHDistributed(uint256 indexed reportTimestamp, uint256 preCLBalance, uint256 postCLBalance, uint256 withdrawalsWithdrawn, uint256 executionLayerRewardsWithdrawn, uint256 postBufferedEther)";

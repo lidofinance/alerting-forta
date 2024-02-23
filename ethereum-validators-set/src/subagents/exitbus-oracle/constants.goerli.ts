@@ -5,21 +5,21 @@ import {
 
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
   EXITBUS_ORACLE_ADDRESS as ebOracleAddress,
   EXITBUS_HASH_CONSENSUS_ADDRESS as ebHashAddress,
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
-} from "../../common/constants.testnet";
+} from "../../common/constants.goerli";
 
 export const CL_GENESIS_TIMESTAMP = 1616508000;
 
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
-export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
+export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = norAddress;
 
 export const LIDO_STETH_ADDRESS = lidoStethAddress;
 
@@ -40,6 +40,14 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x81e411f1bfda43493d7994f82fb61a415f6b8fd4", "Instadapp"],
   ["0x3ff28f2ede8358e288798afc23ee299a503ad5c9", "Kyber Network"],
 ]);
+
+export const STAKING_MODULES: { moduleAddress: string; moduleName: string }[] =
+  [
+    {
+      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+      moduleName: "Curated",
+    },
+  ];
 
 export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
   (event) => ({

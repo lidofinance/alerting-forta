@@ -38,7 +38,7 @@ const {
   EL_REWARDS_VAULT_ADDRESS,
   WITHDRAWALS_VAULT_ADDRESS,
   BURNER_ADDRESS,
-  NODE_OPERATOR_REGISTRY_MODULE_ID,
+  STAKING_MODULES,
   ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
   LIDO_ETHDESTRIBUTED_EVENT,
   LIDO_ELREWARDSRECEIVED_EVENT,
@@ -63,32 +63,165 @@ const {
 
 export const name = "LidoReport";
 
+interface NodeOperatorModuleParams {
+  moduleId: number;
+  moduleName: string;
+  alertPrefix: string;
+}
+
+class NodeOperatorsRegistryModuleContext {
+  // re-fetched from history on startup
+  public lastAllExited = 0;
+  public lastAllStuck = 0;
+  public lastAllRefunded = 0;
+
+  public nodeOperatorNames = new Map<number, string>();
+
+  constructor(public readonly params: NodeOperatorModuleParams) {}
+
+  async initialize(currentBlock: number) {
+    const { allExited, allStuck, allRefunded } =
+      await this.getSummaryDigest(currentBlock);
+    this.lastAllExited = allExited;
+    this.lastAllStuck = allStuck;
+    this.lastAllRefunded = allRefunded;
+
+    const withdrawalsQueue = new ethers.Contract(
+      WITHDRAWAL_QUEUE_ADDRESS,
+      WITHDRAWAL_QUEUE_ABI,
+      ethersProvider,
+    );
+  }
+
+  async getSummaryDigest(block: number) {
+    const stakingRouter = new ethers.Contract(
+      STAKING_ROUTER_ADDRESS,
+      STAKING_ROUTER_ABI,
+      ethersProvider,
+    );
+
+    const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
+      this.params.moduleId,
+      { blockTag: block },
+    );
+
+    let allExited = 0;
+    let allStuck = 0;
+    let allRefunded = 0;
+
+    operators.forEach((digest: any) => {
+      allStuck += Number(digest.summary.stuckValidatorsCount);
+      allRefunded += Number(digest.summary.refundedValidatorsCount);
+      allExited += Number(digest.summary.totalExitedValidators);
+    });
+
+    return {
+      allExited,
+      allStuck,
+      allRefunded,
+    };
+  }
+}
+
+const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+
+let lastRebaseEventTimestamp = 0;
+let lastELOverfillAlertTimestamp = 0;
+let lastWithdrawalsVaultOverfillAlertTimestamp = 0;
+let lastBurnerOverfillAlertTimestamp = 0;
 // re-fetched from history on startup
 let lastCLrewards = BN_ZERO;
 let lastELrewards = BN_ZERO;
 let lastTotalShares = BN_ZERO;
 let lastTotalEther = BN_ZERO;
-let lastAllExited = 0;
-let lastAllStuck = 0;
-let lastAllRefunded = 0;
-
-let lastRebaseEventTimestamp = 0;
-
-let lastELOverfillAlertTimestamp = 0;
-let lastWithdrawalsVaultOverfillAlertTimestamp = 0;
-let lastBurnerOverfillAlertTimestamp = 0;
 
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
-  const { allExited, allStuck, allRefunded } =
-    await getSummaryDigest(currentBlock);
-  lastAllExited = allExited;
-  lastAllStuck = allStuck;
-  lastAllRefunded = allRefunded;
+  const stakingRouter = new ethers.Contract(
+    STAKING_ROUTER_ADDRESS,
+    STAKING_ROUTER_ABI,
+    ethersProvider,
+  );
 
+  stakingModulesOperatorRegistry.length = 0;
+
+  const moduleIds: { stakingModuleIds: BigNumber[] } =
+    await stakingRouter.functions.getStakingModuleIds({
+      blockTag: currentBlock,
+    });
+
+  for (const { moduleId, moduleName, alertPrefix } of STAKING_MODULES) {
+    if (!moduleId) {
+      console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
+    const moduleExists = moduleIds.stakingModuleIds.some(
+      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
+    );
+    if (!moduleExists) {
+      continue;
+    }
+
+    stakingModulesOperatorRegistry.push(
+      new NodeOperatorsRegistryModuleContext({
+        moduleId,
+        moduleName,
+        alertPrefix,
+      }),
+    );
+  }
+
+  await Promise.all(
+    stakingModulesOperatorRegistry.map((nor) => nor.initialize(currentBlock)),
+  );
+
+  await initCommonParams(currentBlock);
+
+  return {};
+}
+
+export async function handleBlock(blockEvent: BlockEvent) {
+  const findings: Finding[] = [];
+  const now = blockEvent.block.timestamp;
+
+  if (
+    now >= lastRebaseEventTimestamp &&
+    blockEvent.blockNumber % OVERFILL_CHECK_INTERVAL == 0
+  ) {
+    const lido = new ethers.Contract(
+      LIDO_STETH_ADDRESS,
+      LIDO_ABI,
+      ethersProvider,
+    );
+
+    const tvl = new BigNumber(
+      String(
+        await lido.functions.totalSupply({ blockTag: blockEvent.blockNumber }),
+      ),
+    );
+    const totalShares = new BigNumber(
+      String(
+        await lido.functions.getTotalShares({
+          blockTag: blockEvent.blockNumber,
+        }),
+      ),
+    );
+
+    await Promise.all([
+      handleELRewardsVaultOverfill(blockEvent, findings, tvl),
+      handleWithdrawalsVaultOverfill(blockEvent, findings, tvl),
+      handleBurnerUnburntSharesOverfill(blockEvent, findings, totalShares),
+    ]);
+  }
+
+  return findings;
+}
+
+async function initCommonParams(currentBlock: number) {
   const lido = new ethers.Contract(
     LIDO_STETH_ADDRESS,
     LIDO_ABI,
@@ -147,50 +280,6 @@ export async function initialize(
       );
     }
   }
-  const withdrawalsQueue = new ethers.Contract(
-    WITHDRAWAL_QUEUE_ADDRESS,
-    WITHDRAWAL_QUEUE_ABI,
-    ethersProvider,
-  );
-
-  return {};
-}
-
-export async function handleBlock(blockEvent: BlockEvent) {
-  const findings: Finding[] = [];
-  const now = blockEvent.block.timestamp;
-
-  if (
-    now >= lastRebaseEventTimestamp &&
-    blockEvent.blockNumber % OVERFILL_CHECK_INTERVAL == 0
-  ) {
-    const lido = new ethers.Contract(
-      LIDO_STETH_ADDRESS,
-      LIDO_ABI,
-      ethersProvider,
-    );
-
-    const tvl = new BigNumber(
-      String(
-        await lido.functions.totalSupply({ blockTag: blockEvent.blockNumber }),
-      ),
-    );
-    const totalShares = new BigNumber(
-      String(
-        await lido.functions.getTotalShares({
-          blockTag: blockEvent.blockNumber,
-        }),
-      ),
-    );
-
-    await Promise.all([
-      handleELRewardsVaultOverfill(blockEvent, findings, tvl),
-      handleWithdrawalsVaultOverfill(blockEvent, findings, tvl),
-      handleBurnerUnburntSharesOverfill(blockEvent, findings, totalShares),
-    ]);
-  }
-
-  return findings;
 }
 
 async function handleELRewardsVaultOverfill(
@@ -302,12 +391,23 @@ async function handleBurnerUnburntSharesOverfill(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  if (txEvent.to === ACCOUNTING_ORACLE_ADDRESS) {
-    await Promise.all([
-      handleExitedStuckRefundedKeysDigest(txEvent, findings),
-      handleRebaseDigest(txEvent, findings),
-    ]);
+  if (txEvent.to !== ACCOUNTING_ORACLE_ADDRESS) {
+    return findings;
   }
+
+  const [extraDataSubmittedEvent] = txEvent.filterLog(
+    ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
+    ACCOUNTING_ORACLE_ADDRESS,
+  );
+  if (extraDataSubmittedEvent) {
+    await Promise.all(
+      stakingModulesOperatorRegistry.map((nor) =>
+        handleExitedStuckRefundedKeysDigest(txEvent, findings, nor),
+      ),
+    );
+  }
+
+  await handleRebaseDigest(txEvent, findings);
 
   return findings;
 }
@@ -315,34 +415,29 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 async function handleExitedStuckRefundedKeysDigest(
   txEvent: TransactionEvent,
   findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
 ) {
-  const [extraDataSubmittedEvent] = txEvent.filterLog(
-    ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
-    ACCOUNTING_ORACLE_ADDRESS,
-  );
-  if (!extraDataSubmittedEvent) return;
-  const { allExited, allStuck, allRefunded } = await getSummaryDigest(
-    txEvent.blockNumber,
-  );
-  const newExited = allExited - lastAllExited;
-  const newStuck = allStuck - lastAllStuck;
-  const newRefunded = allRefunded - lastAllRefunded;
+  const { allExited, allStuck, allRefunded } =
+    await norContext.getSummaryDigest(txEvent.blockNumber);
+  const newExited = allExited - norContext.lastAllExited;
+  const newStuck = allStuck - norContext.lastAllStuck;
+  const newRefunded = allRefunded - norContext.lastAllRefunded;
   if (newExited == 0 && newStuck == 0 && newRefunded == 0) return;
   // Exited always increases, stuck and refunded can decrease and increase
   const newStuckStr = newStuck > 0 ? `+${newStuck}` : newStuck;
   const newRefundedStr = newRefunded > 0 ? `+${newRefunded}` : newRefunded;
   findings.push(
     Finding.fromObject({
-      name: "ℹ️ Lido Report: exited, stuck and refunded keys digest",
+      name: `ℹ️ Lido Report (${norContext.params.moduleName}): exited, stuck and refunded keys digest`,
       description: `Exited: ${allExited} (+${newExited} validators)\nStuck: ${allStuck} (${newStuckStr} validators)\nRefunded: ${allRefunded} (${newRefundedStr} validators)`,
-      alertId: "LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST",
+      alertId: `${norContext.params.alertPrefix}LIDO-REPORT-EXITED-STUCK-REFUNDED-KEYS-DIGEST`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
     }),
   );
-  lastAllStuck = allStuck;
-  lastAllRefunded = allRefunded;
-  lastAllExited = allExited;
+  norContext.lastAllStuck = allStuck;
+  norContext.lastAllRefunded = allRefunded;
+  norContext.lastAllExited = allExited;
 }
 
 async function handleRebaseDigest(
@@ -353,8 +448,9 @@ async function handleRebaseDigest(
     LIDO_ETHDESTRIBUTED_EVENT,
     LIDO_STETH_ADDRESS,
   );
-  if (!ethDistributedEvent) return;
-
+  if (!ethDistributedEvent) {
+    return;
+  }
   let metadata: { [key: string]: string } = {};
 
   const lines = [
@@ -782,35 +878,6 @@ function prepareSharesBurntLines(
     : new BigNumber(0);
   metadata.sharesBurnt = formatBN2Str(sharesBurnt);
   return `*Shares*\nBurnt: ${formatBN2Str(sharesBurnt)} × 1e18`;
-}
-
-async function getSummaryDigest(block: number) {
-  const stakingRouter = new ethers.Contract(
-    STAKING_ROUTER_ADDRESS,
-    STAKING_ROUTER_ABI,
-    ethersProvider,
-  );
-
-  const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
-    NODE_OPERATOR_REGISTRY_MODULE_ID,
-    { blockTag: block },
-  );
-
-  let allExited = 0;
-  let allStuck = 0;
-  let allRefunded = 0;
-
-  operators.forEach((digest: any) => {
-    allStuck += Number(digest.summary.stuckValidatorsCount);
-    allRefunded += Number(digest.summary.refundedValidatorsCount);
-    allExited += Number(digest.summary.totalExitedValidators);
-  });
-
-  return {
-    allExited,
-    allStuck,
-    allRefunded,
-  };
 }
 
 function calculateAPR(
