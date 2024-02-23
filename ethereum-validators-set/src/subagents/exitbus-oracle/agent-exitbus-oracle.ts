@@ -10,7 +10,7 @@ import {
 
 import { utils } from "ethers";
 import { ethersProvider } from "../../ethers";
-
+import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import EXITBUS_ORACLE_ABI from "../../abi/ValidatorsExitBusOracle.json";
 import LIDO_ABI from "../../abi/Lido.json";
 import ORACLE_REPORT_SANITY_CHECKER_ABI from "../../abi/OracleReportSanityChecker.json";
@@ -48,6 +48,7 @@ export const name = "ExitBusOracle";
 const {
   CL_GENESIS_TIMESTAMP,
   TRIGGER_PERIOD,
+  STAKING_ROUTER_ADDRESS,
   MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS,
   REPORT_CRITICAL_OVERDUE_EVERY_ALERT_NUMBER,
   EXITBUS_ORACLE_ADDRESS,
@@ -91,10 +92,28 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
+  const stakingRouter = new ethers.Contract(
+    STAKING_ROUTER_ADDRESS,
+    STAKING_ROUTER_ABI,
+    ethersProvider,
+  );
+
+  const moduleIds: { stakingModuleIds: BigNumber[] } =
+    await stakingRouter.functions.getStakingModuleIds({
+      blockTag: currentBlock,
+    });
+
   stakingModulesOperatorRegistry.length = 0;
-  for (const { moduleAddress, moduleName } of STAKING_MODULES) {
+  for (const { moduleId, moduleAddress, moduleName } of STAKING_MODULES) {
     if (!moduleAddress) {
       console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
+    const moduleExists = moduleIds.stakingModuleIds.some(
+      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
+    );
+    if (!moduleExists) {
       continue;
     }
 

@@ -12,6 +12,7 @@ import {
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress,
   WITHDRAWALS_VAULT_ADDRESS as wdVaultAddress,
   EL_REWARDS_VAULT_ADDRESS as elVaultAddress,
+  STAKING_ROUTER_ADDRESS as stakingRouterAddress,
 } from "../../common/constants";
 
 export const CL_GENESIS_TIMESTAMP = 1606824023;
@@ -22,6 +23,7 @@ export const BLOCK_INTERVAL = 100;
 
 export const MAX_EXIT_REPORTS_TO_ACCOUNT_ENOUGH_EXITS = 3;
 
+export const STAKING_ROUTER_ADDRESS = stakingRouterAddress;
 export const EXITBUS_ORACLE_ADDRESS = ebOracleAddress;
 export const EXITBUS_HASH_CONSENSUS_ADDRESS = ebHashAddress;
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
@@ -57,15 +59,17 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
 ]);
 
-export const STAKING_MODULES: { moduleAddress: string; moduleName: string }[] =
+export const STAKING_MODULES: { moduleAddress: string; moduleName: string; moduleId: number }[] =
   [
     {
       moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
       moduleName: "Curated",
+      moduleId: 1,
     },
     {
       moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
       moduleName: "SimpleDVT",
+      moduleId: 2,
     },
   ];
 

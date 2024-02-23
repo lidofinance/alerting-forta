@@ -141,6 +141,11 @@ export async function initialize(
     ethersProvider,
   );
 
+  const moduleIds: { stakingModuleIds: BigNumber[] } =
+    await stakingRouter.functions.getStakingModuleIds({
+      blockTag: currentBlock,
+    });
+
   stakingModuleManagersMultisigList.length = 0;
   for (const {
     moduleId,
@@ -152,6 +157,13 @@ export async function initialize(
       console.warn(
         `Multisig monitoring is not supported for ${moduleName} module`,
       );
+      continue;
+    }
+
+    const moduleExists = moduleIds.stakingModuleIds.some(
+      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
+    );
+    if (!moduleExists) {
       continue;
     }
 
