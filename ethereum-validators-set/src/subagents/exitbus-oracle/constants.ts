@@ -45,7 +45,7 @@ export const EXITBUS_HASH_CONSENSUS_REPORT_RECEIVED_EVENT =
 
 export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x140bd8fbdc884f48da7cb1c09be8a2fadfea776e", "Chorus One"],
-  ["0x1d0813bf088be3047d827d98524fbf779bc25f00", "jumpcrypto"],
+  ["0xc79f702202e3a6b0b6310b537e786b9acaa19baf", "ChainLayer"],
   ["0x404335bce530400a5814375e7ec1fb55faff3ea2", "Staking Facilities"],
   ["0x007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5", "P2P Validator"],
   ["0x946d3b081ed19173dc83cd974fc69e1e760b7d78", "Stakefish"],

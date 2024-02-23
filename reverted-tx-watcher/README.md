@@ -7,6 +7,8 @@
 ## Alerts
 
 - REVERTED-TX: A reverted transaction has been detected on the specified contract
+- REVERTED-TX-HIGH-GAS: A reverted transaction with high gas used has been detected on the specified contract
+- REVERTED-TX-SPAM: Multiple reverted transactions by one EOA/contract have been detected on the specified contract
 
 ## Development
 

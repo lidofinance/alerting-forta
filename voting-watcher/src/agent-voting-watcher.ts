@@ -105,7 +105,7 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
         const text =
           `Hi there 👋, objection phase 🙅‍♂️ started for ` +
           `${formatLink(`voting #${key}`, url)} ` +
-          `(${proStr} pro, ${contraStr} contra, ${resultsStr})`;
+          `(${proStr}, ${contraStr}, ${resultsStr})`;
         voteStateChanged(text, findings);
         updated.alertLevel = 1;
       }

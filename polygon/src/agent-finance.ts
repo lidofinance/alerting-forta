@@ -10,16 +10,21 @@ import {
 
 import CURVE_POOL_ABI from "./abi/Curve.json";
 import BALANCER_VAULT_ABI from "./abi/Balancer.json";
+import FORT_TOKEN_ABI from "./abi/FortToken.json";
 
 import {
   BALANCER_POOL_ID,
   BALANCER_VAULT_ADDRESS,
   CURVE_POOL_ADDRESS,
   POOL_SIZE_CHANGE_TOLERANCE,
+  FORT_TOKEN_ADDRESS,
+  FORTA_DEPLOYER_ADDRESS,
+  MIN_DEPLOYER_BALANCE,
+  MATIC_DECIMALS,
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
-import { abbreviateNumber } from "./helpers";
+import { abbreviateNumber, polygonscanLink } from "./helpers";
 
 export const name = "Finance";
 
@@ -48,6 +53,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
     await Promise.all([
       handleCurvePoolSize(blockEvent, findings),
       handleBalancerPoolSize(blockEvent, findings),
+      handleFortaDeployerBalance(blockEvent, findings),
     ]);
   }
   return findings;
@@ -154,4 +160,40 @@ async function handleBalancerPoolSize(
     );
   }
   balancerPoolSize = poolSize;
+}
+
+async function handleFortaDeployerBalance(
+  blockEvent: BlockEvent,
+  findings: Finding[],
+) {
+  const fortToken = new ethers.Contract(
+    FORT_TOKEN_ADDRESS,
+    FORT_TOKEN_ABI,
+    ethersProvider,
+  );
+  const deployerBalance = new BigNumber(
+    String(
+      await fortToken.functions.balanceOf(FORTA_DEPLOYER_ADDRESS, {
+        blockTag: blockEvent.blockNumber,
+      }),
+    ),
+  ).div(MATIC_DECIMALS);
+  if (deployerBalance.isLessThan(MIN_DEPLOYER_BALANCE)) {
+    findings.push(
+      Finding.fromObject({
+        name: "⚠️ Forta deployer wallet low FORT balance",
+        description:
+          `FORT token balance of ${polygonscanLink(
+            FORTA_DEPLOYER_ADDRESS,
+          )} is ${deployerBalance.toFixed(2)} FORT/n` +
+          `The balance will be drained in less than 2 month. Please refill!`,
+        alertId: "LOW-FORTA-DEPLOYER-BALANCE",
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+        metadata: {
+          deployerBalance: deployerBalance.toFixed(),
+        },
+      }),
+    );
+  }
 }

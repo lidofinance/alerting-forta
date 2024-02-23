@@ -16,7 +16,7 @@ export class EventWatcher {
     return this.name
   }
 
-  handleLogs(logs: Log[]): Finding[] {
+  public handleLogs(logs: Log[]): Finding[] {
     const addresses: string[] = []
 
     for (const log of logs) {

@@ -1,78 +1,96 @@
-# Lido Detection Bot for Forta
+# Lido Ethereum StETH bot
 
 ## Supported chains
 
 - Ethereum mainnet
-- Ethereum Goerli testnet (dev)
 
-## Sub-bots
+## Alerts
 
-### Gate-seal
+1. StETH operations
+   1. HandleBlock
+      1. 🚨🚨🚨 Buffered ETH drain (checks each block)
+      2. 🚨 Huge depositable ETH amount (checks every 100 blocks)
+      3. ⚠️ High depositable ETH amount (checks every 100 blocks)
+      4. ⚠️ Low deposit executor balance (checks every 100 blocks)
+      5. ⚠️ Unspent staking limit below 10% (checks every 25 blocks)
+      6. 📉 Unspent staking limit below 30% (checks every 25 blocks)
+   2. HandleTransaction
+      1. Deposit Security events
+         1. 🚨 Deposit Security: Deposits paused
+         2. 🚨 Deposit Security: Guardian quorum changed
+         3. 🚨 Deposit Security: Owner changed
+         4. ⚠️ Deposit Security: Deposits resumed
+         5. ⚠️ Deposit Security: Guardian added
+         6. ⚠️ Deposit Security: Guardian removed
+         7. ⚠️ Deposit Security: Max deposits changed
+         8. ⚠️ Deposit Security: Min deposit block distance changed
+      2. Lido events
+         1. 🚨🚨🚨 Lido: Stopped 🚨🚨🚨
+         2. 🚨🚨🚨 Share rate unexpected has changed
+         3. 🚨 Lido: Staking limit removed
+         4. 🚨 Lido: Locator set
+         5. 🚨 Lido: Staking paused
+         6. ⚠️ Lido: Resumed
+         7. ⚠️ Lido: Staking resumed
+         8. ⚠️ Lido: Staking limit set
+         9. ⚠️ Lido: Funds recovered to vault
+         10. ⚠️ Lido: Contract version set
+         11. ℹ️ Lido: Token rebased
+      3. Insurance fund events
+         1. 🚨 Insurance fund: ERC20 transferred
+         2. 🚨 Insurance fund: Ownership transferred
+         3. ⚠️ Insurance fund: ETH transferred
+         4. ⚠️ Insurance fund: ERC1155 transferred
+         5. ⚠️ Insurance fund: ERC721 transferred
+      4. Burner events
+         1. ℹ️ Lido Burner: ERC20 recovered
+         2. ℹ️ Lido Burner: ERC721 recovered
+2. Withdrawals
+   1. HandleBlock runs on each 100-th block or one per 20 minutes
+      1. 🚨🚨🚨 Withdrawals: unclaimed requests size is more than withdrawal queue balance
+      2. ⚠️ Withdrawals: <limitRate>% of stake limit is spent and unfinalized queue is on par with drained stake
+         limit
+      3. ⚠️ Withdrawals: unfinalized queue is more than 100_000 stETH
+      4. ⚠️ Withdrawals: unfinalized queue wait time is <hours> more than 1 day
+      5. ℹ️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed
+   2. HandleTransaction
+      1. 🚨🚨🚨 Withdrawals: claimed amount is more than requested
+      2. 🚨 Withdrawals: BUNKER MODE ON! 🚨
+      3. 🚨 Withdrawals: contract was paused
+      4. ⚠️ Withdrawals: BUNKER MODE OFF! ✅
+      5. ⚠️ Withdrawals: contract was unpaused
+      6. ⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than 150_000 stETH (max
+         staking limit)
+      7. ℹ️ Huge stETH withdrawal requests batch
+3. GateSeal
+   1. HandleBlock runs on each next block
+      1. 🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts
+      2. 🚨 GateSeal: is expired!
+      3. 🚨️ GateSeal: is expired. Update code!
+      4. ⚠️ GateSeal: default GateSeal address in forta agent is expired
+      5. ⚠️️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts
+      6. ⚠️ GateSeal: is about to be expired
+   2. HandleTransaction
+      1. 🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨
+      2. 🚨 GateSeal: is expired
+4. Vaults
+   1. Handleblock
+      1. 🚨🚨🚨 Withdrawal Vault balance mismatch. [without oracle report]
+      2. 🚨🚨🚨 Withdrawal Vault balance mismatch. [within oracle report]
+      3. 🚨🚨🚨 EL Vault balance mismatch. [without oracle report]
+      4. 🚨🚨🚨 EL Vault balance mismatch. [within oracle report]
+      5. 💵 Withdrawal Vault Balance significant change (checks every on 100-th block)
+      6. 💵 EL Vault Balance significant change
+   2. HandleTransaction
+      1. 🚨 Burner shares transfer
 
-Gate seal related alerts
+## Development (Forta specific)
 
-**Alerts:**
-
-- GATE-SEAL-DEFAULT-EXPIRED - Default gate seal default expired
-- GATE-SEAL-DEFAULT-WITHOUT-ROLE - Default gate seal without role
-- GATE-SEAL-WITHOUT-PAUSE-ROLE - Gate seal without pause role
-- GATE-SEAL-IS-EXPIRED - Gate seal is expired
-- GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED - Gate seal is about to be expired
-- GATE-SEAL-IS-SEALED - Gate seal is sealed
-- GATE-SEAL-NEW-ONE-CREATED - New gate seal created
-
-### stETH-ops
-
-stETH operations related alerts
-
-**Alerts:**
-
-- LOW-STAKING-LIMIT - Staking limit is below threshold
-- HIGH-DEPOSITABLE-ETH - Too many ETH in the buffer
-- BUFFERED-ETH-DRAIN - Buffer is being drained unexpectedly
-- LOW-DEPOSIT-EXECUTOR-BALANCE - Deposit executor balance below threshold
-- Alerts on the admin events in Lido DAO contracts
-
-### Vaults
-
-Vaults related alerts
-
-**Alerts:**
-
-- WITHDRAWAL-VAULT-BALANCE-CHANGE - Vault balance has changed
-- WITHDRAWAL-VAULT-BALANCE-DRAIN - Vault balance is being drained unexpectedly
-- EL-VAULT-BALANCE_CHANGE - EL vault balance has changed
-- EL-VAULT-BALANCE-DRAIN - EL vault balance is being drained unexpectedly
-- BURNER-SHARES-TRANSFER - Burner shares transfer
-
-### Withdrawals
-
-Withdrawals related alerts
-
-**Alerts:**
-
-- WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT - Stake limit is drained and unfinalized queue is on par with drained stake limit
-- WITHDRAWALS-BIG-UNFINALIZED-QUEUE - Unfinalized queue is too big
-- WITHDRAWALS-LONG-UNFINALIZED-QUEUE - Unfinalized queue is too long
-- WITHDRAWALS-UNCLAIMED-REQUESTS - Unclaimed requests are too many
-- WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE - Unclaimed requests are more than withdrawal queue balance
-- WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED - Claimed amount is more than requested
-- WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH - Withdrawal request batch is too big
-- WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE - Withdrawal request after rebase is too big
-- WITHDRAWALS-BUNKER-ENABLED - Bunker is enabled
-- WITHDRAWALS-BUNKER-DISABLED - Bunker is disabled
-
-## Development
-
-Install deps:
+Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
 
 ```
 yarn install
 ```
-
-### Mainnet
-
-Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Mainnet JSON-RPC provider.
 
 Running in a live mode:
 
@@ -87,37 +105,3 @@ yarn block 13626668
 yarn range '13626667..13626668'
 yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
 ```
-
-### Testnet
-
-For example, you need to add `testnet` tier support for some new sub-agent:
-
-1. Change default import from `./constants` to `requireWithTier` function call:
-   ##### Before:
-   ```typescript
-   import {
-     NODE_OPERATORS_REGISTRY_ADDRESS,
-     EASY_TRACK_ADDRESS,
-     MOTION_ENACTED_EVENT,
-     SIGNING_KEY_REMOVED_EVENT,
-     NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
-     NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-   } from "./constants";
-   ```
-   ##### After:
-   ```typescript
-   import type * as Constants from "./constants";
-   const {
-     NODE_OPERATORS_REGISTRY_ADDRESS,
-     EASY_TRACK_ADDRESS,
-     MOTION_ENACTED_EVENT,
-     SIGNING_KEY_REMOVED_EVENT,
-     NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
-     NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-   } = requireWithTier<typeof Constants>(module, "./constants");
-   ```
-2. Copy `./constants.ts` file to `./constants.testnet.ts` and change the addresses and other vars to the testnet ones.
-3. Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
-4. Run `export FORTA_AGENT_RUN_TIER=testnet && yarn start:dev`
-
-That's it! Only sub-agents that have `testnet` tier support will be run.

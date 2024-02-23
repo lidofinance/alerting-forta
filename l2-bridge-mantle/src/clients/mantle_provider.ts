@@ -2,35 +2,52 @@ import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provide
 import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
+import { NetworkError } from '../utils/error'
+import { Logger } from 'winston'
+import { L2ERC20TokenBridge } from '../generated'
+import { WithdrawalInitiatedEvent } from '../generated/L2ERC20TokenBridge'
+import { WithdrawalRecord } from '../entity/blockDto'
+import BigNumber from 'bignumber.js'
 
-interface BlockResponse {
-  jsonrpc: string
-  id: number
-  result: Block
+export abstract class IMonitorWithdrawalsClient {
+  public abstract getWithdrawalEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<NetworkError, WithdrawalInitiatedEvent[]>>
+
+  public abstract getWithdrawalRecords(
+    withdrawalEvents: WithdrawalInitiatedEvent[],
+  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
 export abstract class IMantleProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<E.Either<Error, Block[]>>
+  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
 
-  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<Error, Log[]>>
+  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
 
-  public abstract getLatestBlock(): Promise<E.Either<Error, Block>>
+  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
 
-  public abstract getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>>
+  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
 
-  public abstract getBlockNumber(): Promise<E.Either<Error, number>>
-
-  public abstract getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>>
+  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
 }
 
-export class MantleProvider implements IMantleProvider {
-  private jsonRpcProvider: ethers.providers.JsonRpcProvider
+export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClient {
+  private readonly logger: Logger
+  private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
+  private readonly L2ERC20TokenBridge: L2ERC20TokenBridge
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider) {
+  constructor(
+    jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    logger: Logger,
+    L2ERC20TokenBridge: L2ERC20TokenBridge,
+  ) {
     this.jsonRpcProvider = jsonRpcProvider
+    this.logger = logger
+    this.L2ERC20TokenBridge = L2ERC20TokenBridge
   }
 
-  public async fetchBlocks(startBlock: number, endBlock: number): Promise<E.Either<Error, Block[]>> {
+  public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
     const batchRequests = []
     for (let i = startBlock; i <= endBlock; i++) {
       batchRequests.push({
@@ -40,65 +57,67 @@ export class MantleProvider implements IMantleProvider {
         id: i, // Use a unique identifier for each request
       })
     }
-    const chunkSize = 15
-    const out: Block[] = []
+    const formatter = new ethers.providers.Formatter()
+    const doRequest = (request: unknown[]): Promise<Block[]> => {
+      return retryAsync<Block[]>(
+        async (): Promise<Block[]> => {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request),
+          })
 
-    for (let i = 0; i < batchRequests.length; i += chunkSize) {
-      const request = batchRequests.slice(i, i + chunkSize)
-      let response: Response
-      try {
-        response = await retryAsync<Response>(
-          async (): Promise<Response> => {
-            const out = await fetch(this.jsonRpcProvider.connection.url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(request),
-            })
+          if (!response.ok) {
+            throw new NetworkError(`Status: ${response.status}, request: ${JSON.stringify(request)}`, 'FetchBlocksErr')
+          }
 
-            if (!out.ok) {
-              throw new Error(`HTTP error! Status: ${out.status}, request: ${request}`)
-            }
+          const result: Block[] = []
+          const objects = (await response.json()) as unknown[]
 
-            return out
-          },
-          { delay: 500, maxTry: 5 },
-        )
-      } catch (e) {
-        console.log(
-          `Warning: Could not fetch blocks number. cause: ${e}, startBlock: ${startBlock}, endBlock: ${endBlock}. Total: ${
-            endBlock - startBlock
-          }`,
-        )
-        continue
-      }
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      const results: BlockResponse[] = await response.json()
-
-      const formatter = new ethers.providers.Formatter()
-
-      for (const result of results) {
-        if (result.result === null) {
-          for (const r of request) {
-            if (r.id === result.id) {
-              console.log(`Warning: missed response from node by reqId: ${result.id}, request: ${r.params.join(', ')}`)
+          for (const obj of objects) {
+            if (Object.prototype.hasOwnProperty.call(obj, 'result')) {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-expect-error
+              result.push(formatter.block(obj.result))
+            } else {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-expect-error
+              throw new Error(obj.error.message)
             }
           }
 
-          continue
+          return result
+        },
+        { delay: 500, maxTry: 5 },
+      )
+    }
+
+    const chunkSize = 25
+    const out: Block[] = []
+
+    let allowedExtraRequest: number = 30
+    for (let i = 0; i < batchRequests.length; i += chunkSize) {
+      const request = batchRequests.slice(i, i + chunkSize)
+      try {
+        const blocks = await doRequest(request)
+        out.push(...blocks)
+      } catch (e) {
+        this.logger.warning(`${e}`)
+        if (allowedExtraRequest === 0) {
+          break
         }
 
-        out.push(formatter.block(result.result))
+        batchRequests.push(...request)
+        allowedExtraRequest -= 1
       }
     }
 
-    return E.right(out)
+    return out
   }
 
-  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<Error, Log[]>> {
+  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
     const logs: Log[] = []
     const batchSize = 15
 
@@ -120,11 +139,10 @@ export class MantleProvider implements IMantleProvider {
           { delay: 500, maxTry: 5 },
         )
       } catch (e) {
-        console.log(
-          `Warning: Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${
-            end - start
-          }`,
+        this.logger.warning(
+          `Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${end - start}`,
         )
+
         continue
       }
 
@@ -134,7 +152,7 @@ export class MantleProvider implements IMantleProvider {
     return E.right(logs)
   }
 
-  public async getLatestBlock(): Promise<E.Either<Error, Block>> {
+  public async getLatestBlock(): Promise<E.Either<NetworkError, Block>> {
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
@@ -145,22 +163,22 @@ export class MantleProvider implements IMantleProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch latest block. cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch latest block`))
     }
   }
 
-  public async getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>> {
+  public async getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>> {
     try {
       const out = await retryAsync<TransactionResponse>(
         async (): Promise<TransactionResponse> => {
           const tx = await this.jsonRpcProvider.getTransaction(txHash)
 
           if (!tx) {
-            throw new Error(`Can't find transaction ${txHash}`)
+            throw new NetworkError(`Can't find transaction ${txHash}`)
           }
 
           if (tx.blockNumber === undefined) {
-            throw new Error(`Transaction ${txHash} was not yet included into block`)
+            throw new NetworkError(`Transaction ${txHash} was not yet included into block`)
           }
 
           return tx
@@ -170,11 +188,11 @@ export class MantleProvider implements IMantleProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch transaction. cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch transaction`))
     }
   }
 
-  public async getBlockNumber(): Promise<E.Either<Error, number>> {
+  public async getBlockNumber(): Promise<E.Either<NetworkError, number>> {
     try {
       const out = await retryAsync<number>(
         async (): Promise<number> => {
@@ -185,36 +203,60 @@ export class MantleProvider implements IMantleProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch latest getBlockNumber. cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch latest getBlockNumber`))
     }
   }
 
-  public async getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>> {
-    let latestBlockNumber: number = -1
+  public async getWithdrawalEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<NetworkError, WithdrawalInitiatedEvent[]>> {
+    try {
+      const out = await retryAsync<WithdrawalInitiatedEvent[]>(
+        async (): Promise<WithdrawalInitiatedEvent[]> => {
+          return await this.L2ERC20TokenBridge.queryFilter(
+            this.L2ERC20TokenBridge.filters.WithdrawalInitiated(),
+            fromBlockNumber,
+            toBlockNumber,
+          )
+        },
+        { delay: 500, maxTry: 5 },
+      )
 
-    if (argv.includes('--block')) {
-      latestBlockNumber = parseInt(argv[4])
-    } else if (argv.includes('--range')) {
-      latestBlockNumber = parseInt(argv[4].slice(0, argv[4].indexOf('.')))
-    } else if (argv.includes('--tx')) {
-      const txHash = argv[4]
-      const tx = await this.getTransaction(txHash)
-      if (E.isLeft(tx)) {
-        return E.left(tx.left)
-      }
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch withdrawEvents`))
+    }
+  }
 
-      if (tx.right.blockNumber !== undefined) {
-        latestBlockNumber = tx.right.blockNumber
+  public async getWithdrawalRecords(
+    withdrawalEvents: WithdrawalInitiatedEvent[],
+  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>> {
+    const out: WithdrawalRecord[] = []
+
+    for (const withdrawEvent of withdrawalEvents) {
+      if (withdrawEvent.args) {
+        let block: Block
+        try {
+          block = await retryAsync<Block>(
+            async (): Promise<Block> => {
+              return await withdrawEvent.getBlock()
+            },
+            { delay: 500, maxTry: 5 },
+          )
+
+          const record: WithdrawalRecord = {
+            time: block.timestamp,
+            amount: new BigNumber(String(withdrawEvent.args._amount)),
+          }
+
+          out.push(record)
+        } catch (e) {
+          return E.left(new NetworkError(e, `Could not fetch block from withdrawEvent`))
+        }
       }
     }
-    if (latestBlockNumber == -1) {
-      try {
-        latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
-      } catch (e) {
-        return E.left(new Error(`Could not fetch latest block number. cause: ${e}`))
-      }
-    }
 
-    return E.right(latestBlockNumber)
+    return E.right(out)
   }
 }

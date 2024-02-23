@@ -1,27 +1,30 @@
 import { FortaGuardClient } from './clients/forta_guard_client'
-import { ethers } from 'forta-agent'
+import { ethers, Finding } from 'forta-agent'
 import { IMantleProvider, MantleProvider } from './clients/mantle_provider'
-import { EventWatcher } from './services/eventWatcher/event_watcher'
-import { L2_BRIDGE_EVENTS } from './utils/events/bridge_events'
-import { GOV_BRIDGE_EVENTS } from './utils/events/gov_events'
-import { PROXY_ADMIN_EVENTS } from './utils/events/proxy_admin_events'
-import { ProxyContract } from './entity/proxy_contract'
-import { L2_ERC20_TOKEN_GATEWAY, MANTLE_WST_ETH_BRIDGED, WITHDRAWAL_INITIATED_EVENT } from './utils/constants'
+import { EventWatcher } from './services/event_watcher'
+import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
+import { ProxyContractClient } from './clients/proxy_contract_client'
 import { L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated'
-import { BlockSrv } from './services/mantle_block_service'
-import { ProxyWatcher } from './workers/proxy_watcher'
-import { MonitorWithdrawals } from './workers/monitor_withdrawals'
-import { FindingsRW } from './utils/mutex'
+import { MantleBlockClient } from './clients/mantle_block_client'
+import { ProxyWatcher } from './services/proxy_watcher'
+import { MonitorWithdrawals } from './services/monitor_withdrawals'
+import { DataRW } from './utils/mutex'
+import * as Winston from 'winston'
+import { getBridgeEvents } from './utils/events/bridge_events'
+import { getGovEvents } from './utils/events/gov_events'
+import { Address } from './utils/constants'
+import { Logger } from 'winston'
 
 export type Container = {
   mantleClient: IMantleProvider
   proxyWatcher: ProxyWatcher
   monitorWithdrawals: MonitorWithdrawals
-  blockSrv: BlockSrv
+  blockSrv: MantleBlockClient
   bridgeWatcher: EventWatcher
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
-  findingsRW: FindingsRW
+  findingsRW: DataRW<Finding>
+  logger: Logger
 }
 
 export class App {
@@ -31,40 +34,50 @@ export class App {
 
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {
+      const logger: Winston.Logger = Winston.createLogger({
+        format: Winston.format.simple(),
+        transports: [new Winston.transports.Console()],
+      })
+
+      const adr: Address = Address
       const mantleRpcURL = FortaGuardClient.getSecret()
 
       const baseNetworkID = 5000
       const nodeClient = new ethers.providers.JsonRpcProvider(mantleRpcURL, baseNetworkID)
 
-      const mantleClient = new MantleProvider(nodeClient)
+      const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.hash, nodeClient)
 
-      const bridgeEventWatcher = new EventWatcher('BridgeEventWatcher', L2_BRIDGE_EVENTS)
-      const govEventWatcher = new EventWatcher('GovEventWatcher', GOV_BRIDGE_EVENTS)
-      const proxyEventWatcher = new EventWatcher('ProxyEventWatcher', PROXY_ADMIN_EVENTS)
+      const mantleClient = new MantleProvider(nodeClient, logger, l2Bridge)
 
-      const LIDO_PROXY_CONTRACTS: ProxyContract[] = [
-        new ProxyContract(
-          L2_ERC20_TOKEN_GATEWAY.name,
-          L2_ERC20_TOKEN_GATEWAY.hash,
-          OssifiableProxy__factory.connect(L2_ERC20_TOKEN_GATEWAY.hash, nodeClient),
+      const bridgeEventWatcher = new EventWatcher(
+        'BridgeEventWatcher',
+        getBridgeEvents(adr.L2_ERC20_TOKEN_GATEWAY_ADDRESS, adr.RolesMap),
+        logger,
+      )
+      const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS), logger)
+      const proxyEventWatcher = new EventWatcher(
+        'ProxyEventWatcher',
+        getProxyAdminEvents(adr.MANTLE_WST_ETH_BRIDGED, adr.L2_ERC20_TOKEN_GATEWAY),
+        logger,
+      )
+
+      const LIDO_PROXY_CONTRACTS: ProxyContractClient[] = [
+        new ProxyContractClient(
+          adr.L2_ERC20_TOKEN_GATEWAY.name,
+          adr.L2_ERC20_TOKEN_GATEWAY.hash,
+          OssifiableProxy__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.hash, nodeClient),
         ),
-        new ProxyContract(
-          MANTLE_WST_ETH_BRIDGED.name,
-          MANTLE_WST_ETH_BRIDGED.hash,
-          OssifiableProxy__factory.connect(MANTLE_WST_ETH_BRIDGED.hash, nodeClient),
+        new ProxyContractClient(
+          adr.MANTLE_WST_ETH_BRIDGED.name,
+          adr.MANTLE_WST_ETH_BRIDGED.hash,
+          OssifiableProxy__factory.connect(adr.MANTLE_WST_ETH_BRIDGED.hash, nodeClient),
         ),
       ]
 
-      const blockSrv: BlockSrv = new BlockSrv(mantleClient)
-      const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS)
+      const blockSrv: MantleBlockClient = new MantleBlockClient(mantleClient, logger)
+      const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
-      const l2Bridge = L2ERC20TokenBridge__factory.connect(L2_ERC20_TOKEN_GATEWAY.hash, nodeClient)
-
-      const monitorWithdrawals = new MonitorWithdrawals(
-        l2Bridge,
-        L2_ERC20_TOKEN_GATEWAY.hash,
-        WITHDRAWAL_INITIATED_EVENT,
-      )
+      const monitorWithdrawals = new MonitorWithdrawals(mantleClient, adr.L2_ERC20_TOKEN_GATEWAY.hash, logger)
 
       App.instance = {
         mantleClient: mantleClient,
@@ -74,7 +87,8 @@ export class App {
         bridgeWatcher: bridgeEventWatcher,
         govWatcher: govEventWatcher,
         proxyEventWatcher: proxyEventWatcher,
-        findingsRW: new FindingsRW([]),
+        findingsRW: new DataRW<Finding>([]),
+        logger: logger,
       }
     }
 

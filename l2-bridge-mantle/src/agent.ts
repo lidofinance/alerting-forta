@@ -1,15 +1,15 @@
 import { BlockEvent, Finding, FindingSeverity, FindingType, HandleBlock } from 'forta-agent'
 import * as process from 'process'
-import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
 import { Initialize } from 'forta-agent/dist/sdk/handlers'
-import { Metadata } from './entity/metadata'
 import * as E from 'fp-ts/Either'
 import VERSION from './utils/version'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
 
 export function initialize(): Initialize {
+  type Metadata = { [key: string]: string }
+
   const metadata: Metadata = {
     'version.commitHash': VERSION.commitHash,
     'version.commitMsg': VERSION.commitMsg,
@@ -18,26 +18,23 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const app = await App.getInstance()
 
-    const latestBlockNumber = await app.mantleClient.getStartedBlockForApp(argv)
-    if (E.isLeft(latestBlockNumber)) {
-      console.log(`Error: ${latestBlockNumber.left.message}`)
-      console.log(`Stack: ${latestBlockNumber.left.stack}`)
+    const latestBlock = await app.mantleClient.getLatestBlock()
+    if (E.isLeft(latestBlock)) {
+      app.logger.error(latestBlock.left)
 
       process.exit(1)
     }
 
-    const agentMeta = await app.proxyWatcher.initialize(latestBlockNumber.right)
+    const agentMeta = await app.proxyWatcher.initialize(latestBlock.right.number)
     if (E.isLeft(agentMeta)) {
-      console.log(`Error: ${agentMeta.left.message}`)
-      console.log(`Stack: ${agentMeta.left.stack}`)
+      app.logger.error(agentMeta.left)
 
       process.exit(1)
     }
 
-    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlockNumber.right)
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlock.right.number)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
-      console.log(`Error: ${monitorWithdrawalsInitResp.left.message}`)
-      console.log(`Stack: ${monitorWithdrawalsInitResp.left.stack}`)
+      app.logger.error(monitorWithdrawalsInitResp.left)
 
       process.exit(1)
     }
@@ -61,7 +58,7 @@ export function initialize(): Initialize {
       }),
     ])
 
-    console.log('Bot initialization is done!')
+    app.logger.info('Bot initialization is done!')
   }
 }
 
@@ -82,30 +79,27 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const startTimeFetchBlock = new Date().getTime()
     const blocksDto = await app.blockSrv.getBlocks()
     if (E.isLeft(blocksDto)) {
       isHandleBLockRunning = false
       return [blocksDto.left]
     }
-    console.log(
-      `#ETH block ${blockEvent.blockNumber.toString()}. Fetching mantle blocks from ${blocksDto.right[0].number} to ${
+    app.logger.info(
+      `ETH block ${blockEvent.blockNumber.toString()}. Fetched mantle blocks from ${blocksDto.right[0].number} to ${
         blocksDto.right[blocksDto.right.length - 1].number
-      }. Total: ${blocksDto.right.length}\n${elapsedTime('app.blockSrv.getBlocks', startTimeFetchBlock)}`,
+      }. Total: ${blocksDto.right.length}`,
     )
 
-    const startTimeFetchLogs = new Date().getTime()
     const logs = await app.blockSrv.getLogs(blocksDto.right)
     if (E.isLeft(logs)) {
       isHandleBLockRunning = false
       return [logs.left]
     }
-    console.log(elapsedTime('app.blockSrv.getLogs', startTimeFetchLogs))
 
     const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
     const govEventFindings = app.govWatcher.handleLogs(logs.right)
     const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
-    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(blocksDto.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
 
     const blockNumbers: number[] = []
     for (const log of logs.right) {
@@ -118,8 +112,6 @@ export const handleBlock = (): HandleBlock => {
       }
     })
 
-    app.monitorWithdrawals.handleWithdrawalEvent(logs.right, blocksDto.right)
-
     findings.push(
       ...bridgeEventFindings,
       ...govEventFindings,
@@ -127,7 +119,7 @@ export const handleBlock = (): HandleBlock => {
       ...monitorWithdrawalsFindings,
     )
 
-    console.log(elapsedTime('handleBlock', startTime) + '\n')
+    app.logger.info(elapsedTime('handleBlock', startTime) + '\n')
     isHandleBLockRunning = false
     return findings
   }

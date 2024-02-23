@@ -265,6 +265,14 @@ const WHITE_LIST_ADDRESSES_RAW: string[] = [
   "0xd37bbe5744d730a1d98d8dc97c42f0ca46ad7146", // THORChain: THORChain Router v4.1.1
   "0x00000000005bbb0ef59571e58418f9a4357b68a0", // PendleRouterV3
   "0xead050515e10fdb3540ccd6f8236c46790508a76", // Native: Router V1
+  "0x9ffdf407cde9a93c47611799da23924af3ef764f", // ether.fi Liquifier
+  "0x14756a5ed229265f86990e749285bdd39fe0334f", // Curve
+  "0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb", // Morpho
+  "0xa7995f71aa11525db02fc2473c37dee5dbf55107", // Morpho
+  "0x41527b2d03844db6b0945f25702cb958b6d55989", // zkSynk Era: Lido Bridge
+  "0x57891966931eb4bb6fb81430e6ce0a03aabde063", // zkSync Era Bridge
+  "0x6951bdc4734b9f7f3e1b74afebc670c736a0edb6", // pxETH/stETH (pxsteth)
+  "0xa479582c8b64533102f6f528774c536e354b8d32", // primestaked.com LRT deposit pool
 ];
 
 export const WHITE_LIST_ADDRESSES: string[] = WHITE_LIST_ADDRESSES_RAW.map(
@@ -285,6 +293,11 @@ const PHISHING_LIST_ADDRESSES_RAW: string[] = [
   "0x00000cad74214b2771b692b1065f9d0ad7b00000", // Phishing EOA
   "0x111118a36f4f051fc9b35169c92b761a18100000", // Phishing EOA
   "0x00004ffE101ebAD2a0232D1ff7ecBd08cA560000", // Phishing Contract
+  "0x0000f224becadfbee49354113e44166c06b10000", // Phishing Contract
+  "0x00002ddee5038f25d1f73702c5c3bd905b8a0000", // Phishing Contract
+  "0x00004ffe101ebad2a0232d1ff7ecbd08ca560000", // Phishing Contract
+  "0x0000b96d1aca0c7d555deae4da6d9d5813e60000", // Phishing Contract
+  "0x8f146a0802a7710203aef9bc2fa3d59dd855f4d3", // Phishing EOA
 ];
 
 export const PHISHING_LIST_ADDRESSES: string[] =

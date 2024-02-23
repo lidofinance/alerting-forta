@@ -2,11 +2,13 @@
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "baseUrl": ".",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "noImplicitAny": true,
-    "resolveJsonModule": true
+    "baseUrl": "."
   },
-  "exclude": ["e2e", "node_modules"]
+  "exclude": [
+    "node_modules",
+    "tests",
+    "dist",
+    "**/*spec.ts",
+    "**/*mock.ts"
+  ]
 }

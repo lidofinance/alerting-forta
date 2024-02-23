@@ -17,3 +17,7 @@ export function abbreviateNumber(number: number): string {
   // format number and add suffix
   return scaled.toFixed(1) + suffix;
 }
+
+export function polygonscanLink(address: string): string {
+  return `[${address.toLowerCase()}](https://polygonscan.com/address/${address.toLowerCase()})`;
+}
