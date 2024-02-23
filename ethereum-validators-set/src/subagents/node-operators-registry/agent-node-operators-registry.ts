@@ -161,9 +161,10 @@ export async function initialize(
 
   stakingModulesOperatorRegistry.length = 0;
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } = await stakingRouter.functions.getStakingModuleIds({
-    blockTag: currentBlock,
-  });
+  const moduleIds: { stakingModuleIds: BigNumber[] } =
+    await stakingRouter.functions.getStakingModuleIds({
+      blockTag: currentBlock,
+    });
 
   for (const {
     moduleId,
@@ -176,11 +177,12 @@ export async function initialize(
       continue;
     }
 
-    const moduleExists = moduleIds.stakingModuleIds.some((stakingModuleId) => stakingModuleId.toString() === moduleId.toString());
+    const moduleExists = moduleIds.stakingModuleIds.some(
+      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
+    );
     if (!moduleExists) {
       continue;
     }
-
 
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext(

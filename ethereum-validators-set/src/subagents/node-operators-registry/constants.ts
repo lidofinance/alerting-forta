@@ -5,7 +5,7 @@ import {
   ONE_DAY,
   STAKING_ROUTER_ADDRESS as srAddress,
 } from "../../common/constants";
-import {SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID} from "../lido-report/constants";
+import { SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID } from "../lido-report/constants";
 
 export const STUCK_PENALTY_ENDED_TRIGGER_PERIOD = ONE_DAY;
 
