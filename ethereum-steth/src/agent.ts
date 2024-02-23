@@ -138,13 +138,13 @@ export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
     if (onInitErr) {
       return [
-        Finding.fromObject({
+        /*Finding.fromObject({
           name: `Agent is not launched`,
           description: `On init err. There is no sense to run handleBlock`,
           alertId: 'LIDO-AGENT-IS-NOT-LAUNCHED',
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
-        }),
+        }),*/
       ]
     }
 
@@ -185,13 +185,13 @@ export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     if (onInitErr) {
       return [
-        Finding.fromObject({
+        /*Finding.fromObject({
           name: `Agent is not launched`,
           description: `On init err. There is no sense to run handleTransaction`,
           alertId: 'LIDO-AGENT-IS-NOT-LAUNCHED',
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
-        }),
+        }),*/
       ]
     }
 
