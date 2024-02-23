@@ -9,7 +9,6 @@ import {
 export const STUCK_PENALTY_ENDED_TRIGGER_PERIOD = ONE_DAY;
 
 export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
-export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_MODULE_ID = 2;
 
 export const EASY_TRACK_ADDRESS = easyTrackAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
@@ -39,7 +38,7 @@ export const STAKING_MODULES = [
     alertPrefix: "",
   },
   {
-    moduleId: SIMPLEDVT_NODE_OPERATORS_REGISTRY_MODULE_ID,
+    moduleId: null,
     moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",
