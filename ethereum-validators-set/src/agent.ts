@@ -22,6 +22,8 @@ import * as agentNORegistry from "./subagents/node-operators-registry/agent-node
 import * as agentSanityChecker from "./subagents/sanity-checker/agent-sanity-checker";
 import * as agentOracleDaemonConfig from "./subagents/oracle-daemon-config/agent-oracle-daemon-config";
 import * as agentStakingRouter from "./subagents/staking-router/agent-staking-router";
+import * as agentClusterMultisig from "./subagents/multisig-watchers/agent-cluster-multisig";
+import * as agentModuleManager from "./subagents/multisig-watchers/agent-module-manager";
 
 import VERSION from "./version";
 import { mergeFindings } from "./common/utils";
@@ -47,6 +49,8 @@ const subAgents: SubAgent[] = [
   agentSanityChecker,
   agentOracleDaemonConfig,
   agentStakingRouter,
+  agentClusterMultisig,
+  agentModuleManager,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
