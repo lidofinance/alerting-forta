@@ -18,7 +18,6 @@ export const WITHDRAWALS_VAULT_ADDRESS = wdVaultAddress;
 export const BURNER_ADDRESS = burnerAddress;
 
 export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
-export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_MODULE_ID = 2;
 
 export const STAKING_MODULES: {
   moduleId: number | null;
@@ -31,7 +30,7 @@ export const STAKING_MODULES: {
     alertPrefix: "",
   },
   {
-    moduleId: SIMPLEDVT_NODE_OPERATORS_REGISTRY_MODULE_ID,
+    moduleId: null,
     moduleName: "SimpleDVT",
     alertPrefix: "",
   },
