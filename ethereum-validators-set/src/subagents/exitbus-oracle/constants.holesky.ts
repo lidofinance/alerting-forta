@@ -40,19 +40,22 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0xf7aE520e99ed3C41180B5E12681d31Aa7302E4e5", "oracle3"],
 ]);
 
-export const STAKING_MODULES: { moduleAddress: string; moduleName: string; moduleId: number }[] =
-  [
-    {
-      moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleName: "Curated",
-      moduleId: 1,
-    },
-    {
-      moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-      moduleName: "SimpleDVT",
-      moduleId: 2,
-    },
-  ];
+export const STAKING_MODULES: {
+  moduleAddress: string;
+  moduleName: string;
+  moduleId: number;
+}[] = [
+  {
+    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+    moduleName: "Curated",
+    moduleId: 1,
+  },
+  {
+    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+    moduleName: "SimpleDVT",
+    moduleId: 2,
+  },
+];
 
 export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
   (event) => ({
