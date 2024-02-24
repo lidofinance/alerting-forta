@@ -2,25 +2,44 @@ import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provide
 import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
+import { NetworkError } from '../utils/error'
+import { BridgingInitiatedEvent, TokenBridge } from '../generated/TokenBridge'
+import { WithdrawalRecord } from '../entity/blockDto'
+import BigNumber from 'bignumber.js'
+import { Logger } from 'winston'
+
+export abstract class IMonitorWithdrawalsClient {
+  public abstract getWithdrawalEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<NetworkError, BridgingInitiatedEvent[]>>
+
+  public abstract getWithdrawalRecords(
+    withdrawalEvents: BridgingInitiatedEvent[],
+  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
+}
+
 export abstract class ILineaProvider {
   public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
 
-  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<Error, Log[]>>
+  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
 
-  public abstract getLatestBlock(): Promise<E.Either<Error, Block>>
+  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
 
-  public abstract getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>>
+  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
 
-  public abstract getBlockNumber(): Promise<E.Either<Error, number>>
-
-  public abstract getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>>
+  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
 }
 
-export class LineaProvider implements ILineaProvider {
-  private jsonRpcProvider: ethers.providers.JsonRpcProvider
+export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient {
+  private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
+  private readonly lineaTokenBridge: TokenBridge
+  private readonly logger: Logger
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider) {
+  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, lineaTokenBridge: TokenBridge, logger: Logger) {
     this.jsonRpcProvider = jsonRpcProvider
+    this.lineaTokenBridge = lineaTokenBridge
+    this.logger = logger
   }
 
   public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
@@ -37,7 +56,7 @@ export class LineaProvider implements ILineaProvider {
     const doRequest = (request: unknown[]): Promise<Block[]> => {
       return retryAsync<Block[]>(
         async (): Promise<Block[]> => {
-          const response = await fetch(this.jsonRpcProvider.connection.url, {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -46,7 +65,7 @@ export class LineaProvider implements ILineaProvider {
           })
 
           if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}, request: ${JSON.stringify(request)}`)
+            throw new NetworkError(`Status: ${response.status}, request: ${JSON.stringify(request)}`, 'FetchBlocksErr')
           }
 
           const result: Block[] = []
@@ -80,7 +99,7 @@ export class LineaProvider implements ILineaProvider {
         const blocks = await doRequest(request)
         out.push(...blocks)
       } catch (e) {
-        console.log(e)
+        this.logger.warning(`${e}`)
         if (allowedExtraRequest === 0) {
           break
         }
@@ -93,7 +112,7 @@ export class LineaProvider implements ILineaProvider {
     return out
   }
 
-  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<Error, Log[]>> {
+  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
     const logs: Log[] = []
     const batchSize = 15
 
@@ -115,11 +134,10 @@ export class LineaProvider implements ILineaProvider {
           { delay: 500, maxTry: 5 },
         )
       } catch (e) {
-        console.log(
-          `Warning: Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${
-            end - start
-          }`,
+        this.logger.warning(
+          `Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${end - start}`,
         )
+
         continue
       }
 
@@ -129,7 +147,7 @@ export class LineaProvider implements ILineaProvider {
     return E.right(logs)
   }
 
-  public async getLatestBlock(): Promise<E.Either<Error, Block>> {
+  public async getLatestBlock(): Promise<E.Either<NetworkError, Block>> {
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
@@ -140,22 +158,22 @@ export class LineaProvider implements ILineaProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch latest block. cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch latest block`))
     }
   }
 
-  public async getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>> {
+  public async getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>> {
     try {
       const out = await retryAsync<TransactionResponse>(
         async (): Promise<TransactionResponse> => {
           const tx = await this.jsonRpcProvider.getTransaction(txHash)
 
           if (!tx) {
-            throw new Error(`Can't find transaction ${txHash}`)
+            throw new NetworkError(`Can't find transaction ${txHash}`)
           }
 
           if (tx.blockNumber === undefined) {
-            throw new Error(`Transaction ${txHash} was not yet included into block`)
+            throw new NetworkError(`Transaction ${txHash} was not yet included into block`)
           }
 
           return tx
@@ -165,11 +183,11 @@ export class LineaProvider implements ILineaProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch transaction. cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch transaction`))
     }
   }
 
-  public async getBlockNumber(): Promise<E.Either<Error, number>> {
+  public async getBlockNumber(): Promise<E.Either<NetworkError, number>> {
     try {
       const out = await retryAsync<number>(
         async (): Promise<number> => {
@@ -180,36 +198,60 @@ export class LineaProvider implements ILineaProvider {
 
       return E.right(out)
     } catch (e) {
-      return E.left(new Error(`Could not fetch latest getBlockNumber. cause: ${e}`))
+      return E.left(new NetworkError(e, `Could not fetch latest getBlockNumber`))
     }
   }
 
-  public async getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>> {
-    let latestBlockNumber: number = -1
+  public async getWithdrawalEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<NetworkError, BridgingInitiatedEvent[]>> {
+    try {
+      const out = await retryAsync<BridgingInitiatedEvent[]>(
+        async (): Promise<BridgingInitiatedEvent[]> => {
+          return await this.lineaTokenBridge.queryFilter(
+            this.lineaTokenBridge.filters.BridgingInitiated(),
+            fromBlockNumber,
+            toBlockNumber,
+          )
+        },
+        { delay: 500, maxTry: 5 },
+      )
 
-    if (argv.includes('--block')) {
-      latestBlockNumber = parseInt(argv[4])
-    } else if (argv.includes('--range')) {
-      latestBlockNumber = parseInt(argv[4].slice(0, argv[4].indexOf('.')))
-    } else if (argv.includes('--tx')) {
-      const txHash = argv[4]
-      const tx = await this.getTransaction(txHash)
-      if (E.isLeft(tx)) {
-        return E.left(tx.left)
-      }
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch withdrawEvents`))
+    }
+  }
 
-      if (tx.right.blockNumber !== undefined) {
-        latestBlockNumber = tx.right.blockNumber
+  public async getWithdrawalRecords(
+    withdrawalEvents: BridgingInitiatedEvent[],
+  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>> {
+    const out: WithdrawalRecord[] = []
+
+    for (const withdrawEvent of withdrawalEvents) {
+      if (withdrawEvent.args) {
+        let block: Block
+        try {
+          block = await retryAsync<Block>(
+            async (): Promise<Block> => {
+              return await withdrawEvent.getBlock()
+            },
+            { delay: 500, maxTry: 5 },
+          )
+
+          const record: WithdrawalRecord = {
+            time: block.timestamp,
+            amount: new BigNumber(String(withdrawEvent.args.amount)),
+          }
+
+          out.push(record)
+        } catch (e) {
+          return E.left(new NetworkError(e, `Could not fetch block from withdrawEvent`))
+        }
       }
     }
-    if (latestBlockNumber == -1) {
-      try {
-        latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
-      } catch (e) {
-        return E.left(new Error(`Could not fetch latest block number. cause: ${e}`))
-      }
-    }
 
-    return E.right(latestBlockNumber)
+    return E.right(out)
   }
 }

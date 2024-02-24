@@ -1,15 +1,15 @@
 import { BlockEvent, Finding, FindingSeverity, FindingType, HandleBlock } from 'forta-agent'
 import * as process from 'process'
-import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
 import { Initialize } from 'forta-agent/dist/sdk/handlers'
-import { Metadata } from './entity/metadata'
 import * as E from 'fp-ts/Either'
 import VERSION from './utils/version'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
 
 export function initialize(): Initialize {
+  type Metadata = { [key: string]: string }
+
   const metadata: Metadata = {
     'version.commitHash': VERSION.commitHash,
     'version.commitMsg': VERSION.commitMsg,
@@ -18,15 +18,15 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const app = await App.getInstance()
 
-    const latestBlockNumber = await app.LineaClient.getStartedBlockForApp(argv)
-    if (E.isLeft(latestBlockNumber)) {
-      console.log(`Error: ${latestBlockNumber.left.message}`)
-      console.log(`Stack: ${latestBlockNumber.left.stack}`)
+    const latestBlock = await app.LineaClient.getLatestBlock()
+    if (E.isLeft(latestBlock)) {
+      console.log(`Error: ${latestBlock.left.message}`)
+      console.log(`Stack: ${latestBlock.left.stack}`)
 
       process.exit(1)
     }
 
-    const agentMeta = await app.proxyWatcher.initialize(latestBlockNumber.right)
+    const agentMeta = await app.proxyWatcher.initialize(latestBlock.right.number)
     if (E.isLeft(agentMeta)) {
       console.log(`Error: ${agentMeta.left.message}`)
       console.log(`Stack: ${agentMeta.left.stack}`)
@@ -34,7 +34,7 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlockNumber.right)
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlock.right.number)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
       console.log(`Error: ${monitorWithdrawalsInitResp.left.message}`)
       console.log(`Stack: ${monitorWithdrawalsInitResp.left.stack}`)
@@ -105,7 +105,7 @@ export const handleBlock = (): HandleBlock => {
     const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
     const govEventFindings = app.govWatcher.handleLogs(logs.right)
     const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
-    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(blocksDto.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
 
     const blockNumbers: number[] = []
     for (const log of logs.right) {
@@ -117,8 +117,6 @@ export const handleBlock = (): HandleBlock => {
         app.findingsRW.write(findings)
       }
     })
-
-    app.monitorWithdrawals.handleWithdrawalEvent(logs.right, blocksDto.right)
 
     findings.push(
       ...bridgeEventFindings,

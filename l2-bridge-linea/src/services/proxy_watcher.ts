@@ -1,5 +1,5 @@
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { IShortABIcaller } from '../entity/proxy_contract'
+import { IShortABIcaller } from '../clients/proxy_contract_client'
 import * as E from 'fp-ts/Either'
 import { retry } from 'ts-retry'
 

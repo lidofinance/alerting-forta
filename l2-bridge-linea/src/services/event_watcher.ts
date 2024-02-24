@@ -1,4 +1,4 @@
-import { EventOfNotice } from '../../entity/events'
+import { EventOfNotice } from '../entity/events'
 import { Log } from '@ethersproject/abstract-provider'
 import { filterLog, Finding } from 'forta-agent'
 
@@ -36,6 +36,7 @@ export class EventWatcher {
               severity: eventToFinding.severity,
               type: eventToFinding.type,
               metadata: { args: String(event.args) },
+              uniqueKey: eventToFinding.uniqueKey,
             }),
           )
         }
