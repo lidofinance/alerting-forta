@@ -45,7 +45,7 @@ export class ProxyContract implements IShortABIcaller {
             blockTag: blockNumber,
           })
         },
-        { delay: 500, maxTry: 5 },
+        { delay: 1000, maxTry: 5 },
       )
 
       return E.right(resp)
@@ -62,7 +62,7 @@ export class ProxyContract implements IShortABIcaller {
             blockTag: blockNumber,
           })
         },
-        { delay: 500, maxTry: 5 },
+        { delay: 1000, maxTry: 5 },
       )
 
       return E.right(resp)
