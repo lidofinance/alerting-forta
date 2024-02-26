@@ -131,7 +131,7 @@ export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient 
               },
             ])
           },
-          { delay: 500, maxTry: 5 },
+          { delay: 1000, maxTry: 5 },
         )
       } catch (e) {
         this.logger.warn(

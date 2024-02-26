@@ -8,5 +8,5 @@
     "noImplicitAny": true,
     "resolveJsonModule": true
   },
-  "exclude": ["e2e", "node_modules"]
+  "exclude": ["e2e", "node_modules", "tests"]
 }
