@@ -6,6 +6,7 @@ import * as E from 'fp-ts/Either'
 import VERSION from './utils/version'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
+import BigNumber from 'bignumber.js'
 
 export function initialize(): Initialize {
   type Metadata = { [key: string]: string }
@@ -101,22 +102,19 @@ export const handleBlock = (): HandleBlock => {
     const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
     const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
 
-    const blockNumbers: number[] = []
+    const blockNumbers: Set<number> = new Set<number>()
     for (const log of logs.right) {
-      blockNumbers.push(log.blockNumber)
+      blockNumbers.add(new BigNumber(log.blockNumber, 10).toNumber())
     }
 
-    app.proxyWatcher.handleBlocks(blockNumbers).then((findings: Finding[]) => {
-      if (findings.length > 0) {
-        app.findingsRW.write(findings)
-      }
-    })
+    const proxyWatcherFindings = await app.proxyWatcher.handleBlocks(Array.from(blockNumbers))
 
     findings.push(
       ...bridgeEventFindings,
       ...govEventFindings,
       ...proxyAdminEventFindings,
       ...monitorWithdrawalsFindings,
+      ...proxyWatcherFindings,
     )
 
     app.logger.info(elapsedTime('handleBlock', startTime) + '\n')
