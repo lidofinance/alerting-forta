@@ -1,7 +1,10 @@
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { IShortABIcaller } from '../entity/proxy_contract'
+import { IShortABIcaller } from '../clients/proxy_contract_client'
 import * as E from 'fp-ts/Either'
 import { retry } from 'ts-retry'
+import { Logger } from 'winston'
+import { elapsedTime } from '../utils/time'
+import { getUniqueKey, networkAlert } from '../utils/finding.helpers'
 
 export type ProxyWatcherInitResp = {
   lastImpls: string
@@ -15,9 +18,11 @@ export class ProxyWatcher {
   private lastAdmins = new Map<string, string>()
 
   private readonly contractCallers: IShortABIcaller[]
+  private readonly logger: Logger
 
-  constructor(contractCallers: IShortABIcaller[]) {
+  constructor(contractCallers: IShortABIcaller[], logger: Logger) {
     this.contractCallers = contractCallers
+    this.logger = logger
   }
 
   public getName(): string {
@@ -25,8 +30,6 @@ export class ProxyWatcher {
   }
 
   async initialize(currentBlock: number): Promise<E.Either<Error, ProxyWatcherInitResp>> {
-    console.log(`[${this.name}] started on block ${currentBlock}`)
-
     for (const contract of this.contractCallers) {
       const [lastImpl, lastAdmin] = await retry(
         async () => {
@@ -50,13 +53,15 @@ export class ProxyWatcher {
       this.lastAdmins.set(contract.getAddress(), lastAdmin.right)
     }
 
+    this.logger.info(`${ProxyWatcher.name} started on block ${currentBlock}`)
     return E.right({
       lastImpls: JSON.stringify(Object.fromEntries(this.lastImpls)),
       lastAdmins: JSON.stringify(Object.fromEntries(this.lastAdmins)),
     })
   }
 
-  async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+  public async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+    const start = new Date().getTime()
     const findings: Finding[] = []
 
     const BLOCK_INTERVAL = 10
@@ -71,6 +76,7 @@ export class ProxyWatcher {
       }
     }
 
+    this.logger.info(elapsedTime(ProxyWatcher.name + '.' + this.handleBlocks.name, start))
     return findings
   }
 
@@ -83,18 +89,17 @@ export class ProxyWatcher {
       const newImpl = await contract.getProxyImplementation(blockNumber)
       if (E.isLeft(newImpl)) {
         return [
-          Finding.fromObject({
-            name: `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:84`,
-            description: `${newImpl.left.message}`,
-            alertId: 'LIDO-AGENT-ERROR',
-            severity: FindingSeverity.Low,
-            type: FindingType.Degraded,
-            metadata: { stack: `${newImpl.left.stack}` },
-          }),
+          networkAlert(
+            newImpl.left,
+            `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:90`,
+            newImpl.left.message,
+            blockNumber,
+          ),
         ]
       }
 
       if (newImpl.right != lastImpl) {
+        const uniqueKey = 'cc0a5077-7813-49d7-9e0d-7d3db6dd66a7'
         out.push(
           Finding.fromObject({
             name: '🚨 Linea: Proxy implementation changed',
@@ -103,9 +108,10 @@ export class ProxyWatcher {
               `was changed form ${lastImpl} to ${newImpl}` +
               `\n(detected by func call)`,
             alertId: 'PROXY-UPGRADED',
-            severity: FindingSeverity.Critical,
+            severity: FindingSeverity.High,
             type: FindingType.Info,
             metadata: { newImpl: newImpl.right, lastImpl: lastImpl },
+            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), blockNumber),
           }),
         )
       }
@@ -125,18 +131,17 @@ export class ProxyWatcher {
       const newAdmin = await contract.getProxyAdmin(blockNumber)
       if (E.isLeft(newAdmin)) {
         return [
-          Finding.fromObject({
-            name: `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:125`,
-            description: `${newAdmin.left.message}`,
-            alertId: 'LIDO-AGENT-ERROR',
-            severity: FindingSeverity.Low,
-            type: FindingType.Degraded,
-            metadata: { stack: `${newAdmin.left.stack}` },
-          }),
+          networkAlert(
+            newAdmin.left,
+            `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:125`,
+            newAdmin.left.message,
+            blockNumber,
+          ),
         ]
       }
 
       if (newAdmin.right != lastAdmin) {
+        const uniqueKey = `2ca8fe5a-63d1-4f7e-bb15-895bb2114241`
         out.push(
           Finding.fromObject({
             name: '🚨 Linea: Proxy admin changed',
@@ -145,9 +150,10 @@ export class ProxyWatcher {
               `was changed from ${lastAdmin} to ${newAdmin}` +
               `\n(detected by func call)`,
             alertId: 'PROXY-ADMIN-CHANGED',
-            severity: FindingSeverity.Critical,
+            severity: FindingSeverity.High,
             type: FindingType.Info,
             metadata: { newAdmin: newAdmin.right, lastAdmin: lastAdmin },
+            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), blockNumber),
           }),
         )
       }
