@@ -51,6 +51,7 @@ export class App {
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
         getL2BridgeEvents(adr.LINEA_L2_ERC20_TOKEN_BRIDGE),
+        logger,
       )
       const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.LINEA_BRIDGE_EXECUTOR), logger)
       const proxyEventWatcher = new EventWatcher(

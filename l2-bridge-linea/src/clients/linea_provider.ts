@@ -99,7 +99,7 @@ export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient 
         const blocks = await doRequest(request)
         out.push(...blocks)
       } catch (e) {
-        this.logger.warning(`${e}`)
+        this.logger.warn(`${e}`)
         if (allowedExtraRequest === 0) {
           break
         }
@@ -134,7 +134,7 @@ export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient 
           { delay: 500, maxTry: 5 },
         )
       } catch (e) {
-        this.logger.warning(
+        this.logger.warn(
           `Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${end - start}`,
         )
 

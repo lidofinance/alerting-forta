@@ -12,7 +12,7 @@ import { getUniqueKey } from '../utils/finding.helpers'
 const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
-const MAX_WITHDRAWALS_SUM = 10000
+const MAX_WITHDRAWALS_SUM = 10_000
 
 type IWithdrawalRecord = {
   time: number

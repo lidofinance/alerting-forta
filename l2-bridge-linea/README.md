@@ -17,7 +17,7 @@ the cache.
 
 1. Bridge events
    1. 🚨 Linea L2 Bridge: Paused
-   2. 🚨 Linea L2 Bridge: Implementation initialized 
+   2. 🚨 Linea L2 Bridge: Implementation initialized
    3. ⚠️ Linea L2 Bridge: Unpaused
 2. Gov Events
    1. 🚨 Linea Gov Bridge: Ethereum Governance Executor Updated
