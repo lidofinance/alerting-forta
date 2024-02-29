@@ -43,7 +43,7 @@ export class ZkSyncBlockClient {
           networkAlert(
             block.left,
             `Error in ${ZkSyncBlockClient.name}.${this.getBlocks.name}:21`,
-            `Could not call mantleProvider.getLatestBlock`,
+            `Could not call zkSyncProvider.getLatestBlock`,
             0,
           ),
         )
@@ -63,7 +63,7 @@ export class ZkSyncBlockClient {
           networkAlert(
             latestBlock.left,
             `Error in ${ZkSyncBlockClient.name}.${this.getBlocks.name}:39`,
-            `Could not call mantleProvider.getLatestBlock`,
+            `Could not call zkSyncProvider.getLatestBlock`,
             0,
           ),
         )
@@ -100,7 +100,7 @@ export class ZkSyncBlockClient {
         networkAlert(
           logs.left,
           `Error in ${ZkSyncBlockClient.name}.${this.getLogs.name}:76`,
-          `Could not call mantleProvider.getLogs`,
+          `Could not call zkSyncProvider.getLogs`,
           workingBlocks[workingBlocks.length - 1].number,
         ),
       )
