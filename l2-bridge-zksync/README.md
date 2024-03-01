@@ -5,51 +5,30 @@
 - zkSync Era (chain id: 324)
 - Eth mainnet (chain id: 1)
 
-## Sub-bots
-
-### Bridge-watcher alerts
-
-Alerts about events on the L2-bridge (zkSync side)
-
-- 🚨 ZkSync L2 Bridge: Role Admin changed
-- ⚠️ ZkSync L2 Bridge: Role granted
-- ⚠️ ZkSync L2 Bridge: Role revoked
-- ✅ ZkSync L2 Bridge: Deposits Enabled
-- ❌ ZkSync L2 Bridge: Deposits Disabled
-- ✅ ZkSync L2 Bridge: Withdrawals Enabled
-- ❌ ZkSync L2 Bridge: Withdrawals Disabled
-- 🚨 ZkSync L2 Bridge: Implementation initialized
-
-### Governance alerts
-
-Alerts about events on the gov-bridge (zkSync side)
-
-- 🚨 ZkSync Gov Bridge: Ethereum Governance Executor Updated
-- 🚨 ZkSync Gov Bridge: Guardian Updated
-- ⚠️ ZkSync Gov Bridge: Delay Updated
-- ⚠️ ZkSync Gov Bridge: Grace Period Updated
-- ⚠️ ZkSync Gov Bridge: Min Delay Updated
-- ⚠️ ZkSync Gov Bridge: Max Delay Updated
-- ℹ ZkSync Gov Bridge: Action set queued
-- ℹ ZkSync Gov Bridge: Action set executed
-- ℹ ZkSync Gov Bridge: Action set canceled
-
-### Proxy-watcher alerts
-
-Alert on proxy state changes:
-
-- 🚨 ZkSync: Proxy ossified
-- 🚨 ZkSync: Proxy admin changed
-- 🚨 ZkSync: Proxy upgraded
-- 🚨 ZkSync: Proxy beacon upgraded
-- 🚨 ZkSync L2 Bridge: Role Admin changed
-- ⚠️ ZkSync L2 Bridge: Role granted
-- ⚠️ ZkSync L2 Bridge: Role revoked
-- ✅ ZkSync L2 Bridge: Deposits Enabled
-- ❌ ZkSync L2 Bridge: Deposits Disable
-- ✅ ZkSync L2 Bridge: Withdrawals Enabled
-- ❌ ZkSync L2 Bridge: Withdrawals Disabled
-- 🚨 ZkSync L2 Bridge: Implementation initialize
+1. Governance alerts
+   1. 🚨 ZkSync Gov Bridge: Ethereum Governance Executor Updated
+   2. 🚨 ZkSync Gov Bridge: Guardian Updated
+   3. ⚠️ ZkSync Gov Bridge: Delay Updated
+   4. ⚠️ ZkSync Gov Bridge: Grace Period Updated
+   5. ⚠️ ZkSync Gov Bridge: Min Delay Updated
+   6. ⚠️ ZkSync Gov Bridge: Max Delay Updated
+   7. ℹ️ ZkSync Gov Bridge: Action set queued
+   8. ℹ️ ZkSync Gov Bridge: Action set executed
+   9. ℹ️ ZkSync Gov Bridge: Action set canceled
+2. Proxy events
+   1. 🚨 ZkSync: Proxy admin changed
+   2. 🚨 ZkSync: Proxy upgraded
+   3. 🚨 ZkSync: Proxy beacon upgraded
+   4. 🚨 ZkSync: Proxy owner transferred
+3. Bridge Events
+   1. 🚨 ZkSync L2 Bridge: Role Admin changed
+   2. 🚨 ZkSync L2 Bridge: Withdrawals Disabled
+   3. 🚨 ZkSync L2 Bridge: Implementation initialized
+   4. 🚨 ZkSync L2 Bridge: Deposits Disabled
+   5. ⚠️ ZkSync L2 Bridge: Role granted
+   6. ⚠️ ZkSync L2 Bridge: Role revoked
+   7. ℹ️ ZkSync L2 Bridge: Deposits Enabled
+   8. ℹ️ ZkSync L2 Bridge: Withdrawals Enabled
 
 ### Withdrawals alerts
 
@@ -59,7 +38,8 @@ Alert on huge withdrawals
 
 ## Development
 
-cp `forta.config.example.json forta.config.json` and set `jsonRpcUrl` to your zkSync blockchain JSON-RPC provider. Install deps:
+cp `forta.config.example.json forta.config.json` and set `jsonRpcUrl` to your zkSync blockchain JSON-RPC provider.
+Install deps:
 
 ```
 yarn install
