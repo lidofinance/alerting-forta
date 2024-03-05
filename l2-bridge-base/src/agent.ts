@@ -1,304 +1,167 @@
-import { argv } from "process";
-import { Block, Log } from "@ethersproject/abstract-provider";
+import { BlockEvent, decodeJwt, Finding, FindingSeverity, FindingType, HandleBlock, HealthCheck } from 'forta-agent'
+import * as process from 'process'
+import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
+import { Initialize } from 'forta-agent/dist/sdk/handlers'
+import * as E from 'fp-ts/Either'
+import VERSION from './utils/version'
+import { App } from './app'
+import { elapsedTime } from './utils/time'
+import BigNumber from 'bignumber.js'
 
-import {
-  BlockEvent,
-  HandleBlock,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+export function initialize(): Initialize {
+  type Metadata = { [key: string]: string }
 
-import { baseProvider } from "./providers";
-
-import * as agentGov from "./agent-governance";
-import * as agentProxy from "./agent-proxy-watcher";
-import * as agentBridge from "./agent-bridge-watcher";
-import * as agentWithdrawals from "./agent-withdrawals";
-import VERSION from "./version";
-
-type Metadata = { [key: string]: string };
-type CustomHandleBlock = (blockEvent: BlockDto) => Promise<Finding[]>;
-type CustomHandleTransaction = (
-  logs: Log[],
-  blockEvents: BlockDto[],
-) => Promise<Finding[]>;
-
-interface SubAgent {
-  name: string;
-  handleBlock?: CustomHandleBlock;
-  handleTransaction?: CustomHandleTransaction;
-  initialize?: (blockNumber: number) => Promise<Metadata>;
-}
-
-const subAgents: SubAgent[] = [
-  agentBridge,
-  agentGov,
-  agentProxy,
-  agentWithdrawals,
-];
-
-// block or tx handling should take no more than 120 sec.
-// If not all processing is done it interrupts the execution, sends current findings and errors as findings too
-const processingTimeout = 120_000;
-const maxHandlerRetries = 5;
-
-let findingsOnInit: Finding[] = [];
-let cachedBlockDto: BlockDto;
-let iteration: number = 0;
-
-const initialize = async () => {
   const metadata: Metadata = {
-    "version.commitHash": VERSION.commitHash,
-    "version.commitMsg": VERSION.commitMsg,
-  };
-
-  let blockNumber: number = -1;
-
-  if (argv.includes("--block")) {
-    blockNumber = parseInt(argv[4]);
-  } else if (argv.includes("--range")) {
-    blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")));
-  } else if (argv.includes("--tx")) {
-    const txHash = argv[4];
-    const tx = await baseProvider.getTransaction(txHash);
-    if (!tx) {
-      throw new Error(`Can't find transaction ${txHash}`);
-    }
-    if (!tx.blockNumber) {
-      throw new Error(`Transaction ${txHash} was not yet included into block`);
-    }
-    blockNumber = tx.blockNumber;
+    'version.commitHash': VERSION.commitHash,
+    'version.commitMsg': VERSION.commitMsg,
   }
 
-  if (blockNumber == -1) {
-    blockNumber = await baseProvider.getBlockNumber();
-  }
+  return async function (): Promise<InitializeResponse | void> {
+    const app = await App.getInstance()
 
-  await Promise.all(
-    subAgents.map(async (agent, _) => {
-      if (agent.initialize) {
-        try {
-          const agentMeta = await agent.initialize(blockNumber);
-          for (const metaKey in agentMeta) {
-            metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey];
-          }
-        } catch (err: any) {
-          console.log(`Exiting due to init failure on ${agent.name}`);
-          console.log(`Error: ${err}`);
-          console.log(`Stack: ${err.stack}`);
-          process.exit(1);
-        }
+    const token = await App.getJwt()
+    if (E.isLeft(token)) {
+      console.log(`Error: ${token.left.message}`)
+      console.log(`Stack: ${token.left.stack}`)
+
+      process.exit(1)
+    }
+
+    const latestBlock = await app.baseClient.getLatestBlock()
+    if (E.isLeft(latestBlock)) {
+      console.log(`Error: ${latestBlock.left.message}`)
+      console.log(`Stack: ${latestBlock.left.stack}`)
+
+      process.exit(1)
+    }
+
+    const agents: string[] = []
+    for (const proxyWatcher of app.proxyWatchers) {
+      const proxyWatcherErr = await proxyWatcher.initialize(latestBlock.right.number)
+      if (proxyWatcherErr !== null) {
+        app.logger.error(proxyWatcherErr)
+
+        process.exit(1)
       }
-    }),
-  );
 
-  metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
+      metadata[`${proxyWatcher.getName()}.lastAdmin`] = proxyWatcher.getAdmin()
+      metadata[`${proxyWatcher.getName()}.lastImpl`] = proxyWatcher.getImpl()
 
-  findingsOnInit.push(
-    Finding.fromObject({
-      name: "Agent launched",
-      description: `Version: ${VERSION.desc}`,
-      alertId: "LIDO-AGENT-LAUNCHED",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-      metadata,
-    }),
-  );
-  console.log("Bot initialization is done!");
-};
+      agents.push(proxyWatcher.getName())
+    }
 
-const timeout = async (agent: SubAgent) =>
-  new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      const err = new Error(`Sub-agent ${agent.name} timed out`);
-      reject(err);
-    }, processingTimeout);
-  });
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlock.right.number)
+    if (E.isLeft(monitorWithdrawalsInitResp)) {
+      console.log(`Error: ${monitorWithdrawalsInitResp.left.message}`)
+      console.log(`Stack: ${monitorWithdrawalsInitResp.left.stack}`)
 
-const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent,
-): Promise<Finding[]> => {
-  let blockFindings: Finding[] = [];
-  // report findings from init. Will be done only for the first block report.
-  if (findingsOnInit.length) {
-    blockFindings = blockFindings.concat(findingsOnInit);
-    findingsOnInit = [];
-  }
+      process.exit(1)
+    }
 
-  let workingBlocks: BlockDto[] = [];
+    metadata[`${app.monitorWithdrawals.getName()}.currentWithdrawals`] =
+      monitorWithdrawalsInitResp.right.currentWithdrawals
 
-  if (cachedBlockDto === undefined) {
-    const block: Block = await baseProvider.getBlock("latest");
+    agents.push(app.monitorWithdrawals.getName())
 
-    cachedBlockDto = {
-      number: block.number,
-      timestamp: block.timestamp,
-    };
+    metadata.agents = '[' + agents.toString() + ']'
+    const decodedJwt = decodeJwt(token.right)
 
-    workingBlocks.push(cachedBlockDto);
-    iteration += 1;
-  } else {
-    const latestBlock: Block = await baseProvider.getBlock("latest");
-    const range = function (start: number, end: number): number[] {
-      return Array.from(Array(end - start).keys()).map((x) => x + start);
-    };
-
-    const blocksInterval = range(cachedBlockDto.number, latestBlock.number);
-    const blocks = await Promise.all(
-      blocksInterval.map(async (blockNumber: number) => {
-        return await baseProvider.getBlock(blockNumber);
+    await app.findingsRW.write([
+      Finding.fromObject({
+        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
+        description: `Version: ${VERSION.desc}`,
+        alertId: 'LIDO-AGENT-LAUNCHED',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata,
       }),
-    );
+    ])
 
-    for (const block of blocks) {
-      workingBlocks.push({
-        number: block.number,
-        timestamp: block.timestamp,
-      });
-    }
-
-    // hint: we requested blocks like [cachedBlockDto.number, latestBlock.number)
-    // and here we do [cachedBlockDto.number, latestBlock.number]
-    workingBlocks.push({
-      number: latestBlock.number,
-      timestamp: latestBlock.timestamp,
-    });
-
-    cachedBlockDto = {
-      number: latestBlock.number,
-      timestamp: latestBlock.timestamp,
-    };
-
-    iteration += 1;
+    app.logger.info('Bot initialization is done!')
   }
-
-  console.log(
-    `#${iteration} ETH block ${blockEvent.blockNumber.toString()}. Fetching base blocks from ${
-      workingBlocks[0].number
-    } to ${workingBlocks[workingBlocks.length - 1].number}`,
-  );
-  const logs: Log[] = await baseProvider.send("eth_getLogs", [
-    {
-      fromBlock: `0x${workingBlocks[0].number.toString(16)}`,
-      toBlock: `0x${workingBlocks[workingBlocks.length - 1].number.toString(
-        16,
-      )}`,
-    },
-  ]);
-
-  const run = async (agent: SubAgent, blockDtos: BlockDto[]) => {
-    if (!agent.handleBlock) return;
-
-    let retries = maxHandlerRetries;
-    let success = false;
-    let lastError;
-
-    for (const blockDto of blockDtos) {
-      while (retries-- > 0 && !success) {
-        try {
-          const newFindings = await agent.handleBlock(blockDto);
-
-          if (newFindings.length) {
-            enrichFindingsMetadata(newFindings);
-            blockFindings = blockFindings.concat(newFindings);
-          }
-          success = true;
-        } catch (err) {
-          lastError = err;
-        }
-      }
-      if (!success) {
-        blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
-      }
-    }
-  };
-
-  const runs = await Promise.allSettled(
-    subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, workingBlocks), timeout(agent)]);
-    }),
-  );
-
-  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
-    if (r.status == "rejected") {
-      blockFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
-      );
-    }
-  });
-
-  const findings = await handleLogs(logs, workingBlocks);
-  return [...blockFindings, ...findings];
-};
-
-const handleLogs = async (logs: Log[], blocksDto: BlockDto[]) => {
-  let txFindings: Finding[] = [];
-  const run = async (agent: SubAgent, logs: Log[]) => {
-    if (!agent.handleTransaction) return;
-    let retries = maxHandlerRetries;
-    let success = false;
-    let lastError;
-    while (retries-- > 0 && !success) {
-      try {
-        const newFindings = await agent.handleTransaction(logs, blocksDto);
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings);
-          txFindings = txFindings.concat(newFindings);
-        }
-        success = true;
-      } catch (err) {
-        lastError = err;
-      }
-    }
-    if (!success) {
-      txFindings.push(errorToFinding(lastError, agent, "handleTransaction"));
-    }
-  };
-
-  // run agents handlers
-  // wait all results whether success or failure (include timeout errors)
-  const runs = await Promise.allSettled(
-    subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, logs), timeout(agent)]);
-    }),
-  );
-
-  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
-    if (r.status == "rejected") {
-      txFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
-      );
-    }
-  });
-
-  return txFindings;
-};
-
-function enrichFindingsMetadata(findings: Finding[]) {
-  return findings.forEach(enrichFindingMetadata);
 }
 
-function enrichFindingMetadata(finding: Finding) {
-  finding.metadata["version.commitHash"] = VERSION.commitHash;
+let isHandleBLockRunning: boolean = false
+export const handleBlock = (): HandleBlock => {
+  return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    const startTime = new Date().getTime()
+    if (isHandleBLockRunning) {
+      return []
+    }
+
+    isHandleBLockRunning = true
+    const app = await App.getInstance()
+
+    const findings: Finding[] = []
+    const findingsAsync = await app.findingsRW.read()
+    if (findingsAsync.length > 0) {
+      findings.push(...findingsAsync)
+    }
+
+    const blocksDto = await app.blockSrv.getBlocks()
+    if (E.isLeft(blocksDto)) {
+      isHandleBLockRunning = false
+      return [blocksDto.left]
+    }
+    app.logger.info(
+      `ETH block ${blockEvent.blockNumber.toString()}. Fetched base blocks from ${blocksDto.right[0].number} to ${
+        blocksDto.right[blocksDto.right.length - 1].number
+      }. Total: ${blocksDto.right.length}`,
+    )
+
+    const logs = await app.blockSrv.getLogs(blocksDto.right)
+    if (E.isLeft(logs)) {
+      isHandleBLockRunning = false
+      return [logs.left]
+    }
+
+    const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
+    const govEventFindings = app.govWatcher.handleLogs(logs.right)
+    const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
+
+    const blockNumbers: Set<number> = new Set<number>()
+    for (const log of logs.right) {
+      blockNumbers.add(new BigNumber(log.blockNumber, 10).toNumber())
+    }
+
+    const proxyWatcherFindings: Finding[] = []
+
+    for (const proxyWatcher of app.proxyWatchers) {
+      const fnds = await proxyWatcher.handleBlocks(Array.from(blockNumbers))
+      proxyWatcherFindings.push(...fnds)
+    }
+
+    findings.push(
+      ...bridgeEventFindings,
+      ...govEventFindings,
+      ...proxyAdminEventFindings,
+      ...monitorWithdrawalsFindings,
+      ...proxyWatcherFindings,
+    )
+
+    app.healthChecker.check(findings)
+
+    app.logger.info(elapsedTime('handleBlock', startTime) + '\n')
+    isHandleBLockRunning = false
+    return findings
+  }
 }
 
-function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
-  const err: Error =
-    e instanceof Error ? e : new Error(`non-Error thrown: ${e}`);
-  const finding = Finding.fromObject({
-    name: `Error in ${agent.name}.${fnName}`,
-    description: `${err}`,
-    alertId: "LIDO-AGENT-ERROR",
-    severity: FindingSeverity.High,
-    type: FindingType.Degraded,
-    metadata: { stack: `${err.stack}` },
-  });
-  enrichFindingMetadata(finding);
-  return finding;
+export const healthCheck = (): HealthCheck => {
+  return async function (): Promise<string[] | void> {
+    const app = await App.getInstance()
+
+    if (!app.healthChecker.isHealth()) {
+      return ['There is too much network errors']
+    }
+
+    return []
+  }
 }
 
 export default {
-  initialize,
-  handleBlock,
-};
+  initialize: initialize(),
+  handleBlock: handleBlock(),
+  healthCheck: healthCheck(),
+}

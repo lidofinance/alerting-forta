@@ -307,16 +307,12 @@
   {
     "inputs": [],
     "name": "arbSys",
-    "outputs": [
-      { "internalType": "contract IArbSys", "name": "", "type": "address" }
-    ],
+    "outputs": [{ "internalType": "contract IArbSys", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "l1Token_", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "l1Token_", "type": "address" }],
     "name": "calculateL2TokenAddress",
     "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
@@ -384,9 +380,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "bytes32", "name": "role", "type": "bytes32" }
-    ],
+    "inputs": [{ "internalType": "bytes32", "name": "role", "type": "bytes32" }],
     "name": "getRoleAdmin",
     "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "stateMutability": "view",
@@ -413,9 +407,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "admin_", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "admin_", "type": "address" }],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -498,9 +490,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" }
-    ],
+    "inputs": [{ "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" }],
     "name": "supportsInterface",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",

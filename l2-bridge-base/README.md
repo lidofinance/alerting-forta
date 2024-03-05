@@ -2,43 +2,36 @@
 
 ## Supported chains
 
-- base
+- Ethereum mainnet, Base network
 
-## Sub-bots
+## Alerts
 
-### Bridge-watcher
-
-Alerts about events on the L2-bridge (base side)
-
-**Alerts:**
-
-- Alerts on the admin events in L2-bridge (base side)
-
-### Governance
-
-Alerts about events on the gov-bridge (base side)
-
-**Alerts:**
-
-- Alerts on all events in gov-bridge (base side)
-
-### Proxy-watcher
-
-Alert on proxy state changes
-
-**Alerts:**
-
-- PROXY-UPGRADED - One of the proxies on the base side was upgraded
-- PROXY-ADMIN-CHANGED - Admin for of the proxies on the base side was changed
-- Alerts on the admin events in L2-bridge (Base side)
-
-### Withdrawals
-
-Alert on huge withdrawals
-
-**Alerts:**
-
-- HUGE-WITHDRAWALS-FROM-L2 - There were more than 10k wstETH withdrawal requests over the last 48h or less
+1. Bridge events
+   1. 🚨 Base L2 Bridge: Role Admin changed
+   2. 🚨 Base L2 Bridge: Withdrawals Disabled
+   3. 🚨 Base L2 Bridge: Implementation initialized
+   4. 🚨 Base L2 Bridge: Deposits Disabled
+   5. ⚠️ Base L2 Bridge: Role granted
+   6. ⚠️ Base L2 Bridge: Role revoked
+   7. ℹ️ Base L2 Bridge: Deposits Enabled
+   8. ℹ️ Base L2 Bridge: Withdrawals Enabled
+2. Gov Events
+   1. 🚨 Base Gov Bridge: Ethereum Governance Executor Updated
+   2. 🚨 Base Gov Bridge: Guardian Updated
+   3. ⚠️ Base Gov Bridge: Delay Updated
+   4. ⚠️ Base Gov Bridge: Grace Period Updated
+   5. ⚠️ Base Gov Bridge: Min Delay Updated
+   6. ⚠️ Base Gov Bridge: Max Delay Updated
+   7. ℹ️ Base Gov Bridge: Action set queued
+   8. ℹ️ Base Gov Bridge: Action set executed
+   9. ℹ️ Base Gov Bridge: Action set canceled
+3. Proxy events
+   1. 🚨 Base: Proxy admin changed
+   2. 🚨 Base: Proxy upgraded
+   3. 🚨 Base: Proxy beacon upgraded
+   4. 🚨 Base: Proxy ossified
+4. Monitor Withdrawals
+   1. ⚠️ Base: Huge withdrawals during the last ...
 
 ## Development
 
