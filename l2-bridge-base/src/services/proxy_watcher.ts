@@ -39,10 +39,10 @@ export class ProxyWatcher {
     this.lastImpl = impl
   }
 
-  async initialize(currentBlock: number): Promise<Error | null> {
+  async initialize(currentL2Block: number): Promise<Error | null> {
     const [lastImpl, lastAdmin] = await Promise.all([
-      this.proxyContract.getProxyImplementation(currentBlock),
-      this.proxyContract.getProxyAdmin(currentBlock),
+      this.proxyContract.getProxyImplementation(currentL2Block),
+      this.proxyContract.getProxyAdmin(currentL2Block),
     ])
 
     if (E.isLeft(lastImpl)) {
@@ -56,7 +56,7 @@ export class ProxyWatcher {
     this.setImpl(lastImpl.right)
     this.setAdmin(lastAdmin.right)
 
-    this.logger.info(`${this.getName()}. started on block ${currentBlock}`)
+    this.logger.info(`${this.getName()}. started on block ${currentL2Block}`)
 
     return null
   }
@@ -82,17 +82,17 @@ export class ProxyWatcher {
     return out
   }
 
-  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(l2BlockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newImpl = await this.proxyContract.getProxyImplementation(blockNumber)
+    const newImpl = await this.proxyContract.getProxyImplementation(l2BlockNumber)
     if (E.isLeft(newImpl)) {
       return [
         networkAlert(
           newImpl.left,
           `Error in ${this.getName()}.${this.handleProxyImplementationChanges.name}:88`,
-          `Could not fetch proxyImplementation on ${blockNumber}`,
-          blockNumber,
+          `Could not fetch proxyImplementation on ${l2BlockNumber}`,
+          l2BlockNumber,
         ),
       ]
     }
@@ -109,7 +109,7 @@ export class ProxyWatcher {
           severity: FindingSeverity.High,
           type: FindingType.Info,
           metadata: { newImpl: newImpl.right, lastImpl: this.getImpl() },
-          uniqueKey: getUniqueKey(this.proxyContract.getAddress(), blockNumber),
+          uniqueKey: getUniqueKey(this.proxyContract.getAddress(), l2BlockNumber),
         }),
       )
       this.setImpl(newImpl.right)

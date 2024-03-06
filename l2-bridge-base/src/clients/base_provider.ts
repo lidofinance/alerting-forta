@@ -27,7 +27,7 @@ export abstract class IProvider {
   public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
 }
 
-export class BaseLineaProvider implements IProvider, IMonitorWithdrawalsClient {
+export class BaseProvider implements IProvider, IMonitorWithdrawalsClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly l2Bridge: L2Bridge
   private readonly logger: Logger

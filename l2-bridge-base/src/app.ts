@@ -1,6 +1,6 @@
 import { FortaGuardClient } from './clients/forta_guard_client'
 import { ethers, fetchJwt } from 'forta-agent'
-import { IProvider, BaseLineaProvider } from './clients/base_provider'
+import { IProvider, BaseProvider } from './clients/base_provider'
 import { EventWatcher } from './services/event_watcher'
 import { getL2BridgeEvents } from './utils/events/bridge_events'
 import { getGovEvents } from './utils/events/gov_events'
@@ -72,7 +72,7 @@ export class App {
       const adr: Address = Address
 
       const l2Bridge = L2Bridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY_ADDRESS, nodeClient)
-      const baseClient = new BaseLineaProvider(nodeClient, l2Bridge, logger)
+      const baseClient = new BaseProvider(nodeClient, l2Bridge, logger)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
