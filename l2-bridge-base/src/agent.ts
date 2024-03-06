@@ -21,17 +21,14 @@ export function initialize(): Initialize {
 
     const token = await App.getJwt()
     if (E.isLeft(token)) {
-      console.log(`Error: ${token.left.message}`)
-      console.log(`Stack: ${token.left.stack}`)
+      app.logger.error(token.left)
 
       process.exit(1)
     }
 
     const latestL2Block = await app.baseClient.getLatestL2Block()
     if (E.isLeft(latestL2Block)) {
-      console.log(`Error: ${latestL2Block.left.message}`)
-      console.log(`Stack: ${latestL2Block.left.stack}`)
-
+      app.logger.error(latestL2Block.left)
       process.exit(1)
     }
 
@@ -40,7 +37,6 @@ export function initialize(): Initialize {
       const proxyWatcherErr = await proxyWatcher.initialize(latestL2Block.right.number)
       if (proxyWatcherErr !== null) {
         app.logger.error(proxyWatcherErr)
-
         process.exit(1)
       }
 
@@ -52,8 +48,7 @@ export function initialize(): Initialize {
 
     const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestL2Block.right.number)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
-      console.log(`Error: ${monitorWithdrawalsInitResp.left.message}`)
-      console.log(`Stack: ${monitorWithdrawalsInitResp.left.stack}`)
+      app.logger.error(monitorWithdrawalsInitResp.left)
 
       process.exit(1)
     }

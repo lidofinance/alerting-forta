@@ -8,8 +8,9 @@ import { Logger } from 'winston'
 import { elapsedTime } from '../utils/time'
 import { getUniqueKey } from '../utils/finding.helpers'
 
-// 48 hours
-const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
+// 12 hours
+const HOURS_12 = 60 * 60 * 12
+const AVG_BLOCK_TIME: number = 2 //s
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
 const MAX_WITHDRAWALS_SUM = 10_000
@@ -47,8 +48,8 @@ export class MonitorWithdrawals {
   }
 
   public async initialize(l2BlockNumber: number): Promise<E.Either<Error, MonitorWithdrawalsInitResp>> {
-    // 48 hours
-    const pastl2Block = l2BlockNumber - Math.ceil(MAX_WITHDRAWALS_WINDOW / 2)
+    // 12 hours
+    const pastl2Block = l2BlockNumber - Math.ceil(HOURS_12 / AVG_BLOCK_TIME)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastl2Block, l2BlockNumber - 1)
     if (E.isLeft(withdrawalEvents)) {
@@ -85,7 +86,7 @@ export class MonitorWithdrawals {
       // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
       const withdrawalsCache: IWithdrawalRecord[] = []
       for (const wc of this.withdrawalsCache) {
-        if (wc.time > l2block.timestamp - MAX_WITHDRAWALS_WINDOW) {
+        if (wc.time > l2block.timestamp - HOURS_12) {
           withdrawalsCache.push(wc)
         }
       }
@@ -100,9 +101,9 @@ export class MonitorWithdrawals {
       // block number condition is meant to "sync" agents alerts
       if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && l2block.number % 10 === 0) {
         const period =
-          l2block.timestamp - this.lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
+          l2block.timestamp - this.lastReportedToManyWithdrawals < HOURS_12
             ? l2block.timestamp - this.lastReportedToManyWithdrawals
-            : MAX_WITHDRAWALS_WINDOW
+            : HOURS_12
 
         const uniqueKey = '2b55f8b9-c65c-4b91-82cd-d9f6ea426be3'
 

@@ -187,8 +187,6 @@ export class BaseProvider implements IProvider, IMonitorWithdrawalsClient {
     }
 
     try {
-      await Promise.all(batchPromises)
-
       const arrayOfEvents = await Promise.all(batchPromises)
       for (const events of arrayOfEvents) {
         out.push(...events)
