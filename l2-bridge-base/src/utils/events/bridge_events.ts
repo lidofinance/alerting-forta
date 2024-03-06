@@ -7,17 +7,6 @@ export function getL2BridgeEvents(
   L2_ERC20_TOKEN_GATEWAY: OProxyContract,
   RolesAddrToNameMap: RoleHashToName,
 ): EventOfNotice[] {
-  const uniqueKeys = [
-    `944ab955-07dc-45e8-9ab0-4ea99add30b7`,
-    `47c31672-d4b7-4923-8def-98e3958dbbde`,
-    `c768e8e9-a216-40ac-b610-834272344e94`,
-    '6a768bc1-4e08-4924-a2e0-5ef7ddc8ceec',
-    '77aedba1-41ac-423a-8a78-6526d357d6b3',
-    '9f09b503-b447-4b13-9673-4ee3a425c7fb',
-    'a1b8afc8-c2d5-48d1-accb-f5ca986248b8',
-    '0ae20245-7906-4765-a227-5f79b346a230',
-  ]
-
   return [
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -30,7 +19,7 @@ export function getL2BridgeEvents(
         `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[0],
+      uniqueKey: `944ab955-07dc-45e8-9ab0-4ea99add30b7`,
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -40,7 +29,7 @@ export function getL2BridgeEvents(
       description: (args: Result) => `Withdrawals were disabled by ${args.enabler}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[6],
+      uniqueKey: `47c31672-d4b7-4923-8def-98e3958dbbde`,
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -53,7 +42,7 @@ export function getL2BridgeEvents(
         `Make sure that this call was made by Lido!`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[7],
+      uniqueKey: `c768e8e9-a216-40ac-b610-834272344e94`,
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -63,7 +52,7 @@ export function getL2BridgeEvents(
       description: (args: Result) => `Deposits were disabled by ${args.disabler}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[4],
+      uniqueKey: '6a768bc1-4e08-4924-a2e0-5ef7ddc8ceec',
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -75,7 +64,7 @@ export function getL2BridgeEvents(
         `was granted to ${args.account} by ${args.sender}`,
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[1],
+      uniqueKey: '77aedba1-41ac-423a-8a78-6526d357d6b3',
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -87,7 +76,7 @@ export function getL2BridgeEvents(
         `was revoked to ${args.account} by ${args.sender}`,
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[2],
+      uniqueKey: '9f09b503-b447-4b13-9673-4ee3a425c7fb',
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -97,7 +86,7 @@ export function getL2BridgeEvents(
       description: (args: Result) => `Deposits were enabled by ${args.enabler}`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[3],
+      uniqueKey: 'a1b8afc8-c2d5-48d1-accb-f5ca986248b8',
     },
     {
       address: L2_ERC20_TOKEN_GATEWAY.address,
@@ -107,7 +96,7 @@ export function getL2BridgeEvents(
       description: (args: Result) => `Withdrawals were enabled by ${args.enabler}`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[5],
+      uniqueKey: '0ae20245-7906-4765-a227-5f79b346a230',
     },
   ]
 }

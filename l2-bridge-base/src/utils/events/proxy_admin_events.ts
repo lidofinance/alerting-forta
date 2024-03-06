@@ -7,17 +7,6 @@ export function getProxyAdminEvents(
   L2ERC20_Token_Gateway: OProxyContract,
   BASE_WST_ETH_BRIDGED: OProxyContract,
 ): EventOfNotice[] {
-  const uniqueKeys = [
-    'add047d4-ad28-47c9-9543-55e20c55f182',
-    '1a79879e-12eb-4749-917e-cd8163bbc136',
-    'b272e522-55af-46a6-8c10-16e9538c10b2',
-    '3c806ac9-e51d-4d11-9f5c-03346d3bf9c0',
-    '858282d8-2039-4a5a-8894-19854991773e',
-    'cb522da7-f0ab-460e-bc10-eb1c6d0938b8',
-    '3fe4f5de-1773-4ae9-9254-eb93f7682046',
-    '1b1c492f-6d2b-4cc7-a9b0-1db92307d508',
-  ]
-
   return [
     {
       address: L2ERC20_Token_Gateway.address,
@@ -29,7 +18,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[0],
+      uniqueKey: 'add047d4-ad28-47c9-9543-55e20c55f182',
     },
     {
       address: L2ERC20_Token_Gateway.address,
@@ -42,7 +31,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[1],
+      uniqueKey: '1a79879e-12eb-4749-917e-cd8163bbc136',
     },
     {
       address: L2ERC20_Token_Gateway.address,
@@ -55,7 +44,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[2],
+      uniqueKey: 'b272e522-55af-46a6-8c10-16e9538c10b2',
     },
     {
       address: L2ERC20_Token_Gateway.address,
@@ -68,7 +57,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[3],
+      uniqueKey: '3c806ac9-e51d-4d11-9f5c-03346d3bf9c0',
     },
     {
       address: BASE_WST_ETH_BRIDGED.address,
@@ -80,7 +69,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[4],
+      uniqueKey: '858282d8-2039-4a5a-8894-19854991773e',
     },
     {
       address: BASE_WST_ETH_BRIDGED.address,
@@ -93,7 +82,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[5],
+      uniqueKey: 'cb522da7-f0ab-460e-bc10-eb1c6d0938b8',
     },
     {
       address: BASE_WST_ETH_BRIDGED.address,
@@ -106,7 +95,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[6],
+      uniqueKey: '3fe4f5de-1773-4ae9-9254-eb93f7682046',
     },
     {
       address: BASE_WST_ETH_BRIDGED.address,
@@ -119,7 +108,7 @@ export function getProxyAdminEvents(
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[7],
+      uniqueKey: '1b1c492f-6d2b-4cc7-a9b0-1db92307d508',
     },
   ]
 }

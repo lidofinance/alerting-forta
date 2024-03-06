@@ -12,13 +12,13 @@ describe('agent-base e2e tests', () => {
     const handleBlocks = handleBlock()
     const app = await App.getInstance()
 
-    const latestBlock = await app.baseClient.getLatestBlock()
+    const latestBlock = await app.baseClient.getLatestL2Block()
     if (E.isLeft(latestBlock)) {
       throw latestBlock.left
     }
 
     const batchPromises: Promise<Finding[]>[] = []
-    const blocksDto = await app.baseClient.fetchBlocks(latestBlock.right.number - 100, latestBlock.right.number)
+    const blocksDto = await app.baseClient.fetchL2Blocks(latestBlock.right.number - 100, latestBlock.right.number)
 
     for (const b of blocksDto) {
       const blockEvent = etherBlockToFortaBlockEvent(b)

@@ -46,11 +46,11 @@ export class MonitorWithdrawals {
     return this.name
   }
 
-  public async initialize(currentBlock: number): Promise<E.Either<Error, MonitorWithdrawalsInitResp>> {
+  public async initialize(l2BlockNumber: number): Promise<E.Either<Error, MonitorWithdrawalsInitResp>> {
     // 48 hours
-    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 2)
+    const pastl2Block = l2BlockNumber - Math.ceil(MAX_WITHDRAWALS_WINDOW / 2)
 
-    const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
+    const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastl2Block, l2BlockNumber - 1)
     if (E.isLeft(withdrawalEvents)) {
       return withdrawalEvents
     }
@@ -66,26 +66,26 @@ export class MonitorWithdrawals {
       this.withdrawalsCache.push(wc)
     }
 
-    this.logger.info(`${MonitorWithdrawals.name} started on block ${currentBlock}`)
+    this.logger.info(`${MonitorWithdrawals.name} started on block ${l2BlockNumber}`)
     return E.right({
       currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
     })
   }
 
-  public handleBlocks(logs: Log[], blocksDto: BlockDto[]): Finding[] {
+  public handleBlocks(l2logs: Log[], l2blocksDto: BlockDto[]): Finding[] {
     const start = new Date().getTime()
 
     // adds records into withdrawalsCache
-    const withdrawalRecords = this.getWithdrawalRecords(logs, blocksDto)
+    const withdrawalRecords = this.getWithdrawalRecords(l2logs, l2blocksDto)
     this.withdrawalsCache.push(...withdrawalRecords)
 
     const out: Finding[] = []
 
-    for (const block of blocksDto) {
+    for (const l2block of l2blocksDto) {
       // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
       const withdrawalsCache: IWithdrawalRecord[] = []
       for (const wc of this.withdrawalsCache) {
-        if (wc.time > block.timestamp - MAX_WITHDRAWALS_WINDOW) {
+        if (wc.time > l2block.timestamp - MAX_WITHDRAWALS_WINDOW) {
           withdrawalsCache.push(wc)
         }
       }
@@ -98,10 +98,10 @@ export class MonitorWithdrawals {
       }
 
       // block number condition is meant to "sync" agents alerts
-      if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && block.number % 10 === 0) {
+      if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && l2block.number % 10 === 0) {
         const period =
-          block.timestamp - this.lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
-            ? block.timestamp - this.lastReportedToManyWithdrawals
+          l2block.timestamp - this.lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
+            ? l2block.timestamp - this.lastReportedToManyWithdrawals
             : MAX_WITHDRAWALS_WINDOW
 
         const uniqueKey = '2b55f8b9-c65c-4b91-82cd-d9f6ea426be3'
@@ -114,16 +114,16 @@ export class MonitorWithdrawals {
           alertId: 'HUGE-WITHDRAWALS-FROM-L2',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
-          uniqueKey: getUniqueKey(uniqueKey, block.number),
+          uniqueKey: getUniqueKey(uniqueKey, l2block.number),
         })
 
         out.push(finding)
 
-        this.lastReportedToManyWithdrawals = block.timestamp
+        this.lastReportedToManyWithdrawals = l2block.timestamp
 
         const tmp: IWithdrawalRecord[] = []
         for (const wc of this.withdrawalsCache) {
-          if (wc.time > block.timestamp - this.lastReportedToManyWithdrawals) {
+          if (wc.time > l2block.timestamp - this.lastReportedToManyWithdrawals) {
             tmp.push(wc)
           }
         }
@@ -136,23 +136,23 @@ export class MonitorWithdrawals {
     return out
   }
 
-  private getWithdrawalRecords(logs: Log[], blocksDto: BlockDto[]): WithdrawalRecord[] {
+  private getWithdrawalRecords(l2logs: Log[], l2blocksDto: BlockDto[]): WithdrawalRecord[] {
     const blockNumberToBlock = new Map<number, BlockDto>()
     const logIndexToLogs = new Map<number, Log>()
     const addresses: string[] = []
 
-    for (const log of logs) {
-      logIndexToLogs.set(log.logIndex, log)
-      addresses.push(log.address)
+    for (const l2log of l2logs) {
+      logIndexToLogs.set(l2log.logIndex, l2log)
+      addresses.push(l2log.address)
     }
 
-    for (const blockDto of blocksDto) {
-      blockNumberToBlock.set(blockDto.number, blockDto)
+    for (const l2blockDto of l2blocksDto) {
+      blockNumberToBlock.set(l2blockDto.number, l2blockDto)
     }
 
     const out: WithdrawalRecord[] = []
     if (this.l2Erc20TokenGatewayAddress in addresses) {
-      const events = filterLog(logs, this.withdrawalInitiatedEvent, this.l2Erc20TokenGatewayAddress)
+      const events = filterLog(l2logs, this.withdrawalInitiatedEvent, this.l2Erc20TokenGatewayAddress)
 
       for (const event of events) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

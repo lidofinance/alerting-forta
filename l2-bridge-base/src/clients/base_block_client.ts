@@ -17,32 +17,32 @@ export class BlockClient {
     this.logger = logger
   }
 
-  public async getBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
+  public async getL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
     const start = new Date().getTime()
-    const blocks = await this.fetchBlocks()
-    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getBlocks.name, start))
+    const blocks = await this.fetchL2Blocks()
+    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getL2Blocks.name, start))
 
     return blocks
   }
 
-  public async getLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
+  public async getL2Logs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
     const start = new Date().getTime()
-    const logs = await this.fetchLogs(workingBlocks)
-    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getLogs.name, start))
+    const logs = await this.fetchL2Logs(workingBlocks)
+    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getL2Logs.name, start))
 
     return logs
   }
 
-  private async fetchBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
+  private async fetchL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
     const out: BlockDto[] = []
 
     if (this.cachedBlockDto === undefined) {
-      const block = await this.provider.getLatestBlock()
+      const block = await this.provider.getLatestL2Block()
       if (E.isLeft(block)) {
         return E.left(
           networkAlert(
             block.left,
-            `Error in ${BlockClient.name}.${this.getBlocks.name}:40`,
+            `Error in ${BlockClient.name}.${this.getL2Blocks.name}:40`,
             `Could not call provider.getLatestBlock`,
             0,
           ),
@@ -56,20 +56,20 @@ export class BlockClient {
 
       out.push(this.cachedBlockDto)
     } else {
-      const latestBlock = await this.provider.getLatestBlock()
+      const latestBlock = await this.provider.getLatestL2Block()
       if (E.isLeft(latestBlock)) {
         this.cachedBlockDto = undefined
         return E.left(
           networkAlert(
             latestBlock.left,
-            `Error in ${BlockClient.name}.${this.getBlocks.name}:59`,
+            `Error in ${BlockClient.name}.${this.getL2Blocks.name}:59`,
             `Could not call provider.getLatestBlock`,
             0,
           ),
         )
       }
 
-      const blocks = await this.provider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
+      const blocks = await this.provider.fetchL2Blocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
       for (const block of blocks) {
         out.push({
           number: block.number,
@@ -93,13 +93,13 @@ export class BlockClient {
     return E.right(out)
   }
 
-  private async fetchLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
-    const logs = await this.provider.getLogs(workingBlocks[0].number, workingBlocks[workingBlocks.length - 1].number)
+  private async fetchL2Logs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
+    const logs = await this.provider.getL2Logs(workingBlocks[0].number, workingBlocks[workingBlocks.length - 1].number)
     if (E.isLeft(logs)) {
       return E.left(
         networkAlert(
           logs.left,
-          `Error in ${BlockClient.name}.${this.getLogs.name}:76`,
+          `Error in ${BlockClient.name}.${this.getL2Logs.name}:76`,
           `Could not call provider.getLogs`,
           workingBlocks[workingBlocks.length - 1].number,
         ),

@@ -61,17 +61,17 @@ export class ProxyWatcher {
     return null
   }
 
-  async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+  async handleBlocks(l2blockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
 
     const BLOCK_INTERVAL = 25
     const out: Finding[] = []
 
-    for (const blockNumber of blockNumbers) {
-      if (blockNumber % BLOCK_INTERVAL === 0) {
+    for (const l2blockNumber of l2blockNumbers) {
+      if (l2blockNumber % BLOCK_INTERVAL === 0) {
         const [impl, admin] = await Promise.all([
-          this.handleProxyImplementationChanges(blockNumber),
-          this.handleProxyAdminChanges(blockNumber),
+          this.handleProxyImplementationChanges(l2blockNumber),
+          this.handleProxyAdminChanges(l2blockNumber),
         ])
 
         out.push(...impl, ...admin)
@@ -98,8 +98,6 @@ export class ProxyWatcher {
     }
 
     if (newImpl.right != this.getImpl()) {
-      const uniqueKey = '4739d08c-7f77-4cce-9a21-6bdef5160cba'
-
       out.push(
         Finding.fromObject({
           name: '🚨 Base: Proxy implementation changed',
@@ -111,7 +109,7 @@ export class ProxyWatcher {
           severity: FindingSeverity.High,
           type: FindingType.Info,
           metadata: { newImpl: newImpl.right, lastImpl: this.getImpl() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getAddress(), blockNumber),
+          uniqueKey: getUniqueKey(this.proxyContract.getAddress(), blockNumber),
         }),
       )
       this.setImpl(newImpl.right)
@@ -120,23 +118,22 @@ export class ProxyWatcher {
     return out
   }
 
-  private async handleProxyAdminChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyAdminChanges(l2blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newAdmin = await this.proxyContract.getProxyAdmin(blockNumber)
+    const newAdmin = await this.proxyContract.getProxyAdmin(l2blockNumber)
     if (E.isLeft(newAdmin)) {
       return [
         networkAlert(
           newAdmin.left,
           `Error in ${this.getName()}.${this.handleProxyAdminChanges.name}:126`,
-          `Could not fetch getProxyAdmin on ${blockNumber}`,
-          blockNumber,
+          `Could not fetch getProxyAdmin on ${l2blockNumber}`,
+          l2blockNumber,
         ),
       ]
     }
 
     if (newAdmin.right != this.getAdmin()) {
-      const uniqueKey = '89a0f5f4-66d8-4ff2-9633-fdae0568df94'
       out.push(
         Finding.fromObject({
           name: '🚨 Base: Proxy admin changed',
@@ -148,7 +145,7 @@ export class ProxyWatcher {
           severity: FindingSeverity.High,
           type: FindingType.Info,
           metadata: { newAdmin: newAdmin.right, lastAdmin: this.getAdmin() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getAddress(), blockNumber),
+          uniqueKey: getUniqueKey(this.proxyContract.getAddress(), l2blockNumber),
         }),
       )
 

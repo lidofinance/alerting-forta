@@ -1,4 +1,4 @@
-import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provider'
+import { Block, Log } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
@@ -20,15 +20,11 @@ export abstract class IMonitorWithdrawalsClient {
 }
 
 export abstract class IProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
+  public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
 
-  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
+  public abstract getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
 
-  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
-
-  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
-
-  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
+  public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
 }
 
 export class BaseLineaProvider implements IProvider, IMonitorWithdrawalsClient {
@@ -42,7 +38,7 @@ export class BaseLineaProvider implements IProvider, IMonitorWithdrawalsClient {
     this.logger = logger
   }
 
-  public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
+  public async fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]> {
     const batchRequests = []
     for (let i = startBlock; i <= endBlock; i++) {
       batchRequests.push({
@@ -112,7 +108,7 @@ export class BaseLineaProvider implements IProvider, IMonitorWithdrawalsClient {
     return out
   }
 
-  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
+  public async getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
     const logs: Log[] = []
     const batchSize = 15
 
@@ -147,7 +143,7 @@ export class BaseLineaProvider implements IProvider, IMonitorWithdrawalsClient {
     return E.right(logs)
   }
 
-  public async getLatestBlock(): Promise<E.Either<NetworkError, Block>> {
+  public async getLatestL2Block(): Promise<E.Either<NetworkError, Block>> {
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
@@ -159,46 +155,6 @@ export class BaseLineaProvider implements IProvider, IMonitorWithdrawalsClient {
       return E.right(out)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch latest block`))
-    }
-  }
-
-  public async getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>> {
-    try {
-      const out = await retryAsync<TransactionResponse>(
-        async (): Promise<TransactionResponse> => {
-          const tx = await this.jsonRpcProvider.getTransaction(txHash)
-
-          if (!tx) {
-            throw new NetworkError(`Can't find transaction ${txHash}`)
-          }
-
-          if (tx.blockNumber === undefined) {
-            throw new NetworkError(`Transaction ${txHash} was not yet included into block`)
-          }
-
-          return tx
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch transaction`))
-    }
-  }
-
-  public async getBlockNumber(): Promise<E.Either<NetworkError, number>> {
-    try {
-      const out = await retryAsync<number>(
-        async (): Promise<number> => {
-          return await this.jsonRpcProvider.getBlockNumber()
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch latest getBlockNumber`))
     }
   }
 
