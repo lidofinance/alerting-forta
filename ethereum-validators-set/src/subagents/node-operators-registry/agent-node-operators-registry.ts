@@ -274,7 +274,9 @@ async function handleSetRewardAddress(
   findings: Finding[],
   norContext: NodeOperatorsRegistryModuleContext,
 ) {
-  if (norContext.params.moduleId !== SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+  if (
+    norContext.params.moduleId !== SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
+  ) {
     return;
   }
 
@@ -284,48 +286,83 @@ async function handleSetRewardAddress(
   );
 
   if (!setRewardAddressEvents.length) {
-    return [];
+    return;
   }
 
-  for (const nodeOperatorFullInfo of norContext.nodeOperatorNames.values()) {
+  const rewardAddressNodeOperatorMap = new Map<string, string>();
+  for (const { name, rewardAddress } of norContext.nodeOperatorNames.values()) {
+    rewardAddressNodeOperatorMap.set(rewardAddress, name);
+  }
+
+  for (const event of setRewardAddressEvents) {
+    const [nodeOperatorId, newRewardAddress] = event.args;
+    const existingNodeOperatorName =
+      rewardAddressNodeOperatorMap.get(newRewardAddress);
+    if (existingNodeOperatorName) {
+      findings.push(
+        Finding.from({
+          alertId: `DUPLICATE-REWARD-ADDRESS-SET-UP`,
+          name: `⚠️ SimpleDVT NOR: Reward address already in use"`,
+          description: `RewardAddress (${newRewardAddress}) already set up for "${existingNodeOperatorName}"`,
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        }),
+      );
+    }
+
+    let isCreatedViaSplitFactory = false;
     for (const splitWalletFactory of clusterSplitWalletFactories) {
-      await handleRewardAddressObolLidoSplit(
-        nodeOperatorFullInfo,
+      isCreatedViaSplitFactory = await isRewardAddressCreatedViaSplitFactory(
+        newRewardAddress,
         splitWalletFactory,
-        findings,
+      );
+
+      if (isCreatedViaSplitFactory) {
+        break;
+      }
+    }
+
+    if (!isCreatedViaSplitFactory) {
+      const simpleDvtModule = stakingModulesOperatorRegistry.find(
+        (nor) =>
+          nor.params.moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+      );
+      const norInfo = simpleDvtModule?.nodeOperatorNames.get(nodeOperatorId);
+
+      findings.push(
+        Finding.from({
+          alertId: `INCORRECT-REWARD-ADDRESS`,
+          name: `⚠️ SimpleDVT NOR: Incorrect Reward address provided"`,
+          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norInfo?.name}) created not via SplitFactory`,
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        }),
       );
     }
   }
+
+  for (const stakingModule of stakingModulesOperatorRegistry) {
+    await stakingModule.updateNodeOperatorsNames(txEvent.blockNumber);
+  }
 }
 
-async function handleRewardAddressObolLidoSplit(
-  nodeOperator: NodeOperatorFullInfo,
+async function isRewardAddressCreatedViaSplitFactory(
+  newRewardAddress: string,
   splitWalletFactory: ObolLidoSplitFactoryCluster,
-  findings: Finding[],
-): Promise<void> {
-  const { rewardAddress } = nodeOperator;
-
+): Promise<boolean> {
   const filterCreateObolLidoSplit =
     splitWalletFactory.contract.filters.CreateObolLidoSplit();
   const createObolLidoSplitEvents =
     await splitWalletFactory.contract.queryFilter(filterCreateObolLidoSplit);
 
   const createRewardAddressEvent = createObolLidoSplitEvents.find(
-    (event) => event.args?.[0] === rewardAddress,
+    (event) => event.args?.[0] === newRewardAddress,
   );
   if (createRewardAddressEvent) {
-    return;
+    return true;
   }
 
-  findings.push(
-    Finding.from({
-      alertId: `MALFORMED-REWARD-ADDRESS`,
-      name: `⚠️ SplitterWrapper: Malformed Reward address provided"`,
-      description: `RewardAddress (${rewardAddress}) of "${name}" NodeOperator created not via ObolSplitFactory`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
-    }),
-  );
+  return false;
 }
 
 function handleExitedCountChanged(
