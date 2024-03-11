@@ -1,0 +1,37 @@
+x-logging: &default-logging
+  options:
+    max-size: "50m"
+    max-file: "10"
+
+services:
+  service-forta-nats:
+    container_name: forta-nats
+    logging: *default-logging
+    image: nats:2.3.2
+    ports:
+      - 4222:4222
+      - 6222:6222
+      - 8222:8222
+
+  service-forta-json-rpc:
+    container_name: forta-json-rpc
+    logging: *default-logging
+    image: forta-network/forta-node:latest
+    command: /forta-node json-rpc
+    ports:
+      - 8545:8545
+    volumes:
+      - ./forta-local-config.yml:/.forta/config.yml
+    depends_on:
+      - service-forta-nats
+
+  service-forta-scanner:
+    container_name: forta-scanner
+    logging: *default-logging
+    image: forta-network/forta-node:latest
+    command: /forta-node scanner
+    volumes:
+      - ./forta-local-config.yml:/.forta/config.yml
+    depends_on:
+      - service-forta-nats
+      - service-forta-json-rpc
