@@ -1,4 +1,10 @@
-import { Finding, TransactionEvent, ethers } from "forta-agent";
+import {
+  Finding,
+  FindingSeverity,
+  FindingType,
+  TransactionEvent,
+  ethers,
+} from "forta-agent";
 import { ethersProvider } from "../../ethers";
 import { RedefineMode, requireWithTier } from "../../common/utils";
 import type * as Constants from "./constants";
@@ -14,6 +20,7 @@ const {
   STAKING_ROUTER_ADDRESS,
   STAKING_MODULES,
   BLOCKCHAIN_INFO,
+  SET_PERMISSION_EVENT,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -32,11 +39,12 @@ interface StakingModuleManagersParams {
 
 class StakingModuleManagersMultisig {
   public clusterManagerMap = new Map<number, GnosisSafeFortaHandler>();
+  public ROLE_MANAGE_SIGNING_KEYS = null;
   private readonly stakingModuleContract: ethers.Contract;
 
   constructor(
     public readonly params: StakingModuleManagersParams,
-    private readonly aclContract: ethers.Contract,
+    public readonly aclContract: ethers.Contract,
     private readonly stakingRouterContract: ethers.Contract,
   ) {
     this.stakingModuleContract = new ethers.Contract(
@@ -77,13 +85,14 @@ class StakingModuleManagersMultisig {
   }
 
   private async fillClusterManagerAddresses(currentBlock: number) {
-    const role = await this.stakingModuleContract.MANAGE_SIGNING_KEYS();
+    this.ROLE_MANAGE_SIGNING_KEYS =
+      await this.stakingModuleContract.MANAGE_SIGNING_KEYS();
     const fromBlock = Math.max(currentBlock - 1000000000, 0);
 
     const filter = this.aclContract.filters.SetPermission(
       null,
       this.params.moduleAddress,
-      role,
+      this.ROLE_MANAGE_SIGNING_KEYS,
     );
     const eventLogs = await this.aclContract.queryFilter(
       filter,
@@ -101,7 +110,7 @@ class StakingModuleManagersMultisig {
         const roleParams = await this.aclContract.getPermissionParam(
           managerAddress,
           this.params.moduleAddress,
-          role,
+          this.ROLE_MANAGE_SIGNING_KEYS,
           0,
         );
         const operatorId = roleParams[2] as BigNumber;
@@ -215,10 +224,51 @@ async function handleStakingModule(
 ): Promise<Finding[]> {
   let findings: Finding[] = [];
 
-  const { clusterManagerMap, params } = stakingModule;
+  const { clusterManagerMap, params, ROLE_MANAGE_SIGNING_KEYS, aclContract } =
+    stakingModule;
   for await (const [, clusterManagerHandler] of clusterManagerMap.entries()) {
     if (!(clusterManagerHandler.safeAddress in txEvent.addresses)) {
       continue;
+    }
+
+    const events = txEvent.filterLog(
+      SET_PERMISSION_EVENT,
+      clusterManagerHandler.safeAddress,
+    );
+
+    for (const event of events) {
+      const [managerAddress, moduleAddress, role] = event.args;
+      if (
+        moduleAddress !== params.moduleAddress ||
+        role !== ROLE_MANAGE_SIGNING_KEYS
+      ) {
+        continue;
+      }
+
+      const [, , nodeOperatorId] = await aclContract.getPermissionParam(
+        managerAddress,
+        params.moduleAddress,
+        ROLE_MANAGE_SIGNING_KEYS,
+        0,
+      );
+
+      const existingManager = clusterManagerMap.get(Number(nodeOperatorId));
+      // the current manager has been changed for the cluster (safeAddress)
+      if (!existingManager) {
+        await stakingModule.initialize(txEvent.blockNumber);
+        continue;
+      }
+
+      findings.push(
+        Finding.fromObject({
+          name: "Provided cluster manager address that already in use",
+          description: `ManagerAddress (${managerAddress}, id=${nodeOperatorId}) already used for ${existingManager.safeAddress}`,
+          alertId: "DUPLICATE-CLUSTER-MANAGER",
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+          metadata: { args: String(event.args) },
+        }),
+      );
     }
 
     for (const eventInfo of params.eventsOfNotice) {

@@ -16,10 +16,12 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
+import OBOL_LIDO_SPLIT_FACTORY_ABI from "../../abi/obol-splits/ObolLidoSplitFactory.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { ethersProvider } from "../../ethers";
 import { getEventsOfNoticeForStakingModule } from "./utils";
 import BigNumber from "bignumber.js";
+import { NodeOperatorFullInfo } from "../../common/interfaces";
 const {
   EASY_TRACK_ADDRESS,
   STAKING_ROUTER_ADDRESS,
@@ -27,10 +29,13 @@ const {
   SIGNING_KEY_REMOVED_EVENT,
   NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
   STAKING_MODULES,
+  SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
   NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
   NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD,
+  NODE_OPERATOR_REWARD_ADDRESS_SET_EVENT,
+  OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
   BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
@@ -65,9 +70,24 @@ interface NodeOperatorModuleParams {
   eventsOfNotice: EventsOfNotice[];
 }
 
+class ObolLidoSplitFactoryCluster {
+  public readonly contract: ethers.Contract;
+
+  constructor(
+    public readonly clusterName: string,
+    public readonly contractAddress: string,
+  ) {
+    this.contract = new ethers.Contract(
+      contractAddress,
+      OBOL_LIDO_SPLIT_FACTORY_ABI,
+      ethersProvider,
+    );
+  }
+}
+
 class NodeOperatorsRegistryModuleContext {
   public nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
-  public nodeOperatorNames = new Map<number, string>();
+  public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
 
@@ -135,18 +155,23 @@ class NodeOperatorsRegistryModuleContext {
 
     await Promise.all(
       operators.map(async (operator: any) => {
-        const { name } = await nodeOperatorsRegistry.getNodeOperator(
-          String(operator.id),
-          true,
-          { blockTag: block },
-        );
-        this.nodeOperatorNames.set(Number(operator.id), name);
+        const { name, rewardAddress } =
+          await nodeOperatorsRegistry.getNodeOperator(
+            String(operator.id),
+            true,
+            { blockTag: block },
+          );
+        this.nodeOperatorNames.set(Number(operator.id), {
+          name,
+          rewardAddress,
+        });
       }),
     );
   }
 }
 
 const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
 
 export async function initialize(
   currentBlock: number,
@@ -165,6 +190,15 @@ export async function initialize(
     await stakingRouter.functions.getStakingModuleIds({
       blockTag: currentBlock,
     });
+
+  for (const {
+    clusterName,
+    factoryAddress,
+  } of OBOL_LIDO_SPLIT_FACTORY_CLUSTERS) {
+    clusterSplitWalletFactories.push(
+      new ObolLidoSplitFactoryCluster(clusterName, factoryAddress),
+    );
+  }
 
   for (const {
     moduleId,
@@ -229,9 +263,106 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
     handleSigningKeysRemoved(txEvent, findings, norContext);
     handleStakeLimitSet(txEvent, findings, norContext);
+    handleSetRewardAddress(txEvent, findings, norContext);
   });
 
   return findings;
+}
+
+async function handleSetRewardAddress(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
+  if (
+    norContext.params.moduleId !== SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
+  ) {
+    return;
+  }
+
+  const setRewardAddressEvents = txEvent.filterLog(
+    NODE_OPERATOR_REWARD_ADDRESS_SET_EVENT,
+    norContext.params.moduleAddress,
+  );
+
+  if (!setRewardAddressEvents.length) {
+    return;
+  }
+
+  const rewardAddressNodeOperatorMap = new Map<string, string>();
+  for (const { name, rewardAddress } of norContext.nodeOperatorNames.values()) {
+    rewardAddressNodeOperatorMap.set(rewardAddress, name);
+  }
+
+  for (const event of setRewardAddressEvents) {
+    const [nodeOperatorId, newRewardAddress] = event.args;
+    const existingNodeOperatorName =
+      rewardAddressNodeOperatorMap.get(newRewardAddress);
+    if (existingNodeOperatorName) {
+      findings.push(
+        Finding.from({
+          alertId: `DUPLICATE-REWARD-ADDRESS-SET-UP`,
+          name: `⚠️ SimpleDVT NOR: Reward address already in use"`,
+          description: `RewardAddress (${newRewardAddress}) already set up for "${existingNodeOperatorName}"`,
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        }),
+      );
+    }
+
+    let isCreatedViaSplitFactory = false;
+    for (const splitWalletFactory of clusterSplitWalletFactories) {
+      isCreatedViaSplitFactory = await isRewardAddressCreatedViaSplitFactory(
+        newRewardAddress,
+        splitWalletFactory,
+      );
+
+      if (isCreatedViaSplitFactory) {
+        break;
+      }
+    }
+
+    if (!isCreatedViaSplitFactory) {
+      const simpleDvtModule = stakingModulesOperatorRegistry.find(
+        (nor) =>
+          nor.params.moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+      );
+      const norInfo = simpleDvtModule?.nodeOperatorNames.get(nodeOperatorId);
+
+      findings.push(
+        Finding.from({
+          alertId: `INCORRECT-REWARD-ADDRESS`,
+          name: `⚠️ SimpleDVT NOR: Incorrect Reward address provided"`,
+          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norInfo?.name}) created not via SplitFactory`,
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        }),
+      );
+    }
+  }
+
+  for (const stakingModule of stakingModulesOperatorRegistry) {
+    await stakingModule.updateNodeOperatorsNames(txEvent.blockNumber);
+  }
+}
+
+async function isRewardAddressCreatedViaSplitFactory(
+  newRewardAddress: string,
+  splitWalletFactory: ObolLidoSplitFactoryCluster,
+): Promise<boolean> {
+  const filterCreateObolLidoSplit =
+    splitWalletFactory.contract.filters.CreateObolLidoSplit();
+  const createObolLidoSplitEvents =
+    await splitWalletFactory.contract.queryFilter(filterCreateObolLidoSplit);
+
+  const createRewardAddressEvent = createObolLidoSplitEvents.find(
+    (event) => event.args?.[0] === newRewardAddress,
+  );
+  if (createRewardAddressEvent) {
+    return true;
+  }
+
+  return false;
 }
 
 function handleExitedCountChanged(
@@ -377,8 +508,8 @@ function handleSigningKeysRemoved(
     if (events.length > 0) {
       events.forEach((event) => {
         const noName =
-          norContext.nodeOperatorNames.get(Number(event.args.operatorId)) ||
-          "undefined";
+          norContext.nodeOperatorNames.get(Number(event.args.operatorId))
+            ?.name || "undefined";
         const keysCount = digest.get(noName) || 0;
         digest.set(noName, keysCount + 1);
       });
