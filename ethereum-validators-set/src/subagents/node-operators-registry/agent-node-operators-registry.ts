@@ -33,6 +33,8 @@ const {
   NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
   BLOCK_INTERVAL,
+  TARGET_SHARE_THRESHOLD_NOTICE,
+  TARGET_SHARE_THRESHOLD_PANIC,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -70,19 +72,20 @@ class NodeOperatorsRegistryModuleContext {
   public nodeOperatorNames = new Map<number, string>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
+  public readonly contract: ethers.Contract;
 
   constructor(
     public readonly params: NodeOperatorModuleParams,
     private readonly stakingRouter: ethers.Contract,
-  ) {}
-
-  async initialize(currentBlock: number) {
-    const nodeOperatorRegistry = new ethers.Contract(
+  ) {
+    this.contract = new ethers.Contract(
       this.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
       ethersProvider,
     );
+  }
 
+  async initialize(currentBlock: number) {
     const [operators] =
       await this.stakingRouter.functions.getAllNodeOperatorDigests(
         this.params.moduleId,
@@ -91,7 +94,7 @@ class NodeOperatorsRegistryModuleContext {
 
     const operatorsSummaries = await Promise.all(
       operators.map((digest: any) =>
-        nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
+        this.contract.functions.getNodeOperatorSummary(digest.id, {
           blockTag: currentBlock,
         }),
       ),
@@ -147,17 +150,16 @@ class NodeOperatorsRegistryModuleContext {
 }
 
 const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const stakingRouter = new ethers.Contract(
+  STAKING_ROUTER_ADDRESS,
+  STAKING_ROUTER_ABI,
+  ethersProvider,
+);
 
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-
-  const stakingRouter = new ethers.Contract(
-    STAKING_ROUTER_ADDRESS,
-    STAKING_ROUTER_ABI,
-    ethersProvider,
-  );
 
   stakingModulesOperatorRegistry.length = 0;
 
@@ -442,15 +444,96 @@ export async function handleBlock(blockEvent: BlockEvent) {
       (nodeOperatorRegistry) =>
         handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
+    const factTargetShareHandlers = stakingModulesOperatorRegistry.map(
+      (nodeOperatorRegistry) =>
+        handleFactTargetShare(blockEvent, findings, nodeOperatorRegistry),
+    );
     const nodeOperatorsNamesUpdaters = stakingModulesOperatorRegistry.map(
       (nodeOperatorRegistry) =>
         nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
     );
 
-    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsNamesUpdaters]);
+    await Promise.all([
+      ...stuckPenaltyHandlers,
+      ...nodeOperatorsNamesUpdaters,
+      ...factTargetShareHandlers,
+    ]);
   }
 
   return findings;
+}
+
+async function handleFactTargetShare(
+  blockEvent: BlockEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
+  const activeValidatorsCountResponse =
+    await stakingRouter.functions.getStakingModuleActiveValidatorsCount(
+      norContext.params.moduleId,
+      {
+        blockTag: blockEvent.blockNumber,
+      },
+    );
+  const [stModule] = await stakingRouter.functions.getStakingModule(
+    norContext.params.moduleId,
+    {
+      blockTag: blockEvent.blockNumber,
+    },
+  );
+  const targetShare = stModule.targetShare;
+  const routerActiveValidatorsCount = (
+    activeValidatorsCountResponse.activeValidatorsCount as BigNumber
+  ).toNumber();
+  const summary = await norContext.contract.getStakingModuleSummary();
+  const totalDepositedValidators = (
+    summary.totalDepositedValidators as BigNumber
+  ).toNumber();
+  const totalExitedValidators = (
+    summary.totalExitedValidators as BigNumber
+  ).toNumber();
+  const moduleActiveValidators =
+    totalDepositedValidators - totalExitedValidators;
+
+  let factTargetShare = targetShare;
+  if (routerActiveValidatorsCount > moduleActiveValidators) {
+    factTargetShare = moduleActiveValidators / routerActiveValidatorsCount;
+  } else if (routerActiveValidatorsCount < moduleActiveValidators) {
+    factTargetShare = routerActiveValidatorsCount / moduleActiveValidators;
+  } else {
+    return;
+  }
+
+  const multiplier = 10_000;
+  const diffTargetShare =
+    (1 - Math.abs(factTargetShare - targetShare)) * multiplier;
+
+  const title = `Actual target exceeded ${Math.ceil(diffTargetShare) / 100}%%`;
+  const description = `The module has ${moduleActiveValidators} active validators against ${routerActiveValidatorsCount} at Staking Router`;
+  if (diffTargetShare > TARGET_SHARE_THRESHOLD_PANIC) {
+    findings.push(
+      Finding.fromObject({
+        name: `🚨 ${norContext.params.moduleName} NO Registry: ${title}`,
+        description,
+        alertId: `${norContext.params.alertPrefix}TARGET-SHARE-PANIC`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      }),
+    );
+    return;
+  }
+
+  if (diffTargetShare > TARGET_SHARE_THRESHOLD_NOTICE) {
+    findings.push(
+      Finding.fromObject({
+        name: `⚠️ ${norContext.params.moduleName} NO Registry: ${title}`,
+        description,
+        alertId: `${norContext.params.alertPrefix}TARGET-SHARE-NOTICE`,
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }),
+    );
+  }
 }
 
 async function handleStuckPenaltyEnd(

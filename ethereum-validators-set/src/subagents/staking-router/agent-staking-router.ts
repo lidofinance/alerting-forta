@@ -1,5 +1,4 @@
 import { Finding, TransactionEvent } from "forta-agent";
-
 import {
   handleEventsOfNotice,
   RedefineMode,

@@ -16,6 +16,8 @@ export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
 export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const BLOCK_INTERVAL = 100;
+export const TARGET_SHARE_THRESHOLD_NOTICE = 55;
+export const TARGET_SHARE_THRESHOLD_PANIC = 65;
 
 export const MOTION_ENACTED_EVENT =
   "event MotionEnacted(uint256 indexed _motionId)";
