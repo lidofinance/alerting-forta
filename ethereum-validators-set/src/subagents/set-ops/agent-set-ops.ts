@@ -11,6 +11,7 @@ import { ethersProvider } from "../../ethers";
 
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import MEV_ALLOW_LIST_ABI from "../../abi/MEVBoostRelayAllowedList.json";
+import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 
 import {
   handleEventsOfNotice,
@@ -18,6 +19,7 @@ import {
   requireWithTier,
 } from "../../common/utils";
 import type * as Constants from "./constants";
+import BigNumber from "bignumber.js";
 
 export const name = "SetOps";
 
@@ -31,6 +33,7 @@ const {
   MIN_AVAILABLE_KEYS_COUNT,
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   BLOCK_CHECK_INTERVAL,
+  STAKING_ROUTER_ADDRESS,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -59,11 +62,32 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
 
+  const stakingRouter = new ethers.Contract(
+    STAKING_ROUTER_ADDRESS,
+    STAKING_ROUTER_ABI,
+    ethersProvider,
+  );
+  const moduleIds: { stakingModuleIds: BigNumber[] } =
+    await stakingRouter.functions.getStakingModuleIds({
+      blockTag: currentBlock,
+    });
+
   stakingModulesOperatorRegistry.length = 0;
-  stakingModulesOperatorRegistry.length = 0;
-  for (const { moduleAddress, moduleName, alertPrefix } of STAKING_MODULES) {
+  for (const {
+    moduleId,
+    moduleAddress,
+    moduleName,
+    alertPrefix,
+  } of STAKING_MODULES) {
     if (!moduleAddress) {
       console.log(`${moduleName} is not supported on this network for ${name}`);
+      continue;
+    }
+
+    const moduleExists = moduleIds.stakingModuleIds.some(
+      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
+    );
+    if (!moduleExists) {
       continue;
     }
 

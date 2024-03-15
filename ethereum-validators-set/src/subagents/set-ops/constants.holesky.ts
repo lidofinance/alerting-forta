@@ -2,6 +2,7 @@ import { MEV_ALLOWED_LIST_EVENTS_OF_NOTICE as mevAllowedListEvents } from "./con
 
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -30,6 +31,7 @@ export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
 export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
+export const STAKING_ROUTER_ADDRESS = srAddress;
 
 export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
   (event) => ({
