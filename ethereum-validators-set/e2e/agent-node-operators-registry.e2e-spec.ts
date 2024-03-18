@@ -10,7 +10,10 @@ const TEST_TIMEOUT = 60_000; // ms
 
 describe("agent-node-operators-registry e2e tests", () => {
   let runBlock: (blockHashOrNumber: string | number) => Promise<Finding[]>;
-  let runTransaction: (txHash: string) => Promise<Finding[]>;
+  let runTransaction: (
+    txHash: string,
+    initBlock?: number,
+  ) => Promise<Finding[]>;
   let logSpy: jest.SpyInstance;
   let timeSpy: jest.SpyInstance;
 
@@ -69,6 +72,18 @@ describe("agent-node-operators-registry e2e tests", () => {
     async () => {
       const findings = await runTransaction(
         "0xa4629245311d93a11cedb9143d8b7530057685b4b568a026bac194e162002c13",
+      );
+      expect(findings).toMatchSnapshot();
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "should process tx with a lot of validators exited",
+    async () => {
+      const findings = await runTransaction(
+        "0xdc70082a674abb83a94f04ea5b083849ff476ddc2f0fdd2a1cd2f7d2e079592b",
+        19454560,
       );
       expect(findings).toMatchSnapshot();
     },
