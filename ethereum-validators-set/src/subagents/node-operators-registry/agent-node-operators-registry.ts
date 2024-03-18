@@ -140,6 +140,12 @@ class NodeOperatorsRegistryModuleContext {
     await this.updateNodeOperatorsNames(currentBlock);
   }
 
+  getOperatorName(nodeOperatorId: string): string {
+    return (
+      this.nodeOperatorNames.get(Number(nodeOperatorId))?.name ?? "undefined"
+    );
+  }
+
   async updateNodeOperatorsNames(block: number) {
     const nodeOperatorsRegistry = new ethers.Contract(
       this.params.moduleAddress,
@@ -327,13 +333,13 @@ async function handleSetRewardAddress(
         (nor) =>
           nor.params.moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
       );
-      const norInfo = simpleDvtModule?.nodeOperatorNames.get(nodeOperatorId);
+      const norName = simpleDvtModule?.getOperatorName(nodeOperatorId);
 
       findings.push(
         Finding.from({
           alertId: `INCORRECT-REWARD-ADDRESS`,
           name: `⚠️ SimpleDVT NOR: Incorrect Reward address provided"`,
-          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norInfo?.name}) created not via SplitFactory`,
+          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norName}) created not via SplitFactory`,
           severity: FindingSeverity.High,
           type: FindingType.Info,
         }),
@@ -386,8 +392,8 @@ function handleExitedCountChanged(
       findings.push(
         Finding.fromObject({
           name: `⚠️ ${norContext.params.moduleName} NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-            Number(nodeOperatorId),
+          description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+            nodeOperatorId,
           )}\nNew exited: ${newExited}`,
           alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-BIG-EXIT`,
           severity: FindingSeverity.Info,
@@ -407,8 +413,8 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-EXITED`,
             severity: FindingSeverity.Info,
@@ -419,8 +425,8 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited some stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck - actualStuckCount} of ${
               lastDigest.stuck
             }`,
@@ -456,8 +462,8 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `⚠️ ${norContext.params.moduleName} NO Registry: operator have new stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-NEW-STUCK-KEYS`,
             severity: FindingSeverity.Medium,
@@ -475,8 +481,8 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator refunded all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nRefunded: ${refundedValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-REFUNDED`,
             severity: FindingSeverity.Info,
@@ -507,9 +513,7 @@ function handleSigningKeysRemoved(
     const events = txEvent.filterLog(SIGNING_KEY_REMOVED_EVENT, moduleAddress);
     if (events.length > 0) {
       events.forEach((event) => {
-        const noName =
-          norContext.nodeOperatorNames.get(Number(event.args.operatorId))
-            ?.name || "undefined";
+        const noName = norContext.getOperatorName(event.args.operatorId);
         const keysCount = digest.get(noName) || 0;
         digest.set(noName, keysCount + 1);
       });
@@ -551,8 +555,8 @@ function handleStakeLimitSet(
         findings.push(
           Finding.fromObject({
             name: `🚨 ${norContext.params.moduleName} NO Vetted keys set by NON-EasyTrack action`,
-            description: `Vetted keys count for node operator [${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Vetted keys count for node operator [${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-VETTED-KEYS-SET`,
             severity: FindingSeverity.High,
@@ -603,8 +607,8 @@ async function handleStuckPenaltyEnd(
         currentClosestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
       }
       const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
-      description += `Operator: ${id} ${norContext.nodeOperatorNames.get(
-        Number(id),
+      description += `Operator: ${id} ${norContext.getOperatorName(
+        id,
       )} penalty ended ${formatDelay(delay)} ago\n`;
     }
   }
