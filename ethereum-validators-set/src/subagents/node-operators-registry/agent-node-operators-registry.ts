@@ -392,7 +392,7 @@ function handleExitedCountChanged(
       findings.push(
         Finding.fromObject({
           name: `⚠️ ${norContext.params.moduleName} NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+          description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
             nodeOperatorId,
           )}\nNew exited: ${newExited}`,
           alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-BIG-EXIT`,
@@ -413,7 +413,7 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-EXITED`,
@@ -425,7 +425,7 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited some stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck - actualStuckCount} of ${
               lastDigest.stuck
@@ -462,7 +462,7 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `⚠️ ${norContext.params.moduleName} NO Registry: operator have new stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-NEW-STUCK-KEYS`,
@@ -481,7 +481,7 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator refunded all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.getOperatorName(
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nRefunded: ${refundedValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-REFUNDED`,
@@ -555,7 +555,7 @@ function handleStakeLimitSet(
         findings.push(
           Finding.fromObject({
             name: `🚨 ${norContext.params.moduleName} NO Vetted keys set by NON-EasyTrack action`,
-            description: `Vetted keys count for node operator [${nodeOperatorId} ${norContext.getOperatorName(
+            description: `Vetted keys count for node operator [#${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-VETTED-KEYS-SET`,

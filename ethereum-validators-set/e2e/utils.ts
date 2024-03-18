@@ -43,7 +43,9 @@ export function provideRunTransaction(
           `Error retrieving block number of transaction ${txHash}`,
         );
       }
-      await agent.initialize(initBlock ? initBlock : tx?.blockNumber);
+      await agent.initialize(
+        typeof initBlock !== "undefined" ? initBlock : tx?.blockNumber,
+      );
     }
 
     return await runHandlersOnTransaction(txHash);
@@ -67,7 +69,9 @@ export function provideRunBlock(
   ) {
     const agent = await dynamicImport(agentPath);
     if (typeof agent.initialize === "function" && !skipInit) {
-      await agent.initialize(initBlock ? initBlock : blockHashOrNumber);
+      await agent.initialize(
+        typeof initBlock !== "undefined" ? initBlock : blockHashOrNumber,
+      );
     }
 
     return await runHandlersOnBlock(blockHashOrNumber);
