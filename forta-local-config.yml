@@ -9,7 +9,12 @@ localMode:
   logToStdout: true
   privateKeyHex: 984d28fde238c32d06420db29b7277f5fd24c61954d2da491bf7d1ef19996bd0
   # webhookUrl: http://my-webhook-handler.url
+  # runtimeLimits:
+  #  startBlock: 19475885
+  #  stopBlock: 19475890
+  #  stopTimeoutSeconds: 30
   standalone:
     enable: true
     botContainers:
       - host.docker.internal
+      - ethereum-steth

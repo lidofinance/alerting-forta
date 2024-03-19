@@ -1,6 +1,5 @@
 import type { BigNumber } from 'bignumber.js'
-import type { TypedEvent } from '../../generated/common'
-import { Log, LogDescription } from 'forta-agent'
+import type { TypedEvent } from '../../generated/smart-contracts/common'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import * as E from 'fp-ts/Either'
@@ -33,14 +32,4 @@ export abstract class IStethClient {
   public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
-}
-
-export type TransactionEventContract = {
-  addresses: {
-    [key: string]: boolean
-  }
-  logs: Log[]
-  filterLog: (eventAbi: string | string[], contractAddress?: string | string[]) => LogDescription[]
-  to: string | null
-  timestamp: number
 }

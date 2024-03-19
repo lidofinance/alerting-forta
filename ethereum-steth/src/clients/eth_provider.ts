@@ -11,13 +11,13 @@ import {
   Lido as LidoContract,
   ValidatorsExitBusOracle as ExitBusContract,
   WithdrawalQueueERC721 as WithdrawalQueueContract,
-} from '../generated'
+} from '../generated/smart-contracts/'
 import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
-import { ETHDistributedEvent } from '../generated/Lido'
+import { ETHDistributedEvent } from '../generated/smart-contracts/Lido'
 import { DataRW } from '../utils/mutex'
 import { IEtherscanProvider } from './contracts'
 import { WithdrawalRequest } from '../entity/withdrawal_request'
-import { TypedEvent } from '../generated/common'
+import { TypedEvent } from '../generated/smart-contracts/common'
 import { NetworkError } from '../utils/errors'
 import { IGateSealClient } from '../services/gate-seal/contract'
 import { IStethClient } from '../services/steth_operation/contracts'
@@ -52,33 +52,13 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     this.exitBusContract = exitBusContract
   }
 
-  public async getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>> {
-    let latestBlockNumber: number = -1
-
-    if (argv.includes('--block')) {
-      latestBlockNumber = parseInt(argv[4])
-    } else if (argv.includes('--range')) {
-      latestBlockNumber = parseInt(argv[4].slice(0, argv[4].indexOf('.')))
-    } else if (argv.includes('--tx')) {
-      const txHash = argv[4]
-      const tx = await this.getTransaction(txHash)
-      if (E.isLeft(tx)) {
-        return E.left(tx.left)
-      }
-
-      if (tx.right.blockNumber !== undefined) {
-        latestBlockNumber = tx.right.blockNumber
-      }
+  public async getBlockNumber(): Promise<E.Either<Error, number>> {
+    try {
+      const latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
+      return E.right(latestBlockNumber)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch latest block number`))
     }
-    if (latestBlockNumber == -1) {
-      try {
-        latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
-      } catch (e) {
-        return E.left(new NetworkError(e, `Could not fetch latest block number`))
-      }
-    }
-
-    return E.right(latestBlockNumber)
   }
 
   public async getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>> {

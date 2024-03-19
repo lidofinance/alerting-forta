@@ -7,8 +7,6 @@ import { StakingLimitInfo } from '../../entity/staking_limit_info'
 export abstract class IWithdrawalsClient {
   public abstract getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>>
 
-  public abstract getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>>
-
   public abstract getUnfinalizedStETH(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getWithdrawalStatuses(

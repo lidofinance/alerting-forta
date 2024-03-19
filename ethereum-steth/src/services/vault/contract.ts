@@ -1,6 +1,6 @@
 import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
-import { ETHDistributedEvent } from '../../generated/Lido'
+import { ETHDistributedEvent } from '../../generated/smart-contracts/Lido'
 
 export abstract class IVaultClient {
   public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>

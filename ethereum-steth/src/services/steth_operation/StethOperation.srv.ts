@@ -1,10 +1,10 @@
 import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { EventOfNotice } from '../../entity/events'
+import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockEventDto, EventOfNotice, TransactionEventDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
-import { IStethClient, TransactionEventContract } from './contracts'
+import { IStethClient } from './contracts'
 import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
@@ -101,7 +101,7 @@ export class StethOperationSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent) {
+  public async handleBlock(blockEvent: BlockEventDto) {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
@@ -162,7 +162,7 @@ export class StethOperationSrv {
     return findings
   }
 
-  public async handleTransaction(txEvent: TransactionEventContract, blockNumber: number): Promise<Finding[]> {
+  public async handleTransaction(txEvent: TransactionEventDto, blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
     if (txEvent.to == this.depositSecurityAddress) {
@@ -198,7 +198,7 @@ export class StethOperationSrv {
     return out
   }
 
-  public handleEventsOfNotice(txEvent: TransactionEventContract, eventsOfNotice: EventOfNotice[]) {
+  public handleEventsOfNotice(txEvent: TransactionEventDto, eventsOfNotice: EventOfNotice[]) {
     const out: Finding[] = []
     for (const eventInfo of eventsOfNotice) {
       if (eventInfo.address in txEvent.addresses) {

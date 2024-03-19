@@ -35,3 +35,15 @@ services:
     depends_on:
       - service-forta-nats
       - service-forta-json-rpc
+
+# Uncomment for running everything in docker on localhost
+#
+# service-ethereum-steth:
+#    container_name: ethereum-steth
+#    logging: *default-logging
+#    build:
+#      context: ethereum-steth
+#      dockerfile: ../ethereum-steth/Dockerfile
+#    depends_on:
+#      - service-forta-scanner
+#      - service-forta-json-rpc

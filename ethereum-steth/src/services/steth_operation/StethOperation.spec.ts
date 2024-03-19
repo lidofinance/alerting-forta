@@ -20,7 +20,7 @@ import { BigNumber as EtherBigNumber } from 'ethers'
 import BigNumber from 'bignumber.js'
 import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-agent'
 import * as Winston from 'winston'
-import { TypedEvent } from '../../generated/common'
+import { TypedEvent } from '../../generated/smart-contracts/common'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import {
   getFilteredBurnerEventsMock,

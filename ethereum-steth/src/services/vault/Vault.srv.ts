@@ -1,15 +1,16 @@
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
-import { ETHDistributedEvent } from '../../generated/Lido'
+import { ETHDistributedEvent } from '../../generated/smart-contracts/Lido'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { IVaultClient } from './contract'
+import { BlockEventDto } from '../../entity/events'
 
 const WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL = 100
 const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(1000)
@@ -52,7 +53,7 @@ export class VaultSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent) {
+  public async handleBlock(blockEvent: BlockEventDto) {
     const start = new Date().getTime()
     const findings: Finding[] = []
 

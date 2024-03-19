@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { WithdrawalsCache } from './Withdrawals.cache'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { elapsedTime, formatDelay } from '../../utils/time'
@@ -14,7 +14,7 @@ import {
   WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT,
 } from '../../utils/events/withdrawals_events'
 import { etherscanAddress, etherscanNft } from '../../utils/string'
-import { EventOfNotice } from '../../entity/events'
+import { BlockEventDto, EventOfNotice } from '../../entity/events'
 import { Logger } from 'winston'
 import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { WithdrawalsRepo } from './Withdrawals.repo'
@@ -131,7 +131,7 @@ export class WithdrawalsSrv {
     return this.name
   }
 
-  async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+  async handleBlock(blockEvent: BlockEventDto): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
@@ -230,7 +230,7 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public async handleQueueOnParWithStakeLimit(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleQueueOnParWithStakeLimit(blockEvent: BlockEventDto): Promise<Finding[]> {
     const blockTimestamp = blockEvent.block.timestamp
 
     if (
@@ -290,7 +290,7 @@ export class WithdrawalsSrv {
     return findings
   }
 
-  public async handleUnfinalizedRequestNumber(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleUnfinalizedRequestNumber(blockEvent: BlockEventDto): Promise<Finding[]> {
     const currentBlockTimestamp = blockEvent.block.timestamp
 
     let unfinalizedStETH = new BigNumber(0)
@@ -380,7 +380,7 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public async handleUnclaimedRequests(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleUnclaimedRequests(blockEvent: BlockEventDto): Promise<Finding[]> {
     const out: Finding[] = []
     const currentBlockTimestamp = blockEvent.block.timestamp
 

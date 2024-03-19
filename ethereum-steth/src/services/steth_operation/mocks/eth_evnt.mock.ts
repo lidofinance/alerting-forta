@@ -1,6 +1,6 @@
-import { TransactionEventContract } from '../contracts'
-import { TypedEvent } from '../../../generated/common'
+import { TypedEvent } from '../../../generated/smart-contracts/common'
 import { faker } from '@faker-js/faker'
+import { TransactionEventDto } from '../../../entity/events'
 
 export const TypedEventMock = (): jest.Mocked<TypedEvent> => ({
   address: '',
@@ -19,7 +19,7 @@ export const TypedEventMock = (): jest.Mocked<TypedEvent> => ({
   transactionIndex: 0,
 })
 
-export const TransactionEventContractMock = (): jest.Mocked<TransactionEventContract> => ({
+export const TransactionEventContractMock = (): jest.Mocked<TransactionEventDto> => ({
   addresses: {},
   logs: [],
   filterLog: jest.fn(),

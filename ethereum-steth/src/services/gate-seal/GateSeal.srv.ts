@@ -8,7 +8,8 @@ import { etherscanAddress } from '../../utils/string'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { IGateSealClient } from './contract'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockEventDto } from '../../entity/events'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
@@ -100,7 +101,7 @@ export class GateSealSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleBlock(blockEvent: BlockEventDto): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
@@ -115,7 +116,7 @@ export class GateSealSrv {
     return findings
   }
 
-  public async handlePauseRole(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handlePauseRole(blockEvent: BlockEventDto): Promise<Finding[]> {
     const out: Finding[] = []
     if (this.gateSealAddress === undefined) {
       return []
@@ -180,7 +181,7 @@ export class GateSealSrv {
     return out
   }
 
-  public async handleExpiryGateSeal(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleExpiryGateSeal(blockEvent: BlockEventDto): Promise<Finding[]> {
     if (this.gateSealAddress === undefined) {
       return []
     }
