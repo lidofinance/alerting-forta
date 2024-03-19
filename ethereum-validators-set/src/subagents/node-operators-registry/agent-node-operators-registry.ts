@@ -646,17 +646,14 @@ async function handleStakingModuleTargetShare(
   const moduleActiveValidators =
     totalDepositedValidators - totalExitedValidators;
 
-  let currentTargetShare = norContext.targetShare;
-  if (totalActiveValidators > moduleActiveValidators) {
-    currentTargetShare = moduleActiveValidators / totalActiveValidators;
-  } else if (totalActiveValidators < moduleActiveValidators) {
-    currentTargetShare = totalActiveValidators / moduleActiveValidators;
-  } else {
+  if (totalActiveValidators <= moduleActiveValidators) {
     return;
   }
 
   const multiplier = 10_000;
-  currentTargetShare = Math.ceil(currentTargetShare * multiplier);
+  const currentTargetShare = Math.ceil(
+    (moduleActiveValidators / totalActiveValidators) * multiplier,
+  );
   const diffTargetShare = Math.abs(currentTargetShare - norContext.targetShare);
 
   const title = `the current target share exceeded ${
