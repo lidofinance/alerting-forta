@@ -40,9 +40,33 @@ mainnet)
 
 [reverted-tx-watcher](./reverted-tx-watcher) - Detection bot that monitors reverted transactions
 
-[template](./template) - Template for bot creation. (Forta version)
+## Local development
 
-[template-v2](./template-v2) - Template for bot creation. (Sergey Wh1te's version)
+To launch the bot environment similar to the production environment, several services need to be set up:
+
+- [NATS](https://nats.io/) — Message bus
+- [Forta-node](https://github.com/forta-network/forta-node/blob/master/cmd/node/nodecmd/nodecmd.go#L64) — Forta wrapper over the Ethereum-like node
+- [Forta-scanner](https://github.com/forta-network/forta-node/blob/master/cmd/node/nodecmd/nodecmd.go#L40) — service communicating with forta-agent via gRPC
+
+### Setup
+
+1. Install docker
+2. Clone forta-node repo: `git clone https://github.com/forta-network/forta-node`
+3. `cd forta-node && make containers`. It creates containers for local usage
+4. Go back to `alerting-forta` and provide your own `scan.jsonRpc.url` in forta-local-config.yml
+5. Run `docker-compose up -d`
+6. Run your service in production mode. For example [ethereum-steth](..%2Fethereum-steth)
+   1. cd [ethereum-steth](..%2Fethereum-steth)
+   2. `yarn start:prod`
+7. **Extra:** If you want to send agent's findings into Telegram chat or discord chat then provide value in config:
+   `localMode.webhookUrl`: `http://localhost:5001/hook/<your slug name>`
+
+Full capabilities for running in localmode you can find here: https://docs.forta.network/en/latest/scanner-local-mode/.
+Also, the `forta-scanner` config file is useful for a deep dive — check the following: https://github.com/forta-network/forta-node/blob/master/config/config.go#L155
+
+### Or use emulation prod environment for local development.
+
+Just navigate to the bot directory and run `yarn start`. [Forta-sdk](https://github.com/forta-network/forta-bot-sdk/tree/master/sdk) provides emulation prod environment for a simplified local development
 
 ## Contribute
 
@@ -73,10 +97,10 @@ Add the following scripts to your package.json:
 ```json
 {
   "scripts": {
-    "eslint:lint": "eslint ./src",
-    "eslint:format": "eslint ./src --fix",
-    "prettier:check": "prettier --check .",
-    "prettier:format": "prettier --write .",
+    "eslint:lint": "eslint ./src ./tests",
+    "eslint:format": "eslint ./src ./tests --fix",
+    "prettier:check": "prettier --check ./src ./tests",
+    "prettier:format": "prettier --write ./src ./tests README.md",
     "lint": "yarn run prettier:check && yarn run eslint:lint",
     "format": "yarn run eslint:format && yarn run prettier:format"
   }

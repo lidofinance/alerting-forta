@@ -16,10 +16,12 @@ import {
 } from "../../common/utils";
 import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
+import OBOL_LIDO_SPLIT_FACTORY_ABI from "../../abi/obol-splits/ObolLidoSplitFactory.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import { ethersProvider } from "../../ethers";
 import { getEventsOfNoticeForStakingModule } from "./utils";
 import BigNumber from "bignumber.js";
+import { NodeOperatorFullInfo } from "../../common/interfaces";
 const {
   EASY_TRACK_ADDRESS,
   STAKING_ROUTER_ADDRESS,
@@ -27,10 +29,13 @@ const {
   SIGNING_KEY_REMOVED_EVENT,
   NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
   STAKING_MODULES,
+  SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
   NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
   NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD,
+  NODE_OPERATOR_REWARD_ADDRESS_SET_EVENT,
+  OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
   BLOCK_INTERVAL,
   TARGET_SHARE_THRESHOLD_NOTICE,
@@ -67,9 +72,24 @@ interface NodeOperatorModuleParams {
   eventsOfNotice: EventsOfNotice[];
 }
 
+class ObolLidoSplitFactoryCluster {
+  public readonly contract: ethers.Contract;
+
+  constructor(
+    public readonly clusterName: string,
+    public readonly contractAddress: string,
+  ) {
+    this.contract = new ethers.Contract(
+      contractAddress,
+      OBOL_LIDO_SPLIT_FACTORY_ABI,
+      ethersProvider,
+    );
+  }
+}
+
 class NodeOperatorsRegistryModuleContext {
   public nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
-  public nodeOperatorNames = new Map<number, string>();
+  public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
   public readonly contract: ethers.Contract;
@@ -123,6 +143,12 @@ class NodeOperatorsRegistryModuleContext {
     await this.updateNodeOperatorsNames(currentBlock);
   }
 
+  getOperatorName(nodeOperatorId: string): string {
+    return (
+      this.nodeOperatorNames.get(Number(nodeOperatorId))?.name ?? "undefined"
+    );
+  }
+
   async updateNodeOperatorsNames(block: number) {
     const nodeOperatorsRegistry = new ethers.Contract(
       this.params.moduleAddress,
@@ -138,12 +164,16 @@ class NodeOperatorsRegistryModuleContext {
 
     await Promise.all(
       operators.map(async (operator: any) => {
-        const { name } = await nodeOperatorsRegistry.getNodeOperator(
-          String(operator.id),
-          true,
-          { blockTag: block },
-        );
-        this.nodeOperatorNames.set(Number(operator.id), name);
+        const { name, rewardAddress } =
+          await nodeOperatorsRegistry.getNodeOperator(
+            String(operator.id),
+            true,
+            { blockTag: block },
+          );
+        this.nodeOperatorNames.set(Number(operator.id), {
+          name,
+          rewardAddress,
+        });
       }),
     );
   }
@@ -155,6 +185,7 @@ const stakingRouter = new ethers.Contract(
   STAKING_ROUTER_ABI,
   ethersProvider,
 );
+const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
 
 export async function initialize(
   currentBlock: number,
@@ -167,6 +198,15 @@ export async function initialize(
     await stakingRouter.functions.getStakingModuleIds({
       blockTag: currentBlock,
     });
+
+  for (const {
+    clusterName,
+    factoryAddress,
+  } of OBOL_LIDO_SPLIT_FACTORY_CLUSTERS) {
+    clusterSplitWalletFactories.push(
+      new ObolLidoSplitFactoryCluster(clusterName, factoryAddress),
+    );
+  }
 
   for (const {
     moduleId,
@@ -231,9 +271,106 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
     handleSigningKeysRemoved(txEvent, findings, norContext);
     handleStakeLimitSet(txEvent, findings, norContext);
+    handleSetRewardAddress(txEvent, findings, norContext);
   });
 
   return findings;
+}
+
+async function handleSetRewardAddress(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
+  if (
+    norContext.params.moduleId !== SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
+  ) {
+    return;
+  }
+
+  const setRewardAddressEvents = txEvent.filterLog(
+    NODE_OPERATOR_REWARD_ADDRESS_SET_EVENT,
+    norContext.params.moduleAddress,
+  );
+
+  if (!setRewardAddressEvents.length) {
+    return;
+  }
+
+  const rewardAddressNodeOperatorMap = new Map<string, string>();
+  for (const { name, rewardAddress } of norContext.nodeOperatorNames.values()) {
+    rewardAddressNodeOperatorMap.set(rewardAddress, name);
+  }
+
+  for (const event of setRewardAddressEvents) {
+    const [nodeOperatorId, newRewardAddress] = event.args;
+    const existingNodeOperatorName =
+      rewardAddressNodeOperatorMap.get(newRewardAddress);
+    if (existingNodeOperatorName) {
+      findings.push(
+        Finding.from({
+          alertId: `DUPLICATE-REWARD-ADDRESS-SET-UP`,
+          name: `⚠️ SimpleDVT NOR: Reward address already in use"`,
+          description: `RewardAddress (${newRewardAddress}) already set up for "${existingNodeOperatorName}"`,
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        }),
+      );
+    }
+
+    let isCreatedViaSplitFactory = false;
+    for (const splitWalletFactory of clusterSplitWalletFactories) {
+      isCreatedViaSplitFactory = await isRewardAddressCreatedViaSplitFactory(
+        newRewardAddress,
+        splitWalletFactory,
+      );
+
+      if (isCreatedViaSplitFactory) {
+        break;
+      }
+    }
+
+    if (!isCreatedViaSplitFactory) {
+      const simpleDvtModule = stakingModulesOperatorRegistry.find(
+        (nor) =>
+          nor.params.moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+      );
+      const norName = simpleDvtModule?.getOperatorName(nodeOperatorId);
+
+      findings.push(
+        Finding.from({
+          alertId: `INCORRECT-REWARD-ADDRESS`,
+          name: `⚠️ SimpleDVT NOR: Incorrect Reward address provided"`,
+          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norName}) created not via SplitFactory`,
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+        }),
+      );
+    }
+  }
+
+  for (const stakingModule of stakingModulesOperatorRegistry) {
+    await stakingModule.updateNodeOperatorsNames(txEvent.blockNumber);
+  }
+}
+
+async function isRewardAddressCreatedViaSplitFactory(
+  newRewardAddress: string,
+  splitWalletFactory: ObolLidoSplitFactoryCluster,
+): Promise<boolean> {
+  const filterCreateObolLidoSplit =
+    splitWalletFactory.contract.filters.CreateObolLidoSplit();
+  const createObolLidoSplitEvents =
+    await splitWalletFactory.contract.queryFilter(filterCreateObolLidoSplit);
+
+  const createRewardAddressEvent = createObolLidoSplitEvents.find(
+    (event) => event.args?.[0] === newRewardAddress,
+  );
+  if (createRewardAddressEvent) {
+    return true;
+  }
+
+  return false;
 }
 
 function handleExitedCountChanged(
@@ -257,8 +394,8 @@ function handleExitedCountChanged(
       findings.push(
         Finding.fromObject({
           name: `⚠️ ${norContext.params.moduleName} NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-            Number(nodeOperatorId),
+          description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+            nodeOperatorId,
           )}\nNew exited: ${newExited}`,
           alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-BIG-EXIT`,
           severity: FindingSeverity.Info,
@@ -278,8 +415,8 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-EXITED`,
             severity: FindingSeverity.Info,
@@ -290,8 +427,8 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited some stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck - actualStuckCount} of ${
               lastDigest.stuck
             }`,
@@ -327,8 +464,8 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `⚠️ ${norContext.params.moduleName} NO Registry: operator have new stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-NEW-STUCK-KEYS`,
             severity: FindingSeverity.Medium,
@@ -346,8 +483,8 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator refunded all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nRefunded: ${refundedValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-REFUNDED`,
             severity: FindingSeverity.Info,
@@ -378,9 +515,7 @@ function handleSigningKeysRemoved(
     const events = txEvent.filterLog(SIGNING_KEY_REMOVED_EVENT, moduleAddress);
     if (events.length > 0) {
       events.forEach((event) => {
-        const noName =
-          norContext.nodeOperatorNames.get(Number(event.args.operatorId)) ||
-          "undefined";
+        const noName = norContext.getOperatorName(event.args.operatorId);
         const keysCount = digest.get(noName) || 0;
         digest.set(noName, keysCount + 1);
       });
@@ -422,8 +557,8 @@ function handleStakeLimitSet(
         findings.push(
           Finding.fromObject({
             name: `🚨 ${norContext.params.moduleName} NO Vetted keys set by NON-EasyTrack action`,
-            description: `Vetted keys count for node operator [${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Vetted keys count for node operator [#${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-VETTED-KEYS-SET`,
             severity: FindingSeverity.High,
@@ -555,8 +690,8 @@ async function handleStuckPenaltyEnd(
         currentClosestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
       }
       const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
-      description += `Operator: ${id} ${norContext.nodeOperatorNames.get(
-        Number(id),
+      description += `Operator: ${id} ${norContext.getOperatorName(
+        id,
       )} penalty ended ${formatDelay(delay)} ago\n`;
     }
   }

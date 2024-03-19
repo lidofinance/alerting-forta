@@ -15,6 +15,9 @@ export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const MODULE_MANAGER_MULTISIG_ADDRESS = moduleManagerMultisigAddress;
 
+export const SET_PERMISSION_EVENT =
+  "event SetPermission(address indexed entity, address indexed app, bytes32 indexed role, bool allowed)";
+
 export const STAKING_MODULES = [
   {
     moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
