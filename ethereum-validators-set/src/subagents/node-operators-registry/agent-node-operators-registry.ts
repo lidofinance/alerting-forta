@@ -92,6 +92,7 @@ class NodeOperatorsRegistryModuleContext {
   public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
+  public targetShare: number = 0;
   public readonly contract: ethers.Contract;
 
   constructor(
@@ -140,7 +141,7 @@ class NodeOperatorsRegistryModuleContext {
       });
     }
 
-    await this.updateNodeOperatorsNames(currentBlock);
+    await this.updateNodeOperatorsInfo(currentBlock);
   }
 
   getOperatorName(nodeOperatorId: string): string {
@@ -149,7 +150,7 @@ class NodeOperatorsRegistryModuleContext {
     );
   }
 
-  async updateNodeOperatorsNames(block: number) {
+  async updateNodeOperatorsInfo(block: number) {
     const nodeOperatorsRegistry = new ethers.Contract(
       this.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
@@ -161,6 +162,11 @@ class NodeOperatorsRegistryModuleContext {
         this.params.moduleId,
         { blockTag: block },
       );
+    const [srModule] = await this.stakingRouter.functions.getStakingModule(
+      this.params.moduleId,
+      { blockTag: block },
+    );
+    this.targetShare = srModule.targetShare;
 
     await Promise.all(
       operators.map(async (operator: any) => {
@@ -350,7 +356,7 @@ async function handleSetRewardAddress(
   }
 
   for (const stakingModule of stakingModulesOperatorRegistry) {
-    await stakingModule.updateNodeOperatorsNames(txEvent.blockNumber);
+    await stakingModule.updateNodeOperatorsInfo(txEvent.blockNumber);
   }
 }
 
@@ -579,48 +585,59 @@ export async function handleBlock(blockEvent: BlockEvent) {
       (nodeOperatorRegistry) =>
         handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
-    const factTargetShareHandlers = stakingModulesOperatorRegistry.map(
-      (nodeOperatorRegistry) =>
-        handleFactTargetShare(blockEvent, findings, nodeOperatorRegistry),
+    const currentTargetShareHandlers = stakingModulesOperatorRegistry.map(
+      async (nodeOperatorRegistry) => {
+        const totalActiveValidators =
+          await getTotalActiveValidators(blockEvent);
+        await handleStakingModuleTargetShare(
+          blockEvent,
+          findings,
+          nodeOperatorRegistry,
+          totalActiveValidators,
+        );
+      },
     );
-    const nodeOperatorsNamesUpdaters = stakingModulesOperatorRegistry.map(
+    const nodeOperatorsInfoUpdaters = stakingModulesOperatorRegistry.map(
       (nodeOperatorRegistry) =>
-        nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
+        nodeOperatorRegistry.updateNodeOperatorsInfo(blockEvent.blockNumber),
     );
 
-    await Promise.all([
-      ...stuckPenaltyHandlers,
-      ...nodeOperatorsNamesUpdaters,
-      ...factTargetShareHandlers,
-    ]);
+    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsInfoUpdaters]);
+
+    await Promise.all(currentTargetShareHandlers);
   }
 
   return findings;
 }
 
-async function handleFactTargetShare(
+async function getTotalActiveValidators(blockEvent: BlockEvent) {
+  const [smDigests] = await stakingRouter.functions.getAllStakingModuleDigests({
+    blockTag: blockEvent.blockNumber,
+  });
+  let totalActiveValidators = 0;
+  for (const smDigest of smDigests) {
+    const summary = smDigest.summary;
+    const totalDepositedValidators = (
+      summary.totalDepositedValidators as BigNumber
+    ).toNumber();
+    const totalExitedValidators = (
+      summary.totalExitedValidators as BigNumber
+    ).toNumber();
+    totalActiveValidators += totalDepositedValidators - totalExitedValidators;
+  }
+
+  return totalActiveValidators;
+}
+
+async function handleStakingModuleTargetShare(
   blockEvent: BlockEvent,
   findings: Finding[],
   norContext: NodeOperatorsRegistryModuleContext,
+  totalActiveValidators: number,
 ) {
-  const activeValidatorsCountResponse =
-    await stakingRouter.functions.getStakingModuleActiveValidatorsCount(
-      norContext.params.moduleId,
-      {
-        blockTag: blockEvent.blockNumber,
-      },
-    );
-  const [stModule] = await stakingRouter.functions.getStakingModule(
-    norContext.params.moduleId,
-    {
-      blockTag: blockEvent.blockNumber,
-    },
-  );
-  const targetShare = stModule.targetShare;
-  const routerActiveValidatorsCount = (
-    activeValidatorsCountResponse.activeValidatorsCount as BigNumber
-  ).toNumber();
-  const summary = await norContext.contract.getStakingModuleSummary();
+  const summary = await norContext.contract.getStakingModuleSummary({
+    blockTag: blockEvent.blockNumber,
+  });
   const totalDepositedValidators = (
     summary.totalDepositedValidators as BigNumber
   ).toNumber();
@@ -630,21 +647,25 @@ async function handleFactTargetShare(
   const moduleActiveValidators =
     totalDepositedValidators - totalExitedValidators;
 
-  let factTargetShare = targetShare;
-  if (routerActiveValidatorsCount > moduleActiveValidators) {
-    factTargetShare = moduleActiveValidators / routerActiveValidatorsCount;
-  } else if (routerActiveValidatorsCount < moduleActiveValidators) {
-    factTargetShare = routerActiveValidatorsCount / moduleActiveValidators;
+  let currentTargetShare = norContext.targetShare;
+  if (totalActiveValidators > moduleActiveValidators) {
+    currentTargetShare = moduleActiveValidators / totalActiveValidators;
+  } else if (totalActiveValidators < moduleActiveValidators) {
+    currentTargetShare = totalActiveValidators / moduleActiveValidators;
   } else {
     return;
   }
 
   const multiplier = 10_000;
-  const diffTargetShare =
-    (1 - Math.abs(factTargetShare - targetShare)) * multiplier;
+  currentTargetShare = currentTargetShare * multiplier;
+  const diffTargetShare = Math.abs(currentTargetShare - norContext.targetShare);
 
-  const title = `Actual target exceeded ${Math.ceil(diffTargetShare) / 100}%%`;
-  const description = `The module has ${moduleActiveValidators} active validators against ${routerActiveValidatorsCount} at Staking Router`;
+  const title = `the current target share exceeded ${
+    Math.ceil(diffTargetShare) / 100
+  }%%`;
+  const description =
+    `The module has ${moduleActiveValidators} active validators against ${totalActiveValidators}\n` +
+    `Current targetShare: ${currentTargetShare}, the module targetShare: ${norContext.targetShare}`;
   if (diffTargetShare > TARGET_SHARE_THRESHOLD_PANIC) {
     findings.push(
       Finding.fromObject({
