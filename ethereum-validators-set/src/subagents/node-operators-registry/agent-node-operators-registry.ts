@@ -603,7 +603,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
     );
 
     await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsInfoUpdaters]);
-
     await Promise.all(currentTargetShareHandlers);
   }
 
@@ -657,7 +656,7 @@ async function handleStakingModuleTargetShare(
   }
 
   const multiplier = 10_000;
-  currentTargetShare = currentTargetShare * multiplier;
+  currentTargetShare = Math.ceil(currentTargetShare * multiplier);
   const diffTargetShare = Math.abs(currentTargetShare - norContext.targetShare);
 
   const title = `the current target share exceeded ${
