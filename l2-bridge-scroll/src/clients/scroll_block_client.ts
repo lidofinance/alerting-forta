@@ -1,5 +1,5 @@
 import { BlockDto } from 'src/entity/blockDto'
-import { IMantleProvider } from './mantle_provider'
+import { IMantleProvider } from './scroll_provider'
 import { Log } from '@ethersproject/abstract-provider'
 import { Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
