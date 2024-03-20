@@ -38,6 +38,7 @@ const {
   OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
   BLOCK_INTERVAL,
+  BASIS_POINTS_MULTIPLIER,
   TARGET_SHARE_THRESHOLD_NOTICE,
   TARGET_SHARE_THRESHOLD_PANIC,
 } = requireWithTier<typeof Constants>(
@@ -585,8 +586,9 @@ export async function handleBlock(blockEvent: BlockEvent) {
       (nodeOperatorRegistry) =>
         handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
-    const currentTargetShareHandlers = stakingModulesOperatorRegistry.map(
-      async (nodeOperatorRegistry) => {
+    const currentTargetShareHandlers = stakingModulesOperatorRegistry
+      .filter((nor) => nor.targetShare < BASIS_POINTS_MULTIPLIER)
+      .map(async (nodeOperatorRegistry) => {
         const totalActiveValidators =
           await getTotalActiveValidators(blockEvent);
         await handleStakingModuleTargetShare(
@@ -595,8 +597,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
           nodeOperatorRegistry,
           totalActiveValidators,
         );
-      },
-    );
+      });
     const nodeOperatorsInfoUpdaters = stakingModulesOperatorRegistry.map(
       (nodeOperatorRegistry) =>
         nodeOperatorRegistry.updateNodeOperatorsInfo(blockEvent.blockNumber),
@@ -650,11 +651,13 @@ async function handleStakingModuleTargetShare(
     return;
   }
 
-  const multiplier = 10_000;
   const currentTargetShare = Math.ceil(
-    (moduleActiveValidators / totalActiveValidators) * multiplier,
+    (moduleActiveValidators / totalActiveValidators) * BASIS_POINTS_MULTIPLIER,
   );
-  const diffTargetShare = Math.abs(currentTargetShare - norContext.targetShare);
+  const diffTargetShare = currentTargetShare - norContext.targetShare;
+  if (diffTargetShare <= 0) {
+    return;
+  }
 
   const title = `the current target share exceeded ${
     Math.ceil(diffTargetShare) / 100

@@ -22,6 +22,9 @@ export const SPLIT_WALLET_FACTORY_SSV_CLUSTER_ADDRESS =
   splitWalletFactorySsvClusterAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const BLOCK_INTERVAL = 100;
+
+// basis points
+export const BASIS_POINTS_MULTIPLIER = 100_00;
 export const TARGET_SHARE_THRESHOLD_NOTICE = 55;
 export const TARGET_SHARE_THRESHOLD_PANIC = 65;
 
