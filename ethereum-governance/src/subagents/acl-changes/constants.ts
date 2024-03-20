@@ -392,6 +392,13 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
       ownershipMethod: "proxy__getAdmin",
     },
   ],
+  [
+    ebOracleAddress,
+    {
+      name: "Validator Exit Bus Oracle",
+      ownershipMethod: "proxy__getAdmin",
+    },
+  ],
 ]);
 
 export interface IHasRoles {

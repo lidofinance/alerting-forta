@@ -18,6 +18,7 @@ import * as trpChanges from "./subagents/trp-changes/agent-trp-changes";
 import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
 import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
 import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
+import * as treasurySwap from "./subagents/treasury-swap/treasury-swap";
 
 import VERSION from "./version";
 import { mergeFindings } from "./common/utils";
@@ -39,6 +40,7 @@ const subAgents: SubAgent[] = [
   agentProxy,
   agentAragon,
   agentACL,
+  treasurySwap,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
