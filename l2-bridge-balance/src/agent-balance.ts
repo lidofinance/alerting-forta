@@ -12,7 +12,7 @@ import {
   BridgeParamLDO,
   BridgeParamWstETH,
   ETH_DECIMALS,
-  LDO_ADDRESS,
+  LDO_L1_ADDRESS,
   WSTETH_ADDRESS,
 } from "./constants";
 import ERC20_SHORT_ABI from "./abi/ERC20Short.json";
@@ -53,6 +53,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
       BRIDGE_PARAMS_WSTETH.Mantle,
     ),
     handleBridgeBalanceWstETH(blockEvent, findings, BRIDGE_PARAMS_WSTETH.Linea),
+    handleBridgeBalanceWstETH(blockEvent, findings, BRIDGE_PARAMS_WSTETH.Scroll),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Arbitrum),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
   ]);
@@ -112,7 +113,7 @@ async function handleBridgeBalanceLDO(
   findings: Finding[],
   networkParams: BridgeParamLDO,
 ) {
-  const LDO = new ethers.Contract(LDO_ADDRESS, ERC20_SHORT_ABI, ethersProvider);
+  const LDO = new ethers.Contract(LDO_L1_ADDRESS, ERC20_SHORT_ABI, ethersProvider);
   const l1Balance = new BigNumber(
     String(await LDO.functions.balanceOf(networkParams.l1Gateway)),
   );

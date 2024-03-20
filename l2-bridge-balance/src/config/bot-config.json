@@ -16,5 +16,8 @@
   },
   "Linea": {
     "RpcUrl": "https://linea.blockpi.network/v1/rpc/public"
+  },
+  "Scroll": {
+    "RpcUrl": "https://rpc.scroll.io"
   }
 }
