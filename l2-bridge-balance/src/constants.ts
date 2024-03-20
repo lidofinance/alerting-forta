@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import config from "./config/bot-config.json";
 
-// COMMON CONSTS
+// COMMON CONSTANTS
 
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
@@ -24,6 +24,7 @@ export interface BridgeParamsWstETH {
   ZkSync: BridgeParamWstETH;
   Mantle: BridgeParamWstETH;
   Linea: BridgeParamWstETH;
+  Scroll: BridgeParamWstETH;
 }
 
 export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
@@ -63,9 +64,15 @@ export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
     wstEthBridged: "0xB5beDd42000b71FddE22D3eE8a79Bd49A568fC8F",
     rpcUrl: config.Linea.RpcUrl,
   },
+  Scroll: {
+    name: "Scroll",
+    l1Gateway: "0x6625c6332c9f91f2d27c304e729b86db87a3f504",
+    wstEthBridged: "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
+    rpcUrl: config.Scroll.RpcUrl,
+  },
 };
 
-export const LDO_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+export const LDO_L1_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
 
 export interface BridgeParamLDO {
   name: string;
