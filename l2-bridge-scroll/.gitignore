@@ -1,0 +1,8 @@
+node_modules
+dist
+forta.config.json
+.yarn/*
+!.yarn/releases/
+*.log
+version.json
+.DS_Store
