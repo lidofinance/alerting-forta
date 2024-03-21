@@ -1,12 +1,12 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
+  ethers,
 } from "forta-agent";
 
 import VOTING_ABI from "./abi/AragonVoting.json";
@@ -16,15 +16,15 @@ import {
   ETH_DECIMALS,
   HUGE_VOTE_DISTANCE,
   LIDO_VOTING_ADDRESS,
-  VOTING_BASE_URL,
   PINGER_SCHEDULE,
+  VOTING_BASE_URL,
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
 import {
+  abbreviateNumber,
   formatLink,
   getResultStr,
-  abbreviateNumber,
   secondsToDaysAndHours,
 } from "./helpers";
 
@@ -127,12 +127,14 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
 }
 
 async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
+  const prevActiveVotes = await getActiveVotes(blockEvent.blockNumber - 1);
   Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
     if (vote) {
+      const previousVote = prevActiveVotes.get(key);
+      const lastTotal = previousVote ? previousVote.total : new BigNumber(0);
       const total = vote.yea.plus(vote.nay);
-      const lastTotal = vote.lastReportedTotal || new BigNumber(0);
-      const url = `${VOTING_BASE_URL}${key}`;
+
       if (total.gte(lastTotal.plus(HUGE_VOTE_DISTANCE)) && !vote.noMorePing) {
         if (vote.passed) {
           reportHugeVotesWithQuorum(
