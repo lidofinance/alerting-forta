@@ -38,6 +38,9 @@ const {
   OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
   BLOCK_INTERVAL,
+  BASIS_POINTS_MULTIPLIER,
+  TARGET_SHARE_THRESHOLD_NOTICE,
+  TARGET_SHARE_THRESHOLD_PANIC,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -90,19 +93,21 @@ class NodeOperatorsRegistryModuleContext {
   public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
+  public targetShare: number = 0;
+  public readonly contract: ethers.Contract;
 
   constructor(
     public readonly params: NodeOperatorModuleParams,
     private readonly stakingRouter: ethers.Contract,
-  ) {}
-
-  async initialize(currentBlock: number) {
-    const nodeOperatorRegistry = new ethers.Contract(
+  ) {
+    this.contract = new ethers.Contract(
       this.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
       ethersProvider,
     );
+  }
 
+  async initialize(currentBlock: number) {
     const [operators] =
       await this.stakingRouter.functions.getAllNodeOperatorDigests(
         this.params.moduleId,
@@ -111,7 +116,7 @@ class NodeOperatorsRegistryModuleContext {
 
     const operatorsSummaries = await Promise.all(
       operators.map((digest: any) =>
-        nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
+        this.contract.functions.getNodeOperatorSummary(digest.id, {
           blockTag: currentBlock,
         }),
       ),
@@ -137,10 +142,16 @@ class NodeOperatorsRegistryModuleContext {
       });
     }
 
-    await this.updateNodeOperatorsNames(currentBlock);
+    await this.updateNodeOperatorsInfo(currentBlock);
   }
 
-  async updateNodeOperatorsNames(block: number) {
+  getOperatorName(nodeOperatorId: string): string {
+    return (
+      this.nodeOperatorNames.get(Number(nodeOperatorId))?.name ?? "undefined"
+    );
+  }
+
+  async updateNodeOperatorsInfo(block: number) {
     const nodeOperatorsRegistry = new ethers.Contract(
       this.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
@@ -152,6 +163,11 @@ class NodeOperatorsRegistryModuleContext {
         this.params.moduleId,
         { blockTag: block },
       );
+    const [srModule] = await this.stakingRouter.functions.getStakingModule(
+      this.params.moduleId,
+      { blockTag: block },
+    );
+    this.targetShare = srModule.targetShare;
 
     await Promise.all(
       operators.map(async (operator: any) => {
@@ -171,18 +187,17 @@ class NodeOperatorsRegistryModuleContext {
 }
 
 const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const stakingRouter = new ethers.Contract(
+  STAKING_ROUTER_ADDRESS,
+  STAKING_ROUTER_ABI,
+  ethersProvider,
+);
 const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
 
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-
-  const stakingRouter = new ethers.Contract(
-    STAKING_ROUTER_ADDRESS,
-    STAKING_ROUTER_ABI,
-    ethersProvider,
-  );
 
   stakingModulesOperatorRegistry.length = 0;
 
@@ -327,13 +342,13 @@ async function handleSetRewardAddress(
         (nor) =>
           nor.params.moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
       );
-      const norInfo = simpleDvtModule?.nodeOperatorNames.get(nodeOperatorId);
+      const norName = simpleDvtModule?.getOperatorName(nodeOperatorId);
 
       findings.push(
         Finding.from({
           alertId: `INCORRECT-REWARD-ADDRESS`,
           name: `⚠️ SimpleDVT NOR: Incorrect Reward address provided"`,
-          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norInfo?.name}) created not via SplitFactory`,
+          description: `RewardAddress (${newRewardAddress}) for NOR #${nodeOperatorId}(${norName}) created not via SplitFactory`,
           severity: FindingSeverity.High,
           type: FindingType.Info,
         }),
@@ -342,7 +357,7 @@ async function handleSetRewardAddress(
   }
 
   for (const stakingModule of stakingModulesOperatorRegistry) {
-    await stakingModule.updateNodeOperatorsNames(txEvent.blockNumber);
+    await stakingModule.updateNodeOperatorsInfo(txEvent.blockNumber);
   }
 }
 
@@ -386,8 +401,8 @@ function handleExitedCountChanged(
       findings.push(
         Finding.fromObject({
           name: `⚠️ ${norContext.params.moduleName} NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
-          description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-            Number(nodeOperatorId),
+          description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+            nodeOperatorId,
           )}\nNew exited: ${newExited}`,
           alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-BIG-EXIT`,
           severity: FindingSeverity.Info,
@@ -407,8 +422,8 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-EXITED`,
             severity: FindingSeverity.Info,
@@ -419,8 +434,8 @@ function handleExitedCountChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited some stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck - actualStuckCount} of ${
               lastDigest.stuck
             }`,
@@ -456,8 +471,8 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `⚠️ ${norContext.params.moduleName} NO Registry: operator have new stuck keys`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nNew stuck: ${stuckValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-NEW-STUCK-KEYS`,
             severity: FindingSeverity.Medium,
@@ -475,8 +490,8 @@ function handleStuckStateChanged(
         findings.push(
           Finding.fromObject({
             name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator refunded all stuck keys 🎉`,
-            description: `Operator: ${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}\nRefunded: ${refundedValidatorsCount}`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-ALL-STUCK-REFUNDED`,
             severity: FindingSeverity.Info,
@@ -507,9 +522,7 @@ function handleSigningKeysRemoved(
     const events = txEvent.filterLog(SIGNING_KEY_REMOVED_EVENT, moduleAddress);
     if (events.length > 0) {
       events.forEach((event) => {
-        const noName =
-          norContext.nodeOperatorNames.get(Number(event.args.operatorId))
-            ?.name || "undefined";
+        const noName = norContext.getOperatorName(event.args.operatorId);
         const keysCount = digest.get(noName) || 0;
         digest.set(noName, keysCount + 1);
       });
@@ -551,8 +564,8 @@ function handleStakeLimitSet(
         findings.push(
           Finding.fromObject({
             name: `🚨 ${norContext.params.moduleName} NO Vetted keys set by NON-EasyTrack action`,
-            description: `Vetted keys count for node operator [${nodeOperatorId} ${norContext.nodeOperatorNames.get(
-              Number(nodeOperatorId),
+            description: `Vetted keys count for node operator [#${nodeOperatorId} ${norContext.getOperatorName(
+              nodeOperatorId,
             )}] was set to ${approvedValidatorsCount} by NON-EasyTrack motion!`,
             alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-VETTED-KEYS-SET`,
             severity: FindingSeverity.High,
@@ -573,15 +586,109 @@ export async function handleBlock(blockEvent: BlockEvent) {
       (nodeOperatorRegistry) =>
         handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
-    const nodeOperatorsNamesUpdaters = stakingModulesOperatorRegistry.map(
+    const currentTargetShareHandlers = stakingModulesOperatorRegistry
+      .filter((nor) => nor.targetShare < BASIS_POINTS_MULTIPLIER)
+      .map(async (nodeOperatorRegistry) => {
+        const totalActiveValidators =
+          await getTotalActiveValidators(blockEvent);
+        await handleStakingModuleTargetShare(
+          blockEvent,
+          findings,
+          nodeOperatorRegistry,
+          totalActiveValidators,
+        );
+      });
+    const nodeOperatorsInfoUpdaters = stakingModulesOperatorRegistry.map(
       (nodeOperatorRegistry) =>
-        nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
+        nodeOperatorRegistry.updateNodeOperatorsInfo(blockEvent.blockNumber),
     );
 
-    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsNamesUpdaters]);
+    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsInfoUpdaters]);
+    await Promise.all(currentTargetShareHandlers);
   }
 
   return findings;
+}
+
+async function getTotalActiveValidators(blockEvent: BlockEvent) {
+  const [smDigests] = await stakingRouter.functions.getAllStakingModuleDigests({
+    blockTag: blockEvent.blockNumber,
+  });
+  let totalActiveValidators = 0;
+  for (const smDigest of smDigests) {
+    const summary = smDigest.summary;
+    const totalDepositedValidators = (
+      summary.totalDepositedValidators as BigNumber
+    ).toNumber();
+    const totalExitedValidators = (
+      summary.totalExitedValidators as BigNumber
+    ).toNumber();
+    totalActiveValidators += totalDepositedValidators - totalExitedValidators;
+  }
+
+  return totalActiveValidators;
+}
+
+async function handleStakingModuleTargetShare(
+  blockEvent: BlockEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+  totalActiveValidators: number,
+) {
+  const summary = await norContext.contract.getStakingModuleSummary({
+    blockTag: blockEvent.blockNumber,
+  });
+  const totalDepositedValidators = (
+    summary.totalDepositedValidators as BigNumber
+  ).toNumber();
+  const totalExitedValidators = (
+    summary.totalExitedValidators as BigNumber
+  ).toNumber();
+  const moduleActiveValidators =
+    totalDepositedValidators - totalExitedValidators;
+
+  if (totalActiveValidators <= moduleActiveValidators) {
+    return;
+  }
+
+  const currentTargetShare = Math.ceil(
+    (moduleActiveValidators / totalActiveValidators) * BASIS_POINTS_MULTIPLIER,
+  );
+  const diffTargetShare = currentTargetShare - norContext.targetShare;
+  if (diffTargetShare <= 0) {
+    return;
+  }
+
+  const title = `the current target share exceeded ${
+    Math.ceil(diffTargetShare) / 100
+  }%%`;
+  const description =
+    `The module has ${moduleActiveValidators} active validators against ${totalActiveValidators}\n` +
+    `Current targetShare: ${currentTargetShare}, the module targetShare: ${norContext.targetShare}`;
+  if (diffTargetShare > TARGET_SHARE_THRESHOLD_PANIC) {
+    findings.push(
+      Finding.fromObject({
+        name: `🚨 ${norContext.params.moduleName} NO Registry: ${title}`,
+        description,
+        alertId: `${norContext.params.alertPrefix}TARGET-SHARE-PANIC`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      }),
+    );
+    return;
+  }
+
+  if (diffTargetShare > TARGET_SHARE_THRESHOLD_NOTICE) {
+    findings.push(
+      Finding.fromObject({
+        name: `⚠️ ${norContext.params.moduleName} NO Registry: ${title}`,
+        description,
+        alertId: `${norContext.params.alertPrefix}TARGET-SHARE-NOTICE`,
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }),
+    );
+  }
 }
 
 async function handleStuckPenaltyEnd(
@@ -603,8 +710,8 @@ async function handleStuckPenaltyEnd(
         currentClosestPenaltyEndTimestamp = stuckPenaltyEndTimestamp;
       }
       const delay = blockEvent.block.timestamp - stuckPenaltyEndTimestamp;
-      description += `Operator: ${id} ${norContext.nodeOperatorNames.get(
-        Number(id),
+      description += `Operator: ${id} ${norContext.getOperatorName(
+        id,
       )} penalty ended ${formatDelay(delay)} ago\n`;
     }
   }
