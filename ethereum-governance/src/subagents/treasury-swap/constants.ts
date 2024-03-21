@@ -156,24 +156,3 @@ export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
 ];
-
-export const createOrderWatchEvent = (
-  address: string,
-  timestamp: Date
-) => {
-  return {
-    address,
-    timestamp,
-    event: {
-      address: address,
-      event:
-        "event Trade(address indexed owner, IERC20 sellToken, IERC20 buyToken, uint256 sellAmount, uint256 buyAmount, uint256 feeAmount, bytes orderUid)",
-      alertId: "STONKS-ORDER-SETTLED",
-      name: "✅ Stonks: Order settled",
-      description: (args: any) => {
-        return "settled";
-      },
-      severity: FindingSeverity.Info,
-    },
-  };
-};

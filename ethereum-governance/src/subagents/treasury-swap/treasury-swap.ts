@@ -1,4 +1,4 @@
-import { Finding, TransactionEvent } from "forta-agent";
+import { Finding, TransactionEvent, BlockEvent } from "forta-agent";
 
 import {
   handleEventsOfNotice,
@@ -6,15 +6,11 @@ import {
   requireWithTier,
 } from "../../common/utils";
 import type * as Constants from "./constants";
+import { handleOrderCreation, handleOrderSettlement } from "./utils";
 
 export const name = "Stonks";
-const createdOrders: any = [];
 
-const {
-  STONKS_ORDER_CREATION,
-  TREASURY_SWAP_EVENTS_OF_NOTICE,
-  createOrderWatchEvent,
-} = requireWithTier<typeof Constants>(
+const { TREASURY_SWAP_EVENTS_OF_NOTICE } = requireWithTier<typeof Constants>(
   module,
   "./constants",
   RedefineMode.Merge
@@ -26,21 +22,20 @@ export async function initialize(
   return {};
 }
 
+export async function handleBlock(blockEvent: BlockEvent) {
+  await handleOrderSettlement(blockEvent);
+
+  return [];
+}
+
 export async function handleTransaction(txEvent: TransactionEvent) {
   const orderFindings: Finding[] = [];
   const findings: Finding[] = [];
 
-  handleEventsOfNotice(txEvent, orderFindings, STONKS_ORDER_CREATION);
-  handleEventsOfNotice(txEvent, findings, TREASURY_SWAP_EVENTS_OF_NOTICE);
-
-  if (orderFindings.length > 0) {
-    orderFindings.map((event) => {
-      createdOrders.push(
-        createOrderWatchEvent(event.metadata.args.split(",")[0], event.timestamp)
-      );
-      return event.metadata.args.split(",")[0];
-    });
-  }
+  await Promise.all([
+    handleOrderCreation(txEvent),
+    handleEventsOfNotice(txEvent, findings, TREASURY_SWAP_EVENTS_OF_NOTICE),
+  ]);
 
   return findings;
 }
