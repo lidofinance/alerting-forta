@@ -46,7 +46,6 @@ interface VoteInfo {
   quorumDistance: number;
   timeLeft: number;
   resultsStr: string;
-  lastReportedTotal?: BigNumber;
   alertLevel?: number;
   noMorePing?: boolean;
 }
@@ -63,7 +62,7 @@ export async function initialize(
   console.log(`[${name}]`);
 
   await updateVotingDurations(currentBlock);
-  activeVotes = await getActiveVotes(currentBlock, true);
+  activeVotes = await getActiveVotes(currentBlock);
 
   return {
     activeVotes: Array.from(activeVotes.keys()).toString(),
@@ -132,22 +131,27 @@ async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
     const vote = activeVotes.get(key);
     if (vote) {
       const previousVote = prevActiveVotes.get(key);
-      const lastTotal = previousVote ? previousVote.total : new BigNumber(0);
+      if (!previousVote) {
+        // vote was just created
+        return;
+      }
       const total = vote.yea.plus(vote.nay);
 
-      if (total.gte(lastTotal.plus(HUGE_VOTE_DISTANCE)) && !vote.noMorePing) {
+      if (
+        total.gte(previousVote.total.plus(HUGE_VOTE_DISTANCE)) &&
+        !vote.noMorePing
+      ) {
         if (vote.passed) {
           reportHugeVotesWithQuorum(
-            total.minus(lastTotal),
+            total.minus(previousVote.total),
             key,
             vote,
             findings,
           );
           vote.noMorePing = true;
         } else {
-          reportHugeVotes(total.minus(lastTotal), key, vote, findings);
+          reportHugeVotes(total.minus(previousVote.total), key, vote, findings);
         }
-        vote.lastReportedTotal = total;
         activeVotes.set(key, vote);
       }
     }
@@ -222,7 +226,6 @@ async function updateVotingDurations(block: number) {
 
 async function getActiveVotes(
   blockNumber: number,
-  init: boolean = false,
 ): Promise<Map<number, VoteInfo>> {
   const blockTag = { blockTag: blockNumber };
   const block = await ethersProvider.getBlock(blockNumber);
@@ -278,9 +281,6 @@ async function getActiveVotes(
       timeLeft,
       resultsStr,
     };
-    if (init) {
-      voteInfo.lastReportedTotal = total;
-    }
     votesInfo.set(i, voteInfo);
   }
   return votesInfo;
