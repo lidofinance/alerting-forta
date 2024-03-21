@@ -18,6 +18,7 @@ import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import OBOL_LIDO_SPLIT_FACTORY_ABI from "../../abi/obol-splits/ObolLidoSplitFactory.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
+import EASY_TRACK_ABI from "../../abi/EasyTrack.json";
 import { ethersProvider } from "../../ethers";
 import { getEventsOfNoticeForStakingModule } from "./utils";
 import BigNumber from "bignumber.js";
@@ -70,6 +71,7 @@ interface NodeOperatorModuleParams {
   moduleAddress: string;
   alertPrefix: string;
   moduleName: string;
+  setVettedValidatorsLimitsAddress?: string;
   eventsOfNotice: EventsOfNotice[];
 }
 
@@ -220,6 +222,7 @@ export async function initialize(
     moduleAddress,
     moduleName,
     alertPrefix,
+    setVettedValidatorsLimitsAddress,
   } of STAKING_MODULES) {
     if (!moduleId) {
       console.log(`${moduleName} is not supported on this network for ${name}`);
@@ -240,6 +243,7 @@ export async function initialize(
           moduleAddress,
           moduleName,
           alertPrefix,
+          setVettedValidatorsLimitsAddress,
           eventsOfNotice: getEventsOfNoticeForStakingModule({
             moduleId,
             moduleAddress,
@@ -264,7 +268,7 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  stakingModulesOperatorRegistry.forEach((norContext) => {
+  for (const norContext of stakingModulesOperatorRegistry) {
     handleEventsOfNotice(txEvent, findings, norContext.params.eventsOfNotice);
 
     const stuckEvents = txEvent.filterLog(
@@ -275,11 +279,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     // the order is important
     handleExitedCountChanged(txEvent, stuckEvents, findings, norContext);
     handleStuckStateChanged(stuckEvents, findings, norContext);
-
-    handleSigningKeysRemoved(txEvent, findings, norContext);
+    await handleSigningKeysRemoved(txEvent, findings, norContext);
     handleStakeLimitSet(txEvent, findings, norContext);
     handleSetRewardAddress(txEvent, findings, norContext);
-  });
+  }
 
   return findings;
 }
@@ -511,7 +514,7 @@ function handleStuckStateChanged(
   }
 }
 
-function handleSigningKeysRemoved(
+async function handleSigningKeysRemoved(
   txEvent: TransactionEvent,
   findings: Finding[],
   norContext: NodeOperatorsRegistryModuleContext,
@@ -539,7 +542,53 @@ function handleSigningKeysRemoved(
           type: FindingType.Info,
         }),
       );
+      await handleActiveMotionsWhenSigningKeysRemoved(
+        txEvent,
+        findings,
+        norContext,
+      );
     }
+  }
+}
+
+async function handleActiveMotionsWhenSigningKeysRemoved(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
+  const { setVettedValidatorsLimitsAddress } = norContext.params;
+  if (!setVettedValidatorsLimitsAddress) {
+    return;
+  }
+
+  const easyTrackContract = new ethers.Contract(
+    EASY_TRACK_ADDRESS,
+    EASY_TRACK_ABI,
+    ethersProvider,
+  );
+  const [motions] = await easyTrackContract.functions.getMotions({
+    blockTag: txEvent.blockNumber,
+  });
+  for (const motion of motions) {
+    if (
+      motion?.evmScriptFactory.toLowerCase() !==
+      setVettedValidatorsLimitsAddress
+    ) {
+      continue;
+    }
+    const motionId = (motion?.id as BigNumber).toNumber();
+    findings.push(
+      Finding.fromObject({
+        name: `🚨 ${norContext.params.moduleName} NO Registry: SetVettedValidatorsLimits motion enabled 🚨`,
+        description:
+          `SigningKeyRemoved event and enabled SetVettedValidatorsLimits motion may indicate` +
+          `to circumvent DAO validator keys approval.` +
+          `\nPlease check #${motionId} motion`,
+        alertId: `${norContext.params.alertPrefix}CIRCUMVENTING-APPROVED-KEYS`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      }),
+    );
   }
 }
 

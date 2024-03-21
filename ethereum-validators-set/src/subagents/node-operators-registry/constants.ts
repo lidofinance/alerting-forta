@@ -1,5 +1,6 @@
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
+  SET_VETTED_VALIDATORS_LIMITS_ADDRESS as setVettedValidatorsLimitsSDvtAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   SPLIT_WALLET_FACTORY_OBOL_CLUSTER_ADDRESS as splitWalletFactoryObolClusterAddress,
@@ -56,6 +57,7 @@ export const STAKING_MODULES = [
     moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",
+    setVettedValidatorsLimitsAddress: setVettedValidatorsLimitsSDvtAddress,
   },
 ];
 

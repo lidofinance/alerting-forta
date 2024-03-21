@@ -1,5 +1,6 @@
 import {
   EASY_TRACK_ADDRESS as etAddress,
+  SET_VETTED_VALIDATORS_LIMITS_ADDRESS as setVettedValidatorsLimitsAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   SPLIT_WALLET_FACTORY_OBOL_CLUSTER_ADDRESS as splitWalletFactoryObolClusterAddress,
@@ -14,6 +15,8 @@ export const SPLIT_WALLET_FACTORY_OBOL_CLUSTER_ADDRESS =
   splitWalletFactoryObolClusterAddress;
 export const SPLIT_WALLET_FACTORY_SSV_CLUSTER_ADDRESS =
   splitWalletFactorySsvClusterAddress;
+export const SET_VETTED_VALIDATORS_LIMITS_ADDRESS =
+  setVettedValidatorsLimitsAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 
 export const NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD = 1;
