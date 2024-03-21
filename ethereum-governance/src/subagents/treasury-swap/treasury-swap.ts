@@ -19,17 +19,18 @@ const { TREASURY_SWAP_EVENTS_OF_NOTICE } = requireWithTier<typeof Constants>(
 export async function initialize(
   currentBlock: number
 ): Promise<{ [key: string]: string }> {
+  // TODO: find created init createdOrders
+  console.log(`[${name}]`);
   return {};
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
-  await handleOrderSettlement(blockEvent);
+  const findings = await handleOrderSettlement(blockEvent);
 
-  return [];
+  return findings;
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
-  const orderFindings: Finding[] = [];
   const findings: Finding[] = [];
 
   await Promise.all([
@@ -42,6 +43,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 // required for DI to retrieve handlers in the case of direct agent use
 exports.default = {
+  handleBlock,
   handleTransaction,
   initialize, // sdk won't provide any arguments to the function
 };

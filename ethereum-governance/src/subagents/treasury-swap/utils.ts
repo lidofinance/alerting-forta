@@ -1,17 +1,15 @@
-import { BlockEvent, Finding, TransactionEvent, ethers } from "forta-agent";
+import { BlockEvent, Finding, TransactionEvent, ethers, FindingType, FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import ERC20 from "../../abi/ERC20.json";
 import STONKS_ABI from "../../abi/Stonks.json";
-import { handleEventsOfNotice } from "../../common/utils";
+import { etherscanAddress, handleEventsOfNotice } from "../../common/utils";
 import { STONKS_ORDER_CREATION } from "./constants";
 import { ethersProvider } from "../../ethers";
 
 const STETH_MAX_PRECISION = new BigNumber(4);
 const createdOrders: any[] = [];
 
-export async function handleOrderCreation(txEvent: TransactionEvent) {
-  const findings: Finding[] = [];
-
+export async function handleOrderCreation(txEvent: TransactionEvent ) {
   for (const stonksEvent of STONKS_ORDER_CREATION) {
     const stonksFindings: Finding[] = [];
 
@@ -37,15 +35,15 @@ export async function handleOrderCreation(txEvent: TransactionEvent) {
       });
     }
   }
-
-  return findings;
 }
 
 export async function handleOrderSettlement(txBlock: BlockEvent) {
-  if (createdOrders.length === 0) return [];
+  const findings: Finding[] = [];
+  if (createdOrders.length === 0) return findings;
 
   const timestamp = txBlock.block.timestamp;
 
+  // TODO:check that for-of works well with splice
   for (const order of createdOrders) {
     if (timestamp < order.timestamp + order.orderDuration) continue;
 
@@ -60,11 +58,26 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
     );
 
     if (balance.lte(STETH_MAX_PRECISION)) {
-      // TODO: add event of success
+      findings.push(Finding.fromObject({
+        name: "✅ Stonks: order fulfill",
+        description: `Stonks order ${etherscanAddress(order.address)} was fulfill`,
+        alertId: "STONKS-ORDER-FULFILL",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata: { args: '?' },
+      }))
     } else {
-      // TODO: add event of failure
+      findings.push(Finding.fromObject({
+        name: "❌ Stonks: order expired",
+        description: `Stonks order ${etherscanAddress(order.address)} was expired`,
+        alertId: "STONKS-ORDER-EXPIRED",
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata: { args: '?' },
+      }))
     }
 
     createdOrders.splice(createdOrders.indexOf(order), 1);
   }
+  return findings
 }
