@@ -71,5 +71,4 @@ export const DAI_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 export const USDT_ADDRESS = "0x86f6c353a0965eb069cd7f4f91c1afef8c725551";
 export const USDC_ADDRESS = "0x9715b2786f1053294fc8952df923b95cab9aac42";
 export const EMERGENCY_BRAKES_MS_ADDRESS = "?";
-export const ORDER_ADDRESS = "?";
 export const DEV_MS_ADDRESS = "?";

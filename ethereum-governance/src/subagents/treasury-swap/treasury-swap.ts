@@ -17,23 +17,42 @@ import {
 } from "../../common/utils";
 import { ethersProvider } from "../../ethers";
 import type * as Constants from "./constants";
-import { STONKS_ORDER_CREATION } from "./constants";
+import { EventOfNotice } from "./constants";
 
 export const name = "Stonks";
 
-const { TREASURY_SWAP_EVENTS_OF_NOTICE, STONKS, BLOCK_INTERVAL } =
-  requireWithTier<typeof Constants>(module, "./constants", RedefineMode.Merge);
+const {
+  TREASURY_SWAP_EVENTS_OF_NOTICE,
+  STONKS,
+  BLOCK_WINDOW,
+  BLOCK_TO_WATCH,
+  BLOCK_TO_WATCH_TIME,
+  STONKS_ORDER_CREATION,
+  ORDER_EVENTS_OF_NOTICE,
+} = requireWithTier<typeof Constants>(
+  module,
+  "./constants",
+  RedefineMode.Merge,
+);
 
 const STETH_MAX_PRECISION = new BigNumber(4);
-const createdOrders: any[] = [];
+
+type CreatedOrder = {
+  tokenFrom: string;
+  address: string;
+  orderDuration: number;
+  timestamp: number;
+  active: boolean;
+};
+const createdOrders: CreatedOrder[] = [];
 
 export async function initialize(
-  currentBlock: number,
+  currentBlockNumber: number,
 ): Promise<{ [key: string]: string }> {
+  const currentBlock = await ethersProvider.getBlock(currentBlockNumber);
+  console.log(`[${name}]`);
   await Promise.all(
     STONKS.map(async (stonks) => {
-      console.log(`[${name}]`);
-
       const stonksContract = new ethers.Contract(
         stonks.address,
         STONKS_ABI,
@@ -42,14 +61,14 @@ export async function initialize(
 
       const allEvents = await stonksContract.queryFilter(
         { address: stonks.address },
-        currentBlock - BLOCK_INTERVAL,
-        `0x${currentBlock.toString(16)}`,
+        currentBlockNumber - BLOCK_TO_WATCH,
+        currentBlockNumber,
       );
 
       const events = allEvents.filter(
         (event) => event.event === "OrderContractCreated",
       );
-      // no stonks past 30 min
+      // no stonks past 120 min
       if (!events.length) {
         return;
       }
@@ -59,36 +78,61 @@ export async function initialize(
 
       await Promise.all(
         events.map(async (event) => {
+          if (
+            createdOrders.some(
+              (order) => order.address === event?.args?.orderContract,
+            )
+          ) {
+            return;
+          }
           const block = await event.getBlock();
+
           createdOrders.push({
             tokenFrom,
             address: event?.args?.orderContract,
             orderDuration: orderDuration.toNumber(),
             timestamp: block.timestamp,
+            active:
+              currentBlock.timestamp - block.timestamp <
+              orderDuration.toNumber(),
           });
         }),
       );
     }),
   );
-
   return {};
 }
 
 export async function handleBlock(blockEvent: BlockEvent) {
+  if (blockEvent.blockNumber % BLOCK_WINDOW != 0) {
+    return [];
+  }
   const findings = await handleOrderSettlement(blockEvent);
   return findings;
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
-
-  await Promise.all([
-    handleOrderCreation(txEvent),
-    handleEventsOfNotice(txEvent, findings, TREASURY_SWAP_EVENTS_OF_NOTICE),
-  ]);
+  await handleOrderCreation(txEvent);
+  handleEventsOfNotice(txEvent, findings, TREASURY_SWAP_EVENTS_OF_NOTICE);
+  handleEventsOfNotice(
+    txEvent,
+    findings,
+    getOrderEventsOfNotice(createdOrders),
+  );
 
   return findings;
 }
+
+const getOrderEventsOfNotice = (orders: CreatedOrder[]) => {
+  const events: EventOfNotice[] = [];
+  orders.forEach((order) => {
+    return ORDER_EVENTS_OF_NOTICE.forEach((event) => {
+      events.push({ ...event, address: order.address });
+    });
+  });
+  return events;
+};
 
 export async function handleOrderCreation(txEvent: TransactionEvent) {
   for (const stonksEvent of STONKS_ORDER_CREATION) {
@@ -99,6 +143,10 @@ export async function handleOrderCreation(txEvent: TransactionEvent) {
     for (const finding of stonksFindings) {
       const stonksAddress = stonksEvent.address;
       const orderAddress = finding.metadata.args.split(",")[0].toLowerCase();
+      if (createdOrders.some((order) => order.address === orderAddress)) {
+        continue;
+      }
+
       const stonksContract = new ethers.Contract(
         stonksAddress,
         STONKS_ABI,
@@ -113,6 +161,7 @@ export async function handleOrderCreation(txEvent: TransactionEvent) {
         address: orderAddress,
         orderDuration: orderDuration.toNumber(),
         timestamp: txEvent.block.timestamp,
+        active: true,
       });
     }
   }
@@ -126,7 +175,8 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
 
   const lastCreatedOrders = [...createdOrders];
   for (const order of lastCreatedOrders) {
-    if (timestamp < order.timestamp + order.orderDuration) continue;
+    const duration = timestamp - order.timestamp;
+    if (duration < order.orderDuration) continue;
 
     const tokenToSell = new ethers.Contract(
       order.tokenFrom,
@@ -138,35 +188,42 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
       (await tokenToSell.functions.balanceOf(order.address)).toString(),
     );
 
-    if (balance.lte(STETH_MAX_PRECISION)) {
-      findings.push(
-        Finding.fromObject({
-          name: "✅ Stonks: order fulfill",
-          description: `Stonks order ${etherscanAddress(
-            order.address,
-          )} was fulfill`,
-          alertId: "STONKS-ORDER-FULFILL",
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-          metadata: { args: "?" },
-        }),
-      );
-    } else {
-      findings.push(
-        Finding.fromObject({
-          name: "❌ Stonks: order expired",
-          description: `Stonks order ${etherscanAddress(
-            order.address,
-          )} was expired`,
-          alertId: "STONKS-ORDER-EXPIRED",
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-          metadata: { args: "?" },
-        }),
-      );
+    if (order.active) {
+      if (balance.lte(STETH_MAX_PRECISION)) {
+        findings.push(
+          Finding.fromObject({
+            name: "✅ Stonks: order fulfill",
+            description: `Stonks order ${etherscanAddress(
+              order.address,
+            )} was fulfill`,
+            alertId: "STONKS-ORDER-FULFILL",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+            metadata: { args: "?" },
+          }),
+        );
+      } else {
+        findings.push(
+          Finding.fromObject({
+            name: "❌ Stonks: order expired",
+            description: `Stonks order ${etherscanAddress(
+              order.address,
+            )} was expired`,
+            alertId: "STONKS-ORDER-EXPIRED",
+            severity: FindingSeverity.Info,
+            type: FindingType.Info,
+            metadata: { args: "?" },
+          }),
+        );
+      }
     }
 
-    createdOrders.splice(createdOrders.indexOf(order), 1);
+    order.active = false;
+    if (
+      balance.lte(STETH_MAX_PRECISION) || duration > BLOCK_TO_WATCH_TIME
+    ) {
+      createdOrders.splice(createdOrders.indexOf(order), 1);
+    }
   }
   return findings;
 }

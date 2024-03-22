@@ -1,80 +1,88 @@
 import { FindingSeverity } from "forta-agent";
 import { etherscanAddress } from "../../common/utils";
 import {
-  STONKS_STETH_DAI_ADDRESS as stonksStethDaiAddress,
-  STONKS_STETH_USDC_ADDRESS as stonksStethUsdcAddress,
-  STONKS_STETH_USDT_ADDRESS as stonksStethUsdtAddress,
-  STONKS_DAI_USDC_ADDRESS as stonksDaiUsdcAddress,
-  STONKS_DAI_USDT_ADDRESS as stonksDaiUsdtAddress,
-  STONKS_USDC_DAI_ADDRESS as stonksUsdcDaiAddress,
-  STONKS_USDC_USDT_ADDRESS as stonksUsdcUsdtAddress,
-  STONKS_USDT_DAI_ADDRESS as stonksUsdtDaiAddress,
-  STONKS_USDT_USDC_ADDRESS as stonksUsdtUsdcAddress,
-  STONKS_TESTFLIGHT_ADDRESS as stonksTestflightAddress,
-  ORDER_ADDRESS as orderAddress,
+  STONKS_STETH_DAI_ADDRESS,
+  STONKS_STETH_USDC_ADDRESS,
+  STONKS_STETH_USDT_ADDRESS,
+  STONKS_DAI_USDC_ADDRESS,
+  STONKS_DAI_USDT_ADDRESS,
+  STONKS_USDC_DAI_ADDRESS,
+  STONKS_USDC_USDT_ADDRESS,
+  STONKS_USDT_DAI_ADDRESS,
+  STONKS_USDT_USDC_ADDRESS,
+  STONKS_TESTFLIGHT_ADDRESS,
 } from "../../common/constants";
 
-export const BLOCK_INTERVAL = 150; // about 30 min (one block is 12 sec)
+export type EventOfNotice = {
+  address: string;
+  event: string;
+  alertId: string;
+  name: string;
+  description: (args: any) => string;
+  severity: number;
+};
 
+export const BLOCK_WINDOW = 5; // about 1 min (one block is 12 sec)
+export const BLOCK_TO_WATCH = 600; // about 120 min (one block is 12 sec)
+export const BLOCK_TO_WATCH_TIME = 12 * BLOCK_TO_WATCH;
 export const STONKS = [
   {
-    address: stonksStethDaiAddress,
+    address: STONKS_STETH_DAI_ADDRESS,
     from: "stETH",
     to: "DAI",
   },
   {
-    address: stonksStethUsdcAddress,
+    address: STONKS_STETH_USDC_ADDRESS,
     from: "stETH",
     to: "USDC",
   },
   {
-    address: stonksStethUsdtAddress,
+    address: STONKS_STETH_USDT_ADDRESS,
     from: "stETH",
     to: "USDT",
   },
   {
-    address: stonksDaiUsdcAddress,
+    address: STONKS_DAI_USDC_ADDRESS,
     from: "DAI",
     to: "USDC",
   },
   {
-    address: stonksDaiUsdtAddress,
+    address: STONKS_DAI_USDT_ADDRESS,
     from: "DAI",
     to: "USDT",
   },
   {
-    address: stonksUsdcDaiAddress,
+    address: STONKS_USDC_DAI_ADDRESS,
     from: "USDC",
     to: "DAI",
   },
   {
-    address: stonksUsdcUsdtAddress,
+    address: STONKS_USDC_USDT_ADDRESS,
     from: "USDC",
     to: "USDT",
   },
   {
-    address: stonksUsdtDaiAddress,
+    address: STONKS_USDT_DAI_ADDRESS,
     from: "USDT",
     to: "USDC",
   },
   {
-    address: stonksUsdtUsdcAddress,
+    address: STONKS_USDT_USDC_ADDRESS,
     from: "USDT",
     to: "USDC",
   },
   {
-    address: stonksTestflightAddress,
+    address: STONKS_TESTFLIGHT_ADDRESS,
     from: "stETH",
     to: "DAI",
   },
 ];
-export const ORDER_ADDRESS = orderAddress;
+export const STONKS_ORDER_CREATION: EventOfNotice[] = [];
 
-export const STONKS_ORDER_CREATION: Record<string, any>[] = [];
-
-export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
+export const TREASURY_SWAP_EVENTS_OF_NOTICE: EventOfNotice[] = [];
+export const ORDER_EVENTS_OF_NOTICE = [
   {
-    address: orderAddress,
+    address: "",
     event: "event ManagerSet(address manager)",
     alertId: "ORDER-MANAGER-CHANGED",
     name: "🚨 ORDER Factory: Manager changed",
@@ -85,7 +93,7 @@ export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Critical,
   },
   {
-    address: orderAddress,
+    address: "",
     event:
       "event ERC20Recovered(address indexed token, address indexed recipient, uint256 amount)",
     alertId: "ORDER-ERC20-RECOVERED",
@@ -98,7 +106,7 @@ export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: orderAddress,
+    address: "",
     event:
       "event ERC721Recovered(address indexed token, uint256 tokenId, address indexed recipient)",
     alertId: "ORDER-ERC721-RECOVERED",
@@ -111,7 +119,7 @@ export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: orderAddress,
+    address: "",
     event:
       "event ERC1155Recovered(address token, uint256 tokenId, address recipient, uint256 amount)",
     alertId: "ORDER-ERC1155-RECOVERED",
@@ -125,7 +133,7 @@ export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
     severity: FindingSeverity.Info,
   },
   {
-    address: orderAddress,
+    address: "",
     event: "event EtherRecovered(address indexed recipient, uint256 amount)",
     alertId: "ORDER-ETHER-RECOVERED",
     name: "ℹ️ Order: Ether recovered",
@@ -139,6 +147,18 @@ export const TREASURY_SWAP_EVENTS_OF_NOTICE = [
 
 // fill events by stonks
 STONKS.forEach(({ address, to, from }) => {
+  STONKS_ORDER_CREATION.push({
+    address: address.toLocaleLowerCase(),
+    event:
+      "event OrderContractCreated(address indexed orderContract,uint256 minBuyAmount)",
+    alertId: "STONKS-ORDER-CREATED",
+    name: "ℹ️ Stonks: order created",
+    description: (args: any) =>
+      `Order from ${from} to ${to} created:\n` +
+      `Order address: ${etherscanAddress(args.orderContract)}\n` +
+      `Amount min: ${args.minBuyAmount}`,
+    severity: FindingSeverity.Info,
+  });
   TREASURY_SWAP_EVENTS_OF_NOTICE.push({
     address,
     event: "event ManagerSet(address manager)",
@@ -199,19 +219,6 @@ STONKS.forEach(({ address, to, from }) => {
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Amount: ${args.amount}`,
-    severity: FindingSeverity.Info,
-  });
-
-  STONKS_ORDER_CREATION.push({
-    address: address.toLocaleLowerCase(),
-    event:
-      "event OrderContractCreated(address indexed orderContract,uint256 minBuyAmount)",
-    alertId: "STONKS-ORDER-CREATED",
-    name: "ℹ️ Stonks: order created",
-    description: (args: any) =>
-      `Order from ${from} to ${to} created:\n` +
-      `Order address: ${etherscanAddress(args.orderContract)}\n` +
-      `Amount min: ${args.minBuyAmount}`,
     severity: FindingSeverity.Info,
   });
 });
