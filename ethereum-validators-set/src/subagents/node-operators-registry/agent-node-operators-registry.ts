@@ -579,10 +579,10 @@ async function handleActiveMotionsWhenSigningKeysRemoved(
     const motionId = (motion?.id as BigNumber).toNumber();
     findings.push(
       Finding.fromObject({
-        name: `🚨 ${norContext.params.moduleName} NO Registry: SetVettedValidatorsLimits motion enabled 🚨`,
+        name: `🚨 ${norContext.params.moduleName} NO Registry: SetVettedValidatorsLimits motion active 🚨`,
         description:
-          `SigningKeyRemoved event and enabled SetVettedValidatorsLimits motion may indicate` +
-          `to circumvent DAO validator keys approval.` +
+          `SigningKeyRemoved event and ongoing SetVettedValidatorsLimits motion may indicate ` +
+          `circumventing of DAO validator keys approval.` +
           `\nPlease check #${motionId} motion`,
         alertId: `${norContext.params.alertPrefix}CIRCUMVENTING-APPROVED-KEYS`,
         severity: FindingSeverity.High,
