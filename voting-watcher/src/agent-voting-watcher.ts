@@ -46,11 +46,13 @@ interface VoteInfo {
   quorumDistance: number;
   timeLeft: number;
   resultsStr: string;
+  lastReportedTotal?: BigNumber;
   alertLevel?: number;
   noMorePing?: boolean;
 }
 
 let activeVotes: Map<number, VoteInfo> = new Map<number, VoteInfo>();
+let prevBlockVotes: Map<number, VoteInfo> = new Map<number, VoteInfo>();
 let voteLength: number;
 let objectionsTime: number;
 
@@ -63,6 +65,17 @@ export async function initialize(
 
   await updateVotingDurations(currentBlock);
   activeVotes = await getActiveVotes(currentBlock);
+
+  // Get previous block votes to correctly compare with the current one after the restart.
+  prevBlockVotes = await getActiveVotes(currentBlock - 1);
+  activeVotes.forEach((vote, key) => {
+    if (!vote) {
+      return;
+    }
+    const prevVote = prevBlockVotes.get(key);
+    vote.lastReportedTotal = prevVote ? prevVote.total : new BigNumber(0);
+    activeVotes.set(key, vote);
+  });
 
   return {
     activeVotes: Array.from(activeVotes.keys()).toString(),
@@ -126,34 +139,25 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
 }
 
 async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
-  const prevActiveVotes = await getActiveVotes(blockEvent.blockNumber - 1);
   Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
-    if (vote) {
-      const previousVote = prevActiveVotes.get(key);
-      if (!previousVote) {
-        // vote was just created
-        return;
-      }
-      const total = vote.yea.plus(vote.nay);
+    if (!vote) {
+      return;
+    }
 
-      if (
-        total.gte(previousVote.total.plus(HUGE_VOTE_DISTANCE)) &&
-        !vote.noMorePing
-      ) {
-        if (vote.passed) {
-          reportHugeVotesWithQuorum(
-            total.minus(previousVote.total),
-            key,
-            vote,
-            findings,
-          );
-          vote.noMorePing = true;
-        } else {
-          reportHugeVotes(total.minus(previousVote.total), key, vote, findings);
-        }
-        activeVotes.set(key, vote);
+    const total = vote.yea.plus(vote.nay);
+    const lastTotal = vote.lastReportedTotal || new BigNumber(0);
+
+    if (total.gte(lastTotal.plus(HUGE_VOTE_DISTANCE)) && !vote.noMorePing) {
+      if (vote.passed) {
+        reportHugeVotesWithQuorum(total.minus(lastTotal), key, vote, findings);
+        vote.noMorePing = true;
+      } else {
+        reportHugeVotes(total.minus(lastTotal), key, vote, findings);
       }
+
+      vote.lastReportedTotal = total;
+      activeVotes.set(key, vote);
     }
   });
 }
