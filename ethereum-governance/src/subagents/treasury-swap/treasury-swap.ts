@@ -1,23 +1,23 @@
+import BigNumber from "bignumber.js";
 import {
-  Finding,
-  TransactionEvent,
   BlockEvent,
-  ethers,
+  Finding,
   FindingSeverity,
   FindingType,
+  TransactionEvent,
+  ethers,
 } from "forta-agent";
-import { ethersProvider } from "../../ethers";
+import ERC20 from "../../abi/ERC20.json";
+import STONKS_ABI from "../../abi/Stonks.json";
 import {
+  RedefineMode,
   etherscanAddress,
   handleEventsOfNotice,
-  RedefineMode,
   requireWithTier,
 } from "../../common/utils";
+import { ethersProvider } from "../../ethers";
 import type * as Constants from "./constants";
-import STONKS_ABI from "../../abi/Stonks.json";
 import { STONKS_ORDER_CREATION } from "./constants";
-import ERC20 from "../../abi/ERC20.json";
-import BigNumber from "bignumber.js";
 
 export const name = "Stonks";
 
@@ -142,7 +142,9 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
       findings.push(
         Finding.fromObject({
           name: "✅ Stonks: order fulfill",
-          description: `Stonks order ${etherscanAddress(order.address)} was fulfill`,
+          description: `Stonks order ${etherscanAddress(
+            order.address,
+          )} was fulfill`,
           alertId: "STONKS-ORDER-FULFILL",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
@@ -153,7 +155,9 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
       findings.push(
         Finding.fromObject({
           name: "❌ Stonks: order expired",
-          description: `Stonks order ${etherscanAddress(order.address)} was expired`,
+          description: `Stonks order ${etherscanAddress(
+            order.address,
+          )} was expired`,
           alertId: "STONKS-ORDER-EXPIRED",
           severity: FindingSeverity.Info,
           type: FindingType.Info,
