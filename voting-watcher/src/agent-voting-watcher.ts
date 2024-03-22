@@ -87,7 +87,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   await handleActiveVotes(blockEvent, findings);
   await handlePinger(blockEvent, findings);
-  await handleHugeVotes(blockEvent, findings);
+  await handleHugeVotes(findings);
 
   return findings;
 }
@@ -138,7 +138,7 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
   });
 }
 
-async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
+async function handleHugeVotes(findings: Finding[]) {
   Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
     if (!vote) {
