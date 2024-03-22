@@ -66,16 +66,18 @@ export async function initialize(
   await updateVotingDurations(currentBlock);
   activeVotes = await getActiveVotes(currentBlock);
 
-  // Get previous block votes to correctly compare with the current one after the restart.
-  prevBlockVotes = await getActiveVotes(currentBlock - 1);
-  activeVotes.forEach((vote, key) => {
-    if (!vote) {
-      return;
-    }
-    const prevVote = prevBlockVotes.get(key);
-    vote.lastReportedTotal = prevVote ? prevVote.total : new BigNumber(0);
-    activeVotes.set(key, vote);
-  });
+  if (activeVotes.size !== 0) {
+    // Get previous block votes to correctly compare with the current one after the restart.
+    prevBlockVotes = await getActiveVotes(currentBlock - 1);
+    activeVotes.forEach((vote, key) => {
+      if (!vote) {
+        return;
+      }
+      const prevVote = prevBlockVotes.get(key);
+      vote.lastReportedTotal = prevVote ? prevVote.total : new BigNumber(0);
+      activeVotes.set(key, vote);
+    });
+  }
 
   return {
     activeVotes: Array.from(activeVotes.keys()).toString(),
