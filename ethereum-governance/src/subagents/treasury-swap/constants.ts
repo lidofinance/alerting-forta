@@ -14,6 +14,8 @@ import {
   ORDER_ADDRESS as orderAddress,
 } from "../../common/constants";
 
+export const BLOCK_INTERVAL = 150 // about 30 min (one block is 12 sec)
+
 export const STONKS = [
   {
     address: stonksStethDaiAddress,
