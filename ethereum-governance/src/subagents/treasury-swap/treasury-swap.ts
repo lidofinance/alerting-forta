@@ -45,14 +45,14 @@ type CreatedOrder = {
   active: boolean;
 };
 const createdOrders: CreatedOrder[] = [];
-let wasInit = false // tests run init 2 times
+let wasInit = false; // tests run init 2 times
 export async function initialize(
   currentBlockNumber: number,
 ): Promise<{ [key: string]: string }> {
   if (wasInit && !currentBlockNumber) {
-    return {} // skip second init in tests by current block
+    return {}; // skip second init in tests by current block
   }
-  wasInit = true
+  wasInit = true;
   const currentBlock = await ethersProvider.getBlock(currentBlockNumber);
   console.log(`[${name}]`);
   await Promise.all(
@@ -223,9 +223,7 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
     }
 
     order.active = false;
-    if (
-      balance.lte(STETH_MAX_PRECISION) || duration > BLOCK_TO_WATCH_TIME
-    ) {
+    if (balance.lte(STETH_MAX_PRECISION) || duration > BLOCK_TO_WATCH_TIME) {
       createdOrders.splice(createdOrders.indexOf(order), 1);
     }
   }
