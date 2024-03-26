@@ -103,7 +103,7 @@ describe("treasury-swap e2e tests", () => {
     TEST_TIMEOUT,
   );
 
-  it.only(
+  it(
     "should find 0 in 120+ after testflight",
     async () => {
       let findings = await runBlock(19440680, 19440660);

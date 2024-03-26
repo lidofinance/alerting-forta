@@ -45,10 +45,14 @@ type CreatedOrder = {
   active: boolean;
 };
 const createdOrders: CreatedOrder[] = [];
-
+let wasInit = false // tests run init 2 times
 export async function initialize(
   currentBlockNumber: number,
 ): Promise<{ [key: string]: string }> {
+  if (wasInit && !currentBlockNumber) {
+    return {} // skip second init in tests by current block
+  }
+  wasInit = true
   const currentBlock = await ethersProvider.getBlock(currentBlockNumber);
   console.log(`[${name}]`);
   await Promise.all(
