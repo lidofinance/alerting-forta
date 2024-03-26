@@ -10,7 +10,6 @@ import {
   STONKS_USDC_USDT_ADDRESS,
   STONKS_USDT_DAI_ADDRESS,
   STONKS_USDT_USDC_ADDRESS,
-  STONKS_TESTFLIGHT_ADDRESS,
 } from "../../common/constants";
 
 export type EventOfNotice = {
@@ -70,11 +69,6 @@ export const STONKS = [
     address: STONKS_USDT_USDC_ADDRESS,
     from: "USDT",
     to: "USDC",
-  },
-  {
-    address: STONKS_TESTFLIGHT_ADDRESS,
-    from: "stETH",
-    to: "DAI",
   },
 ];
 export const STONKS_ORDER_CREATION: EventOfNotice[] = [];

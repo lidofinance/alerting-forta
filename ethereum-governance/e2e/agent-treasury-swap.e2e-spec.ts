@@ -8,7 +8,11 @@ import {
 
 const TEST_TIMEOUT = 180_000; // ms
 
-describe("treasury-swap e2e tests", () => {
+/**
+ * Tests works for testflight stonks 0x5FA801ee2202b3Bcd2317F9a65A408A725746647
+ */
+
+describe.skip("treasury-swap e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
     initBlock?: number,
