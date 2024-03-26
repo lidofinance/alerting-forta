@@ -73,7 +73,7 @@ export const STONKS = [
 ];
 export const STONKS_ORDER_CREATION: EventOfNotice[] = [];
 
-export const TREASURY_SWAP_EVENTS_OF_NOTICE: EventOfNotice[] = [];
+export const STONKS_EVENTS_OF_NOTICE: EventOfNotice[] = [];
 export const ORDER_EVENTS_OF_NOTICE = [
   {
     address: "",
@@ -153,7 +153,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Amount min: ${args.minBuyAmount}`,
     severity: FindingSeverity.Info,
   });
-  TREASURY_SWAP_EVENTS_OF_NOTICE.push({
+  STONKS_EVENTS_OF_NOTICE.push({
     address,
     event: "event ManagerSet(address manager)",
     alertId: "STONKS-MANAGER-CHANGED",
@@ -164,7 +164,7 @@ STONKS.forEach(({ address, to, from }) => {
       )}`,
     severity: FindingSeverity.Critical,
   });
-  TREASURY_SWAP_EVENTS_OF_NOTICE.push({
+  STONKS_EVENTS_OF_NOTICE.push({
     address,
     event:
       "event ERC20Recovered(address indexed token, address indexed recipient, uint256 amount)",
@@ -177,7 +177,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Amount: ${args.amount}`,
     severity: FindingSeverity.Info,
   });
-  TREASURY_SWAP_EVENTS_OF_NOTICE.push({
+  STONKS_EVENTS_OF_NOTICE.push({
     address,
     event:
       "event ERC721Recovered(address indexed token, uint256 tokenId, address indexed recipient)",
@@ -190,7 +190,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Token ID: ${args.tokenId}`,
     severity: FindingSeverity.Info,
   });
-  TREASURY_SWAP_EVENTS_OF_NOTICE.push({
+  STONKS_EVENTS_OF_NOTICE.push({
     address,
     event:
       "event ERC1155Recovered(address token, uint256 tokenId, address recipient, uint256 amount)",
@@ -204,7 +204,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Amount: ${args.amount}`,
     severity: FindingSeverity.Info,
   });
-  TREASURY_SWAP_EVENTS_OF_NOTICE.push({
+  STONKS_EVENTS_OF_NOTICE.push({
     address,
     event: "event EtherRecovered(address indexed recipient, uint256 amount)",
     alertId: "STONKS-ETHER-RECOVERED",

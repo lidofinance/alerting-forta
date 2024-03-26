@@ -22,7 +22,7 @@ import { EventOfNotice } from "./constants";
 export const name = "Stonks";
 
 const {
-  TREASURY_SWAP_EVENTS_OF_NOTICE,
+  STONKS_EVENTS_OF_NOTICE,
   STONKS,
   BLOCK_WINDOW,
   BLOCK_TO_WATCH,
@@ -118,7 +118,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
   await handleOrderCreation(txEvent);
-  handleEventsOfNotice(txEvent, findings, TREASURY_SWAP_EVENTS_OF_NOTICE);
+  handleEventsOfNotice(txEvent, findings, STONKS_EVENTS_OF_NOTICE);
   handleEventsOfNotice(
     txEvent,
     findings,

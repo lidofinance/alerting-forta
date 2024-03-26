@@ -12,7 +12,7 @@ const TEST_TIMEOUT = 180_000; // ms
  * Tests works for testflight stonks 0x5FA801ee2202b3Bcd2317F9a65A408A725746647
  */
 
-describe.skip("treasury-swap e2e tests", () => {
+describe("treasury-swap e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
     initBlock?: number,
@@ -33,7 +33,7 @@ describe.skip("treasury-swap e2e tests", () => {
     const container = configureContainer() as AwilixContainer;
     container.register({
       agentPath: asFunction(
-        provideAgentPath("subagents/treasury-swap/treasury-swap"),
+        provideAgentPath("subagents/stonks-order-watcher/stonks-order-watcher"),
       ),
       runTransaction: asFunction(provideRunTransaction),
       runBlock: asFunction(provideRunBlock),
