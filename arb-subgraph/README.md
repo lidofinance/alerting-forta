@@ -1,4 +1,4 @@
-# Lido Detection Bot for apps on Arbitrum
+# Lido Detection Bot for subgraph on Arbitrum
 
 ## Supported chains
 
