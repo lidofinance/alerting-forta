@@ -4,7 +4,7 @@ import { Result } from '@ethersproject/abi/lib'
 import { RoleHashToName } from '../constants'
 
 export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameMap: RoleHashToName): EventOfNotice[] {
-  const uniqueKeys: string[] = [
+  const uniqueKeys = [
     'f760df18-5dfc-4237-a752-b5654a123c48',
     'e0e57c09-17f0-4e37-8308-1d2e666d7fdb',
     'd1b7de38-d0b1-4b52-996a-ca4b32b4af2d',

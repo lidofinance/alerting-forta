@@ -98,7 +98,7 @@ export class MonitorWithdrawals {
             ? block.timestamp - this.lastReportedToManyWithdrawals
             : MAX_WITHDRAWALS_WINDOW
 
-        const uniqueKey: string = `82fd9b59-0cb2-42bd-b660-1c01bc18bfd2`
+        const uniqueKey = `82fd9b59-0cb2-42bd-b660-1c01bc18bfd2`
 
         const finding: Finding = Finding.fromObject({
           name: `⚠️ Mantle: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`,

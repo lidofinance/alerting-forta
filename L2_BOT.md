@@ -43,11 +43,13 @@
    3. proxy_admin_events.ts
       1. Replace all network name to your-network name
       2. Check event signatures
-10. Go to ./src/workers and replace all network name to your-network name
-11. Add new folder to .github/CODEOWNERS file
-12. Add new bot for root [Readme.md](README.md)
-13. Add alerts of bot to bot's Readme.md
-14. Finish. Type yarn run in your CLI
+10. Get sure there are no duplicate GUIDs by running root of all bots directory:
+    `grep -E -oh "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" --exclude-dir=node_modules -r . | tr '[:upper:]' '[:lower:]' | sort | uniq -cd`
+11. Go to ./src/workers and replace all network name to your-network name
+12. Add new folder to .github/CODEOWNERS file
+13. Add new bot for root [Readme.md](README.md)
+14. Add alerts of bot to bot's Readme.md
+15. Finish. Type yarn run in your CLI
 
 ## Update l2-bridge-balance bot
 
