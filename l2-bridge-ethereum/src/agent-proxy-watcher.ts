@@ -18,7 +18,7 @@ import {
   THIRD_PARTY_PROXY_EVENTS,
   WSTETH_ADDRESS,
 } from "./constants";
-import { ethersProvider } from "./ethers";
+import { ethersProvider, inTx } from "./ethers";
 
 const lastImpls = new Map<string, string>();
 const lastAdmins = new Map<string, string>();
@@ -57,7 +57,7 @@ function handleProxyAdminEvents(
   findings: Finding[],
 ) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
+    if (inTx(eventInfo.address, txEvent)) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(
@@ -80,7 +80,7 @@ function handleThirdPartyProxyAdminEvents(
   findings: Finding[],
 ) {
   THIRD_PARTY_PROXY_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
+    if (inTx(eventInfo.address, txEvent)) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(
@@ -96,7 +96,7 @@ function handleThirdPartyProxyAdminEvents(
       });
     }
   });
-  if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
+  if (inTx(ARBITRUM_L1_GATEWAY_ROUTER, txEvent)) {
     const events = txEvent.filterLog(
       ARBITRUM_GATEWAY_SET_EVENT,
       ARBITRUM_L1_GATEWAY_ROUTER,
@@ -117,7 +117,7 @@ function handleThirdPartyProxyAdminEvents(
     });
   }
 
-  if (LINEA_L1_CROSS_DOMAIN_MESSENGER in txEvent.addresses) {
+  if (inTx(LINEA_L1_CROSS_DOMAIN_MESSENGER, txEvent)) {
     const events = txEvent.filterLog(
       LINEA_CUSTOM_CONTRACT_SET_EVENT,
       LINEA_L1_CROSS_DOMAIN_MESSENGER,
