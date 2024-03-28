@@ -9,11 +9,11 @@ import {
 import {
   ARBITRUM_GATEWAY_SET_EVENT,
   ARBITRUM_L1_GATEWAY_ROUTER,
-  LIDO_PROXY_CONTRACTS,
-  LidoProxy,
+  L1_BRIDGES,
+  BridgeProxyInfo,
   LINEA_CUSTOM_CONTRACT_SET_EVENT,
   LINEA_L1_CROSS_DOMAIN_MESSENGER,
-  PROXY_ADMIN_EVENTS,
+  L1_BRIDGES_PROXY_EVENTS,
   STETH_ADDRESS,
   THIRD_PARTY_PROXY_EVENTS,
   WSTETH_ADDRESS,
@@ -30,7 +30,7 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   await Promise.all(
-    LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
+    L1_BRIDGES.map(async (proxyInfo: BridgeProxyInfo) => {
       const lastImpl = await getProxyImpl(proxyInfo, currentBlock);
       lastImpls.set(proxyInfo.address, lastImpl);
       const lastAdmin = await getProxyAdmin(proxyInfo, currentBlock);
@@ -56,7 +56,7 @@ function handleProxyAdminEvents(
   txEvent: TransactionEvent,
   findings: Finding[],
 ) {
-  PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
+  L1_BRIDGES_PROXY_EVENTS.forEach((eventInfo) => {
     if (inTx(eventInfo.address, txEvent)) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
@@ -83,6 +83,11 @@ function handleThirdPartyProxyAdminEvents(
     if (inTx(eventInfo.address, txEvent)) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
+        if (eventInfo.condition && !eventInfo.condition(event.args)) {
+          console.log(`Condition is not met for ${event.args})`);
+          return;
+        }
+
         findings.push(
           Finding.fromObject({
             name: eventInfo.name,
@@ -163,7 +168,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   return findings;
 }
 
-async function getProxyImpl(proxyInfo: LidoProxy, blockNumber: number) {
+async function getProxyImpl(proxyInfo: BridgeProxyInfo, blockNumber: number) {
   const implFunc = proxyInfo.functions.get("implementation");
   if (!implFunc) {
     return undefined;
@@ -197,7 +202,7 @@ async function handleProxyImplementationChanges(
   findings: Finding[],
 ) {
   await Promise.all(
-    LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
+    L1_BRIDGES.map(async (proxyInfo: BridgeProxyInfo) => {
       const newImpl = await getProxyImpl(proxyInfo, blockEvent.blockNumber);
       const lastImpl = lastImpls.get(proxyInfo.address) || "";
       if (newImpl != lastImpl) {
@@ -220,7 +225,7 @@ async function handleProxyImplementationChanges(
   );
 }
 
-async function getProxyAdmin(proxyInfo: LidoProxy, blockNumber: number) {
+async function getProxyAdmin(proxyInfo: BridgeProxyInfo, blockNumber: number) {
   const adminFunc = proxyInfo.functions.get("admin");
   if (!adminFunc) {
     return undefined;
@@ -253,7 +258,7 @@ async function handleProxyAdminChanges(
   findings: Finding[],
 ) {
   await Promise.all(
-    LIDO_PROXY_CONTRACTS.map(async (proxyInfo: LidoProxy) => {
+    L1_BRIDGES.map(async (proxyInfo: BridgeProxyInfo) => {
       const newAdmin = await getProxyAdmin(proxyInfo, blockEvent.blockNumber);
       const lastAdmin = lastAdmins.get(proxyInfo.address) || "";
       if (newAdmin != lastAdmin) {
