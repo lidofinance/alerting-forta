@@ -10,6 +10,18 @@ export function getBridgeEvents(
   return [
     {
       address: l2GatewayAddress,
+      event: 'event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)',
+      alertId: 'L2-BRIDGE-OWNER-CHANGED',
+      name: '🚨 Scroll: L2 gateway owner changed',
+      description: (args: Result) =>
+        `Owner of L2LidoGateway ${l2GatewayAddress} was changed to ${args.newOwner}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '136546BE-E1BF-40DA-98FB-17B741E12A35',
+    },
+    {
+      address: l2GatewayAddress,
       event: 'event DepositsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-DISABLED',
       name: '🚨 Scroll L2 Bridge: Deposits Disabled',
@@ -27,6 +39,26 @@ export function getBridgeEvents(
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: 'C6DBFF28-C12D-4CEC-8087-2F0898F7AEAB',
+    },
+    {
+      address: l2GatewayAddress,
+      event: 'event DepositsEnabled(address indexed enabler)',
+      alertId: 'L2-BRIDGE-DEPOSITS-ENABLED',
+      name: 'ℹ️ Scroll L2 Bridge: Deposits Enabled',
+      description: (args: Result) => `Deposits were enabled by ${args.enabler}`,
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      uniqueKey: 'EA60F6DC-9A59-4FAE-8467-521DF56813C5',
+    },
+    {
+      address: l2GatewayAddress,
+      event: 'event WithdrawalsEnabled(address indexed enabler)',
+      alertId: 'L2-BRIDGE-WITHDRAWALS-ENABLED',
+      name: 'ℹ️ Scroll L2 Bridge: Withdrawals Enabled',
+      description: (args: Result) => `Withdrawals were enabled by ${args.enabler}`,
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      uniqueKey: '0CEE896B-6BDD-45C5-9ADD-46A1558F1BBC',
     },
     {
       address: l2GatewayAddress,
@@ -51,26 +83,6 @@ export function getBridgeEvents(
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
       uniqueKey: '42816CCE-24C3-4CE2-BC21-4F2202A66EFD',
-    },
-    {
-      address: l2GatewayAddress,
-      event: 'event DepositsEnabled(address indexed enabler)',
-      alertId: 'L2-BRIDGE-DEPOSITS-ENABLED',
-      name: 'ℹ️ Scroll L2 Bridge: Deposits Enabled',
-      description: (args: Result) => `Deposits were enabled by ${args.enabler}`,
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-      uniqueKey: 'EA60F6DC-9A59-4FAE-8467-521DF56813C5',
-    },
-    {
-      address: l2GatewayAddress,
-      event: 'event WithdrawalsEnabled(address indexed enabler)',
-      alertId: 'L2-BRIDGE-WITHDRAWALS-ENABLED',
-      name: 'ℹ️ Scroll L2 Bridge: Withdrawals Enabled',
-      description: (args: Result) => `Withdrawals were enabled by ${args.enabler}`,
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-      uniqueKey: '0CEE896B-6BDD-45C5-9ADD-46A1558F1BBC',
     },
   ]
 }
