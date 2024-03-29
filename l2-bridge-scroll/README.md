@@ -1,47 +1,47 @@
-# Lido Detection Mantle Bot
+# Lido Detection Scroll Bot
 
 How does it work.
 
-The bot works on two networks: ETH mainnet and Mantle.
+The bot works on two networks: ETH mainnet and Scroll.
 Here's how it operates: The bot monitors new blocks on the ETH mainnet.
-Since Forta doesn't currently support Mantle, the bot reads blocks on the L2 network (Mantle) and stores the latest one
+Since Forta doesn't currently support Scroll, the bot reads blocks on the L2 network (Scroll) and stores the latest one
 in an in-memory cache.
-When the bot reads the next block on ETH, it also retrieves a segment of Mantle blocks (cachedBlock, LatestBlock) from
+When the bot reads the next block on ETH, it also retrieves a segment of Scroll blocks (cachedBlock, latestBlock) from
 the cache.
 
 ## Supported chains
 
-- Ethereum mainnet, Mantle network
+- Ethereum mainnet, Scroll network
 
 ## Alerts
 
 1. Bridge events
-   1. 🚨🚨🚨 Mantle L2 Bridge: Implementation initialized
-   2. 🚨 Mantle L2 Bridge: Deposits Disabled
-   3. 🚨 Mantle L2 Bridge: Role Admin changed
-   4. 🚨 Mantle L2 Bridge: Withdrawals Disabled
-   5. ⚠️ Mantle L2 Bridge: Role granted
-   6. ⚠️ Mantle L2 Bridge: Role revoked
-   7. ℹ️ Mantle L2 Bridge: Deposits Enabled
-   8. ℹ️ Mantle L2 Bridge: Withdrawals Enabled
+   1. 🚨🚨🚨 Scroll L2 Bridge: Implementation initialized
+   2. 🚨 Scroll L2 Bridge: Deposits Disabled
+   3. 🚨 Scroll L2 Bridge: Role Admin changed
+   4. 🚨 Scroll L2 Bridge: Withdrawals Disabled
+   5. ⚠️ Scroll L2 Bridge: Role granted
+   6. ⚠️ Scroll L2 Bridge: Role revoked
+   7. ℹ️ Scroll L2 Bridge: Deposits Enabled
+   8. ℹ️ Scroll L2 Bridge: Withdrawals Enabled
 2. Gov Events
-   1. 🚨 Mantle Gov Bridge: Ethereum Governance Executor Updated
-   2. 🚨 Mantle Gov Bridge: Guardian Updated
-   3. ⚠️ Mantle Gov Bridge: Delay Updated
-   4. ⚠️ Mantle Gov Bridge: Grace Period Updated
-   5. ⚠️ Mantle Gov Bridge: Min Delay Updated
-   6. ⚠️ Mantle Gov Bridge: Max Delay Updated
-   7. ℹ️ Mantle Gov Bridge: Action set queued
-   8. ℹ️ Mantle Gov Bridge: Action set executed
-   9. ℹ️ Mantle Gov Bridge: Action set canceled
+   1. 🚨 Scroll Gov Bridge: Ethereum Governance Executor Updated
+   2. 🚨 Scroll Gov Bridge: Guardian Updated
+   3. ⚠️ Scroll Gov Bridge: Delay Updated
+   4. ⚠️ Scroll Gov Bridge: Grace Period Updated
+   5. ⚠️ Scroll Gov Bridge: Min Delay Updated
+   6. ⚠️ Scroll Gov Bridge: Max Delay Updated
+   7. ℹ️ Scroll Gov Bridge: Action set queued
+   8. ℹ️ Scroll Gov Bridge: Action set executed
+   9. ℹ️ Scroll Gov Bridge: Action set canceled
 3. Proxy events
-   1. 🚨 Mantle: Proxy ossified
-   2. 🚨 Mantle: Proxy admin changed
-   3. 🚨 Mantle: Proxy implementation changed
-   4. 🚨 Mantle: Proxy upgraded
-   5. 🚨 Mantle: Proxy beacon upgraded
+   1. 🚨 Scroll: Proxy ossified
+   2. 🚨 Scroll: Proxy admin changed
+   3. 🚨 Scroll: Proxy implementation changed
+   4. 🚨 Scroll: Proxy upgraded
+   5. 🚨 Scroll: Proxy beacon upgraded
 4. Monitor Withdrawals
-   1. ⚠️ Mantle: Huge withdrawals during the last ...
+   1. ⚠️ Scroll: Huge withdrawals during the last ...
 5. Agent balance
 
 ## Development (Forta specific)

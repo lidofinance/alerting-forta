@@ -1,11 +1,11 @@
 {
-  "name": "lido-l2-bridge-mantle-bot",
+  "name": "lido-l2-bridge-scroll-bot",
   "displayName": "Forta Agent Starter",
   "version": "0.0.1",
-  "description": "Lido Detection Bot for mantle part of L2 bridge",
+  "description": "Lido Detection Bot for Scroll part of L2 bridge",
   "repository": {
     "type": "git",
-    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/l2-bridge-mantle"
+    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/l2-bridge-scroll"
   },
   "license": "MIT",
   "chainIds": [

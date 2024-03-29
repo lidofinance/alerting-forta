@@ -3,7 +3,7 @@
 1. Find out a repository which contains WstETH information. For current project it's
    1. https://www.notion.so/wstETH-on-Mantle-Deployment-Verification-08a1e257034b4ed9b6f5de1ef5293399
    2. https://github.com/mantlenetworkio/lido-l2
-   3. Get Proofs of addreses and constants got from https://docs.lido.fi/deployed-contracts/:
+   3. Get Proofs of addresses and constants got from https://docs.lido.fi/deployed-contracts/:
       1. L1ERC20TokenBridge
          Impl : [0x6fBBe1Af52D22557D7F161Dc5952E306F4742e23](https://etherscan.io/address/0x2D001d79E5aF5F65a939781FE228B267a8Ed468B)
       2. L1ERC20TokenBridge
@@ -18,7 +18,7 @@
          Proxy: [0x9c46560D6209743968cC24150893631A39AfDe4d](https://explorer.mantle.xyz/address/0x9c46560D6209743968cC24150893631A39AfDe4d)
       7. OptimismBridgeExecutor: [0x3a7b055bf88cdc59d20d0245809c6e6b3c5819dd](https://explorer.mantle.xyz/address/0x3a7b055bf88cdc59d20d0245809c6e6b3c5819dd)
 2. Clone https://github.com/mantlenetworkio/lido-l2 repository and compile contracts.
-   1. Then copy and past needed abi's into ./abi folder in current repo
+   1. Then copy and past needed abi's into ./scr/abi folder in current repo
 3. `yarn install`
 4. `yarn generate-types` Install abi bindings though typechain. Generated files place in ./src/generated
 5. Set up correct contract addresses.

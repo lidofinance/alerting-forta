@@ -107,11 +107,10 @@ export class ProxyWatcher {
       }
 
       if (newImpl.right != lastImpl) {
-        const uniqueKey = '3d1b3e5b-5eb1-4926-896a-230d5f51070c'
-
+        const uniqueKey = 'EFC29EB4-2A50-4CC8-A8BE-5AD9044FFFD5'
         out.push(
           Finding.fromObject({
-            name: '🚨 Mantle: Proxy implementation changed',
+            name: '🚨 Scroll: Proxy implementation changed',
             description:
               `Proxy implementation for ${contract.getName()}(${contract.getAddress()}) ` +
               `was changed form ${lastImpl} to ${newImpl}` +
@@ -150,10 +149,10 @@ export class ProxyWatcher {
       }
 
       if (newAdmin.right != lastAdmin) {
-        const uniqueKey = 'a5c757e0-22b2-4a9b-83cd-cdf6f2915ddc'
+        const uniqueKey = '575AFC07-6AA9-4FC7-B35E-D20D8232866F'
         out.push(
           Finding.fromObject({
-            name: '🚨 Mantle: Proxy admin changed',
+            name: '🚨 Scroll: Proxy admin changed',
             description:
               `Proxy admin for ${contract.getName()}(${contract.getAddress()}) ` +
               `was changed from ${lastAdmin} to ${newAdmin}` +

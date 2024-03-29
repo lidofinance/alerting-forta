@@ -20,8 +20,9 @@ export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
+
   private readonly withdrawalInitiatedEvent =
-    'event WithdrawalInitiated(address indexed _l1Token, address indexed _l2Token, address indexed _from, address _to, uint256 _amount, bytes _data)'
+      'event WithdrawERC20(address indexed l1Token, address indexed l2Token, address indexed from, uint256 amount, bytes data)'
 
   private readonly logger: Logger
   private readonly l2Erc20TokenGatewayAddress: string
@@ -98,10 +99,10 @@ export class MonitorWithdrawals {
             ? block.timestamp - this.lastReportedToManyWithdrawals
             : MAX_WITHDRAWALS_WINDOW
 
-        const uniqueKey: string = `82fd9b59-0cb2-42bd-b660-1c01bc18bfd2`
+        const uniqueKey = `C167F276-D519-4906-90CB-C4455E9ABBD4`
 
         const finding: Finding = Finding.fromObject({
-          name: `⚠️ Mantle: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`,
+          name: `⚠️ Scroll: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`,
           description:
             `There were withdrawals requests from L2 to L1 for the ` +
             `${withdrawalsSum.div(ETH_DECIMALS).toFixed(4)} wstETH in total`,
