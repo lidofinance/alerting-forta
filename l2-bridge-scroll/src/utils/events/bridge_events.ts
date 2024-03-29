@@ -10,31 +10,6 @@ export function getBridgeEvents(
   return [
     {
       address: l2GatewayAddress,
-      event: 'event Upgraded(address indexed implementation)',
-      alertId: 'L2-BRIDGE-IMPLEMENTATION-UPGRADED',
-      name: '🚨🚨🚨 Scroll L2 Bridge: Implementation upgraded',
-      description: (args: Result) =>
-        `Implementation of the Scroll L2 Bridge was upgraded by ${args.admin}\n` +
-        `NOTE: This is not the thing that should be left unacted! ` +
-        `Make sure that this call was made by Lido!`,
-      severity: FindingSeverity.Critical,
-      type: FindingType.Info,
-      uniqueKey: '5A4853D8-D7BF-4431-B7EC-8A5433E89B6A',
-    },
-    {
-      address: l2GatewayAddress,
-      event:'event AdminChanged(address previousAdmin, address newAdmin)',
-      alertId: 'L2-BRIDGE-ROLE-ADMIN-CHANGED',
-      name: '🚨 Scroll L2 Bridge: Role Admin changed',
-      description: (args: Result) =>
-        `Admin for L2 Token Gateway ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
-        `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
-      uniqueKey: 'A04BB85A-7B66-48AC-94CF-59D772DC9063',
-    },
-    {
-      address: l2GatewayAddress,
       event: 'event DepositsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-DISABLED',
       name: '🚨 Scroll L2 Bridge: Deposits Disabled',
