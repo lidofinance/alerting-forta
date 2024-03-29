@@ -1,25 +1,25 @@
 import { FortaGuardClient } from './clients/forta_guard_client'
 import { ethers, Finding } from 'forta-agent'
-import { IMantleProvider, MantleProvider } from './clients/scroll_provider'
+import { IScrollProvider as IScrollProvider, ScrollProvider } from './clients/scroll_provider'
 import { EventWatcher } from './services/event_watcher'
 import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { ProxyContractClient } from './clients/proxy_contract_client'
 import { L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated'
-import { MantleBlockClient } from './clients/scroll_block_client'
+import { ScrollBlockClient } from './clients/scroll_block_client'
 import { ProxyWatcher } from './services/proxy_watcher'
 import { MonitorWithdrawals } from './services/monitor_withdrawals'
 import { DataRW } from './utils/mutex'
 import * as Winston from 'winston'
 import { getBridgeEvents } from './utils/events/bridge_events'
 import { getGovEvents } from './utils/events/gov_events'
-import { Address } from './utils/constants'
+import { Address, L2_NETWORK_ID } from './utils/constants'
 import { Logger } from 'winston'
 
 export type Container = {
-  mantleClient: IMantleProvider
+  scrollClient: IScrollProvider
   proxyWatcher: ProxyWatcher
   monitorWithdrawals: MonitorWithdrawals
-  blockSrv: MantleBlockClient
+  blockSrv: ScrollBlockClient
   bridgeWatcher: EventWatcher
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
@@ -40,14 +40,13 @@ export class App {
       })
 
       const adr: Address = Address
-      const mantleRpcURL = FortaGuardClient.getSecret()
+      const scrollRpcURL = FortaGuardClient.getSecret()
 
-      const baseNetworkID = 5000
-      const nodeClient = new ethers.providers.JsonRpcProvider(mantleRpcURL, baseNetworkID)
+      const nodeClient = new ethers.providers.JsonRpcProvider(scrollRpcURL, L2_NETWORK_ID)
 
       const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.hash, nodeClient)
 
-      const mantleClient = new MantleProvider(nodeClient, logger, l2Bridge)
+      const scrollClient = new ScrollProvider(nodeClient, logger, l2Bridge)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
@@ -57,7 +56,7 @@ export class App {
       const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS), logger)
       const proxyEventWatcher = new EventWatcher(
         'ProxyEventWatcher',
-        getProxyAdminEvents(adr.MANTLE_WST_ETH_BRIDGED, adr.L2_ERC20_TOKEN_GATEWAY),
+        getProxyAdminEvents(adr.SCROLL_WST_ETH_BRIDGED, adr.L2_ERC20_TOKEN_GATEWAY),
         logger,
       )
 
@@ -68,19 +67,19 @@ export class App {
           OssifiableProxy__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.hash, nodeClient),
         ),
         new ProxyContractClient(
-          adr.MANTLE_WST_ETH_BRIDGED.name,
-          adr.MANTLE_WST_ETH_BRIDGED.hash,
-          OssifiableProxy__factory.connect(adr.MANTLE_WST_ETH_BRIDGED.hash, nodeClient),
+          adr.SCROLL_WST_ETH_BRIDGED.name,
+          adr.SCROLL_WST_ETH_BRIDGED.hash,
+          OssifiableProxy__factory.connect(adr.SCROLL_WST_ETH_BRIDGED.hash, nodeClient),
         ),
       ]
 
-      const blockSrv: MantleBlockClient = new MantleBlockClient(mantleClient, logger)
+      const blockSrv: ScrollBlockClient = new ScrollBlockClient(scrollClient, logger)
       const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
-      const monitorWithdrawals = new MonitorWithdrawals(mantleClient, adr.L2_ERC20_TOKEN_GATEWAY.hash, logger)
+      const monitorWithdrawals = new MonitorWithdrawals(scrollClient, adr.L2_ERC20_TOKEN_GATEWAY.hash, logger)
 
       App.instance = {
-        mantleClient: mantleClient,
+        scrollClient: scrollClient,
         proxyWatcher: proxyWorker,
         monitorWithdrawals: monitorWithdrawals,
         blockSrv: blockSrv,

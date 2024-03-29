@@ -19,7 +19,7 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const app = await App.getInstance()
 
-    const latestBlock = await app.mantleClient.getLatestBlock()
+    const latestBlock = await app.scrollClient.getLatestBlock()
     if (E.isLeft(latestBlock)) {
       app.logger.error(latestBlock.left)
 
@@ -86,7 +86,7 @@ export const handleBlock = (): HandleBlock => {
       return [blocksDto.left]
     }
     app.logger.info(
-      `ETH block ${blockEvent.blockNumber.toString()}. Fetched mantle blocks from ${blocksDto.right[0].number} to ${
+      `ETH block ${blockEvent.blockNumber.toString()}. Fetched Scroll blocks from ${blocksDto.right[0].number} to ${
         blocksDto.right[blocksDto.right.length - 1].number
       }. Total: ${blocksDto.right.length}`,
     )

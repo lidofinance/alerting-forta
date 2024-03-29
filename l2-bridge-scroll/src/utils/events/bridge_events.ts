@@ -4,110 +4,98 @@ import { Result } from '@ethersproject/abi/lib'
 import { RoleHashToName } from '../constants'
 
 export function getBridgeEvents(
-  L2_ERC20_TOKEN_GATEWAY_ADDRESS: string,
+  l2GatewayAddress: string,
   RolesAddrToNameMap: RoleHashToName,
 ): EventOfNotice[] {
-  const uniqueKeys: string[] = [
-    'be8452bb-c4c6-4526-9489-b04626ec4c4d',
-    'e3e767b1-de01-4695-84c7-5654567cf501',
-    'ff634c6e-e42c-4432-80e8-b1b4133c7478',
-    '3da97319-97cc-4124-85fd-96253be17368',
-    '8f775e16-a0f0-4232-a83d-6741825cd0e5',
-    '077579cd-d178-422e-ab76-3f3e3bf6c533',
-    'cae6f704-391f-4862-9ae4-6b4dae289cc8',
-    'f3e7baf3-f8cb-48bf-821a-3fec05222497',
-  ]
-
   return [
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
-      event: 'event Initialized(address indexed admin)',
-      alertId: 'L2-BRIDGE-IMPLEMENTATION-INITIALIZED',
-      name: '🚨🚨🚨 Mantle L2 Bridge: Implementation initialized',
+      address: l2GatewayAddress,
+      event: 'event Upgraded(address indexed implementation)',
+      alertId: 'L2-BRIDGE-IMPLEMENTATION-UPGRADED',
+      name: '🚨🚨🚨 Scroll L2 Bridge: Implementation upgraded',
       description: (args: Result) =>
-        `Implementation of the Mantle L2 Bridge was initialized by ${args.admin}\n` +
+        `Implementation of the Scroll L2 Bridge was upgraded by ${args.admin}\n` +
         `NOTE: This is not the thing that should be left unacted! ` +
         `Make sure that this call was made by Lido!`,
       severity: FindingSeverity.Critical,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[0],
+      uniqueKey: '5A4853D8-D7BF-4431-B7EC-8A5433E89B6A',
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
-      event: 'event DepositsDisabled(address indexed disabler)',
-      alertId: 'L2-BRIDGE-DEPOSITS-DISABLED',
-      name: '🚨 Mantle L2 Bridge: Deposits Disabled',
-      description: (args: Result) => `Deposits were disabled by ${args.disabler}`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
-      uniqueKey: uniqueKeys[1],
-    },
-    {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
-      event:
-        'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)',
+      address: l2GatewayAddress,
+      event:'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'L2-BRIDGE-ROLE-ADMIN-CHANGED',
-      name: '🚨 Mantle L2 Bridge: Role Admin changed',
+      name: '🚨 Scroll L2 Bridge: Role Admin changed',
       description: (args: Result) =>
-        `Role Admin for role ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
+        `Admin for L2 Token Gateway ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
         `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[2],
+      uniqueKey: 'A04BB85A-7B66-48AC-94CF-59D772DC9063',
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2GatewayAddress,
+      event: 'event DepositsDisabled(address indexed disabler)',
+      alertId: 'L2-BRIDGE-DEPOSITS-DISABLED',
+      name: '🚨 Scroll L2 Bridge: Deposits Disabled',
+      description: (args: Result) => `Deposits were disabled by ${args.disabler}`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '7CBC6E3F-BABA-437A-9142-0C1CD8AAA827',
+    },
+    {
+      address: l2GatewayAddress,
       event: 'event WithdrawalsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-WITHDRAWALS-DISABLED',
-      name: '🚨 Mantle L2 Bridge: Withdrawals Disabled',
+      name: '🚨 Scroll L2 Bridge: Withdrawals Disabled',
       description: (args: Result) => `Withdrawals were disabled by ${args.enabler}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[3],
+      uniqueKey: 'C6DBFF28-C12D-4CEC-8087-2F0898F7AEAB',
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2GatewayAddress,
       event: 'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'L2-BRIDGE-ROLE-GRANTED',
-      name: '⚠️ Mantle L2 Bridge: Role granted',
+      name: '⚠️ Scroll L2 Bridge: Role granted',
       description: (args: Result) =>
         `Role ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
         `was granted to ${args.account} by ${args.sender}`,
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[4],
+      uniqueKey: 'F58F36AD-9811-40D7-ACD2-667A7624D85B',
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2GatewayAddress,
       event: 'event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'L2-BRIDGE-ROLE-REVOKED',
-      name: '⚠️ Mantle L2 Bridge: Role revoked',
+      name: '⚠️ Scroll L2 Bridge: Role revoked',
       description: (args: Result) =>
         `Role ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
         `was revoked to ${args.account} by ${args.sender}`,
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[5],
+      uniqueKey: '42816CCE-24C3-4CE2-BC21-4F2202A66EFD',
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2GatewayAddress,
       event: 'event DepositsEnabled(address indexed enabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-ENABLED',
-      name: 'ℹ️ Mantle L2 Bridge: Deposits Enabled',
+      name: 'ℹ️ Scroll L2 Bridge: Deposits Enabled',
       description: (args: Result) => `Deposits were enabled by ${args.enabler}`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[6],
+      uniqueKey: 'EA60F6DC-9A59-4FAE-8467-521DF56813C5',
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2GatewayAddress,
       event: 'event WithdrawalsEnabled(address indexed enabler)',
       alertId: 'L2-BRIDGE-WITHDRAWALS-ENABLED',
-      name: 'ℹ️ Mantle L2 Bridge: Withdrawals Enabled',
+      name: 'ℹ️ Scroll L2 Bridge: Withdrawals Enabled',
       description: (args: Result) => `Withdrawals were enabled by ${args.enabler}`,
       severity: FindingSeverity.Info,
       type: FindingType.Info,
-      uniqueKey: uniqueKeys[7],
+      uniqueKey: '0CEE896B-6BDD-45C5-9ADD-46A1558F1BBC',
     },
   ]
 }

@@ -3,22 +3,27 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "messenger_",
+        "name": "_l1Token",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "l1TokenBridge_",
+        "name": "_l2Token",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "l1Token_",
+        "name": "_counterpart",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "l2Token_",
+        "name": "_router",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_messenger",
         "type": "address"
       }
     ],
@@ -32,7 +37,32 @@
   },
   {
     "inputs": [],
-    "name": "ErrorAlreadyInitialized",
+    "name": "ErrorCallerIsNotCounterpartGateway",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ErrorCallerIsNotDepositsDisabler",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ErrorCallerIsNotDepositsEnabler",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ErrorCallerIsNotMessenger",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ErrorCallerIsNotWithdrawalsDisabler",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ErrorCallerIsNotWithdrawalsEnabler",
     "type": "error"
   },
   {
@@ -47,12 +77,12 @@
   },
   {
     "inputs": [],
-    "name": "ErrorSenderNotEOA",
+    "name": "ErrorNonZeroMsgValue",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "ErrorUnauthorizedMessenger",
+    "name": "ErrorNotInDropMessageContext",
     "type": "error"
   },
   {
@@ -67,6 +97,11 @@
   },
   {
     "inputs": [],
+    "name": "ErrorWithdrawZeroAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ErrorWithdrawalsDisabled",
     "type": "error"
   },
@@ -77,94 +112,13 @@
   },
   {
     "inputs": [],
-    "name": "ErrorWrongCrossDomainSender",
+    "name": "ErrorZeroAddress",
     "type": "error"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_l1Token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_l2Token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "_data",
-        "type": "bytes"
-      }
-    ],
-    "name": "DepositFailed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_l1Token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_l2Token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "_data",
-        "type": "bytes"
-      }
-    ],
-    "name": "DepositFinalized",
-    "type": "event"
+    "inputs": [],
+    "name": "WithdrawAndCallIsNotAllowed",
+    "type": "error"
   },
   {
     "anonymous": false,
@@ -198,8 +152,51 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "admin",
+        "name": "l1Token",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "l2Token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "FinalizeDepositERC20",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
       }
     ],
     "name": "Initialized",
@@ -210,24 +207,18 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "role",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
       },
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "previousAdminRole",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "newAdminRole",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
       }
     ],
-    "name": "RoleAdminChanged",
+    "name": "OwnershipTransferred",
     "type": "event"
   },
   {
@@ -286,41 +277,41 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_l1Token",
+        "name": "l1Token",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_l2Token",
+        "name": "l2Token",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_from",
+        "name": "from",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_to",
+        "name": "to",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "amount",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "_data",
+        "name": "data",
         "type": "bytes"
       }
     ],
-    "name": "WithdrawalInitiated",
+    "name": "WithdrawERC20",
     "type": "event"
   },
   {
@@ -348,19 +339,6 @@
     ],
     "name": "WithdrawalsEnabled",
     "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "DEFAULT_ADMIN_ROLE",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [],
@@ -416,6 +394,19 @@
   },
   {
     "inputs": [],
+    "name": "counterpart",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "disableDeposits",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -446,54 +437,73 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "l1Token_",
+        "name": "_l1Token",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "l2Token_",
+        "name": "_l2Token",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "from_",
+        "name": "_from",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "to_",
+        "name": "_to",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "amount_",
+        "name": "_amount",
         "type": "uint256"
       },
       {
         "internalType": "bytes",
-        "name": "data_",
+        "name": "_data",
         "type": "bytes"
       }
     ],
-    "name": "finalizeDeposit",
+    "name": "finalizeDepositERC20",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "role",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "_l2Token",
+        "type": "address"
       }
     ],
-    "name": "getRoleAdmin",
+    "name": "getL1ERC20Address",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "address",
         "name": "",
-        "type": "bytes32"
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_l1Token",
+        "type": "address"
+      }
+    ],
+    "name": "getL2ERC20Address",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -503,12 +513,55 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "role",
+        "name": "_role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRoleMember",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleMemberCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_role",
         "type": "bytes32"
       },
       {
         "internalType": "address",
-        "name": "account",
+        "name": "_account",
         "type": "address"
       }
     ],
@@ -521,12 +574,12 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "role",
+        "name": "_role",
         "type": "bytes32"
       },
       {
         "internalType": "address",
-        "name": "account",
+        "name": "_account",
         "type": "address"
       }
     ],
@@ -545,7 +598,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "admin_",
+        "name": "_counterpart",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_router",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_messenger",
         "type": "address"
       }
     ],
@@ -555,21 +618,36 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "isDepositsEnabled",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
+        "internalType": "address",
+        "name": "_depositsEnabler",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_depositsDisabler",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_withdrawalsEnabler",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_withdrawalsDisabler",
+        "type": "address"
       }
     ],
-    "stateMutability": "view",
+    "name": "initializeV2",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "isInitialized",
+    "name": "isDepositsEnabled",
     "outputs": [
       {
         "internalType": "bool",
@@ -608,19 +686,6 @@
   },
   {
     "inputs": [],
-    "name": "l1TokenBridge",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "l2Token",
     "outputs": [
       {
@@ -637,7 +702,7 @@
     "name": "messenger",
     "outputs": [
       {
-        "internalType": "contract ICrossDomainMessenger",
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -646,19 +711,21 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "role",
-        "type": "bytes32"
-      },
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
       {
         "internalType": "address",
-        "name": "account",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "renounceRole",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -667,12 +734,12 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "role",
+        "name": "_role",
         "type": "bytes32"
       },
       {
         "internalType": "address",
-        "name": "account",
+        "name": "_account",
         "type": "address"
       }
     ],
@@ -682,19 +749,13 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "interfaceId",
-        "type": "bytes4"
-      }
-    ],
-    "name": "supportsInterface",
+    "inputs": [],
+    "name": "router",
     "outputs": [
       {
-        "internalType": "bool",
+        "internalType": "address",
         "name": "",
-        "type": "bool"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -704,26 +765,11 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "l2Token_",
+        "name": "newOwner",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint32",
-        "name": "l1Gas_",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data_",
-        "type": "bytes"
       }
     ],
-    "name": "withdraw",
+    "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -732,33 +778,84 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "l2Token_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to_",
+        "name": "_token",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "amount_",
+        "name": "_amount",
         "type": "uint256"
       },
       {
-        "internalType": "uint32",
-        "name": "l1Gas_",
-        "type": "uint32"
+        "internalType": "uint256",
+        "name": "_gasLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawERC20",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_gasLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawERC20",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
       },
       {
         "internalType": "bytes",
-        "name": "data_",
+        "name": "_data",
         "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_gasLimit",
+        "type": "uint256"
       }
     ],
-    "name": "withdrawTo",
+    "name": "withdrawERC20AndCall",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   }
 ]

@@ -5,7 +5,7 @@ import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/error'
 import { Logger } from 'winston'
 import { L2ERC20TokenBridge } from '../generated'
-import { WithdrawalInitiatedEvent } from '../generated/L2ERC20TokenBridge'
+import { WithdrawERC20Event } from '../generated/L2ERC20TokenBridge'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
 
@@ -13,14 +13,14 @@ export abstract class IMonitorWithdrawalsClient {
   public abstract getWithdrawalEvents(
     fromBlockNumber: number,
     toBlockNumber: number,
-  ): Promise<E.Either<NetworkError, WithdrawalInitiatedEvent[]>>
+  ): Promise<E.Either<NetworkError, WithdrawERC20Event[]>>
 
   public abstract getWithdrawalRecords(
-    withdrawalEvents: WithdrawalInitiatedEvent[],
+    withdrawalEvents: WithdrawERC20Event[],
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
-export abstract class IMantleProvider {
+export abstract class IScrollProvider {
   public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
 
   public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
@@ -32,7 +32,7 @@ export abstract class IMantleProvider {
   public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
 }
 
-export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClient {
+export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClient {
   private readonly logger: Logger
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly L2ERC20TokenBridge: L2ERC20TokenBridge
@@ -210,12 +210,12 @@ export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClien
   public async getWithdrawalEvents(
     fromBlockNumber: number,
     toBlockNumber: number,
-  ): Promise<E.Either<NetworkError, WithdrawalInitiatedEvent[]>> {
+  ): Promise<E.Either<NetworkError, WithdrawERC20Event[]>> {
     try {
-      const out = await retryAsync<WithdrawalInitiatedEvent[]>(
-        async (): Promise<WithdrawalInitiatedEvent[]> => {
+      const out = await retryAsync<WithdrawERC20Event[]>(
+        async (): Promise<WithdrawERC20Event[]> => {
           return await this.L2ERC20TokenBridge.queryFilter(
-            this.L2ERC20TokenBridge.filters.WithdrawalInitiated(),
+            this.L2ERC20TokenBridge.filters.WithdrawERC20(),
             fromBlockNumber,
             toBlockNumber,
           )
@@ -230,7 +230,7 @@ export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClien
   }
 
   public async getWithdrawalRecords(
-    withdrawalEvents: WithdrawalInitiatedEvent[],
+    withdrawalEvents: WithdrawERC20Event[],
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>> {
     const out: WithdrawalRecord[] = []
 
@@ -247,7 +247,7 @@ export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClien
 
           const record: WithdrawalRecord = {
             time: block.timestamp,
-            amount: new BigNumber(String(withdrawEvent.args._amount)),
+            amount: new BigNumber(String(withdrawEvent.args.amount)),
           }
 
           out.push(record)

@@ -1,5 +1,5 @@
 import { BlockDto } from 'src/entity/blockDto'
-import { IMantleProvider } from './scroll_provider'
+import { IScrollProvider } from './scroll_provider'
 import { Log } from '@ethersproject/abstract-provider'
 import { Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
@@ -7,20 +7,20 @@ import { networkAlert } from '../utils/finding.helpers'
 import { Logger } from 'winston'
 import { elapsedTime } from '../utils/time'
 
-export class MantleBlockClient {
-  private mantleProvider: IMantleProvider
+export class ScrollBlockClient {
+  private scrollProvider: IScrollProvider
   private logger: Logger
   private cachedBlockDto: BlockDto | undefined = undefined
 
-  constructor(provider: IMantleProvider, logger: Logger) {
-    this.mantleProvider = provider
+  constructor(provider: IScrollProvider, logger: Logger) {
+    this.scrollProvider = provider
     this.logger = logger
   }
 
   public async getBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
     const start = new Date().getTime()
     const blocks = await this.fetchBlocks()
-    this.logger.info(elapsedTime(MantleBlockClient.name + '.' + this.getBlocks.name, start))
+    this.logger.info(elapsedTime(ScrollBlockClient.name + '.' + this.getBlocks.name, start))
 
     return blocks
   }
@@ -28,7 +28,7 @@ export class MantleBlockClient {
   public async getLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
     const start = new Date().getTime()
     const logs = await this.fetchLogs(workingBlocks)
-    this.logger.info(elapsedTime(MantleBlockClient.name + '.' + this.getLogs.name, start))
+    this.logger.info(elapsedTime(ScrollBlockClient.name + '.' + this.getLogs.name, start))
 
     return logs
   }
@@ -37,13 +37,13 @@ export class MantleBlockClient {
     const out: BlockDto[] = []
 
     if (this.cachedBlockDto === undefined) {
-      const block = await this.mantleProvider.getLatestBlock()
+      const block = await this.scrollProvider.getLatestBlock()
       if (E.isLeft(block)) {
         return E.left(
           networkAlert(
             block.left,
-            `Error in ${MantleBlockClient.name}.${this.getBlocks.name}:21`,
-            `Could not call mantleProvider.getLatestBlock`,
+            `Error in ${ScrollBlockClient.name}.${this.getBlocks.name}:21`,
+            `Could not call scrollProvider.getLatestBlock`,
             0,
           ),
         )
@@ -56,20 +56,20 @@ export class MantleBlockClient {
 
       out.push(this.cachedBlockDto)
     } else {
-      const latestBlock = await this.mantleProvider.getLatestBlock()
+      const latestBlock = await this.scrollProvider.getLatestBlock()
       if (E.isLeft(latestBlock)) {
         this.cachedBlockDto = undefined
         return E.left(
           networkAlert(
             latestBlock.left,
-            `Error in ${MantleBlockClient.name}.${this.getBlocks.name}:39`,
-            `Could not call mantleProvider.getLatestBlock`,
+            `Error in ${ScrollBlockClient.name}.${this.getBlocks.name}:39`,
+            `Could not call scrollProvider.getLatestBlock`,
             0,
           ),
         )
       }
 
-      const blocks = await this.mantleProvider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
+      const blocks = await this.scrollProvider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
       for (const block of blocks) {
         out.push({
           number: block.number,
@@ -94,7 +94,7 @@ export class MantleBlockClient {
   }
 
   private async fetchLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
-    const logs = await this.mantleProvider.getLogs(
+    const logs = await this.scrollProvider.getLogs(
       workingBlocks[0].number,
       workingBlocks[workingBlocks.length - 1].number,
     )
@@ -102,8 +102,8 @@ export class MantleBlockClient {
       return E.left(
         networkAlert(
           logs.left,
-          `Error in ${MantleBlockClient.name}.${this.getLogs.name}:76`,
-          `Could not call mantleProvider.getLogs`,
+          `Error in ${ScrollBlockClient.name}.${this.getLogs.name}:76`,
+          `Could not call scrollProvider.getLogs`,
           workingBlocks[workingBlocks.length - 1].number,
         ),
       )
