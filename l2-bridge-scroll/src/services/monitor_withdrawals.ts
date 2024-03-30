@@ -22,7 +22,7 @@ export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
 
   private readonly withdrawalInitiatedEvent =
-      'event WithdrawERC20(address indexed l1Token, address indexed l2Token, address indexed from, uint256 amount, bytes data)'
+    'event WithdrawERC20(address indexed l1Token, address indexed l2Token, address indexed from, uint256 amount, bytes data)'
 
   private readonly logger: Logger
   private readonly l2Erc20TokenGatewayAddress: string

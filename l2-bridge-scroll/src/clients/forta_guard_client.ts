@@ -1,7 +1,7 @@
 import { fetchJwt } from 'forta-agent'
 import { verifyJwt } from 'forta-agent/dist/sdk/jwt'
-import { L2_NETWORK_RPC } from 'src/utils/constants'
 import * as E from 'fp-ts/Either'
+import { Constants } from '../utils/constants'
 
 export class FortaGuardClient {
   private fortaGuardURL: string = 'http://127.0.0.1/secret'
@@ -12,8 +12,7 @@ export class FortaGuardClient {
   }
 
   public static getSecret(): string {
-    // NB: obfuscate url if the rpc isn't public Buffer.from('???', 'base64').toString('utf-8')
-    return L2_NETWORK_RPC
+    return Constants.L2_NETWORK_RPC
   }
 
   public async getSecret(key: string): Promise<E.Either<Error, string>> {

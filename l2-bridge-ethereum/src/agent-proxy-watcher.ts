@@ -84,7 +84,6 @@ function handleThirdPartyProxyAdminEvents(
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         if (eventInfo.condition && !eventInfo.condition(event.args)) {
-          console.log(`Condition is not met for ${event.args})`);
           return;
         }
 

@@ -3,10 +3,7 @@ import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
 import { RoleHashToName } from '../constants'
 
-export function getBridgeEvents(
-  l2GatewayAddress: string,
-  RolesAddrToNameMap: RoleHashToName,
-): EventOfNotice[] {
+export function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: RoleHashToName): EventOfNotice[] {
   return [
     {
       address: l2GatewayAddress,
@@ -14,8 +11,7 @@ export function getBridgeEvents(
       alertId: 'L2-BRIDGE-OWNER-CHANGED',
       name: '🚨 Scroll: L2 gateway owner changed',
       description: (args: Result) =>
-        `Owner of L2LidoGateway ${l2GatewayAddress} was changed to ${args.newOwner}` +
-        `\n(detected by event)`,
+        `Owner of L2LidoGateway ${l2GatewayAddress} was changed to ${args.newOwner} (detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: '136546BE-E1BF-40DA-98FB-17B741E12A35',
