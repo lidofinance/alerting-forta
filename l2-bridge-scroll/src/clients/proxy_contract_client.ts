@@ -1,4 +1,4 @@
-import { OssifiableProxy } from '../generated'
+import { ProxyAdmin } from '../generated'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/error'
@@ -16,18 +16,12 @@ export abstract class IProxyContractClient {
 export class ProxyContractClient implements IProxyContractClient {
   private readonly name: string
   private readonly address: string
-  private readonly contract: OssifiableProxy
+  private readonly proxyAdminContract: ProxyAdmin
 
-  constructor(name: string, address: string, contract: OssifiableProxy) {
-    if (address !== contract.address) {
-      throw Error(
-        `Could not create instance of ProxyContract: ${name} . Cause: ${address} != ${contract.address} proxyAddress`,
-      )
-    }
-
+  constructor(name: string, address: string, proxyAdmin: ProxyAdmin) {
     this.name = name
     this.address = address
-    this.contract = contract
+    this.proxyAdminContract = proxyAdmin
   }
 
   public getName(): string {
@@ -42,7 +36,7 @@ export class ProxyContractClient implements IProxyContractClient {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.proxy__getAdmin({
+          return await this.proxyAdminContract.getProxyAdmin(this.address, {
             blockTag: blockNumber,
           })
         },
@@ -59,7 +53,7 @@ export class ProxyContractClient implements IProxyContractClient {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.proxy__getImplementation({
+          return await this.proxyAdminContract.getProxyImplementation(this.address, {
             blockTag: blockNumber,
           })
         },
