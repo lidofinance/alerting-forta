@@ -13,7 +13,7 @@ mainnet)
 
 [polygon](./polygon) - Detection bot for Lido Apps on the Polygon network (should be launched against Polygon mainnet)
 
-[arbitrum](./arbitrum) - Detection bot for Lido Apps on the Arbitrum network (should be launched against Arbitrum
+[arb-subgraph](./arb-subgraph) - Lido Subgraph bot on the Arbitrum network (should be launched against Arbitrum
 mainnet)
 
 [l2-bridge-arbitrum](./l2-bridge-arbitrum) - Detection bot for Arbitrum part of L2 bridge
