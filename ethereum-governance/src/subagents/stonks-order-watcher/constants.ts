@@ -63,7 +63,7 @@ export const STONKS = [
   {
     address: STONKS_USDT_DAI_ADDRESS,
     from: "USDT",
-    to: "USDC",
+    to: "DAI",
   },
   {
     address: STONKS_USDT_USDC_ADDRESS,
