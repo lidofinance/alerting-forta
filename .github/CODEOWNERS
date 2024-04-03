@@ -11,7 +11,6 @@
 /l2-bridge-mantle/ @lidofinance/lido-eth-protocol
 /l2-bridge-linea/ @lidofinance/lido-eth-protocol
 /ethereum-financial/ @lidofinance/lido-eth-protocol
-/reverted-tx-watcher/ @lidofinance/lido-eth-protocol
 /arb-subgraph/ @lidofinance/lido-si
 /ethereum-governance/ @lidofinance/lido-dao-ops-team
 /multisig-watcher/ @lidofinance/lido-dao-ops-team
