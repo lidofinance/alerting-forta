@@ -148,19 +148,10 @@ describe('agent-pools-balances functional tests', () => {
         severity: FindingSeverity.High,
         type: FindingType.Info,
       }),
-      Finding.fromObject({
-        alertId: 'TOTAL-UNSTAKED-STETH-INCREASED',
-        description:
-          'Total unstaked stETH increased from 216520.43 stETH to 283458.93 stETH over the last 0 hours.\n' +
-          'Note: Unstaked = difference of stETH(wstETH) and ETH amount in Curve and Balancer pools',
-        name: "⚠️ Total 'unstaked' stETH increased",
-        severity: FindingSeverity.High,
-        type: FindingType.Info,
-      }),
     ]
 
-    expect(result.length).toEqual(3)
-    for (let i = 0; i <= 2; i++) {
+    expect(result.length).toEqual(2)
+    for (let i = 0; i <= 1; i++) {
       expect(result[i].alertId).toEqual(expected[i].alertId)
       expect(result[i].description).toEqual(expected[i].description)
       expect(result[i].name).toEqual(expected[i].name)

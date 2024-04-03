@@ -18,7 +18,6 @@ const PEG_STEP = 0.005
 const PEG_STEP_0_995 = 0.995
 const PEG_STEP_0_98 = 0.98
 
-const ONE_HOUR = 60 * 60
 const WEEK_1 = 60 * 60 * 24 * 7 // 1 week
 const HOURS_24 = 60 * 60 * 24 // 24 hours
 
@@ -100,9 +99,6 @@ export class PoolBalanceSrv {
     this.cache.lastReportedChainlinkPegLevel = Math.ceil(chainlinkPeg.right.toNumber() / PEG_STEP) / 100
     this.cache.lastReportedChainlinkPegTimestamp = blockDto.timestamp
 
-    this.cache.curveUnstakedStEth = this.calculateUnstakedStEth(stEthBalancePrev.right, ethBalancePrev.right)
-    this.cache.curveLastReportedUnstakedStEthTimestamp = blockDto.timestamp
-
     this.logger.info(elapsedTime(PoolBalanceSrv.name + '.' + this.init.name, start))
 
     return null
@@ -112,15 +108,13 @@ export class PoolBalanceSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [curvePoolImbalanceFindings, curvePegFindings, chainlinPegFindings] = await Promise.all([
+    const [curvePoolImbalanceFindings, curvePegFindings, chainlinkPegFindings] = await Promise.all([
       this.handleCurvePool(blockEvent),
       this.handleCurvePeg(blockEvent),
       this.handleChainlinkPeg(blockEvent),
     ])
 
-    const unstakedStEthFindings = this.handleUnstakedStEth(blockEvent)
-
-    findings.push(...curvePoolImbalanceFindings, ...curvePegFindings, ...chainlinPegFindings, ...unstakedStEthFindings)
+    findings.push(...curvePoolImbalanceFindings, ...curvePegFindings, ...chainlinkPegFindings)
 
     this.logger.info(elapsedTime(PoolBalanceSrv.name + '.' + this.handleBlock.name, start))
     return findings
@@ -347,54 +341,6 @@ export class PoolBalanceSrv {
     }
     if (this.cache.lastReportedChainlinkPegLevel + PEG_STEP * 2 < pegLevel) {
       this.cache.lastReportedChainlinkPegLevel = pegLevel
-    }
-
-    return out
-  }
-
-  handleUnstakedStEth(blockDto: BlockDto): Finding[] {
-    const out: Finding[] = []
-    const newUnstakedStEth = this.calculateUnstakedStEth(this.cache.curveStEthBalance, this.cache.curveEthBalance)
-
-    if (newUnstakedStEth.isGreaterThan(0)) {
-      // if totalUnstakedStEth decreased by more than TOTAL_UNSTAKED_STETH_TOLERANCE% update last reported value
-      if (newUnstakedStEth.isLessThan(this.cache.curveUnstakedStEth.times(1 - PERCENT_10 / 100))) {
-        this.cache.curveUnstakedStEth = newUnstakedStEth
-        this.cache.curveLastReportedUnstakedStEthTimestamp = blockDto.timestamp
-      }
-
-      if (newUnstakedStEth.isGreaterThanOrEqualTo(this.cache.curveUnstakedStEth.times(1 + PERCENT_10 / 100))) {
-        if (newUnstakedStEth.isGreaterThanOrEqualTo(this.cache.curvePoolSize.times(PERCENT_10 / 100))) {
-          const severity =
-            blockDto.timestamp - this.cache.curveLastReportedUnstakedStEthTimestamp > ONE_HOUR
-              ? FindingSeverity.Info
-              : FindingSeverity.High
-          const time = Math.floor((blockDto.timestamp - this.cache.curveLastReportedUnstakedStEthTimestamp) / ONE_HOUR)
-
-          out.push(
-            Finding.fromObject({
-              name: "⚠️ Total 'unstaked' stETH increased",
-              description:
-                `Total unstaked stETH increased from ` +
-                `${this.cache.curveUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
-                `to ${newUnstakedStEth.div(ETH_DECIMALS).toFixed(2)} stETH ` +
-                `over the last ${time} hours.\n` +
-                `Note: Unstaked = difference of stETH(wstETH) and ETH amount in Curve and Balancer pools`,
-              alertId: 'TOTAL-UNSTAKED-STETH-INCREASED',
-              severity: severity,
-              type: FindingType.Info,
-              metadata: {
-                prevTotalUnstaked: this.cache.curveUnstakedStEth.dividedBy(ETH_DECIMALS).toFixed(2),
-                currentTotalUnstaked: newUnstakedStEth.dividedBy(ETH_DECIMALS).toFixed(2),
-                timePeriod: time.toFixed(),
-              },
-            }),
-          )
-        }
-
-        this.cache.curveUnstakedStEth = newUnstakedStEth
-        this.cache.curveLastReportedUnstakedStEthTimestamp = blockDto.timestamp
-      }
     }
 
     return out

@@ -25,9 +25,6 @@ export class PoolBalanceCache {
   private _lastReportedChainlinkPegLevel: number
   private _lastReportedChainlinkPegTimestamp: number
 
-  private _curveUnstakedStEth: BigNumber
-  private _curveLastReportedUnstakedStEthTimestamp: number
-
   constructor() {
     this._curveEthBalance = new BigNumber(0)
     this._curveStEthBalance = new BigNumber(0)
@@ -39,8 +36,6 @@ export class PoolBalanceCache {
     this._lastReportedChainlinkPegTimestamp = 0
     this._lastReportedCurvePegLevel = 0
     this._lastReportedCurvePegTimestamp = 0
-    this._curveUnstakedStEth = new BigNumber(0)
-    this._curveLastReportedUnstakedStEthTimestamp = 0
   }
 
   get curveEthBalance(): BigNumber {
@@ -121,22 +116,6 @@ export class PoolBalanceCache {
 
   set lastReportedCurvePegTimestamp(value: number) {
     this._lastReportedCurvePegTimestamp = value
-  }
-
-  get curveUnstakedStEth(): BigNumber {
-    return this._curveUnstakedStEth
-  }
-
-  set curveUnstakedStEth(value: BigNumber) {
-    this._curveUnstakedStEth = value
-  }
-
-  get curveLastReportedUnstakedStEthTimestamp(): number {
-    return this._curveLastReportedUnstakedStEthTimestamp
-  }
-
-  set curveLastReportedUnstakedStEthTimestamp(value: number) {
-    this._curveLastReportedUnstakedStEthTimestamp = value
   }
 
   public getState(): PoolBalanceState {
