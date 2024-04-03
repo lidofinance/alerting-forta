@@ -4,7 +4,6 @@ import proxyAdminABI from "./abi/ProxyAdminABI.json";
 import { Result } from "@ethersproject/abi/lib";
 import { getAddress } from "./ethers";
 
-
 type EventOfNotice = {
   address: string;
   event: string;
@@ -23,7 +22,6 @@ export interface BridgeProxyInfo {
   functions: Map<string, string>;
   proxyAdminAddress: string | null;
 }
-
 
 export const ROLES = new Map<string, string>([
   [
@@ -92,14 +90,13 @@ export const LINEA_L1_TOKEN_BRIDGE =
 export const ADMIN_OF_LINEA_L1_TOKEN_BRIDGE =
   "0x5b0bb17755fba06028530682e2fd5bc373931768";
 
-  export const SCROLL_L1_TOKEN_BRIDGE =
+export const SCROLL_L1_TOKEN_BRIDGE =
   "0x6625c6332c9f91f2d27c304e729b86db87a3f504";
 
 export const ADMIN_OF_SCROLL_L1_TOKEN_BRIDGE =
   "0xCC2C53556Bc75217cf698721b29071d6f12628A9";
 
-export const SCROLL_L1_MESSENGER =
-  "0x6774Bcbd5ceCeF1336b5300fb5186a12DDD8b367";
+export const SCROLL_L1_MESSENGER = "0x6774Bcbd5ceCeF1336b5300fb5186a12DDD8b367";
 
 export const SCROLL_L1_GATEWAY_ROUTER =
   "0xF8B1378579659D8F7EE5f3C929c2f3E332E41Fd6";
@@ -280,7 +277,6 @@ export const L1_BRIDGES_PROXY_EVENTS: EventOfNotice[] = L1_BRIDGES.map(
   },
 ).reduce((a, b) => [...a, ...b]);
 
-
 const ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
   {
     address: ARBITRUM_L1_GATEWAY_ROUTER, // Arbitrum One: L1 Gateway Router
@@ -304,7 +300,7 @@ const ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
+];
 
 const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
@@ -331,7 +327,7 @@ const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
+];
 
 const BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
@@ -358,7 +354,7 @@ const BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
+];
 
 const ZKSYNC_L1_DIAMOND_PROXY_EVENTS = [
   {
@@ -373,7 +369,7 @@ const ZKSYNC_L1_DIAMOND_PROXY_EVENTS = [
     severity: FindingSeverity.Medium,
     type: FindingType.Info,
   },
-]
+];
 
 const MANTLE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
@@ -400,7 +396,7 @@ const MANTLE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
+];
 
 const LINEA_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
@@ -432,13 +428,12 @@ const LINEA_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
     name: "🚨 Linea Native Bridge: L1 Cross Domain Messenger proxy admin changed",
     description: (args: Result) =>
-      `Proxy admin of L1 Cross Domain Messenger ${LINEA_L1_CROSS_DOMAIN_MESSENGER} was changed`
-      + `\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+      `Proxy admin of L1 Cross Domain Messenger ${LINEA_L1_CROSS_DOMAIN_MESSENGER} was changed` +
+      `\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
-
+];
 
 const SCROLL_L1_MESSENGER_PROXY_EVENTS = [
   {
@@ -474,7 +469,7 @@ const SCROLL_L1_MESSENGER_PROXY_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
+];
 
 const SCROLL_L1_MESSENGER_EVENTS = [
   {
@@ -506,7 +501,8 @@ const SCROLL_L1_MESSENGER_EVENTS = [
     alertId: "THIRD-PARTY-MESSENGER-PAUSED",
     name: "🚨 Scroll Native Bridge: L1 Messenger paused",
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    description: (args: Result) => `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} paused`,
+    description: (args: Result) =>
+      `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} paused`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
@@ -516,13 +512,14 @@ const SCROLL_L1_MESSENGER_EVENTS = [
     alertId: "THIRD-PARTY-MESSENGER-UNPAUSED",
     name: "🚨 Scroll Native Bridge: L1 Messenger unpaused",
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    description: (args: Result) => `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} unpaused`,
+    description: (args: Result) =>
+      `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} unpaused`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
   // There is also `event UpdateFeeVault(address _oldFeeVault, address _newFeeVault)`
   // for skipping it as not significant enough
-]
+];
 
 const SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
   {
@@ -558,7 +555,7 @@ const SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-]
+];
 
 const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
   {
@@ -586,8 +583,11 @@ const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
   },
   {
     address: SCROLL_L1_GATEWAY_ROUTER,
-    event: "event SetERC20Gateway(address indexed token, address indexed oldGateway, address indexed newGateway)",
-    condition: (args: Result) => { return getAddress(args.token) === getAddress(WSTETH_ADDRESS) },
+    event:
+      "event SetERC20Gateway(address indexed token, address indexed oldGateway, address indexed newGateway)",
+    condition: (args: Result) => {
+      return getAddress(args.token) === getAddress(WSTETH_ADDRESS);
+    },
     alertId: "THIRD-PARTY-ROUTER-CHANGED",
     name: "🚨 Scroll Bridge: L1 Gateway for wstETH changed on router",
     description: (args: Result) =>
@@ -599,10 +599,9 @@ const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
     type: FindingType.Info,
     // Occurred in block 18318378 but than there were no Lido custom gateway contracts
   },
-]
+];
 
-
-export const THIRD_PARTY_PROXY_EVENTS = new Array()
+export const THIRD_PARTY_PROXY_EVENTS = []
   .concat(ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS)
   .concat(OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
   .concat(BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
@@ -613,7 +612,6 @@ export const THIRD_PARTY_PROXY_EVENTS = new Array()
   .concat(SCROLL_L1_MESSENGER_EVENTS)
   .concat(SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS)
   .concat(SCROLL_L1_GATEWAY_ROUTER_EVENTS);
-
 
 export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
   (gw) => {
