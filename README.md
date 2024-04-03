@@ -38,8 +38,6 @@ mainnet)
 
 [storage-watcher](./storage-watcher) - Detection bot that monitors critical storage changes
 
-[reverted-tx-watcher](./reverted-tx-watcher) - Detection bot that monitors reverted transactions
-
 ## Local development
 
 To launch the bot environment similar to the production environment, several services need to be set up:
