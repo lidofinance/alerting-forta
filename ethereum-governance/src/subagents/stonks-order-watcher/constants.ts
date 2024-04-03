@@ -169,7 +169,7 @@ STONKS.forEach(({ address, to, from }) => {
     event:
       "event ERC20Recovered(address indexed token, address indexed recipient, uint256 amount)",
     alertId: "STONKS-ERC20-RECOVERED",
-    name: "ℹ️ Order: ERC20 recovered",
+    name: "ℹ️ Stonks: ERC20 recovered",
     description: (args: any) =>
       `ERC20 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
@@ -182,7 +182,7 @@ STONKS.forEach(({ address, to, from }) => {
     event:
       "event ERC721Recovered(address indexed token, uint256 tokenId, address indexed recipient)",
     alertId: "STONKS-ERC721-RECOVERED",
-    name: "ℹ️ Order: ERC721 recovered",
+    name: "ℹ️ Stonks: ERC721 recovered",
     description: (args: any) =>
       `ERC721 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
@@ -195,7 +195,7 @@ STONKS.forEach(({ address, to, from }) => {
     event:
       "event ERC1155Recovered(address token, uint256 tokenId, address recipient, uint256 amount)",
     alertId: "STONKS-ERC1155-RECOVERED",
-    name: "ℹ️ Order: ERC1155 recovered",
+    name: "ℹ️ Stonks: ERC1155 recovered",
     description: (args: any) =>
       `ERC1155 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
@@ -208,7 +208,7 @@ STONKS.forEach(({ address, to, from }) => {
     address,
     event: "event EtherRecovered(address indexed recipient, uint256 amount)",
     alertId: "STONKS-ETHER-RECOVERED",
-    name: "ℹ️ Order: Ether recovered",
+    name: "ℹ️ Stonks: Ether recovered",
     description: (args: any) =>
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
