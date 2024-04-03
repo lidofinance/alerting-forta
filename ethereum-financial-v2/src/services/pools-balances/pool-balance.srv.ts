@@ -200,7 +200,7 @@ export class PoolBalanceSrv {
       let name = '⚠️ Significant Curve Pool size change'
       if (poolSizeChange < -PERCENT_10 || poolSizeChange > PERCENT_10) {
         severity = FindingSeverity.High
-        name = '🚨Significant Curve Pool size change'
+        name = '🚨 Significant Curve Pool size change'
       }
 
       out.push(
@@ -248,9 +248,9 @@ export class PoolBalanceSrv {
     if (pegLevel < this.cache.lastReportedCurvePegValue && peg.right.toNumber() < PEG_STEP_0_995) {
       out.push(
         Finding.fromObject({
-          name: '⚠️ stETH PEG on Curve decreased',
-          description: `stETH PEG on Curve decreased to ${peg.right.toFixed(4)}`,
-          alertId: 'STETH-CURVE-PEG-DECREASE',
+          name: '⚠️ stETH price on Curve decreased',
+          description: `stETH price on Curve decreased to ${peg.right.toFixed(4)}`,
+          alertId: 'STETH-CURVE-PRICE-DECREASE',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
           metadata: {
@@ -267,7 +267,7 @@ export class PoolBalanceSrv {
       if (peg.right.toNumber() <= PEG_STEP_0_98) {
         out.push(
           Finding.fromObject({
-            name: '🚨🚨🚨 Super low stETH:Eth price on Curve',
+            name: '🚨🚨🚨 Super low stETH:ETH price on Curve',
             description: `Current stETH PEG on Curve - ${peg.right.toFixed(4)}`,
             alertId: 'LOW-STETH-CURVE-PEG',
             severity: FindingSeverity.Critical,
@@ -314,8 +314,8 @@ export class PoolBalanceSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ stETH:ETH on Chainlink decreased',
-          description: `stETH:ETH PEG on Chainlink decreased to ${peg.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
-          alertId: 'STETH-CHAINLINK-PEG-DECREASE',
+          description: `stETH:ETH price on Chainlink decreased to ${peg.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
+          alertId: 'STETH-CHAINLINK-PRICE-DECREASE',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
           metadata: {

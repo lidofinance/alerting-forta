@@ -92,7 +92,7 @@ export class AaveSrv {
 
         return [
           Finding.fromObject({
-            name: '🚨🚨🚨 astETH balance - astEth totalSupply >= 1ETH',
+            name: '🚨🚨🚨 astETH balance - astETH totalSupply >= 1ETH',
             description:
               `stETH.balanceOf(${this.aaveAstethAddress})` +
               `=${astEthBalance.right.div(GWEI_DECIMALS).toFixed(0)} ` +

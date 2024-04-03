@@ -1,6 +1,5 @@
 import { App } from '../../app'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { etherBlockToFortaBlockEvent } from '../../../tests/e2e/utils'
 import { BlockDto } from '../../entity/events'
 import { Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
 
@@ -22,17 +21,14 @@ describe('agent-pools-balances functional tests', () => {
       const block = await ethProvider.getBlock(blockNumber)
       const initBlock = await ethProvider.getBlock(blockNumber - 10)
 
-      const blockEvent = etherBlockToFortaBlockEvent(block)
-      const initBlockEvent = etherBlockToFortaBlockEvent(initBlock)
-
       const blockDto: BlockDto = {
-        number: blockEvent.block.number,
-        timestamp: blockEvent.block.timestamp,
+        number: block.number,
+        timestamp: block.timestamp,
       }
 
       const initBlockDto: BlockDto = {
-        number: initBlockEvent.block.number,
-        timestamp: initBlockEvent.block.timestamp,
+        number: initBlock.number,
+        timestamp: initBlock.timestamp,
       }
 
       await app.PoolBalanceSrv.init(initBlockDto)
@@ -65,11 +61,9 @@ describe('agent-pools-balances functional tests', () => {
 
       const initBlock = await ethProvider.getBlock(startBlock)
 
-      const initBlockEvent = etherBlockToFortaBlockEvent(initBlock)
-
       const initBlockDto: BlockDto = {
-        number: initBlockEvent.block.number,
-        timestamp: initBlockEvent.block.timestamp,
+        number: initBlock.number,
+        timestamp: initBlock.timestamp,
       }
 
       await app.PoolBalanceSrv.init(initBlockDto)
@@ -91,7 +85,7 @@ describe('agent-pools-balances functional tests', () => {
       const expected = Finding.fromObject({
         alertId: 'CURVE-POOL-SIZE-CHANGE',
         description: `Curve Pool size has decreased by 13.24% since the last block`,
-        name: '🚨Significant Curve Pool size change',
+        name: '🚨 Significant Curve Pool size change',
         severity: FindingSeverity.High,
         type: FindingType.Info,
       })
@@ -150,7 +144,7 @@ describe('agent-pools-balances functional tests', () => {
       Finding.fromObject({
         alertId: 'CURVE-POOL-SIZE-CHANGE',
         description: 'Curve Pool size has increased by 14.39% since the last block',
-        name: '🚨Significant Curve Pool size change',
+        name: '🚨 Significant Curve Pool size change',
         severity: FindingSeverity.High,
         type: FindingType.Info,
       }),
