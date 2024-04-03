@@ -67,8 +67,6 @@ export function createTransactionEventFromGrpcRequest(request: agent_pb.Evaluate
   const transaction = <TransactionEvent.EthTransaction>txEvent.getTransaction()
   const logList = <Array<TransactionEvent.Log>>txEvent.getLogsList()
   const block = <TransactionEvent.EthBlock>txEvent.getBlock()
-  // const addresses = txEvent.getAddressesMap()
-  // const contractAddress = txEvent.getContractaddress()
   const tracesList = txEvent.getTracesList()
 
   const tx = {
@@ -91,18 +89,12 @@ export function createTransactionEventFromGrpcRequest(request: agent_pb.Evaluate
     addresses[tx.to] = true
   }
 
-  const blok = {
-    hash: block.getBlockhash(),
-    number: parseInt(block.getBlocknumber()),
-    timestamp: parseInt(block.getBlocknumber()),
-  }
-
   const traces = []
   for (const trace of tracesList) {
     const action = <TransactionEvent.TraceAction>trace.getAction()
     const result = trace.getResult()
 
-    const t = {
+    traces.push({
       action: {
         callType: action.getCalltype(),
         to: formatAddress(action.getTo()),
@@ -128,15 +120,15 @@ export function createTransactionEventFromGrpcRequest(request: agent_pb.Evaluate
       transactionPosition: trace.getTransactionposition(),
       type: trace.getType(),
       error: trace.getError(),
-    }
-
-    traces.push(t)
+    })
   }
 
-  const logs = []
-  for (const log of logList) {
-    const l = {
-      address: formatAddress(log.getAddress()),
+  const logs = logList.map((log) => {
+    const address = formatAddress(log.getAddress())
+    addresses[address] = true
+
+    return {
+      address: address,
       topics: log.getTopicsList(),
       data: log.getData(),
       logIndex: parseInt(log.getLogindex()),
@@ -146,16 +138,25 @@ export function createTransactionEventFromGrpcRequest(request: agent_pb.Evaluate
       transactionHash: log.getTransactionhash(),
       removed: log.getRemoved(),
     }
-
-    logs.push(l)
-  }
-
-  logs.forEach((log) => (addresses[log.address] = true))
+  })
 
   let contractAddress = null
   if (isZeroAddress(transaction.getTo())) {
     contractAddress = formatAddress(getContractAddress({ from: transaction.getFrom(), nonce: transaction.getNonce() }))
   }
 
-  return new FortaTxEvent(type, parseInt(network.getChainid()), tx, traces, addresses, blok, logs, contractAddress)
+  return new FortaTxEvent(
+    type,
+    parseInt(network.getChainid()),
+    tx,
+    traces,
+    addresses,
+    {
+      hash: block.getBlockhash(),
+      number: parseInt(block.getBlocknumber()),
+      timestamp: parseInt(block.getBlocknumber()),
+    },
+    logs,
+    contractAddress,
+  )
 }

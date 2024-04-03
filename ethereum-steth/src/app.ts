@@ -1,5 +1,5 @@
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
-import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { ethers, Finding, getEthersProvider } from 'forta-agent'
 import { Address } from './utils/constants'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { ETHProvider } from './clients/eth_provider'
@@ -22,11 +22,9 @@ import { DataRW } from './utils/mutex'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
 import * as Winston from 'winston'
 import { VaultSrv } from './services/vault/Vault.srv'
-import * as E from 'fp-ts/Either'
 import { Knex, knex } from 'knex'
 import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import process from 'process'
 
 export type Container = {
   ethClient: ETHProvider
@@ -83,14 +81,14 @@ async function createApp(): Promise<Container> {
 
   const address: Address = Address
 
-  const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
+  const lidoContract = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
   const mainnet = 1
   const drpcProvider = `https://eth.drpc.org`
   const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
-  const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
+  const wdQueueContract = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
 
-  const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
+  const gateSealContract = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
   const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
     address.EXIT_BUS_ORACLE_ADDRESS,
     ethersProvider,
@@ -98,9 +96,9 @@ async function createApp(): Promise<Container> {
   const ethClient = new ETHProvider(
     ethersProvider,
     etherscanProvider,
-    lidoContact,
-    wdQueueContact,
-    gateSealContact,
+    lidoContract,
+    wdQueueContract,
+    gateSealContract,
     exitBusOracleContract,
   )
 
@@ -156,26 +154,4 @@ async function createApp(): Promise<Container> {
     healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
     logger: logger,
   }
-}
-
-export async function getJwt(): Promise<E.Either<Error, string>> {
-  let token: string
-  try {
-    token = await fetchJwt({})
-  } catch (e) {
-    return E.left(new Error(`Could not fetch jwt. Cause ${e}`))
-  }
-
-  if (process.env.NODE_ENV === 'production') {
-    try {
-      const isTokenOk = await verifyJwt(token)
-      if (!isTokenOk) {
-        return E.left(new Error(`Token verification failed`))
-      }
-    } catch (e) {
-      return E.left(new Error(`Token verification failed`))
-    }
-  }
-
-  return E.right(token)
 }
