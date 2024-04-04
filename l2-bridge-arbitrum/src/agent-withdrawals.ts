@@ -10,7 +10,7 @@ import {
 } from "forta-agent";
 
 import { Event } from "ethers";
-import { ethersProvider } from "./ethers";
+import { ethersProvider, formatAddressAsForta } from "./ethers";
 
 import L2_BRIDGE_ABI from "./abi/L2Bridge.json";
 import {
@@ -159,7 +159,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
-  if (L2_ERC20_TOKEN_GATEWAY in txEvent.addresses) {
+  if (formatAddressAsForta(L2_ERC20_TOKEN_GATEWAY) in txEvent.addresses) {
     const events = txEvent.filterLog(
       WITHDRAWAL_INITIATED_EVENT,
       L2_ERC20_TOKEN_GATEWAY,

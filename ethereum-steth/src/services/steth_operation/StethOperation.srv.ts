@@ -8,6 +8,7 @@ import { IStethClient, TransactionEventContract } from './contracts'
 import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
+import { formatAddressAsForta } from '../../utils/forta'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
@@ -201,7 +202,7 @@ export class StethOperationSrv {
   public handleEventsOfNotice(txEvent: TransactionEventContract, eventsOfNotice: EventOfNotice[]) {
     const out: Finding[] = []
     for (const eventInfo of eventsOfNotice) {
-      if (eventInfo.address in txEvent.addresses) {
+      if (formatAddressAsForta(eventInfo.address) in txEvent.addresses) {
         const filteredEvents = txEvent.filterLog(eventInfo.event, eventInfo.address)
 
         for (const filteredEvent of filteredEvents) {

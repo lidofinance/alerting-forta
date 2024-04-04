@@ -1,12 +1,9 @@
-import { getEthersProvider, ethers, TransactionEvent } from "forta-agent";
+import { getEthersProvider, ethers } from "forta-agent";
 import { Provider } from "@ethersproject/abstract-provider";
+import { formatAddress } from "forta-agent/dist/cli/utils";
 
 export const ethersProvider: Provider = getEthersProvider();
 export const getAddress = ethers.utils.getAddress;
 
-export function inTx(address: string, txEvent: TransactionEvent) {
-  return (
-    -1 !=
-    Object.keys(txEvent.addresses).map(getAddress).indexOf(getAddress(address))
-  );
-}
+// The function forta uses under the hood to normalize format of addresses in TransactionEvent.addresses
+export const formatAddressAsForta = formatAddress;
