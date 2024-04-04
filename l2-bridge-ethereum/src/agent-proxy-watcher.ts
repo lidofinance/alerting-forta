@@ -121,7 +121,9 @@ function handleThirdPartyProxyAdminEvents(
     });
   }
 
-  if (formatAddressAsForta(LINEA_L1_CROSS_DOMAIN_MESSENGER) in txEvent.addresses) {
+  if (
+    formatAddressAsForta(LINEA_L1_CROSS_DOMAIN_MESSENGER) in txEvent.addresses
+  ) {
     const events = txEvent.filterLog(
       LINEA_CUSTOM_CONTRACT_SET_EVENT,
       LINEA_L1_CROSS_DOMAIN_MESSENGER,
