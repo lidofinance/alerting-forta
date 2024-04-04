@@ -161,7 +161,9 @@ STONKS.forEach(({ address, to, from }) => {
     description: (args: any) =>
       `Manager of the STONKS factory was changed to ${etherscanAddress(
         args.manager,
-      )}`,
+      )}\n` +
+      `Order: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Critical,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -174,7 +176,9 @@ STONKS.forEach(({ address, to, from }) => {
       `ERC20 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -187,7 +191,9 @@ STONKS.forEach(({ address, to, from }) => {
       `ERC721 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Token ID: ${args.tokenId}`,
+      `Token ID: ${args.tokenId}\n` +
+      `Order: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -201,7 +207,9 @@ STONKS.forEach(({ address, to, from }) => {
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -212,7 +220,9 @@ STONKS.forEach(({ address, to, from }) => {
     description: (args: any) =>
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
 });
