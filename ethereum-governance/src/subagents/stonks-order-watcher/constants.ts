@@ -81,9 +81,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
     alertId: "ORDER-MANAGER-CHANGED",
     name: "🚨 ORDER Factory: Manager changed",
     description: (args: any) =>
-      `Manager of the ORDER factory was changed to ${etherscanAddress(
-        args.manager,
-      )}`,
+      `Manager of the ORDER factory was changed to ${etherscanAddress(args.manager)}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -96,7 +95,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
       `ERC20 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -109,7 +109,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
       `ERC721 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Token ID: ${args.tokenId}`,
+      `Token ID: ${args.tokenId}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -123,7 +124,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -134,7 +136,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
 ];
@@ -162,7 +165,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Manager of the STONKS factory was changed to ${etherscanAddress(
         args.manager,
       )}\n` +
-      `Order: ${etherscanAddress(address)}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
       `From ${from} to ${to}`,
     severity: FindingSeverity.Critical,
   });
@@ -177,7 +180,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
       `Amount: ${args.amount}\n` +
-      `Order: ${etherscanAddress(address)}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
       `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
@@ -192,7 +195,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}\n` +
-      `Order: ${etherscanAddress(address)}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
       `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
@@ -208,7 +211,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}\n` +
       `Amount: ${args.amount}\n` +
-      `Order: ${etherscanAddress(address)}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
       `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
@@ -221,7 +224,7 @@ STONKS.forEach(({ address, to, from }) => {
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Amount: ${args.amount}\n` +
-      `Order: ${etherscanAddress(address)}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
       `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });

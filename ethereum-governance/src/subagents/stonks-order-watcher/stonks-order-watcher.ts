@@ -132,7 +132,11 @@ const getOrderEventsOfNotice = (orders: CreatedOrder[]) => {
   const events: EventOfNotice[] = [];
   orders.forEach((order) => {
     return ORDER_EVENTS_OF_NOTICE.forEach((event) => {
-      events.push({ ...event, address: order.address });
+      events.push({
+        ...event,
+        address: order.address,
+        description: args => event.description({...args, address: order.address}),
+      });
     });
   });
   return events;
