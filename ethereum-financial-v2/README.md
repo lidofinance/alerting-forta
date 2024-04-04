@@ -13,8 +13,8 @@
       3. 🚨🚨🚨 variableDebtStETH totalSupply is not 0
 2. Pool balances
    1. HandleBlock
-      1. 🚨🚨🚨 Super low stETH:ETH price on Curve
-      2. 🚨🚨🚨 Super low stETH:ETH price on Chainlink
+      1. 🚨 Super low stETH:ETH price on Curve
+      2. 🚨 Super low stETH:ETH price on Chainlink
       3. 🚨 Curve Pool rapid imbalance change
       4. 🚨️ Significant Curve Pool size change
       5. ⚠️ Significant Curve Pool size change

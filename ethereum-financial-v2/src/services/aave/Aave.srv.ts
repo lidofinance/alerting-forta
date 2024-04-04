@@ -18,8 +18,7 @@ export interface IAaveClient {
 
 const GWEI_DECIMALS = new BigNumber(10).pow(9)
 const ASTETH_ETH_1 = GWEI_DECIMALS.times(1)
-// 12 hours
-const HOURS_12 = 60 * 60 * 12
+const MINUTES_10 = 60 * 10
 
 export class AaveSrv {
   private name = `AaveSrv`
@@ -59,7 +58,7 @@ export class AaveSrv {
   }
 
   async handleAstEthSupply(blockEvent: BlockDto): Promise<Finding[]> {
-    if (this.lastReportedAstEthSupply + HOURS_12 < blockEvent.timestamp) {
+    if (this.lastReportedAstEthSupply + MINUTES_10 < blockEvent.timestamp) {
       const [astEthBalance, astEthTotalSupply] = await Promise.all([
         this.ethProvider.getStethBalance(this.aaveAstethAddress, blockEvent.number - 1),
         await this.ethProvider.getTotalSupply(blockEvent.number - 1),
@@ -112,7 +111,7 @@ export class AaveSrv {
   }
 
   async handleStableStEthSupply(blockEvent: BlockDto): Promise<Finding[]> {
-    if (this.lastReportedStableStEthSupply + HOURS_12 < blockEvent.timestamp) {
+    if (this.lastReportedStableStEthSupply + MINUTES_10 < blockEvent.timestamp) {
       const stableDebtStEthTotalSupply = await this.ethProvider.getStableDebtStEthTotalSupply(blockEvent.number)
       if (E.isLeft(stableDebtStEthTotalSupply)) {
         return [
@@ -142,7 +141,7 @@ export class AaveSrv {
   }
 
   async handleVariableStEthSupply(blockEvent: BlockDto): Promise<Finding[]> {
-    if (this.lastReportedVariableStEthSupply + HOURS_12 < blockEvent.timestamp) {
+    if (this.lastReportedVariableStEthSupply + MINUTES_10 < blockEvent.timestamp) {
       const variableDebtStEthTotalSupply = await this.ethProvider.getVariableDebtStEthTotalSupply(blockEvent.number)
       if (E.isLeft(variableDebtStEthTotalSupply)) {
         return [

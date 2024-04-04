@@ -108,7 +108,7 @@ describe('eth provider tests', () => {
       const app = await App.getInstance()
 
       const blockNumber = 19526474
-      const out = await app.ethClient.getCurvePeg(blockNumber)
+      const out = await app.ethClient.getCurveStEthToEthPrice(blockNumber)
       if (E.isLeft(out)) {
         throw out.left.message
       }
@@ -124,7 +124,7 @@ describe('eth provider tests', () => {
       const app = await App.getInstance()
 
       const blockNumber = 19526474
-      const out = await app.ethClient.getChainlinkPeg(blockNumber)
+      const out = await app.ethClient.getChainlinkStEthToEthPrice(blockNumber)
       if (E.isLeft(out)) {
         throw out.left.message
       }

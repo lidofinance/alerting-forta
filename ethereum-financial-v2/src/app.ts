@@ -65,7 +65,7 @@ export class App {
         transports: [new Winston.transports.Console()],
       })
 
-      const lidoDaoContract = LidoDAO__factory.connect(address.LIDO_DAO_ADDRESS, ethersProvider)
+      const stethContract = LidoDAO__factory.connect(address.STETH_ADDRESS, ethersProvider)
       const astETHContract = AstETH__factory.connect(address.AAVE_ASTETH_ADDRESS, ethersProvider)
       const stableDebtStEthContract = StableDebtStETH__factory.connect(
         address.AAVE_STABLE_DEBT_STETH_ADDRESS,
@@ -85,7 +85,7 @@ export class App {
       const ethClient = new ETHProvider(
         logger,
         ethersProvider,
-        lidoDaoContract,
+        stethContract,
         astETHContract,
         stableDebtStEthContract,
         variableDebtStEthContract,

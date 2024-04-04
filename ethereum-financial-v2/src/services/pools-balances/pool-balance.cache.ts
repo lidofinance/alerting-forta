@@ -2,12 +2,20 @@ import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
 
 export type PoolBalanceState = {
-  curveETH: string
-  curveStEth: string
-  curveStEthPeg: string
-  chainlinkStEthPeg: string
-  curvePoolImbalance: string
-  curvePoolSize: string
+  curveEthBalance: number
+  curveStEthBalance: number
+  curvePoolSize: number
+
+  lastReportedCurveImbalance: number
+  lastReportedCurveImbalanceTimestamp: number
+
+  lastReportedCurveStEthToEthPrice: number
+  lastReportedCurvePriceChangeLevel: number
+  lastReportedCurveStEthToEthPriceTimestamp: number
+
+  lastReportedChainlinkStEthToEthPrice: number
+  lastReportedChainlinkPriceChangeLevel: number
+  lastReportedChainlinkStEthToEthPriceTimestamp: number
 }
 
 export class PoolBalanceCache {
@@ -15,27 +23,29 @@ export class PoolBalanceCache {
   private _curveStEthBalance: BigNumber
   private _curvePoolSize: BigNumber
 
-  private _lastReportedImbalance: number
-  private _lastReportedImbalanceTimestamp: number
+  private _lastReportedCurveImbalance: number
+  private _lastReportedCurveImbalanceTimestamp: number
 
-  private _lastReportedCurvePegValue: number
-  private _lastReportedCurvePegLevel: number
-  private _lastReportedCurvePegTimestamp: number
+  private _lastReportedCurveStEthToEthPrice: number
+  private _lastReportedCurvePriceChangeLevel: number
+  private _lastReportedCurveStEthToEthPriceTimestamp: number
 
-  private _lastReportedChainlinkPegLevel: number
-  private _lastReportedChainlinkPegTimestamp: number
+  private _lastReportedChainlinkStEthToEthPrice: number
+  private _lastReportedChainlinkPriceChangeLevel: number
+  private _lastReportedChainlinkStEthToEthPriceTimestamp: number
 
   constructor() {
     this._curveEthBalance = new BigNumber(0)
     this._curveStEthBalance = new BigNumber(0)
     this._curvePoolSize = new BigNumber(0)
-    this._lastReportedImbalance = 0
-    this._lastReportedImbalanceTimestamp = 0
-    this._lastReportedCurvePegValue = 0
-    this._lastReportedChainlinkPegLevel = 0
-    this._lastReportedChainlinkPegTimestamp = 0
-    this._lastReportedCurvePegLevel = 0
-    this._lastReportedCurvePegTimestamp = 0
+    this._lastReportedCurveImbalance = 0
+    this._lastReportedCurveImbalanceTimestamp = 0
+    this._lastReportedCurveStEthToEthPrice = 0
+    this._lastReportedChainlinkPriceChangeLevel = 0
+    this._lastReportedChainlinkStEthToEthPriceTimestamp = 0
+    this._lastReportedCurvePriceChangeLevel = 0
+    this._lastReportedCurveStEthToEthPriceTimestamp = 0
+    this._lastReportedChainlinkStEthToEthPrice = 0
   }
 
   get curveEthBalance(): BigNumber {
@@ -62,70 +72,115 @@ export class PoolBalanceCache {
     this._curvePoolSize = value
   }
 
-  get lastReportedImbalance(): number {
-    return this._lastReportedImbalance
+  get lastReportedCurveImbalance(): number {
+    return this._lastReportedCurveImbalance
   }
 
-  set lastReportedImbalance(value: number) {
-    this._lastReportedImbalance = value
+  set lastReportedCurveImbalance(value: number) {
+    this._lastReportedCurveImbalance = value
   }
 
-  get lastReportedImbalanceTimestamp(): number {
-    return this._lastReportedImbalanceTimestamp
+  get lastReportedCurveImbalanceTimestamp(): number {
+    return this._lastReportedCurveImbalanceTimestamp
   }
 
-  set lastReportedImbalanceTimestamp(value: number) {
-    this._lastReportedImbalanceTimestamp = value
+  set lastReportedCurveImbalanceTimestamp(value: number) {
+    this._lastReportedCurveImbalanceTimestamp = value
   }
 
-  get lastReportedCurvePegValue(): number {
-    return this._lastReportedCurvePegValue
+  get lastReportedCurveStEthToEthPrice(): number {
+    return this._lastReportedCurveStEthToEthPrice
   }
 
-  set lastReportedCurvePegValue(value: number) {
-    this._lastReportedCurvePegValue = value
+  set lastReportedCurveStEthToEthPrice(value: number) {
+    this._lastReportedCurveStEthToEthPrice = value
   }
 
-  get lastReportedChainlinkPegLevel(): number {
-    return this._lastReportedChainlinkPegLevel
+  get lastReportedChainlinkPriceChangeLevel(): number {
+    return this._lastReportedChainlinkPriceChangeLevel
   }
 
-  set lastReportedChainlinkPegLevel(value: number) {
-    this._lastReportedChainlinkPegLevel = value
+  set lastReportedChainlinkPriceChangeLevel(value: number) {
+    this._lastReportedChainlinkPriceChangeLevel = value
   }
 
-  get lastReportedChainlinkPegTimestamp(): number {
-    return this._lastReportedChainlinkPegTimestamp
+  get lastReportedChainlinkStEthToEthPriceTimestamp(): number {
+    return this._lastReportedChainlinkStEthToEthPriceTimestamp
   }
 
-  set lastReportedChainlinkPegTimestamp(value: number) {
-    this._lastReportedChainlinkPegTimestamp = value
+  set lastReportedChainlinkStEthToEthPriceTimestamp(value: number) {
+    this._lastReportedChainlinkStEthToEthPriceTimestamp = value
   }
 
-  get lastReportedCurvePegLevel(): number {
-    return this._lastReportedCurvePegLevel
+  get lastReportedCurvePriceChangeLevel(): number {
+    return this._lastReportedCurvePriceChangeLevel
   }
 
-  set lastReportedCurvePegLevel(value: number) {
-    this._lastReportedCurvePegLevel = value
+  set lastReportedCurvePriceChangeLevel(value: number) {
+    this._lastReportedCurvePriceChangeLevel = value
   }
 
-  get lastReportedCurvePegTimestamp(): number {
-    return this._lastReportedCurvePegTimestamp
+  get lastReportedCurveStEthToEthPriceTimestamp(): number {
+    return this._lastReportedCurveStEthToEthPriceTimestamp
   }
 
-  set lastReportedCurvePegTimestamp(value: number) {
-    this._lastReportedCurvePegTimestamp = value
+  set lastReportedCurveStEthToEthPriceTimestamp(value: number) {
+    this._lastReportedCurveStEthToEthPriceTimestamp = value
   }
 
-  public getState(): PoolBalanceState {
-    return {
-      curveETH: this.curveEthBalance.div(ETH_DECIMALS).toFixed(4),
-      curveStEth: this.curveStEthBalance.div(ETH_DECIMALS).toFixed(4),
-      curveStEthPeg: this.lastReportedCurvePegValue.toFixed(4),
-      chainlinkStEthPeg: this.lastReportedChainlinkPegLevel.toFixed(4),
-      curvePoolImbalance: this.lastReportedImbalance.toString(),
-      curvePoolSize: this.curvePoolSize.div(ETH_DECIMALS).toFixed(4),
+  get lastReportedChainlinkStEthToEthPrice(): number {
+    return this._lastReportedChainlinkStEthToEthPrice
+  }
+
+  set lastReportedChainlinkStEthToEthPrice(value: number) {
+    this._lastReportedChainlinkStEthToEthPrice = value
+  }
+
+  public getState(): Map<string, string> {
+    const state: PoolBalanceState = {
+      curveEthBalance: this.curveEthBalance.div(ETH_DECIMALS).toNumber(),
+      curveStEthBalance: this.curveStEthBalance.div(ETH_DECIMALS).toNumber(),
+      curvePoolSize: this.curvePoolSize.div(ETH_DECIMALS).toNumber(),
+
+      lastReportedCurveImbalance: this.lastReportedCurveImbalance,
+      lastReportedCurveImbalanceTimestamp: this.lastReportedCurveImbalanceTimestamp,
+
+      lastReportedCurveStEthToEthPrice: this.lastReportedCurveStEthToEthPrice,
+      lastReportedCurvePriceChangeLevel: this.lastReportedCurvePriceChangeLevel,
+      lastReportedCurveStEthToEthPriceTimestamp: this.lastReportedCurveStEthToEthPriceTimestamp,
+
+      lastReportedChainlinkStEthToEthPrice: this.lastReportedChainlinkStEthToEthPrice,
+      lastReportedChainlinkPriceChangeLevel: this.lastReportedChainlinkPriceChangeLevel,
+      lastReportedChainlinkStEthToEthPriceTimestamp: this.lastReportedChainlinkStEthToEthPriceTimestamp,
     }
+
+    const out = new Map<string, string>()
+
+    out.set('curve EthBalance', state.curveEthBalance.toString())
+    out.set('curve StEthBalance', state.curveStEthBalance.toString())
+    out.set('curve PoolSize', state.curvePoolSize.toString())
+    out.set(
+      'curve Imbalance',
+      state.lastReportedCurveImbalance.toString() +
+        ' ' +
+        new Date(this.lastReportedCurveImbalanceTimestamp * 1000).toUTCString(),
+    )
+    out.set('curve StEth:Eth', state.lastReportedCurveStEthToEthPrice.toString())
+    out.set(
+      'curve StEth:Eth price change',
+      state.lastReportedCurvePriceChangeLevel.toString() +
+        ' ' +
+        new Date(this.lastReportedCurveStEthToEthPriceTimestamp * 1000).toUTCString(),
+    )
+
+    out.set('chainlink StEth:Eth', state.lastReportedChainlinkStEthToEthPrice.toString())
+    out.set(
+      'chainlink StEth:Eth price change',
+      state.lastReportedChainlinkPriceChangeLevel.toString() +
+        ' ' +
+        new Date(this.lastReportedChainlinkStEthToEthPriceTimestamp * 1000).toUTCString(),
+    )
+
+    return out
   }
 }

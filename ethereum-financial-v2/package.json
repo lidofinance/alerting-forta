@@ -15,6 +15,9 @@
       "pre-commit": "yarn run lint"
     }
   },
+  "engines": {
+    "node": ">=20.0"
+  },
   "scripts": {
     "update-version": "node ../utils/write-version.js",
     "build": "tsc && yarn run copy-version",

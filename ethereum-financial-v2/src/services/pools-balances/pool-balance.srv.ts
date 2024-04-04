@@ -8,18 +8,18 @@ import { PoolBalanceCache } from './pool-balance.cache'
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { ETH_DECIMALS } from '../../utils/constants'
 
-//  MIN_5 Math.ceil((5 * 60) / 13) = 23
+//  MIN_5 Math.ceil((5 * 60) / 12) = 25
 //  5 minutes in eth blocks
-const MIN_5 = 23
+const MIN_5 = 25
 const PERCENT_10 = 10
 const PERCENT_5 = 5
 
-const PEG_STEP = 0.005
-const PEG_STEP_0_995 = 0.995
-const PEG_STEP_0_98 = 0.98
+const PRICE_CHANGE_STEP = 0.005
+const PRICE_CHANGE_0_995 = 0.995
+const PRICE_CHANGE_0_98 = 0.98
 
 const WEEK_1 = 60 * 60 * 24 * 7 // 1 week
-const HOURS_24 = 60 * 60 * 24 // 24 hours
+const MINUTES_10 = 60 * 10
 
 const CHAINLINK_STETH_ETH_PAGE = 'https://data.chain.link/ethereum/mainnet/crypto-eth/steth-eth'
 
@@ -28,9 +28,9 @@ export interface IPoolBalanceClient {
 
   getCurveStEthBalance(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
-  getCurvePeg(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  getCurveStEthToEthPrice(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
-  getChainlinkPeg(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  getChainlinkStEthToEthPrice(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 }
 
 export class PoolBalanceSrv {
@@ -47,16 +47,17 @@ export class PoolBalanceSrv {
   async init(blockDto: BlockDto): Promise<NetworkError | null> {
     const start = new Date().getTime()
 
-    const [ethBalance, stEthBalance, ethBalancePrev, stEthBalancePrev, curvePegVal, chainlinkPeg] = await Promise.all([
-      this.ethClient.getCurveEthBalance(blockDto.number),
-      this.ethClient.getCurveStEthBalance(blockDto.number),
+    const [ethBalance, stEthBalance, ethBalancePrev, stEthBalancePrev, curveStEthToEthPrice, chainlinkStEthToEthPrice] =
+      await Promise.all([
+        this.ethClient.getCurveEthBalance(blockDto.number),
+        this.ethClient.getCurveStEthBalance(blockDto.number),
 
-      this.ethClient.getCurveEthBalance(blockDto.number - MIN_5),
-      this.ethClient.getCurveStEthBalance(blockDto.number - MIN_5),
+        this.ethClient.getCurveEthBalance(blockDto.number - MIN_5),
+        this.ethClient.getCurveStEthBalance(blockDto.number - MIN_5),
 
-      this.ethClient.getCurvePeg(blockDto.number),
-      this.ethClient.getChainlinkPeg(blockDto.number),
-    ])
+        this.ethClient.getCurveStEthToEthPrice(blockDto.number),
+        this.ethClient.getChainlinkStEthToEthPrice(blockDto.number),
+      ])
 
     if (E.isLeft(ethBalance)) {
       return ethBalance.left
@@ -74,30 +75,33 @@ export class PoolBalanceSrv {
       return stEthBalancePrev.left
     }
 
-    if (E.isLeft(curvePegVal)) {
-      return curvePegVal.left
+    if (E.isLeft(curveStEthToEthPrice)) {
+      return curveStEthToEthPrice.left
     }
 
-    if (E.isLeft(chainlinkPeg)) {
-      return chainlinkPeg.left
+    if (E.isLeft(chainlinkStEthToEthPrice)) {
+      return chainlinkStEthToEthPrice.left
     }
 
     this.cache.curveEthBalance = ethBalance.right
     this.cache.curveStEthBalance = stEthBalance.right
     this.cache.curvePoolSize = this.cache.curveEthBalance.plus(this.cache.curveStEthBalance)
 
-    this.cache.lastReportedImbalance = this.calcImbalance(ethBalancePrev.right, stEthBalancePrev.right)
+    this.cache.lastReportedCurveImbalance = this.calcImbalance(ethBalancePrev.right, stEthBalancePrev.right)
 
-    if (Math.abs(this.cache.lastReportedImbalance) > PERCENT_10) {
-      this.cache.lastReportedImbalanceTimestamp = blockDto.timestamp
+    if (Math.abs(this.cache.lastReportedCurveImbalance) > PERCENT_10) {
+      this.cache.lastReportedCurveImbalanceTimestamp = blockDto.timestamp
     }
 
-    this.cache.lastReportedCurvePegLevel = Math.ceil(curvePegVal.right.toNumber() / PEG_STEP) / 100
-    this.cache.lastReportedCurvePegValue = curvePegVal.right.toNumber()
-    this.cache.lastReportedCurvePegTimestamp = blockDto.timestamp
+    this.cache.lastReportedCurveStEthToEthPrice = curveStEthToEthPrice.right.toNumber()
+    this.cache.lastReportedCurvePriceChangeLevel =
+      Math.ceil(curveStEthToEthPrice.right.toNumber() / PRICE_CHANGE_STEP) / 100
+    this.cache.lastReportedCurveStEthToEthPriceTimestamp = blockDto.timestamp
 
-    this.cache.lastReportedChainlinkPegLevel = Math.ceil(chainlinkPeg.right.toNumber() / PEG_STEP) / 100
-    this.cache.lastReportedChainlinkPegTimestamp = blockDto.timestamp
+    this.cache.lastReportedChainlinkStEthToEthPrice = chainlinkStEthToEthPrice.right.toNumber()
+    this.cache.lastReportedChainlinkPriceChangeLevel =
+      Math.ceil(chainlinkStEthToEthPrice.right.toNumber() / PRICE_CHANGE_STEP) / 100
+    this.cache.lastReportedChainlinkStEthToEthPriceTimestamp = blockDto.timestamp
 
     this.logger.info(elapsedTime(PoolBalanceSrv.name + '.' + this.init.name, start))
 
@@ -110,8 +114,8 @@ export class PoolBalanceSrv {
 
     const [curvePoolImbalanceFindings, curvePegFindings, chainlinkPegFindings] = await Promise.all([
       this.handleCurvePool(blockEvent),
-      this.handleCurvePeg(blockEvent),
-      this.handleChainlinkPeg(blockEvent),
+      this.handleCurvePriceChange(blockEvent),
+      this.handleChainlinkPriceChange(blockEvent),
     ])
 
     findings.push(...curvePoolImbalanceFindings, ...curvePegFindings, ...chainlinkPegFindings)
@@ -148,9 +152,8 @@ export class PoolBalanceSrv {
     }
 
     const curveImbalance = this.calcImbalance(ethBalance.right, stEthBalance.right)
-    this.logger.info(`Curve imbalance: current(${curveImbalance}), prev(${this.cache.lastReportedImbalance})`)
 
-    if (this.cache.lastReportedImbalanceTimestamp + WEEK_1 < blockEvent.timestamp) {
+    if (this.cache.lastReportedCurveImbalanceTimestamp + WEEK_1 < blockEvent.timestamp) {
       if (curveImbalance < -PERCENT_10 || curveImbalance > PERCENT_10) {
         out.push(
           Finding.fromObject({
@@ -162,8 +165,8 @@ export class PoolBalanceSrv {
           }),
         )
 
-        this.cache.lastReportedImbalanceTimestamp = blockEvent.timestamp
-        this.cache.lastReportedImbalance = curveImbalance
+        this.cache.lastReportedCurveImbalanceTimestamp = blockEvent.timestamp
+        this.cache.lastReportedCurveImbalance = curveImbalance
       }
     }
 
@@ -182,8 +185,8 @@ export class PoolBalanceSrv {
           type: FindingType.Suspicious,
         }),
       )
-      this.cache.lastReportedImbalanceTimestamp = blockEvent.timestamp
-      this.cache.lastReportedImbalance = curveImbalance
+      this.cache.lastReportedCurveImbalanceTimestamp = blockEvent.timestamp
+      this.cache.lastReportedCurveImbalance = curveImbalance
     }
 
     const poolSize = ethBalance.right.plus(stEthBalance.right)
@@ -223,124 +226,135 @@ export class PoolBalanceSrv {
     return out
   }
 
-  async handleCurvePeg(blockDto: BlockDto): Promise<Finding[]> {
+  async handleCurvePriceChange(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
-    const peg = await this.ethClient.getCurvePeg(blockDto.number)
-    if (E.isLeft(peg)) {
+    const curveStEthToEthPrice = await this.ethClient.getCurveStEthToEthPrice(blockDto.number)
+    if (E.isLeft(curveStEthToEthPrice)) {
       return [
         networkAlert(
-          peg.left,
-          `Error in ${PoolBalanceSrv.name}.${this.handleCurvePeg.name}:224`,
+          curveStEthToEthPrice.left,
+          `Error in ${PoolBalanceSrv.name}.${this.handleCurvePriceChange.name}:224`,
           `Could not call ethProvider.getCurveEthBalance`,
         ),
       ]
     }
 
     // Division by 100 is required to normalize pegLevel to PEG_STEP
-    const pegLevel = Math.ceil(peg.right.toNumber() / PEG_STEP) / 100
-    // info on PEG decrease
-    if (pegLevel < this.cache.lastReportedCurvePegValue && peg.right.toNumber() < PEG_STEP_0_995) {
+    const priceChangeLevel = Math.ceil(curveStEthToEthPrice.right.toNumber() / PRICE_CHANGE_STEP) / 100
+    // info on price decrease
+    if (
+      priceChangeLevel < this.cache.lastReportedCurveStEthToEthPrice &&
+      curveStEthToEthPrice.right.toNumber() < PRICE_CHANGE_0_995
+    ) {
       out.push(
         Finding.fromObject({
-          name: '⚠️ stETH price on Curve decreased',
-          description: `stETH price on Curve decreased to ${peg.right.toFixed(4)}`,
+          name: '⚠️ stETH:ETH price on Curve decreased',
+          description: `stETH:ETH price on Curve decreased to ${curveStEthToEthPrice.right.toFixed(4)}`,
           alertId: 'STETH-CURVE-PRICE-DECREASE',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
           metadata: {
-            peg: peg.right.toFixed(4),
+            peg: curveStEthToEthPrice.right.toFixed(4),
           },
         }),
       )
-      this.cache.lastReportedCurvePegValue = peg.right.toNumber()
-      this.cache.lastReportedCurvePegLevel = pegLevel
-      this.cache.lastReportedCurvePegTimestamp = blockDto.timestamp
+      this.cache.lastReportedCurveStEthToEthPrice = curveStEthToEthPrice.right.toNumber()
+      this.cache.lastReportedCurvePriceChangeLevel = priceChangeLevel
+      this.cache.lastReportedCurveStEthToEthPriceTimestamp = blockDto.timestamp
     }
 
-    if (this.cache.lastReportedCurvePegTimestamp + HOURS_24 < blockDto.timestamp) {
-      if (peg.right.toNumber() <= PEG_STEP_0_98) {
+    if (this.cache.lastReportedCurveStEthToEthPriceTimestamp + MINUTES_10 < blockDto.timestamp) {
+      if (curveStEthToEthPrice.right.toNumber() <= PRICE_CHANGE_0_98) {
         out.push(
           Finding.fromObject({
-            name: '🚨🚨🚨 Super low stETH:ETH price on Curve',
-            description: `Current stETH PEG on Curve - ${peg.right.toFixed(4)}`,
-            alertId: 'LOW-STETH-CURVE-PEG',
-            severity: FindingSeverity.Critical,
+            name: '🚨Super low stETH:ETH price on Curve',
+            description: `Current stETH:ETH price on Curve - ${curveStEthToEthPrice.right.toFixed(4)}`,
+            alertId: 'LOW-STETH-PRICE',
+            severity: FindingSeverity.High,
             type: FindingType.Degraded,
             metadata: {
-              peg: peg.right.toFixed(4),
+              peg: curveStEthToEthPrice.right.toFixed(4),
             },
           }),
         )
-        this.cache.lastReportedCurvePegValue = peg.right.toNumber()
-        this.cache.lastReportedCurvePegLevel = pegLevel
-        this.cache.lastReportedCurvePegTimestamp = blockDto.timestamp
+        this.cache.lastReportedCurveStEthToEthPrice = curveStEthToEthPrice.right.toNumber()
+        this.cache.lastReportedCurvePriceChangeLevel = priceChangeLevel
+        this.cache.lastReportedCurveStEthToEthPriceTimestamp = blockDto.timestamp
       }
     }
 
-    // update PEG vals if PEG goes way back
-    if (this.cache.lastReportedCurvePegLevel + PEG_STEP * 2 < pegLevel) {
-      this.cache.lastReportedCurvePegValue = peg.right.toNumber()
-      this.cache.lastReportedCurvePegLevel = pegLevel
-      this.cache.lastReportedCurvePegTimestamp = blockDto.timestamp
+    if (this.cache.lastReportedCurvePriceChangeLevel + PRICE_CHANGE_STEP * 2 < priceChangeLevel) {
+      this.cache.lastReportedCurveStEthToEthPrice = curveStEthToEthPrice.right.toNumber()
+      this.cache.lastReportedCurvePriceChangeLevel = priceChangeLevel
+      this.cache.lastReportedCurveStEthToEthPriceTimestamp = blockDto.timestamp
     }
 
     return out
   }
 
-  async handleChainlinkPeg(blockDto: BlockDto): Promise<Finding[]> {
+  async handleChainlinkPriceChange(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const peg = await this.ethClient.getChainlinkPeg(blockDto.number)
-    if (E.isLeft(peg)) {
+    const chainlinkStEthToEthPrice = await this.ethClient.getChainlinkStEthToEthPrice(blockDto.number)
+    if (E.isLeft(chainlinkStEthToEthPrice)) {
       return [
         networkAlert(
-          peg.left,
-          `Error in ${PoolBalanceSrv.name}.${this.handleChainlinkPeg.name}:296`,
+          chainlinkStEthToEthPrice.left,
+          `Error in ${PoolBalanceSrv.name}.${this.handleChainlinkPriceChange.name}:296`,
           `Could not call ethProvider.getChainlinkPeg`,
         ),
       ]
     }
 
     // Division by 100 is required to normalize pegLevel to PEG_STEP
-    const pegLevel = Math.ceil(peg.right.toNumber() / PEG_STEP) / 100
-    // info on PEG decrease
-    if (pegLevel < this.cache.lastReportedChainlinkPegLevel && peg.right.toNumber() < PEG_STEP_0_995) {
+    const priceChangeLevel = Math.ceil(chainlinkStEthToEthPrice.right.toNumber() / PRICE_CHANGE_STEP) / 100
+    // info on price decrease
+    if (
+      priceChangeLevel < this.cache.lastReportedChainlinkPriceChangeLevel &&
+      chainlinkStEthToEthPrice.right.toNumber() < PRICE_CHANGE_0_995
+    ) {
       out.push(
         Finding.fromObject({
-          name: '⚠️ stETH:ETH on Chainlink decreased',
-          description: `stETH:ETH price on Chainlink decreased to ${peg.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
+          name: '⚠️ stETH:ETH price on Chainlink decreased',
+          description: `stETH:ETH price on Chainlink decreased to ${chainlinkStEthToEthPrice.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
           alertId: 'STETH-CHAINLINK-PRICE-DECREASE',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
           metadata: {
-            peg: peg.right.toFixed(4),
+            peg: chainlinkStEthToEthPrice.right.toFixed(4),
           },
         }),
       )
 
-      this.cache.lastReportedChainlinkPegLevel = pegLevel
+      this.cache.lastReportedChainlinkStEthToEthPrice = chainlinkStEthToEthPrice.right.toNumber()
+      this.cache.lastReportedChainlinkPriceChangeLevel = priceChangeLevel
+      this.cache.lastReportedChainlinkStEthToEthPriceTimestamp = blockDto.timestamp
     }
 
-    if (this.cache.lastReportedChainlinkPegTimestamp + HOURS_24 < blockDto.timestamp) {
-      if (peg.right.toNumber() <= PEG_STEP_0_98) {
+    if (this.cache.lastReportedChainlinkStEthToEthPriceTimestamp + MINUTES_10 < blockDto.timestamp) {
+      if (chainlinkStEthToEthPrice.right.toNumber() <= PRICE_CHANGE_0_98) {
         out.push(
           Finding.fromObject({
-            name: '🚨🚨🚨 Super low stETH:ETH on Chainlink',
-            description: `Current stETH:ETH on Chainlink - ${peg.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
+            name: '🚨Super low stETH:ETH price on Chainlink',
+            description: `Current stETH:ETH price on Chainlink - ${chainlinkStEthToEthPrice.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
             alertId: 'LOW-STETH-CHAINLINK-PEG',
-            severity: FindingSeverity.Critical,
+            severity: FindingSeverity.High,
             type: FindingType.Degraded,
             metadata: {
-              peg: peg.right.toFixed(4),
+              peg: chainlinkStEthToEthPrice.right.toFixed(4),
             },
           }),
         )
 
-        this.cache.lastReportedChainlinkPegTimestamp = blockDto.timestamp
+        this.cache.lastReportedChainlinkStEthToEthPrice = chainlinkStEthToEthPrice.right.toNumber()
+        this.cache.lastReportedChainlinkPriceChangeLevel = priceChangeLevel
+        this.cache.lastReportedChainlinkStEthToEthPriceTimestamp = blockDto.timestamp
       }
     }
-    if (this.cache.lastReportedChainlinkPegLevel + PEG_STEP * 2 < pegLevel) {
-      this.cache.lastReportedChainlinkPegLevel = pegLevel
+    if (this.cache.lastReportedChainlinkPriceChangeLevel + PRICE_CHANGE_STEP * 2 < priceChangeLevel) {
+      this.cache.lastReportedChainlinkStEthToEthPrice = chainlinkStEthToEthPrice.right.toNumber()
+      this.cache.lastReportedChainlinkPriceChangeLevel = priceChangeLevel
+      this.cache.lastReportedChainlinkStEthToEthPriceTimestamp = blockDto.timestamp
     }
 
     return out
@@ -368,11 +382,17 @@ export class PoolBalanceSrv {
   }
 
   private curvePoolImbalanceRapidlyChanges(curveImbalance: number): boolean {
-    if (this.cache.lastReportedImbalance > 0 && curveImbalance > this.cache.lastReportedImbalance + PERCENT_10) {
+    if (
+      this.cache.lastReportedCurveImbalance > 0 &&
+      curveImbalance > this.cache.lastReportedCurveImbalance + PERCENT_10
+    ) {
       return true
     }
 
-    if (this.cache.lastReportedImbalance < 0 && curveImbalance < this.cache.lastReportedImbalance - PERCENT_10) {
+    if (
+      this.cache.lastReportedCurveImbalance < 0 &&
+      curveImbalance < this.cache.lastReportedCurveImbalance - PERCENT_10
+    ) {
       return true
     }
 
@@ -381,9 +401,5 @@ export class PoolBalanceSrv {
 
   private calcPoolSizeChange(balancePrev: BigNumber, balanceCur: BigNumber): number {
     return (balanceCur.div(balancePrev).toNumber() - 1) * 100
-  }
-
-  private calculateUnstakedStEth(stEthBalance: BigNumber, ethBalance: BigNumber): BigNumber {
-    return stEthBalance.minus(ethBalance)
   }
 }

@@ -17,7 +17,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly logger: Logger
 
-  private readonly lidoDaoContract: LidoDAO
+  private readonly stethContract: LidoDAO
   private readonly astEthContract: AstETH
   private readonly stableDebtStETHContract: StableDebtStETH
   private readonly variableDebtStETHContract: VariableDebtStETH
@@ -27,7 +27,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
   constructor(
     logger: Logger,
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
-    lidoDaoContract: LidoDAO,
+    stethContract: LidoDAO,
     astEthContract: AstETH,
     stableDebtStETHContract: StableDebtStETH,
     variableDebtStETHContract: VariableDebtStETH,
@@ -36,7 +36,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
   ) {
     this.logger = logger
     this.jsonRpcProvider = jsonRpcProvider
-    this.lidoDaoContract = lidoDaoContract
+    this.stethContract = stethContract
     this.astEthContract = astEthContract
     this.stableDebtStETHContract = stableDebtStETHContract
     this.variableDebtStETHContract = variableDebtStETHContract
@@ -76,7 +76,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
-          const [balanceOf] = await this.lidoDaoContract.functions.balanceOf(address, {
+          const [balanceOf] = await this.stethContract.functions.balanceOf(address, {
             blockTag: blockNumber,
           })
 
@@ -167,7 +167,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     }
   }
 
-  public async getCurvePeg(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getCurveStEthToEthPrice(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const amountStEth = new BigNumber(1000).times(ETH_DECIMALS)
 
@@ -188,7 +188,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     }
   }
 
-  public async getChainlinkPeg(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getChainlinkStEthToEthPrice(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const hexValue = await retryAsync<string>(
         async (): Promise<string> => {

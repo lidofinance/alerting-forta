@@ -39,14 +39,9 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const poolState = app.PoolBalanceCache.getState()
-
-    metadata['curve:Imbalance'] = poolState.curvePoolImbalance
-    metadata['curve Eth:Steth'] = poolState.curveStEthPeg
-    metadata['chainlink ETH:StEth'] = poolState.chainlinkStEthPeg
-    metadata['curve:Eth'] = poolState.curveETH
-    metadata['curve:StEth'] = poolState.curveStEth
-    metadata['curve:PoolSize'] = poolState.curvePoolSize
+    app.PoolBalanceCache.getState().forEach((value, key) => {
+      metadata[key] = value
+    })
 
     await app.findingsRW.write([
       Finding.fromObject({
@@ -81,16 +76,21 @@ export const handleBlock = (): HandleBlock => {
       timestamp: blockEvent.block.timestamp,
     }
 
-    const [aaveFindings] = await Promise.all([
+    const [aaveFindings, poolFindings] = await Promise.all([
       app.AaveSrv.handleBlock(blockDto),
       app.PoolBalanceSrv.handleBlock(blockDto),
     ])
 
-    out.push(...aaveFindings)
+    out.push(...aaveFindings, ...poolFindings)
 
     app.healthChecker.check(out)
 
+    app.PoolBalanceCache.getState().forEach((value, key) => {
+      app.logger.info(key + ' ' + value)
+    })
+
     app.logger.info(elapsedTime('handleBlock', startTime) + '\n')
+
     return out
   }
 }
