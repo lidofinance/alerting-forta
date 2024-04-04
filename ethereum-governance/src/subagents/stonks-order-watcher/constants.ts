@@ -81,8 +81,9 @@ export const ORDER_EVENTS_OF_NOTICE = [
     alertId: "ORDER-MANAGER-CHANGED",
     name: "🚨 ORDER Factory: Manager changed",
     description: (args: any) =>
-      `Manager of the ORDER factory was changed to ${etherscanAddress(args.manager)}\n` +
-      `Order: ${etherscanAddress(args.address)}`,
+      `Manager of the ORDER factory was changed to ${etherscanAddress(
+        args.manager,
+      )}\n` + `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Critical,
   },
   {

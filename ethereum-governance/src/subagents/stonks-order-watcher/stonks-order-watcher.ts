@@ -135,7 +135,8 @@ const getOrderEventsOfNotice = (orders: CreatedOrder[]) => {
       events.push({
         ...event,
         address: order.address,
-        description: args => event.description({...args, address: order.address}),
+        description: (args) =>
+          event.description({ ...args, address: order.address }),
       });
     });
   });
