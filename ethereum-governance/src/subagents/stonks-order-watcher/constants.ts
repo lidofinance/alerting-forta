@@ -83,7 +83,7 @@ export const ORDER_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Manager of the ORDER factory was changed to ${etherscanAddress(
         args.manager,
-      )}`,
+      )}\n` + `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Critical,
   },
   {
@@ -96,7 +96,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
       `ERC20 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -109,7 +110,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
       `ERC721 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Token ID: ${args.tokenId}`,
+      `Token ID: ${args.tokenId}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -123,7 +125,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
   {
@@ -134,7 +137,8 @@ export const ORDER_EVENTS_OF_NOTICE = [
     description: (args: any) =>
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Order: ${etherscanAddress(args.address)}`,
     severity: FindingSeverity.Info,
   },
 ];
@@ -161,7 +165,9 @@ STONKS.forEach(({ address, to, from }) => {
     description: (args: any) =>
       `Manager of the STONKS factory was changed to ${etherscanAddress(
         args.manager,
-      )}`,
+      )}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Critical,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -169,12 +175,14 @@ STONKS.forEach(({ address, to, from }) => {
     event:
       "event ERC20Recovered(address indexed token, address indexed recipient, uint256 amount)",
     alertId: "STONKS-ERC20-RECOVERED",
-    name: "ℹ️ Order: ERC20 recovered",
+    name: "ℹ️ Stonks: ERC20 recovered",
     description: (args: any) =>
       `ERC20 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -182,12 +190,14 @@ STONKS.forEach(({ address, to, from }) => {
     event:
       "event ERC721Recovered(address indexed token, uint256 tokenId, address indexed recipient)",
     alertId: "STONKS-ERC721-RECOVERED",
-    name: "ℹ️ Order: ERC721 recovered",
+    name: "ℹ️ Stonks: ERC721 recovered",
     description: (args: any) =>
       `ERC721 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
-      `Token ID: ${args.tokenId}`,
+      `Token ID: ${args.tokenId}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
   STONKS_EVENTS_OF_NOTICE.push({
@@ -195,24 +205,28 @@ STONKS.forEach(({ address, to, from }) => {
     event:
       "event ERC1155Recovered(address token, uint256 tokenId, address recipient, uint256 amount)",
     alertId: "STONKS-ERC1155-RECOVERED",
-    name: "ℹ️ Order: ERC1155 recovered",
+    name: "ℹ️ Stonks: ERC1155 recovered",
     description: (args: any) =>
       `ERC1155 recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
       `Token: ${etherscanAddress(args.token)}\n` +
       `Token ID: ${args.tokenId}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
   STONKS_EVENTS_OF_NOTICE.push({
     address,
     event: "event EtherRecovered(address indexed recipient, uint256 amount)",
     alertId: "STONKS-ETHER-RECOVERED",
-    name: "ℹ️ Order: Ether recovered",
+    name: "ℹ️ Stonks: Ether recovered",
     description: (args: any) =>
       `Ether recovered:\n` +
       `Requested by: ${etherscanAddress(args.recipient)}\n` +
-      `Amount: ${args.amount}`,
+      `Amount: ${args.amount}\n` +
+      `Stonks: ${etherscanAddress(address)}\n` +
+      `From ${from} to ${to}`,
     severity: FindingSeverity.Info,
   });
 });
