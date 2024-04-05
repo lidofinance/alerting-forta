@@ -8,7 +8,7 @@ import { IStethClient, TransactionEventContract } from './contracts'
 import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
-import { formatAddressAsForta } from '../../utils/forta'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)

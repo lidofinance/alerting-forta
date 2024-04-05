@@ -1,13 +1,9 @@
+import { formatAddress } from "forta-agent/dist/cli/utils";
 import {
-  ethers,
-  BlockEvent,
   TransactionEvent,
   Finding,
-  FindingType,
-  FindingSeverity,
 } from "forta-agent";
 import { GOV_BRIDGE_EVENTS } from "./constants";
-import { formatAddressAsForta } from "./ethers";
 
 export const name = "GovBridgeBot";
 
@@ -28,7 +24,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleGovBridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
   GOV_BRIDGE_EVENTS.forEach((eventInfo) => {
-    if (formatAddressAsForta(eventInfo.address) in txEvent.addresses) {
+    if (formatAddress(eventInfo.address) in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(

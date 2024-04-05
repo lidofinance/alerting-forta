@@ -20,7 +20,7 @@ import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { WithdrawalsRepo } from './Withdrawals.repo'
 import { dbAlert, networkAlert } from '../../utils/errors'
 import { IWithdrawalsClient } from './contract'
-import { formatAddressAsForta } from '../../utils/forta'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -779,7 +779,7 @@ export class WithdrawalsSrv {
   public handleEventsOfNotice(txEvent: TransactionEvent, eventsOfNotice: EventOfNotice[]): Finding[] {
     const out: Finding[] = []
     for (const eventInfo of eventsOfNotice) {
-      if (formatAddressAsForta(eventInfo.address) in txEvent.addresses) {
+      if (formatAddress(eventInfo.address) in txEvent.addresses) {
         const filteredEvents = filterLog(txEvent.logs, eventInfo.event, eventInfo.address)
 
         for (const filteredEvent of filteredEvents) {

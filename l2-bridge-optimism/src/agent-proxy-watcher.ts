@@ -6,12 +6,13 @@ import {
   FindingType,
   FindingSeverity,
 } from "forta-agent";
+import { formatAddress } from "forta-agent/dist/cli/utils";
 import {
   PROXY_ADMIN_EVENTS,
   LIDO_PROXY_CONTRACTS,
   LidoProxy,
 } from "./constants";
-import { ethersProvider, formatAddressAsForta } from "./ethers";
+import { ethersProvider } from "./ethers";
 
 // Block interval tp fetch proxy params
 const BLOCK_INTERVAL = 10;
@@ -52,7 +53,7 @@ function handleProxyAdminEvents(
   findings: Finding[],
 ) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (formatAddressAsForta(eventInfo.address) in txEvent.addresses) {
+    if (formatAddress(eventInfo.address) in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(
