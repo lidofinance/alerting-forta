@@ -36,6 +36,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Generate forta.config.json
+        run: >-
+          mkdir -p $HOME/.forta && printf '{"jsonRpcUrl":"%s"}' "$URL" >>
+          $HOME/.forta/forta.config.json
+        env:
+          URL: ${{ secrets.ETHEREUM_RPC_URL }}
+        if: ${{ steps.check_scripts.outputs.has_e2e == 'true' }}
+
       - name: Run unit tests
         run: yarn test
 
@@ -45,14 +53,6 @@ jobs:
           xargs -I% echo "HAS_E2E=%" |
           tee $GITHUB_OUTPUT
         id: check_scripts
-
-      - name: Generate forta.config.json
-        run: >-
-          mkdir -p $HOME/.forta && printf '{"jsonRpcUrl":"%s"}' "$URL" >>
-          $HOME/.forta/forta.config.json
-        env:
-          URL: ${{ secrets.ETHEREUM_RPC_URL }}
-        if: ${{ steps.check_scripts.outputs.has_e2e == 'true' }}
 
       - name: Run e2e tests
         run: yarn test:e2e
