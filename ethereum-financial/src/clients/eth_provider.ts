@@ -58,7 +58,7 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
           const [totalSupply] = await this.astEthContract.functions.totalSupply({
-            blockTag: blockNumber - 1,
+            blockTag: blockNumber,
           })
 
           return totalSupply
