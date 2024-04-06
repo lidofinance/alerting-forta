@@ -42,14 +42,14 @@ describe('GateSeal srv e2e tests', () => {
   test('⚠️ GateSeal: is about to be expired', async () => {
     const app = await App.getInstance()
 
-    const initBlock = 19_570_531
+    const initBlock = 19_172_614
 
     const initErr = await app.GateSealSrv.initialize(initBlock)
     if (initErr instanceof Error) {
       throw initErr
     }
 
-    const neededBlock = 19_571_532
+    const neededBlock = 19_172_615
     const block = await ethProvider.getBlock(neededBlock)
     const blockEvent = etherBlockToFortaBlockEvent(block)
     const result = await app.GateSealSrv.handleExpiryGateSeal(blockEvent)
