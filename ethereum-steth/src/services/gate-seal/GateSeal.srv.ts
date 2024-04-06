@@ -14,10 +14,12 @@ const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
 const ONE_WEEK = 7 * ONE_DAY
 const ONE_MONTH = ONE_WEEK * 4
-const GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY = ONE_DAY
-const GATE_SEAL_EXPIRY_TRIGGER_EVERY = ONE_WEEK
+const THREE_MONTHS = ONE_MONTH * 3
 
-const GATE_SEAL_EXPIRY_THRESHOLD = ONE_MONTH
+const GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY = ONE_DAY
+
+const GATE_SEAL_EXPIRY_TRIGGER_EVERY = ONE_WEEK
+const GATE_SEAL_EXPIRY_THRESHOLD = THREE_MONTHS
 
 export class GateSealSrv {
   private readonly name = 'GateSealSrv'
@@ -187,6 +189,7 @@ export class GateSealSrv {
 
     const currentBlockTimestamp = blockEvent.block.timestamp
     const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockEvent.block.number)
+
     if (E.isLeft(expiryTimestamp)) {
       return [
         networkAlert(
@@ -196,8 +199,9 @@ export class GateSealSrv {
         ),
       ]
     }
+
     const out: Finding[] = []
-    if (expiryTimestamp.right.eq(0) || Number(expiryTimestamp.right) <= currentBlockTimestamp) {
+    if (expiryTimestamp.right.eq(0) || expiryTimestamp.right.toNumber() <= currentBlockTimestamp) {
       out.push(
         Finding.fromObject({
           name: '🚨 GateSeal: is expired!',
@@ -212,13 +216,11 @@ export class GateSealSrv {
       currentBlockTimestamp - this.cache.getLastExpiryGateSealAlertTimestamp() >
       GATE_SEAL_EXPIRY_TRIGGER_EVERY
     ) {
-      if (Number(expiryTimestamp) - currentBlockTimestamp <= GATE_SEAL_EXPIRY_THRESHOLD) {
+      if (expiryTimestamp.right.toNumber() - currentBlockTimestamp <= GATE_SEAL_EXPIRY_THRESHOLD) {
         out.push(
           Finding.fromObject({
             name: '⚠️ GateSeal: is about to be expired',
-            description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(
-              String(expiryTimestamp),
-            )}`,
+            description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(expiryTimestamp.right.toNumber() * 1000).toUTCString()}`,
             alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
             severity: FindingSeverity.Medium,
             type: FindingType.Degraded,
