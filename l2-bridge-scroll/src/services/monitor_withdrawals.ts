@@ -1,13 +1,14 @@
 import BigNumber from 'bignumber.js'
 import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { BlockDto, WithdrawalRecord } from 'src/entity/blockDto'
+import { Logger } from 'winston'
 import { Log } from '@ethersproject/abstract-provider'
 import * as E from 'fp-ts/Either'
+import { BlockDto, WithdrawalRecord } from 'src/entity/blockDto'
 import { IMonitorWithdrawalsClient } from '../clients/scroll_provider'
 import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
-import { Logger } from 'winston'
 import { getUniqueKey } from '../utils/finding.helpers'
+import { Constants } from '../utils/constants'
 
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
@@ -29,7 +30,7 @@ export class MonitorWithdrawals {
   private readonly withdrawalsClient: IMonitorWithdrawalsClient
 
   private withdrawalsCache: WithdrawalRecord[] = []
-  private lastReportedToManyWithdrawals = 0
+  private lastReportedTooManyWithdrawalsTimestamp = 0
 
   constructor(withdrawalsClient: IMonitorWithdrawalsClient, l2Erc20TokenGatewayAddress: string, logger: Logger) {
     this.withdrawalsClient = withdrawalsClient
@@ -42,8 +43,7 @@ export class MonitorWithdrawals {
   }
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    // 48 hours
-    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 13)
+    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / Constants.L2_APPROX_BLOCK_TIME_SEC)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
     if (E.isLeft(withdrawalEvents)) {
@@ -95,8 +95,8 @@ export class MonitorWithdrawals {
       // block number condition is meant to "sync" agents alerts
       if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && block.number % 10 === 0) {
         const period =
-          block.timestamp - this.lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
-            ? block.timestamp - this.lastReportedToManyWithdrawals
+          block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp < MAX_WITHDRAWALS_WINDOW
+            ? block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp
             : MAX_WITHDRAWALS_WINDOW
 
         const uniqueKey = `C167F276-D519-4906-90CB-C4455E9ABBD4`
@@ -114,11 +114,11 @@ export class MonitorWithdrawals {
 
         out.push(finding)
 
-        this.lastReportedToManyWithdrawals = block.timestamp
+        this.lastReportedTooManyWithdrawalsTimestamp = block.timestamp
 
         const tmp: WithdrawalRecord[] = []
         for (const wc of this.withdrawalsCache) {
-          if (wc.time > block.timestamp - this.lastReportedToManyWithdrawals) {
+          if (wc.time > block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp) {
             tmp.push(wc)
           }
         }

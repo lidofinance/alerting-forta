@@ -9,6 +9,7 @@ import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { getUniqueKey } from '../utils/finding.helpers'
 
+
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
 const MAX_WITHDRAWALS_SUM = 10000
@@ -42,7 +43,7 @@ export class MonitorWithdrawals {
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
     // 48 hours
-    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / 13)
+    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / Constants)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
     if (E.isLeft(withdrawalEvents)) {

@@ -1,4 +1,4 @@
-import { App } from '../../src/app'
+import { App } from '../app'
 
 describe('ScrollProvider', () => {
   test('fetchBlocks', async () => {
