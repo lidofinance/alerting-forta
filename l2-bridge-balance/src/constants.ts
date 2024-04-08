@@ -1,7 +1,6 @@
 import BigNumber from "bignumber.js";
 import config from "./config/bot-config.json";
 
-
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 

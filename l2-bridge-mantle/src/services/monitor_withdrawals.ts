@@ -9,7 +9,6 @@ import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { getUniqueKey } from '../utils/finding.helpers'
 
-
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
 const MAX_WITHDRAWALS_SUM = 10000
