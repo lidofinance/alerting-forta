@@ -156,29 +156,42 @@ export class PoolBalanceCache {
 
     const out = new Map<string, string>()
 
-    out.set('curve EthBalance', state.curveEthBalance.toString())
-    out.set('curve StEthBalance', state.curveStEthBalance.toString())
-    out.set('curve PoolSize', state.curvePoolSize.toString())
+    const dateTimeFormat = new Intl.DateTimeFormat('RU', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      timeZoneName: 'short',
+      formatMatcher: 'basic',
+      hour12: false,
+      timeZone: 'UTC',
+    })
+
+    out.set('curve EthBalance:', state.curveEthBalance.toString())
+    out.set('curve StEthBalance:', state.curveStEthBalance.toString())
+    out.set('curve PoolSize:', state.curvePoolSize.toString())
     out.set(
-      'curve Imbalance',
+      'curve Imbalance:',
       state.lastReportedCurveImbalance.toString() +
         ' ' +
-        new Date(this.lastReportedCurveImbalanceTimestamp * 1000).toUTCString(),
+        dateTimeFormat.format(new Date(this.lastReportedCurveImbalanceTimestamp * 1000)),
     )
     out.set('curve StEth:Eth', state.lastReportedCurveStEthToEthPrice.toString())
     out.set(
-      'curve StEth:Eth price change',
+      'curve StEth:Eth price change:',
       state.lastReportedCurvePriceChangeLevel.toString() +
-        ' ' +
-        new Date(this.lastReportedCurveStEthToEthPriceTimestamp * 1000).toUTCString(),
+        '. ' +
+        dateTimeFormat.format(new Date(this.lastReportedCurveStEthToEthPriceTimestamp * 1000)),
     )
 
     out.set('chainlink StEth:Eth', state.lastReportedChainlinkStEthToEthPrice.toString())
     out.set(
-      'chainlink StEth:Eth price change',
+      'chainlink StEth:Eth price change:',
       state.lastReportedChainlinkPriceChangeLevel.toString() +
-        ' ' +
-        new Date(this.lastReportedChainlinkStEthToEthPriceTimestamp * 1000).toUTCString(),
+        '. ' +
+        dateTimeFormat.format(new Date(this.lastReportedChainlinkStEthToEthPriceTimestamp * 1000)),
     )
 
     return out

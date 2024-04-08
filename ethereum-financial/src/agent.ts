@@ -30,6 +30,7 @@ export function initialize(): Initialize {
     const blockDto: BlockDto = {
       number: latestBlock.right.number,
       timestamp: latestBlock.right.timestamp,
+      parentHash: latestBlock.right.parentHash,
     }
 
     const [poolBalanceSrvErr] = await Promise.all([app.PoolBalanceSrv.init(blockDto)])
@@ -74,6 +75,7 @@ export const handleBlock = (): HandleBlock => {
     const blockDto: BlockDto = {
       number: blockEvent.block.number,
       timestamp: blockEvent.block.timestamp,
+      parentHash: blockEvent.block.parentHash,
     }
 
     const [aaveFindings, poolFindings] = await Promise.all([

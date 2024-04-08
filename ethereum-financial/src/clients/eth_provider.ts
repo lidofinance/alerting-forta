@@ -53,12 +53,12 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     }
   }
 
-  public async getTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getTotalSupply(blockHash: string): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
           const [totalSupply] = await this.astEthContract.functions.totalSupply({
-            blockTag: blockNumber,
+            blockTag: blockHash,
           })
 
           return totalSupply
@@ -72,12 +72,12 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     }
   }
 
-  public async getStethBalance(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getStethBalance(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
           const [balanceOf] = await this.stethContract.functions.balanceOf(address, {
-            blockTag: blockNumber,
+            blockTag: blockHash,
           })
 
           return balanceOf

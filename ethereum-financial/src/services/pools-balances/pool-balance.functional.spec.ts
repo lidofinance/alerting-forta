@@ -1,21 +1,23 @@
 import { App } from '../../app'
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { BlockDto } from '../../entity/events'
-import { Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
+import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
 
 const TEST_TIMEOUT = 180_000
 
 describe('agent-pools-balances functional tests', () => {
-  let ethProvider: JsonRpcProvider
+  let ethProvider: ethers.providers.JsonRpcProvider
+
+  const mainnet = 1
+  const drpcProvider = 'https://eth.drpc.org/'
 
   beforeAll(async () => {
-    ethProvider = getEthersProvider()
+    ethProvider = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
   })
 
   test(
     'should process block with imbalanced Curve pool',
     async () => {
-      const app = await App.getInstance()
+      const app = await App.getInstance(drpcProvider)
       const blockNumber = 16804419
 
       const block = await ethProvider.getBlock(blockNumber)
@@ -24,11 +26,13 @@ describe('agent-pools-balances functional tests', () => {
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
+        parentHash: block.parentHash,
       }
 
       const initBlockDto: BlockDto = {
         number: initBlock.number,
         timestamp: initBlock.timestamp,
+        parentHash: initBlock.parentHash,
       }
 
       await app.PoolBalanceSrv.init(initBlockDto)
@@ -55,7 +59,7 @@ describe('agent-pools-balances functional tests', () => {
   it(
     'should process block with significant Curve pool change',
     async () => {
-      const app = await App.getInstance()
+      const app = await App.getInstance(drpcProvider)
       const startBlock = 16_870_589
       const endBlock = 16_870_590
 
@@ -64,6 +68,7 @@ describe('agent-pools-balances functional tests', () => {
       const initBlockDto: BlockDto = {
         number: initBlock.number,
         timestamp: initBlock.timestamp,
+        parentHash: initBlock.parentHash,
       }
 
       await app.PoolBalanceSrv.init(initBlockDto)
@@ -75,6 +80,7 @@ describe('agent-pools-balances functional tests', () => {
         const blockDto: BlockDto = {
           number: block.number,
           timestamp: block.timestamp,
+          parentHash: block.parentHash,
         }
 
         const f = await app.PoolBalanceSrv.handleBlock(blockDto)
@@ -103,7 +109,7 @@ describe('agent-pools-balances functional tests', () => {
   it(
     'Total unstaked stETH increased',
     async () => {
-      const app = await App.getInstance()
+      const app = await App.getInstance(drpcProvider)
       const startBlock = 16_038_250
       const endBlock = 16_038_263
 
@@ -112,6 +118,7 @@ describe('agent-pools-balances functional tests', () => {
       const initBlockDto: BlockDto = {
         number: initBlock.number,
         timestamp: initBlock.timestamp,
+        parentHash: initBlock.parentHash,
       }
 
       await app.PoolBalanceSrv.init(initBlockDto)
@@ -123,6 +130,7 @@ describe('agent-pools-balances functional tests', () => {
         const blockDto: BlockDto = {
           number: block.number,
           timestamp: block.timestamp,
+          parentHash: block.parentHash,
         }
 
         const f = await app.PoolBalanceSrv.handleBlock(blockDto)

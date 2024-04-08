@@ -7,9 +7,9 @@ import { networkAlert } from '../../utils/errors'
 import { elapsedTime } from '../../utils/time'
 
 export interface IAaveClient {
-  getStethBalance(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  getStethBalance(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>>
 
-  getTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  getTotalSupply(blockHash: string): Promise<E.Either<Error, BigNumber>>
 
   getStableDebtStEthTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
@@ -31,9 +31,9 @@ export class AaveSrv {
   //
   // Cache
   //
-  private lastReportedAstEthSupply: number = 0
-  private lastReportedStableStEthSupply: number = 0
-  private lastReportedVariableStEthSupply: number = 0
+  private lastReportedAstEthSupplyTimestamp: number = 0
+  private lastReportedStableStEthSupplyTimestamp: number = 0
+  private lastReportedVariableStEthSupplyTimestamp: number = 0
 
   constructor(logger: Logger, ethProvider: IAaveClient, aaveAstethAddress: string) {
     this.logger = logger
@@ -58,10 +58,10 @@ export class AaveSrv {
   }
 
   async handleAstEthSupply(blockEvent: BlockDto): Promise<Finding[]> {
-    if (this.lastReportedAstEthSupply + MINUTES_10 < blockEvent.timestamp) {
+    if (this.lastReportedAstEthSupplyTimestamp + MINUTES_10 < blockEvent.timestamp) {
       const [astEthBalance, astEthTotalSupply] = await Promise.all([
-        this.ethProvider.getStethBalance(this.aaveAstethAddress, blockEvent.number - 1),
-        await this.ethProvider.getTotalSupply(blockEvent.number - 1),
+        this.ethProvider.getStethBalance(this.aaveAstethAddress, blockEvent.parentHash),
+        this.ethProvider.getTotalSupply(blockEvent.parentHash),
       ])
 
       if (E.isLeft(astEthBalance)) {
@@ -87,7 +87,7 @@ export class AaveSrv {
       const difference = astEthBalance.right.minus(astEthTotalSupply.right).abs()
 
       if (difference.isGreaterThan(ASTETH_ETH_1)) {
-        this.lastReportedAstEthSupply = blockEvent.timestamp
+        this.lastReportedAstEthSupplyTimestamp = blockEvent.timestamp
 
         return [
           Finding.fromObject({
@@ -111,7 +111,7 @@ export class AaveSrv {
   }
 
   async handleStableStEthSupply(blockEvent: BlockDto): Promise<Finding[]> {
-    if (this.lastReportedStableStEthSupply + MINUTES_10 < blockEvent.timestamp) {
+    if (this.lastReportedStableStEthSupplyTimestamp + MINUTES_10 < blockEvent.timestamp) {
       const stableDebtStEthTotalSupply = await this.ethProvider.getStableDebtStEthTotalSupply(blockEvent.number)
       if (E.isLeft(stableDebtStEthTotalSupply)) {
         return [
@@ -124,7 +124,7 @@ export class AaveSrv {
       }
 
       if (stableDebtStEthTotalSupply.right.isGreaterThan(0)) {
-        this.lastReportedStableStEthSupply = blockEvent.timestamp
+        this.lastReportedStableStEthSupplyTimestamp = blockEvent.timestamp
         return [
           Finding.fromObject({
             name: '🚨🚨🚨 stableDebtStETH totalSupply is not 0',
@@ -141,7 +141,7 @@ export class AaveSrv {
   }
 
   async handleVariableStEthSupply(blockEvent: BlockDto): Promise<Finding[]> {
-    if (this.lastReportedVariableStEthSupply + MINUTES_10 < blockEvent.timestamp) {
+    if (this.lastReportedVariableStEthSupplyTimestamp + MINUTES_10 < blockEvent.timestamp) {
       const variableDebtStEthTotalSupply = await this.ethProvider.getVariableDebtStEthTotalSupply(blockEvent.number)
       if (E.isLeft(variableDebtStEthTotalSupply)) {
         return [
@@ -154,7 +154,7 @@ export class AaveSrv {
       }
 
       if (variableDebtStEthTotalSupply.right.isGreaterThan(0)) {
-        this.lastReportedVariableStEthSupply = blockEvent.timestamp
+        this.lastReportedVariableStEthSupplyTimestamp = blockEvent.timestamp
         return [
           Finding.fromObject({
             name: '🚨🚨🚨 variableDebtStETH totalSupply is not 0',
