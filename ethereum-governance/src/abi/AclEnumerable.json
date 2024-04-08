@@ -1,0 +1,4 @@
+[
+  "function getRoleMember(bytes32, uint256) view returns (address)",
+  "function getRoleMemberCount(bytes32) view returns (uint256)"
+]
