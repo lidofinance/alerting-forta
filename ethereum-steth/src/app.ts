@@ -86,9 +86,9 @@ export class App {
     if (!App.instance) {
       const db = App.getConnection()
 
-      const drpcProvider = `https://eth.drpc.org`
+      const drpcURL = `https://eth.drpc.org`
       const mainnet = 1
-      const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+      const drcpClient = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
 
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
       let ethersProvider = getEthersProvider()
@@ -156,9 +156,18 @@ export class App {
         address.GATE_SEAL_FACTORY_ADDRESS,
       )
 
+      const drpcProvider = new ETHProvider(
+        drcpClient,
+        etherscanProvider,
+        lidoContact,
+        wdQueueContact,
+        gateSealContact,
+        exitBusOracleContract,
+      )
+
       const vaultSrv = new VaultSrv(
         logger,
-        ethClient,
+        drpcProvider,
         address.WITHDRAWALS_VAULT_ADDRESS,
         address.EL_REWARDS_VAULT_ADDRESS,
         address.BURNER_ADDRESS,

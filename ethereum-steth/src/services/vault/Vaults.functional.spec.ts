@@ -1,5 +1,5 @@
 import { App } from '../../app'
-import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
+import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { BlockDto } from '../../entity/events'
 import { JsonRpcProvider } from '@ethersproject/providers'
 
