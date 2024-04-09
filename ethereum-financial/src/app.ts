@@ -1,4 +1,4 @@
-import { fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
 import { Address } from './utils/constants'
 import { ETHProvider } from './clients/eth_provider'
 import { DataRW } from './utils/mutex'
@@ -55,9 +55,13 @@ export class App {
     return E.right(token)
   }
 
-  public static async getInstance(): Promise<Container> {
+  public static async getInstance(rpcUrl?: string): Promise<Container> {
     if (!App.instance) {
-      const ethersProvider = getEthersProvider()
+      let ethersProvider = getEthersProvider()
+      if (rpcUrl !== undefined) {
+        ethersProvider = new ethers.providers.JsonRpcProvider(rpcUrl)
+      }
+
       const address: Address = Address
 
       const logger: Winston.Logger = Winston.createLogger({

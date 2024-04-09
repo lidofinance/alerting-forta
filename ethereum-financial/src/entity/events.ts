@@ -13,4 +13,5 @@ export type EventOfNotice = {
 export type BlockDto = {
   number: number
   timestamp: number
+  parentHash: string
 }
