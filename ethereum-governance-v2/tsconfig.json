@@ -1,0 +1,23 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "constants/common": ["./src/utils/constants/common/mainnet"],
+      "constants/easy-track": ["./src/utils/constants/easy-track/mainnet"],
+      "constants/ens-names": ["./src/utils/constants/ens-names/mainnet"],
+      "constants/proxy-watcher": ["./src/utils/constants/proxy-watcher/mainnet"],
+      "constants/acl-changes": ["./src/utils/constants/acl-changes/mainnet"],
+      "constants/trp-changes": ["./src/utils/constants/trp-changes/mainnet"],
+      "constants/aragon-voting": ["./src/utils/constants/aragon-voting/mainnet"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "tests",
+    "dist",
+    "**/*spec.ts",
+    "**/*mock.ts"
+  ]
+}
