@@ -1,15 +1,15 @@
 import { ethers, filterLog, getEthersProvider, Network, Transaction } from 'forta-agent'
-import { App, Container } from '../../src/app'
-import { createTransactionEvent } from './utils'
-import { WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../src/utils/events/withdrawals_events'
-import { Address } from '../../src/utils/constants'
+import { App, Container } from '../../app'
+import { createTransactionEvent } from '../../utils/forta'
+import { WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
+import { Address } from '../../utils/constants'
 import BigNumber from 'bignumber.js'
-import { WithdrawalsRepo } from '../../src/services/withdrawals/Withdrawals.repo'
+import { WithdrawalsRepo } from './Withdrawals.repo'
 import * as E from 'fp-ts/Either'
 
 const timeout = 120_000
 
-describe('Withdrawals srv e2e tests', () => {
+describe('Withdrawals.srv functional tests', () => {
   const ethProvider = getEthersProvider()
   let app: Container
   let repo: WithdrawalsRepo

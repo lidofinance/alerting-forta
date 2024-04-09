@@ -182,9 +182,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
-          return await this.jsonRpcProvider.getBalance(address, {
-            blockHash: blockHash,
-          } as never)
+          return await this.jsonRpcProvider.getBalance(address, blockHash)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )

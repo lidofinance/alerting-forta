@@ -1,12 +1,13 @@
 import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider, Network, Transaction } from 'forta-agent'
-import { App } from '../../src/app'
+import { App } from '../../app'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { createTransactionEvent, etherBlockToFortaBlockEvent } from './utils'
+import { createTransactionEvent } from '../../utils/forta'
 import BigNumber from 'bignumber.js'
+import { BlockDto } from '../../entity/events'
 
 const TEST_TIMEOUT = 60_000 // ms
 
-describe('agent-steth-ops e2e tests', () => {
+describe('Steth.srv functional tests', () => {
   let ethProvider: JsonRpcProvider
 
   beforeAll(async () => {
@@ -14,15 +15,19 @@ describe('agent-steth-ops e2e tests', () => {
   })
 
   test(
-    'should process block with low staking limit (10%)',
+    'LOW-STAKING-LIMIT',
     async () => {
       const app = await App.getInstance()
-      const blockNumber = 16704075
+      const blockNumber = 16_704_075
       const block = await ethProvider.getBlock(blockNumber)
 
-      const blockEvent = etherBlockToFortaBlockEvent(block)
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
+      }
 
-      const result = await app.StethOperationSrv.handleBlock(blockEvent)
+      const result = await app.StethOperationSrv.handleBlock(blockDto)
 
       const expected = Finding.fromObject({
         alertId: 'LOW-STAKING-LIMIT',
@@ -43,15 +48,19 @@ describe('agent-steth-ops e2e tests', () => {
   )
 
   test(
-    'should process block with huge buffered ETH amount and low deposit executor balance',
+    'LOW-DEPOSIT-EXECUTOR-BALANCE',
     async () => {
       const app = await App.getInstance()
       const blockNumber = 17241600
       const block = await ethProvider.getBlock(blockNumber)
 
-      const blockEvent = etherBlockToFortaBlockEvent(block)
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
+      }
 
-      const result = await app.StethOperationSrv.handleDepositExecutorBalance(blockEvent.block.number, block.timestamp)
+      const result = await app.StethOperationSrv.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp)
 
       const expected = Finding.fromObject({
         alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
@@ -127,7 +136,7 @@ describe('agent-steth-ops e2e tests', () => {
   )
 
   test(
-    'should process tx with transferred ownership of Insurance fund',
+    'Insurance fund',
     async () => {
       const app = await App.getInstance()
       const txHash = '0x91c7c2f33faf3b5fb097138c1d49c1d4e83f99e1c3b346b3cad35a5928c03b3a'

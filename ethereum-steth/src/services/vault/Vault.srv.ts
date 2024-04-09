@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
 import { ETHDistributedEvent } from '../../generated/Lido'
@@ -10,6 +10,7 @@ import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { IVaultClient } from './contract'
+import { BlockDto } from '../../entity/events'
 
 const WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL = 100
 const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(1000)
@@ -52,14 +53,14 @@ export class VaultSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent) {
+  public async handleBlock(blockDto: BlockDto) {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const currentBlock = blockEvent.block.number
+    const currentBlock = blockDto.number
     const prevBlockWithdrawalVaultBalance = await this.ethProvider.getBalanceByBlockHash(
       this.withdrawalsVaultAddress,
-      blockEvent.block.parentHash,
+      blockDto.parentHash,
     )
     if (E.isLeft(prevBlockWithdrawalVaultBalance)) {
       return [
@@ -72,7 +73,7 @@ export class VaultSrv {
     }
     const prevBlockElVaultBalance = await this.ethProvider.getBalanceByBlockHash(
       this.elRewardsVaultAddress,
-      blockEvent.block.parentHash,
+      blockDto.parentHash,
     )
     if (E.isLeft(prevBlockElVaultBalance)) {
       return [

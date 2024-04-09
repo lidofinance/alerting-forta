@@ -8,7 +8,8 @@ import { etherscanAddress } from '../../utils/string'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { IGateSealClient } from './contract'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockDto } from '../../entity/events'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
@@ -102,13 +103,13 @@ export class GateSealSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
     const [pauseRoleFindings, expiryGateSealFindings] = await Promise.all([
-      this.handlePauseRole(blockEvent),
-      this.handleExpiryGateSeal(blockEvent),
+      this.handlePauseRole(blockDto),
+      this.handleExpiryGateSeal(blockDto),
     ])
 
     findings.push(...pauseRoleFindings, ...expiryGateSealFindings)
@@ -117,14 +118,14 @@ export class GateSealSrv {
     return findings
   }
 
-  public async handlePauseRole(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handlePauseRole(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
     if (this.gateSealAddress === undefined) {
       return []
     }
 
-    const currentBlockTimestamp = blockEvent.block.timestamp
-    const status = await this.ethProvider.checkGateSeal(blockEvent.block.number, this.gateSealAddress)
+    const currentBlockTimestamp = blockDto.timestamp
+    const status = await this.ethProvider.checkGateSeal(blockDto.number, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
         const f = Finding.fromObject({
@@ -182,13 +183,13 @@ export class GateSealSrv {
     return out
   }
 
-  public async handleExpiryGateSeal(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleExpiryGateSeal(blockDto: BlockDto): Promise<Finding[]> {
     if (this.gateSealAddress === undefined) {
       return []
     }
 
-    const currentBlockTimestamp = blockEvent.block.timestamp
-    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockEvent.block.number)
+    const currentBlockTimestamp = blockDto.timestamp
+    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockDto.number)
 
     if (E.isLeft(expiryTimestamp)) {
       return [
