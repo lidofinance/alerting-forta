@@ -88,12 +88,12 @@ export class App {
 
       const drpcURL = `https://eth.drpc.org`
       const mainnet = 1
-      const drcpClient = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+      const drpcProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
 
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
       let ethersProvider = getEthersProvider()
       if (rpcUrl !== undefined) {
-        ethersProvider = drcpClient
+        ethersProvider = drpcProvider
       }
       ethersProvider.formatter = new FormatterWithEIP1898()
 
@@ -103,14 +103,21 @@ export class App {
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
-      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
+      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drpcProvider)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
         address.EXIT_BUS_ORACLE_ADDRESS,
         ethersProvider,
       )
+
+      const logger: Winston.Logger = Winston.createLogger({
+        format: Winston.format.simple(),
+        transports: [new Winston.transports.Console()],
+      })
+
       const ethClient = new ETHProvider(
+        logger,
         ethersProvider,
         etherscanProvider,
         lidoContact,
@@ -118,11 +125,6 @@ export class App {
         gateSealContact,
         exitBusOracleContract,
       )
-
-      const logger: Winston.Logger = Winston.createLogger({
-        format: Winston.format.simple(),
-        transports: [new Winston.transports.Console()],
-      })
 
       const stethOperationCache = new StethOperationCache()
       const stethOperationSrv = new StethOperationSrv(
@@ -156,8 +158,9 @@ export class App {
         address.GATE_SEAL_FACTORY_ADDRESS,
       )
 
-      const drpcProvider = new ETHProvider(
-        drcpClient,
+      const drpcClient = new ETHProvider(
+        logger,
+        drpcProvider,
         etherscanProvider,
         lidoContact,
         wdQueueContact,
@@ -167,7 +170,7 @@ export class App {
 
       const vaultSrv = new VaultSrv(
         logger,
-        drpcProvider,
+        drpcClient,
         address.WITHDRAWALS_VAULT_ADDRESS,
         address.EL_REWARDS_VAULT_ADDRESS,
         address.BURNER_ADDRESS,

@@ -23,6 +23,7 @@ import { IGateSealClient } from '../services/gate-seal/contract'
 import { IStethClient } from '../services/steth_operation/contracts'
 import { IVaultClient } from '../services/vault/contract'
 import { IWithdrawalsClient } from '../services/withdrawals/contract'
+import { Logger } from 'winston'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -35,8 +36,10 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   private readonly wdQueueContract: WithdrawalQueueContract
   private readonly exitBusContract: ExitBusContract
   private gateSeal: GateSealContract
+  private readonly logger: Logger
 
   constructor(
+    logger: Logger,
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     etherscanProvider: IEtherscanProvider,
     lidoContract: LidoContract,
@@ -50,6 +53,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     this.wdQueueContract = wdQueueContract
     this.gateSeal = gateSeal
     this.exitBusContract = exitBusContract
+    this.logger = logger
   }
 
   public async getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>> {
@@ -179,15 +183,44 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   public async getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>> {
+    type balanceResponse = {
+      id: number | null
+      jsonrpc: string
+      result: string
+    }
+
+    type BadResponse = {
+      id: number | null
+      jsonrpc: string
+      error: {
+        message: string
+        code: number
+      }
+    }
+
     try {
-      const out = await retryAsync<EtherBigNumber>(
-        async (): Promise<EtherBigNumber> => {
-          return await this.jsonRpcProvider.getBalance(address, blockHash)
+      const out = await retryAsync<balanceResponse>(
+        async (): Promise<balanceResponse> => {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
+            method: 'POST',
+            body: JSON.stringify({
+              method: 'eth_getBalance',
+              params: [address, blockHash],
+            }),
+          })
+
+          if (response.status !== 200) {
+            const e = await response.json()
+            this.logger.error(e)
+            throw new Error((e as BadResponse).error.message)
+          }
+
+          return (await response.json()) as balanceResponse
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      return E.right(new BigNumber(String(out)))
+      return E.right(new BigNumber(String(out.result)))
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address} and blockHash ${blockHash}`))
     }
