@@ -88,12 +88,12 @@ export class App {
 
       const drpcURL = `https://eth.drpc.org`
       const mainnet = 1
-      const drcpProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+      const drpcProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
 
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
       let ethersProvider = getEthersProvider()
       if (rpcUrl !== undefined) {
-        ethersProvider = drcpProvider
+        ethersProvider = drpcProvider
       }
       ethersProvider.formatter = new FormatterWithEIP1898()
 
@@ -103,7 +103,7 @@ export class App {
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
-      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpProvider)
+      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drpcProvider)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
@@ -160,7 +160,7 @@ export class App {
 
       const drpcClient = new ETHProvider(
         logger,
-        drcpProvider,
+        drpcProvider,
         etherscanProvider,
         lidoContact,
         wdQueueContact,
