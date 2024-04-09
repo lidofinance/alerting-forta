@@ -55,7 +55,6 @@ describe('Withdrawals.srv functional tests', () => {
         fail(initErr.message)
       }
       const resultsBigOnly = await app.WithdrawalsSrv.handleUnfinalizedRequestNumber(blockDto)
-      console.log(resultsBigOnly)
       expect(resultsBigOnly.length).toEqual(1)
 
       const expectedBig = Finding.fromObject({
@@ -82,7 +81,6 @@ describe('Withdrawals.srv functional tests', () => {
       }
 
       const results = await app.WithdrawalsSrv.handleUnfinalizedRequestNumber(neededBlockDto)
-      console.log(results)
 
       const expectedLong = Finding.fromObject({
         alertId: 'WITHDRAWALS-LONG-UNFINALIZED-QUEUE',
