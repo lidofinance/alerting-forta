@@ -289,12 +289,12 @@ export class GateSealSrv {
       const { gate_seal } = newGateSealEvent.args
       out.push(
         Finding.fromObject({
-          name: '🚨️ GateSeal: is expired. Update code!',
-          description: `GateSeal address: ${etherscanAddress(
+          name: '⚠️ GateSeal: a new instance deployed from factory',
+          description: `New instance address: ${etherscanAddress(
             gate_seal,
-          )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,
+          )}\ndev: Please, check if \`GATE_SEAL_DEFAULT_ADDRESS\` should be updated in the nearest future`,
           alertId: 'GATE-SEAL-NEW-ONE-CREATED',
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Info,
         }),
       )
