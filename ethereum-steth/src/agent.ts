@@ -19,6 +19,7 @@ import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { Metadata } from './entity/metadata'
 import Version from './utils/version'
 import { ETH_DECIMALS } from './utils/constants'
+import { BlockDto } from './entity/events'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -138,11 +139,17 @@ export const handleBlock = (): HandleBlock => {
       out.push(...findingsAsync)
     }
 
+    const blockDto: BlockDto = {
+      number: blockEvent.block.number,
+      timestamp: blockEvent.block.timestamp,
+      parentHash: blockEvent.block.parentHash,
+    }
+
     const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings] = await Promise.all([
-      app.StethOperationSrv.handleBlock(blockEvent),
-      app.WithdrawalsSrv.handleBlock(blockEvent),
-      app.GateSealSrv.handleBlock(blockEvent),
-      app.VaultSrv.handleBlock(blockEvent),
+      app.StethOperationSrv.handleBlock(blockDto),
+      app.WithdrawalsSrv.handleBlock(blockDto),
+      app.GateSealSrv.handleBlock(blockDto),
+      app.VaultSrv.handleBlock(blockDto),
     ])
 
     out.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)

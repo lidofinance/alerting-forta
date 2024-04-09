@@ -1,11 +1,21 @@
 import { App } from '../app'
 import * as E from 'fp-ts/Either'
-import { Address } from '../utils/constants'
+import { Address, ETH_DECIMALS } from '../utils/constants'
 import { GateSeal } from '../entity/gate_seal'
+import { JsonRpcProvider } from '@ethersproject/providers'
+import { ethers } from 'forta-agent'
 
 describe('eth provider tests', () => {
+  let ethProvider: JsonRpcProvider
+  const mainnet = 1
+  const drpcProvider = 'https://eth.drpc.org/'
+
+  beforeAll(async () => {
+    ethProvider = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+  })
+
   test('getWithdrawalStatuses should return 1750 withdrawal statuses', async () => {
-    const app = await App.getInstance()
+    const app = await App.getInstance(drpcProvider)
 
     const blockNumber = 19112800
     const requestsRange: number[] = []
@@ -22,7 +32,7 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('checkGateSeal should be success', async () => {
-    const app = await App.getInstance()
+    const app = await App.getInstance(drpcProvider)
 
     const blockNumber = 19140476
 
@@ -39,5 +49,19 @@ describe('eth provider tests', () => {
     }
 
     expect(resp.right).toEqual(expected)
+  }, 120_000)
+
+  test('getBalanceByBlockHash is ok', async () => {
+    const app = await App.getInstance(drpcProvider)
+
+    const blockNumber = 19_140_476
+    const block = await ethProvider.getBlock(blockNumber)
+
+    const resp = await app.ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
+    if (E.isLeft(resp)) {
+      throw resp.left.message
+    }
+
+    expect(resp.right.dividedBy(ETH_DECIMALS).toNumber()).toEqual(16_619.29059680177)
   }, 120_000)
 })

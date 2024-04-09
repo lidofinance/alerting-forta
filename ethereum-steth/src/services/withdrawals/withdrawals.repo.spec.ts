@@ -7,7 +7,7 @@ import * as E from 'fp-ts/Either'
 
 const timeout = 120_000
 
-describe('Withdrawals repo e2e tests', () => {
+describe('Withdrawals repo tests', () => {
   let app: Container
   let repo: WithdrawalsRepo
 

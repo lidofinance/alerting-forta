@@ -9,3 +9,9 @@ export type EventOfNotice = {
   severity: FindingSeverity
   type: FindingType
 }
+
+export type BlockDto = {
+  number: number
+  timestamp: number
+  parentHash: string
+}

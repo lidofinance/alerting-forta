@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { WithdrawalsCache } from './Withdrawals.cache'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { elapsedTime, formatDelay } from '../../utils/time'
@@ -20,6 +20,7 @@ import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { WithdrawalsRepo } from './Withdrawals.repo'
 import { dbAlert, networkAlert } from '../../utils/errors'
 import { IWithdrawalsClient } from './contract'
+import { BlockDto } from '../../entity/events'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -131,11 +132,11 @@ export class WithdrawalsSrv {
     return this.name
   }
 
-  async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+  async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const chainLastRequestId = await this.ethProvider.getWithdrawalLastRequestId(blockEvent.block.number)
+    const chainLastRequestId = await this.ethProvider.getWithdrawalLastRequestId(blockDto.number)
     if (E.isLeft(chainLastRequestId)) {
       return [
         networkAlert(
@@ -165,7 +166,7 @@ export class WithdrawalsSrv {
         requestIds.push(i)
       }
 
-      const requests = await this.ethProvider.getWithdrawalStatuses(requestIds, blockEvent.block.number)
+      const requests = await this.ethProvider.getWithdrawalStatuses(requestIds, blockDto.number)
       if (E.isLeft(requests)) {
         return [
           networkAlert(
@@ -188,12 +189,12 @@ export class WithdrawalsSrv {
       }
     }
 
-    if (blockEvent.block.number % BLOCK_CHECK_INTERVAL === 0) {
+    if (blockDto.number % BLOCK_CHECK_INTERVAL === 0) {
       const [queueOnParWithStakeLimitFindings, unfinalizedRequestNumberFindings, unclaimedRequestsFindings] =
         await Promise.all([
-          this.handleQueueOnParWithStakeLimit(blockEvent),
-          this.handleUnfinalizedRequestNumber(blockEvent),
-          this.handleUnclaimedRequests(blockEvent),
+          this.handleQueueOnParWithStakeLimit(blockDto),
+          this.handleUnfinalizedRequestNumber(blockDto),
+          this.handleUnclaimedRequests(blockDto),
         ])
 
       findings.push(
@@ -230,8 +231,8 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public async handleQueueOnParWithStakeLimit(blockEvent: BlockEvent): Promise<Finding[]> {
-    const blockTimestamp = blockEvent.block.timestamp
+  public async handleQueueOnParWithStakeLimit(blockDto: BlockDto): Promise<Finding[]> {
+    const blockTimestamp = blockDto.timestamp
 
     if (
       blockTimestamp - this.cache.getLastQueueOnParStakeLimitAlertTimestamp() <=
@@ -240,7 +241,7 @@ export class WithdrawalsSrv {
       return []
     }
 
-    const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockEvent.block.number)
+    const stakeLimitFullInfo = await this.ethProvider.getStakingLimitInfo(blockDto.number)
     if (E.isLeft(stakeLimitFullInfo)) {
       return [
         networkAlert(
@@ -251,7 +252,7 @@ export class WithdrawalsSrv {
       ]
     }
 
-    const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
+    const unfinalizedStETH = await this.ethProvider.getUnfinalizedStETH(blockDto.number)
     if (E.isLeft(unfinalizedStETH)) {
       return [
         networkAlert(
@@ -290,8 +291,8 @@ export class WithdrawalsSrv {
     return findings
   }
 
-  public async handleUnfinalizedRequestNumber(blockEvent: BlockEvent): Promise<Finding[]> {
-    const currentBlockTimestamp = blockEvent.block.timestamp
+  public async handleUnfinalizedRequestNumber(blockDto: BlockDto): Promise<Finding[]> {
+    const currentBlockTimestamp = blockDto.timestamp
 
     let unfinalizedStETH = new BigNumber(0)
 
@@ -319,7 +320,7 @@ export class WithdrawalsSrv {
     }
 
     if (currentBlockTimestamp >= lastFinalizedRequest.right.timestamp) {
-      const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockEvent.block.number)
+      const unfinalizedStETHraw = await this.ethProvider.getUnfinalizedStETH(blockDto.number)
       if (E.isLeft(unfinalizedStETHraw)) {
         return [
           networkAlert(
@@ -380,9 +381,9 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public async handleUnclaimedRequests(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleUnclaimedRequests(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
-    const currentBlockTimestamp = blockEvent.block.timestamp
+    const currentBlockTimestamp = blockDto.timestamp
 
     const outdatedClaimedReqIds: number[] = []
     let unclaimedStETH = new BigNumber(0)
@@ -400,7 +401,7 @@ export class WithdrawalsSrv {
     }
     const unclaimedRequestsStatuses = await this.ethProvider.getWithdrawalStatuses(
       unclaimedReqIds.right,
-      blockEvent.block.number,
+      blockDto.number,
     )
     if (E.isLeft(unclaimedRequestsStatuses)) {
       return [
@@ -484,10 +485,7 @@ export class WithdrawalsSrv {
       currentBlockTimestamp - this.cache.getLastUnclaimedMoreThanBalanceAlertTimestamp() >
       UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY
     ) {
-      const withdrawalQueueBalance = await this.ethProvider.getBalance(
-        this.withdrawalsQueueAddress,
-        blockEvent.block.number,
-      )
+      const withdrawalQueueBalance = await this.ethProvider.getBalance(this.withdrawalsQueueAddress, blockDto.number)
       if (E.isLeft(withdrawalQueueBalance)) {
         return [
           networkAlert(

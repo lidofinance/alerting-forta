@@ -1,12 +1,12 @@
 import { Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
-import { etherBlockToFortaBlockEvent } from '../../../tests/e2e/utils'
 import { App } from '../../app'
 import { Address } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
 import { GateSeal } from '../../entity/gate_seal'
 import { expect } from '@jest/globals'
+import { BlockDto } from '../../entity/events'
 
-describe('GateSeal srv e2e tests', () => {
+describe('GateSeal srv functional tests', () => {
   const ethProvider = getEthersProvider()
 
   test('handle pause role true', async () => {
@@ -14,6 +14,11 @@ describe('GateSeal srv e2e tests', () => {
 
     const blockNumber = 19113580
     const block = await ethProvider.getBlock(blockNumber)
+    const blockDto: BlockDto = {
+      number: block.number,
+      timestamp: block.timestamp,
+      parentHash: block.parentHash,
+    }
 
     const initErr = await app.GateSealSrv.initialize(blockNumber)
     if (initErr instanceof Error) {
@@ -33,8 +38,7 @@ describe('GateSeal srv e2e tests', () => {
     }
     expect(status.right).toEqual(expected)
 
-    const blockEvent = etherBlockToFortaBlockEvent(block)
-    const result = await app.GateSealSrv.handlePauseRole(blockEvent)
+    const result = await app.GateSealSrv.handlePauseRole(blockDto)
 
     expect(result.length).toEqual(0)
   }, 120_000)
@@ -51,8 +55,12 @@ describe('GateSeal srv e2e tests', () => {
 
     const neededBlock = 19_172_615
     const block = await ethProvider.getBlock(neededBlock)
-    const blockEvent = etherBlockToFortaBlockEvent(block)
-    const result = await app.GateSealSrv.handleExpiryGateSeal(blockEvent)
+    const blockDto: BlockDto = {
+      number: block.number,
+      timestamp: block.timestamp,
+      parentHash: block.parentHash,
+    }
+    const result = await app.GateSealSrv.handleExpiryGateSeal(blockDto)
 
     const expected = Finding.fromObject({
       alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',

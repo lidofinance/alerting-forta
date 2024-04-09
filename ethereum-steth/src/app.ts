@@ -82,12 +82,19 @@ export class App {
     return knex(config)
   }
 
-  public static async getInstance(): Promise<Container> {
+  public static async getInstance(rpcUrl?: string): Promise<Container> {
     if (!App.instance) {
       const db = App.getConnection()
 
+      const drpcProvider = `https://eth.drpc.org`
+      const mainnet = 1
+      const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
-      const ethersProvider = getEthersProvider()
+      let ethersProvider = getEthersProvider()
+      if (rpcUrl !== undefined) {
+        ethersProvider = drcpClient
+      }
       ethersProvider.formatter = new FormatterWithEIP1898()
 
       const etherscanProvider = new ethers.providers.EtherscanProvider(ethersProvider.network, etherscanKey)
@@ -96,10 +103,6 @@ export class App {
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
-      const drpcProvider = `https://eth.drpc.org`
-
-      const mainnet = 1
-      const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
       const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
