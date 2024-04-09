@@ -356,17 +356,17 @@ export class WithdrawalsSrv {
 
     if (!this.cache.getIsBunkerMode() && unfinalizedStETH.gt(0)) {
       if (currentBlockTimestamp - LONG_UNFINALIZED_QUEUE_THRESHOLD > firstUnfinalizedRequest.right.timestamp) {
-        const waitTime = currentBlockTimestamp - this.cache.getLastLongUnfinalizedQueueAlertTimestamp()
+        const timeSinceLastAlert = currentBlockTimestamp - this.cache.getLastLongUnfinalizedQueueAlertTimestamp()
 
-        if (waitTime > LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY) {
+        if (timeSinceLastAlert > LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY) {
           // if we are in turbo mode and unfinalized queue is not finalized for 5 days
           // and alert hasn't been sent for 1 day
           out.push(
             Finding.fromObject({
-              name: `⚠️ Withdrawals: unfinalized queue wait time is ${new Date(waitTime * 1000).getHours()} hr`,
-              description: `Unfinalized queue wait time is ${formatDelay(
+              name: `⚠️ Withdrawals: unfinalized queue wait time is more than ${LONG_UNFINALIZED_QUEUE_THRESHOLD / ONE_DAY} days`,
+              description: `Withdrawal request #${firstUnfinalizedRequest.right.id} has been waiting for ${formatDelay(
                 currentBlockTimestamp - firstUnfinalizedRequest.right.timestamp,
-              )}`,
+              )} at the moment`,
               alertId: 'WITHDRAWALS-LONG-UNFINALIZED-QUEUE',
               severity: FindingSeverity.Medium,
               type: FindingType.Info,
