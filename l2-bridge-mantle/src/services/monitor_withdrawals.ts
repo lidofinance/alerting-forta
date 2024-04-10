@@ -16,7 +16,8 @@ const MAX_WITHDRAWALS_SUM = 10000
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
 }
-export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
+const TWO_DAYS = 60 * 60 * 24 * 2
+const MANTLE_BLOCK_AVERAGE_TIME_2_SECS = 2
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
@@ -41,8 +42,8 @@ export class MonitorWithdrawals {
   }
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    // 48 hours
-    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / Constants)
+    // TODO: Fix actually on Mantle block time is not constant and the check logic must be updated
+    const pastBlock = currentBlock - Math.ceil(TWO_DAYS / MANTLE_BLOCK_AVERAGE_TIME_2_SECS)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
     if (E.isLeft(withdrawalEvents)) {
@@ -79,7 +80,7 @@ export class MonitorWithdrawals {
       // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
       const withdrawalsCache: WithdrawalRecord[] = []
       for (const wc of this.withdrawalsCache) {
-        if (wc.time > block.timestamp - MAX_WITHDRAWALS_WINDOW) {
+        if (wc.time > block.timestamp - TWO_DAYS) {
           withdrawalsCache.push(wc)
         }
       }
@@ -94,9 +95,9 @@ export class MonitorWithdrawals {
       // block number condition is meant to "sync" agents alerts
       if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && block.number % 10 === 0) {
         const period =
-          block.timestamp - this.lastReportedToManyWithdrawals < MAX_WITHDRAWALS_WINDOW
+          block.timestamp - this.lastReportedToManyWithdrawals < TWO_DAYS
             ? block.timestamp - this.lastReportedToManyWithdrawals
-            : MAX_WITHDRAWALS_WINDOW
+            : TWO_DAYS
 
         const uniqueKey = `82fd9b59-0cb2-42bd-b660-1c01bc18bfd2`
 
