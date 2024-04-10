@@ -1,8 +1,8 @@
 import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { EventOfNotice } from '../../entity/events'
+import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { EventOfNotice, BlockDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
 import { IStethClient, TransactionEventContract } from './contracts'
 import { Logger } from 'winston'
@@ -102,15 +102,15 @@ export class StethOperationSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent) {
+  public async handleBlock(blockDto: BlockDto) {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
     const [bufferedEthFindings, depositorBalanceFindings, stakingLimitFindings] = await Promise.all([
-      this.handleBufferedEth(blockEvent.block.number, blockEvent.block.timestamp),
-      this.handleDepositExecutorBalance(blockEvent.block.number, blockEvent.block.timestamp),
-      this.handleStakingLimit(blockEvent.block.number, blockEvent.block.timestamp),
-      this.handleShareRateChange(blockEvent.block.number),
+      this.handleBufferedEth(blockDto.number, blockDto.timestamp),
+      this.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp),
+      this.handleStakingLimit(blockDto.number, blockDto.timestamp),
+      this.handleShareRateChange(blockDto.number),
     ])
 
     findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings)
@@ -202,7 +202,7 @@ export class StethOperationSrv {
   public handleEventsOfNotice(txEvent: TransactionEventContract, eventsOfNotice: EventOfNotice[]) {
     const out: Finding[] = []
     for (const eventInfo of eventsOfNotice) {
-      if (formatAddressAsForta(eventInfo.address) in txEvent.addresses) {
+      if (formatAddress(eventInfo.address) in txEvent.addresses) {
         const filteredEvents = txEvent.filterLog(eventInfo.event, eventInfo.address)
 
         for (const filteredEvent of filteredEvents) {

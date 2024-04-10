@@ -13,7 +13,7 @@ mainnet)
 
 [polygon](./polygon) - Detection bot for Lido Apps on the Polygon network (should be launched against Polygon mainnet)
 
-[arbitrum](./arbitrum) - Detection bot for Lido Apps on the Arbitrum network (should be launched against Arbitrum
+[arb-subgraph](./arb-subgraph) - Lido Subgraph bot on the Arbitrum network (should be launched against Arbitrum
 mainnet)
 
 [l2-bridge-arbitrum](./l2-bridge-arbitrum) - Detection bot for Arbitrum part of L2 bridge
@@ -39,8 +39,6 @@ mainnet)
 [voting-watcher](./voting-watcher) - Lido bot for watching votes
 
 [storage-watcher](./storage-watcher) - Detection bot that monitors critical storage changes
-
-[reverted-tx-watcher](./reverted-tx-watcher) - Detection bot that monitors reverted transactions
 
 ## Local development
 

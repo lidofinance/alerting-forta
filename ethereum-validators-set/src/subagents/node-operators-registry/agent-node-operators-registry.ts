@@ -18,6 +18,7 @@ import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import OBOL_LIDO_SPLIT_FACTORY_ABI from "../../abi/obol-splits/ObolLidoSplitFactory.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
+import EASY_TRACK_ABI from "../../abi/EasyTrack.json";
 import { ethersProvider } from "../../ethers";
 import { getEventsOfNoticeForStakingModule } from "./utils";
 import BigNumber from "bignumber.js";
@@ -38,6 +39,9 @@ const {
   OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
   STUCK_PENALTY_ENDED_TRIGGER_PERIOD,
   BLOCK_INTERVAL,
+  BASIS_POINTS_MULTIPLIER,
+  TARGET_SHARE_THRESHOLD_NOTICE,
+  TARGET_SHARE_THRESHOLD_PANIC,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -67,6 +71,7 @@ interface NodeOperatorModuleParams {
   moduleAddress: string;
   alertPrefix: string;
   moduleName: string;
+  setVettedValidatorsLimitsAddress?: string;
   eventsOfNotice: EventsOfNotice[];
 }
 
@@ -90,19 +95,21 @@ class NodeOperatorsRegistryModuleContext {
   public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
+  public targetShare: number = 0;
+  public readonly contract: ethers.Contract;
 
   constructor(
     public readonly params: NodeOperatorModuleParams,
     private readonly stakingRouter: ethers.Contract,
-  ) {}
-
-  async initialize(currentBlock: number) {
-    const nodeOperatorRegistry = new ethers.Contract(
+  ) {
+    this.contract = new ethers.Contract(
       this.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
       ethersProvider,
     );
+  }
 
+  async initialize(currentBlock: number) {
     const [operators] =
       await this.stakingRouter.functions.getAllNodeOperatorDigests(
         this.params.moduleId,
@@ -111,7 +118,7 @@ class NodeOperatorsRegistryModuleContext {
 
     const operatorsSummaries = await Promise.all(
       operators.map((digest: any) =>
-        nodeOperatorRegistry.functions.getNodeOperatorSummary(digest.id, {
+        this.contract.functions.getNodeOperatorSummary(digest.id, {
           blockTag: currentBlock,
         }),
       ),
@@ -137,7 +144,7 @@ class NodeOperatorsRegistryModuleContext {
       });
     }
 
-    await this.updateNodeOperatorsNames(currentBlock);
+    await this.updateNodeOperatorsInfo(currentBlock);
   }
 
   getOperatorName(nodeOperatorId: string): string {
@@ -146,7 +153,7 @@ class NodeOperatorsRegistryModuleContext {
     );
   }
 
-  async updateNodeOperatorsNames(block: number) {
+  async updateNodeOperatorsInfo(block: number) {
     const nodeOperatorsRegistry = new ethers.Contract(
       this.params.moduleAddress,
       NODE_OPERATORS_REGISTRY_ABI,
@@ -158,6 +165,11 @@ class NodeOperatorsRegistryModuleContext {
         this.params.moduleId,
         { blockTag: block },
       );
+    const [srModule] = await this.stakingRouter.functions.getStakingModule(
+      this.params.moduleId,
+      { blockTag: block },
+    );
+    this.targetShare = srModule.targetShare;
 
     await Promise.all(
       operators.map(async (operator: any) => {
@@ -177,18 +189,17 @@ class NodeOperatorsRegistryModuleContext {
 }
 
 const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const stakingRouter = new ethers.Contract(
+  STAKING_ROUTER_ADDRESS,
+  STAKING_ROUTER_ABI,
+  ethersProvider,
+);
 const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
 
 export async function initialize(
   currentBlock: number,
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
-
-  const stakingRouter = new ethers.Contract(
-    STAKING_ROUTER_ADDRESS,
-    STAKING_ROUTER_ABI,
-    ethersProvider,
-  );
 
   stakingModulesOperatorRegistry.length = 0;
 
@@ -211,6 +222,7 @@ export async function initialize(
     moduleAddress,
     moduleName,
     alertPrefix,
+    setVettedValidatorsLimitsAddress,
   } of STAKING_MODULES) {
     if (!moduleId) {
       console.log(`${moduleName} is not supported on this network for ${name}`);
@@ -231,6 +243,7 @@ export async function initialize(
           moduleAddress,
           moduleName,
           alertPrefix,
+          setVettedValidatorsLimitsAddress,
           eventsOfNotice: getEventsOfNoticeForStakingModule({
             moduleId,
             moduleAddress,
@@ -255,7 +268,7 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  stakingModulesOperatorRegistry.forEach((norContext) => {
+  for (const norContext of stakingModulesOperatorRegistry) {
     handleEventsOfNotice(txEvent, findings, norContext.params.eventsOfNotice);
 
     const stuckEvents = txEvent.filterLog(
@@ -266,11 +279,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     // the order is important
     handleExitedCountChanged(txEvent, stuckEvents, findings, norContext);
     handleStuckStateChanged(stuckEvents, findings, norContext);
-
-    handleSigningKeysRemoved(txEvent, findings, norContext);
+    await handleSigningKeysRemoved(txEvent, findings, norContext);
     handleStakeLimitSet(txEvent, findings, norContext);
     handleSetRewardAddress(txEvent, findings, norContext);
-  });
+  }
 
   return findings;
 }
@@ -348,7 +360,7 @@ async function handleSetRewardAddress(
   }
 
   for (const stakingModule of stakingModulesOperatorRegistry) {
-    await stakingModule.updateNodeOperatorsNames(txEvent.blockNumber);
+    await stakingModule.updateNodeOperatorsInfo(txEvent.blockNumber);
   }
 }
 
@@ -502,7 +514,7 @@ function handleStuckStateChanged(
   }
 }
 
-function handleSigningKeysRemoved(
+async function handleSigningKeysRemoved(
   txEvent: TransactionEvent,
   findings: Finding[],
   norContext: NodeOperatorsRegistryModuleContext,
@@ -530,7 +542,53 @@ function handleSigningKeysRemoved(
           type: FindingType.Info,
         }),
       );
+      await handleActiveMotionsWhenSigningKeysRemoved(
+        txEvent,
+        findings,
+        norContext,
+      );
     }
+  }
+}
+
+async function handleActiveMotionsWhenSigningKeysRemoved(
+  txEvent: TransactionEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+) {
+  const { setVettedValidatorsLimitsAddress } = norContext.params;
+  if (!setVettedValidatorsLimitsAddress) {
+    return;
+  }
+
+  const easyTrackContract = new ethers.Contract(
+    EASY_TRACK_ADDRESS,
+    EASY_TRACK_ABI,
+    ethersProvider,
+  );
+  const [motions] = await easyTrackContract.functions.getMotions({
+    blockTag: txEvent.blockNumber,
+  });
+  for (const motion of motions) {
+    if (
+      motion?.evmScriptFactory.toLowerCase() !==
+      setVettedValidatorsLimitsAddress
+    ) {
+      continue;
+    }
+    const motionId = (motion?.id as BigNumber).toNumber();
+    findings.push(
+      Finding.fromObject({
+        name: `🚨 ${norContext.params.moduleName} NO Registry: SetVettedValidatorsLimits motion active 🚨`,
+        description:
+          `SigningKeyRemoved event and ongoing SetVettedValidatorsLimits motion may indicate ` +
+          `circumventing of DAO validator keys approval.` +
+          `\nPlease check #${motionId} motion`,
+        alertId: `${norContext.params.alertPrefix}CIRCUMVENTING-APPROVED-KEYS`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      }),
+    );
   }
 }
 
@@ -577,15 +635,109 @@ export async function handleBlock(blockEvent: BlockEvent) {
       (nodeOperatorRegistry) =>
         handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
-    const nodeOperatorsNamesUpdaters = stakingModulesOperatorRegistry.map(
+    const currentTargetShareHandlers = stakingModulesOperatorRegistry
+      .filter((nor) => nor.targetShare < BASIS_POINTS_MULTIPLIER)
+      .map(async (nodeOperatorRegistry) => {
+        const totalActiveValidators =
+          await getTotalActiveValidators(blockEvent);
+        await handleStakingModuleTargetShare(
+          blockEvent,
+          findings,
+          nodeOperatorRegistry,
+          totalActiveValidators,
+        );
+      });
+    const nodeOperatorsInfoUpdaters = stakingModulesOperatorRegistry.map(
       (nodeOperatorRegistry) =>
-        nodeOperatorRegistry.updateNodeOperatorsNames(blockEvent.blockNumber),
+        nodeOperatorRegistry.updateNodeOperatorsInfo(blockEvent.blockNumber),
     );
 
-    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsNamesUpdaters]);
+    await Promise.all([...stuckPenaltyHandlers, ...nodeOperatorsInfoUpdaters]);
+    await Promise.all(currentTargetShareHandlers);
   }
 
   return findings;
+}
+
+async function getTotalActiveValidators(blockEvent: BlockEvent) {
+  const [smDigests] = await stakingRouter.functions.getAllStakingModuleDigests({
+    blockTag: blockEvent.blockNumber,
+  });
+  let totalActiveValidators = 0;
+  for (const smDigest of smDigests) {
+    const summary = smDigest.summary;
+    const totalDepositedValidators = (
+      summary.totalDepositedValidators as BigNumber
+    ).toNumber();
+    const totalExitedValidators = (
+      summary.totalExitedValidators as BigNumber
+    ).toNumber();
+    totalActiveValidators += totalDepositedValidators - totalExitedValidators;
+  }
+
+  return totalActiveValidators;
+}
+
+async function handleStakingModuleTargetShare(
+  blockEvent: BlockEvent,
+  findings: Finding[],
+  norContext: NodeOperatorsRegistryModuleContext,
+  totalActiveValidators: number,
+) {
+  const summary = await norContext.contract.getStakingModuleSummary({
+    blockTag: blockEvent.blockNumber,
+  });
+  const totalDepositedValidators = (
+    summary.totalDepositedValidators as BigNumber
+  ).toNumber();
+  const totalExitedValidators = (
+    summary.totalExitedValidators as BigNumber
+  ).toNumber();
+  const moduleActiveValidators =
+    totalDepositedValidators - totalExitedValidators;
+
+  if (totalActiveValidators <= moduleActiveValidators) {
+    return;
+  }
+
+  const currentTargetShare = Math.ceil(
+    (moduleActiveValidators / totalActiveValidators) * BASIS_POINTS_MULTIPLIER,
+  );
+  const diffTargetShare = currentTargetShare - norContext.targetShare;
+  if (diffTargetShare <= 0) {
+    return;
+  }
+
+  const title = `the current target share exceeded ${
+    Math.ceil(diffTargetShare) / 100
+  }%%`;
+  const description =
+    `The module has ${moduleActiveValidators} active validators against ${totalActiveValidators}\n` +
+    `Current targetShare: ${currentTargetShare}, the module targetShare: ${norContext.targetShare}`;
+  if (diffTargetShare > TARGET_SHARE_THRESHOLD_PANIC) {
+    findings.push(
+      Finding.fromObject({
+        name: `🚨 ${norContext.params.moduleName} NO Registry: ${title}`,
+        description,
+        alertId: `${norContext.params.alertPrefix}TARGET-SHARE-PANIC`,
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      }),
+    );
+    return;
+  }
+
+  if (diffTargetShare > TARGET_SHARE_THRESHOLD_NOTICE) {
+    findings.push(
+      Finding.fromObject({
+        name: `⚠️ ${norContext.params.moduleName} NO Registry: ${title}`,
+        description,
+        alertId: `${norContext.params.alertPrefix}TARGET-SHARE-NOTICE`,
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+      }),
+    );
+  }
 }
 
 async function handleStuckPenaltyEnd(

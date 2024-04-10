@@ -18,6 +18,7 @@ import * as trpChanges from "./subagents/trp-changes/agent-trp-changes";
 import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
 import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
 import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
+import * as stonksOrderWatcher from "./subagents/stonks-order-watcher/stonks-order-watcher";
 
 import VERSION from "./version";
 import { mergeFindings } from "./common/utils";
@@ -39,6 +40,7 @@ const subAgents: SubAgent[] = [
   agentProxy,
   agentAragon,
   agentACL,
+  stonksOrderWatcher,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
@@ -47,9 +49,9 @@ const subAgents: SubAgent[] = [
   );
 });
 
-// block or tx handling should take no more than 240 sec.
+// block or tx handling should take no more than 300 sec.
 // If not all processing is done it interrupts the execution, sends current findings and errors as findings too
-const processingTimeout = 240_000;
+const processingTimeout = 300_000;
 
 const maxHandlerRetries = 5;
 

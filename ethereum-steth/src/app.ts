@@ -82,12 +82,19 @@ export class App {
     return knex(config)
   }
 
-  public static async getInstance(): Promise<Container> {
+  public static async getInstance(rpcUrl?: string): Promise<Container> {
     if (!App.instance) {
       const db = App.getConnection()
 
+      const drpcURL = `https://eth.drpc.org`
+      const mainnet = 1
+      const drpcProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+
       const etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
-      const ethersProvider = getEthersProvider()
+      let ethersProvider = getEthersProvider()
+      if (rpcUrl !== undefined) {
+        ethersProvider = drpcProvider
+      }
       ethersProvider.formatter = new FormatterWithEIP1898()
 
       const etherscanProvider = new ethers.providers.EtherscanProvider(ethersProvider.network, etherscanKey)
@@ -96,18 +103,21 @@ export class App {
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
-      const drpcProvider = `https://eth.drpc.org`
-
-      const mainnet = 1
-      const drcpClient = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
-      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drcpClient)
+      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drpcProvider)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
         address.EXIT_BUS_ORACLE_ADDRESS,
         ethersProvider,
       )
+
+      const logger: Winston.Logger = Winston.createLogger({
+        format: Winston.format.simple(),
+        transports: [new Winston.transports.Console()],
+      })
+
       const ethClient = new ETHProvider(
+        logger,
         ethersProvider,
         etherscanProvider,
         lidoContact,
@@ -115,11 +125,6 @@ export class App {
         gateSealContact,
         exitBusOracleContract,
       )
-
-      const logger: Winston.Logger = Winston.createLogger({
-        format: Winston.format.simple(),
-        transports: [new Winston.transports.Console()],
-      })
 
       const stethOperationCache = new StethOperationCache()
       const stethOperationSrv = new StethOperationSrv(
@@ -153,9 +158,19 @@ export class App {
         address.GATE_SEAL_FACTORY_ADDRESS,
       )
 
+      const drpcClient = new ETHProvider(
+        logger,
+        drpcProvider,
+        etherscanProvider,
+        lidoContact,
+        wdQueueContact,
+        gateSealContact,
+        exitBusOracleContract,
+      )
+
       const vaultSrv = new VaultSrv(
         logger,
-        ethClient,
+        drpcClient,
         address.WITHDRAWALS_VAULT_ADDRESS,
         address.EL_REWARDS_VAULT_ADDRESS,
         address.BURNER_ADDRESS,

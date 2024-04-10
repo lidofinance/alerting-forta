@@ -165,9 +165,7 @@
   {
     "inputs": [],
     "name": "POOL",
-    "outputs": [
-      { "internalType": "contract ILendingPool", "name": "", "type": "address" }
-    ],
+    "outputs": [{ "internalType": "contract ILendingPool", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -209,9 +207,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
     "name": "balanceOf",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
@@ -260,9 +256,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
     "name": "getScaledUserBalanceAndSupply",
     "outputs": [
       { "internalType": "uint256", "name": "", "type": "uint256" },
@@ -312,9 +306,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
     "name": "scaledBalanceOf",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",

@@ -8,16 +8,19 @@ import { etherscanAddress } from '../../utils/string'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { IGateSealClient } from './contract'
-import { BlockEvent, filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockDto } from '../../entity/events'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
 const ONE_WEEK = 7 * ONE_DAY
 const ONE_MONTH = ONE_WEEK * 4
-const GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY = ONE_DAY
-const GATE_SEAL_EXPIRY_TRIGGER_EVERY = ONE_WEEK
+const THREE_MONTHS = ONE_MONTH * 3
 
-const GATE_SEAL_EXPIRY_THRESHOLD = ONE_MONTH
+const GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY = ONE_DAY
+
+const GATE_SEAL_EXPIRY_TRIGGER_EVERY = ONE_WEEK
+const GATE_SEAL_EXPIRY_THRESHOLD = THREE_MONTHS
 
 export class GateSealSrv {
   private readonly name = 'GateSealSrv'
@@ -100,13 +103,13 @@ export class GateSealSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
     const [pauseRoleFindings, expiryGateSealFindings] = await Promise.all([
-      this.handlePauseRole(blockEvent),
-      this.handleExpiryGateSeal(blockEvent),
+      this.handlePauseRole(blockDto),
+      this.handleExpiryGateSeal(blockDto),
     ])
 
     findings.push(...pauseRoleFindings, ...expiryGateSealFindings)
@@ -115,14 +118,14 @@ export class GateSealSrv {
     return findings
   }
 
-  public async handlePauseRole(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handlePauseRole(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
     if (this.gateSealAddress === undefined) {
       return []
     }
 
-    const currentBlockTimestamp = blockEvent.block.timestamp
-    const status = await this.ethProvider.checkGateSeal(blockEvent.block.number, this.gateSealAddress)
+    const currentBlockTimestamp = blockDto.timestamp
+    const status = await this.ethProvider.checkGateSeal(blockDto.number, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
         const f = Finding.fromObject({
@@ -180,13 +183,14 @@ export class GateSealSrv {
     return out
   }
 
-  public async handleExpiryGateSeal(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleExpiryGateSeal(blockDto: BlockDto): Promise<Finding[]> {
     if (this.gateSealAddress === undefined) {
       return []
     }
 
-    const currentBlockTimestamp = blockEvent.block.timestamp
-    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockEvent.block.number)
+    const currentBlockTimestamp = blockDto.timestamp
+    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockDto.number)
+
     if (E.isLeft(expiryTimestamp)) {
       return [
         networkAlert(
@@ -196,8 +200,9 @@ export class GateSealSrv {
         ),
       ]
     }
+
     const out: Finding[] = []
-    if (expiryTimestamp.right.eq(0) || Number(expiryTimestamp.right) <= currentBlockTimestamp) {
+    if (expiryTimestamp.right.eq(0) || expiryTimestamp.right.toNumber() <= currentBlockTimestamp) {
       out.push(
         Finding.fromObject({
           name: '🚨 GateSeal: is expired!',
@@ -212,13 +217,13 @@ export class GateSealSrv {
       currentBlockTimestamp - this.cache.getLastExpiryGateSealAlertTimestamp() >
       GATE_SEAL_EXPIRY_TRIGGER_EVERY
     ) {
-      if (Number(expiryTimestamp) - currentBlockTimestamp <= GATE_SEAL_EXPIRY_THRESHOLD) {
+      if (expiryTimestamp.right.toNumber() - currentBlockTimestamp <= GATE_SEAL_EXPIRY_THRESHOLD) {
         out.push(
           Finding.fromObject({
             name: '⚠️ GateSeal: is about to be expired',
             description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(
-              String(expiryTimestamp),
-            )}`,
+              expiryTimestamp.right.toNumber() * 1000,
+            ).toUTCString()}`,
             alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
             severity: FindingSeverity.Medium,
             type: FindingType.Degraded,
@@ -286,12 +291,12 @@ export class GateSealSrv {
       const { gate_seal } = newGateSealEvent.args
       out.push(
         Finding.fromObject({
-          name: '🚨️ GateSeal: is expired. Update code!',
-          description: `GateSeal address: ${etherscanAddress(
+          name: '⚠️ GateSeal: a new instance deployed from factory',
+          description: `New instance address: ${etherscanAddress(
             gate_seal,
-          )}\ndev: Please, update \`GATE_SEAL_DEFAULT_ADDRESS\` in code`,
+          )}\ndev: Please, check if \`GATE_SEAL_DEFAULT_ADDRESS\` should be updated in the nearest future`,
           alertId: 'GATE-SEAL-NEW-ONE-CREATED',
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Info,
         }),
       )

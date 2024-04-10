@@ -116,6 +116,10 @@ export const SAFES = {
     ],
     ["0x834560f580764bc2e0b16925f8bf229bb00cb759", "TRP Committee"],
     [
+      "0xa02FC823cCE0D016bD7e17ac684c9abAb2d6D647",
+      "Treasury Management Committee",
+    ],
+    [
       "0x98be4a407bff0c125e25fbe9eb1165504349c37d",
       "Relay Maintenance Committee",
     ],

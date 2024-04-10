@@ -1,5 +1,6 @@
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
+  SET_VETTED_VALIDATORS_LIMITS_ADDRESS as setVettedValidatorsLimitsSDvtAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   SPLIT_WALLET_FACTORY_OBOL_CLUSTER_ADDRESS as splitWalletFactoryObolClusterAddress,
@@ -22,6 +23,11 @@ export const SPLIT_WALLET_FACTORY_SSV_CLUSTER_ADDRESS =
   splitWalletFactorySsvClusterAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const BLOCK_INTERVAL = 100;
+
+// basis points
+export const BASIS_POINTS_MULTIPLIER = 100_00;
+export const TARGET_SHARE_THRESHOLD_NOTICE = 55;
+export const TARGET_SHARE_THRESHOLD_PANIC = 65;
 
 export const MOTION_ENACTED_EVENT =
   "event MotionEnacted(uint256 indexed _motionId)";
@@ -51,6 +57,7 @@ export const STAKING_MODULES = [
     moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",
+    setVettedValidatorsLimitsAddress: setVettedValidatorsLimitsSDvtAddress,
   },
 ];
 

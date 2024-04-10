@@ -66,7 +66,7 @@
    1. HandleBlock runs on each next block
       1. 🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts
       2. 🚨 GateSeal: is expired!
-      3. 🚨️ GateSeal: is expired. Update code!
+      3. ⚠️ GateSeal: GateSeal: a new instance deployed from factory
       4. ⚠️ GateSeal: default GateSeal address in forta agent is expired
       5. ⚠️️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts
       6. ⚠️ GateSeal: is about to be expired
