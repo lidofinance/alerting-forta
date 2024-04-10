@@ -122,9 +122,6 @@ export class AclChangesSrv {
           const [role, members] = entry
           const membersInLower = members.map((m) => m.toLowerCase())
           const curMembers = await this.ethProvider.getRoleMembers(address, role.hash, blockEvent.blockNumber)
-          if (_.isEqual(curMembers, membersInLower)) {
-            return
-          }
 
           if (E.isLeft(curMembers)) {
             out.push(
@@ -134,6 +131,10 @@ export class AclChangesSrv {
                 `Could not call ethProvider.getRoleMembers for address - ${address}`,
               ),
             )
+            return
+          }
+
+          if (_.isEqual(curMembers.right, membersInLower)) {
             return
           }
 
@@ -176,7 +177,7 @@ export class AclChangesSrv {
         out.push(
           networkAlert(
             curOwner.left,
-            `Error in ${AclChangesSrv.name}.${this.handleRolesMembers.name} (uid:790dc305)`,
+            `Error in ${AclChangesSrv.name}.${this.handleOwnerChange.name} (uid:790dc305)`,
             `Could not call ethProvider.getOwner for address - ${address}`,
           ),
         )
@@ -239,40 +240,41 @@ export class AclChangesSrv {
 
   public async handleSetPermission(txEvent: TransactionEvent) {
     const out: Finding[] = []
-
-    if (ARAGON_ACL_ADDRESS in txEvent.addresses) {
-      const permissions = new Map<string, IPermission>()
-      const setEvents = txEvent.filterLog(SET_PERMISSION_EVENT, ARAGON_ACL_ADDRESS)
-      setEvents.sort(byLogIndexAsc)
-      setEvents.forEach((event) => {
-        const permissionKey = this.eventToPermissionKey(event)
-        const state = event.args.allowed ? 'granted to' : 'revoked from'
-        const permissionObjOld = permissions.get(permissionKey)
-        if (permissionObjOld) {
-          permissionObjOld.state = `${permissionObjOld.state} and ${state}`
-          permissions.set(permissionKey, permissionObjOld)
-        } else {
-          permissions.set(permissionKey, this.eventToPermissionObj(event, state))
-        }
-      })
-
-      const setParamsEvents = txEvent.filterLog(SET_PERMISSION_PARAMS_EVENT, ARAGON_ACL_ADDRESS)
-      setParamsEvents.forEach((event) => {
-        const permissionKey = this.eventToPermissionKey(event)
-        const permissionObjOld = permissions.get(permissionKey)
-        if (permissionObjOld) {
-          permissionObjOld.state = permissionObjOld.state.replace('granted', 'granted with params')
-          permissions.set(permissionKey, permissionObjOld)
-        }
-      })
-      await Promise.all(
-        Array.from(permissions.values()).map(async (permission: IPermission) => {
-          await this.handlePermissionChange(permission, out)
-        }),
-      )
+    if (!(ARAGON_ACL_ADDRESS in txEvent.addresses)) {
+      return out
     }
+    const permissions = new Map<string, IPermission>()
+    const setEvents = txEvent.filterLog(SET_PERMISSION_EVENT, ARAGON_ACL_ADDRESS)
+    setEvents.sort(byLogIndexAsc)
+    setEvents.forEach((event) => {
+      const permissionKey = this.eventToPermissionKey(event)
+      const state = event.args.allowed ? 'granted to' : 'revoked from'
+      const permissionObjOld = permissions.get(permissionKey)
+      if (permissionObjOld) {
+        permissionObjOld.state = `${permissionObjOld.state} and ${state}`
+        permissions.set(permissionKey, permissionObjOld)
+      } else {
+        permissions.set(permissionKey, this.eventToPermissionObj(event, state))
+      }
+    })
+
+    const setParamsEvents = txEvent.filterLog(SET_PERMISSION_PARAMS_EVENT, ARAGON_ACL_ADDRESS)
+    setParamsEvents.forEach((event) => {
+      const permissionKey = this.eventToPermissionKey(event)
+      const permissionObjOld = permissions.get(permissionKey)
+      if (permissionObjOld) {
+        permissionObjOld.state = permissionObjOld.state.replace('granted', 'granted with params')
+        permissions.set(permissionKey, permissionObjOld)
+      }
+    })
+    await Promise.all(
+      Array.from(permissions.values()).map(async (permission: IPermission) => {
+        await this.handlePermissionChange(permission, out)
+      }),
+    )
     return out
   }
+
   public async handlePermissionChange(permission: IPermission, out: Finding[]) {
     const shortState = permission.state.replace(' from', '').replace(' to', '')
     const role = LIDO_ROLES.get(permission.role) || 'unknown'
@@ -321,26 +323,27 @@ export class AclChangesSrv {
 
   public handleChangePermissionManager(txEvent: TransactionEvent) {
     const out: Finding[] = []
-
-    if (ARAGON_ACL_ADDRESS in txEvent.addresses) {
-      const managerEvents = txEvent.filterLog(CHANGE_PERMISSION_MANAGER_EVENT, ARAGON_ACL_ADDRESS)
-      managerEvents.forEach((event) => {
-        const role = LIDO_ROLES.get(event.args.role) || 'unknown'
-        const app = LIDO_APPS.get(event.args.app.toLowerCase()) || 'unknown'
-        const manager = LIDO_APPS.get(event.args.manager.toLowerCase()) || 'unknown'
-        out.push(
-          Finding.fromObject({
-            name: `🚨 Aragon ACL: Permission manager changed`,
-            description: `Permission manager for the role ${event.args.role} (${role}) on the app ${etherscanAddress(
-              event.args.app,
-            )} (${app}) was set to ${etherscanAddress(event.args.manager)} (${manager})`,
-            alertId: 'ARAGON-ACL-PERMISSION-MANAGER-CHANGED',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Info,
-          }),
-        )
-      })
+    if (!(ARAGON_ACL_ADDRESS in txEvent.addresses)) {
+      return out
     }
+
+    const managerEvents = txEvent.filterLog(CHANGE_PERMISSION_MANAGER_EVENT, ARAGON_ACL_ADDRESS)
+    managerEvents.forEach((event) => {
+      const role = LIDO_ROLES.get(event.args.role) || 'unknown'
+      const app = LIDO_APPS.get(event.args.app.toLowerCase()) || 'unknown'
+      const manager = LIDO_APPS.get(event.args.manager.toLowerCase()) || 'unknown'
+      out.push(
+        Finding.fromObject({
+          name: `🚨 Aragon ACL: Permission manager changed`,
+          description: `Permission manager for the role ${event.args.role} (${role}) on the app ${etherscanAddress(
+            event.args.app,
+          )} (${app}) was set to ${etherscanAddress(event.args.manager)} (${manager})`,
+          alertId: 'ARAGON-ACL-PERMISSION-MANAGER-CHANGED',
+          severity: FindingSeverity.Critical,
+          type: FindingType.Info,
+        }),
+      )
+    })
     return out
   }
 }
