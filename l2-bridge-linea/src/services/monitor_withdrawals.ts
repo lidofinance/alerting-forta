@@ -3,10 +3,11 @@ import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { BlockDto, WithdrawalRecord } from 'src/entity/blockDto'
 import { Log } from '@ethersproject/abstract-provider'
 import * as E from 'fp-ts/Either'
-import { IMonitorWithdrawalsClient } from '../clients/linea_provider'
 import { Logger } from 'winston'
 import { elapsedTime } from '../utils/time'
 import { getUniqueKey } from '../utils/finding.helpers'
+import { NetworkError } from '../utils/error'
+import { BridgingInitiatedEvent } from '../generated/TokenBridge'
 
 // 48 hours
 const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
@@ -21,6 +22,17 @@ type IWithdrawalRecord = {
 
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
+}
+
+export abstract class IMonitorWithdrawalsClient {
+  public abstract getWithdrawalEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<NetworkError, BridgingInitiatedEvent[]>>
+
+  public abstract getWithdrawalRecords(
+    withdrawalEvents: BridgingInitiatedEvent[],
+  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
 export class MonitorWithdrawals {

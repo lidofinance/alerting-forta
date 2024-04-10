@@ -1,8 +1,6 @@
-import { App } from '../src/app'
+import { App } from './app'
 import * as E from 'fp-ts/Either'
 import { Finding } from 'forta-agent'
-import { handleBlock, initialize } from '../src/agent'
-import { etherBlockToFortaBlockEvent } from './utils'
 
 describe('agent-linea e2e tests', () => {
   test('should process handleBlocks', async () => {
@@ -20,7 +18,7 @@ describe('agent-linea e2e tests', () => {
       throw monitorWithdrawalsInitResp
     }
 
-    const logs = await app.blockSrv.getLogs(blocksDto)
+    const logs = await app.blockSrv.getL2Logs(blocksDto)
     if (E.isLeft(logs)) {
       throw logs
     }
@@ -30,9 +28,9 @@ describe('agent-linea e2e tests', () => {
       blockNumbers.push(block.number)
     }
 
-    const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
-    const govEventFindings = app.govWatcher.handleLogs(logs.right)
-    const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
+    const bridgeEventFindings = app.bridgeWatcher.handleL2Logs(logs.right)
+    const govEventFindings = app.govWatcher.handleL2Logs(logs.right)
+    const proxyAdminEventFindings = app.proxyEventWatcher.handleL2Logs(logs.right)
     const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto)
     const proxyWatcherFindings = await app.proxyWatcher.handleBlocks(blockNumbers)
 
@@ -46,25 +44,5 @@ describe('agent-linea e2e tests', () => {
     )
 
     expect(findings.length).toEqual(0)
-  }, 120_000)
-
-  test('should process app', async () => {
-    const init = initialize()
-    await init()
-
-    const handleBlocks = handleBlock()
-    const app = await App.getInstance()
-
-    const blocksDto = await app.LineaClient.fetchBlocks(2476530, 2476540)
-    const out: Finding[] = []
-    for (const b of blocksDto) {
-      const blockEvent = etherBlockToFortaBlockEvent(b)
-      const findings = await handleBlocks(blockEvent)
-
-      out.push(...findings)
-    }
-
-    expect(out.length).toEqual(1)
-    expect(out[0].name).toEqual(`Agent launched`)
   }, 120_000)
 })

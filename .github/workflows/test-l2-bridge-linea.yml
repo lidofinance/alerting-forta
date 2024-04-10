@@ -1,0 +1,15 @@
+---
+name: Tests @ l2-bridge-linea
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "l2-bridge-linea/**"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/_tests.yml
+    with:
+      path: ./l2-bridge-linea
+    secrets: inherit
