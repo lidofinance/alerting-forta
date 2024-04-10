@@ -7,39 +7,30 @@ import { BridgingInitiatedEvent, TokenBridge } from '../generated/TokenBridge'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
 import { Logger } from 'winston'
+import { IL2BridgeBalanceClient } from '../services/bridge_balance'
+import { ERC20Short as BridgedWstEthRunner } from '../generated'
+import { ILineaProvider } from './linea_block_client'
+import { IMonitorWithdrawalsClient } from '../services/monitor_withdrawals'
 
-export abstract class IMonitorWithdrawalsClient {
-  public abstract getWithdrawalEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<NetworkError, BridgingInitiatedEvent[]>>
+const DELAY_IN_500MS = 500
+const ATTEMPTS_5 = 5
 
-  public abstract getWithdrawalRecords(
-    withdrawalEvents: BridgingInitiatedEvent[],
-  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
-}
-
-export abstract class ILineaProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
-
-  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
-
-  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
-
-  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
-
-  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
-}
-
-export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient {
+export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly lineaTokenBridge: TokenBridge
   private readonly logger: Logger
+  private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, lineaTokenBridge: TokenBridge, logger: Logger) {
+  constructor(
+    jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    lineaTokenBridge: TokenBridge,
+    logger: Logger,
+    bridgedWstEthRunner: BridgedWstEthRunner,
+  ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.lineaTokenBridge = lineaTokenBridge
     this.logger = logger
+    this.bridgedWstEthRunner = bridgedWstEthRunner
   }
 
   public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
@@ -253,5 +244,24 @@ export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient 
     }
 
     return E.right(out)
+  }
+
+  public async getWstEth(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const [balance] = await this.bridgedWstEthRunner.functions.totalSupply({
+            blockTag: l2blockNumber,
+          })
+
+          return balance.toString()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(out))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
+    }
   }
 }

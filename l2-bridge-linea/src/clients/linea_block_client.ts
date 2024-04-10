@@ -1,11 +1,23 @@
 import { BlockDto } from 'src/entity/blockDto'
-import { ILineaProvider } from './linea_provider'
-import { Log } from '@ethersproject/abstract-provider'
+import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provider'
 import { Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { Logger } from 'winston'
 import { elapsedTime } from '../utils/time'
 import { networkAlert } from '../utils/finding.helpers'
+import { NetworkError } from '../utils/error'
+
+export abstract class ILineaProvider {
+  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
+
+  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
+
+  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
+
+  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
+
+  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
+}
 
 export class BlockClient {
   private provider: ILineaProvider
@@ -17,18 +29,18 @@ export class BlockClient {
     this.logger = logger
   }
 
-  public async getBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
+  public async getL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
     const start = new Date().getTime()
     const blocks = await this.fetchBlocks()
-    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getBlocks.name, start))
+    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getL2Blocks.name, start))
 
     return blocks
   }
 
-  public async getLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
+  public async getL2Logs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
     const start = new Date().getTime()
     const logs = await this.fetchLogs(workingBlocks)
-    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getLogs.name, start))
+    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getL2Logs.name, start))
 
     return logs
   }
@@ -42,7 +54,7 @@ export class BlockClient {
         return E.left(
           networkAlert(
             block.left,
-            `Error in ${BlockClient.name}.${this.getBlocks.name}:21`,
+            `Error in ${BlockClient.name}.${this.getL2Blocks.name}:21`,
             `Could not call provider.getLatestBlock`,
             0,
           ),
@@ -62,7 +74,7 @@ export class BlockClient {
         return E.left(
           networkAlert(
             latestBlock.left,
-            `Error in ${BlockClient.name}.${this.getBlocks.name}:39`,
+            `Error in ${BlockClient.name}.${this.getL2Blocks.name}:39`,
             `Could not call provider.getLatestBlock`,
             0,
           ),
@@ -99,7 +111,7 @@ export class BlockClient {
       return E.left(
         networkAlert(
           logs.left,
-          `Error in ${BlockClient.name}.${this.getLogs.name}:76`,
+          `Error in ${BlockClient.name}.${this.getL2Logs.name}:76`,
           `Could not call provider.getLogs`,
           workingBlocks[workingBlocks.length - 1].number,
         ),
