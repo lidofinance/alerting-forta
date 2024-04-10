@@ -24,24 +24,18 @@ import { BlockDto } from '../../entity/events'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
+const FIVE_DAYS = ONE_DAY * 5
+const TWO_WEEKS = 14 * ONE_DAY // 2 weeks
 
-const BLOCK_CHECK_INTERVAL = 100 // ~20 minutes
-const QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY = ONE_DAY
+const THRESHOLD_OF_100K_STETH = new BigNumber(100_000)
+const THRESHOLD_OF_5K_STETH = new BigNumber(5_000)
+const THRESHOLD_OF_150K_STETH = new BigNumber(150_000)
+
+const BLOCK_CHECK_INTERVAL = 100 // 20 minutes (100 blocks x 12 sec = 12000 seconds = 20 minutes)
 const QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD = 0.95
-const BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY
-
-const LONG_UNFINALIZED_QUEUE_THRESHOLD = 5 * ONE_DAY // 5 days
-const LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY = ONE_DAY
-const UNCLAIMED_REQUESTS_TIME_WINDOW = 14 * ONE_DAY // 2 weeks
-const UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY = ONE_DAY
 const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.2
-const UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY = ONE_DAY
-
-const BIG_UNFINALIZED_QUEUE_THRESHOLD = new BigNumber(100_000)
-const BIG_WITHDRAWAL_REQUEST_THRESHOLD = new BigNumber(5_000)
-const BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD = new BigNumber(150_000)
-
 const CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR = 5
+
 
 export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
@@ -236,7 +230,7 @@ export class WithdrawalsSrv {
 
     if (
       blockTimestamp - this.cache.getLastQueueOnParStakeLimitAlertTimestamp() <=
-      QUEUE_ON_PAR_STAKE_LIMIT_TRIGGER_EVERY
+      ONE_DAY
     ) {
       return []
     }
@@ -334,14 +328,14 @@ export class WithdrawalsSrv {
       unfinalizedStETH = unfinalizedStETHraw.right.div(ETH_DECIMALS)
       if (
         currentBlockTimestamp - this.cache.getLastBigUnfinalizedQueueAlertTimestamp() >
-        BIG_UNFINALIZED_QUEUE_TRIGGER_EVERY
+        ONE_DAY
       ) {
-        if (unfinalizedStETH.gte(BIG_UNFINALIZED_QUEUE_THRESHOLD)) {
+        if (unfinalizedStETH.gte(THRESHOLD_OF_100K_STETH)) {
           // if alert hasn't been sent after last finalized batch
-          // and unfinalized queue is more than `BIG_UNFINALIZED_QUEUE_THRESHOLD` StETH
+          // and unfinalized queue is more than `THRESHOLD_OF_100K_STETH` StETH
           out.push(
             Finding.fromObject({
-              name: `⚠️ Withdrawals: unfinalized queue is more than ${BIG_UNFINALIZED_QUEUE_THRESHOLD} stETH`,
+              name: `⚠️ Withdrawals: unfinalized queue is more than ${THRESHOLD_OF_100K_STETH} stETH`,
               description: `Unfinalized queue is ${unfinalizedStETH.toFixed(2)} stETH`,
               alertId: 'WITHDRAWALS-BIG-UNFINALIZED-QUEUE',
               severity: FindingSeverity.Medium,
@@ -355,15 +349,15 @@ export class WithdrawalsSrv {
     }
 
     if (!this.cache.getIsBunkerMode() && unfinalizedStETH.gt(0)) {
-      if (currentBlockTimestamp - LONG_UNFINALIZED_QUEUE_THRESHOLD > firstUnfinalizedRequest.right.timestamp) {
+      if (currentBlockTimestamp - FIVE_DAYS > firstUnfinalizedRequest.right.timestamp) {
         const timeSinceLastAlert = currentBlockTimestamp - this.cache.getLastLongUnfinalizedQueueAlertTimestamp()
 
-        if (timeSinceLastAlert > LONG_UNFINALIZED_QUEUE_TRIGGER_EVERY) {
+        if (timeSinceLastAlert > ONE_DAY) {
           // if we are in turbo mode and unfinalized queue is not finalized for 5 days
           // and alert hasn't been sent for 1 day
           out.push(
             Finding.fromObject({
-              name: `⚠️ Withdrawals: unfinalized queue wait time is more than ${LONG_UNFINALIZED_QUEUE_THRESHOLD / ONE_DAY} days`,
+              name: `⚠️ Withdrawals: unfinalized queue wait time is more than ${FIVE_DAYS / ONE_DAY} days`,
               description: `Withdrawal request #${firstUnfinalizedRequest.right.id} has been waiting for ${formatDelay(
                 currentBlockTimestamp - firstUnfinalizedRequest.right.timestamp,
               )} at the moment`,
@@ -436,7 +430,7 @@ export class WithdrawalsSrv {
     }
 
     for (const request of finalizedRequests.right) {
-      const isOutdated = currentBlockTimestamp - request.timestamp > UNCLAIMED_REQUESTS_TIME_WINDOW
+      const isOutdated = currentBlockTimestamp - request.timestamp > TWO_WEEKS
       if (isOutdated && request.isClaimed) {
         outdatedClaimedReqIds.push(request.id)
       }
@@ -463,7 +457,7 @@ export class WithdrawalsSrv {
     const unclaimedSizeRate = unclaimedStETH.div(totalFinalizedSize)
     if (
       currentBlockTimestamp - this.cache.getLastUnclaimedRequestsAlertTimestamp() >
-      UNCLAIMED_REQUESTS_SIZE_RATE_TRIGGER_EVERY
+      ONE_DAY
     ) {
       if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
         out.push(
@@ -483,7 +477,7 @@ export class WithdrawalsSrv {
     }
     if (
       currentBlockTimestamp - this.cache.getLastUnclaimedMoreThanBalanceAlertTimestamp() >
-      UNCLAIMED_REQUESTS_MORE_THAN_BALANCE_TRIGGER_EVERY
+      ONE_DAY
     ) {
       const withdrawalQueueBalance = await this.ethProvider.getBalance(this.withdrawalsQueueAddress, blockDto.number)
       if (E.isLeft(withdrawalQueueBalance)) {
@@ -610,7 +604,7 @@ export class WithdrawalsSrv {
 
     const out: Finding[] = []
     for (const [requester, amounts] of perRequesterAmounts.entries()) {
-      if (amounts.gte(BIG_WITHDRAWAL_REQUEST_THRESHOLD)) {
+      if (amounts.gte(THRESHOLD_OF_5K_STETH)) {
         out.push(
           Finding.fromObject({
             name: `ℹ️ Huge stETH withdrawal requests batch`,
@@ -627,11 +621,11 @@ export class WithdrawalsSrv {
       )
     }
 
-    if (this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().gte(BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD)) {
+    if (this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().gte(THRESHOLD_OF_150K_STETH)) {
       if (this.cache.getLastBigRequestAfterRebaseAlertTimestamp() < this.cache.getLastTokenRebaseTimestamp()) {
         out.push(
           Finding.fromObject({
-            name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${BIG_WITHDRAWAL_REQUEST_AFTER_REBASE_THRESHOLD} stETH (max staking limit)`,
+            name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${THRESHOLD_OF_150K_STETH} stETH (max staking limit)`,
             description: `Amount: ${this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().toFixed(2)} stETH`,
             alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE',
             severity: FindingSeverity.Medium,
