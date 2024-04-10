@@ -17,7 +17,7 @@ const MAX_WITHDRAWALS_SUM = 10000
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
 }
-export const MAX_WITHDRAWALS_WINDOW = 60 * 60 * 24 * 2
+export const TWO_DAYS = 60 * 60 * 24 * 2
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
@@ -43,7 +43,7 @@ export class MonitorWithdrawals {
   }
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    const pastBlock = currentBlock - Math.ceil(MAX_WITHDRAWALS_WINDOW / Constants.L2_APPROX_BLOCK_TIME_SEC)
+    const pastBlock = currentBlock - Math.ceil(TWO_DAYS / Constants.SCROLL_APPROX_BLOCK_TIME_3_SECONDS)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
     if (E.isLeft(withdrawalEvents)) {
@@ -80,7 +80,7 @@ export class MonitorWithdrawals {
       // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
       const withdrawalsCache: WithdrawalRecord[] = []
       for (const wc of this.withdrawalsCache) {
-        if (wc.time > block.timestamp - MAX_WITHDRAWALS_WINDOW) {
+        if (wc.time > block.timestamp - TWO_DAYS) {
           withdrawalsCache.push(wc)
         }
       }
@@ -95,9 +95,9 @@ export class MonitorWithdrawals {
       // block number condition is meant to "sync" agents alerts
       if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && block.number % 10 === 0) {
         const period =
-          block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp < MAX_WITHDRAWALS_WINDOW
+          block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp < TWO_DAYS
             ? block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp
-            : MAX_WITHDRAWALS_WINDOW
+            : TWO_DAYS
 
         const uniqueKey = `C167F276-D519-4906-90CB-C4455E9ABBD4`
 
