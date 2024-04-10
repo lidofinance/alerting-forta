@@ -1,5 +1,5 @@
 ---
-name: Tests @ ethereum-financial
+name: Tests @ l2-bridge-linea
 
 on:
   workflow_dispatch:
