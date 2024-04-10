@@ -18,7 +18,7 @@ export class ETHProvider implements IL1BridgeBalanceClient {
     this.logger = logger
   }
 
-  public async getWstEth(l1blockNumber: number, address: string): Promise<E.Either<Error, BigNumber>> {
+  public async getWstEthBalance(l1blockNumber: number, address: string): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<string>(
         async (): Promise<string> => {

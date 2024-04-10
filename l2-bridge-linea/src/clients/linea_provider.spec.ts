@@ -24,7 +24,7 @@ describe('linea provider tests', () => {
     const app = await App.getInstance()
 
     const lineaBlockNumber = 3_567_282
-    const balance = await app.LineaClient.getWstEth(lineaBlockNumber)
+    const balance = await app.LineaClient.getWstEthTotalSupply(lineaBlockNumber)
     if (E.isLeft(balance)) {
       throw balance.left
     }

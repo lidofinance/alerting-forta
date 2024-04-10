@@ -246,7 +246,7 @@ export class LineaProvider implements ILineaProvider, IMonitorWithdrawalsClient,
     return E.right(out)
   }
 
-  public async getWstEth(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<string>(
         async (): Promise<string> => {

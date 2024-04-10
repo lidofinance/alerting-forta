@@ -7,11 +7,11 @@ import { getUniqueKey, networkAlert } from '../utils/finding.helpers'
 import { ETH_DECIMALS } from '../utils/constants'
 
 export abstract class IL1BridgeBalanceClient {
-  abstract getWstEth(l1blockNumber: number, address: string): Promise<E.Either<Error, BigNumber>>
+  abstract getWstEthBalance(l1blockNumber: number, address: string): Promise<E.Either<Error, BigNumber>>
 }
 
 export abstract class IL2BridgeBalanceClient {
-  abstract getWstEth(l1blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  abstract getWstEthTotalSupply(l1blockNumber: number): Promise<E.Either<Error, BigNumber>>
 }
 
 export class BridgeBalanceSrv {
@@ -44,13 +44,13 @@ export class BridgeBalanceSrv {
   }
 
   private async handleBridgeBalanceWstETH(l1BlockNumber: number, l2BlockNumbers: number[]): Promise<Finding[]> {
-    const wStEth_L1 = await this.clientL1.getWstEth(l1BlockNumber, this.lineaL1TokenBridge)
+    const wstETHBalance_onL1LineaBridge = await this.clientL1.getWstEthBalance(l1BlockNumber, this.lineaL1TokenBridge)
 
     const out: Finding[] = []
-    if (E.isLeft(wStEth_L1)) {
+    if (E.isLeft(wstETHBalance_onL1LineaBridge)) {
       return [
         networkAlert(
-          wStEth_L1.left,
+          wstETHBalance_onL1LineaBridge.left,
           `Error in ${BridgeBalanceSrv.name}.${this.handleBridgeBalanceWstETH.name}:36`,
           `Could not call clientL1.getWstEth`,
           l1BlockNumber,
@@ -59,12 +59,12 @@ export class BridgeBalanceSrv {
     }
 
     for (const l2blockNumber of l2BlockNumbers) {
-      const wStEth_L2 = await this.clientL2.getWstEth(l2blockNumber)
+      const wstETHTotalSupply_onLinea = await this.clientL2.getWstEthTotalSupply(l2blockNumber)
 
-      if (E.isLeft(wStEth_L2)) {
+      if (E.isLeft(wstETHTotalSupply_onLinea)) {
         out.push(
           networkAlert(
-            wStEth_L2.left,
+            wstETHTotalSupply_onLinea.left,
             `Error in ${BridgeBalanceSrv.name}.${this.handleBridgeBalanceWstETH.name}:36`,
             `Could not call clientL2.getWstEth`,
             l2blockNumber,
@@ -74,14 +74,14 @@ export class BridgeBalanceSrv {
         continue
       }
 
-      if (wStEth_L2.right.isGreaterThan(wStEth_L1.right)) {
+      if (wstETHTotalSupply_onLinea.right.isGreaterThan(wstETHBalance_onL1LineaBridge.right)) {
         out.push(
           Finding.fromObject({
             name: `🚨🚨🚨 Linea bridge balance mismatch 🚨🚨🚨`,
             description:
               `Total supply of bridged wstETH is greater than balanceOf L1 bridge side!\n` +
-              `L2 total supply: ${wStEth_L2.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n` +
-              `L1 balanceOf: ${wStEth_L1.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n\n` +
+              `L2 total supply: ${wstETHTotalSupply_onLinea.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n` +
+              `L1 balanceOf: ${wstETHBalance_onL1LineaBridge.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n\n` +
               `ETH: ${l1BlockNumber}\n` +
               `Linea: ${l2blockNumber}\n`,
             alertId: 'BRIDGE-BALANCE-MISMATCH',
