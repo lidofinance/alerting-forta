@@ -2,24 +2,21 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type { AclEnumerable, AclEnumerableInterface } from "../AclEnumerable";
+import { Contract, Signer, utils } from 'ethers'
+import type { Provider } from '@ethersproject/providers'
+import type { AclEnumerable, AclEnumerableInterface } from '../AclEnumerable'
 
 const _abi = [
-  "function getRoleMember(bytes32, uint256) view returns (address)",
-  "function getRoleMemberCount(bytes32) view returns (uint256)",
-] as const;
+  'function getRoleMember(bytes32, uint256) view returns (address)',
+  'function getRoleMemberCount(bytes32) view returns (uint256)',
+] as const
 
 export class AclEnumerable__factory {
-  static readonly abi = _abi;
+  static readonly abi = _abi
   static createInterface(): AclEnumerableInterface {
-    return new utils.Interface(_abi) as AclEnumerableInterface;
+    return new utils.Interface(_abi) as AclEnumerableInterface
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): AclEnumerable {
-    return new Contract(address, _abi, signerOrProvider) as AclEnumerable;
+  static connect(address: string, signerOrProvider: Signer | Provider): AclEnumerable {
+    return new Contract(address, _abi, signerOrProvider) as AclEnumerable
   }
 }

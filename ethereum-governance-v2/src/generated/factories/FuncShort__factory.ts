@@ -2,36 +2,33 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type { FuncShort, FuncShortInterface } from "../FuncShort";
+import { Contract, Signer, utils } from 'ethers'
+import type { Provider } from '@ethersproject/providers'
+import type { FuncShort, FuncShortInterface } from '../FuncShort'
 
 const _abi = [
   {
     constant: true,
     inputs: [],
-    name: "implementation",
+    name: 'implementation',
     outputs: [
       {
-        name: "",
-        type: "address",
+        name: '',
+        type: 'address',
       },
     ],
     payable: false,
-    stateMutability: "view",
-    type: "function",
+    stateMutability: 'view',
+    type: 'function',
   },
-] as const;
+] as const
 
 export class FuncShort__factory {
-  static readonly abi = _abi;
+  static readonly abi = _abi
   static createInterface(): FuncShortInterface {
-    return new utils.Interface(_abi) as FuncShortInterface;
+    return new utils.Interface(_abi) as FuncShortInterface
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): FuncShort {
-    return new Contract(address, _abi, signerOrProvider) as FuncShort;
+  static connect(address: string, signerOrProvider: Signer | Provider): FuncShort {
+    return new Contract(address, _abi, signerOrProvider) as FuncShort
   }
 }

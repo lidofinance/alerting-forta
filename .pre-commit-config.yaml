@@ -1,12 +1,12 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-    - repo: local
-      hooks:
-          - id: prettier
-            name: prettier check
-            entry: npx prettier --check .
-            language: system
-            types: [javascript]
-            pass_filenames: false
-            always_run: true
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier check
+        entry: npx prettier --check .
+        language: system
+        types: [javascript]
+        pass_filenames: false
+        always_run: true

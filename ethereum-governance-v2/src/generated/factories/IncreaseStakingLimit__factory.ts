@@ -2,101 +2,91 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type {
-  IncreaseStakingLimit,
-  IncreaseStakingLimitInterface,
-} from "../IncreaseStakingLimit";
+import { Contract, Signer, utils } from 'ethers'
+import type { Provider } from '@ethersproject/providers'
+import type { IncreaseStakingLimit, IncreaseStakingLimitInterface } from '../IncreaseStakingLimit'
 
 const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_nodeOperatorsRegistry",
-        type: "address",
+        internalType: 'address',
+        name: '_nodeOperatorsRegistry',
+        type: 'address',
       },
     ],
-    stateMutability: "nonpayable",
-    type: "constructor",
+    stateMutability: 'nonpayable',
+    type: 'constructor',
   },
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_creator",
-        type: "address",
+        internalType: 'address',
+        name: '_creator',
+        type: 'address',
       },
       {
-        internalType: "bytes",
-        name: "_evmScriptCallData",
-        type: "bytes",
+        internalType: 'bytes',
+        name: '_evmScriptCallData',
+        type: 'bytes',
       },
     ],
-    name: "createEVMScript",
+    name: 'createEVMScript',
     outputs: [
       {
-        internalType: "bytes",
-        name: "",
-        type: "bytes",
+        internalType: 'bytes',
+        name: '',
+        type: 'bytes',
       },
     ],
-    stateMutability: "view",
-    type: "function",
+    stateMutability: 'view',
+    type: 'function',
   },
   {
     inputs: [
       {
-        internalType: "bytes",
-        name: "_evmScriptCallData",
-        type: "bytes",
+        internalType: 'bytes',
+        name: '_evmScriptCallData',
+        type: 'bytes',
       },
     ],
-    name: "decodeEVMScriptCallData",
+    name: 'decodeEVMScriptCallData',
     outputs: [
       {
-        internalType: "uint256",
-        name: "_nodeOperatorId",
-        type: "uint256",
+        internalType: 'uint256',
+        name: '_nodeOperatorId',
+        type: 'uint256',
       },
       {
-        internalType: "uint256",
-        name: "_stakingLimit",
-        type: "uint256",
+        internalType: 'uint256',
+        name: '_stakingLimit',
+        type: 'uint256',
       },
     ],
-    stateMutability: "pure",
-    type: "function",
+    stateMutability: 'pure',
+    type: 'function',
   },
   {
     inputs: [],
-    name: "nodeOperatorsRegistry",
+    name: 'nodeOperatorsRegistry',
     outputs: [
       {
-        internalType: "contract INodeOperatorsRegistry",
-        name: "",
-        type: "address",
+        internalType: 'contract INodeOperatorsRegistry',
+        name: '',
+        type: 'address',
       },
     ],
-    stateMutability: "view",
-    type: "function",
+    stateMutability: 'view',
+    type: 'function',
   },
-] as const;
+] as const
 
 export class IncreaseStakingLimit__factory {
-  static readonly abi = _abi;
+  static readonly abi = _abi
   static createInterface(): IncreaseStakingLimitInterface {
-    return new utils.Interface(_abi) as IncreaseStakingLimitInterface;
+    return new utils.Interface(_abi) as IncreaseStakingLimitInterface
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): IncreaseStakingLimit {
-    return new Contract(
-      address,
-      _abi,
-      signerOrProvider
-    ) as IncreaseStakingLimit;
+  static connect(address: string, signerOrProvider: Signer | Provider): IncreaseStakingLimit {
+    return new Contract(address, _abi, signerOrProvider) as IncreaseStakingLimit
   }
 }
