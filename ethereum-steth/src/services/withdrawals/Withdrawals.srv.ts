@@ -36,7 +36,6 @@ const QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD = 0.95
 const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.2
 const CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR = 5
 
-
 export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
 
@@ -228,10 +227,7 @@ export class WithdrawalsSrv {
   public async handleQueueOnParWithStakeLimit(blockDto: BlockDto): Promise<Finding[]> {
     const blockTimestamp = blockDto.timestamp
 
-    if (
-      blockTimestamp - this.cache.getLastQueueOnParStakeLimitAlertTimestamp() <=
-      ONE_DAY
-    ) {
+    if (blockTimestamp - this.cache.getLastQueueOnParStakeLimitAlertTimestamp() <= ONE_DAY) {
       return []
     }
 
@@ -326,10 +322,7 @@ export class WithdrawalsSrv {
       }
 
       unfinalizedStETH = unfinalizedStETHraw.right.div(ETH_DECIMALS)
-      if (
-        currentBlockTimestamp - this.cache.getLastBigUnfinalizedQueueAlertTimestamp() >
-        ONE_DAY
-      ) {
+      if (currentBlockTimestamp - this.cache.getLastBigUnfinalizedQueueAlertTimestamp() > ONE_DAY) {
         if (unfinalizedStETH.gte(THRESHOLD_OF_100K_STETH)) {
           // if alert hasn't been sent after last finalized batch
           // and unfinalized queue is more than `THRESHOLD_OF_100K_STETH` StETH
@@ -455,10 +448,7 @@ export class WithdrawalsSrv {
 
     const totalFinalizedSize = claimedStETH.plus(unclaimedStETH)
     const unclaimedSizeRate = unclaimedStETH.div(totalFinalizedSize)
-    if (
-      currentBlockTimestamp - this.cache.getLastUnclaimedRequestsAlertTimestamp() >
-      ONE_DAY
-    ) {
+    if (currentBlockTimestamp - this.cache.getLastUnclaimedRequestsAlertTimestamp() > ONE_DAY) {
       if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
         out.push(
           Finding.fromObject({
@@ -475,10 +465,7 @@ export class WithdrawalsSrv {
         this.cache.setLastUnclaimedRequestsAlertTimestamp(currentBlockTimestamp)
       }
     }
-    if (
-      currentBlockTimestamp - this.cache.getLastUnclaimedMoreThanBalanceAlertTimestamp() >
-      ONE_DAY
-    ) {
+    if (currentBlockTimestamp - this.cache.getLastUnclaimedMoreThanBalanceAlertTimestamp() > ONE_DAY) {
       const withdrawalQueueBalance = await this.ethProvider.getBalance(this.withdrawalsQueueAddress, blockDto.number)
       if (E.isLeft(withdrawalQueueBalance)) {
         return [
