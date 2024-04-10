@@ -29,7 +29,7 @@ jobs:
       - name: Install node
         uses: actions/setup-node@v3
         with:
-          node-version-file: "${{ inputs.path }}/.nvmrc"
+          node-version: 20.10.0
           cache: yarn
           cache-dependency-path: "**/yarn.lock"
 
@@ -42,7 +42,6 @@ jobs:
           $HOME/.forta/forta.config.json
         env:
           URL: ${{ secrets.ETHEREUM_RPC_URL }}
-        if: ${{ steps.check_scripts.outputs.has_e2e == 'true' }}
 
       - name: Run unit tests
         run: yarn test

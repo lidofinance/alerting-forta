@@ -60,16 +60,16 @@ export class ProxyWatcher {
     })
   }
 
-  public async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+  public async handleBlocks(l2blockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
     const BLOCK_INTERVAL = 10
-    for (const blockNumber of blockNumbers) {
-      if (blockNumber % BLOCK_INTERVAL === 0) {
+    for (const l2blockNumber of l2blockNumbers) {
+      if (l2blockNumber % BLOCK_INTERVAL === 0) {
         const [implFindings, adminFindings] = await Promise.all([
-          this.handleProxyImplementationChanges(blockNumber),
-          this.handleProxyAdminChanges(blockNumber),
+          this.handleProxyImplementationChanges(l2blockNumber),
+          this.handleProxyAdminChanges(l2blockNumber),
         ])
 
         findings.push(...implFindings, ...adminFindings)
@@ -80,20 +80,20 @@ export class ProxyWatcher {
     return findings
   }
 
-  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(l2blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
     for (const contract of this.contractCallers) {
       const lastImpl = this.lastImpls.get(contract.getAddress()) || ''
 
-      const newImpl = await contract.getProxyImplementation(blockNumber)
+      const newImpl = await contract.getProxyImplementation(l2blockNumber)
       if (E.isLeft(newImpl)) {
         return [
           networkAlert(
             newImpl.left,
             `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:90`,
             newImpl.left.message,
-            blockNumber,
+            l2blockNumber,
           ),
         ]
       }
@@ -111,7 +111,7 @@ export class ProxyWatcher {
             severity: FindingSeverity.High,
             type: FindingType.Info,
             metadata: { newImpl: newImpl.right, lastImpl: lastImpl },
-            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), blockNumber),
+            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), l2blockNumber),
           }),
         )
       }
@@ -122,20 +122,20 @@ export class ProxyWatcher {
     return out
   }
 
-  private async handleProxyAdminChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyAdminChanges(l2blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
     for (const contract of this.contractCallers) {
       const lastAdmin: string = this.lastAdmins.get(contract.getAddress()) || ''
 
-      const newAdmin = await contract.getProxyAdmin(blockNumber)
+      const newAdmin = await contract.getProxyAdmin(l2blockNumber)
       if (E.isLeft(newAdmin)) {
         return [
           networkAlert(
             newAdmin.left,
             `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:125`,
             newAdmin.left.message,
-            blockNumber,
+            l2blockNumber,
           ),
         ]
       }
@@ -153,7 +153,7 @@ export class ProxyWatcher {
             severity: FindingSeverity.High,
             type: FindingType.Info,
             metadata: { newAdmin: newAdmin.right, lastAdmin: lastAdmin },
-            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), blockNumber),
+            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), l2blockNumber),
           }),
         )
       }

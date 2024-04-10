@@ -16,9 +16,10 @@ the cache.
 ## Alerts
 
 1. Bridge events
-   1. 🚨 Linea L2 Bridge: Paused
-   2. 🚨 Linea L2 Bridge: Implementation initialized
-   3. ⚠️ Linea L2 Bridge: Unpaused
+   1. 🚨🚨🚨 Linea bridge balance mismatch 🚨🚨🚨
+   2. 🚨 Linea L2 Bridge: Paused
+   3. 🚨 Linea L2 Bridge: Implementation initialized
+   4. ⚠️ Linea L2 Bridge: Unpaused
 2. Gov Events
    1. 🚨 Linea Gov Bridge: Ethereum Governance Executor Updated
    2. 🚨 Linea Gov Bridge: Guardian Updated

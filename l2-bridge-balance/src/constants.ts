@@ -23,7 +23,6 @@ export interface BridgeParamsWstETH {
   Base: BridgeParamWstETH;
   ZkSync: BridgeParamWstETH;
   Mantle: BridgeParamWstETH;
-  Linea: BridgeParamWstETH;
 }
 
 export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
@@ -56,12 +55,6 @@ export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
     l1Gateway: "0x2D001d79E5aF5F65a939781FE228B267a8Ed468B",
     wstEthBridged: "0x458ed78EB972a369799fb278c0243b25e5242A83",
     rpcUrl: config.Mantle.RpcUrl,
-  },
-  Linea: {
-    name: "Linea",
-    l1Gateway: "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319",
-    wstEthBridged: "0xB5beDd42000b71FddE22D3eE8a79Bd49A568fC8F",
-    rpcUrl: config.Linea.RpcUrl,
   },
 };
 
