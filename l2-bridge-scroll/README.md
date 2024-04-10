@@ -16,9 +16,9 @@ the cache.
 ## Alerts
 
 1. Bridge events
-   1. 🚨🚨🚨 Scroll L2 Bridge: Implementation initialized
+   1. 🚨 Scroll L2 Bridge: (re-)initialized
    2. 🚨 Scroll L2 Bridge: Deposits Disabled
-   3. 🚨 Scroll L2 Bridge: Role Admin changed
+   3. 🚨 Scroll: L2 gateway owner changed
    4. 🚨 Scroll L2 Bridge: Withdrawals Disabled
    5. ⚠️ Scroll L2 Bridge: Role granted
    6. ⚠️ Scroll L2 Bridge: Role revoked
@@ -35,11 +35,10 @@ the cache.
    8. ℹ️ Scroll Gov Bridge: Action set executed
    9. ℹ️ Scroll Gov Bridge: Action set canceled
 3. Proxy events
-   1. 🚨 Scroll: Proxy ossified
-   2. 🚨 Scroll: Proxy admin changed
-   3. 🚨 Scroll: Proxy implementation changed
-   4. 🚨 Scroll: Proxy upgraded
-   5. 🚨 Scroll: Proxy beacon upgraded
+   1. 🚨 Scroll: Proxy admin changed
+   2. 🚨 Scroll: Proxy implementation changed
+   3. 🚨 Scroll: Proxy upgraded
+   4. 🚨 Scroll: Proxy beacon upgraded
 4. Monitor Withdrawals
    1. ⚠️ Scroll: Huge withdrawals during the last ...
 5. Agent balance

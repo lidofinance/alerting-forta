@@ -80,5 +80,18 @@ export function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: Ro
       type: FindingType.Info,
       uniqueKey: '42816CCE-24C3-4CE2-BC21-4F2202A66EFD',
     },
+    {
+      address: l2GatewayAddress,
+      event: 'event Initialized(uint8 version)',
+      alertId: 'L2-BRIDGE-INITIALIZED',
+      name: '🚨 Scroll L2 Bridge: (re-)initialized',
+      description: (args: Result) =>
+        `Implementation of the Scroll L2 Bridge was initialized by version: ${args.version}\n` +
+        `NOTE: This is not the thing that should be left unacted! ` +
+        `Make sure that this call was made by Lido!`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: 'E42BC7A0-0715-4D55-AB9D-0A041F639B20',
+    },
   ]
 }
