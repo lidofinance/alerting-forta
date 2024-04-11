@@ -1,5 +1,5 @@
-import { BlockDto } from 'src/entity/blockDto'
-import { IProvider } from './base_provider'
+import { BlockDto } from '../entity/blockDto'
+import { IBaseClient } from './base_client'
 import { Log } from '@ethersproject/abstract-provider'
 import { Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
@@ -8,11 +8,11 @@ import { elapsedTime } from '../utils/time'
 import { networkAlert } from '../utils/finding.helpers'
 
 export class BlockClient {
-  private provider: IProvider
+  private provider: IBaseClient
   private logger: Logger
   private cachedBlockDto: BlockDto | undefined = undefined
 
-  constructor(provider: IProvider, logger: Logger) {
+  constructor(provider: IBaseClient, logger: Logger) {
     this.provider = provider
     this.logger = logger
   }
