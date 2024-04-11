@@ -73,7 +73,7 @@ export class App {
       const adr: Address = Address
 
       const l2Bridge = L2Bridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY_ADDRESS, baseProvider)
-      const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.BASE_WST_ETH_BRIDGED_ADDRESS, baseProvider)
+      const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.BASE_WSTETH_ADDRESS, baseProvider)
       const baseClient = new BaseClient(baseProvider, l2Bridge, logger, bridgedWSthEthRunner)
 
       const bridgeEventWatcher = new EventWatcher(
@@ -84,7 +84,7 @@ export class App {
       const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS), logger)
       const proxyEventWatcher = new EventWatcher(
         'ProxyEventWatcher',
-        getProxyAdminEvents(adr.L2_ERC20_TOKEN_GATEWAY, adr.BASE_WST_ETH_BRIDGED),
+        getProxyAdminEvents(adr.L2_ERC20_TOKEN_GATEWAY, adr.BASE_WSTETH_BRIDGED),
         logger,
       )
 
@@ -98,8 +98,8 @@ export class App {
         ),
         new ProxyWatcher(
           new ProxyContractClient(
-            adr.BASE_WST_ETH_BRIDGED,
-            ProxyShortABI__factory.connect(adr.BASE_WST_ETH_BRIDGED.address, baseProvider),
+            adr.BASE_WSTETH_BRIDGED,
+            ProxyShortABI__factory.connect(adr.BASE_WSTETH_BRIDGED.address, baseProvider),
           ),
           logger,
         ),
@@ -116,7 +116,7 @@ export class App {
         new ethers.providers.JsonRpcProvider(drpcUrl, mainnet),
       ])
 
-      const wSthEthRunner = ERC20Short__factory.connect(adr.WSTETH_ADDRESS, ethProvider)
+      const wSthEthRunner = ERC20Short__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
       const ethClient = new ETHProvider(logger, wSthEthRunner)
       const bridgeBalanceSrv = new BridgeBalanceSrv(logger, ethClient, adr.BASE_L1ERC20_TOKEN_BRIDGE, baseClient)
 
