@@ -21,7 +21,7 @@ export class EventWatcher {
     return this.name
   }
 
-  handleLogs(l2logs: Log[]): Finding[] {
+  handleL2Logs(l2logs: Log[]): Finding[] {
     const start = new Date().getTime()
     const addresses: string[] = []
 
@@ -51,7 +51,7 @@ export class EventWatcher {
       }
     }
 
-    this.logger.info(elapsedTime(this.getName() + '.' + this.handleLogs.name, start))
+    this.logger.info(elapsedTime(this.getName() + '.' + this.handleL2Logs.name, start))
     return findings
   }
 }

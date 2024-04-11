@@ -7,6 +7,8 @@ import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
 import { Logger } from 'winston'
 import { L2Bridge, WithdrawalInitiatedEvent } from '../generated/L2Bridge'
+import { IL2BridgeBalanceClient } from '../services/bridge_balance'
+import { ERC20Short as BridgedWstEthRunner } from '../generated'
 
 export abstract class IMonitorWithdrawalsClient {
   public abstract getWithdrawalEvents(
@@ -19,7 +21,7 @@ export abstract class IMonitorWithdrawalsClient {
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
-export abstract class IProvider {
+export abstract class IBaseClient {
   public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
 
   public abstract getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
@@ -27,15 +29,22 @@ export abstract class IProvider {
   public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
 }
 
-export class BaseProvider implements IProvider, IMonitorWithdrawalsClient {
+export class BaseClient implements IBaseClient, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly l2Bridge: L2Bridge
   private readonly logger: Logger
+  private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, baseTokenBridge: L2Bridge, logger: Logger) {
+  constructor(
+    jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    baseTokenBridge: L2Bridge,
+    logger: Logger,
+    bridgedWstEthRunner: BridgedWstEthRunner,
+  ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.l2Bridge = baseTokenBridge
     this.logger = logger
+    this.bridgedWstEthRunner = bridgedWstEthRunner
   }
 
   public async fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]> {
@@ -215,7 +224,7 @@ export class BaseProvider implements IProvider, IMonitorWithdrawalsClient {
           )
 
           const record: WithdrawalRecord = {
-            time: block.timestamp,
+            timestamp: block.timestamp,
             amount: new BigNumber(String(withdrawEvent.args.amount)),
           }
 
@@ -227,5 +236,24 @@ export class BaseProvider implements IProvider, IMonitorWithdrawalsClient {
     }
 
     return E.right(out)
+  }
+
+  public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const [balance] = await this.bridgedWstEthRunner.functions.totalSupply({
+            blockTag: l2blockNumber,
+          })
+
+          return balance.toString()
+        },
+        { delay: 500, maxTry: 5 },
+      )
+
+      return E.right(new BigNumber(out))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
+    }
   }
 }

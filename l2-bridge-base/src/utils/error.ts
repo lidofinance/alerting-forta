@@ -9,7 +9,6 @@ export class NetworkError extends Error {
     if (e instanceof Error) {
       this.stack = e.stack
       this.message = e.message
-      this.cause = e.cause
     } else {
       this.message = `${e}`
     }

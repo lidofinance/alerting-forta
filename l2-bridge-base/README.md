@@ -7,14 +7,15 @@
 ## Alerts
 
 1. Bridge events
-   1. 🚨 Base L2 Bridge: Role Admin changed
+   1. 🚨🚨🚨 Base bridge balance mismatch 🚨🚨🚨
    2. 🚨 Base L2 Bridge: Withdrawals Disabled
    3. 🚨 Base L2 Bridge: Implementation initialized
    4. 🚨 Base L2 Bridge: Deposits Disabled
-   5. ⚠️ Base L2 Bridge: Role granted
-   6. ⚠️ Base L2 Bridge: Role revoked
-   7. ℹ️ Base L2 Bridge: Deposits Enabled
-   8. ℹ️ Base L2 Bridge: Withdrawals Enabled
+   5. 🚨 Base L2 Bridge: Role Admin changed
+   6. ⚠️ Base L2 Bridge: Role granted
+   7. ⚠️ Base L2 Bridge: Role revoked
+   8. ℹ️ Base L2 Bridge: Deposits Enabled
+   9. ℹ️ Base L2 Bridge: Withdrawals Enabled
 2. Gov Events
    1. 🚨 Base Gov Bridge: Ethereum Governance Executor Updated
    2. 🚨 Base Gov Bridge: Guardian Updated
