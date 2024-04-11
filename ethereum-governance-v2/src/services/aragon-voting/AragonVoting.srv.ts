@@ -18,7 +18,7 @@ import {
 
 import { CAST_VOTE_EVENT, ARAGON_VOTING_EVENTS_OF_NOTICE } from '../../utils/events/aragon_events'
 
-enum Outcomes {
+export enum Outcomes {
   Pass = 'Pass',
   Fail = 'Fail',
 }
@@ -69,7 +69,7 @@ export class AragonVotingSrv {
   }
 
   public async handleAragonBlock(blockEvent: BlockEvent) {
-    if (blockEvent.blockNumber % BLOCK_WINDOW != 0 && this.hasBlockWindow) {
+    if (blockEvent.block.number % BLOCK_WINDOW != 0 && this.hasBlockWindow) {
       return []
     }
 

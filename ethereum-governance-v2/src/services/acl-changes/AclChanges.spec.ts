@@ -42,8 +42,8 @@ describe('AclChangesSrv', () => {
   const fakeAddress = '0x123'
 
   beforeEach(() => {
-    logger = { info: jest.fn() } as unknown as Logger
     whitelistedOwner = WHITELISTED_OWNERS[0]
+    logger = { info: jest.fn() } as unknown as Logger
     ethProvider = {
       getRoleMembers: jest.fn(),
       getOwner: jest.fn(),
