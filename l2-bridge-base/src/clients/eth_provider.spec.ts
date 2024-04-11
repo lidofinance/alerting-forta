@@ -9,7 +9,7 @@ describe('eth provider tests', () => {
     const adr = Address
 
     const blockNumber = 19_619_102
-    const balance = await app.ethClient.getWstEthBalance(blockNumber, adr.BASE_L1ERC20_TOKEN_BRIDGE)
+    const balance = await app.ethClient.getWstEthBalance(blockNumber, adr.BASE_L1ERC20_TOKEN_BRIDGE_ADDRESS)
     if (E.isLeft(balance)) {
       throw balance.left
     }

@@ -72,27 +72,27 @@ export class App {
       const baseProvider = new ethers.providers.JsonRpcProvider('https://base.llamarpc.com', baseNetworkID)
       const adr: Address = Address
 
-      const l2Bridge = L2Bridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY_ADDRESS, baseProvider)
+      const l2Bridge = L2Bridge__factory.connect(adr.BASE_L2ERC20_TOKEN_BRIDGE_ADDRESS, baseProvider)
       const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.BASE_WSTETH_ADDRESS, baseProvider)
       const baseClient = new BaseClient(baseProvider, l2Bridge, logger, bridgedWSthEthRunner)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
-        getL2BridgeEvents(adr.L2_ERC20_TOKEN_GATEWAY, adr.RolesMap),
+        getL2BridgeEvents(adr.BASE_L2ERC20_TOKEN_BRIDGED, adr.RolesMap),
         logger,
       )
-      const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS), logger)
+      const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.BASE_GOV_EXECUTOR_ADDRESS), logger)
       const proxyEventWatcher = new EventWatcher(
         'ProxyEventWatcher',
-        getProxyAdminEvents(adr.L2_ERC20_TOKEN_GATEWAY, adr.BASE_WSTETH_BRIDGED),
+        getProxyAdminEvents(adr.BASE_L2ERC20_TOKEN_BRIDGED, adr.BASE_WSTETH_BRIDGED),
         logger,
       )
 
       const proxyWatchers: ProxyWatcher[] = [
         new ProxyWatcher(
           new ProxyContractClient(
-            adr.L2_ERC20_TOKEN_GATEWAY,
-            ProxyShortABI__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.address, baseProvider),
+            adr.BASE_L2ERC20_TOKEN_BRIDGED,
+            ProxyShortABI__factory.connect(adr.BASE_L2ERC20_TOKEN_BRIDGED.address, baseProvider),
           ),
           logger,
         ),
@@ -107,7 +107,7 @@ export class App {
 
       const blockSrv: BlockClient = new BlockClient(baseClient, logger)
 
-      const monitorWithdrawals = new MonitorWithdrawals(baseClient, adr.L2_ERC20_TOKEN_GATEWAY_ADDRESS, logger)
+      const monitorWithdrawals = new MonitorWithdrawals(baseClient, adr.BASE_L2ERC20_TOKEN_BRIDGE_ADDRESS, logger)
 
       const mainnet = 1
       const drpcUrl = 'https://eth.drpc.org/'
@@ -118,7 +118,12 @@ export class App {
 
       const wSthEthRunner = ERC20Short__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
       const ethClient = new ETHProvider(logger, wSthEthRunner)
-      const bridgeBalanceSrv = new BridgeBalanceSrv(logger, ethClient, adr.BASE_L1ERC20_TOKEN_BRIDGE, baseClient)
+      const bridgeBalanceSrv = new BridgeBalanceSrv(
+        logger,
+        ethClient,
+        adr.BASE_L1ERC20_TOKEN_BRIDGE_ADDRESS,
+        baseClient,
+      )
 
       App.instance = {
         ethClient: ethClient,
