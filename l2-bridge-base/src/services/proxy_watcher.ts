@@ -20,23 +20,23 @@ export class ProxyWatcher {
   }
 
   public getName(): string {
-    return this.proxyContract.getName() + '.' + this.name
+    return this.proxyContract.getName() + `(${this.proxyContract.getAddress()}).` + this.name
   }
 
   public getAdmin(): string {
-    return this.lastAdmin
+    return this.lastAdmin.toLowerCase()
   }
 
   public getImpl(): string {
-    return this.lastImpl
+    return this.lastImpl.toLowerCase()
   }
 
   public setAdmin(admin: string) {
-    this.lastAdmin = admin
+    this.lastAdmin = admin.toLowerCase()
   }
 
   public setImpl(impl: string) {
-    this.lastImpl = impl
+    this.lastImpl = impl.toLowerCase()
   }
 
   async initialize(currentL2Block: number): Promise<Error | null> {
@@ -61,7 +61,7 @@ export class ProxyWatcher {
     return null
   }
 
-  async handleBlocks(l2blockNumbers: number[]): Promise<Finding[]> {
+  async handleL2Blocks(l2blockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
 
     const BLOCK_INTERVAL = 25
@@ -78,7 +78,9 @@ export class ProxyWatcher {
       }
     }
 
-    this.logger.info(elapsedTime(this.getName() + '.' + this.handleBlocks.name, start))
+    this.logger.info(this.getName() + '.impl = ' + this.getImpl())
+    this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
+    this.logger.info(elapsedTime(this.proxyContract.getName() + `.` + this.handleL2Blocks.name, start))
     return out
   }
 
@@ -97,7 +99,7 @@ export class ProxyWatcher {
       ]
     }
 
-    if (newImpl.right != this.getImpl()) {
+    if (newImpl.right.toLowerCase() != this.getImpl()) {
       out.push(
         Finding.fromObject({
           name: '🚨 Base: Proxy implementation changed',
@@ -133,7 +135,7 @@ export class ProxyWatcher {
       ]
     }
 
-    if (newAdmin.right != this.getAdmin()) {
+    if (newAdmin.right.toLowerCase() != this.getAdmin()) {
       out.push(
         Finding.fromObject({
           name: '🚨 Base: Proxy admin changed',

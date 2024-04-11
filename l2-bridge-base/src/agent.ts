@@ -1,4 +1,4 @@
-import { BlockEvent, decodeJwt, Finding, FindingSeverity, FindingType, HandleBlock, HealthCheck } from 'forta-agent'
+import { BlockEvent, Finding, FindingSeverity, FindingType, HandleBlock, HealthCheck } from 'forta-agent'
 import * as process from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
 import { Initialize } from 'forta-agent/dist/sdk/handlers'
@@ -59,11 +59,10 @@ export function initialize(): Initialize {
     agents.push(app.monitorWithdrawals.getName())
 
     metadata.agents = '[' + agents.toString() + ']'
-    const decodedJwt = decodeJwt(token.right)
 
     await app.findingsRW.write([
       Finding.fromObject({
-        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
+        name: `Agent launched`,
         description: `Version: ${VERSION.desc}`,
         alertId: 'LIDO-AGENT-LAUNCHED',
         severity: FindingSeverity.Info,
@@ -110,22 +109,25 @@ export const handleBlock = (): HandleBlock => {
       return [l2logs.left]
     }
 
-    const bridgeEventFindings = app.bridgeWatcher.handleLogs(l2logs.right)
-    const govEventFindings = app.govWatcher.handleLogs(l2logs.right)
-    const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(l2logs.right)
-    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(l2logs.right, l2blocksDto.right)
+    const bridgeEventFindings = app.bridgeWatcher.handleL2Logs(l2logs.right)
+    const govEventFindings = app.govWatcher.handleL2Logs(l2logs.right)
+    const proxyAdminEventFindings = app.proxyEventWatcher.handleL2Logs(l2logs.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleL2Blocks(l2logs.right, l2blocksDto.right)
 
-    const l2BlockNumbers: Set<number> = new Set<number>()
+    const l2BlockNumberSet: Set<number> = new Set<number>()
     for (const l2log of l2logs.right) {
-      l2BlockNumbers.add(new BigNumber(l2log.blockNumber, 10).toNumber())
+      l2BlockNumberSet.add(new BigNumber(l2log.blockNumber, 10).toNumber())
     }
 
+    const l2BlockNumbers = Array.from(l2BlockNumberSet).toSorted((a, b) => a - b)
     const proxyWatcherFindings: Finding[] = []
 
     for (const proxyWatcher of app.proxyWatchers) {
-      const fnds = await proxyWatcher.handleBlocks(Array.from(l2BlockNumbers))
+      const fnds = await proxyWatcher.handleL2Blocks(l2BlockNumbers)
       proxyWatcherFindings.push(...fnds)
     }
+
+    const bridgeBalanceFindings = await app.bridgeBalanceSrc.handleBlock(blockEvent.block.number, l2BlockNumbers)
 
     findings.push(
       ...bridgeEventFindings,
@@ -133,6 +135,7 @@ export const handleBlock = (): HandleBlock => {
       ...proxyAdminEventFindings,
       ...monitorWithdrawalsFindings,
       ...proxyWatcherFindings,
+      ...bridgeBalanceFindings,
     )
 
     app.healthChecker.check(findings)

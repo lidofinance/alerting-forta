@@ -41,7 +41,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
       findings,
       BRIDGE_PARAMS_WSTETH.Optimism,
     ),
-    handleBridgeBalanceWstETH(blockEvent, findings, BRIDGE_PARAMS_WSTETH.Base),
     handleBridgeBalanceWstETH(
       blockEvent,
       findings,
