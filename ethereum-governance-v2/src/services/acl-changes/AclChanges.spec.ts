@@ -237,131 +237,136 @@ describe('AclChangesSrv', () => {
   })
 
   it.each([
-    [
-      'Single event when permission was granted for an address of unknown contract', // case description
-      true, // isContract
-      true, // granted
-      true, // isSingleEvent
-      true, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted with params', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted with params to 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      'Single event when permission was granted with params for an address of unknown EOA', // case description
-      false, // isContract
-      true, // granted
-      true, // isSingleEvent
-      true, // withParams
-      FindingSeverity.Critical, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted with params', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted with params to 0x456 (unknown EOA)', // expectedDescription
-    ],
-    [
-      'Single event when permission was granted for an address of unknown contract', // case description
-      true, // isContract
-      false, // granted
-      true, // isSingleEvent
-      true, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission revoked', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      'Multiple events when permission was revoked and granted with params for an address of unknown contract', // case description
-      true, // isContract
-      true, // granted
-      false, // isSingleEvent
-      true, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted with params and revoked', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted with params to and revoked from 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      'Single event when permission was granted without params for an address of unknown contract', // case description
-      true, // isContract
-      true, // granted
-      true, // isSingleEvent
-      false, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      'Single event when permission was granted without params for an address of unknown EOA', // case description
-      false, // isContract
-      true, // granted
-      true, // isSingleEvent
-      false, // withParams
-      FindingSeverity.Critical, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to 0x456 (unknown EOA)', // expectedDescription
-    ],
-    [
+    {
+      description: 'Single event when permission was granted for an address of unknown contract',
+      isContract: true,
+      granted: true,
+      isSingleEvent: true,
+      withParams: true,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission granted with params',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted with params to 0x456 (unknown contract)',
+    },
+    {
+      description: 'Single event when permission was granted with params for an address of unknown EOA',
+      isContract: false,
+      granted: true,
+      isSingleEvent: true,
+      withParams: true,
+      expectedSeverity: FindingSeverity.Critical,
+      expectedName: '🚨 Aragon ACL: Permission granted with params',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted with params to 0x456 (unknown EOA)',
+    },
+    {
+      description: 'Single event when permission was granted for an address of unknown contract',
+      isContract: true,
+      granted: false,
+      isSingleEvent: true,
+      withParams: true,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission revoked',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from 0x456 (unknown contract)',
+    },
+    {
+      description:
+        'Multiple events when permission was revoked and granted with params for an address of unknown contract',
+      isContract: true,
+      granted: true,
+      isSingleEvent: false,
+      withParams: true,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission granted with params and revoked',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted with params to and revoked from 0x456 (unknown contract)',
+    },
+    {
+      description: 'Single event when permission was granted without params for an address of unknown contract',
+      isContract: true,
+      granted: true,
+      isSingleEvent: true,
+      withParams: false,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission granted',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to 0x456 (unknown contract)',
+    },
+    {
+      description: 'Single event when permission was granted without params for an address of unknown EOA',
+      isContract: false,
+      granted: true,
+      isSingleEvent: true,
+      withParams: false,
+      expectedSeverity: FindingSeverity.Critical,
+      expectedName: '🚨 Aragon ACL: Permission granted',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to 0x456 (unknown EOA)',
+    },
+    {
       // To clarify: maybe unused case
-      'Single event when permission was revoked without params for an address of unknown contract', // case description
-      true, // isContract
-      false, // granted
-      true, // isSingleEvent
-      false, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission revoked', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      'Multiple events when permission was revoked and granted without params for an address of unknown contract', // case description
-      true, // isContract
-      true, // granted
-      false, // isSingleEvent
-      false, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted and revoked', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to and revoked from 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      'Multiple events when permission was revoked and granted without params for an address of unknown EOA', // case description
-      false, // isContract
-      true, // granted
-      false, // isSingleEvent
-      false, // withParams
-      FindingSeverity.Critical, // expectedSeverity
-      '🚨 Aragon ACL: Permission granted and revoked', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to and revoked from 0x456 (unknown EOA)', // expectedDescription
-    ],
-    [
-      // To clarify: maybe unused case
-      'Multiple events when permission was revoked and granted without params for an address of unknown contract', // case description
-      true, // isContract
-      false, // granted
-      false, // isSingleEvent
-      false, // withParams
-      FindingSeverity.High, // expectedSeverity
-      '🚨 Aragon ACL: Permission revoked and granted', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from and granted to 0x456 (unknown contract)', // expectedDescription
-    ],
-    [
-      // To clarify: maybe unused case
-      'Multiple events when permission was revoked and granted without params for an address of unknown EOA', // case description
-      false, // isContract
-      false, // granted
-      false, // isSingleEvent
-      false, // withParams
-      FindingSeverity.Critical, // expectedSeverity
-      '🚨 Aragon ACL: Permission revoked and granted', // expectedName
-      'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from and granted to 0x456 (unknown EOA)', // expectedDescription
-    ],
+      description: 'Single event when permission was revoked without params for an address of unknown contract',
+      isContract: true,
+      granted: false,
+      isSingleEvent: true,
+      withParams: false,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission revoked',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from 0x456 (unknown contract)',
+    },
+    {
+      description:
+        'Multiple events when permission was revoked and granted without params for an address of unknown contract',
+      isContract: true,
+      granted: true,
+      isSingleEvent: false,
+      withParams: false,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission granted and revoked',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to and revoked from 0x456 (unknown contract)',
+    },
+    {
+      description:
+        'Multiple events when permission was revoked and granted without params for an address of unknown EOA',
+      isContract: false,
+      granted: true,
+      isSingleEvent: false,
+      withParams: false,
+      expectedSeverity: FindingSeverity.Critical,
+      expectedName: '🚨 Aragon ACL: Permission granted and revoked',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was granted to and revoked from 0x456 (unknown EOA)',
+    },
+    {
+      description:
+        'Multiple events when permission was revoked and granted without params for an address of unknown contract',
+      isContract: true,
+      granted: false,
+      isSingleEvent: false,
+      withParams: false,
+      expectedSeverity: FindingSeverity.High,
+      expectedName: '🚨 Aragon ACL: Permission revoked and granted',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from and granted to 0x456 (unknown contract)',
+    },
+    {
+      description:
+        'Multiple events when permission was revoked and granted without params for an address of unknown EOA',
+      isContract: false,
+      granted: false,
+      isSingleEvent: false,
+      withParams: false,
+      expectedSeverity: FindingSeverity.Critical,
+      expectedName: '🚨 Aragon ACL: Permission revoked and granted',
+      expectedDescription:
+        'Role 0x789 (unknown) on the app [0x123](https://etherscan.io/address/0x123) (unknown) was revoked from and granted to 0x456 (unknown EOA)',
+    },
   ])(
-    'handles set permission with findings when permission changes in transactions with conditions:\n %p',
-    async (
-      description,
-      isContract,
-      granted,
-      isSingleEvent,
-      withParams,
-      expectedSeverity,
-      expectedName,
-      expectedDescription,
-    ) => {
+    'handles set permission with findings when permission changes in transactions with conditions:\n $description',
+    async ({ isContract, granted, isSingleEvent, withParams, expectedSeverity, expectedName, expectedDescription }) => {
       const txEvent = { addresses: { [ARAGON_ACL_ADDRESS]: true }, filterLog: jest.fn() } as unknown as TransactionEvent
       const logEvents = [
         {
