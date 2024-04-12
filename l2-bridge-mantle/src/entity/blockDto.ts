@@ -6,6 +6,6 @@ export type BlockDto = {
 }
 
 export type WithdrawalRecord = {
-  time: number
+  timestamp: number
   amount: BigNumber
 }

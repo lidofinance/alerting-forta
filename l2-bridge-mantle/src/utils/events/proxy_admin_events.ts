@@ -1,11 +1,11 @@
-import { L2_ERC20_TOKEN_GATEWAY_TYPE, MANTLE_WST_ETH_BRIDGED_TYPE } from '../constants'
+import { MANTLE_L2ERC20_TOKEN_BRIDGED_TYPE, MANTLE_WSTETH_BRIDGED_TYPE } from '../constants'
 import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 
 export function getProxyAdminEvents(
-  MANTLE_WST_ETH_BRIDGED_ADDRESS: MANTLE_WST_ETH_BRIDGED_TYPE,
-  L2_ERC20_TOKEN_GATEWAY_ADDRESS: L2_ERC20_TOKEN_GATEWAY_TYPE,
+  MANTLE_WST_ETH_BRIDGED_ADDRESS: MANTLE_WSTETH_BRIDGED_TYPE,
+  L2_ERC20_TOKEN_GATEWAY_ADDRESS: MANTLE_L2ERC20_TOKEN_BRIDGED_TYPE,
 ): EventOfNotice[] {
   const uniqueKeys = [
     '82b39d98-a156-4be2-be48-81a0d237c53a',
@@ -20,25 +20,25 @@ export function getProxyAdminEvents(
 
   return [
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.hash,
+      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
       event: 'event ProxyOssified()',
       alertId: 'PROXY-OSSIFIED',
       name: '🚨 Mantle: Proxy ossified',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       description: (args: Result) =>
-        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.hash}) was ossified` +
+        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) was ossified` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[0],
     },
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.hash,
+      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
       name: '🚨 Mantle: Proxy admin changed',
       description: (args: Result) =>
-        `Proxy admin for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.hash}) ` +
+        `Proxy admin for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -46,12 +46,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[1],
     },
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.hash,
+      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
       name: '🚨 Mantle: Proxy upgraded',
       description: (args: Result) =>
-        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.hash}) ` +
+        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -59,12 +59,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[2],
     },
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.hash,
+      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
       name: '🚨 Mantle: Proxy beacon upgraded',
       description: (args: Result) =>
-        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.hash}) ` +
+        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -73,25 +73,25 @@ export function getProxyAdminEvents(
     },
 
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash,
+      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
       event: 'event ProxyOssified()',
       alertId: 'PROXY-OSSIFIED',
       name: '🚨 Mantle: Proxy ossified',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       description: (args: Result) =>
-        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash}) was ossified` +
+        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) was ossified` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[4],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash,
+      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
       name: '🚨 Mantle: Proxy admin changed',
       description: (args: Result) =>
-        `Proxy admin for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash}) ` +
+        `Proxy admin for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -99,12 +99,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[5],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash,
+      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
       name: '🚨 Mantle: Proxy upgraded',
       description: (args: Result) =>
-        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash}) ` +
+        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -112,12 +112,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[6],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash,
+      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
       name: '🚨 Mantle: Proxy beacon upgraded',
       description: (args: Result) =>
-        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.hash}) ` +
+        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
