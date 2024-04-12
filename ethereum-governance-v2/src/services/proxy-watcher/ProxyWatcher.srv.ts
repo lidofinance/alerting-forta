@@ -45,6 +45,7 @@ export class ProxyWatcherSrv {
         if (!data) {
           return
         }
+
         const proxyImplementation = await this.ethProvider.getProxyImplementation(address, data, currentBlock)
         if (E.isLeft(proxyImplementation)) {
           this.initFindings.push(
@@ -56,9 +57,7 @@ export class ProxyWatcherSrv {
           )
           return
         }
-        if (!E.isLeft(proxyImplementation)) {
-          this.prevProxyImplementations.set(address, String(proxyImplementation.right?.[0]))
-        }
+        this.prevProxyImplementations.set(address, String(proxyImplementation.right?.[0]))
       }),
     )
 
@@ -121,7 +120,7 @@ export class ProxyWatcherSrv {
           out.push(
             networkAlert(
               proxyImplementation.left,
-              `Error in ${ProxyWatcherSrv.name}.${this.initialize.name} (uid:bdbd1548)`,
+              `Error in ${ProxyWatcherSrv.name}.${this.handleProxyImplementations.name} (uid:bdbd1548)`,
               `Could not call ethProvider.getCode for address - ${address}`,
             ),
           )
