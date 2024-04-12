@@ -17,21 +17,6 @@ export function networkAlert(err: Error, name: string, desc: string): Finding {
   })
 }
 
-export function dbAlert(err: Error, name: string, desc: string): Finding {
-  return Finding.fromObject({
-    name: name,
-    description: desc,
-    alertId: 'DB-ERROR',
-    severity: FindingSeverity.Unknown,
-    type: FindingType.Degraded,
-    metadata: {
-      stack: `${err.stack}`,
-      message: `${err.message}`,
-      name: `${err.name}`,
-    },
-  })
-}
-
 export class NetworkError extends Error {
   constructor(e: unknown, name?: string) {
     super()
