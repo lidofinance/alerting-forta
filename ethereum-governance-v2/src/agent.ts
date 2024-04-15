@@ -16,8 +16,8 @@ import * as E from 'fp-ts/Either'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import { Metadata } from './entity/metadata'
 import Version from './utils/version'
+import { Metadata } from './entity/metadata'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -52,6 +52,7 @@ export function initialize(): Initialize {
       app.EnsNamesSrv.initialize(latestBlockNumber.right),
       app.ProxyWatcherSrv.initialize(latestBlockNumber.right),
       app.TrpChangesSrv.initialize(latestBlockNumber.right),
+      app.StonksSrv.initialize(latestBlockNumber.right),
     ])
 
     if (aragonVotingSrvErr !== null) {
@@ -99,15 +100,22 @@ export const handleBlock = (): HandleBlock => {
       out.push(...findingsAsync)
     }
 
-    const [aclChangesFindings, aragonVotingFindings, ensNamesFindings, proxyWatcherFindings] = await Promise.all([
-      app.AclChangesSrv.handleBlock(blockEvent),
-      app.AragonVotingSrv.handleBlock(blockEvent),
-      app.EnsNamesSrv.handleBlock(blockEvent),
-      app.ProxyWatcherSrv.handleBlock(blockEvent),
-    ])
+    const [aclChangesFindings, aragonVotingFindings, ensNamesFindings, proxyWatcherFindings, stonksFindings] =
+      await Promise.all([
+        app.AclChangesSrv.handleBlock(blockEvent),
+        app.AragonVotingSrv.handleBlock(blockEvent),
+        app.EnsNamesSrv.handleBlock(blockEvent),
+        app.ProxyWatcherSrv.handleBlock(blockEvent),
+        app.StonksSrv.handleBlock(blockEvent),
+      ])
 
-    out.push(...aclChangesFindings, ...aragonVotingFindings, ...ensNamesFindings, ...proxyWatcherFindings)
-
+    out.push(
+      ...aclChangesFindings,
+      ...aragonVotingFindings,
+      ...ensNamesFindings,
+      ...proxyWatcherFindings,
+      ...stonksFindings,
+    )
     app.healthChecker.check(out)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
@@ -116,13 +124,8 @@ export const handleBlock = (): HandleBlock => {
   }
 }
 
-let isHandleTransactionRunning: boolean = false
 export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
-    if (isHandleTransactionRunning) {
-      return []
-    }
-    isHandleTransactionRunning = true
     const app = await App.getInstance()
     const out: Finding[] = []
 
@@ -130,12 +133,17 @@ export const handleTransaction = (): HandleTransaction => {
     const aragonVotingFindings = await app.AragonVotingSrv.handleTransaction(txEvent)
     const easyTrackFindings = await app.EasyTrackSrv.handleTransaction(txEvent)
     const trpChangesFindings = await app.TrpChangesSrv.handleTransaction(txEvent)
-
-    out.push(...aclChangesFindings, ...aragonVotingFindings, ...easyTrackFindings, ...trpChangesFindings)
-
+    const stonksFindings = await app.StonksSrv.handleTransaction(txEvent)
+    out.push(
+      ...aclChangesFindings,
+      ...aragonVotingFindings,
+      ...easyTrackFindings,
+      ...trpChangesFindings,
+      ...stonksFindings,
+    )
+    out.push(...stonksFindings)
     app.healthChecker.check(out)
 
-    isHandleTransactionRunning = false
     return out
   }
 }

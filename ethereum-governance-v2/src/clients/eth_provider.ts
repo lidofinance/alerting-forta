@@ -19,6 +19,9 @@ import { BlockTag } from '@ethersproject/providers'
 import { AclEnumerableABI } from 'constants/acl-changes'
 import { IAclChangesClient } from '../services/acl-changes/contract'
 import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contract'
+import { BLOCK_TO_WATCH } from '../utils/constants/stonks/mainnet'
+import { TypedEvent } from '../generated/common'
+import { Stonks__factory } from '../generated/factories/Stonks__factory'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -31,7 +34,7 @@ export interface IProxyContractData {
 export class ETHProvider
   implements IEnsNamesClient, IEasyTrackClient, IProxyWatcherClient, IAclChangesClient, IAragonVotingClient
 {
-  private jsonRpcProvider: ethers.providers.JsonRpcProvider
+  private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private etherscanProvider: IEtherscanProvider
 
   private readonly ensContract: EnsContract
@@ -55,6 +58,20 @@ export class ETHProvider
     this.increaseStakingLimitContract = increaseStakingLimitContract
     this.nodeOperatorsRegistryContract = nodeOperatorsRegistryContract
     this.aragonVotingContract = aragonVotingContract
+  }
+
+  public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
+    try {
+      const block = await retryAsync(
+        async () => {
+          return await this.jsonRpcProvider.getBlock(blockNumber)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(block)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get block #${blockNumber}`))
+    }
   }
 
   public async getVote(voteId: number, toBlock: BlockTag): Promise<E.Either<Error, IVoteInfo>> {
@@ -317,6 +334,59 @@ export class ETHProvider
       return E.right(out)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not call getTransaction`))
+    }
+  }
+
+  public async getStonksOrderEvents(
+    stonksContractAddress: string,
+    blockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>> {
+    try {
+      const stonksContract = Stonks__factory.connect(stonksContractAddress, this.jsonRpcProvider)
+      const result = await retryAsync(
+        async () => {
+          return await stonksContract.queryFilter(
+            { address: stonksContractAddress },
+            blockNumber - BLOCK_TO_WATCH,
+            blockNumber,
+          )
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(
+        new NetworkError(e, `Could not call jsonRpcProvider.queryFilter for address ${stonksContractAddress}`),
+      )
+    }
+  }
+
+  public async getStonksOrderParams(stonksContractAddress: string) {
+    const stonksContract = Stonks__factory.connect(stonksContractAddress, this.jsonRpcProvider)
+    try {
+      const result = await retryAsync(
+        async () => {
+          return await stonksContract.getOrderParameters()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
+    }
+  }
+
+  public async getOrderBalance(orderAddress: string) {
+    try {
+      const result = await retryAsync(
+        async () => {
+          return await this.jsonRpcProvider.getBalance(orderAddress)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
     }
   }
 }

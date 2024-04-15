@@ -20,6 +20,7 @@ import { INCREASE_STAKING_LIMIT_ADDRESS, NODE_OPERATORS_REGISTRY_ADDRESS } from 
 import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
 import { AragonVotingSrv } from './services/aragon-voting/AragonVoting.srv'
 import { TrpChangesSrv } from './services/trp-changes/TrpChanges.srv'
+import { StonksSrv } from './services/stonks/Stonks.srv'
 
 export type Container = {
   ethClient: ETHProvider
@@ -29,6 +30,7 @@ export type Container = {
   ProxyWatcherSrv: ProxyWatcherSrv
   AragonVotingSrv: AragonVotingSrv
   TrpChangesSrv: TrpChangesSrv
+  StonksSrv: StonksSrv
   findingsRW: DataRW<Finding>
   healthChecker: HealthChecker
 }
@@ -98,6 +100,7 @@ export class App {
       const aclChangesSrv = new AclChangesSrv(logger, ethClient)
       const aragonVotingSrv = new AragonVotingSrv(logger, ethClient)
       const trpChangesSrv = new TrpChangesSrv(logger)
+      const stonksSrv = new StonksSrv(logger, ethClient)
 
       App.instance = {
         ethClient: ethClient,
@@ -107,6 +110,7 @@ export class App {
         ProxyWatcherSrv: proxyWatcherSrv,
         AragonVotingSrv: aragonVotingSrv,
         TrpChangesSrv: trpChangesSrv,
+        StonksSrv: stonksSrv,
         findingsRW: new DataRW([]),
         healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
       }
