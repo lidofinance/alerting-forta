@@ -5,13 +5,7 @@
   "Optimism": {
     "RpcUrl": "https://mainnet.optimism.io"
   },
-  "Base": {
-    "RpcUrl": "https://mainnet.base.org"
-  },
   "ZkSync": {
     "RpcUrl": "https://mainnet.era.zksync.io"
-  },
-  "Mantle": {
-    "RpcUrl": "https://mantle.publicnode.com"
   }
 }

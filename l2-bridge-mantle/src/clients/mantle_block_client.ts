@@ -1,5 +1,5 @@
-import { BlockDto } from 'src/entity/blockDto'
-import { IMantleProvider } from './mantle_provider'
+import { BlockDto } from '../entity/blockDto'
+import { IMantleClient } from './mantle_provider'
 import { Log } from '@ethersproject/abstract-provider'
 import { Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
@@ -8,27 +8,27 @@ import { Logger } from 'winston'
 import { elapsedTime } from '../utils/time'
 
 export class MantleBlockClient {
-  private mantleProvider: IMantleProvider
+  private mantleProvider: IMantleClient
   private logger: Logger
   private cachedBlockDto: BlockDto | undefined = undefined
 
-  constructor(provider: IMantleProvider, logger: Logger) {
+  constructor(provider: IMantleClient, logger: Logger) {
     this.mantleProvider = provider
     this.logger = logger
   }
 
-  public async getBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
+  public async getL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
     const start = new Date().getTime()
     const blocks = await this.fetchBlocks()
-    this.logger.info(elapsedTime(MantleBlockClient.name + '.' + this.getBlocks.name, start))
+    this.logger.info(elapsedTime(MantleBlockClient.name + '.' + this.getL2Blocks.name, start))
 
     return blocks
   }
 
-  public async getLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
+  public async getL2Logs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
     const start = new Date().getTime()
     const logs = await this.fetchLogs(workingBlocks)
-    this.logger.info(elapsedTime(MantleBlockClient.name + '.' + this.getLogs.name, start))
+    this.logger.info(elapsedTime(MantleBlockClient.name + '.' + this.getL2Logs.name, start))
 
     return logs
   }
@@ -37,12 +37,12 @@ export class MantleBlockClient {
     const out: BlockDto[] = []
 
     if (this.cachedBlockDto === undefined) {
-      const block = await this.mantleProvider.getLatestBlock()
+      const block = await this.mantleProvider.getLatestL2Block()
       if (E.isLeft(block)) {
         return E.left(
           networkAlert(
             block.left,
-            `Error in ${MantleBlockClient.name}.${this.getBlocks.name}:21`,
+            `Error in ${MantleBlockClient.name}.${this.getL2Blocks.name}:21`,
             `Could not call mantleProvider.getLatestBlock`,
             0,
           ),
@@ -56,20 +56,20 @@ export class MantleBlockClient {
 
       out.push(this.cachedBlockDto)
     } else {
-      const latestBlock = await this.mantleProvider.getLatestBlock()
+      const latestBlock = await this.mantleProvider.getLatestL2Block()
       if (E.isLeft(latestBlock)) {
         this.cachedBlockDto = undefined
         return E.left(
           networkAlert(
             latestBlock.left,
-            `Error in ${MantleBlockClient.name}.${this.getBlocks.name}:39`,
+            `Error in ${MantleBlockClient.name}.${this.getL2Blocks.name}:39`,
             `Could not call mantleProvider.getLatestBlock`,
             0,
           ),
         )
       }
 
-      const blocks = await this.mantleProvider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
+      const blocks = await this.mantleProvider.fetchL2Blocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
       for (const block of blocks) {
         out.push({
           number: block.number,
@@ -102,7 +102,7 @@ export class MantleBlockClient {
       return E.left(
         networkAlert(
           logs.left,
-          `Error in ${MantleBlockClient.name}.${this.getLogs.name}:76`,
+          `Error in ${MantleBlockClient.name}.${this.getL2Logs.name}:76`,
           `Could not call mantleProvider.getLogs`,
           workingBlocks[workingBlocks.length - 1].number,
         ),

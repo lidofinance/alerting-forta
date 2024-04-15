@@ -8,6 +8,8 @@ import { L2ERC20TokenBridge } from '../generated'
 import { WithdrawalInitiatedEvent } from '../generated/L2ERC20TokenBridge'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
+import { IL2BridgeBalanceClient } from '../services/bridge_balance'
+import { ERC20Short as BridgedWstEthRunner } from '../generated'
 
 export abstract class IMonitorWithdrawalsClient {
   public abstract getWithdrawalEvents(
@@ -20,34 +22,37 @@ export abstract class IMonitorWithdrawalsClient {
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
-export abstract class IMantleProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
+export abstract class IMantleClient {
+  public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
 
   public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
 
-  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
+  public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
 
   public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
 
   public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
 }
 
-export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClient {
+export class MantleClient implements IMantleClient, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
   private readonly logger: Logger
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly L2ERC20TokenBridge: L2ERC20TokenBridge
+  private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     logger: Logger,
     L2ERC20TokenBridge: L2ERC20TokenBridge,
+    bridgedWstEthRunner: BridgedWstEthRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.logger = logger
     this.L2ERC20TokenBridge = L2ERC20TokenBridge
+    this.bridgedWstEthRunner = bridgedWstEthRunner
   }
 
-  public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
+  public async fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]> {
     const batchRequests = []
     for (let i = startBlock; i <= endBlock; i++) {
       batchRequests.push({
@@ -152,7 +157,7 @@ export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClien
     return E.right(logs)
   }
 
-  public async getLatestBlock(): Promise<E.Either<NetworkError, Block>> {
+  public async getLatestL2Block(): Promise<E.Either<NetworkError, Block>> {
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
@@ -246,7 +251,7 @@ export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClien
           )
 
           const record: WithdrawalRecord = {
-            time: block.timestamp,
+            timestamp: block.timestamp,
             amount: new BigNumber(String(withdrawEvent.args._amount)),
           }
 
@@ -258,5 +263,24 @@ export class MantleProvider implements IMantleProvider, IMonitorWithdrawalsClien
     }
 
     return E.right(out)
+  }
+
+  public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const [balance] = await this.bridgedWstEthRunner.functions.totalSupply({
+            blockTag: l2blockNumber,
+          })
+
+          return balance.toString()
+        },
+        { delay: 500, maxTry: 5 },
+      )
+
+      return E.right(new BigNumber(out))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
+    }
   }
 }

@@ -1,10 +1,9 @@
-import { FortaGuardClient } from './clients/forta_guard_client'
-import { ethers, Finding } from 'forta-agent'
-import { IMantleProvider, MantleProvider } from './clients/mantle_provider'
+import { Finding, getJsonRpcUrl } from 'forta-agent'
+import { MantleClient } from './clients/mantle_provider'
 import { EventWatcher } from './services/event_watcher'
 import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { ProxyContractClient } from './clients/proxy_contract_client'
-import { L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated'
+import { ERC20Short__factory, L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated'
 import { MantleBlockClient } from './clients/mantle_block_client'
 import { ProxyWatcher } from './services/proxy_watcher'
 import { MonitorWithdrawals } from './services/monitor_withdrawals'
@@ -14,13 +13,18 @@ import { getBridgeEvents } from './utils/events/bridge_events'
 import { getGovEvents } from './utils/events/gov_events'
 import { Address } from './utils/constants'
 import { Logger } from 'winston'
+import { ethers } from 'ethers'
+import { BridgeBalanceSrv } from './services/bridge_balance'
+import { ETHProvider } from './clients/eth_provider_client'
 
 export type Container = {
-  mantleClient: IMantleProvider
-  proxyWatcher: ProxyWatcher
+  ethClient: ETHProvider
+  mantleClient: MantleClient
+  proxyWatchers: ProxyWatcher[]
   monitorWithdrawals: MonitorWithdrawals
   blockSrv: MantleBlockClient
   bridgeWatcher: EventWatcher
+  bridgeBalanceSrv: BridgeBalanceSrv
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
   findingsRW: DataRW<Finding>
@@ -40,51 +44,74 @@ export class App {
       })
 
       const adr: Address = Address
-      const mantleRpcURL = FortaGuardClient.getSecret()
+      const mantleRpcURL = 'https://rpc.mantle.xyz'
 
       const baseNetworkID = 5000
-      const nodeClient = new ethers.providers.JsonRpcProvider(mantleRpcURL, baseNetworkID)
+      const mantleProvider = new ethers.providers.JsonRpcProvider(mantleRpcURL, baseNetworkID)
 
-      const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.hash, nodeClient)
-
-      const mantleClient = new MantleProvider(nodeClient, logger, l2Bridge)
+      const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.MANTLE_L2ERC20_TOKEN_BRIDGE_ADDRESS, mantleProvider)
+      const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.MANTLE_WSTETH_ADDRESS, mantleProvider)
+      const mantleClient = new MantleClient(mantleProvider, logger, l2Bridge, bridgedWSthEthRunner)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
-        getBridgeEvents(adr.L2_ERC20_TOKEN_GATEWAY_ADDRESS, adr.RolesMap),
+        getBridgeEvents(adr.MANTLE_L2ERC20_TOKEN_BRIDGE_ADDRESS, adr.RolesMap),
         logger,
       )
-      const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS), logger)
+      const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.MANTLE_GOV_EXECUTOR_ADDRESS), logger)
       const proxyEventWatcher = new EventWatcher(
         'ProxyEventWatcher',
-        getProxyAdminEvents(adr.MANTLE_WST_ETH_BRIDGED, adr.L2_ERC20_TOKEN_GATEWAY),
+        getProxyAdminEvents(adr.MANTLE_WSTETH_BRIDGED, adr.MANTLE_L2ERC20_TOKEN_BRIDGED),
         logger,
       )
 
-      const LIDO_PROXY_CONTRACTS: ProxyContractClient[] = [
-        new ProxyContractClient(
-          adr.L2_ERC20_TOKEN_GATEWAY.name,
-          adr.L2_ERC20_TOKEN_GATEWAY.hash,
-          OssifiableProxy__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.hash, nodeClient),
+      const blockSrv: MantleBlockClient = new MantleBlockClient(mantleClient, logger)
+
+      const proxyWatchers: ProxyWatcher[] = [
+        new ProxyWatcher(
+          new ProxyContractClient(
+            adr.MANTLE_L2ERC20_TOKEN_BRIDGED.name,
+            adr.MANTLE_L2ERC20_TOKEN_BRIDGED.address,
+            OssifiableProxy__factory.connect(adr.MANTLE_L2ERC20_TOKEN_BRIDGED.address, mantleProvider),
+          ),
+          logger,
         ),
-        new ProxyContractClient(
-          adr.MANTLE_WST_ETH_BRIDGED.name,
-          adr.MANTLE_WST_ETH_BRIDGED.hash,
-          OssifiableProxy__factory.connect(adr.MANTLE_WST_ETH_BRIDGED.hash, nodeClient),
+        new ProxyWatcher(
+          new ProxyContractClient(
+            adr.MANTLE_WSTETH_BRIDGED.name,
+            adr.MANTLE_WSTETH_BRIDGED.address,
+            OssifiableProxy__factory.connect(adr.MANTLE_WSTETH_BRIDGED.address, mantleProvider),
+          ),
+          logger,
         ),
       ]
 
-      const blockSrv: MantleBlockClient = new MantleBlockClient(mantleClient, logger)
-      const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
+      const monitorWithdrawals = new MonitorWithdrawals(mantleClient, adr.MANTLE_L2ERC20_TOKEN_BRIDGED.address, logger)
 
-      const monitorWithdrawals = new MonitorWithdrawals(mantleClient, adr.L2_ERC20_TOKEN_GATEWAY.hash, logger)
+      const mainnet = 1
+      const drpcUrl = 'https://eth.drpc.org/'
+      const ethProvider = new ethers.providers.FallbackProvider([
+        new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), mainnet),
+        new ethers.providers.JsonRpcProvider(drpcUrl, mainnet),
+      ])
+
+      const wSthEthRunner = ERC20Short__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
+      const ethClient = new ETHProvider(logger, wSthEthRunner)
+      const bridgeBalanceSrv = new BridgeBalanceSrv(
+        logger,
+        ethClient,
+        adr.MANTLE_L1ERC20_TOKEN_BRIDGE_ADDRESS,
+        mantleClient,
+      )
 
       App.instance = {
+        ethClient: ethClient,
         mantleClient: mantleClient,
-        proxyWatcher: proxyWorker,
+        proxyWatchers: proxyWatchers,
         monitorWithdrawals: monitorWithdrawals,
         blockSrv: blockSrv,
         bridgeWatcher: bridgeEventWatcher,
+        bridgeBalanceSrv: bridgeBalanceSrv,
         govWatcher: govEventWatcher,
         proxyEventWatcher: proxyEventWatcher,
         findingsRW: new DataRW<Finding>([]),
