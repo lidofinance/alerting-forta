@@ -1,6 +1,4 @@
 import { Finding, FindingType, Log, LogDescription } from 'forta-agent'
-import { EventArgs } from './constants/stonks/mainnet'
-import { Result } from '@ethersproject/abi'
 import { EventOfNotice } from '../entity/events'
 
 export type TransactionEventContract = {
@@ -24,7 +22,7 @@ export function handleEventsOfNotice(txEvent: TransactionEventContract, eventsOf
       out.push(
         Finding.fromObject({
           name: eventInfo.name,
-          description: eventInfo.description(logArgsToEventArgs(filteredEvent.args)),
+          description: eventInfo.description(filteredEvent.args),
           alertId: eventInfo.alertId,
           severity: eventInfo.severity,
           type: FindingType.Info,
@@ -35,17 +33,4 @@ export function handleEventsOfNotice(txEvent: TransactionEventContract, eventsOf
   }
 
   return out
-}
-
-export function logArgsToEventArgs(args: Result): EventArgs {
-  return {
-    manager: args.manager,
-    address: args.address,
-    recipient: args.recipient,
-    token: args.token,
-    tokenId: args.tokenId,
-    amount: args.amount,
-    orderContract: args.orderContract,
-    minBuyAmount: args.minBuyAmount,
-  }
 }

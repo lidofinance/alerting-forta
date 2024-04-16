@@ -1,6 +1,5 @@
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakingLimitAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegistryAddress,
@@ -10,7 +9,6 @@ export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakingLimitAddress
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = evmExecutorAddress
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS = rewardProgramRegistryAddress
 export const EASY_TRACK_ADDRESS = easyTrackAddress
-export const NODE_OPERATORS_REGISTRY_ADDRESS = norAddress
 
 export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   [increaseStakingLimitAddress, 'Increase node operator staking limit'],

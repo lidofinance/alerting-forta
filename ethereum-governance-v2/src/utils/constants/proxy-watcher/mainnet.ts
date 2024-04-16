@@ -3,7 +3,6 @@ import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
   LIDO_STETH_ADDRESS as lidoStethAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   STAKING_ROUTER_ADDRESS as srAddress,
   ARAGON_VOTING_ADDRESS as votingAddress,
   WITHDRAWALS_QUEUE_ADDRESS as wqAddress,
@@ -15,7 +14,8 @@ import {
   VOTING_REPO_ADDRESS as votingRepoAddress,
   APP_REPO_ADDRESS as appRepoAddress,
   ORACLE_REPO_ADDRESS as oracleRepoAddress,
-  NO_REPO_ADDRESS as noRepoAddress,
+  CURATED_NO_REPO_ADDRESS as curatedNoRepoAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   ARAGON_TOKEN_MANAGER_ADDRESS as tmAddress,
   ARAGON_FINANCE_ADDRESS as financeAddress,
   LIDO_DAO_ADDRESS as daoAddress,
@@ -37,9 +37,9 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> = new Ma
     },
   ],
   [
-    norAddress,
+    curatedNorAddress,
     {
-      name: 'Node Operators Registry',
+      name: 'Node Operator Registry of Curated Module',
       shortABI: implementationFuncShortABI,
     },
   ],
@@ -107,9 +107,9 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> = new Ma
     },
   ],
   [
-    noRepoAddress,
+    curatedNoRepoAddress,
     {
-      name: 'Node Operators Registry Repo',
+      name: 'Curated Node Operators Registry Repo',
       shortABI: implementationFuncShortABI,
     },
   ],

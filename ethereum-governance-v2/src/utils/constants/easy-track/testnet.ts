@@ -1,6 +1,6 @@
 import {
   EASY_TRACK_ADDRESS as easyTrackAddress,
-  NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as norAddress,
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakingLimitAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegistryAddress,

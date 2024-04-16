@@ -1,6 +1,9 @@
 import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
-import { ARAGON_VOTING_ADDRESS } from 'constants/common'
-import { ENS_BASE_REGISTRAR_ADDRESS } from 'constants/common'
+import {
+  ARAGON_VOTING_ADDRESS,
+  CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+  ENS_BASE_REGISTRAR_ADDRESS,
+} from 'constants/common'
 import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
 import {
@@ -16,7 +19,7 @@ import { DataRW } from './utils/mutex'
 import * as Winston from 'winston'
 import * as E from 'fp-ts/Either'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { INCREASE_STAKING_LIMIT_ADDRESS, NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/easy-track'
+import { INCREASE_STAKING_LIMIT_ADDRESS } from 'constants/easy-track'
 import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
 import { AragonVotingSrv } from './services/aragon-voting/AragonVoting.srv'
 import { TrpChangesSrv } from './services/trp-changes/TrpChanges.srv'
@@ -74,7 +77,7 @@ export class App {
         ethersProvider,
       )
       const nodeOperatorsRegistryContract = NodeOperatorsRegistry__factory.connect(
-        NODE_OPERATORS_REGISTRY_ADDRESS,
+        CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
         ethersProvider,
       )
       const aragonVotingContract = AragonVoting__factory.connect(ARAGON_VOTING_ADDRESS, ethersProvider)
