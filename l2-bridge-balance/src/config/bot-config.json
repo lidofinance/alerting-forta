@@ -4,8 +4,5 @@
   },
   "Optimism": {
     "RpcUrl": "https://mainnet.optimism.io"
-  },
-  "ZkSync": {
-    "RpcUrl": "https://mainnet.era.zksync.io"
   }
 }

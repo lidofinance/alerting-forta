@@ -1,9 +1,12 @@
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
-import { RoleHashToName } from '../constants'
+import { RoleHashToNameMap } from '../constants'
 
-export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameMap: RoleHashToName): EventOfNotice[] {
+export function getBridgeEvents(
+  ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS: string,
+  RolesAddrToNameMap: RoleHashToNameMap,
+): EventOfNotice[] {
   const uniqueKeys: string[] = [
     'f760df18-5dfc-4237-a752-b5654a123c48',
     'e0e57c09-17f0-4e37-8308-1d2e666d7fdb',
@@ -17,7 +20,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
 
   return [
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event:
         'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)',
       alertId: 'L2-BRIDGE-ROLE-ADMIN-CHANGED',
@@ -30,7 +33,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[0],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event WithdrawalsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-WITHDRAWALS-DISABLED',
       name: '🚨 ZkSync L2 Bridge: Withdrawals Disabled',
@@ -40,7 +43,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[6],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event Initialized(address indexed admin)',
       alertId: 'L2-BRIDGE-IMPLEMENTATION-INITIALIZED',
       name: '🚨 ZkSync L2 Bridge: Implementation initialized',
@@ -53,7 +56,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[7],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event DepositsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-DISABLED',
       name: '🚨 ZkSync L2 Bridge: Deposits Disabled',
@@ -63,7 +66,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[4],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'L2-BRIDGE-ROLE-GRANTED',
       name: '⚠️ ZkSync L2 Bridge: Role granted',
@@ -75,7 +78,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[1],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'L2-BRIDGE-ROLE-REVOKED',
       name: '⚠️ ZkSync L2 Bridge: Role revoked',
@@ -87,7 +90,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[2],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event DepositsEnabled(address indexed enabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-ENABLED',
       name: 'ℹ️ ZkSync L2 Bridge: Deposits Enabled',
@@ -97,7 +100,7 @@ export function getBridgeEvents(L2_ERC20_TOKEN_GATEWAY: string, RolesAddrToNameM
       uniqueKey: uniqueKeys[3],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY,
+      address: ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS,
       event: 'event WithdrawalsEnabled(address indexed enabler)',
       alertId: 'L2-BRIDGE-WITHDRAWALS-ENABLED',
       name: 'ℹ️ ZkSync L2 Bridge: Withdrawals Enabled',

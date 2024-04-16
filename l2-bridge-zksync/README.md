@@ -21,20 +21,17 @@
    3. 🚨 ZkSync: Proxy beacon upgraded
    4. 🚨 ZkSync: Proxy owner transferred
 3. Bridge Events
-   1. 🚨 ZkSync L2 Bridge: Role Admin changed
-   2. 🚨 ZkSync L2 Bridge: Withdrawals Disabled
-   3. 🚨 ZkSync L2 Bridge: Implementation initialized
-   4. 🚨 ZkSync L2 Bridge: Deposits Disabled
-   5. ⚠️ ZkSync L2 Bridge: Role granted
-   6. ⚠️ ZkSync L2 Bridge: Role revoked
-   7. ℹ️ ZkSync L2 Bridge: Deposits Enabled
-   8. ℹ️ ZkSync L2 Bridge: Withdrawals Enabled
-
-### Withdrawals alerts
-
-Alert on huge withdrawals
-
-- ⚠️ ZkSync: Huge withdrawals during the last ...
+   1. 🚨🚨🚨 ZkSync bridge balance mismatch 🚨🚨🚨
+   2. 🚨 ZkSync L2 Bridge: Role Admin changed
+   3. 🚨 ZkSync L2 Bridge: Withdrawals Disabled
+   4. 🚨 ZkSync L2 Bridge: Implementation initialized
+   5. 🚨 ZkSync L2 Bridge: Deposits Disabled
+   6. ⚠️ ZkSync L2 Bridge: Role granted
+   7. ⚠️ ZkSync L2 Bridge: Role revoked
+   8. ℹ️ ZkSync L2 Bridge: Deposits Enabled
+   9. ℹ️ ZkSync L2 Bridge: Withdrawals Enabled
+4. Withdrawals alerts
+   1. ⚠️ ZkSync: Huge withdrawals during the last ...
 
 ## Development
 
@@ -48,13 +45,5 @@ yarn install
 Running in a live mode:
 
 ```
-yarn start:dev
-```
-
-Testing on a specific block/range/transaction:
-
-```
-yarn block 5764029
-yarn range '5764000..5764029'
-yarn tx 0x5e7e3adcbe9645ca65703055bf3a5355225ee61eda0b24ebcad36f69869e7a01
+yarn start
 ```

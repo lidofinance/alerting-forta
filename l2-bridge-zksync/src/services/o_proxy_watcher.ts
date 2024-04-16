@@ -21,15 +21,15 @@ export class OProxyWatcher {
   }
 
   public getName(): string {
-    return this.proxyContract.getName() + '.' + this.name
+    return this.proxyContract.getName() + `(${this.proxyContract.getProxyAdminAddress()}).` + this.name
   }
 
   public getAdmin(): string {
-    return this.lastAdmin
+    return this.lastAdmin.toLowerCase()
   }
 
   public getImpl(): string {
-    return this.lastImpl
+    return this.lastImpl.toLowerCase()
   }
 
   public isOssified(): boolean {
@@ -48,11 +48,11 @@ export class OProxyWatcher {
     this.ossified = isOssified
   }
 
-  async initialize(currentBlock: number): Promise<Error | null> {
+  async initialize(latestL2BlockNumber: number): Promise<Error | null> {
     const [lastImpl, lastAdmin, isOssified] = await Promise.all([
-      this.proxyContract.getProxyImplementation(currentBlock),
-      this.proxyContract.getProxyAdmin(currentBlock),
-      this.proxyContract.getOssified(currentBlock),
+      this.proxyContract.getProxyImplementation(latestL2BlockNumber),
+      this.proxyContract.getProxyAdmin(latestL2BlockNumber),
+      this.proxyContract.getOssified(latestL2BlockNumber),
     ])
 
     if (E.isLeft(lastImpl)) {
@@ -67,123 +67,127 @@ export class OProxyWatcher {
       return isOssified.left
     }
 
-    this.setImpl(lastImpl.right)
-    this.setAdmin(lastAdmin.right)
+    this.setImpl(lastImpl.right.toLowerCase())
+    this.setAdmin(lastAdmin.right.toLowerCase())
     this.setOssified(isOssified.right)
 
-    this.logger.info(`${this.getName()}. started on block ${currentBlock}`)
+    this.logger.info(`${this.getName()}. started on block ${latestL2BlockNumber}`)
 
     return null
   }
 
-  async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+  async handleL2Blocks(l2BlockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
 
     const BLOCK_INTERVAL = 25
     const out: Finding[] = []
 
-    for (const blockNumber of blockNumbers) {
-      if (blockNumber % BLOCK_INTERVAL === 0) {
+    for (const l2BlockNumber of l2BlockNumbers) {
+      if (l2BlockNumber % BLOCK_INTERVAL === 0) {
         const [impl, admin, owner] = await Promise.all([
-          this.handleProxyImplementationChanges(blockNumber),
-          this.handleProxyAdminChanges(blockNumber),
-          this.handleOssifiedChanges(blockNumber),
+          this.handleProxyImplementationChanges(l2BlockNumber),
+          this.handleProxyAdminChanges(l2BlockNumber),
+          this.handleOssifiedChanges(l2BlockNumber),
         ])
 
         out.push(...impl, ...admin, ...owner)
       }
     }
 
-    this.logger.info(elapsedTime(this.getName() + '.' + this.handleBlocks.name, start))
+    this.logger.info(this.getName() + '.impl = ' + this.getImpl())
+    this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
+    this.logger.info(this.getName() + '.isOssified = ' + this.isOssified())
+
+    this.logger.info(elapsedTime(this.getName() + '.' + this.handleL2Blocks.name, start))
     return out
   }
 
-  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(l2BlockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newImpl = await this.proxyContract.getProxyImplementation(blockNumber)
+    const newImpl = await this.proxyContract.getProxyImplementation(l2BlockNumber)
     if (E.isLeft(newImpl)) {
       return [
         networkAlert(
           newImpl.left,
           `Error in ${this.getName()}.${this.handleProxyImplementationChanges.name}:104`,
-          `Could not fetch proxyImplementation on ${blockNumber}`,
-          blockNumber,
+          `Could not fetch proxyImplementation on ${l2BlockNumber}`,
+          l2BlockNumber,
         ),
       ]
     }
 
-    if (newImpl.right != this.getImpl()) {
+    if (newImpl.right.toLowerCase() != this.getImpl()) {
       const uniqueKey = 'a0cc5ee4-c514-42c4-9501-f936cdd55470'
 
       out.push(
         Finding.fromObject({
           name: '🚨 ZkSync: Proxy implementation changed',
           description:
-            `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAddress()}) ` +
+            `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAdminAddress()}) ` +
             `was changed form ${this.getImpl()} to ${newImpl.right}` +
             `\n(detected by func call)`,
           alertId: 'PROXY-UPGRADED',
           severity: FindingSeverity.High,
           type: FindingType.Info,
-          metadata: { newImpl: newImpl.right, lastImpl: this.getImpl() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAddress(), blockNumber),
+          metadata: { newImpl: newImpl.right.toLowerCase(), lastImpl: this.getImpl() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAdminAddress(), l2BlockNumber),
         }),
       )
-      this.setImpl(newImpl.right)
+      this.setImpl(newImpl.right.toLowerCase())
     }
 
     return out
   }
 
-  private async handleProxyAdminChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyAdminChanges(l2BlockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newAdmin = await this.proxyContract.getProxyAdmin(blockNumber)
+    const newAdmin = await this.proxyContract.getProxyAdmin(l2BlockNumber)
     if (E.isLeft(newAdmin)) {
       return [
         networkAlert(
           newAdmin.left,
           `Error in ${this.getName()}.${this.handleProxyAdminChanges.name}:142`,
-          `Could not fetch getProxyAdmin on ${blockNumber}`,
-          blockNumber,
+          `Could not fetch getProxyAdmin on ${l2BlockNumber}`,
+          l2BlockNumber,
         ),
       ]
     }
 
-    if (newAdmin.right != this.getAdmin()) {
+    if (newAdmin.right.toLowerCase() != this.getAdmin()) {
       const uniqueKey = '0e48b31d-6a94-4fc0-867d-9bcecd38cfc8'
       out.push(
         Finding.fromObject({
           name: '🚨 ZkSync: Proxy admin changed',
           description:
-            `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAddress()}) ` +
+            `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAdminAddress()}) ` +
             `was changed from ${this.getAdmin()} to ${newAdmin.right}` +
             `\n(detected by func call)`,
           alertId: 'PROXY-ADMIN-CHANGED',
           severity: FindingSeverity.High,
           type: FindingType.Info,
-          metadata: { newAdmin: newAdmin.right, lastAdmin: this.getAdmin() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAddress(), blockNumber),
+          metadata: { newAdmin: newAdmin.right.toLowerCase(), lastAdmin: this.getAdmin() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAdminAddress(), l2BlockNumber),
         }),
       )
 
-      this.setAdmin(newAdmin.right)
+      this.setAdmin(newAdmin.right.toLowerCase())
     }
     return out
   }
 
-  private async handleOssifiedChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleOssifiedChanges(l2BlockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const isOssified = await this.proxyContract.getOssified(blockNumber)
+    const isOssified = await this.proxyContract.getOssified(l2BlockNumber)
     if (E.isLeft(isOssified)) {
       return [
         networkAlert(
           isOssified.left,
           `Error in ${this.getName()}.${this.handleOssifiedChanges.name}:179`,
-          `Could not fetch getOssified on ${blockNumber}`,
-          blockNumber,
+          `Could not fetch getOssified on ${l2BlockNumber}`,
+          l2BlockNumber,
         ),
       ]
     }
@@ -194,7 +198,7 @@ export class OProxyWatcher {
         Finding.fromObject({
           name: '🚨 ZkSync: Proxy ossified is changed',
           description:
-            `Proxy ossified for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAddress()}) ` +
+            `Proxy ossified for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAdminAddress()}) ` +
             `was changed from ${this.isOssified()} to ${isOssified.right}` +
             `\n(detected by func call)`,
           alertId: 'PROXY-OSSIFIED-CHANGED',
@@ -204,7 +208,7 @@ export class OProxyWatcher {
             newIsOssified: String(isOssified.right),
             lastIsOssified: String(this.isOssified()),
           },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAddress(), blockNumber),
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAdminAddress(), l2BlockNumber),
         }),
       )
 
