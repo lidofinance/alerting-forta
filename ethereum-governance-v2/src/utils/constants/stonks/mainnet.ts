@@ -3,7 +3,6 @@ import { etherscanAddress } from '../../string'
 import BigNumber from 'bignumber.js'
 import { EventOfNotice } from '../../../entity/events'
 
-export const STONKS_TESTFLIGHT_ADDRESS = '0x5FA801ee2202b3Bcd2317F9a65A408A725746647'
 export const STONKS_STETH_DAI_ADDRESS = '0x3e2D251275A92a8169A3B17A2C49016e2de492a7'
 export const STONKS_STETH_USDC_ADDRESS = '0xf4F6A03E3dbf0aA22083be80fDD340943d275Ea5'
 export const STONKS_STETH_USDT_ADDRESS = '0x7C2a1E25cA6D778eCaEBC8549371062487846aAF'
@@ -25,15 +24,6 @@ export type EventArgs = {
   minBuyAmount: string
 }
 
-// export type EventOfNotice = {
-//   address: string
-//   event: string
-//   alertId: string
-//   name: string
-//   description: (args: EventArgs) => string
-//   severity: number
-// }
-
 export const STONKS_ORDER_CREATED_EVENT = 'OrderContractCreated'
 export const STETH_MAX_PRECISION = new BigNumber(4)
 
@@ -42,55 +32,50 @@ export const BLOCK_TO_WATCH = 600 // about 120 min (one block is 12 sec)
 export const BLOCK_TO_WATCH_TIME = 12 * BLOCK_TO_WATCH
 export const STONKS = [
   {
-    address: STONKS_TESTFLIGHT_ADDRESS,
+    address: STONKS_STETH_DAI_ADDRESS,
     from: 'stETH',
     to: 'DAI',
   },
-  // {
-  //   address: STONKS_STETH_DAI_ADDRESS,
-  //   from: 'stETH',
-  //   to: 'DAI',
-  // },
-  // {
-  //   address: STONKS_STETH_USDC_ADDRESS,
-  //   from: 'stETH',
-  //   to: 'USDC',
-  // },
-  // {
-  //   address: STONKS_STETH_USDT_ADDRESS,
-  //   from: 'stETH',
-  //   to: 'USDT',
-  // },
-  // {
-  //   address: STONKS_DAI_USDC_ADDRESS,
-  //   from: 'DAI',
-  //   to: 'USDC',
-  // },
-  // {
-  //   address: STONKS_DAI_USDT_ADDRESS,
-  //   from: 'DAI',
-  //   to: 'USDT',
-  // },
-  // {
-  //   address: STONKS_USDC_DAI_ADDRESS,
-  //   from: 'USDC',
-  //   to: 'DAI',
-  // },
-  // {
-  //   address: STONKS_USDC_USDT_ADDRESS,
-  //   from: 'USDC',
-  //   to: 'USDT',
-  // },
-  // {
-  //   address: STONKS_USDT_DAI_ADDRESS,
-  //   from: 'USDT',
-  //   to: 'DAI',
-  // },
-  // {
-  //   address: STONKS_USDT_USDC_ADDRESS,
-  //   from: 'USDT',
-  //   to: 'USDC',
-  // },
+  {
+    address: STONKS_STETH_USDC_ADDRESS,
+    from: 'stETH',
+    to: 'USDC',
+  },
+  {
+    address: STONKS_STETH_USDT_ADDRESS,
+    from: 'stETH',
+    to: 'USDT',
+  },
+  {
+    address: STONKS_DAI_USDC_ADDRESS,
+    from: 'DAI',
+    to: 'USDC',
+  },
+  {
+    address: STONKS_DAI_USDT_ADDRESS,
+    from: 'DAI',
+    to: 'USDT',
+  },
+  {
+    address: STONKS_USDC_DAI_ADDRESS,
+    from: 'USDC',
+    to: 'DAI',
+  },
+  {
+    address: STONKS_USDC_USDT_ADDRESS,
+    from: 'USDC',
+    to: 'USDT',
+  },
+  {
+    address: STONKS_USDT_DAI_ADDRESS,
+    from: 'USDT',
+    to: 'DAI',
+  },
+  {
+    address: STONKS_USDT_USDC_ADDRESS,
+    from: 'USDT',
+    to: 'USDC',
+  },
 ]
 export const STONKS_ORDER_CREATION: EventOfNotice[] = []
 
