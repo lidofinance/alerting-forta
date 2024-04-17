@@ -95,7 +95,7 @@ export class TProxyWatcher {
     }
 
     this.logger.info(this.getName() + '.impl = ' + this.getImpl())
-    this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
+    this.logger.info(this.getName() + '.admin = ' + this.getAdmin())
     this.logger.info(this.getName() + '.own = ' + this.getOwner())
 
     this.logger.info(elapsedTime(this.getName() + '.' + this.handleL2Blocks.name, start))

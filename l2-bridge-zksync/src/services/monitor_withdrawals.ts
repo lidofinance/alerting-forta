@@ -16,8 +16,8 @@ const MAX_WITHDRAWALS_10K_WstEth = 10_000
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
 }
-export const HOURS_48 = 60 * 60 * 24 * 2
-const AVG_BLOCK_TIME_75SECONDS: number = 75 //s
+const L2_BLOCKS_PER_2_DAYS = 172_800
+const HOURS_48 = 60 * 60 * 24 * 2
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
@@ -43,7 +43,7 @@ export class MonitorWithdrawals {
 
   public async initialize(latestL2BlockNumber: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
     // 48 hours
-    const pastBlock = latestL2BlockNumber - Math.ceil(HOURS_48 / AVG_BLOCK_TIME_75SECONDS)
+    const pastBlock = latestL2BlockNumber - L2_BLOCKS_PER_2_DAYS
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, latestL2BlockNumber - 1)
     if (E.isLeft(withdrawalEvents)) {
@@ -141,11 +141,11 @@ export class MonitorWithdrawals {
   private getWithdrawalRecords(l2Logs: Log[], l2BlocksDto: BlockDto[]): WithdrawalRecord[] {
     const blockNumberToBlock = new Map<number, BlockDto>()
     const logIndexToLogs = new Map<number, Log>()
-    const addresses = new Map<string, boolean>()
+    const addresses = new Set<string>()
 
     for (const l2Log of l2Logs) {
       logIndexToLogs.set(l2Log.logIndex, l2Log)
-      addresses.set(l2Log.address.toLowerCase(), true)
+      addresses.add(l2Log.address.toLowerCase())
     }
 
     for (const l2BlockDto of l2BlocksDto) {

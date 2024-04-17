@@ -95,7 +95,7 @@ export class OProxyWatcher {
     }
 
     this.logger.info(this.getName() + '.impl = ' + this.getImpl())
-    this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
+    this.logger.info(this.getName() + '.admin = ' + this.getAdmin())
     this.logger.info(this.getName() + '.isOssified = ' + this.isOssified())
 
     this.logger.info(elapsedTime(this.getName() + '.' + this.handleL2Blocks.name, start))

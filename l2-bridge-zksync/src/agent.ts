@@ -116,9 +116,9 @@ export const handleBlock = (): HandleBlock => {
       return [l2Logs.left]
     }
 
-    const bridgeEventFindings = app.bridgeWatcher.handleLogs(l2Logs.right)
-    const govEventFindings = app.govWatcher.handleLogs(l2Logs.right)
-    const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(l2Logs.right)
+    const bridgeEventFindings = app.bridgeWatcher.handleL2Logs(l2Logs.right)
+    const govEventFindings = app.govWatcher.handleL2Logs(l2Logs.right)
+    const proxyAdminEventFindings = app.proxyEventWatcher.handleL2Logs(l2Logs.right)
     const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(l2Logs.right, l2BlocksDto.right)
 
     const l2BlockNumbersSet: Set<number> = new Set<number>()
