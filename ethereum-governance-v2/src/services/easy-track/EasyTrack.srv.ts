@@ -1,16 +1,16 @@
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { elapsedTime } from '../../utils/time'
-import { getMotionLink, getMotionType } from '../../utils/string'
+import { elapsedTime } from '../../shared/time'
+import { getMotionLink, getMotionType } from '../../shared/string'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import { MOTION_CREATED_EVENT } from '../../utils/events/motion_created_events'
+import { MOTION_CREATED_EVENT } from '../../shared/events/motion_created_events'
 import { Logger } from 'winston'
 import { IEasyTrackClient } from './contract'
 import { EventOfNotice } from '../../entity/events'
-import { handleEventsOfNotice } from '../../utils/notice'
+import { handleEventsOfNotice } from '../../shared/notice'
 import { EASY_TRACK_ADDRESS, EASY_TRACK_TYPES_BY_FACTORIES, INCREASE_STAKING_LIMIT_ADDRESS } from 'constants/easy-track'
 import * as E from 'fp-ts/Either'
-import { networkAlert } from '../../utils/errors'
-import { EASY_TRACK_EVENTS } from '../../utils/events/easytrack_events'
+import { networkAlert } from '../../shared/errors'
+import { EASY_TRACK_EVENTS } from '../../shared/events/easytrack_events'
 
 export class EasyTrackSrv {
   private readonly logger: Logger

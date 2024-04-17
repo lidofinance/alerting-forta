@@ -1,4 +1,4 @@
-import { networkAlert } from '../../utils/errors'
+import { networkAlert } from '../../shared/errors'
 import { HealthChecker } from './health-checker.srv'
 
 function sleep(ms: number): Promise<void> {

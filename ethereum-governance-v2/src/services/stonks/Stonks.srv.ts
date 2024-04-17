@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/Either'
 import { Logger } from 'winston'
 import { BlockEvent, ethers, Finding, FindingSeverity, FindingType, TransactionEvent } from 'forta-agent'
-import { elapsedTime } from '../../utils/time'
+import { elapsedTime } from '../../shared/time'
 import { ETHProvider } from '../../clients/eth_provider'
 import { CreatedOrder, EventArgs } from './contract'
 import {
@@ -15,9 +15,9 @@ import {
   STONKS_ORDER_CREATION,
 } from 'constants/stonks'
 import BigNumber from 'bignumber.js'
-import { etherscanAddress } from '../../utils/string'
-import { networkAlert } from '../../utils/errors'
-import { handleEventsOfNotice } from '../../utils/notice'
+import { etherscanAddress } from '../../shared/string'
+import { networkAlert } from '../../shared/errors'
+import { handleEventsOfNotice } from '../../shared/notice'
 import { EventOfNotice } from '../../entity/events'
 
 export class StonksSrv {

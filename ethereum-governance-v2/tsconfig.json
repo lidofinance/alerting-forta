@@ -4,14 +4,14 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "constants/common": ["./src/utils/constants/common/mainnet"],
-      "constants/easy-track": ["./src/utils/constants/easy-track/mainnet"],
-      "constants/ens-names": ["./src/utils/constants/ens-names/mainnet"],
-      "constants/proxy-watcher": ["./src/utils/constants/proxy-watcher/mainnet"],
-      "constants/acl-changes": ["./src/utils/constants/acl-changes/mainnet"],
-      "constants/trp-changes": ["./src/utils/constants/trp-changes/mainnet"],
-      "constants/aragon-voting": ["./src/utils/constants/aragon-voting/mainnet"],
-      "constants/stonks": ["./src/utils/constants/stonks/mainnet"]
+      "constants/common": ["./src/shared/constants/common/mainnet"],
+      "constants/easy-track": ["./src/shared/constants/easy-track/mainnet"],
+      "constants/ens-names": ["./src/shared/constants/ens-names/mainnet"],
+      "constants/proxy-watcher": ["./src/shared/constants/proxy-watcher/mainnet"],
+      "constants/acl-changes": ["./src/shared/constants/acl-changes/mainnet"],
+      "constants/trp-changes": ["./src/shared/constants/trp-changes/mainnet"],
+      "constants/aragon-voting": ["./src/shared/constants/aragon-voting/mainnet"],
+      "constants/stonks": ["./src/shared/constants/stonks/mainnet"]
     }
   },
   "exclude": [

@@ -1,8 +1,8 @@
 import * as E from 'fp-ts/Either'
-import { elapsedTime } from '../../utils/time'
+import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
 import { IAragonVotingClient, IVoteInfo } from './contract'
-import { handleEventsOfNotice } from '../../utils/notice'
+import { handleEventsOfNotice } from '../../shared/notice'
 
 import { Block, BlockEvent, Finding, FindingSeverity, FindingType, TransactionEvent, TxEventBlock } from 'forta-agent'
 
@@ -16,7 +16,7 @@ import {
   BLOCK_WINDOW,
 } from 'constants/aragon-voting'
 
-import { CAST_VOTE_EVENT, ARAGON_VOTING_EVENTS_OF_NOTICE } from '../../utils/events/aragon_events'
+import { CAST_VOTE_EVENT, ARAGON_VOTING_EVENTS_OF_NOTICE } from '../../shared/events/aragon_events'
 
 export enum Outcomes {
   Pass = 'Pass',

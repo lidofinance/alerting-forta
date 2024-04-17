@@ -1,7 +1,7 @@
 import { ethers, Finding, getEthersProvider, Network, Transaction } from 'forta-agent'
 import { BlockTag, JsonRpcProvider } from '@ethersproject/providers'
 
-import { roleByName } from '../../src/utils/string'
+import { roleByName } from '../../src/shared/string'
 import { App } from '../../src/app'
 import { createTransactionEvent } from './utils'
 import * as E from 'fp-ts/Either'

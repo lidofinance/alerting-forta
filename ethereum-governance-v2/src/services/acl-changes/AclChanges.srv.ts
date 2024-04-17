@@ -2,12 +2,12 @@ import { BlockEvent, Finding, FindingSeverity, FindingType, LogDescription, Tran
 
 import _ from 'lodash'
 
-import { etherscanAddress } from '../../utils/string'
+import { etherscanAddress } from '../../shared/string'
 import {
   SET_PERMISSION_EVENT,
   SET_PERMISSION_PARAMS_EVENT,
   CHANGE_PERMISSION_MANAGER_EVENT,
-} from '../../utils/events/acl_events'
+} from '../../shared/events/acl_events'
 
 import {
   ACL_ENUMERABLE_CONTRACTS,
@@ -23,9 +23,9 @@ import {
 import { ARAGON_ACL_ADDRESS } from 'constants/common'
 
 import * as E from 'fp-ts/Either'
-import { elapsedTime } from '../../utils/time'
+import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
-import { networkAlert } from '../../utils/errors'
+import { networkAlert } from '../../shared/errors'
 import type { IAclChangesClient } from './contract'
 
 interface IPermission {

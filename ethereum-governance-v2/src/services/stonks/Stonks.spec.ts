@@ -7,7 +7,7 @@ import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import mocked = jest.mocked
 import { BigNumber } from 'ethers'
 import { faker } from '@faker-js/faker'
-import { STETH_MAX_PRECISION, STONKS, STONKS_ORDER_CREATED_EVENT } from '../../utils/constants/stonks/mainnet'
+import { STETH_MAX_PRECISION, STONKS, STONKS_ORDER_CREATED_EVENT } from '../../shared/constants/stonks/mainnet'
 import { TypedEvent } from '../../generated/common'
 
 describe('StonksSrv', () => {

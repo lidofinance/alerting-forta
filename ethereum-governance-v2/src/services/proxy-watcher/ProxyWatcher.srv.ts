@@ -1,11 +1,11 @@
 import * as E from 'fp-ts/Either'
 import { LIDO_PROXY_CONTRACTS_DATA } from 'constants/proxy-watcher'
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { elapsedTime } from '../../utils/time'
+import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
-import { networkAlert } from '../../utils/errors'
+import { networkAlert } from '../../shared/errors'
 import type { IProxyWatcherClient } from './contract'
-import { etherscanAddress } from '../../utils/string'
+import { etherscanAddress } from '../../shared/string'
 
 export class ProxyWatcherSrv {
   private readonly logger: Logger

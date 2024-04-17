@@ -3,7 +3,7 @@ import { BlockEvent, Finding, FindingSeverity, FindingType, LogDescription, Tran
 import { Logger } from 'winston'
 import { IAclChangesClient } from './contract'
 import * as E from 'fp-ts/Either'
-import * as constants from '../../utils/constants/acl-changes/mainnet'
+import * as constants from '../../shared/constants/acl-changes/mainnet'
 import {
   ACL_ENUMERABLE_CONTRACTS,
   IHasRoles,
@@ -12,17 +12,17 @@ import {
   OWNABLE_CONTRACTS,
   ROLES_OWNERS,
   WHITELISTED_OWNERS,
-} from '../../utils/constants/acl-changes/mainnet'
+} from '../../shared/constants/acl-changes/mainnet'
 import {
   ARAGON_ACL_ADDRESS,
   ARAGON_VOTING_ADDRESS,
   DEPOSIT_SECURITY_ADDRESS as dsAddress,
   LIDO_DAO_ADDRESS,
   ORACLE_DAEMON_CONFIG_ADDRESS as oracleConfigAddress,
-} from '../../utils/constants/common/mainnet'
-import { etherscanAddress, INamedRole, roleByName } from '../../utils/string'
-import { SET_PERMISSION_PARAMS_EVENT } from '../../utils/events/acl_events'
-import { networkAlert } from '../../utils/errors'
+} from '../../shared/constants/common/mainnet'
+import { etherscanAddress, INamedRole, roleByName } from '../../shared/string'
+import { SET_PERMISSION_PARAMS_EVENT } from '../../shared/events/acl_events'
+import { networkAlert } from '../../shared/errors'
 import { expect } from '@jest/globals'
 
 describe('AclChangesSrv', () => {
@@ -91,7 +91,7 @@ describe('AclChangesSrv', () => {
   })
 
   it('handles roles members with findings', async () => {
-    jest.mock('../../utils/constants/acl-changes/mainnet')
+    jest.mock('../../shared/constants/acl-changes/mainnet')
     jest.mocked(constants).ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       [
         oracleConfigAddress,
@@ -178,7 +178,7 @@ describe('AclChangesSrv', () => {
   ])('handles owner change with findings: %p', async (name, isContract, assertedObject) => {
     jest.spyOn(ethProvider, 'getOwner').mockResolvedValue(E.right(fakeAddress))
     jest.spyOn(ethProvider, 'isDeployed').mockResolvedValue(E.right(isContract))
-    jest.mock('../../utils/constants/acl-changes/mainnet')
+    jest.mock('../../shared/constants/acl-changes/mainnet')
     jest.mocked(constants).OWNABLE_CONTRACTS = new Map<string, IOwnable>([
       [
         dsAddress,

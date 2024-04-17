@@ -3,11 +3,11 @@ import { Logger } from 'winston'
 import { IProxyWatcherClient } from './contract'
 import { ProxyWatcherSrv } from './ProxyWatcher.srv'
 import { BlockEvent, FindingSeverity } from 'forta-agent'
-import * as constants from '../../utils/constants/proxy-watcher/mainnet'
-import { implementationFuncShortABI } from '../../utils/constants/proxy-watcher/mainnet'
-import { IProxyContractData, LIDO_STETH_ADDRESS as lidoStethAddress } from '../../utils/constants/common/mainnet'
+import * as constants from '../../shared/constants/proxy-watcher/mainnet'
+import { implementationFuncShortABI } from '../../shared/constants/proxy-watcher/mainnet'
+import { IProxyContractData, LIDO_STETH_ADDRESS as lidoStethAddress } from '../../shared/constants/common/mainnet'
 import { faker } from '@faker-js/faker'
-import { etherscanAddress } from '../../utils/string'
+import { etherscanAddress } from '../../shared/string'
 import { expect } from '@jest/globals'
 
 describe('ProxyWatcherSrv', () => {
@@ -24,7 +24,7 @@ describe('ProxyWatcherSrv', () => {
     blockEvent = { blockNumber: 100 } as BlockEvent
 
     dataName = faker.music.songName()
-    jest.mock('../../utils/constants/proxy-watcher/mainnet')
+    jest.mock('../../shared/constants/proxy-watcher/mainnet')
     jest.mocked(constants).LIDO_PROXY_CONTRACTS_DATA = new Map<string, IProxyContractData>([
       [
         lidoStethAddress,

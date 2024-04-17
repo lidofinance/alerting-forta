@@ -14,9 +14,9 @@ import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
 import { Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
 import { App } from './app'
-import { elapsedTime } from './utils/time'
+import { elapsedTime } from './shared/time'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import Version from './utils/version'
+import Version from './shared/version'
 import { Metadata } from './entity/metadata'
 
 export function initialize(): Initialize {

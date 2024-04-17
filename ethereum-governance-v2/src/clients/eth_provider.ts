@@ -3,7 +3,7 @@ import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
-import { ETH_DECIMALS } from '../utils/constants'
+import { ETH_DECIMALS } from '../shared/constants'
 import {
   ENS as EnsContract,
   AragonVoting as AragonVotingContract,
@@ -11,7 +11,7 @@ import {
   NodeOperatorsRegistry as NodeOperatorsRegistryContract,
 } from '../generated'
 import { IEtherscanProvider } from './contracts'
-import { NetworkError } from '../utils/errors'
+import { NetworkError } from '../shared/errors'
 import { IEnsNamesClient } from '../services/ens-names/contract'
 import { IEasyTrackClient, INodeOperatorInfo } from '../services/easy-track/contract'
 import { IProxyWatcherClient } from '../services/proxy-watcher/contract'
@@ -19,7 +19,7 @@ import { BlockTag } from '@ethersproject/providers'
 import { AclEnumerableABI } from 'constants/acl-changes'
 import { IAclChangesClient } from '../services/acl-changes/contract'
 import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contract'
-import { BLOCK_TO_WATCH } from '../utils/constants/stonks/mainnet'
+import { BLOCK_TO_WATCH } from 'constants/stonks'
 import { TypedEvent } from '../generated/common'
 import { Stonks__factory } from '../generated/factories/Stonks__factory'
 

@@ -15,7 +15,7 @@ import {
 import { EnsNamesSrv } from './services/ens-names/EnsNames.srv'
 import { EasyTrackSrv } from './services/easy-track/EasyTrack.srv'
 import { ProxyWatcherSrv } from './services/proxy-watcher/ProxyWatcher.srv'
-import { DataRW } from './utils/mutex'
+import { DataRW } from './shared/mutex'
 import * as Winston from 'winston'
 import * as E from 'fp-ts/Either'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'

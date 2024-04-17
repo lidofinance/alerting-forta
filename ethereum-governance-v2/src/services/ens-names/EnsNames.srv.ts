@@ -1,9 +1,9 @@
 import * as E from 'fp-ts/Either'
 import { ENS_CHECK_INTERVAL, LIDO_ENS_NAMES } from 'constants/ens-names'
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { elapsedTime, ONE_WEEK, ONE_MONTH } from '../../utils/time'
+import { elapsedTime, ONE_WEEK, ONE_MONTH } from '../../shared/time'
 import { Logger } from 'winston'
-import { networkAlert } from '../../utils/errors'
+import { networkAlert } from '../../shared/errors'
 import type { IEnsNamesClient } from './contract'
 
 export class EnsNamesSrv {

@@ -3,10 +3,10 @@ import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { Logger } from 'winston'
 import { IEnsNamesClient } from './contract'
 import * as E from 'fp-ts/Either'
-import { networkAlert } from '../../utils/errors'
+import { networkAlert } from '../../shared/errors'
 import BigNumber from 'bignumber.js'
-import { ENS_CHECK_INTERVAL, LIDO_ENS_NAMES } from '../../utils/constants/ens-names/mainnet'
-import { ONE_WEEK } from '../../utils/time'
+import { ENS_CHECK_INTERVAL, LIDO_ENS_NAMES } from '../../shared/constants/ens-names/mainnet'
+import { ONE_WEEK } from '../../shared/time'
 import { expect } from '@jest/globals'
 
 describe('EnsNamesSrv', () => {

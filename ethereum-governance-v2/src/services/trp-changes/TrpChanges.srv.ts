@@ -1,10 +1,10 @@
-import { elapsedTime } from '../../utils/time'
+import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
-import { handleEventsOfNotice } from '../../utils/notice'
+import { handleEventsOfNotice } from '../../shared/notice'
 
 import { Finding, TransactionEvent } from 'forta-agent'
 
-import { TRP_EVENTS_OF_NOTICE } from '../../utils/events/trp_changes'
+import { TRP_EVENTS_OF_NOTICE } from '../../shared/events/trp_changes'
 
 export class TrpChangesSrv {
   private readonly logger: Logger

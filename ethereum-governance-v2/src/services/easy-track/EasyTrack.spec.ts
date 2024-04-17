@@ -6,7 +6,7 @@ import * as E from 'fp-ts/Either'
 import {
   EASY_TRACK_ADDRESS,
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakingLimitAddress,
-} from '../../utils/constants/common/mainnet'
+} from '../../shared/constants/common/mainnet'
 import BigNumber from 'bignumber.js'
 
 describe('EasyTrackSrv', () => {
