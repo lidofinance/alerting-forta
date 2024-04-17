@@ -21,19 +21,19 @@ export class TProxyWatcher {
   }
 
   public getName(): string {
-    return this.proxyContract.getName() + '.' + this.name
+    return this.proxyContract.getName() + `(${this.proxyContract.getProxyAdminAddress()}).` + this.name
   }
 
   public getAdmin(): string {
-    return this.lastAdmin
+    return this.lastAdmin.toLowerCase()
   }
 
   public getImpl(): string {
-    return this.lastImpl
+    return this.lastImpl.toLowerCase()
   }
 
   public getOwner(): string {
-    return this.lastOwner
+    return this.lastOwner.toLowerCase()
   }
 
   public setAdmin(admin: string) {
@@ -48,11 +48,11 @@ export class TProxyWatcher {
     this.lastOwner = owner
   }
 
-  async initialize(currentBlock: number): Promise<Error | null> {
+  async initialize(latestL2BlockNumber: number): Promise<Error | null> {
     const [lastImpl, lastAdmin, lastOwner] = await Promise.all([
-      this.proxyContract.getProxyImplementation(currentBlock),
-      this.proxyContract.getProxyAdmin(currentBlock),
-      this.proxyContract.getOwner(currentBlock),
+      this.proxyContract.getProxyImplementation(latestL2BlockNumber),
+      this.proxyContract.getProxyAdmin(latestL2BlockNumber),
+      this.proxyContract.getOwner(latestL2BlockNumber),
     ])
 
     if (E.isLeft(lastImpl)) {
@@ -67,70 +67,74 @@ export class TProxyWatcher {
       return lastOwner.left
     }
 
-    this.setImpl(lastImpl.right)
-    this.setAdmin(lastAdmin.right)
-    this.setOwner(lastOwner.right)
+    this.setImpl(lastImpl.right.toLowerCase())
+    this.setAdmin(lastAdmin.right.toLowerCase())
+    this.setOwner(lastOwner.right.toLowerCase())
 
-    this.logger.info(`${this.getName()}. started on block ${currentBlock}`)
+    this.logger.info(`${this.getName()}. started on block ${latestL2BlockNumber}`)
 
     return null
   }
 
-  async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+  async handleL2Blocks(l2BlockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
 
     const BLOCK_INTERVAL = 25
     const out: Finding[] = []
 
-    for (const blockNumber of blockNumbers) {
-      if (blockNumber % BLOCK_INTERVAL === 0) {
+    for (const l2BlockNumber of l2BlockNumbers) {
+      if (l2BlockNumber % BLOCK_INTERVAL === 0) {
         const [impl, admin, owner] = await Promise.all([
-          this.handleProxyImplementationChanges(blockNumber),
-          this.handleProxyAdminChanges(blockNumber),
-          this.handleOwnerChanges(blockNumber),
+          this.handleProxyImplementationChanges(l2BlockNumber),
+          this.handleProxyAdminChanges(l2BlockNumber),
+          this.handleOwnerChanges(l2BlockNumber),
         ])
 
         out.push(...impl, ...admin, ...owner)
       }
     }
 
-    this.logger.info(elapsedTime(this.getName() + '.' + this.handleBlocks.name, start))
+    this.logger.info(this.getName() + '.impl = ' + this.getImpl())
+    this.logger.info(this.getName() + '.admin = ' + this.getAdmin())
+    this.logger.info(this.getName() + '.own = ' + this.getOwner())
+
+    this.logger.info(elapsedTime(this.getName() + '.' + this.handleL2Blocks.name, start))
     return out
   }
 
-  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(l2BlockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newImpl = await this.proxyContract.getProxyImplementation(blockNumber)
+    const newImpl = await this.proxyContract.getProxyImplementation(l2BlockNumber)
     if (E.isLeft(newImpl)) {
       return [
         networkAlert(
           newImpl.left,
           `Error in ${this.getName()}.${this.handleProxyImplementationChanges.name}:104`,
-          `Could not fetch proxyImplementation on ${blockNumber}`,
-          blockNumber,
+          `Could not fetch proxyImplementation on ${l2BlockNumber}`,
+          l2BlockNumber,
         ),
       ]
     }
 
-    if (newImpl.right != this.getImpl()) {
+    if (newImpl.right.toLowerCase() != this.getImpl()) {
       const uniqueKey = '8af33ac8-1cad-40a6-95f0-d13ca7e60876'
 
       out.push(
         Finding.fromObject({
           name: '🚨 ZkSync: Proxy implementation changed',
           description:
-            `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAddress()}) ` +
+            `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAdminAddress()}) ` +
             `was changed form ${this.getImpl()} to ${newImpl.right}` +
             `\n(detected by func call)`,
           alertId: 'PROXY-UPGRADED',
           severity: FindingSeverity.High,
           type: FindingType.Info,
-          metadata: { newImpl: newImpl.right, lastImpl: this.getImpl() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAddress(), blockNumber),
+          metadata: { newImpl: newImpl.right.toLowerCase(), lastImpl: this.getImpl() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAdminAddress(), l2BlockNumber),
         }),
       )
-      this.setImpl(newImpl.right)
+      this.setImpl(newImpl.right.toLowerCase())
     }
 
     return out
@@ -151,24 +155,24 @@ export class TProxyWatcher {
       ]
     }
 
-    if (newAdmin.right != this.getAdmin()) {
+    if (newAdmin.right.toLowerCase() != this.getAdmin()) {
       const uniqueKey = 'ac58edab-9512-4606-942d-013d85d655f4'
       out.push(
         Finding.fromObject({
           name: '🚨 ZkSync: Proxy admin changed',
           description:
-            `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAddress()}) ` +
+            `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAdminAddress()}) ` +
             `was changed from ${this.getAdmin()} to ${newAdmin.right}` +
             `\n(detected by func call)`,
           alertId: 'PROXY-ADMIN-CHANGED',
           severity: FindingSeverity.High,
           type: FindingType.Info,
-          metadata: { newAdmin: newAdmin.right, lastAdmin: this.getAdmin() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAddress(), blockNumber),
+          metadata: { newAdmin: newAdmin.right.toLowerCase(), lastAdmin: this.getAdmin() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAdminAddress(), blockNumber),
         }),
       )
 
-      this.setAdmin(newAdmin.right)
+      this.setAdmin(newAdmin.right.toLowerCase())
     }
     return out
   }
@@ -188,24 +192,24 @@ export class TProxyWatcher {
       ]
     }
 
-    if (newOwner.right != this.getOwner()) {
+    if (newOwner.right.toLowerCase() != this.getOwner()) {
       const uniqueKey = '0ff2cac9-6b8a-486c-a8fe-fb2df81c8048'
       out.push(
         Finding.fromObject({
           name: '🚨 ZkSync: Proxy owner changed',
           description:
-            `Proxy owner for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAddress()}) ` +
+            `Proxy owner for ${this.proxyContract.getName()}(${this.proxyContract.getProxyAdminAddress()}) ` +
             `was changed from ${this.getOwner()} to ${newOwner.right}` +
             `\n(detected by func call)`,
           alertId: 'PROXY-OWNER-CHANGED',
           severity: FindingSeverity.High,
           type: FindingType.Info,
-          metadata: { newOwner: newOwner.right, lastAdmin: this.getOwner() },
-          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAddress(), blockNumber),
+          metadata: { newOwner: newOwner.right.toLowerCase(), lastAdmin: this.getOwner() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getProxyAdminAddress(), blockNumber),
         }),
       )
 
-      this.setOwner(newOwner.right)
+      this.setOwner(newOwner.right.toLowerCase())
     }
     return out
   }

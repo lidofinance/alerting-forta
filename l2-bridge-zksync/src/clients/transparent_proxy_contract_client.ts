@@ -2,10 +2,12 @@ import { ProxyAdmin } from '../generated'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/error'
-import { TProxyContract } from '../utils/constants'
+import { ZKSYNC_BRIDGE_EXECUTOR_TYPE, ZKSYNC_WSTETH_BRIDGED_UPGRADEABLE_TYPE } from '../utils/constants'
 
 export abstract class ITransparentProxyContractClient {
   abstract getName(): string
+
+  abstract getProxyAdminAddress(): string
 
   abstract getProxyAddress(): string
 
@@ -17,22 +19,29 @@ export abstract class ITransparentProxyContractClient {
 }
 
 export class TProxyContractClient implements ITransparentProxyContractClient {
-  private readonly proxyContract: TProxyContract
-  private readonly contract: ProxyAdmin
+  private readonly proxyAdminContract: ProxyAdmin
+  private readonly proxyContract: ZKSYNC_WSTETH_BRIDGED_UPGRADEABLE_TYPE | ZKSYNC_BRIDGE_EXECUTOR_TYPE
 
-  constructor(proxyContract: TProxyContract, contract: ProxyAdmin) {
-    if (proxyContract.proxyAdminAddress !== contract.address) {
+  constructor(
+    proxyAdminContract: ProxyAdmin,
+    proxyContract: ZKSYNC_WSTETH_BRIDGED_UPGRADEABLE_TYPE | ZKSYNC_BRIDGE_EXECUTOR_TYPE,
+  ) {
+    if (proxyContract.proxyAdminAddress !== proxyAdminContract.address) {
       throw Error(
-        `Could not create instance of ProxyContract: ${proxyContract.name} . Cause: ${proxyContract.proxyAdminAddress} != ${contract.address} proxyAdminAddress`,
+        `Could not create instance of ProxyContract: ${proxyContract.name} . Cause: ${proxyContract.proxyAdminAddress} != ${proxyAdminContract.address} proxyAdminAddress`,
       )
     }
 
+    this.proxyAdminContract = proxyAdminContract
     this.proxyContract = proxyContract
-    this.contract = contract
   }
 
   public getName(): string {
     return this.proxyContract.name
+  }
+
+  public getProxyAdminAddress(): string {
+    return this.proxyAdminContract.address
   }
 
   public getProxyAddress(): string {
@@ -43,7 +52,7 @@ export class TProxyContractClient implements ITransparentProxyContractClient {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.getProxyAdmin(this.proxyContract.proxyAddress, {
+          return await this.proxyAdminContract.getProxyAdmin(this.proxyContract.proxyAddress, {
             blockTag: blockNumber,
           })
         },
@@ -60,7 +69,7 @@ export class TProxyContractClient implements ITransparentProxyContractClient {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.getProxyImplementation(this.proxyContract.proxyAddress, {
+          return await this.proxyAdminContract.getProxyImplementation(this.proxyContract.proxyAddress, {
             blockTag: blockNumber,
           })
         },
@@ -77,7 +86,7 @@ export class TProxyContractClient implements ITransparentProxyContractClient {
     try {
       const resp = await retryAsync<string>(
         async (): Promise<string> => {
-          return await this.contract.owner({
+          return await this.proxyAdminContract.owner({
             blockTag: blockNumber,
           })
         },

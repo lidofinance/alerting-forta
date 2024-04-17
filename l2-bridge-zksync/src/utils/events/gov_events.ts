@@ -2,7 +2,7 @@ import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 
-export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
+export function getGovEvents(ZKSYNC_GOV_EXECUTOR_ADDRESS: string): EventOfNotice[] {
   const uniqueKeys = [
     '0a4af7aa-698e-47b8-adff-ed17cb85c8d4',
     '35c68be6-1704-4e39-b3ee-dd83eb1da978',
@@ -17,7 +17,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
 
   return [
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event:
         'event EthereumGovernanceExecutorUpdate(address oldEthereumGovernanceExecutor, address newEthereumGovernanceExecutor)',
       alertId: 'GOV-BRIDGE-EXEC-UPDATED',
@@ -30,7 +30,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[0],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event GuardianUpdate(address oldGuardian, address newGuardian)',
       alertId: 'GOV-BRIDGE-GUARDIAN-UPDATED',
       name: '🚨 ZkSync Gov Bridge: Guardian Updated',
@@ -40,7 +40,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[1],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event DelayUpdate(uint256 oldDelay, uint256 newDelay)',
       alertId: 'GOV-BRIDGE-DELAY-UPDATED',
       name: '⚠️ ZkSync Gov Bridge: Delay Updated',
@@ -50,7 +50,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[2],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event GracePeriodUpdate(uint256 oldGracePeriod, uint256 newGracePeriod)',
       alertId: 'GOV-BRIDGE-GRACE-PERIOD-UPDATED',
       name: '⚠️ ZkSync Gov Bridge: Grace Period Updated',
@@ -61,7 +61,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[3],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event MinimumDelayUpdate(uint256 oldMinimumDelay, uint256 newMinimumDelay)',
       alertId: 'GOV-BRIDGE-MIN-DELAY-UPDATED',
       name: '⚠️ ZkSync Gov Bridge: Min Delay Updated',
@@ -72,7 +72,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[4],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event MaximumDelayUpdate(uint256 oldMaximumDelay, uint256 newMaximumDelay)',
       alertId: 'GOV-BRIDGE-MAX-DELAY-UPDATED',
       name: '⚠️ ZkSync Gov Bridge: Max Delay Updated',
@@ -83,7 +83,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[5],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event:
         'event ActionsSetQueued(uint256 indexed id, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, bool[] withDelegatecalls, uint256 executionTime)',
       alertId: 'GOV-BRIDGE-ACTION-SET-QUEUED',
@@ -94,7 +94,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[6],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event ActionsSetExecuted(uint256 indexed id, address indexed initiatorExecution, bytes[] returnedData)',
       alertId: 'GOV-BRIDGE-ACTION-SET-EXECUTED',
       name: 'ℹ️ ZkSync Gov Bridge: Action set executed',
@@ -104,7 +104,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: uniqueKeys[7],
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: ZKSYNC_GOV_EXECUTOR_ADDRESS,
       event: 'event ActionsSetCanceled(uint256 indexed id)',
       alertId: 'GOV-BRIDGE-ACTION-SET-CANCELED',
       name: 'ℹ️ ZkSync Gov Bridge: Action set canceled',

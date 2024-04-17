@@ -1,11 +1,11 @@
-import { ERC20_BRIDGED_UPGRADEABLE_TYPE, ZKSYNC_BRIDGE_EXECUTOR_TYPE } from '../constants'
+import { ZKSYNC_WSTETH_BRIDGED_UPGRADEABLE_TYPE, ZKSYNC_BRIDGE_EXECUTOR_TYPE } from '../constants'
 import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 
 export function getProxyAdminEvents(
-  ERC20_BRIDGED_UPGRADEABLE_TYPE: ERC20_BRIDGED_UPGRADEABLE_TYPE,
-  ZKSYNC_BRIDGE_EXECUTOR_TYPE: ZKSYNC_BRIDGE_EXECUTOR_TYPE,
+  ZKSYNC_WSTETH_BRIDGED: ZKSYNC_WSTETH_BRIDGED_UPGRADEABLE_TYPE,
+  ZKSYNC_BRIDGE_EXECUTOR: ZKSYNC_BRIDGE_EXECUTOR_TYPE,
 ): EventOfNotice[] {
   const uniqueKeys = [
     'f9e87d52-9ac5-4f26-8dbb-a2f56c5f06bb',
@@ -20,12 +20,12 @@ export function getProxyAdminEvents(
 
   return [
     {
-      address: ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAddress,
+      address: ZKSYNC_WSTETH_BRIDGED.proxyAddress,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
       name: '🚨 ZkSync: Proxy admin changed',
       description: (args: Result) =>
-        `Proxy admin for ${ERC20_BRIDGED_UPGRADEABLE_TYPE.name}(${ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAdminAddress}) ` +
+        `Proxy admin for ${ZKSYNC_WSTETH_BRIDGED.name}(${ZKSYNC_WSTETH_BRIDGED.proxyAdminAddress}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -33,12 +33,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[0],
     },
     {
-      address: ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAddress,
+      address: ZKSYNC_WSTETH_BRIDGED.proxyAddress,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
       name: '🚨 ZkSync: Proxy upgraded',
       description: (args: Result) =>
-        `Proxy for ${ERC20_BRIDGED_UPGRADEABLE_TYPE.name}(${ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAdminAddress}) ` +
+        `Proxy for ${ZKSYNC_WSTETH_BRIDGED.name}(${ZKSYNC_WSTETH_BRIDGED.proxyAdminAddress}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -46,12 +46,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[1],
     },
     {
-      address: ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAddress,
+      address: ZKSYNC_WSTETH_BRIDGED.proxyAddress,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
       name: '🚨 ZkSync: Proxy beacon upgraded',
       description: (args: Result) =>
-        `Proxy for ${ERC20_BRIDGED_UPGRADEABLE_TYPE.name}(${ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAdminAddress}) ` +
+        `Proxy for ${ZKSYNC_WSTETH_BRIDGED.name}(${ZKSYNC_WSTETH_BRIDGED.proxyAdminAddress}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -59,12 +59,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[2],
     },
     {
-      address: ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAddress,
+      address: ZKSYNC_WSTETH_BRIDGED.proxyAddress,
       event: 'event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)',
       alertId: 'PROXY-OWNER-TRANSFERRED',
       name: '🚨 ZkSync: Proxy owner transferred',
       description: (args: Result) =>
-        `Proxy owner for ${ERC20_BRIDGED_UPGRADEABLE_TYPE.name}(${ERC20_BRIDGED_UPGRADEABLE_TYPE.proxyAdminAddress}) ` +
+        `Proxy owner for ${ZKSYNC_WSTETH_BRIDGED.name}(${ZKSYNC_WSTETH_BRIDGED.proxyAdminAddress}) ` +
         `was changed to ${args.newOwner}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -72,12 +72,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[3],
     },
     {
-      address: ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAddress,
+      address: ZKSYNC_BRIDGE_EXECUTOR.proxyAddress,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
       name: '🚨 ZkSync: Proxy admin changed',
       description: (args: Result) =>
-        `Proxy admin for ${ZKSYNC_BRIDGE_EXECUTOR_TYPE.name}(${ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAdminAddress}) ` +
+        `Proxy admin for ${ZKSYNC_BRIDGE_EXECUTOR.name}(${ZKSYNC_BRIDGE_EXECUTOR.proxyAdminAddress}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -85,12 +85,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[4],
     },
     {
-      address: ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAddress,
+      address: ZKSYNC_BRIDGE_EXECUTOR.proxyAddress,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
       name: '🚨 ZkSync: Proxy upgraded',
       description: (args: Result) =>
-        `Proxy for ${ZKSYNC_BRIDGE_EXECUTOR_TYPE.name}(${ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAdminAddress}) ` +
+        `Proxy for ${ZKSYNC_BRIDGE_EXECUTOR.name}(${ZKSYNC_BRIDGE_EXECUTOR.proxyAdminAddress}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -98,12 +98,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[5],
     },
     {
-      address: ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAddress,
+      address: ZKSYNC_BRIDGE_EXECUTOR.proxyAddress,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
       name: '🚨 ZkSync: Proxy beacon upgraded',
       description: (args: Result) =>
-        `Proxy for ${ZKSYNC_BRIDGE_EXECUTOR_TYPE.name}(${ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAdminAddress}) ` +
+        `Proxy for ${ZKSYNC_BRIDGE_EXECUTOR.name}(${ZKSYNC_BRIDGE_EXECUTOR.proxyAdminAddress}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -111,12 +111,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[6],
     },
     {
-      address: ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAddress,
+      address: ZKSYNC_BRIDGE_EXECUTOR.proxyAddress,
       event: 'event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)',
       alertId: 'PROXY-OWNER-TRANSFERRED',
       name: '🚨 ZkSync: Proxy owner transferred',
       description: (args: Result) =>
-        `Proxy owner for ${ZKSYNC_BRIDGE_EXECUTOR_TYPE.name}(${ZKSYNC_BRIDGE_EXECUTOR_TYPE.proxyAdminAddress}) ` +
+        `Proxy owner for ${ZKSYNC_BRIDGE_EXECUTOR.name}(${ZKSYNC_BRIDGE_EXECUTOR.proxyAdminAddress}) ` +
         `was changed to ${args.newOwner}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,

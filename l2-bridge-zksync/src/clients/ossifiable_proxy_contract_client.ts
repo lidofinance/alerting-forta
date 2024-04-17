@@ -2,10 +2,12 @@ import { OssifiableProxy } from '../generated'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/error'
-import { OProxyContract } from '../utils/constants'
+import { ZKSYNC_L2ERC20_TOKEN_BRIDGED_TYPE } from '../utils/constants'
 
 export abstract class IOssifiableProxyContractClient {
   abstract getName(): string
+
+  abstract getProxyAdminAddress(): string
 
   abstract getProxyAddress(): string
 
@@ -17,10 +19,10 @@ export abstract class IOssifiableProxyContractClient {
 }
 
 export class OProxyContractClient implements IOssifiableProxyContractClient {
-  private readonly proxyContract: OProxyContract
   private readonly contract: OssifiableProxy
+  private readonly proxyContract: ZKSYNC_L2ERC20_TOKEN_BRIDGED_TYPE
 
-  constructor(proxyContract: OProxyContract, contract: OssifiableProxy) {
+  constructor(contract: OssifiableProxy, proxyContract: ZKSYNC_L2ERC20_TOKEN_BRIDGED_TYPE) {
     if (proxyContract.address !== contract.address) {
       throw Error(
         `Could not create instance of ProxyContract: ${proxyContract.name} . Cause: ${proxyContract.address} != ${contract.address} address`,
@@ -33,6 +35,10 @@ export class OProxyContractClient implements IOssifiableProxyContractClient {
 
   public getName(): string {
     return this.proxyContract.name
+  }
+
+  public getProxyAdminAddress(): string {
+    return this.contract.address
   }
 
   public getProxyAddress(): string {

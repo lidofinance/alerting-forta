@@ -19,16 +19,16 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const app = await App.getInstance()
 
-    const latestBlock = await app.zkSyncClient.getLatestBlock()
-    if (E.isLeft(latestBlock)) {
-      app.logger.error(latestBlock.left)
+    const latestL2Block = await app.zkSyncClient.getLatestL2Block()
+    if (E.isLeft(latestL2Block)) {
+      app.logger.error(latestL2Block.left)
 
       process.exit(1)
     }
 
     const agents: string[] = []
     for (const tProxyWatcher of app.tProxyWatchers) {
-      const tProxyWatcherErr = await tProxyWatcher.initialize(latestBlock.right.number)
+      const tProxyWatcherErr = await tProxyWatcher.initialize(latestL2Block.right.number)
       if (tProxyWatcherErr !== null) {
         app.logger.error(tProxyWatcherErr)
 
@@ -42,7 +42,7 @@ export function initialize(): Initialize {
       agents.push(tProxyWatcher.getName())
     }
 
-    const oProxyWorker = await app.oProxyWatcher.initialize(latestBlock.right.number)
+    const oProxyWorker = await app.oProxyWatcher.initialize(latestL2Block.right.number)
     if (oProxyWorker !== null) {
       app.logger.error(oProxyWorker)
 
@@ -54,7 +54,7 @@ export function initialize(): Initialize {
     metadata[`${app.oProxyWatcher.getName()}.isOssified`] = String(app.oProxyWatcher.isOssified())
     agents.push(app.oProxyWatcher.getName())
 
-    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlock.right.number)
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestL2Block.right.number)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
       app.logger.error(monitorWithdrawalsInitResp.left)
 
@@ -99,41 +99,44 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const blocksDto = await app.blockSrv.getBlocks()
-    if (E.isLeft(blocksDto)) {
+    const l2BlocksDto = await app.blockSrv.getL2Blocks()
+    if (E.isLeft(l2BlocksDto)) {
       isHandleBLockRunning = false
-      return [blocksDto.left]
+      return [l2BlocksDto.left]
     }
     app.logger.info(
-      `ETH block ${blockEvent.blockNumber.toString()}. Fetched zkSync blocks from ${blocksDto.right[0].number} to ${
-        blocksDto.right[blocksDto.right.length - 1].number
-      }. Total: ${blocksDto.right.length}`,
+      `ETH block ${blockEvent.blockNumber.toString()}. Fetched zkSync blocks from ${l2BlocksDto.right[0].number} to ${
+        l2BlocksDto.right[l2BlocksDto.right.length - 1].number
+      }. Total: ${l2BlocksDto.right.length}`,
     )
 
-    const logs = await app.blockSrv.getLogs(blocksDto.right)
-    if (E.isLeft(logs)) {
+    const l2Logs = await app.blockSrv.getL2Logs(l2BlocksDto.right)
+    if (E.isLeft(l2Logs)) {
       isHandleBLockRunning = false
-      return [logs.left]
+      return [l2Logs.left]
     }
 
-    const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
-    const govEventFindings = app.govWatcher.handleLogs(logs.right)
-    const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
-    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
+    const bridgeEventFindings = app.bridgeWatcher.handleL2Logs(l2Logs.right)
+    const govEventFindings = app.govWatcher.handleL2Logs(l2Logs.right)
+    const proxyAdminEventFindings = app.proxyEventWatcher.handleL2Logs(l2Logs.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(l2Logs.right, l2BlocksDto.right)
 
-    const blockNumbers: Set<number> = new Set<number>()
-    for (const log of logs.right) {
-      blockNumbers.add(new BigNumber(log.blockNumber, 10).toNumber())
+    const l2BlockNumbersSet: Set<number> = new Set<number>()
+    for (const log of l2Logs.right) {
+      l2BlockNumbersSet.add(new BigNumber(log.blockNumber, 10).toNumber())
     }
+    const l2BlockNumbers = Array.from(l2BlockNumbersSet).toSorted((a, b) => a - b)
 
     const proxyWatcherFindings: Finding[] = []
-
     for (const tProxyWatcher of app.tProxyWatchers) {
-      const findings = await tProxyWatcher.handleBlocks(Array.from(blockNumbers))
+      const findings = await tProxyWatcher.handleL2Blocks(l2BlockNumbers)
       proxyWatcherFindings.push(...findings)
     }
 
-    const oProxyWatcherFindings = await app.oProxyWatcher.handleBlocks(Array.from(blockNumbers))
+    const [oProxyWatcherFindings, bridgeBalanceFindings] = await Promise.all([
+      app.oProxyWatcher.handleL2Blocks(l2BlockNumbers),
+      app.bridgeBalanceSrv.handleBlock(blockEvent.block.number, l2BlockNumbers),
+    ])
 
     findings.push(
       ...bridgeEventFindings,
@@ -142,6 +145,7 @@ export const handleBlock = (): HandleBlock => {
       ...monitorWithdrawalsFindings,
       ...proxyWatcherFindings,
       ...oProxyWatcherFindings,
+      ...bridgeBalanceFindings,
     )
 
     app.healthChecker.check(findings)
