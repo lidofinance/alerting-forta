@@ -3,18 +3,17 @@ import { Logger } from 'winston'
 import { BlockEvent, ethers, Finding, FindingSeverity, FindingType, TransactionEvent } from 'forta-agent'
 import { elapsedTime } from '../../utils/time'
 import { ETHProvider } from '../../clients/eth_provider'
-import { CreatedOrder } from './contract'
+import { CreatedOrder, EventArgs } from './contract'
 import {
   BLOCK_TO_WATCH_TIME,
   BLOCK_WINDOW,
-  EventArgs,
   ORDER_EVENTS_OF_NOTICE,
   STETH_MAX_PRECISION,
   STONKS,
   STONKS_EVENTS_OF_NOTICE,
   STONKS_ORDER_CREATED_EVENT,
   STONKS_ORDER_CREATION,
-} from '../../utils/constants/stonks/mainnet'
+} from 'constants/stonks'
 import BigNumber from 'bignumber.js'
 import { etherscanAddress } from '../../utils/string'
 import { networkAlert } from '../../utils/errors'

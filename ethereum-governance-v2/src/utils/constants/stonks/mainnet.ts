@@ -2,6 +2,7 @@ import { FindingSeverity } from 'forta-agent'
 import { etherscanAddress } from '../../string'
 import BigNumber from 'bignumber.js'
 import { EventOfNotice } from '../../../entity/events'
+import { EventArgs } from '../../../services/stonks/contract'
 
 export const STONKS_STETH_DAI_ADDRESS = '0x3e2D251275A92a8169A3B17A2C49016e2de492a7'
 export const STONKS_STETH_USDC_ADDRESS = '0xf4F6A03E3dbf0aA22083be80fDD340943d275Ea5'
@@ -12,17 +13,6 @@ export const STONKS_USDC_DAI_ADDRESS = '0x2B5a3944A654439379B206DE999639508bA2e8
 export const STONKS_USDC_USDT_ADDRESS = '0x278f7B6CBB3Cc37374e6a40bDFEBfff08f65A5C7'
 export const STONKS_USDT_DAI_ADDRESS = '0x64B6aF9A108dCdF470E48e4c0147127F26221A7C'
 export const STONKS_USDT_USDC_ADDRESS = '0x281e6BB6F26A94250aCEb24396a8E4190726C97e'
-
-export type EventArgs = {
-  manager: string
-  address: string
-  recipient: string
-  token: string
-  tokenId: number
-  amount: string
-  orderContract: string
-  minBuyAmount: string
-}
 
 export const STONKS_ORDER_CREATED_EVENT = 'OrderContractCreated'
 export const STETH_MAX_PRECISION = new BigNumber(4)

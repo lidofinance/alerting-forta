@@ -10,7 +10,8 @@
       "constants/proxy-watcher": ["./src/utils/constants/proxy-watcher/mainnet"],
       "constants/acl-changes": ["./src/utils/constants/acl-changes/mainnet"],
       "constants/trp-changes": ["./src/utils/constants/trp-changes/mainnet"],
-      "constants/aragon-voting": ["./src/utils/constants/aragon-voting/mainnet"]
+      "constants/aragon-voting": ["./src/utils/constants/aragon-voting/mainnet"],
+      "constants/stonks": ["./src/utils/constants/stonks/mainnet"]
     }
   },
   "exclude": [

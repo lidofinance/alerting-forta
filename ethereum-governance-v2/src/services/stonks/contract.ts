@@ -5,3 +5,14 @@ export type CreatedOrder = {
   timestamp: number
   active: boolean
 }
+
+export type EventArgs = {
+  manager: string
+  address: string
+  recipient: string
+  token: string
+  tokenId: number
+  amount: string
+  orderContract: string
+  minBuyAmount: string
+}
