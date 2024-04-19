@@ -1,5 +1,6 @@
 import { Finding, FindingType, TransactionEvent } from "forta-agent";
 import { RUN_TIER } from "./constants";
+import { BigNumberish, BigNumber, utils } from "ethers";
 
 export enum RedefineMode {
   Strict = "strict",
@@ -161,3 +162,19 @@ export function eventSig(abi: string) {
   argsRaw.map((arg) => args.push(arg.trim().split(" ")[0]));
   return `${name}(${args.join(",")})`;
 }
+
+export const formatToken = (
+  amount: BigNumber,
+  decimals: BigNumberish,
+): string => {
+  const amountStr = utils.formatUnits(amount, decimals);
+
+  const formatter = new Intl.NumberFormat("en", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
+
+  return formatter.format(parseFloat(amountStr));
+};
+
+export const formatEth = (amount: BigNumber): string => formatToken(amount, 18);
