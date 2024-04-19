@@ -44,8 +44,8 @@ function getSubpathForNetwork(): string {
   return "";
 }
 
-export function etherscanAddress(address: string): string {
-  return `[${address}](https://${getSubpathForNetwork()}etherscan.io/address/${address})`;
+export function etherscanAddress(address: string, text?: string): string {
+  return `[${text ? text : address}](https://${getSubpathForNetwork()}etherscan.io/address/${address})`;
 }
 
 export function etherscanNft(address: string, id: number | string): string {

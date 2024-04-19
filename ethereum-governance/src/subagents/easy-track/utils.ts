@@ -1,6 +1,7 @@
 import { ethers, getEthersProvider } from "forta-agent";
 import TOP_UP_ALLOWED_RECIPIENTS_ABI from "../../abi/TopUpAllowedRecipients.json";
 import { STONKS } from "../stonks-order-watcher/constants";
+import { etherscanAddress } from "../../common/utils";
 
 export const getMotionType = (
   types: Map<string, string>,
@@ -28,7 +29,7 @@ export const buildStonksTopUpDescription = async (
   const descriptions = recipients.map((recipient: string, idx: number) => {
     const stonksData = getStonksContractInfo(recipient);
     const amount = ethers.utils.formatUnits(amounts[idx]);
-    const etherScanAddress = `[${stonksData?.from} -> ${stonksData?.to}](https://etherscan.io/address/${recipient})`;
+    const etherScanAddress = etherscanAddress(recipient, `${stonksData?.from} -> ${stonksData?.to}`)
     return `${etherScanAddress} pair with ${amount} stETH`;
   });
   return `Top up STONKS:\n ${descriptions.join("\n")}`;
