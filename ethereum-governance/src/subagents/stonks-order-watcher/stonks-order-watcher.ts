@@ -111,8 +111,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   if (blockEvent.blockNumber % BLOCK_WINDOW != 0) {
     return [];
   }
-  const findings = await handleOrderSettlement(blockEvent);
-  return findings;
+  return handleOrderSettlement(blockEvent);
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {
@@ -201,10 +200,10 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
       if (balance.lte(STETH_MAX_PRECISION)) {
         findings.push(
           Finding.fromObject({
-            name: "✅ Stonks: order fulfill",
+            name: "✅ Stonks: order fulfilled",
             description: `Stonks order ${etherscanAddress(
               order.address,
-            )} was fulfill`,
+            )} was fulfilled`,
             alertId: "STONKS-ORDER-FULFILL",
             severity: FindingSeverity.Info,
             type: FindingType.Info,

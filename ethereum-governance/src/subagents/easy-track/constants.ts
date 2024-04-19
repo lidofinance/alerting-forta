@@ -7,6 +7,7 @@ import {
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakinigLimitAddress,
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegAddress,
+  STONKS_TOP_UP_ALLOWED_RECIPIENTS_CONTRACT,
 } from "../../common/constants";
 
 export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakinigLimitAddress;
@@ -191,3 +192,6 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
     "Top up recipients (stETH reWARDS)",
   ],
 ]);
+
+
+export const EASY_TRACK_STONKS_CONTRACTS = [STONKS_TOP_UP_ALLOWED_RECIPIENTS_CONTRACT]
