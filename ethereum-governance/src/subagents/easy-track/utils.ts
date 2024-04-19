@@ -23,10 +23,9 @@ export const buildStonksTopUpDescription = async (
     TOP_UP_ALLOWED_RECIPIENTS_ABI,
     ethersProvider,
   );
-  const data = await topUpContract.decodeEVMScriptCallData(
+  const { recipients, amounts } = await topUpContract.decodeEVMScriptCallData(
     args._evmScriptCallData,
   );
-  const { recipients, amounts } = data;
   const descriptions = recipients.map((recipient: string, idx: number) => {
     const stonksData = getStonksContractInfo(recipient);
     const amount = ethers.utils.formatUnits(amounts[idx]);
