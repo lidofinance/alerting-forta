@@ -15,7 +15,9 @@ export const getMotionLink = (motionId: string) => {
 };
 
 // this helper placed here because it's used in handling easy track motion events
-export const buildStonksTopUpDescription = async (args: any): Promise<string> => {
+export const buildStonksTopUpDescription = async (
+  args: any,
+): Promise<string> => {
   const topUpContract = new ethers.Contract(
     args._evmScriptFactory,
     TOP_UP_ALLOWED_RECIPIENTS_ABI,
@@ -24,7 +26,7 @@ export const buildStonksTopUpDescription = async (args: any): Promise<string> =>
   const data = await topUpContract.decodeEVMScriptCallData(
     args._evmScriptCallData,
   );
-  const {recipients, amounts} = data
+  const { recipients, amounts } = data;
   const descriptions = recipients.map((recipient: string, idx: number) => {
     const stonksData = getStonksContractInfo(recipient);
     const amount = ethers.utils.formatUnits(amounts[idx]);
@@ -36,4 +38,4 @@ export const buildStonksTopUpDescription = async (args: any): Promise<string> =>
 
 const getStonksContractInfo = (address: string) => {
   return STONKS.find((c) => c.address === address);
-}
+};

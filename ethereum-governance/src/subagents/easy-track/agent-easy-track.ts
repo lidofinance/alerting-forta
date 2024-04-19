@@ -10,7 +10,11 @@ import { ethersProvider } from "../../ethers";
 
 import INCREASE_STAKING_LIMIT_ABI from "../../abi/IncreaseStakingLimit.json";
 import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
-import { buildStonksTopUpDescription, getMotionLink, getMotionType } from "./utils";
+import {
+  buildStonksTopUpDescription,
+  getMotionLink,
+  getMotionType,
+} from "./utils";
 import {
   handleEventsOfNotice,
   RedefineMode,
@@ -96,8 +100,12 @@ async function handleEasyTrackMotionCreated(
           } else {
             description += `\nNo issues with keys! ✅`;
           }
-        } else if (EASY_TRACK_STONKS_CONTRACTS.includes(args._evmScriptFactory.toLowerCase())){
-          description += `\n${await buildStonksTopUpDescription(args)}`
+        } else if (
+          EASY_TRACK_STONKS_CONTRACTS.includes(
+            args._evmScriptFactory.toLowerCase(),
+          )
+        ) {
+          description += `\n${await buildStonksTopUpDescription(args)}`;
         }
         findings.push(
           Finding.fromObject({
