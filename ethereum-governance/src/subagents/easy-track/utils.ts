@@ -1,6 +1,5 @@
-import { ethers } from "forta-agent";
+import { ethers, getEthersProvider } from "forta-agent";
 import TOP_UP_ALLOWED_RECIPIENTS_ABI from "../../abi/TopUpAllowedRecipients.json";
-import { ethersProvider } from "../../ethers";
 import { STONKS } from "../stonks-order-watcher/constants";
 
 export const getMotionType = (
@@ -21,7 +20,7 @@ export const buildStonksTopUpDescription = async (
   const topUpContract = new ethers.Contract(
     args._evmScriptFactory,
     TOP_UP_ALLOWED_RECIPIENTS_ABI,
-    ethersProvider,
+    getEthersProvider(),
   );
   const { recipients, amounts } = await topUpContract.decodeEVMScriptCallData(
     args._evmScriptCallData,
