@@ -6,6 +6,13 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { ethers } from 'forta-agent'
 import BigNumber from 'bignumber.js'
 
+const addrOverrides: Address = {
+  ...Address,
+  GATE_SEAL_DEFAULT_ADDRESS: '0x1ad5cb2955940f998081c1ef5f5f00875431aa90',
+}
+
+const rpcUrl: undefined = undefined
+
 describe('eth provider tests', () => {
   let ethProvider: JsonRpcProvider
   const mainnet = 1
@@ -16,7 +23,7 @@ describe('eth provider tests', () => {
   })
 
   test('getWithdrawalStatuses should return 1750 withdrawal statuses', async () => {
-    const app = await App.getInstance(drpcProvider)
+    const app = await App.getInstance(drpcProvider, addrOverrides)
 
     const blockNumber = 19112800
     const requestsRange: number[] = []
@@ -33,11 +40,11 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('checkGateSeal should be success', async () => {
-    const app = await App.getInstance(drpcProvider)
+    const app = await App.getInstance(drpcProvider, addrOverrides)
 
-    const blockNumber = 19140476
+    const blockNumber = 19_140_476
 
-    const resp = await app.ethClient.checkGateSeal(blockNumber, Address.GATE_SEAL_DEFAULT_ADDRESS)
+    const resp = await app.ethClient.checkGateSeal(blockNumber, addrOverrides.GATE_SEAL_DEFAULT_ADDRESS)
     if (E.isLeft(resp)) {
       throw resp.left.message
     }
@@ -53,7 +60,7 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getBalanceByBlockHash is 16619.29059680177', async () => {
-    const app = await App.getInstance(drpcProvider)
+    const app = await App.getInstance(drpcProvider, addrOverrides)
 
     const blockNumber = 19_140_476
     const block = await ethProvider.getBlock(blockNumber)
@@ -78,7 +85,7 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getBalanceByBlockHash is 38186.88677324665', async () => {
-    const app = await App.getInstance(drpcProvider)
+    const app = await App.getInstance(drpcProvider, addrOverrides)
 
     const blockNumber = 19_619_102
     const block = await ethProvider.getBlock(blockNumber)
