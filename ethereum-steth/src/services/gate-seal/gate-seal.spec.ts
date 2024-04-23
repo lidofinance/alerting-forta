@@ -9,15 +9,22 @@ import { createTransactionEvent } from '../../utils/forta'
 
 const TEST_TIMEOUT = 120_000 // ms
 
+const addrOverrides: Address = {
+  ...Address,
+  GATE_SEAL_DEFAULT_ADDRESS: '0x1ad5cb2955940f998081c1ef5f5f00875431aa90',
+}
+
+const rpcUrl: undefined = undefined
+
 describe('GateSeal srv functional tests', () => {
   const ethProvider = getEthersProvider()
 
   test(
     'handle pause role true',
     async () => {
-      const app = await App.getInstance()
+      const app = await App.getInstance(rpcUrl, addrOverrides)
 
-      const blockNumber = 19113580
+      const blockNumber = 19_113_580
       const block = await ethProvider.getBlock(blockNumber)
       const blockDto: BlockDto = {
         number: block.number,
@@ -30,7 +37,7 @@ describe('GateSeal srv functional tests', () => {
         throw initErr
       }
 
-      const status = await app.ethClient.checkGateSeal(blockNumber, Address.GATE_SEAL_DEFAULT_ADDRESS)
+      const status = await app.ethClient.checkGateSeal(blockNumber, addrOverrides.GATE_SEAL_DEFAULT_ADDRESS)
       if (E.isLeft(status)) {
         throw status
       }
@@ -53,7 +60,7 @@ describe('GateSeal srv functional tests', () => {
   test(
     '⚠️ GateSeal: is about to be expired',
     async () => {
-      const app = await App.getInstance()
+      const app = await App.getInstance(rpcUrl, addrOverrides)
 
       const initBlock = 19_172_614
 
@@ -94,7 +101,7 @@ describe('GateSeal srv functional tests', () => {
   test(
     '⚠️ GateSeal: a new instance deployed from factory',
     async () => {
-      const app = await App.getInstance()
+      const app = await App.getInstance(rpcUrl, addrOverrides)
       const txHash = '0x1547f17108830a92673b967aff13971fae18b4d35681b93a38a97a22083deb93'
 
       const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])

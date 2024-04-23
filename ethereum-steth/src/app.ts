@@ -82,7 +82,7 @@ export class App {
     return knex(config)
   }
 
-  public static async getInstance(rpcUrl?: string): Promise<Container> {
+  public static async getInstance(rpcUrl?: string, addressOverrides?: Address): Promise<Container> {
     if (!App.instance) {
       const db = App.getConnection()
 
@@ -99,7 +99,7 @@ export class App {
 
       const etherscanProvider = new ethers.providers.EtherscanProvider(ethersProvider.network, etherscanKey)
 
-      const address: Address = Address
+      const address: Address = addressOverrides !== undefined ? addressOverrides : Address
 
       const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
