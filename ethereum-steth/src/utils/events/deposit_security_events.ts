@@ -7,7 +7,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
   return [
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event DepositsPaused(address indexed guardian, uint24 indexed stakingModuleId)',
+      abi: 'event DepositsPaused(address indexed guardian, uint24 indexed stakingModuleId)',
       alertId: 'LIDO-DEPOSITS-PAUSED',
       name: '🚨 Deposit Security: Deposits paused',
       description: (args: Result) =>
@@ -17,7 +17,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event GuardianQuorumChanged(uint256 newValue)',
+      abi: 'event GuardianQuorumChanged(uint256 newValue)',
       alertId: 'LIDO-DEPOSITOR-GUARDIAN-QUORUM-CHANGED',
       name: '🚨 Deposit Security: Guardian quorum changed',
       description: (args: Result) => `New quorum size ${args.newValue}`,
@@ -26,7 +26,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event OwnerChanged(address newValue)',
+      abi: 'event OwnerChanged(address newValue)',
       alertId: 'LIDO-DEPOSITOR-OWNER-CHANGED',
       name: '🚨 Deposit Security: Owner changed',
       description: (args: Result) => `New owner ${etherscanAddress(args.newValue)}`,
@@ -35,7 +35,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event DepositsUnpaused(uint24 indexed stakingModuleId)',
+      abi: 'event DepositsUnpaused(uint24 indexed stakingModuleId)',
       alertId: 'LIDO-DEPOSITS-UNPAUSED',
       name: '⚠️ Deposit Security: Deposits resumed',
       description: (args: Result) => `Deposits were resumed for ${args.stakingModuleId} staking module`,
@@ -44,7 +44,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event GuardianAdded(address guardian)',
+      abi: 'event GuardianAdded(address guardian)',
       alertId: 'LIDO-DEPOSITOR-GUARDIAN-ADDED',
       name: '⚠️ Deposit Security: Guardian added',
       description: (args: Result) => `New guardian added ${etherscanAddress(args.guardian)}`,
@@ -53,7 +53,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event GuardianRemoved(address guardian)',
+      abi: 'event GuardianRemoved(address guardian)',
       alertId: 'LIDO-DEPOSITOR-GUARDIAN-REMOVED',
       name: '⚠️ Deposit Security: Guardian removed',
       description: (args: Result) => `Guardian ${etherscanAddress(args.guardian)} was removed`,
@@ -62,7 +62,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event MaxDepositsChanged(uint256 newValue)',
+      abi: 'event MaxDepositsChanged(uint256 newValue)',
       alertId: 'LIDO-DEPOSITOR-MAX-DEPOSITS-CHANGED',
       name: '⚠️ Deposit Security: Max deposits changed',
       description: (args: Result) => `New value ${args.newValue}`,
@@ -71,7 +71,7 @@ export function getDepositSecurityEvents(DEPOSIT_SECURITY_ADDRESS: string): Even
     },
     {
       address: DEPOSIT_SECURITY_ADDRESS,
-      event: 'event MinDepositBlockDistanceChanged(uint256 newValue)',
+      abi: 'event MinDepositBlockDistanceChanged(uint256 newValue)',
       alertId: 'LIDO-DEPOSITOR-MIN-DEPOSITS-BLOCK-DISTANCE-CHANGED',
       name: '⚠️ Deposit Security: Min deposit block distance changed',
       description: (args: Result) => `New value ${args.newValue}`,

@@ -9,7 +9,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
   return [
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event Stopped()',
+      abi: 'event Stopped()',
       alertId: 'LIDO-STOPPED',
       name: '🚨🚨🚨 Lido: Stopped 🚨🚨🚨',
       description: () => `Lido DAO contract was stopped`,
@@ -18,7 +18,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event StakingLimitRemoved()',
+      abi: 'event StakingLimitRemoved()',
       alertId: 'LIDO-STAKING-LIMIT-REMOVED',
       name: '🚨 Lido: Staking limit removed',
       description: () => `Staking limit was removed`,
@@ -27,7 +27,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event LidoLocatorSet(address lidoLocator)',
+      abi: 'event LidoLocatorSet(address lidoLocator)',
       alertId: 'LIDO-LOCATOR-SET',
       name: '🚨 Lido: Locator set',
       description: (args: Result) => `Lido locator was set to: ${etherscanAddress(args.lidoLocator)}`,
@@ -36,7 +36,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event StakingPaused()',
+      abi: 'event StakingPaused()',
       alertId: 'LIDO-STAKING-PAUSED',
       name: '🚨 Lido: Staking paused',
       description: () => `Staking was paused!`,
@@ -45,7 +45,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event Resumed()',
+      abi: 'event Resumed()',
       alertId: 'LIDO-RESUMED',
       name: '⚠️ Lido: Resumed',
       description: () => `Lido DAO contract was resumed`,
@@ -54,7 +54,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event StakingResumed()',
+      abi: 'event StakingResumed()',
       alertId: 'LIDO-STAKING-RESUMED',
       name: '⚠️ Lido: Staking resumed',
       description: () => `Staking was resumed!`,
@@ -63,7 +63,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)',
+      abi: 'event StakingLimitSet(uint256 maxStakeLimit, uint256 stakeLimitIncreasePerBlock)',
       alertId: 'LIDO-STAKING-LIMIT-SET',
       name: '⚠️ Lido: Staking limit set',
       description: (args: Result) =>
@@ -75,7 +75,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event RecoverToVault(address vault, address token, uint256 amount)',
+      abi: 'event RecoverToVault(address vault, address token, uint256 amount)',
       alertId: 'LIDO-RECOVER-TO-VAULT',
       name: '⚠️ Lido: Funds recovered to vault',
       description: (args: Result) =>
@@ -88,7 +88,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event: 'event ContractVersionSet(uint256 version)',
+      abi: 'event ContractVersionSet(uint256 version)',
       alertId: 'LIDO-CONTRACT-VERSION-SET',
       name: '⚠️ Lido: Contract version set',
       description: (args: Result) => `Contract version set:\n` + `Version: ${args.version}`,
@@ -97,8 +97,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      event:
-        'event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)',
+      abi: 'event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)',
       alertId: alertId_token_rebased,
       name: 'ℹ️ Lido: Token rebased',
       description: (args: Result) => `reportTimestamp: ${args.reportTimestamp}`,

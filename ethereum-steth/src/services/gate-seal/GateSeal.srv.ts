@@ -1,32 +1,33 @@
 import { elapsedTime, formatDelay } from '../../utils/time'
 import * as E from 'fp-ts/Either'
-import { GateSealExpiredErr } from '../../entity/gate_seal'
+import { GateSeal, GateSealExpiredErr } from '../../entity/gate_seal'
 import { GateSealCache } from './GateSeal.cache'
-import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT, GATE_SEAL_SEALED_EVENT } from '../../utils/events/gate_seal_events'
 import { etherscanAddress } from '../../utils/string'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
-import { IGateSealClient } from './contract'
-import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { BlockDto } from '../../entity/events'
+import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { BlockDto, TransactionDto } from '../../entity/events'
+import BigNumber from 'bignumber.js'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
 const ONE_WEEK = 7 * ONE_DAY
+const TWO_WEEKS = 2 * ONE_WEEK
 const ONE_MONTH = ONE_WEEK * 4
 const THREE_MONTHS = ONE_MONTH * 3
 
-const GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY = ONE_DAY
+export abstract class IGateSealClient {
+  public abstract checkGateSeal(blockNumber: number, gateSealAddress: string): Promise<E.Either<Error, GateSeal>>
 
-const GATE_SEAL_EXPIRY_TRIGGER_EVERY = ONE_WEEK
-const GATE_SEAL_EXPIRY_THRESHOLD = THREE_MONTHS
+  public abstract getExpiryTimestamp(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+}
 
 export class GateSealSrv {
   private readonly name = 'GateSealSrv'
   private readonly logger: Logger
 
-  private readonly ethProvider: IGateSealClient
+  private readonly gateSealClient: IGateSealClient
   private readonly cache: GateSealCache
   private readonly gateSealFactoryAddress: string
 
@@ -40,7 +41,7 @@ export class GateSealSrv {
     gateSealFactoryAddress: string,
   ) {
     this.logger = logger
-    this.ethProvider = ethProvider
+    this.gateSealClient = ethProvider
     this.cache = cache
     this.gateSealAddress = gateSealAddress
     this.gateSealFactoryAddress = gateSealFactoryAddress
@@ -53,7 +54,7 @@ export class GateSealSrv {
       return new Error(`Gate seal address is not provided`)
     }
 
-    const status = await this.ethProvider.checkGateSeal(currentBlock, this.gateSealAddress)
+    const status = await this.gateSealClient.checkGateSeal(currentBlock, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
         const f = Finding.fromObject({
@@ -125,7 +126,7 @@ export class GateSealSrv {
     }
 
     const currentBlockTimestamp = blockDto.timestamp
-    const status = await this.ethProvider.checkGateSeal(blockDto.number, this.gateSealAddress)
+    const status = await this.gateSealClient.checkGateSeal(blockDto.number, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
         const f = Finding.fromObject({
@@ -162,10 +163,7 @@ export class GateSealSrv {
           status.right.withdrawalQueueAddress,
         )}`
       }
-      if (
-        currentBlockTimestamp - this.cache.getLastNoPauseRoleAlertTimestamp() >
-        GATE_SEAL_WITHOUT_PAUSE_ROLE_TRIGGER_EVERY
-      ) {
+      if (currentBlockTimestamp - this.cache.getLastNoPauseRoleAlertTimestamp() > ONE_DAY) {
         out.push(
           Finding.fromObject({
             name: "🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
@@ -189,7 +187,7 @@ export class GateSealSrv {
     }
 
     const currentBlockTimestamp = blockDto.timestamp
-    const expiryTimestamp = await this.ethProvider.getExpiryTimestamp(blockDto.number)
+    const expiryTimestamp = await this.gateSealClient.getExpiryTimestamp(blockDto.number)
 
     if (E.isLeft(expiryTimestamp)) {
       return [
@@ -213,11 +211,8 @@ export class GateSealSrv {
         }),
       )
       this.gateSealAddress = undefined
-    } else if (
-      currentBlockTimestamp - this.cache.getLastExpiryGateSealAlertTimestamp() >
-      GATE_SEAL_EXPIRY_TRIGGER_EVERY
-    ) {
-      if (expiryTimestamp.right.toNumber() - currentBlockTimestamp <= GATE_SEAL_EXPIRY_THRESHOLD) {
+    } else if (currentBlockTimestamp - this.cache.getLastExpiryGateSealAlertTimestamp() > TWO_WEEKS) {
+      if (expiryTimestamp.right.toNumber() - currentBlockTimestamp <= THREE_MONTHS) {
         out.push(
           Finding.fromObject({
             name: '⚠️ GateSeal: is about to be expired',
@@ -234,7 +229,7 @@ export class GateSealSrv {
     return out
   }
 
-  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+  public handleTransaction(txEvent: TransactionDto): Finding[] {
     const findings: Finding[] = []
 
     const sealedGateSealFindings = this.handleSealedGateSeal(txEvent)
@@ -245,60 +240,72 @@ export class GateSealSrv {
     return findings
   }
 
-  public handleSealedGateSeal(txEvent: TransactionEvent): Finding[] {
+  public handleSealedGateSeal(txEvent: TransactionDto): Finding[] {
     if (this.gateSealAddress === undefined) {
       return []
     }
-    const sealedEvents = filterLog(txEvent.logs, GATE_SEAL_SEALED_EVENT, this.gateSealAddress)
-    if (sealedEvents.length === 0) {
-      return []
-    }
 
+    const iface = new ethers.utils.Interface([GATE_SEAL_SEALED_EVENT])
     const out: Finding[] = []
-    for (const sealedEvent of sealedEvents) {
-      const { sealed_by, sealed_for, sealable } = sealedEvent.args
-      const duration = formatDelay(Number(sealed_for))
-      out.push(
-        Finding.fromObject({
-          name: '🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨',
-          description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nSealed by: ${etherscanAddress(
-            sealed_by,
-          )}\nSealed for: ${duration}\nSealable: ${etherscanAddress(sealable)}`,
-          alertId: 'GATE-SEAL-IS-SEALED',
-          severity: FindingSeverity.Critical,
-          type: FindingType.Info,
-        }),
-      )
+    for (const log of txEvent.logs) {
+      if (log.address.toLowerCase() !== this.gateSealAddress.toLowerCase()) {
+        continue
+      }
+
+      try {
+        const sealedEvent = iface.parseLog(log)
+        const { sealed_by, sealed_for, sealable } = sealedEvent.args
+        const duration = formatDelay(Number(sealed_for))
+
+        out.push(
+          Finding.fromObject({
+            name: '🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨',
+            description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nSealed by: ${etherscanAddress(
+              sealed_by,
+            )}\nSealed for: ${duration}\nSealable: ${etherscanAddress(sealable)}`,
+            alertId: 'GATE-SEAL-IS-SEALED',
+            severity: FindingSeverity.Critical,
+            type: FindingType.Info,
+          }),
+        )
+      } catch (e) {
+        // Only one from eventsOfNotice could be correct
+        // Others - skipping
+      }
     }
 
     return out
   }
 
-  public handleNewGateSeal(txEvent: TransactionEvent): Finding[] {
-    const newGateSealEvents = filterLog(
-      txEvent.logs,
-      GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT,
-      this.gateSealFactoryAddress,
-    )
-    if (newGateSealEvents.length === 0) {
-      return []
-    }
-
+  public handleNewGateSeal(txEvent: TransactionDto): Finding[] {
+    const iface = new ethers.utils.Interface([GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT])
     const out: Finding[] = []
-    for (const newGateSealEvent of newGateSealEvents) {
-      const { gate_seal } = newGateSealEvent.args
-      out.push(
-        Finding.fromObject({
-          name: '⚠️ GateSeal: a new instance deployed from factory',
-          description: `New instance address: ${etherscanAddress(
-            gate_seal,
-          )}\ndev: Please, check if \`GATE_SEAL_DEFAULT_ADDRESS\` should be updated in the nearest future`,
-          alertId: 'GATE-SEAL-NEW-ONE-CREATED',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-        }),
-      )
-      this.gateSealAddress = gate_seal
+
+    for (const log of txEvent.logs) {
+      if (log.address.toLowerCase() !== this.gateSealFactoryAddress.toLowerCase()) {
+        continue
+      }
+
+      try {
+        const newGateSealEvent = iface.parseLog(log)
+        const { gate_seal } = newGateSealEvent.args
+
+        out.push(
+          Finding.fromObject({
+            name: '⚠️ GateSeal: a new instance deployed from factory',
+            description: `New instance address: ${etherscanAddress(
+              gate_seal,
+            )}\ndev: Please, check if \`GATE_SEAL_DEFAULT_ADDRESS\` should be updated in the nearest future`,
+            alertId: 'GATE-SEAL-NEW-ONE-CREATED',
+            severity: FindingSeverity.Medium,
+            type: FindingType.Info,
+          }),
+        )
+        this.gateSealAddress = gate_seal
+      } catch (e) {
+        // Only one from eventsOfNotice could be correct
+        // Others - skipping
+      }
     }
 
     return out

@@ -101,15 +101,12 @@ export class App {
 
       const address: Address = Address
 
-      const lidoContact = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
+      const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethersProvider)
 
-      const wdQueueContact = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drpcProvider)
+      const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drpcProvider)
 
       const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
-      const exitBusOracleContract = ValidatorsExitBusOracle__factory.connect(
-        address.EXIT_BUS_ORACLE_ADDRESS,
-        ethersProvider,
-      )
+      const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, ethersProvider)
 
       const logger: Winston.Logger = Winston.createLogger({
         format: Winston.format.simple(),
@@ -120,10 +117,10 @@ export class App {
         logger,
         ethersProvider,
         etherscanProvider,
-        lidoContact,
-        wdQueueContact,
+        lidoRunner,
+        wdQueueRunner,
         gateSealContact,
-        exitBusOracleContract,
+        veboRunner,
       )
 
       const stethOperationCache = new StethOperationCache()
@@ -162,10 +159,10 @@ export class App {
         logger,
         drpcProvider,
         etherscanProvider,
-        lidoContact,
-        wdQueueContact,
+        lidoRunner,
+        wdQueueRunner,
         gateSealContact,
-        exitBusOracleContract,
+        veboRunner,
       )
 
       const vaultSrv = new VaultSrv(

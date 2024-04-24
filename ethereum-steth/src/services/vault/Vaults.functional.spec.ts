@@ -35,7 +35,7 @@ describe('Vaults.srv functional tests', () => {
       const expected = Finding.fromObject({
         alertId: 'EL-VAULT-BALANCE-CHANGE',
         description: `EL Vault Balance has increased by 689.017 ETH`,
-        name: '💵 EL Vault Balance significant change',
+        name: 'ℹ️ EL Vault Balance significant change',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
       })

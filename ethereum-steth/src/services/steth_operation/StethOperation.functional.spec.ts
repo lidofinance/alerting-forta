@@ -1,9 +1,8 @@
-import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider, Network, Transaction } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
 import { App } from '../../app'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { createTransactionEvent } from '../../utils/forta'
 import BigNumber from 'bignumber.js'
-import { BlockDto } from '../../entity/events'
+import { BlockDto, TransactionDto } from '../../entity/events'
 
 const TEST_TIMEOUT = 60_000 // ms
 
@@ -86,16 +85,20 @@ describe('Steth.srv functional tests', () => {
       const app = await App.getInstance()
       const txHash = '0x11a48020ae69cf08bd063f1fbc8ecf65bd057015aaa991bf507dbc598aadb68e'
 
-      const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
-      const block = await ethProvider.send('eth_getBlockByNumber', [
-        ethers.utils.hexValue(parseInt(receipt.blockNumber)),
-        true,
-      ])
-      const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
+      const trx = await ethProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
 
-      const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
 
-      const results = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.blockNumber)
+      const results = await app.StethOperationSrv.handleTransaction(transactionDto)
 
       const expected = [
         {
@@ -141,16 +144,19 @@ describe('Steth.srv functional tests', () => {
       const app = await App.getInstance()
       const txHash = '0x91c7c2f33faf3b5fb097138c1d49c1d4e83f99e1c3b346b3cad35a5928c03b3a'
 
-      const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
-      const block = await ethProvider.send('eth_getBlockByNumber', [
-        ethers.utils.hexValue(parseInt(receipt.blockNumber)),
-        true,
-      ])
-      const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
+      const trx = await ethProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
 
-      const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
-
-      const results = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.blockNumber)
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+      const results = await app.StethOperationSrv.handleTransaction(transactionDto)
 
       const expected = [
         {
@@ -195,14 +201,20 @@ describe('Steth.srv functional tests', () => {
       const app = await App.getInstance()
       const txHash = '0xe71ac8b9f8f7b360f5defd3f6738f8482f8c15f1dd5f6827544bef8b7b4fbd37'
 
-      const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
-      const block = await ethProvider.send('eth_getBlockByNumber', [
-        ethers.utils.hexValue(parseInt(receipt.blockNumber)),
-        true,
-      ])
-      const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
-      const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
-      const results = await app.StethOperationSrv.handleTransaction(txEvent, parseInt(receipt.blockNumber))
+      const trx = await ethProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = await app.StethOperationSrv.handleTransaction(transactionDto)
 
       const expected: Finding = Finding.fromObject({
         name: 'ℹ️ Lido: Token rebased',

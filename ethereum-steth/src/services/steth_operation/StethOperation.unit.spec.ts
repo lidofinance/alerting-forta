@@ -1,11 +1,4 @@
-import {
-  MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL,
-  MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME,
-  MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM,
-  MAX_DEPOSITOR_TX_DELAY,
-  MIN_DEPOSIT_EXECUTOR_BALANCE,
-  StethOperationSrv,
-} from './StethOperation.srv'
+import { ETH_20K, HOUR_1, ETH_10K, DAYS_3, ETH_2, StethOperationSrv } from './StethOperation.srv'
 import { StethOperationCache } from './StethOperation.cache'
 import * as E from 'fp-ts/Either'
 import { Address, ETH_DECIMALS } from '../../utils/constants'
@@ -18,19 +11,13 @@ import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { faker } from '@faker-js/faker'
 import { BigNumber as EtherBigNumber } from 'ethers'
 import BigNumber from 'bignumber.js'
-import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import * as Winston from 'winston'
 import { TypedEvent } from '../../generated/common'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
-import {
-  getFilteredBurnerEventsMock,
-  getFilteredDepositSecurityEventsMock,
-  getFilteredInsuranceFundEventsMock,
-  getFilteredLidoEventsMock,
-} from '../../utils/events/mocks/events.mock'
 import { IStethClient } from './contracts'
 import { StethClientMock } from './mocks/mock'
-import { TransactionEventContractMock, TypedEventMock } from './mocks/eth_evnt.mock'
+import { TypedEventMock } from './mocks/eth_evnt.mock'
 
 describe('StethOperationSrv', () => {
   let ethProviderMock: jest.Mocked<IStethClient>
@@ -491,9 +478,7 @@ describe('StethOperationSrv', () => {
       const bufferedEther = new BigNumber(180).multipliedBy(ETH_DECIMALS)
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(bufferedEther))
 
-      const mockDepositableEther = EtherBigNumber.from(MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM + 1).mul(
-        EtherBigNumber.from(ETH_DECIMALS.toString()),
-      )
+      const mockDepositableEther = EtherBigNumber.from(ETH_10K + 1).mul(EtherBigNumber.from(ETH_DECIMALS.toString()))
       ethProviderMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(mockDepositableEther.toString())))
 
       // shifte3dBufferedEthRaw
@@ -514,7 +499,7 @@ describe('StethOperationSrv', () => {
 
       const cache = new StethOperationCache()
 
-      cache.setLastDepositorTxTime(date.setHours(-(MAX_DEPOSITOR_TX_DELAY + 1)))
+      cache.setLastDepositorTxTime(date.setHours(-(DAYS_3 + 1)))
       const srv = new StethOperationSrv(
         logger,
         cache,
@@ -537,7 +522,7 @@ describe('StethOperationSrv', () => {
         description:
           `There are ${bufferedEth.toFixed(2)} ` +
           `depositable ETH in DAO and there are more than ` +
-          `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
+          `${Math.floor(DAYS_3 / (60 * 60))} ` +
           `hours since last Depositor TX`,
         name: '⚠️ High depositable ETH amount',
         severity: FindingSeverity.Medium,
@@ -558,9 +543,7 @@ describe('StethOperationSrv', () => {
       const bufferedEther = new BigNumber(180).multipliedBy(ETH_DECIMALS)
       ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(bufferedEther))
 
-      const mockDepositableEther = EtherBigNumber.from(MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL + 1).mul(
-        EtherBigNumber.from(ETH_DECIMALS.toString()),
-      )
+      const mockDepositableEther = EtherBigNumber.from(ETH_20K + 1).mul(EtherBigNumber.from(ETH_DECIMALS.toString()))
       ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(mockDepositableEther.toString())))
 
       // shifte3dBufferedEthRaw
@@ -602,8 +585,7 @@ describe('StethOperationSrv', () => {
       const expected = Finding.fromObject({
         alertId: 'HUGE-DEPOSITABLE-ETH',
         description:
-          `There are 20001.00 depositable ETH in DAO for more than ` +
-          `${Math.floor(MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME / (60 * 60))} hour(s)`,
+          `There are 20001.00 depositable ETH in DAO for more than ` + `${Math.floor(HOUR_1 / (60 * 60))} hour(s)`,
         name: '🚨 Huge depositable ETH amount',
         severity: FindingSeverity.High,
         type: FindingType.Suspicious,
@@ -661,7 +643,7 @@ describe('StethOperationSrv', () => {
     })
 
     test('⚠️ Low deposit executor balance', async () => {
-      const executorBalanceRaw = new BigNumber(MIN_DEPOSIT_EXECUTOR_BALANCE - 1).multipliedBy(ETH_DECIMALS)
+      const executorBalanceRaw = new BigNumber(ETH_2 - 1).multipliedBy(ETH_DECIMALS)
       ethProviderMock.getBalance.mockResolvedValueOnce(E.right(executorBalanceRaw))
 
       const cache = new StethOperationCache()
@@ -830,154 +812,6 @@ describe('StethOperationSrv', () => {
       expect(result[0].type).toEqual(expected.type)
 
       expect(srv.getStorage().getLastReportedStakingLimit30Timestamp()).toEqual(currentBlockDate.getTime())
-    })
-  })
-
-  describe('handleTransaction', () => {
-    test('success', async () => {
-      const cache = new StethOperationCache()
-
-      const depositEvents = getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS)
-      const lidoEvents = getLidoEvents(address.LIDO_STETH_ADDRESS)
-      const insuranceFundEvents = getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20)
-      const burnerEvents = getBurnerEvents(address.BURNER_ADDRESS)
-
-      const events = [...depositEvents, ...lidoEvents, ...insuranceFundEvents, ...burnerEvents]
-
-      const shareRateMock = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
-      ethProviderMock.getShareRate.mockResolvedValue(E.right(shareRateMock))
-
-      const srv = new StethOperationSrv(
-        logger,
-        cache,
-        ethProviderMock,
-        address.DEPOSIT_SECURITY_ADDRESS,
-        address.LIDO_STETH_ADDRESS,
-        address.DEPOSIT_EXECUTOR_ADDRESS,
-
-        depositEvents,
-        lidoEvents,
-        insuranceFundEvents,
-        burnerEvents,
-      )
-
-      const txEventMock = TransactionEventContractMock()
-      txEventMock.addresses = {
-        [address.DEPOSIT_SECURITY_ADDRESS]: true,
-        [address.LIDO_STETH_ADDRESS]: true,
-        [address.INSURANCE_FUND_ADDRESS]: true,
-        [address.BURNER_ADDRESS]: true,
-      }
-
-      txEventMock.to = address.DEPOSIT_SECURITY_ADDRESS
-
-      const filteredEvents: LogDescription[] = []
-      for (const logDescription of [
-        ...getFilteredDepositSecurityEventsMock(),
-        ...getFilteredLidoEventsMock(),
-        ...getFilteredInsuranceFundEventsMock(),
-        ...getFilteredBurnerEventsMock(),
-      ]) {
-        filteredEvents.push(logDescription)
-        txEventMock.filterLog.mockReturnValueOnce([logDescription])
-      }
-
-      const blockNumber = 19061521
-      const result = await srv.handleTransaction(txEventMock, blockNumber)
-
-      for (let i = 0; i < result.length; i++) {
-        const expected: Finding = Finding.fromObject({
-          name: events[i].name,
-          description: events[i].description(filteredEvents[i].args),
-          alertId: events[i].alertId,
-          severity: events[i].severity,
-          type: events[i].type,
-          metadata: { args: String(filteredEvents[i].args) },
-        })
-
-        expect(result[i]).toEqual(expected)
-      }
-
-      expect(srv.getStorage().getShareRate().amount).toEqual(shareRateMock)
-      expect(srv.getStorage().getShareRate().blockNumber).toEqual(19061521)
-    })
-
-    test('get shareRate error', async () => {
-      const cache = new StethOperationCache()
-
-      const depositEvents = getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS)
-      const lidoEvents = getLidoEvents(address.LIDO_STETH_ADDRESS)
-      const insuranceFundEvents = getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20)
-      const burnerEvents = getBurnerEvents(address.BURNER_ADDRESS)
-
-      const events = [...depositEvents, ...lidoEvents, ...insuranceFundEvents, ...burnerEvents]
-
-      ethProviderMock.getShareRate.mockResolvedValue(E.left(new Error('shareRateErr')))
-
-      const srv = new StethOperationSrv(
-        logger,
-        cache,
-        ethProviderMock,
-        address.DEPOSIT_SECURITY_ADDRESS,
-        address.LIDO_STETH_ADDRESS,
-        address.DEPOSIT_EXECUTOR_ADDRESS,
-
-        depositEvents,
-        lidoEvents,
-        insuranceFundEvents,
-        burnerEvents,
-      )
-
-      const txEventMock = TransactionEventContractMock()
-      txEventMock.addresses = {
-        [address.DEPOSIT_SECURITY_ADDRESS]: true,
-        [address.LIDO_STETH_ADDRESS]: true,
-        [address.INSURANCE_FUND_ADDRESS]: true,
-        [address.BURNER_ADDRESS]: true,
-      }
-
-      txEventMock.to = address.DEPOSIT_SECURITY_ADDRESS
-
-      const filteredEvents: LogDescription[] = []
-      for (const logDescription of [
-        ...getFilteredDepositSecurityEventsMock(),
-        ...getFilteredLidoEventsMock(),
-        ...getFilteredInsuranceFundEventsMock(),
-        ...getFilteredBurnerEventsMock(),
-      ]) {
-        filteredEvents.push(logDescription)
-        txEventMock.filterLog.mockReturnValueOnce([logDescription])
-      }
-
-      const blockNumber = 19061521
-      const result = await srv.handleTransaction(txEventMock, blockNumber)
-
-      for (let i = 0; i < result.length - 1; i++) {
-        const expected: Finding = Finding.fromObject({
-          name: events[i].name,
-          description: events[i].description(filteredEvents[i].args),
-          alertId: events[i].alertId,
-          severity: events[i].severity,
-          type: events[i].type,
-          metadata: { args: String(filteredEvents[i].args) },
-        })
-
-        expect(result[i]).toEqual(expected)
-      }
-
-      const expectedShareRateErrFinding = Finding.fromObject({
-        alertId: 'NETWORK-ERROR',
-        description: `Could not call ethProvider.getShareRate`,
-        name: 'Error in StethOperationSrv.handleTransaction:192',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
-
-      expect(result[result.length - 1].name).toEqual(expectedShareRateErrFinding.name)
-      expect(result[result.length - 1].description).toEqual(expectedShareRateErrFinding.description)
-      expect(result[result.length - 1].alertId).toEqual(expectedShareRateErrFinding.alertId)
-      expect(result[result.length - 1].severity).toEqual(expectedShareRateErrFinding.severity)
-      expect(result[result.length - 1].type).toEqual(expectedShareRateErrFinding.type)
     })
   })
 

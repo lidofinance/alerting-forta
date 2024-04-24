@@ -2,9 +2,9 @@ import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { EventOfNotice } from '../../entity/events'
+import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
-import { IStethClient, TransactionEventContract } from './contracts'
+import { IStethClient } from './contracts'
 import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
@@ -12,18 +12,16 @@ import { BlockDto } from '../../entity/events'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
-const BLOCK_CHECK_INTERVAL: number = 100
-const BLOCK_CHECK_INTERVAL_SMAll: number = 25
-export const MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM = 10_000 // 10000 ETH
-export const MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL: number = 20_000 // 20000 ETH
-const REPORT_WINDOW = 60 * 60 * 24 // 24 hours
-export const MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME = 60 * 60 // 1 hour
-
-export const MAX_DEPOSITOR_TX_DELAY = 60 * 60 * 72 // 72 Hours
-const REPORT_WINDOW_EXECUTOR_BALANCE = 60 * 60 * 4 // 4 Hours
-export const MIN_DEPOSIT_EXECUTOR_BALANCE = 2 // 2 ETH
-const REPORT_WINDOW_STAKING_LIMIT_10 = 60 * 60 * 12 // 12 hours
-const REPORT_WINDOW_STAKING_LIMIT_30 = 60 * 60 * 12 // 12 hours
+const ONCE_PER_100_BLOCKS: number = 100
+const ONCE_PER_25_BLOCKS: number = 25
+export const ETH_10K = 10_000 // 10000 ETH
+export const ETH_20K: number = 20_000 // 20000 ETH
+const HOURS_24 = 60 * 60 * 24 // 24 hours
+export const HOUR_1 = 60 * 60 // 1 hour
+const HOURS_4 = 60 * 60 * 4 // 4 Hours
+const HOURS_12 = 60 * 60 * 12 // 12 Hours
+export const DAYS_3 = 60 * 60 * 72 // 72 Hours
+export const ETH_2 = 2 // 2 ETH
 
 export class StethOperationSrv {
   private readonly name = 'StethOperationSrv'
@@ -163,22 +161,22 @@ export class StethOperationSrv {
     return findings
   }
 
-  public async handleTransaction(txEvent: TransactionEventContract, blockNumber: number): Promise<Finding[]> {
+  public async handleTransaction(txEvent: TransactionDto): Promise<Finding[]> {
     const out: Finding[] = []
 
-    if (txEvent.to == this.depositSecurityAddress) {
+    if (txEvent.to !== null && txEvent.to.toLowerCase() == this.depositSecurityAddress.toLowerCase()) {
       this.cache.setLastDepositorTxTime(txEvent.timestamp)
     }
 
-    const depositSecFindings = this.handleEventsOfNotice(txEvent, this.depositSecurityEvents)
-    const lidoFindings = this.handleEventsOfNotice(txEvent, this.lidoEvents)
-    const insuranceFundFindings = this.handleEventsOfNotice(txEvent, this.insuranceFundEvents)
-    const burnerFindings = this.handleEventsOfNotice(txEvent, this.burnerEvents)
-    out.push(...depositSecFindings, ...lidoFindings, ...insuranceFundFindings, ...burnerFindings)
+    const lidoFindings = handleEventsOfNotice(txEvent, this.lidoEvents)
+    const depositSecFindings = handleEventsOfNotice(txEvent, this.depositSecurityEvents)
+    const insuranceFundFindings = handleEventsOfNotice(txEvent, this.insuranceFundEvents)
+    const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
+    out.push(...lidoFindings, ...depositSecFindings, ...insuranceFundFindings, ...burnerFindings)
 
     for (const f of lidoFindings) {
       if (f.alertId === alertId_token_rebased) {
-        const shareRate = await this.ethProvider.getShareRate(blockNumber)
+        const shareRate = await this.ethProvider.getShareRate(txEvent.block.number)
         if (E.isLeft(shareRate)) {
           const f: Finding = networkAlert(
             shareRate.left,
@@ -190,32 +188,8 @@ export class StethOperationSrv {
         } else {
           this.cache.setShareRate({
             amount: shareRate.right,
-            blockNumber: blockNumber,
+            blockNumber: txEvent.block.number,
           })
-        }
-      }
-    }
-
-    return out
-  }
-
-  public handleEventsOfNotice(txEvent: TransactionEventContract, eventsOfNotice: EventOfNotice[]) {
-    const out: Finding[] = []
-    for (const eventInfo of eventsOfNotice) {
-      if (eventInfo.address in txEvent.addresses) {
-        const filteredEvents = txEvent.filterLog(eventInfo.event, eventInfo.address)
-
-        for (const filteredEvent of filteredEvents) {
-          out.push(
-            Finding.fromObject({
-              name: eventInfo.name,
-              description: eventInfo.description(filteredEvent.args),
-              alertId: eventInfo.alertId,
-              severity: eventInfo.severity,
-              type: eventInfo.type,
-              metadata: { args: String(filteredEvent.args) },
-            }),
-          )
         }
       }
     }
@@ -306,7 +280,7 @@ export class StethOperationSrv {
       }
     }
 
-    if (blockNumber % BLOCK_CHECK_INTERVAL === 0) {
+    if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
       const depositableEtherRaw = await this.ethProvider.getDepositableEther(blockNumber)
       if (E.isLeft(depositableEtherRaw)) {
         return [
@@ -320,7 +294,7 @@ export class StethOperationSrv {
       const depositableEther = depositableEtherRaw.right.div(ETH_DECIMALS).toNumber()
 
       // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
-      if (depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL) {
+      if (depositableEther > ETH_20K) {
         if (this.cache.getCriticalDepositableAmountTimestamp() === 0) {
           this.cache.setCriticalDepositableAmountTimestamp(blockTimestamp)
         }
@@ -329,10 +303,10 @@ export class StethOperationSrv {
         this.cache.setCriticalDepositableAmountTimestamp(0)
       }
 
-      if (this.cache.getLastReportedDepositableEthTimestamp() + REPORT_WINDOW < blockTimestamp) {
+      if (this.cache.getLastReportedDepositableEthTimestamp() + HOURS_24 < blockTimestamp) {
         if (
-          depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL &&
-          this.cache.getCriticalDepositableAmountTimestamp() + MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME < blockTimestamp
+          depositableEther > ETH_20K &&
+          this.cache.getCriticalDepositableAmountTimestamp() + HOUR_1 < blockTimestamp
         ) {
           out.push(
             Finding.fromObject({
@@ -340,7 +314,7 @@ export class StethOperationSrv {
               description:
                 `There are ${depositableEther.toFixed(2)} ` +
                 `depositable ETH in DAO for more than ` +
-                `${Math.floor(MAX_DEPOSITABLE_ETH_AMOUNT_CRITICAL_TIME / (60 * 60))} hour(s)`,
+                `${Math.floor(HOUR_1 / (60 * 60))} hour(s)`,
               alertId: 'HUGE-DEPOSITABLE-ETH',
               severity: FindingSeverity.High,
               type: FindingType.Suspicious,
@@ -348,9 +322,9 @@ export class StethOperationSrv {
           )
           this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
         } else if (
-          depositableEther > MAX_DEPOSITABLE_ETH_AMOUNT_MEDIUM &&
+          depositableEther > ETH_10K &&
           this.cache.getLastDepositorTxTime() !== 0 &&
-          this.cache.getLastDepositorTxTime() + MAX_DEPOSITOR_TX_DELAY < blockTimestamp
+          this.cache.getLastDepositorTxTime() + DAYS_3 < blockTimestamp
         ) {
           const bufferedEth = bufferedEthRaw.right.div(ETH_DECIMALS).toNumber()
 
@@ -360,7 +334,7 @@ export class StethOperationSrv {
               description:
                 `There are ${bufferedEth.toFixed(2)} ` +
                 `depositable ETH in DAO and there are more than ` +
-                `${Math.floor(MAX_DEPOSITOR_TX_DELAY / (60 * 60))} ` +
+                `${Math.floor(DAYS_3 / (60 * 60))} ` +
                 `hours since last Depositor TX`,
               alertId: 'HIGH-DEPOSITABLE-ETH',
               severity: FindingSeverity.Medium,
@@ -377,11 +351,8 @@ export class StethOperationSrv {
 
   public async handleDepositExecutorBalance(blockNumber: number, currentBlockTimestamp: number): Promise<Finding[]> {
     const out: Finding[] = []
-    if (blockNumber % BLOCK_CHECK_INTERVAL === 0) {
-      if (
-        this.cache.getLastReportedExecutorBalanceTimestamp() + REPORT_WINDOW_EXECUTOR_BALANCE <
-        currentBlockTimestamp
-      ) {
+    if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
+      if (this.cache.getLastReportedExecutorBalanceTimestamp() + HOURS_4 < currentBlockTimestamp) {
         const executorBalanceRaw = await this.ethProvider.getBalance(this.lidoDepositExecutorAddress, blockNumber)
         if (E.isLeft(executorBalanceRaw)) {
           return [
@@ -394,7 +365,7 @@ export class StethOperationSrv {
         }
 
         const executorBalance = executorBalanceRaw.right.div(ETH_DECIMALS).toNumber()
-        if (executorBalance < MIN_DEPOSIT_EXECUTOR_BALANCE) {
+        if (executorBalance < ETH_2) {
           this.cache.setLastReportedExecutorBalanceTimestamp(currentBlockTimestamp)
           out.push(
             Finding.fromObject({
@@ -415,7 +386,7 @@ export class StethOperationSrv {
 
   public async handleStakingLimit(blockNumber: number, currentBlockTimestamp: number): Promise<Finding[]> {
     const out: Finding[] = []
-    if (blockNumber % BLOCK_CHECK_INTERVAL_SMAll === 0) {
+    if (blockNumber % ONCE_PER_25_BLOCKS === 0) {
       const stakingLimitInfo = await this.ethProvider.getStakingLimitInfo(blockNumber)
       if (E.isLeft(stakingLimitInfo)) {
         return [
@@ -431,7 +402,7 @@ export class StethOperationSrv {
       const maxStakingLimit = stakingLimitInfo.right.maxStakeLimit
 
       if (
-        this.cache.getLastReportedStakingLimit10Timestamp() + REPORT_WINDOW_STAKING_LIMIT_10 < currentBlockTimestamp &&
+        this.cache.getLastReportedStakingLimit10Timestamp() + HOURS_12 < currentBlockTimestamp &&
         currentStakingLimit.isLessThan(maxStakingLimit.times(0.1))
       ) {
         out.push(
@@ -445,7 +416,7 @@ export class StethOperationSrv {
         )
         this.cache.setLastReportedStakingLimit10Timestamp(currentBlockTimestamp)
       } else if (
-        this.cache.getLastReportedStakingLimit30Timestamp() + REPORT_WINDOW_STAKING_LIMIT_30 < currentBlockTimestamp &&
+        this.cache.getLastReportedStakingLimit30Timestamp() + HOURS_12 < currentBlockTimestamp &&
         currentStakingLimit.isLessThan(maxStakingLimit.times(0.3))
       ) {
         out.push(
