@@ -20,7 +20,7 @@ import { IAclChangesClient } from '../services/acl-changes/contract'
 import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contract'
 import { BLOCK_TO_WATCH } from 'constants/stonks'
 import { TypedEvent } from '../generated/common'
-import { Stonks__factory } from '../generated/factories/Stonks__factory'
+import { Stonks__factory } from '../generated'
 import { formatEther } from 'ethers/lib/utils'
 
 const DELAY_IN_500MS = 500

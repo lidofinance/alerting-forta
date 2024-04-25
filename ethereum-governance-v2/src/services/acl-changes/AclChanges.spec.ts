@@ -46,7 +46,7 @@ describe('AclChangesSrv', () => {
     logger = { info: jest.fn() } as unknown as Logger
     ethProvider = {
       getRoleMembers: jest.fn(),
-      getOwner: jest.fn(),
+      getContractOwner: jest.fn(),
       isDeployed: jest.fn(),
     } as unknown as IAclChangesClient
     aclChangesSrv = new AclChangesSrv(logger, ethProvider)
