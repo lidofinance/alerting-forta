@@ -105,7 +105,7 @@ export class App {
 
       const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, drpcProvider)
 
-      const gateSealContact = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
+      const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethersProvider)
       const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, ethersProvider)
 
       const logger: Winston.Logger = Winston.createLogger({
@@ -119,7 +119,7 @@ export class App {
         etherscanProvider,
         lidoRunner,
         wdQueueRunner,
-        gateSealContact,
+        gateSealRunner,
         veboRunner,
       )
 
@@ -161,7 +161,7 @@ export class App {
         etherscanProvider,
         lidoRunner,
         wdQueueRunner,
-        gateSealContact,
+        gateSealRunner,
         veboRunner,
       )
 
