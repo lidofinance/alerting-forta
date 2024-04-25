@@ -94,13 +94,13 @@ export const handleBlock = (): HandleBlock => {
     isHandleBlockRunning = true
     const app = await App.getInstance()
 
-    const out: Finding[] = []
+    const findings: Finding[] = []
     const findingsAsync = await app.findingsRW.read()
     if (findingsAsync.length > 0) {
-      out.push(...findingsAsync)
+      findings.push(...findingsAsync)
     }
 
-    const [aclChangesFindings, aragonVotingFindings, ensNamesFindings, proxyWatcherFindings, stonksFindings] =
+    const servicesFindings = (
       await Promise.all([
         app.AclChangesSrv.handleBlock(blockEvent),
         app.AragonVotingSrv.handleBlock(blockEvent),
@@ -108,43 +108,34 @@ export const handleBlock = (): HandleBlock => {
         app.ProxyWatcherSrv.handleBlock(blockEvent),
         app.StonksSrv.handleBlock(blockEvent),
       ])
+    ).flat()
+    findings.push(...servicesFindings)
 
-    out.push(
-      ...aclChangesFindings,
-      ...aragonVotingFindings,
-      ...ensNamesFindings,
-      ...proxyWatcherFindings,
-      ...stonksFindings,
-    )
-    app.healthChecker.check(out)
+    app.healthChecker.check(findings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
     isHandleBlockRunning = false
-    return out
+    return findings
   }
 }
 
 export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
-    const out: Finding[] = []
 
-    const aclChangesFindings = await app.AclChangesSrv.handleTransaction(txEvent)
-    const aragonVotingFindings = await app.AragonVotingSrv.handleTransaction(txEvent)
-    const easyTrackFindings = await app.EasyTrackSrv.handleTransaction(txEvent)
-    const trpChangesFindings = await app.TrpChangesSrv.handleTransaction(txEvent)
-    const stonksFindings = await app.StonksSrv.handleTransaction(txEvent)
-    out.push(
-      ...aclChangesFindings,
-      ...aragonVotingFindings,
-      ...easyTrackFindings,
-      ...trpChangesFindings,
-      ...stonksFindings,
-    )
-    out.push(...stonksFindings)
-    app.healthChecker.check(out)
+    const findings: Finding[] = (
+      await Promise.all([
+        await app.AclChangesSrv.handleTransaction(txEvent),
+        await app.AragonVotingSrv.handleTransaction(txEvent),
+        await app.EasyTrackSrv.handleTransaction(txEvent),
+        await app.TrpChangesSrv.handleTransaction(txEvent),
+        await app.StonksSrv.handleTransaction(txEvent),
+      ])
+    ).flat()
 
-    return out
+    app.healthChecker.check(findings)
+
+    return findings
   }
 }
 

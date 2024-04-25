@@ -1,5 +1,4 @@
 import { ONE_HOUR } from '../../time'
-import { ARAGON_VOTING_ADDRESS as votingAddress } from 'constants/common'
 
 // Perform ad-hoc votes info refresh each BLOCK_WINDOW blocks
 export const BLOCK_WINDOW = 1000
@@ -12,5 +11,3 @@ export const TRIGGER_AFTER = 46 * ONE_HOUR
 
 // 48 hours
 export const PHASE_ONE_DURATION = 48 * ONE_HOUR
-
-export const ARAGON_VOTING_ADDRESS = votingAddress

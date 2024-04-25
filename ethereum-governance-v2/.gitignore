@@ -7,4 +7,4 @@ forta.config.json
 version.json
 .DS_Store
 /coverage/
-src/generated
+/src/generated/

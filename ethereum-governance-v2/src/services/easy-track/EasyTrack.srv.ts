@@ -37,13 +37,14 @@ export class EasyTrackSrv {
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
-    const out: Finding[] = []
+    const findings: Finding[] = []
+
     const easyTrackFindings = handleEventsOfNotice(txEvent, this.easyTrackEvents)
     const easyTrackMotionFindings = await this.handleEasyTrackMotionCreated(txEvent)
 
-    out.push(...easyTrackFindings, ...easyTrackMotionFindings)
+    findings.push(...easyTrackFindings, ...easyTrackMotionFindings)
 
-    return out
+    return findings
   }
 
   public async handleEasyTrackMotionCreated(txEvent: TransactionEvent) {

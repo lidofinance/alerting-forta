@@ -19,7 +19,7 @@ describe('ProxyWatcherSrv', () => {
 
   beforeEach(() => {
     logger = { info: jest.fn() } as unknown as Logger
-    ethProvider = { isDeployed: jest.fn(), getProxyImplementation: jest.fn() } as unknown as IProxyWatcherClient
+    ethProvider = { isDeployed: jest.fn(), getProxyImplementation: jest.fn() }
     proxyWatcherSrv = new ProxyWatcherSrv(logger, ethProvider)
     blockEvent = { blockNumber: 100 } as BlockEvent
 

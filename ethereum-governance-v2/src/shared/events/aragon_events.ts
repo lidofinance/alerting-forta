@@ -1,7 +1,7 @@
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi'
-import { ARAGON_VOTING_ADDRESS } from 'constants/aragon-voting'
 import { etherscanAddress } from '../string'
+import { ARAGON_VOTING_ADDRESS } from 'constants/common'
 
 export const CAST_VOTE_EVENT =
   'event CastVote(uint256 indexed voteId, address indexed voter, bool supports, uint256 stake)'

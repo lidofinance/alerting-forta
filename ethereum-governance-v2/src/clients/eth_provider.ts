@@ -3,7 +3,6 @@ import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
-import { ETH_DECIMALS } from '../shared/constants'
 import {
   ENS as EnsContract,
   AragonVoting as AragonVotingContract,
@@ -22,6 +21,7 @@ import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contra
 import { BLOCK_TO_WATCH } from 'constants/stonks'
 import { TypedEvent } from '../generated/common'
 import { Stonks__factory } from '../generated/factories/Stonks__factory'
+import { formatEther } from 'ethers/lib/utils'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -88,8 +88,8 @@ export class ETHProvider
             yea: new BigNumber(String(voteInfo.yea)),
             nay: new BigNumber(String(voteInfo.nay)),
             votingPower: new BigNumber(String(voteInfo.votingPower)),
-            supportRequired: new BigNumber(String(voteInfo.supportRequired)).div(ETH_DECIMALS).toNumber(),
-            minAcceptQuorum: new BigNumber(String(voteInfo.minAcceptQuorum)).div(ETH_DECIMALS).toNumber(),
+            supportRequired: Number(formatEther(voteInfo.supportRequired)),
+            minAcceptQuorum: Number(formatEther(voteInfo.minAcceptQuorum)),
             phase: voteInfo.phase,
           }
         },
@@ -140,7 +140,15 @@ export class ETHProvider
     }
   }
 
-  public async getOwner(address: string, method: string, currentBlock: number): Promise<E.Either<Error, string>> {
+  public async getContractOwner(
+    address: string,
+    method: string,
+    currentBlock: number,
+  ): Promise<E.Either<Error, string>> {
+    /*
+    getContractOwner calls the method written in the ownershipMethod field in contract description
+    and returns the owner of the contract address.
+    */
     try {
       const members = await retryAsync(
         async (): Promise<string> => {

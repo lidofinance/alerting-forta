@@ -6,15 +6,9 @@ import { handleEventsOfNotice } from '../../shared/notice'
 
 import { Block, BlockEvent, Finding, FindingSeverity, FindingType, TransactionEvent, TxEventBlock } from 'forta-agent'
 
-import { ONE_HOUR } from 'constants/common'
+import { ARAGON_VOTING_ADDRESS, ONE_HOUR } from 'constants/common'
 
-import {
-  ARAGON_VOTING_ADDRESS,
-  PHASE_ONE_DURATION,
-  TRIGGER_AFTER,
-  FIVE_DAYS_BLOCKS,
-  BLOCK_WINDOW,
-} from 'constants/aragon-voting'
+import { PHASE_ONE_DURATION, TRIGGER_AFTER, FIVE_DAYS_BLOCKS, BLOCK_WINDOW } from 'constants/aragon-voting'
 
 import { CAST_VOTE_EVENT, ARAGON_VOTING_EVENTS_OF_NOTICE } from '../../shared/events/aragon_events'
 

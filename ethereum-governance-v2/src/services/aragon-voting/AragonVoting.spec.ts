@@ -4,7 +4,8 @@ import { Logger } from 'winston'
 import { IAragonVotingClient, IVoteInfo } from './contract'
 import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
-import { ARAGON_VOTING_ADDRESS, BLOCK_WINDOW, TRIGGER_AFTER } from '../../shared/constants/aragon-voting/mainnet'
+import { BLOCK_WINDOW, TRIGGER_AFTER } from '../../shared/constants/aragon-voting/mainnet'
+import { ARAGON_VOTING_ADDRESS } from '../../shared/constants/common/mainnet'
 
 describe('AragonVotingSrv', () => {
   let logger: Logger

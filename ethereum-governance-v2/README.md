@@ -3,7 +3,6 @@
 ## Supported chains
 
 - Ethereum mainnet
-- Ethereum Goerli testnet (dev)
 
 ## Sub-bots
 

@@ -119,7 +119,7 @@ describe('AclChangesSrv', () => {
   })
 
   it('handles owner change without errors', async () => {
-    jest.spyOn(ethProvider, 'getOwner').mockResolvedValue(E.right(whitelistedOwner))
+    jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.right(whitelistedOwner))
 
     const findings = await aclChangesSrv.handleOwnerChange(blockEvent)
 
@@ -127,7 +127,7 @@ describe('AclChangesSrv', () => {
   })
 
   it('handles owner change with error', async () => {
-    jest.spyOn(ethProvider, 'getOwner').mockResolvedValue(E.left(new Error('Test error')))
+    jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.left(new Error('Test error')))
     const finding = networkAlert(
       new Error('Test error'),
       `Error in AclChangesSrv.handleOwnerChange (uid:790dc305)`,
@@ -176,7 +176,7 @@ describe('AclChangesSrv', () => {
       },
     ],
   ])('handles owner change with findings: %p', async (name, isContract, assertedObject) => {
-    jest.spyOn(ethProvider, 'getOwner').mockResolvedValue(E.right(fakeAddress))
+    jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.right(fakeAddress))
     jest.spyOn(ethProvider, 'isDeployed').mockResolvedValue(E.right(isContract))
     jest.mock('../../shared/constants/acl-changes/mainnet')
     jest.mocked(constants).OWNABLE_CONTRACTS = new Map<string, IOwnable>([

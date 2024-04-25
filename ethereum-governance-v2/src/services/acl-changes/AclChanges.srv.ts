@@ -171,7 +171,7 @@ export class AclChangesSrv {
         return
       }
 
-      const curOwner = await this.ethProvider.getOwner(address, data.ownershipMethod, blockEvent.blockNumber)
+      const curOwner = await this.ethProvider.getContractOwner(address, data.ownershipMethod, blockEvent.blockNumber)
 
       if (E.isLeft(curOwner)) {
         out.push(
