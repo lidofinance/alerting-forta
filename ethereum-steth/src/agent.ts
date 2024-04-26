@@ -19,7 +19,8 @@ import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { Metadata } from './entity/metadata'
 import Version from './utils/version'
 import { ETH_DECIMALS } from './utils/constants'
-import { BlockDto } from './entity/events'
+import { BlockDto, TransactionDto } from './entity/events'
+import BigNumber from 'bignumber.js'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -172,10 +173,20 @@ export const handleTransaction = (): HandleTransaction => {
     const app = await App.getInstance()
     const out: Finding[] = []
 
-    const stethOperationFindings = await app.StethOperationSrv.handleTransaction(txEvent, txEvent.block.number)
-    const withdrawalsFindings = await app.WithdrawalsSrv.handleTransaction(txEvent)
-    const gateSealFindings = app.GateSealSrv.handleTransaction(txEvent)
-    const vaultFindings = app.VaultSrv.handleTransaction(txEvent)
+    const txDto: TransactionDto = {
+      logs: txEvent.logs,
+      to: txEvent.to,
+      timestamp: txEvent.timestamp,
+      block: {
+        timestamp: txEvent.block.timestamp,
+        number: new BigNumber(txEvent.block.number, 10).toNumber(),
+      },
+    }
+
+    const withdrawalsFindings = await app.WithdrawalsSrv.handleTransaction(txDto)
+    const stethOperationFindings = await app.StethOperationSrv.handleTransaction(txDto)
+    const gateSealFindings = app.GateSealSrv.handleTransaction(txDto)
+    const vaultFindings = app.VaultSrv.handleTransaction(txDto)
 
     out.push(...stethOperationFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 

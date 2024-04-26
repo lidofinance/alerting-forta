@@ -1,21 +1,11 @@
-import {
-  Finding,
-  FindingSeverity,
-  FindingType,
-  ethers,
-  filterLog,
-  getEthersProvider,
-  Network,
-  Transaction,
-} from 'forta-agent'
+import { Finding, FindingSeverity, FindingType, filterLog, getEthersProvider } from 'forta-agent'
 import { App, Container } from '../../app'
-import { createTransactionEvent } from '../../utils/forta'
 import { WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
 import { Address } from '../../utils/constants'
 import BigNumber from 'bignumber.js'
 import { WithdrawalsRepo } from './Withdrawals.repo'
 import * as E from 'fp-ts/Either'
-import { BlockDto } from '../../entity/events'
+import { BlockDto, TransactionDto } from '../../entity/events'
 
 const TEST_TIMEOUT = 120_000 // ms
 
@@ -105,19 +95,24 @@ describe('Withdrawals.srv functional tests', () => {
     async () => {
       const txHash = '0xdf4c31a9886fc4269bfef601c6d0a287633d516d16d61d5b62b9341e704eb52c'
 
-      const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
-      const block = await ethProvider.send('eth_getBlockByNumber', [
-        ethers.utils.hexValue(parseInt(receipt.blockNumber)),
-        true,
-      ])
-      const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
-      const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
+      const trx = await ethProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
 
       const initErr = await app.WithdrawalsSrv.initialize(19113262)
       if (initErr !== null) {
         fail(initErr.message)
       }
-      const result = await app.WithdrawalsSrv.handleWithdrawalClaimed(txEvent)
+      const result = await app.WithdrawalsSrv.handleWithdrawalClaimed(transactionDto)
       expect(result.length).toEqual(0)
 
       const requestID = 24651
@@ -127,7 +122,7 @@ describe('Withdrawals.srv functional tests', () => {
       }
 
       const claimedEvents = filterLog(
-        txEvent.logs,
+        transactionDto.logs,
         WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
         Address.WITHDRAWALS_QUEUE_ADDRESS,
       )

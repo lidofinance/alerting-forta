@@ -7,52 +7,65 @@ import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../utils/constants'
 import { StakingLimitInfo } from '../entity/staking_limit_info'
 import {
-  GateSeal as GateSealContract,
-  Lido as LidoContract,
-  ValidatorsExitBusOracle as ExitBusContract,
-  WithdrawalQueueERC721 as WithdrawalQueueContract,
+  GateSeal as GateSealRunner,
+  Lido as LidoRunner,
+  ValidatorsExitBusOracle as VeboRunner,
+  WithdrawalQueueERC721 as WithdrawalQueueRunner,
 } from '../generated'
 import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
 import { ETHDistributedEvent } from '../generated/Lido'
 import { DataRW } from '../utils/mutex'
-import { IEtherscanProvider } from './contracts'
 import { WithdrawalRequest } from '../entity/withdrawal_request'
 import { TypedEvent } from '../generated/common'
 import { NetworkError } from '../utils/errors'
-import { IGateSealClient } from '../services/gate-seal/contract'
 import { IStethClient } from '../services/steth_operation/contracts'
 import { IVaultClient } from '../services/vault/contract'
 import { IWithdrawalsClient } from '../services/withdrawals/contract'
 import { Logger } from 'winston'
+import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
+import { BlockTag } from '@ethersproject/providers'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
+
+export abstract class IEtherscanProvider {
+  abstract getHistory(
+    addressOrName: string | Promise<string>,
+    startBlock?: BlockTag,
+    endBlock?: BlockTag,
+  ): Promise<Array<TransactionResponse>>
+
+  abstract getBalance(
+    addressOrName: string | Promise<string>,
+    blockTag?: BlockTag | Promise<BlockTag>,
+  ): Promise<EtherBigNumber>
+}
 
 export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient, IWithdrawalsClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private etherscanProvider: IEtherscanProvider
 
-  private readonly lidoContract: LidoContract
-  private readonly wdQueueContract: WithdrawalQueueContract
-  private readonly exitBusContract: ExitBusContract
-  private gateSeal: GateSealContract
+  private readonly lidoRunner: LidoRunner
+  private readonly wdQueueRunner: WithdrawalQueueRunner
+  private readonly veboRunner: VeboRunner
+  private gateSealRunner: GateSealRunner
   private readonly logger: Logger
 
   constructor(
     logger: Logger,
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     etherscanProvider: IEtherscanProvider,
-    lidoContract: LidoContract,
-    wdQueueContract: WithdrawalQueueContract,
-    gateSeal: GateSealContract,
-    exitBusContract: ExitBusContract,
+    lidoRunner: LidoRunner,
+    wdQueueRunner: WithdrawalQueueRunner,
+    gateSealRunner: GateSealRunner,
+    veboRunner: VeboRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.etherscanProvider = etherscanProvider
-    this.lidoContract = lidoContract
-    this.wdQueueContract = wdQueueContract
-    this.gateSeal = gateSeal
-    this.exitBusContract = exitBusContract
+    this.lidoRunner = lidoRunner
+    this.wdQueueRunner = wdQueueRunner
+    this.gateSealRunner = gateSealRunner
+    this.veboRunner = veboRunner
     this.logger = logger
   }
 
@@ -230,7 +243,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<StakingLimitInfo>(
         async (): Promise<StakingLimitInfo> => {
-          const resp = await this.lidoContract.functions.getStakeLimitFullInfo({
+          const resp = await this.lidoRunner.functions.getStakeLimitFullInfo({
             blockTag: blockNumber,
           })
 
@@ -253,7 +266,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<BigNumber>(
         async (): Promise<BigNumber> => {
-          const out = await this.wdQueueContract.unfinalizedStETH({
+          const out = await this.wdQueueRunner.unfinalizedStETH({
             blockTag: blockNumber,
           })
 
@@ -276,7 +289,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
       try {
         return await retryAsync<WithdrawalRequest[]>(
           async (): Promise<WithdrawalRequest[]> => {
-            const resp = await this.wdQueueContract.functions.getWithdrawalStatus(requestIds, {
+            const resp = await this.wdQueueRunner.functions.getWithdrawalStatus(requestIds, {
               blockTag: blockNumber,
             })
 
@@ -329,7 +342,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const resp = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getBufferedEther({
+          return await this.lidoRunner.getBufferedEther({
             blockTag: blockNumber,
           })
         },
@@ -368,8 +381,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     const out: GateSeal = {
       roleForWithdrawalQueue: isGateSealHasPauseRole.right,
       roleForExitBus: isGateSealHasExitBusPauseRoleMember.right,
-      exitBusOracleAddress: this.exitBusContract.address,
-      withdrawalQueueAddress: this.wdQueueContract.address,
+      exitBusOracleAddress: this.veboRunner.address,
+      withdrawalQueueAddress: this.wdQueueRunner.address,
     }
 
     return E.right(out)
@@ -379,7 +392,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const expiryTimestamp = await retryAsync<BigNumber>(
         async (): Promise<BigNumber> => {
-          const [resp] = await this.gateSeal.functions.get_expiry_timestamp({
+          const [resp] = await this.gateSealRunner.functions.get_expiry_timestamp({
             blockTag: blockNumber,
           })
 
@@ -401,8 +414,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const report = await retryAsync<ETHDistributedEvent | null>(
         async (): Promise<ETHDistributedEvent | null> => {
-          const [resp] = await this.lidoContract.queryFilter(
-            this.lidoContract.filters.ETHDistributed(),
+          const [resp] = await this.lidoRunner.queryFilter(
+            this.lidoRunner.filters.ETHDistributed(),
             fromBlockNumber,
             toBlockNumber,
           )
@@ -423,12 +436,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   private async isGateSealExpired(blockNumber: number, gateSealAddress: string): Promise<E.Either<Error, boolean>> {
-    this.gateSeal = this.gateSeal.attach(gateSealAddress)
+    this.gateSealRunner = this.gateSealRunner.attach(gateSealAddress)
 
     try {
       const isExpired = await retryAsync<boolean>(
         async (): Promise<boolean> => {
-          const [resp] = await this.gateSeal.functions.is_expired({
+          const [resp] = await this.gateSealRunner.functions.is_expired({
             blockTag: blockNumber,
           })
 
@@ -452,7 +465,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const queuePauseRoleMember = await retryAsync<boolean>(
         async (): Promise<boolean> => {
-          const [resp] = await this.wdQueueContract.functions.hasRole(keccakPauseRole, gateSealAddress, {
+          const [resp] = await this.wdQueueRunner.functions.hasRole(keccakPauseRole, gateSealAddress, {
             blockTag: blockNumber,
           })
 
@@ -476,7 +489,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const exitBusPauseRoleMember = await retryAsync<boolean>(
         async (): Promise<boolean> => {
-          const [resp] = await this.exitBusContract.functions.hasRole(keccakPauseRole, gateSealAddress, {
+          const [resp] = await this.veboRunner.functions.hasRole(keccakPauseRole, gateSealAddress, {
             blockTag: blockNumber,
           })
 
@@ -495,7 +508,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getTotalPooledEther({
+          return await this.lidoRunner.getTotalPooledEther({
             blockTag: blockNumber,
           })
         },
@@ -512,7 +525,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getTotalShares({
+          return await this.lidoRunner.getTotalShares({
             blockTag: blockNumber,
           })
         },
@@ -546,7 +559,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const isBunkerMode = await retryAsync<boolean>(
         async (): Promise<boolean> => {
-          const [isBunkerMode] = await this.wdQueueContract.functions.isBunkerModeActive({
+          const [isBunkerMode] = await this.wdQueueRunner.functions.isBunkerModeActive({
             blockTag: blockNumber,
           })
 
@@ -565,7 +578,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const bunkerModeSinceTimestamp = await retryAsync<number>(
         async (): Promise<number> => {
-          const [resp] = await this.wdQueueContract.functions.bunkerModeSinceTimestamp({
+          const [resp] = await this.wdQueueRunner.functions.bunkerModeSinceTimestamp({
             blockTag: blockNumber,
           })
 
@@ -584,7 +597,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const lastRequestId = await retryAsync<number>(
         async (): Promise<number> => {
-          const [resp] = await this.wdQueueContract.functions.getLastRequestId({
+          const [resp] = await this.wdQueueRunner.functions.getLastRequestId({
             blockTag: blockNumber,
           })
 
@@ -606,7 +619,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<WithdrawalRequest>(
         async (): Promise<WithdrawalRequest> => {
-          const resp = await this.wdQueueContract.functions.getWithdrawalStatus([requestId], {
+          const resp = await this.wdQueueRunner.functions.getWithdrawalStatus([requestId], {
             blockTag: blockNumber,
           })
 
@@ -628,9 +641,9 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<TypedEvent[]>(
         async (): Promise<TypedEvent[]> => {
-          const filter = this.lidoContract.filters.Unbuffered()
+          const filter = this.lidoRunner.filters.Unbuffered()
 
-          return await this.lidoContract.queryFilter(filter, fromBlockNumber, toBlockNumber)
+          return await this.lidoRunner.queryFilter(filter, fromBlockNumber, toBlockNumber)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
@@ -648,9 +661,9 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<TypedEvent[]>(
         async (): Promise<TypedEvent[]> => {
-          const filter = this.wdQueueContract.filters.WithdrawalsFinalized()
+          const filter = this.wdQueueRunner.filters.WithdrawalsFinalized()
 
-          return await this.wdQueueContract.queryFilter(filter, fromBlockNumber, toBlockNumber)
+          return await this.wdQueueRunner.queryFilter(filter, fromBlockNumber, toBlockNumber)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
@@ -665,7 +678,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
-          return await this.lidoContract.getDepositableEther({
+          return await this.lidoRunner.getDepositableEther({
             blockTag: blockNumber,
           })
         },

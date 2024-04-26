@@ -1,20 +1,19 @@
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
 import { ETHDistributedEvent } from '../../generated/Lido'
-import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { IVaultClient } from './contract'
-import { BlockDto } from '../../entity/events'
+import { BlockDto, TransactionDto } from '../../entity/events'
 
-const WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL = 100
-const WITHDRAWAL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(1000)
-const EL_VAULT_BALANCE_DIFF_INFO = ETH_DECIMALS.times(50)
+const ONCE_PER_100_BLOCKS = 100
+const ETH_1K = ETH_DECIMALS.times(1000)
+const ETH_50 = ETH_DECIMALS.times(50)
 
 export class VaultSrv {
   private readonly logger: Logger
@@ -122,11 +121,8 @@ export class VaultSrv {
 
   public async handleWithdrawalVaultBalance(blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
-    if (blockNumber % WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL === 0) {
-      const report = await this.ethProvider.getETHDistributedEvent(
-        blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
-        blockNumber,
-      )
+    if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
+      const report = await this.ethProvider.getETHDistributedEvent(blockNumber - ONCE_PER_100_BLOCKS, blockNumber)
       if (E.isLeft(report)) {
         return [
           networkAlert(
@@ -139,7 +135,7 @@ export class VaultSrv {
 
       const prevWithdrawalVaultBalance = await this.ethProvider.getBalance(
         this.withdrawalsVaultAddress,
-        blockNumber - WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL,
+        blockNumber - ONCE_PER_100_BLOCKS,
       )
       if (E.isLeft(prevWithdrawalVaultBalance)) {
         return [
@@ -171,13 +167,13 @@ export class VaultSrv {
         .minus(prevWithdrawalVaultBalance.right)
         .plus(withdrawalsWithdrawn)
 
-      if (withdrawalVaultBalanceDiff.gte(WITHDRAWAL_VAULT_BALANCE_DIFF_INFO)) {
+      if (withdrawalVaultBalanceDiff.gte(ETH_1K)) {
         out.push(
           Finding.fromObject({
-            name: '💵 Withdrawal Vault Balance significant change',
+            name: 'ℹ️ Withdrawal Vault Balance significant change',
             description: `Withdrawal Vault Balance has increased by ${toEthString(
               withdrawalVaultBalanceDiff,
-            )} during the last ${WITHDRAWAL_VAULT_BALANCE_BLOCK_INTERVAL} blocks`,
+            )} during the last ${ONCE_PER_100_BLOCKS} blocks`,
             alertId: 'WITHDRAWAL-VAULT-BALANCE-CHANGE',
             type: FindingType.Info,
             severity: FindingSeverity.Info,
@@ -204,10 +200,10 @@ export class VaultSrv {
     const elVaultBalanceDiff = elVaultBalance.right.minus(prevBalance)
 
     const out: Finding[] = []
-    if (elVaultBalanceDiff.gte(EL_VAULT_BALANCE_DIFF_INFO)) {
+    if (elVaultBalanceDiff.gte(ETH_50)) {
       out.push(
         Finding.fromObject({
-          name: '💵 EL Vault Balance significant change',
+          name: 'ℹ️ EL Vault Balance significant change',
           description: `EL Vault Balance has increased by ${toEthString(elVaultBalanceDiff)}`,
           alertId: 'EL-VAULT-BALANCE-CHANGE',
           type: FindingType.Info,
@@ -329,26 +325,35 @@ export class VaultSrv {
     return out
   }
 
-  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+  public handleTransaction(txEvent: TransactionDto): Finding[] {
     return this.handleBurnerSharesTx(txEvent)
   }
 
-  public handleBurnerSharesTx(txEvent: TransactionEvent): Finding[] {
-    const events = txEvent
-      .filterLog(TRANSFER_SHARES_EVENT, this.lidoStethAddress)
-      .filter((e) => e.args.from.toLowerCase() === this.burnerAddress.toLowerCase())
-
+  public handleBurnerSharesTx(txEvent: TransactionDto): Finding[] {
+    const iface = new ethers.utils.Interface([TRANSFER_SHARES_EVENT])
     const out: Finding[] = []
-    for (const event of events) {
-      out.push(
-        Finding.fromObject({
-          name: '🚨 Burner shares transfer',
-          description: `Burner shares transfer to ${event.args.to} has occurred`,
-          alertId: 'BURNER-SHARES-TRANSFER',
-          severity: FindingSeverity.High,
-          type: FindingType.Suspicious,
-        }),
-      )
+    for (const log of txEvent.logs) {
+      if (log.address.toLowerCase() !== this.lidoStethAddress.toLowerCase()) {
+        continue
+      }
+
+      try {
+        const event = iface.parseLog(log)
+        if (event.args.from.toLowerCase() === this.burnerAddress.toLowerCase()) {
+          out.push(
+            Finding.fromObject({
+              name: '🚨 Burner shares transfer',
+              description: `Burner shares transfer to ${event.args.to} has occurred`,
+              alertId: 'BURNER-SHARES-TRANSFER',
+              severity: FindingSeverity.High,
+              type: FindingType.Suspicious,
+            }),
+          )
+        }
+      } catch (e) {
+        // Only one from eventsOfNotice could be correct
+        // Others - skipping
+      }
     }
 
     return out

@@ -1,6 +1,4 @@
-import { TransactionEventContract } from '../contracts'
 import { TypedEvent } from '../../../generated/common'
-import { faker } from '@faker-js/faker'
 
 export const TypedEventMock = (): jest.Mocked<TypedEvent> => ({
   address: '',
@@ -17,12 +15,4 @@ export const TypedEventMock = (): jest.Mocked<TypedEvent> => ({
   topics: [],
   transactionHash: '',
   transactionIndex: 0,
-})
-
-export const TransactionEventContractMock = (): jest.Mocked<TransactionEventContract> => ({
-  addresses: {},
-  logs: [],
-  filterLog: jest.fn(),
-  to: faker.finance.ethereumAddress(),
-  timestamp: faker.date.past().getTime(),
 })
