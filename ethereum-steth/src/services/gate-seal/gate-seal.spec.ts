@@ -74,7 +74,7 @@ describe('GateSeal srv functional tests', () => {
       const expected = Finding.fromObject({
         alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
         description:
-          'GateSeal address: [0x1ad5cb2955940f998081c1ef5f5f00875431aa90](https://etherscan.io/address/0x1ad5cb2955940f998081c1ef5f5f00875431aa90)\n' +
+          'GateSeal address: [0x79243345edbe01a7e42edff5900156700d22611c](https://etherscan.io/address/0x79243345edbe01a7e42edff5900156700d22611c)\n' +
           'Expiry date Wed, 01 May 2024 00:00:00 GMT',
         name: '⚠️ GateSeal: is about to be expired',
         severity: FindingSeverity.Medium,
