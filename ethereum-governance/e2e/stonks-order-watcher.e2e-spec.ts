@@ -48,10 +48,16 @@ describe.skip("treasury-swap e2e tests", () => {
     jest.resetAllMocks();
   });
 
+  // for block and order
+  // https://etherscan.io/block/19440050 -> https://etherscan.io/block/19730974
+  // https://etherscan.io/address/0x0d4d93c171452d8c58e7a8cc2d70045ebf3d293c -> https://etherscan.io/address/0x35136b2d2426ecd2e86b7dbc48d6c41c52f49ade
+
+  const orderBlock = 19440050
+
   it(
     "should find 0 testflight stonks at creation block",
     async () => {
-      let findings = await runBlock(19440190, 19440050);
+      let findings = await runBlock(orderBlock+140, orderBlock);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
@@ -60,7 +66,7 @@ describe.skip("treasury-swap e2e tests", () => {
   it(
     "should find 1 testflight stonks at creation block",
     async () => {
-      let findings = await runBlock(19440200, 19440050);
+      let findings = await runBlock(orderBlock+150, orderBlock);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
@@ -70,7 +76,7 @@ describe.skip("treasury-swap e2e tests", () => {
   it(
     "should find 0 testflight stonks at next after creation block",
     async () => {
-      let findings = await runBlock(19440190, 19440070);
+      let findings = await runBlock(orderBlock+140, orderBlock+20);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
@@ -80,7 +86,7 @@ describe.skip("treasury-swap e2e tests", () => {
   it(
     "should find 1 testflight stonks at next after creation block",
     async () => {
-      let findings = await runBlock(19440200, 19440070);
+      let findings = await runBlock(orderBlock+150, orderBlock+20);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
@@ -90,7 +96,7 @@ describe.skip("treasury-swap e2e tests", () => {
   it(
     "should find 0 stonks in 30+ after testflight",
     async () => {
-      let findings = await runBlock(19440220, 19440210);
+      let findings = await runBlock(orderBlock+170, orderBlock+160);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
@@ -100,7 +106,7 @@ describe.skip("treasury-swap e2e tests", () => {
   it(
     "should find 0 in 31+ after testflight",
     async () => {
-      let findings = await runBlock(19440680, 19440210);
+      let findings = await runBlock(orderBlock+630, orderBlock+160);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
@@ -110,7 +116,7 @@ describe.skip("treasury-swap e2e tests", () => {
   it(
     "should find 0 in 120+ after testflight",
     async () => {
-      let findings = await runBlock(19440680, 19440660);
+      let findings = await runBlock(orderBlock+630, orderBlock+610);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
       expect(findings).toMatchSnapshot();
     },
