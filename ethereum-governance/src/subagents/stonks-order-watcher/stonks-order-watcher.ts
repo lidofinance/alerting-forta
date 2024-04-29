@@ -9,6 +9,7 @@ import {
 } from "forta-agent";
 import ERC20 from "../../abi/ERC20.json";
 import STONKS_ABI from "../../abi/Stonks.json";
+import SWAP_ABI from "../../abi/Swap.json";
 import {
   RedefineMode,
   etherscanAddress,
@@ -17,7 +18,9 @@ import {
 } from "../../common/utils";
 import { ethersProvider } from "../../ethers";
 import type * as Constants from "./constants";
-import { EventOfNotice } from "./constants";
+import { COW_PROTOCOL_ADDRESS, EventOfNotice } from "./constants";
+import { KNOWN_ERC20 } from "../../common/constants";
+import { formatAmount } from "./utils";
 
 export const name = "Stonks";
 
@@ -42,6 +45,7 @@ type CreatedOrder = {
   address: string;
   orderDuration: number;
   timestamp: number;
+  blockNumber: number;
   active: boolean;
 };
 const createdOrders: CreatedOrder[] = [];
@@ -96,6 +100,7 @@ export async function initialize(
             address: event?.args?.orderContract,
             orderDuration: orderDuration.toNumber(),
             timestamp: block.timestamp,
+            blockNumber: block.number,
             active:
               currentBlock.timestamp - block.timestamp <
               orderDuration.toNumber(),
@@ -169,6 +174,7 @@ export async function handleOrderCreation(txEvent: TransactionEvent) {
         address: orderAddress,
         orderDuration: orderDuration.toNumber(),
         timestamp: txEvent.block.timestamp,
+        blockNumber: txEvent.block.number,
         active: true,
       });
     }
@@ -182,28 +188,88 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
   const timestamp = txBlock.block.timestamp;
 
   const lastCreatedOrders = [...createdOrders];
-  for (const order of lastCreatedOrders) {
-    const duration = timestamp - order.timestamp;
-    if (duration < order.orderDuration) continue;
+  let iface = new ethers.utils.Interface(SWAP_ABI);
+  let operationInfo = "";
+  // life is too short to handle orders one by one
+  const orderInfo = await Promise.all(
+    lastCreatedOrders.map(async (order) => {
+      const duration = timestamp - order.timestamp;
 
-    const tokenToSell = new ethers.Contract(
-      order.tokenFrom,
-      ERC20,
-      ethersProvider,
-    );
+      const tokenToSell = new ethers.Contract(
+        order.tokenFrom,
+        ERC20,
+        ethersProvider,
+      );
 
-    const balance = new BigNumber(
-      (await tokenToSell.functions.balanceOf(order.address)).toString(),
-    );
+      const balance = new BigNumber(
+        await tokenToSell.functions.balanceOf(order.address),
+      );
+
+      const fulfilled = balance.lte(STETH_MAX_PRECISION);
+
+      const events: ethers.providers.Log[] = [];
+
+      if (order.active && fulfilled) {
+        try {
+          const events = await ethersProvider.getLogs({
+            fromBlock: `0x${order.blockNumber.toString(16)}`,
+            toBlock: `0x${txBlock.block.number.toString(16)}`,
+            address: COW_PROTOCOL_ADDRESS,
+            topics: [
+              null, // any
+              order.address.replace("0x", "0x000000000000000000000000"),
+            ],
+          });
+          const args = iface.parseLog(events[0]).args;
+          let sellInfo = `unknown token`;
+          const sellToken = KNOWN_ERC20.get(args?.sellToken?.toLowerCase());
+          if (sellToken) {
+            const sellAmount = formatAmount(
+              args?.sellAmount,
+              sellToken.decimals,
+              4,
+            );
+            sellInfo = `${sellAmount} ${sellToken?.name}`;
+          }
+
+          let buyInfo = `unknown token`;
+          const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase());
+          if (buyToken) {
+            const buyAmount = formatAmount(
+              args?.buyAmount,
+              buyToken?.decimals,
+              4,
+            );
+            buyInfo = `${buyAmount} ${buyToken?.name}`;
+          }
+
+          operationInfo = `${sellInfo} -> ${buyInfo}`;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      return {
+        order,
+        balance,
+        fulfilled,
+        duration,
+        events,
+      };
+    }),
+  );
+
+  for (const { order, fulfilled, duration, balance } of orderInfo) {
+    if (duration < order.orderDuration && !fulfilled) continue;
 
     if (order.active) {
-      if (balance.lte(STETH_MAX_PRECISION)) {
+      if (fulfilled) {
         findings.push(
           Finding.fromObject({
             name: "✅ Stonks: order fulfilled",
             description: `Stonks order ${etherscanAddress(
               order.address,
-            )} was fulfilled`,
+            )} was fulfilled ${operationInfo}`,
             alertId: "STONKS-ORDER-FULFILL",
             severity: FindingSeverity.Info,
             type: FindingType.Info,
