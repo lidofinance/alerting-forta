@@ -135,15 +135,15 @@ export interface IProxyContractData {
 }
 
 export type ERC20 = {
-  decimals: number
-  name: string
-}
+  decimals: number;
+  name: string;
+};
 
 export const KNOWN_ERC20 = new Map<string, ERC20>([
-  [LIDO_STETH_ADDRESS, { decimals: 18, name: 'stETH' }],
-  [WSTETH_ADDRESS, { decimals: 18, name: 'wstETH' }],
-  [LDO_ADDRESS, { decimals: 18, name: 'LDO' }],
-  [DAI_ADDRESS, { decimals: 18, name: 'DAI' }],
-  [USDT_ADDRESS, { decimals: 6, name: 'USDT' }],
-  [USDC_ADDRESS, { decimals: 6, name: 'USDC' }],
-])
+  [LIDO_STETH_ADDRESS, { decimals: 18, name: "stETH" }],
+  [WSTETH_ADDRESS, { decimals: 18, name: "wstETH" }],
+  [LDO_ADDRESS, { decimals: 18, name: "LDO" }],
+  [DAI_ADDRESS, { decimals: 18, name: "DAI" }],
+  [USDT_ADDRESS, { decimals: 6, name: "USDT" }],
+  [USDC_ADDRESS, { decimals: 6, name: "USDC" }],
+]);

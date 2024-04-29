@@ -9,6 +9,7 @@ import {
 } from "forta-agent";
 import ERC20 from "../../abi/ERC20.json";
 import STONKS_ABI from "../../abi/Stonks.json";
+import SWAP_ABI from "../../abi/Swap.json";
 import {
   RedefineMode,
   etherscanAddress,
@@ -40,12 +41,12 @@ const {
 const STETH_MAX_PRECISION = new BigNumber(4);
 
 type CreatedOrder = {
-  tokenFrom: string
-  address: string
-  orderDuration: number
-  timestamp: number
-  blockNumber:number
-  active: boolean
+  tokenFrom: string;
+  address: string;
+  orderDuration: number;
+  timestamp: number;
+  blockNumber: number;
+  active: boolean;
 };
 const createdOrders: CreatedOrder[] = [];
 let wasInit = false; // tests run init 2 times
@@ -187,62 +188,69 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
   const timestamp = txBlock.block.timestamp;
 
   const lastCreatedOrders = [...createdOrders];
-  let iface = new ethers.utils.Interface([{"inputs":[{"internalType":"contract GPv2Authentication","name":"authenticator_","type":"address"},{"internalType":"contract IVault","name":"vault_","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"target","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"},{"indexed":false,"internalType":"bytes4","name":"selector","type":"bytes4"}],"name":"Interaction","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"bytes","name":"orderUid","type":"bytes"}],"name":"OrderInvalidated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"bytes","name":"orderUid","type":"bytes"},{"indexed":false,"internalType":"bool","name":"signed","type":"bool"}],"name":"PreSignature","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"}],"name":"Settlement","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"contract IERC20","name":"sellToken","type":"address"},{"indexed":false,"internalType":"contract IERC20","name":"buyToken","type":"address"},{"indexed":false,"internalType":"uint256","name":"sellAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"buyAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"feeAmount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"orderUid","type":"bytes"}],"name":"Trade","type":"event"},{"inputs":[],"name":"authenticator","outputs":[{"internalType":"contract GPv2Authentication","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"domainSeparator","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"","type":"bytes"}],"name":"filledAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes[]","name":"orderUids","type":"bytes[]"}],"name":"freeFilledAmountStorage","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes[]","name":"orderUids","type":"bytes[]"}],"name":"freePreSignatureStorage","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"offset","type":"uint256"},{"internalType":"uint256","name":"length","type":"uint256"}],"name":"getStorageAt","outputs":[{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"orderUid","type":"bytes"}],"name":"invalidateOrder","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes","name":"","type":"bytes"}],"name":"preSignature","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"orderUid","type":"bytes"},{"internalType":"bool","name":"signed","type":"bool"}],"name":"setPreSignature","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"contract IERC20[]","name":"tokens","type":"address[]"},{"internalType":"uint256[]","name":"clearingPrices","type":"uint256[]"},{"components":[{"internalType":"uint256","name":"sellTokenIndex","type":"uint256"},{"internalType":"uint256","name":"buyTokenIndex","type":"uint256"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"sellAmount","type":"uint256"},{"internalType":"uint256","name":"buyAmount","type":"uint256"},{"internalType":"uint32","name":"validTo","type":"uint32"},{"internalType":"bytes32","name":"appData","type":"bytes32"},{"internalType":"uint256","name":"feeAmount","type":"uint256"},{"internalType":"uint256","name":"flags","type":"uint256"},{"internalType":"uint256","name":"executedAmount","type":"uint256"},{"internalType":"bytes","name":"signature","type":"bytes"}],"internalType":"struct GPv2Trade.Data[]","name":"trades","type":"tuple[]"},{"components":[{"internalType":"address","name":"target","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"bytes","name":"callData","type":"bytes"}],"internalType":"struct GPv2Interaction.Data[][3]","name":"interactions","type":"tuple[][3]"}],"name":"settle","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"targetContract","type":"address"},{"internalType":"bytes","name":"calldataPayload","type":"bytes"}],"name":"simulateDelegatecall","outputs":[{"internalType":"bytes","name":"response","type":"bytes"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"targetContract","type":"address"},{"internalType":"bytes","name":"calldataPayload","type":"bytes"}],"name":"simulateDelegatecallInternal","outputs":[{"internalType":"bytes","name":"response","type":"bytes"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"bytes32","name":"poolId","type":"bytes32"},{"internalType":"uint256","name":"assetInIndex","type":"uint256"},{"internalType":"uint256","name":"assetOutIndex","type":"uint256"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"userData","type":"bytes"}],"internalType":"struct IVault.BatchSwapStep[]","name":"swaps","type":"tuple[]"},{"internalType":"contract IERC20[]","name":"tokens","type":"address[]"},{"components":[{"internalType":"uint256","name":"sellTokenIndex","type":"uint256"},{"internalType":"uint256","name":"buyTokenIndex","type":"uint256"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"sellAmount","type":"uint256"},{"internalType":"uint256","name":"buyAmount","type":"uint256"},{"internalType":"uint32","name":"validTo","type":"uint32"},{"internalType":"bytes32","name":"appData","type":"bytes32"},{"internalType":"uint256","name":"feeAmount","type":"uint256"},{"internalType":"uint256","name":"flags","type":"uint256"},{"internalType":"uint256","name":"executedAmount","type":"uint256"},{"internalType":"bytes","name":"signature","type":"bytes"}],"internalType":"struct GPv2Trade.Data","name":"trade","type":"tuple"}],"name":"swap","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"vault","outputs":[{"internalType":"contract IVault","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"vaultRelayer","outputs":[{"internalType":"contract GPv2VaultRelayer","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}]);
-  let operationInfo = ''
+  let iface = new ethers.utils.Interface(SWAP_ABI);
+  let operationInfo = "";
   // life is too short to handle orders one by one
-  const orderInfo = await Promise.all(lastCreatedOrders.map(async order => {
-    const duration = timestamp - order.timestamp;
+  const orderInfo = await Promise.all(
+    lastCreatedOrders.map(async (order) => {
+      const duration = timestamp - order.timestamp;
 
-    const tokenToSell = new ethers.Contract(
-      order.tokenFrom,
-      ERC20,
-      ethersProvider
-    );
+      const tokenToSell = new ethers.Contract(
+        order.tokenFrom,
+        ERC20,
+        ethersProvider,
+      );
 
-    const balance = new BigNumber(
-      (await tokenToSell.functions.balanceOf(order.address)).toString(),
-    );
+      const balance = new BigNumber(
+        (await tokenToSell.functions.balanceOf(order.address)).toString(),
+      );
 
-    const fulfilled = balance.lte(STETH_MAX_PRECISION)
+      const fulfilled = balance.lte(STETH_MAX_PRECISION);
 
-    const events: ethers.providers.Log[] = []
+      const events: ethers.providers.Log[] = [];
 
-    if (order.active && fulfilled) {
-      try {
-        const events = await ethersProvider.getLogs(
-          {
+      if (order.active && fulfilled) {
+        try {
+          const events = await ethersProvider.getLogs({
             fromBlock: `0x${order.blockNumber.toString(16)}`,
             toBlock: `0x${txBlock.block.number.toString(16)}`,
-            address: '0x9008D19f58AAbD9eD0D60971565AA8510560ab41', // TODO: that it is same all pairs
+            address: "0x9008D19f58AAbD9eD0D60971565AA8510560ab41", // TODO: that it is same all pairs
             topics: [
               null, // any
-              order.address.replace('0x', '0x000000000000000000000000')
-            ]
-          },
-        )
-        const args = iface.parseLog(events[0]).args
-        const sellToken = KNOWN_ERC20.get(args?.sellToken?.toLowerCase())
-        const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase())
-        const sellAmount = formatAmount(args?.sellAmount, sellToken?.decimals ?? 18, 4)
-        const buyAmount = formatAmount(args?.buyAmount, buyToken?.decimals ?? 18, 4)
+              order.address.replace("0x", "0x000000000000000000000000"),
+            ],
+          });
+          const args = iface.parseLog(events[0]).args;
+          const sellToken = KNOWN_ERC20.get(args?.sellToken?.toLowerCase());
+          const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase());
+          const sellAmount = formatAmount(
+            args?.sellAmount,
+            sellToken?.decimals ?? 18,
+            4,
+          );
+          const buyAmount = formatAmount(
+            args?.buyAmount,
+            buyToken?.decimals ?? 18,
+            4,
+          );
 
-        operationInfo = `${sellAmount?.toString()} ${sellToken?.name} -> ${buyAmount} ${buyToken?.name}`
-      } catch (err) {
-        console.error(err)
+          operationInfo = `${sellAmount?.toString()} ${sellToken?.name} -> ${buyAmount} ${buyToken?.name}`;
+        } catch (err) {
+          console.error(err);
+        }
       }
-    }
 
-    return {
-      order,
-      balance,
-      fulfilled,
-      duration,
-      events,
-    }
-  }))
+      return {
+        order,
+        balance,
+        fulfilled,
+        duration,
+        events,
+      };
+    }),
+  );
 
-  for (const { order, fulfilled, duration, balance} of orderInfo) {
-
+  for (const { order, fulfilled, duration, balance } of orderInfo) {
     if (duration < order.orderDuration && !fulfilled) continue;
 
     if (order.active) {
