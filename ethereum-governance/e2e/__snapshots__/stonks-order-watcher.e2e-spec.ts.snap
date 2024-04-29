@@ -2,8 +2,6 @@
 
 exports[`treasury-swap e2e tests should find 0 order (stETH -> DAI) before init (block 19730974) 1`] = `[]`;
 
-exports[`treasury-swap e2e tests should find 0 order (stETH -> DAI) between 31-120m after (block 19730974) (order - 19730974) 1`] = `[]`;
-
 exports[`treasury-swap e2e tests should find 0 order (stETH -> DAI) between 31-120m after (block 19730974) 1`] = `[]`;
 
 exports[`treasury-swap e2e tests should find 0 order (stETH -> DAI) near 30m after (block 19730974) 1`] = `[]`;
