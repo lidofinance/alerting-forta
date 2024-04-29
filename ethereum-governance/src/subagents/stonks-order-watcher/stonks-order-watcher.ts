@@ -237,7 +237,7 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
           if (buyToken) {
             const buyAmount = formatAmount(
               args?.buyAmount,
-              buyToken?.decimals ?? 18,
+              buyToken?.decimals,
               4,
             );
             buyInfo = `${buyAmount} ${buyToken?.name}`;
