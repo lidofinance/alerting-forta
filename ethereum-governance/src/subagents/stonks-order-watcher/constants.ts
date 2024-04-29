@@ -24,6 +24,8 @@ export type EventOfNotice = {
 export const BLOCK_WINDOW = 10; // about 2 min (one block is 12 sec)
 export const BLOCK_TO_WATCH = 600; // about 120 min (one block is 12 sec)
 export const BLOCK_TO_WATCH_TIME = 12 * BLOCK_TO_WATCH;
+export const COW_PROTOCOL_ADDRESS =
+  "0x9008D19f58AAbD9eD0D60971565AA8510560ab41";
 export const STONKS = [
   {
     address: STONKS_STETH_DAI_ADDRESS,

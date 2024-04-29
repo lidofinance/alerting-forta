@@ -18,7 +18,7 @@ import {
 } from "../../common/utils";
 import { ethersProvider } from "../../ethers";
 import type * as Constants from "./constants";
-import { EventOfNotice } from "./constants";
+import { COW_PROTOCOL_ADDRESS, EventOfNotice } from "./constants";
 import { KNOWN_ERC20 } from "../../common/constants";
 import { formatAmount } from "./utils";
 
@@ -214,7 +214,7 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
           const events = await ethersProvider.getLogs({
             fromBlock: `0x${order.blockNumber.toString(16)}`,
             toBlock: `0x${txBlock.block.number.toString(16)}`,
-            address: "0x9008D19f58AAbD9eD0D60971565AA8510560ab41", // TODO: that it is same all pairs
+            address: COW_PROTOCOL_ADDRESS,
             topics: [
               null, // any
               order.address.replace("0x", "0x000000000000000000000000"),
