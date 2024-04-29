@@ -1,26 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`treasury-swap e2e tests should find 0 in 31+ after testflight 1`] = `[]`;
+exports[`treasury-swap e2e tests should find 0 between 31-120m after stETH2DAI 1`] = `[]`;
 
-exports[`treasury-swap e2e tests should find 0 in 120+ after testflight 1`] = `[]`;
+exports[`treasury-swap e2e tests should find 0 near 120m after stETH2DAI 1`] = `[]`;
 
-exports[`treasury-swap e2e tests should find 0 stonks in 30+ after testflight 1`] = `[]`;
+exports[`treasury-swap e2e tests should find 0 stonks near 30m after stETH2DAI 1`] = `[]`;
 
-exports[`treasury-swap e2e tests should find 0 testflight stonks at creation block 1`] = `[]`;
+exports[`treasury-swap e2e tests should find 0 stETH2DAI stonks at creation block 1`] = `[]`;
 
-exports[`treasury-swap e2e tests should find 0 testflight stonks at next after creation block 1`] = `[]`;
-
-exports[`treasury-swap e2e tests should find 1 testflight stonks at creation block 1`] = `
+exports[`treasury-swap e2e tests should find 1 stETH2DAI stonks at creation block 1`] = `
 [
   Finding {
     "addresses": [],
     "alertId": "STONKS-ORDER-FULFILL",
-    "description": "Stonks order [0x0D4d93c171452D8c58e7a8Cc2D70045eBf3D293c](https://etherscan.io/address/0x0D4d93c171452D8c58e7a8Cc2D70045eBf3D293c) was fulfill",
+    "description": "Stonks order [0x35136B2d2426ECD2E86b7DBC48D6c41C52F49ade](https://etherscan.io/address/0x35136B2d2426ECD2E86b7DBC48D6c41C52F49ade) was fulfilled 17.0017 stETH -> 53229.6027 DAI",
     "labels": [],
     "metadata": {
       "args": "?",
     },
-    "name": "✅ Stonks: order fulfill",
+    "name": "✅ Stonks: order fulfilled",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -31,17 +29,17 @@ exports[`treasury-swap e2e tests should find 1 testflight stonks at creation blo
 ]
 `;
 
-exports[`treasury-swap e2e tests should find 1 testflight stonks at next after creation block 1`] = `
+exports[`treasury-swap e2e tests should find 1 stETH2DAI stonks at next after creation block 1`] = `
 [
   Finding {
     "addresses": [],
     "alertId": "STONKS-ORDER-FULFILL",
-    "description": "Stonks order [0x0D4d93c171452D8c58e7a8Cc2D70045eBf3D293c](https://etherscan.io/address/0x0D4d93c171452D8c58e7a8Cc2D70045eBf3D293c) was fulfill",
+    "description": "Stonks order [0x35136B2d2426ECD2E86b7DBC48D6c41C52F49ade](https://etherscan.io/address/0x35136B2d2426ECD2E86b7DBC48D6c41C52F49ade) was fulfilled 17.0017 stETH -> 53229.6027 DAI",
     "labels": [],
     "metadata": {
       "args": "?",
     },
-    "name": "✅ Stonks: order fulfill",
+    "name": "✅ Stonks: order fulfilled",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},

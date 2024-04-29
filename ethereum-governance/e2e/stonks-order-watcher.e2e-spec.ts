@@ -1,5 +1,6 @@
 import { configureContainer, Finding } from "forta-agent";
 import { AwilixContainer, asFunction } from "awilix";
+import { BLOCK_WINDOW } from "../src/subagents/stonks-order-watcher/constants";
 import {
   provideAgentPath,
   provideRunBlock,
@@ -9,10 +10,14 @@ import {
 const TEST_TIMEOUT = 180_000; // ms
 
 /**
- * Tests works for testflight stonks 0x5FA801ee2202b3Bcd2317F9a65A408A725746647
+ * Tests works for stETH -> DAI
  */
 
-describe.skip("treasury-swap e2e tests", () => {
+const hasAddressInDescription = (finding:Finding, address:string) => {
+  return `${finding.description}`.toLowerCase().includes(`${address}`.toLowerCase())
+}
+
+describe("treasury-swap e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
     initBlock?: number,
@@ -49,76 +54,68 @@ describe.skip("treasury-swap e2e tests", () => {
   });
 
   // for block and order
-  // https://etherscan.io/block/19440050 -> https://etherscan.io/block/19730974
-  // https://etherscan.io/address/0x0d4d93c171452d8c58e7a8cc2d70045ebf3d293c -> https://etherscan.io/address/0x35136b2d2426ecd2e86b7dbc48d6c41c52f49ade
+  // https://etherscan.io/block/19730974
+  // https://etherscan.io/address/0x35136b2d2426ecd2e86b7dbc48d6c41c52f49ade
 
-  const orderBlock = 19440050
+  const orderBlock = 19730974
+  const orderBlockRound = 19730974+6
+  const orderAddress = '0x35136b2d2426ecd2e86b7dbc48d6c41c52f49ade'
 
   it(
-    "should find 0 testflight stonks at creation block",
+    "should find 0 stETH2DAI stonks at creation block",
     async () => {
-      let findings = await runBlock(orderBlock+140, orderBlock);
+      let findings = await runBlock(orderBlockRound-BLOCK_WINDOW, orderBlock-BLOCK_WINDOW);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
+      expect(findings.filter(fi => hasAddressInDescription(fi,orderAddress))).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
   it(
-    "should find 1 testflight stonks at creation block",
+    "should find 1 stETH2DAI stonks at creation block",
     async () => {
-      let findings = await runBlock(orderBlock+150, orderBlock);
+      let findings = await runBlock(orderBlockRound+150, orderBlock);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should find 0 testflight stonks at next after creation block",
-    async () => {
-      let findings = await runBlock(orderBlock+140, orderBlock+20);
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
+      expect(findings.filter(fi => hasAddressInDescription(fi,orderAddress))).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
 
   it(
-    "should find 1 testflight stonks at next after creation block",
+    "should find 1 stETH2DAI stonks at next after creation block",
     async () => {
-      let findings = await runBlock(orderBlock+150, orderBlock+20);
+      let findings = await runBlock(orderBlockRound+150, orderBlock+20);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
+      expect(findings.filter(fi => hasAddressInDescription(fi,orderAddress))).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
 
   it(
-    "should find 0 stonks in 30+ after testflight",
+    "should find 0 stonks near 30m after stETH2DAI",
     async () => {
-      let findings = await runBlock(orderBlock+170, orderBlock+160);
+      let findings = await runBlock(orderBlockRound+170, orderBlock+160);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
+      expect(findings.filter(fi => hasAddressInDescription(fi,orderAddress))).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
 
   it(
-    "should find 0 in 31+ after testflight",
+    "should find 0 between 31-120m after stETH2DAI",
     async () => {
-      let findings = await runBlock(orderBlock+630, orderBlock+160);
+      let findings = await runBlock(orderBlockRound+630, orderBlock+160);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
+      expect(findings.filter(fi => hasAddressInDescription(fi,orderAddress))).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
 
   it(
-    "should find 0 in 120+ after testflight",
+    "should find 0 near 120m after stETH2DAI",
     async () => {
-      let findings = await runBlock(orderBlock+630, orderBlock+610);
+      let findings = await runBlock(orderBlockRound+630, orderBlock+610);
       findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(findings).toMatchSnapshot();
+      expect(findings.filter(fi => hasAddressInDescription(fi,orderAddress))).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );

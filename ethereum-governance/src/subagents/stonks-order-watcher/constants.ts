@@ -21,7 +21,7 @@ export type EventOfNotice = {
   severity: number;
 };
 
-export const BLOCK_WINDOW = 5; // about 1 min (one block is 12 sec)
+export const BLOCK_WINDOW = 10; // about 2 min (one block is 12 sec)
 export const BLOCK_TO_WATCH = 600; // about 120 min (one block is 12 sec)
 export const BLOCK_TO_WATCH_TIME = 12 * BLOCK_TO_WATCH;
 export const STONKS = [
