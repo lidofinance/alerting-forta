@@ -13,12 +13,6 @@ const TEST_TIMEOUT = 180_000; // ms
  * Tests works for stETH -> DAI
  */
 
-const hasAddressInDescription = (finding: Finding, address: string) => {
-  return `${finding.description}`
-    .toLowerCase()
-    .includes(`${address}`.toLowerCase());
-};
-
 describe("treasury-swap e2e tests", () => {
   let runBlock: (
     blockHashOrNumber: string | number,
@@ -63,6 +57,16 @@ describe("treasury-swap e2e tests", () => {
   const orderBlockRound = 19730974 + 6;
   const orderAddress = "0x35136b2d2426ecd2e86b7dbc48d6c41c52f49ade";
 
+  const prepareFindings = (findings: Finding[], orderAddress: string) => {
+    const result = findings.filter((finding) =>
+      `${finding.description}`
+        .toLowerCase()
+        .includes(`${orderAddress}`.toLowerCase()),
+    );
+    result.sort((a, b) => (a.description < b.description ? -1 : 1));
+    return result;
+  };
+
   it(
     "should find 0 stETH2DAI stonks at creation block",
     async () => {
@@ -70,10 +74,7 @@ describe("treasury-swap e2e tests", () => {
         orderBlockRound - BLOCK_WINDOW,
         orderBlock - BLOCK_WINDOW,
       );
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(
-        findings.filter((fi) => hasAddressInDescription(fi, orderAddress)),
-      ).toMatchSnapshot();
+      expect(prepareFindings(findings, orderAddress)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -81,10 +82,7 @@ describe("treasury-swap e2e tests", () => {
     "should find 1 stETH2DAI stonks at creation block",
     async () => {
       let findings = await runBlock(orderBlockRound + 150, orderBlock);
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(
-        findings.filter((fi) => hasAddressInDescription(fi, orderAddress)),
-      ).toMatchSnapshot();
+      expect(prepareFindings(findings, orderAddress)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -93,10 +91,7 @@ describe("treasury-swap e2e tests", () => {
     "should find 1 stETH2DAI stonks at next after creation block",
     async () => {
       let findings = await runBlock(orderBlockRound + 150, orderBlock + 20);
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(
-        findings.filter((fi) => hasAddressInDescription(fi, orderAddress)),
-      ).toMatchSnapshot();
+      expect(prepareFindings(findings, orderAddress)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -105,10 +100,7 @@ describe("treasury-swap e2e tests", () => {
     "should find 0 stonks near 30m after stETH2DAI",
     async () => {
       let findings = await runBlock(orderBlockRound + 170, orderBlock + 160);
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(
-        findings.filter((fi) => hasAddressInDescription(fi, orderAddress)),
-      ).toMatchSnapshot();
+      expect(prepareFindings(findings, orderAddress)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -117,10 +109,7 @@ describe("treasury-swap e2e tests", () => {
     "should find 0 between 31-120m after stETH2DAI",
     async () => {
       let findings = await runBlock(orderBlockRound + 630, orderBlock + 160);
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(
-        findings.filter((fi) => hasAddressInDescription(fi, orderAddress)),
-      ).toMatchSnapshot();
+      expect(prepareFindings(findings, orderAddress)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
@@ -129,10 +118,7 @@ describe("treasury-swap e2e tests", () => {
     "should find 0 near 120m after stETH2DAI",
     async () => {
       let findings = await runBlock(orderBlockRound + 630, orderBlock + 610);
-      findings.sort((a, b) => (a.description < b.description ? -1 : 1));
-      expect(
-        findings.filter((fi) => hasAddressInDescription(fi, orderAddress)),
-      ).toMatchSnapshot();
+      expect(prepareFindings(findings, orderAddress)).toMatchSnapshot();
     },
     TEST_TIMEOUT,
   );
