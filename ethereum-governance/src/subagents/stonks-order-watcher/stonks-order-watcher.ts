@@ -202,7 +202,7 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
       );
 
       const balance = new BigNumber(
-        (await tokenToSell.functions.balanceOf(order.address)).toString(),
+        await tokenToSell.functions.balanceOf(order.address),
       );
 
       const fulfilled = balance.lte(STETH_MAX_PRECISION);
@@ -221,20 +221,29 @@ export async function handleOrderSettlement(txBlock: BlockEvent) {
             ],
           });
           const args = iface.parseLog(events[0]).args;
+          let sellInfo = `unknown token`;
           const sellToken = KNOWN_ERC20.get(args?.sellToken?.toLowerCase());
-          const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase());
-          const sellAmount = formatAmount(
-            args?.sellAmount,
-            sellToken?.decimals ?? 18,
-            4,
-          );
-          const buyAmount = formatAmount(
-            args?.buyAmount,
-            buyToken?.decimals ?? 18,
-            4,
-          );
+          if (sellToken) {
+            const sellAmount = formatAmount(
+              args?.sellAmount,
+              sellToken.decimals,
+              4,
+            );
+            sellInfo = `${sellAmount} ${sellToken?.name}`;
+          }
 
-          operationInfo = `${sellAmount?.toString()} ${sellToken?.name} -> ${buyAmount} ${buyToken?.name}`;
+          let buyInfo = `unknown token`;
+          const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase());
+          if (buyToken) {
+            const buyAmount = formatAmount(
+              args?.buyAmount,
+              buyToken?.decimals ?? 18,
+              4,
+            );
+            buyInfo = `${buyAmount} ${buyToken?.name}`;
+          }
+
+          operationInfo = `${sellInfo} -> ${buyInfo}`;
         } catch (err) {
           console.error(err);
         }
