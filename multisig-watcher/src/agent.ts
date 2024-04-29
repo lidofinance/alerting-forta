@@ -41,7 +41,7 @@ const subAgents: SubAgent[] = [
 
 // block or tx handling should take no more than 240 sec. Increased due to free RPC usage.
 // If not all processing is done it interrupts the execution, sends current findings and errors as findings too
-const processingTimeout = 240_000;
+const processingTimeout = 300_000;
 
 const maxHandlerRetries = 5;
 
