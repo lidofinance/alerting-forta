@@ -42,8 +42,8 @@ export function fortaFindingToGrpc(finding: Finding): alert_pb.Finding {
   const out: alert_pb.Finding = new alert_pb.Finding()
 
   out.setProtocol(finding.protocol)
-  out.setSeverity(finding.severity)
-  out.setType(finding.type)
+  out.setSeverity(Number(finding.severity))
+  out.setType(Number(finding.type))
   out.setAlertid(finding.alertId)
   out.setName(finding.name)
   out.setDescription(finding.description)
