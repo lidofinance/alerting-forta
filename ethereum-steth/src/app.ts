@@ -25,17 +25,19 @@ import { VaultSrv } from './services/vault/Vault.srv'
 import { Knex, knex } from 'knex'
 import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
+import promClient, { collectDefaultMetrics } from 'prom-client'
 
 export type Container = {
+  db: Knex
+  logger: Winston.Logger
+  prometheus: promClient.Registry
   ethClient: ETHProvider
   StethOperationSrv: StethOperationSrv
   WithdrawalsSrv: WithdrawalsSrv
   GateSealSrv: GateSealSrv
   VaultSrv: VaultSrv
   findingsRW: DataRW<Finding>
-  db: Knex
   healthChecker: HealthChecker
-  logger: Winston.Logger
 }
 
 export class App {
@@ -143,7 +145,13 @@ async function createApp(): Promise<Container> {
     address.LIDO_STETH_ADDRESS,
   )
 
+  const m = promClient
+  m.collectDefaultMetrics({
+    prefix: 'ethereum_steth_',
+  })
+
   return {
+    prometheus: m.register,
     ethClient: ethClient,
     StethOperationSrv: stethOperationSrv,
     WithdrawalsSrv: withdrawalsSrv,

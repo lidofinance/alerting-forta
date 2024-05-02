@@ -8,6 +8,7 @@ import { TxHandler } from './handlers/tx.handler'
 import { InitHandler } from './handlers/init.handler'
 import { AlertHandler } from './handlers/alert.handler'
 import { AgentService } from './proto/agent_grpc_pb'
+import express, { Express, Request, Response } from 'express'
 
 const main = async () => {
   const app = await App.getInstance()
@@ -23,7 +24,7 @@ const main = async () => {
 
   const onAppFindings: Finding[] = []
 
-  const server = new grpc.Server()
+  const gRPCserver = new grpc.Server()
   const blockH = new BlockHandler(
     app.logger,
     app.StethOperationSrv,
@@ -46,7 +47,7 @@ const main = async () => {
   )
   const alertH = new AlertHandler()
 
-  server.addService(AgentService, {
+  gRPCserver.addService(AgentService, {
     initialize: initH.handleInit(),
     evaluateBlock: blockH.handleBlock(),
     evaluateTx: txH.handleTx(),
@@ -55,13 +56,30 @@ const main = async () => {
     evaluateAlert: alertH.handleAlert(),
   })
 
-  server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), (err, port) => {
+  gRPCserver.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err != null) {
       app.logger.error(err)
 
       process.exit(1)
     }
     app.logger.info(`gRPC listening on ${port}`)
+  })
+
+  const httpService: Express = express()
+  const port = 3000
+
+  httpService.get('/metrics', async (req: Request, res: Response) => {
+    res.set('Content-Type', app.prometheus.contentType)
+    res.send(await app.prometheus.metrics())
+  })
+
+  httpService.get('/health', async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify('ok'))
+  })
+
+  httpService.listen(port, () => {
+    console.log(`[server]: Server is running at http://localhost:${port}`)
   })
 }
 
