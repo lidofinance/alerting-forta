@@ -26,11 +26,13 @@ import { Knex, knex } from 'knex'
 import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 import promClient from 'prom-client'
+import { Metrics } from './utils/metrics/metrics'
 
 export type Container = {
   db: Knex
   logger: Winston.Logger
   prometheus: promClient.Registry
+  metrics: Metrics
   ethClient: ETHProvider
   StethOperationSrv: StethOperationSrv
   WithdrawalsSrv: WithdrawalsSrv
@@ -153,14 +155,22 @@ export class App {
         address.LIDO_STETH_ADDRESS,
       )
 
-      const m = promClient
-      m.collectDefaultMetrics({
-        prefix: 'ethereum_steth_',
+      const prefix = 'ethereum_steth_'
+      const defaultRegistry = promClient
+      defaultRegistry.collectDefaultMetrics({
+        prefix: prefix,
       })
+
+      const customRegister = new promClient.Registry()
+      const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
+      mergedRegistry.setDefaultLabels({ instance: 'local-infra' })
+
+      const metrics = new Metrics(mergedRegistry, prefix)
 
       App.instance = {
         logger: logger,
-        prometheus: m.register,
+        metrics: metrics,
+        prometheus: mergedRegistry,
         ethClient: ethClient,
         StethOperationSrv: stethOperationSrv,
         WithdrawalsSrv: withdrawalsSrv,

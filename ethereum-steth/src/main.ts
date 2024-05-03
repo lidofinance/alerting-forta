@@ -9,6 +9,7 @@ import { InitHandler } from './handlers/init.handler'
 import { AlertHandler } from './handlers/alert.handler'
 import { AgentService } from './generated/proto/agent_grpc_pb'
 import express, { Express, Request, Response } from 'express'
+import Version from './utils/version'
 
 const main = async () => {
   const app = await App.getInstance()
@@ -35,7 +36,7 @@ const main = async () => {
     onAppFindings,
   )
   const txH = new TxHandler(app.StethOperationSrv, app.WithdrawalsSrv, app.GateSealSrv, app.VaultSrv, app.healthChecker)
-  const healthH = new HealthHandler(app.healthChecker)
+  const healthH = new HealthHandler(app.healthChecker, app.metrics)
   const initH = new InitHandler(
     app.ethClient,
     app.logger,
@@ -55,6 +56,8 @@ const main = async () => {
     // not used, but required for grpc contract
     evaluateAlert: alertH.handleAlert(),
   })
+
+  app.metrics.build().set({ commitHash: Version.commitHash }, 1)
 
   gRPCserver.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err != null) {
