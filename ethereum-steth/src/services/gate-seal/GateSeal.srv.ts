@@ -6,9 +6,10 @@ import { GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT, GATE_SEAL_SEALED_EVENT } fro
 import { etherscanAddress } from '../../utils/string'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
-import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import BigNumber from 'bignumber.js'
+import { Finding } from '../../generated/proto/alert_pb'
+import { ethers } from 'forta-agent'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR
@@ -57,13 +58,12 @@ export class GateSealSrv {
     const status = await this.gateSealClient.checkGateSeal(currentBlock, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
-        const f = Finding.fromObject({
-          name: '⚠️ GateSeal: default GateSeal address in forta agent is expired',
-          description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}]`,
-          alertId: 'GATE-SEAL-DEFAULT-EXPIRED',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-        })
+        const f: Finding = new Finding()
+        f.setName('⚠️ GateSeal: default GateSeal address in forta agent is expired')
+        f.setDescription(`GateSeal address: ${etherscanAddress(this.gateSealAddress)}]`)
+        f.setAlertid('GATE-SEAL-DEFAULT-EXPIRED')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.INFORMATION)
 
         out.push(f)
         this.logger.info(elapsedTime(`[${this.name}.initialize]`, start) + `on block ${currentBlock}`)
@@ -85,13 +85,12 @@ export class GateSealSrv {
         )}`
       }
 
-      const f = Finding.fromObject({
-        name: "⚠️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts",
-        description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`,
-        alertId: 'GATE-SEAL-DEFAULT-WITHOUT-ROLE',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-      })
+      const f: Finding = new Finding()
+      f.setName("⚠️ GateSeal: default GateSeal address in forta agent doesn't have PAUSE_ROLE for contracts")
+      f.setDescription(`GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`)
+      f.setAlertid('GATE-SEAL-DEFAULT-WITHOUT-ROLE')
+      f.setSeverity(Finding.Severity.MEDIUM)
+      f.setType(Finding.FindingType.INFORMATION)
 
       out.push(f)
     }
@@ -129,13 +128,12 @@ export class GateSealSrv {
     const status = await this.gateSealClient.checkGateSeal(blockDto.number, this.gateSealAddress)
     if (E.isLeft(status)) {
       if (status.left === GateSealExpiredErr) {
-        const f = Finding.fromObject({
-          name: '⚠️ GateSeal: default GateSeal address in forta agent is expired',
-          description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}]`,
-          alertId: 'GATE-SEAL-DEFAULT-EXPIRED',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-        })
+        const f: Finding = new Finding()
+        f.setName('⚠️ GateSeal: default GateSeal address in forta agent is expired')
+        f.setDescription(`GateSeal address: ${etherscanAddress(this.gateSealAddress)}]`)
+        f.setAlertid('GATE-SEAL-DEFAULT-EXPIRED')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.INFORMATION)
 
         out.push(f)
 
@@ -164,15 +162,12 @@ export class GateSealSrv {
         )}`
       }
       if (currentBlockTimestamp - this.cache.getLastNoPauseRoleAlertTimestamp() > ONE_DAY) {
-        out.push(
-          Finding.fromObject({
-            name: "🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts",
-            description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`,
-            alertId: 'GATE-SEAL-WITHOUT-PAUSE-ROLE',
-            severity: FindingSeverity.High,
-            type: FindingType.Degraded,
-          }),
-        )
+        const f: Finding = new Finding()
+        f.setName("🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts")
+        f.setDescription(`GateSeal address: ${etherscanAddress(this.gateSealAddress)}${additionalDesc}`)
+        f.setAlertid('GATE-SEAL-DEFAULT-EXPIRED')
+        f.setSeverity(Finding.Severity.HIGH)
+        f.setType(Finding.FindingType.DEGRADED)
 
         this.cache.setLastNoPauseRoleAlertTimestamp(currentBlockTimestamp)
       }
@@ -201,27 +196,28 @@ export class GateSealSrv {
 
     const out: Finding[] = []
     if (expiryTimestamp.right.eq(0) || expiryTimestamp.right.toNumber() <= currentBlockTimestamp) {
-      out.push(
-        Finding.fromObject({
-          name: '🚨 GateSeal: is expired!',
-          description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}}`,
-          alertId: 'GATE-SEAL-IS-EXPIRED',
-          severity: FindingSeverity.High,
-          type: FindingType.Degraded,
-        }),
-      )
+      const f: Finding = new Finding()
+      f.setName('🚨 GateSeal: is expired!')
+      f.setDescription(`GateSeal address: ${etherscanAddress(this.gateSealAddress)}}`)
+      f.setAlertid('GATE-SEAL-IS-EXPIRED')
+      f.setSeverity(Finding.Severity.HIGH)
+      f.setType(Finding.FindingType.DEGRADED)
+
+      out.push(f)
+
       this.gateSealAddress = undefined
     } else if (currentBlockTimestamp - this.cache.getLastExpiryGateSealAlertTimestamp() > TWO_WEEKS) {
       if (expiryTimestamp.right.toNumber() - currentBlockTimestamp <= THREE_MONTHS) {
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ GateSeal: is about to be expired',
-            description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(expiryTimestamp.right.toNumber() * 1000).toUTCString()}`,
-            alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Degraded,
-          }),
+        const f: Finding = new Finding()
+        f.setName('⚠️ GateSeal: is about to be expired')
+        f.setDescription(
+          `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(expiryTimestamp.right.toNumber() * 1000).toUTCString()}`,
         )
+        f.setAlertid('GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.DEGRADED)
+        out.push(f)
+
         this.cache.setLastExpiryGateSealAlertTimestamp(currentBlockTimestamp)
       }
     }
@@ -257,17 +253,18 @@ export class GateSealSrv {
         const { sealed_by, sealed_for, sealable } = sealedEvent.args
         const duration = formatDelay(Number(sealed_for))
 
-        out.push(
-          Finding.fromObject({
-            name: '🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨',
-            description: `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nSealed by: ${etherscanAddress(
-              sealed_by,
-            )}\nSealed for: ${duration}\nSealable: ${etherscanAddress(sealable)}`,
-            alertId: 'GATE-SEAL-IS-SEALED',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Info,
-          }),
+        const f: Finding = new Finding()
+        f.setName('🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨')
+        f.setDescription(
+          `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nSealed by: ${etherscanAddress(
+            sealed_by,
+          )}\nSealed for: ${duration}\nSealable: ${etherscanAddress(sealable)}`,
         )
+        f.setAlertid('GATE-SEAL-IS-SEALED')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.INFORMATION)
+
+        out.push(f)
       } catch (e) {
         // Only one from eventsOfNotice could be correct
         // Others - skipping
@@ -290,17 +287,18 @@ export class GateSealSrv {
         const newGateSealEvent = iface.parseLog(log)
         const { gate_seal } = newGateSealEvent.args
 
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ GateSeal: a new instance deployed from factory',
-            description: `New instance address: ${etherscanAddress(
-              gate_seal,
-            )}\ndev: Please, check if \`GATE_SEAL_DEFAULT_ADDRESS\` should be updated in the nearest future`,
-            alertId: 'GATE-SEAL-NEW-ONE-CREATED',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Info,
-          }),
+        const f: Finding = new Finding()
+        f.setName('⚠️ GateSeal: a new instance deployed from factory')
+        f.setDescription(
+          `New instance address: ${etherscanAddress(
+            gate_seal,
+          )}\ndev: Please, check if \`GATE_SEAL_DEFAULT_ADDRESS\` should be updated in the nearest future`,
         )
+        f.setAlertid('GATE-SEAL-NEW-ONE-CREATED')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.INFORMATION)
+
+        out.push(f)
         this.gateSealAddress = gate_seal
       } catch (e) {
         // Only one from eventsOfNotice could be correct

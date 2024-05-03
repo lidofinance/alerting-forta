@@ -1,17 +1,17 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
 import { BlockEvent, EvaluateBlockRequest, EvaluateBlockResponse, ResponseStatus } from '../generated/proto/agent_pb'
-import * as alert_pb from '../generated/proto/alert_pb'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
 import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { Logger } from 'winston'
-import { Finding } from 'forta-agent'
 import { elapsedTime } from '../utils/time'
 import { BlockDto } from '../entity/events'
 import BigNumber from 'bignumber.js'
-import { fortaFindingToGrpc } from '../utils/forta.grpc.utils'
+import { Finding } from '../generated/proto/alert_pb'
+import * as E from 'fp-ts/Either'
+import { ETH_DECIMALS } from '../utils/constants'
 
 export class BlockHandler {
   private logger: Logger
@@ -71,22 +71,25 @@ export class BlockHandler {
         this.VaultSrv.handleBlock(blockDtoEvent),
       ])
 
+      const WithdrawalStat = await this.WithdrawalsSrv.getStatistic()
+      const stat: string = E.isLeft(WithdrawalStat) ? WithdrawalStat.left.message : WithdrawalStat.right
+
       findings.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
       this.healthChecker.check(findings)
-      this.logger.info(elapsedTime('handleBlock', startTime) + '\n')
+      this.logger.info(stat)
 
-      const out: alert_pb.Finding[] = []
-      for (const f of findings) {
-        out.push(fortaFindingToGrpc(f))
-      }
+      const share = this.StethOperationSrv.getStorage().getShareRate()
+      this.logger.info(`\tShare rate: ${share.amount.toFixed(4)} on block: ${share.blockNumber}`)
 
       const blockResponse = new EvaluateBlockResponse()
       blockResponse.setStatus(ResponseStatus.SUCCESS)
-      blockResponse.setTimestamp(new Date().toISOString())
       blockResponse.setPrivate(false)
-      blockResponse.setFindingsList(out)
+      blockResponse.setFindingsList(findings)
+      const m = blockResponse.getMetadataMap()
+      m.set('timestamp', new Date().toISOString())
 
+      this.logger.info(elapsedTime('handleBlock', startTime) + '\n')
       callback(null, blockResponse)
     }
   }

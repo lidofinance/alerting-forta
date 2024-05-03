@@ -1,8 +1,6 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { Error as gError, InitializeRequest, InitializeResponse, ResponseStatus } from '../generated/proto/agent_pb'
-import * as E from 'fp-ts/Either'
+import { InitializeRequest, InitializeResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { Logger } from 'winston'
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
@@ -12,6 +10,7 @@ import Version from '../utils/version'
 import { ETHProvider } from '../clients/eth_provider'
 import { elapsedTime } from '../utils/time'
 import { ETH_DECIMALS } from '../utils/constants'
+import { Finding } from '../generated/proto/alert_pb'
 
 export class InitHandler {
   private readonly ethClient: ETHProvider
@@ -21,7 +20,7 @@ export class InitHandler {
   private readonly GateSealSrv: GateSealSrv
   private readonly VaultSrv: VaultSrv
 
-  private onAppStartFindings: Finding[]
+  private onAppStartFindings: Finding[] = []
 
   constructor(
     ethClient: ETHProvider,
@@ -53,71 +52,6 @@ export class InitHandler {
         'version.commitMsg': Version.commitMsg,
       }
 
-      const latestBlockNumber = await this.ethClient.getBlockNumber()
-      if (E.isLeft(latestBlockNumber)) {
-        this.logger.error(latestBlockNumber.left)
-
-        const resp = new InitializeResponse()
-        const err: gError = new gError()
-        err.setMessage(latestBlockNumber.left.message)
-
-        resp.setStatus(ResponseStatus.ERROR)
-        resp.addErrors(err)
-
-        callback(null, resp)
-        return
-      }
-
-      const [stethOperationSrvErr, withdrawalsSrvErr, gateSealSrvErr] = await Promise.all([
-        this.StethOperationSrv.initialize(latestBlockNumber.right),
-        this.WithdrawalsSrv.initialize(latestBlockNumber.right),
-        this.GateSealSrv.initialize(latestBlockNumber.right),
-        this.VaultSrv.initialize(latestBlockNumber.right),
-      ])
-      if (stethOperationSrvErr !== null) {
-        this.logger.error('Could not init stethSrv', stethOperationSrvErr)
-
-        const resp = new InitializeResponse()
-        const err: gError = new gError()
-        err.setMessage(stethOperationSrvErr.message)
-
-        resp.setStatus(ResponseStatus.ERROR)
-        resp.addErrors(err)
-
-        callback(null, resp)
-        return
-      }
-
-      if (withdrawalsSrvErr !== null) {
-        this.logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
-
-        const resp = new InitializeResponse()
-        const err: gError = new gError()
-        err.setMessage(withdrawalsSrvErr.message)
-
-        resp.setStatus(ResponseStatus.ERROR)
-        resp.addErrors(err)
-
-        callback(null, resp)
-        return
-      }
-
-      if (gateSealSrvErr instanceof Error) {
-        this.logger.error('Could not init gateSealSrvErr', gateSealSrvErr)
-
-        const resp = new InitializeResponse()
-        const err: gError = new gError()
-        err.setMessage(gateSealSrvErr.message)
-
-        resp.setStatus(ResponseStatus.ERROR)
-        resp.addErrors(err)
-
-        callback(null, resp)
-        return
-      } else {
-        this.onAppStartFindings.push(...gateSealSrvErr)
-      }
-
       const agents: string[] = [
         this.StethOperationSrv.getName(),
         this.WithdrawalsSrv.getName(),
@@ -126,16 +60,12 @@ export class InitHandler {
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
-      this.onAppStartFindings.push(
-        Finding.fromObject({
-          name: `Agent launched`,
-          description: `Version: ${Version.desc}`,
-          alertId: 'LIDO-AGENT-LAUNCHED',
-          severity: FindingSeverity.Info,
-          type: FindingType.Info,
-          metadata,
-        }),
-      )
+      const f: Finding = new Finding()
+      f.setName(`Agent launched`)
+      f.setDescription(`Version: ${Version.desc}`)
+      f.setAlertid('LIDO-AGENT-LAUNCHED')
+      f.setSeverity(Finding.Severity.INFO)
+      f.setType(Finding.FindingType.INFORMATION)
 
       this.logger.info(
         `[${this.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
@@ -146,10 +76,11 @@ export class InitHandler {
         `[${this.StethOperationSrv.getName()}] Buffered Eth: ${this.StethOperationSrv.getStorage()
           .getLastBufferedEth()
           .div(ETH_DECIMALS)
-          .toFixed(2)} on ${latestBlockNumber.right} block`,
+          .toFixed(2)}`,
       )
       this.logger.info(elapsedTime('Agent.initialize', startTime) + '\n')
 
+      this.onAppStartFindings.push(f)
       const resp = new InitializeResponse()
       resp.setStatus(ResponseStatus.SUCCESS)
 

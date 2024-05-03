@@ -151,44 +151,18 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   public async getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>> {
-    type balanceResponse = {
-      id: number | null
-      jsonrpc: string
-      result: string
-    }
-
-    type BadResponse = {
-      id: number | null
-      jsonrpc: string
-      error: {
-        message: string
-        code: number
-      }
-    }
-
     try {
-      const out = await retryAsync<balanceResponse>(
-        async (): Promise<balanceResponse> => {
-          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
-            method: 'POST',
-            body: JSON.stringify({
-              method: 'eth_getBalance',
-              params: [address, blockHash],
-            }),
-          })
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const block = await this.jsonRpcProvider.getBlock(blockHash)
+          const balance = await this.jsonRpcProvider.getBalance(address, new BigNumber(block.number, 10).toNumber())
 
-          if (response.status !== 200) {
-            const e = await response.json()
-            this.logger.error(e)
-            throw new Error((e as BadResponse).error.message)
-          }
-
-          return (await response.json()) as balanceResponse
+          return balance.toString()
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      return E.right(new BigNumber(String(out.result)))
+      return E.right(new BigNumber(out))
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address} and blockHash ${blockHash}`))
     }
@@ -272,7 +246,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     }
 
     const chunkPromises: Promise<void>[] = []
-    const MAX_REQUESTS_CHUNK_SIZE = 1750
+    const MAX_REQUESTS_CHUNK_SIZE = 875
     const out = new DataRW<WithdrawalRequest>([])
 
     for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
@@ -506,8 +480,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     if (E.isLeft(totalShares)) {
       return E.left(totalShares.left)
     }
-    // Formula: shareRate = (totalPooledEth * 10**27) / totalShares
-    return E.right(totalPooledEth.right.multipliedBy(new BigNumber(10).pow(27)).div(totalShares.right))
+
+    return E.right(totalPooledEth.right.div(totalShares.right))
   }
 
   public async isBunkerModeActive(blockNumber: number): Promise<E.Either<Error, boolean>> {

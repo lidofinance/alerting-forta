@@ -2,7 +2,6 @@ import * as grpc from '@grpc/grpc-js'
 import { App } from './app'
 import { BlockHandler } from './handlers/block.handler'
 import process from 'process'
-import { Finding } from 'forta-agent'
 import { HealthHandler } from './handlers/health.handler'
 import { TxHandler } from './handlers/tx.handler'
 import { InitHandler } from './handlers/init.handler'
@@ -10,6 +9,8 @@ import { AlertHandler } from './handlers/alert.handler'
 import { AgentService } from './generated/proto/agent_grpc_pb'
 import express, { Express, Request, Response } from 'express'
 import Version from './utils/version'
+import { Finding } from './generated/proto/alert_pb'
+import * as E from 'fp-ts/Either'
 
 const main = async () => {
   const app = await App.getInstance()
@@ -57,6 +58,36 @@ const main = async () => {
     evaluateAlert: alertH.handleAlert(),
   })
 
+  const latestBlockNumber = await app.ethClient.getBlockNumber()
+  if (E.isLeft(latestBlockNumber)) {
+    app.logger.error(latestBlockNumber.left)
+
+    process.exit(1)
+  }
+
+  const stethOperationSrvErr = await app.StethOperationSrv.initialize(latestBlockNumber.right)
+  if (stethOperationSrvErr !== null) {
+    app.logger.error('Could not init stethSrv', stethOperationSrvErr)
+
+    process.exit(1)
+  }
+
+  const gateSealSrvErr = await app.GateSealSrv.initialize(latestBlockNumber.right)
+  if (gateSealSrvErr instanceof Error) {
+    app.logger.error('Could not init gateSealSrvErr', gateSealSrvErr)
+
+    process.exit(1)
+  } else {
+    onAppFindings.push(...gateSealSrvErr)
+  }
+
+  const withdrawalsSrvErr = await app.WithdrawalsSrv.initialize(latestBlockNumber.right)
+  if (withdrawalsSrvErr !== null) {
+    app.logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
+
+    process.exit(1)
+  }
+
   app.metrics.build().set({ commitHash: Version.commitHash }, 1)
 
   gRPCserver.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), (err, port) => {
@@ -65,7 +96,7 @@ const main = async () => {
 
       process.exit(1)
     }
-    app.logger.info(`gRPC listening on ${port}`)
+    app.logger.info(`gRPC is listening on ${port}`)
   })
 
   const httpService: Express = express()
@@ -82,7 +113,7 @@ const main = async () => {
   })
 
   httpService.listen(port, () => {
-    console.log(`[server]: Server is running at http://localhost:${port}`)
+    app.logger.info(`Http server is running at http://localhost:${port}`)
   })
 }
 

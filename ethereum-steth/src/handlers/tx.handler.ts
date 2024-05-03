@@ -5,10 +5,8 @@ import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
-import { Finding } from 'forta-agent'
-import * as alert_pb from '../generated/proto/alert_pb'
-import { fortaFindingToGrpc } from '../utils/forta.grpc.utils'
 import { newTransactionDto } from '../entity/events'
+import { Finding } from '../generated/proto/alert_pb'
 
 export class TxHandler {
   private StethOperationSrv: StethOperationSrv
@@ -49,18 +47,14 @@ export class TxHandler {
 
       this.healthChecker.check(findings)
 
-      const out: alert_pb.Finding[] = []
-      for (const f of findings) {
-        out.push(fortaFindingToGrpc(f))
-      }
+      const txResponse = new EvaluateTxResponse()
+      txResponse.setStatus(ResponseStatus.SUCCESS)
+      txResponse.setPrivate(false)
+      txResponse.setFindingsList(findings)
+      const m = txResponse.getMetadataMap()
+      m.set('timestamp', new Date().toISOString())
 
-      const blockResponse = new EvaluateTxResponse()
-      blockResponse.setStatus(ResponseStatus.SUCCESS)
-      blockResponse.setTimestamp(new Date().toISOString())
-      blockResponse.setPrivate(false)
-      blockResponse.setFindingsList(out)
-
-      callback(null, blockResponse)
+      callback(null, txResponse)
     }
   }
 }

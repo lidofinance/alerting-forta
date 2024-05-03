@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
 import { ETHDistributedEvent } from '../../generated/typechain/Lido'
@@ -9,6 +8,8 @@ import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { BlockDto, TransactionDto } from '../../entity/events'
+import { Finding } from '../../generated/proto/alert_pb'
+import { ethers } from 'forta-agent'
 
 const ONCE_PER_100_BLOCKS = 100
 const ETH_1K = ETH_DECIMALS.times(1000)
@@ -178,17 +179,18 @@ export class VaultSrv {
         .plus(withdrawalsWithdrawn)
 
       if (withdrawalVaultBalanceDiff.gte(ETH_1K)) {
-        out.push(
-          Finding.fromObject({
-            name: 'ℹ️ Withdrawal Vault Balance significant change',
-            description: `Withdrawal Vault Balance has increased by ${toEthString(
-              withdrawalVaultBalanceDiff,
-            )} during the last ${ONCE_PER_100_BLOCKS} blocks`,
-            alertId: 'WITHDRAWAL-VAULT-BALANCE-CHANGE',
-            type: FindingType.Info,
-            severity: FindingSeverity.Info,
-          }),
+        const f: Finding = new Finding()
+        f.setName('ℹ️ Withdrawal Vault Balance significant change')
+        f.setDescription(
+          `Withdrawal Vault Balance has increased by ${toEthString(
+            withdrawalVaultBalanceDiff,
+          )} during the last ${ONCE_PER_100_BLOCKS} blocks`,
         )
+        f.setAlertid('WITHDRAWAL-VAULT-BALANCE-CHANGE')
+        f.setSeverity(Finding.Severity.INFO)
+        f.setType(Finding.FindingType.INFORMATION)
+
+        out.push(f)
       }
     }
 
@@ -211,15 +213,14 @@ export class VaultSrv {
 
     const out: Finding[] = []
     if (elVaultBalanceDiff.gte(ETH_50)) {
-      out.push(
-        Finding.fromObject({
-          name: 'ℹ️ EL Vault Balance significant change',
-          description: `EL Vault Balance has increased by ${toEthString(elVaultBalanceDiff)}`,
-          alertId: 'EL-VAULT-BALANCE-CHANGE',
-          type: FindingType.Info,
-          severity: FindingSeverity.Info,
-        }),
-      )
+      const f: Finding = new Finding()
+      f.setName('ℹ️ EL Vault Balance significant change')
+      f.setDescription(`EL Vault Balance has increased by ${toEthString(elVaultBalanceDiff)}`)
+      f.setAlertid('EL-VAULT-BALANCE-CHANGE')
+      f.setSeverity(Finding.Severity.INFO)
+      f.setType(Finding.FindingType.INFORMATION)
+
+      out.push(f)
     }
 
     return out
@@ -244,17 +245,18 @@ export class VaultSrv {
 
     if (report === null) {
       if (currentBalance.right.lt(prevBalance)) {
-        out.push(
-          Finding.fromObject({
-            name: '🚨🚨🚨 Withdrawal Vault balance mismatch. [without oracle report]',
-            description: `Withdrawal Vault Balance has decreased by ${toEthString(
-              prevBalance.minus(currentBalance.right),
-            )} without Oracle report`,
-            alertId: 'WITHDRAWAL-VAULT-BALANCE-DRAIN',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
+        const f: Finding = new Finding()
+        f.setName('🚨🚨🚨 Withdrawal Vault balance mismatch. [without oracle report]')
+        f.setDescription(
+          `Withdrawal Vault Balance has decreased by ${toEthString(
+            prevBalance.minus(currentBalance.right),
+          )} without Oracle report`,
         )
+        f.setAlertid('WITHDRAWAL-VAULT-BALANCE-DRAIN')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+
+        out.push(f)
       }
 
       return out
@@ -264,17 +266,18 @@ export class VaultSrv {
     const expectedBalance = prevBalance.minus(withdrawalsWithdrawn)
 
     if (currentBalance.right.lt(expectedBalance)) {
-      out.push(
-        Finding.fromObject({
-          name: '🚨🚨🚨 Withdrawal Vault balance mismatch. [within oracle report]',
-          description: `Withdrawal Vault Balance has decreased by ${toEthString(
-            expectedBalance.minus(currentBalance.right),
-          )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
-          alertId: 'WITHDRAWAL-VAULT-BALANCE-DRAIN',
-          severity: FindingSeverity.Critical,
-          type: FindingType.Suspicious,
-        }),
+      const f: Finding = new Finding()
+      f.setName('🚨🚨🚨 Withdrawal Vault balance mismatch. [within oracle report]')
+      f.setDescription(
+        `Withdrawal Vault Balance has decreased by ${toEthString(
+          expectedBalance.minus(currentBalance.right),
+        )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
       )
+      f.setAlertid('WITHDRAWAL-VAULT-BALANCE-DRAIN')
+      f.setSeverity(Finding.Severity.CRITICAL)
+      f.setType(Finding.FindingType.SUSPICIOUS)
+
+      out.push(f)
     }
 
     return out
@@ -299,17 +302,18 @@ export class VaultSrv {
     const out: Finding[] = []
     if (report === null) {
       if (currentBalance.right.lt(prevBalance)) {
-        out.push(
-          Finding.fromObject({
-            name: '🚨🚨🚨 EL Vault balance mismatch. [without oracle report]',
-            description: `EL Vault Balance has decreased by ${toEthString(
-              prevBalance.minus(currentBalance.right),
-            )} without Oracle report`,
-            alertId: 'EL-VAULT-BALANCE-DRAIN',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
+        const f: Finding = new Finding()
+        f.setName('🚨🚨🚨 EL Vault balance mismatch. [without oracle report]')
+        f.setDescription(
+          `EL Vault Balance has decreased by ${toEthString(
+            prevBalance.minus(currentBalance.right),
+          )} without Oracle report`,
         )
+        f.setAlertid('EL-VAULT-BALANCE-DRAIN')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+
+        out.push(f)
       }
 
       return out
@@ -319,17 +323,18 @@ export class VaultSrv {
     const expectedBalance = prevBalance.minus(executionLayerRewardsWithdrawn)
 
     if (currentBalance.right.lt(expectedBalance)) {
-      out.push(
-        Finding.fromObject({
-          name: '🚨🚨🚨 EL Vault balance mismatch. [within oracle report]',
-          description: `EL Vault Balance has decreased by ${toEthString(
-            expectedBalance.minus(currentBalance.right),
-          )} but Oracle report shows ${toEthString(executionLayerRewardsWithdrawn)}`,
-          alertId: 'EL-VAULT-BALANCE-DRAIN',
-          severity: FindingSeverity.Critical,
-          type: FindingType.Suspicious,
-        }),
+      const f: Finding = new Finding()
+      f.setName('🚨🚨🚨 EL Vault balance mismatch. [within oracle report]')
+      f.setDescription(
+        `EL Vault Balance has decreased by ${toEthString(
+          expectedBalance.minus(currentBalance.right),
+        )} but Oracle report shows ${toEthString(executionLayerRewardsWithdrawn)}`,
       )
+      f.setAlertid('EL-VAULT-BALANCE-DRAIN')
+      f.setSeverity(Finding.Severity.CRITICAL)
+      f.setType(Finding.FindingType.SUSPICIOUS)
+
+      out.push(f)
     }
 
     return out
@@ -350,15 +355,14 @@ export class VaultSrv {
       try {
         const event = iface.parseLog(log)
         if (event.args.from.toLowerCase() === this.burnerAddress.toLowerCase()) {
-          out.push(
-            Finding.fromObject({
-              name: '🚨 Burner shares transfer',
-              description: `Burner shares transfer to ${event.args.to} has occurred`,
-              alertId: 'BURNER-SHARES-TRANSFER',
-              severity: FindingSeverity.High,
-              type: FindingType.Suspicious,
-            }),
-          )
+          const f: Finding = new Finding()
+          f.setName('🚨 Burner shares transfer')
+          f.setDescription(`Burner shares transfer to ${event.args.to} has occurred`)
+          f.setAlertid('BURNER-SHARES-TRANSFER')
+          f.setSeverity(Finding.Severity.HIGH)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+
+          out.push(f)
         }
       } catch (e) {
         // Only one from eventsOfNotice could be correct

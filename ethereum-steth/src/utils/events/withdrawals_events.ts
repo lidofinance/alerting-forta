@@ -1,7 +1,7 @@
-import { FindingSeverity, FindingType } from 'forta-agent'
 import BigNumber from 'bignumber.js'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../entity/events'
+import { Finding } from '../../generated/proto/alert_pb'
 
 export const WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT = 'event BunkerModeEnabled(uint256 _sinceTimestamp)'
 
@@ -27,8 +27,8 @@ export function getWithdrawalsEvents(WITHDRAWAL_QUEUE_ADDRESS: string): EventOfN
       alertId: 'WITHDRAWALS-PAUSED',
       name: '🚨 Withdrawals: contract was paused',
       description: (args: Result) => `For ${new BigNumber(args.duration).div(60 * 60)} hours`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
+      severity: Finding.Severity.HIGH,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: WITHDRAWAL_QUEUE_ADDRESS,
@@ -36,8 +36,8 @@ export function getWithdrawalsEvents(WITHDRAWAL_QUEUE_ADDRESS: string): EventOfN
       alertId: 'WITHDRAWALS-UNPAUSED',
       name: '⚠️ Withdrawals: contract was unpaused',
       description: () => 'Contract was resumed',
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
   ]
 }

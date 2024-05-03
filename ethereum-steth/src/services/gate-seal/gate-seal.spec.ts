@@ -1,4 +1,3 @@
-import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { Address, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
 import { GateSeal } from '../../entity/gate_seal'
@@ -15,6 +14,8 @@ import { GateSealCache } from './GateSeal.cache'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
+import { ethers } from 'forta-agent'
+import { Finding } from '../../generated/proto/alert_pb'
 
 const TEST_TIMEOUT = 120_000 // ms
 
@@ -108,22 +109,22 @@ describe('GateSeal srv functional tests', () => {
       }
       const result = await gateSealSrv.handleExpiryGateSeal(blockDto)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
         description:
           `GateSeal address: [${GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024}](https://etherscan.io/address/${GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024})\n` +
           'Expiry date Wed, 01 May 2024 00:00:00 GMT',
         name: '⚠️ GateSeal: is about to be expired',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     },
     TEST_TIMEOUT,
   )
@@ -146,22 +147,22 @@ describe('GateSeal srv functional tests', () => {
 
       const results = gateSealSrv.handleTransaction(transactionDto)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'GATE-SEAL-NEW-ONE-CREATED',
         description:
           'New instance address: [0x79243345eDbe01A7E42EDfF5900156700d22611c](https://etherscan.io/address/0x79243345eDbe01A7E42EDfF5900156700d22611c)\n' +
           'dev: Please, check if `GATE_SEAL_DEFAULT_ADDRESS` should be updated in the nearest future',
         name: '⚠️ GateSeal: a new instance deployed from factory',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.INFORMATION,
+      }
 
       expect(results.length).toEqual(1)
-      expect(results[0].alertId).toEqual(expected.alertId)
-      expect(results[0].description).toEqual(expected.description)
-      expect(results[0].name).toEqual(expected.name)
-      expect(results[0].severity).toEqual(expected.severity)
-      expect(results[0].type).toEqual(expected.type)
+      expect(results[0].getAlertid()).toEqual(expected.alertId)
+      expect(results[0].getDescription()).toEqual(expected.description)
+      expect(results[0].getName()).toEqual(expected.name)
+      expect(results[0].getSeverity()).toEqual(expected.severity)
+      expect(results[0].getType()).toEqual(expected.type)
 
       const txHashEmptyFindings = '0xb00783f3eb79bd60f63e5744bbf0cb4fdc2f98bbca54cd2d3f611f032faa6a57'
 

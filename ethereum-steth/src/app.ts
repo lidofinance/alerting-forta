@@ -1,5 +1,5 @@
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
-import { ethers, Finding, getEthersProvider } from 'forta-agent'
+import { getEthersProvider } from 'forta-agent'
 import { Address } from './utils/constants'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { ETHProvider } from './clients/eth_provider'
@@ -27,6 +27,8 @@ import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 import promClient from 'prom-client'
 import { Metrics } from './utils/metrics/metrics'
+import { ethers } from 'ethers'
+import { Finding } from './generated/proto/alert_pb'
 
 export type Container = {
   db: Knex
@@ -104,6 +106,16 @@ export class App {
         veboRunner,
       )
 
+      const drpcClient = new ETHProvider(
+        logger,
+        drpcProvider,
+        etherscanProvider,
+        lidoRunner,
+        wdQueueRunner,
+        gateSealRunner,
+        veboRunner,
+      )
+
       const stethOperationCache = new StethOperationCache()
       const stethOperationSrv = new StethOperationSrv(
         logger,
@@ -134,16 +146,6 @@ export class App {
         new GateSealCache(),
         address.GATE_SEAL_DEFAULT_ADDRESS,
         address.GATE_SEAL_FACTORY_ADDRESS,
-      )
-
-      const drpcClient = new ETHProvider(
-        logger,
-        drpcProvider,
-        etherscanProvider,
-        lidoRunner,
-        wdQueueRunner,
-        gateSealRunner,
-        veboRunner,
       )
 
       const vaultSrv = new VaultSrv(

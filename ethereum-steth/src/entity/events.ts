@@ -1,9 +1,10 @@
-import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { Log } from '@ethersproject/abstract-provider'
 import * as agent_pb from '../generated/proto/agent_pb'
 import { TransactionEvent } from '../generated/proto/agent_pb'
 import BigNumber from 'bignumber.js'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
+import { Finding } from '../generated/proto/alert_pb'
+import { ethers } from 'ethers'
 
 export type EventOfNotice = {
   name: string
@@ -11,8 +12,8 @@ export type EventOfNotice = {
   abi: string
   alertId: string
   description: CallableFunction
-  severity: FindingSeverity
-  type: FindingType
+  severity: Finding.Severity
+  type: Finding.FindingType
 }
 
 export type BlockDto = {
@@ -76,17 +77,17 @@ export function handleEventsOfNotice(txEvent: TransactionDto, eventsOfNotice: Ev
 
         try {
           const logDesc = parser.parseLog(log)
+          const f: Finding = new Finding()
 
-          out.push(
-            Finding.fromObject({
-              name: eventInfo.name,
-              description: eventInfo.description(logDesc.args),
-              alertId: eventInfo.alertId,
-              severity: eventInfo.severity,
-              type: eventInfo.type,
-              metadata: { args: String(logDesc.args) },
-            }),
-          )
+          f.setName(eventInfo.name)
+          f.setDescription(eventInfo.description(logDesc.args))
+          f.setAlertid(eventInfo.alertId)
+          f.setSeverity(eventInfo.severity)
+          f.setType(eventInfo.type)
+          const m = f.getMetadataMap()
+          m.set('args', String(logDesc.args))
+
+          out.push(f)
         } catch (e) {
           // Only one from eventsOfNotice could be correct
           // Others - skipping
