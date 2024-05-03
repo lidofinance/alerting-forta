@@ -1,4 +1,4 @@
-import { IStethClient } from '../contracts'
+import { IStethClient } from '../StethOperation.srv'
 
 export const StethClientMock = (): jest.Mocked<IStethClient> => ({
   getHistory: jest.fn(),

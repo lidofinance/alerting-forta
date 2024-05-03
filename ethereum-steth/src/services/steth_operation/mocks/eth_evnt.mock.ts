@@ -1,4 +1,4 @@
-import { TypedEvent } from '../../../generated/common'
+import { TypedEvent } from '../../../generated/typechain/common'
 
 export const TypedEventMock = (): jest.Mocked<TypedEvent> => ({
   address: '',

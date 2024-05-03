@@ -4,16 +4,26 @@ import * as E from 'fp-ts/Either'
 import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
-import { ETHDistributedEvent } from '../../generated/Lido'
+import { ETHDistributedEvent } from '../../generated/typechain/Lido'
 import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
-import { IVaultClient } from './contract'
 import { BlockDto, TransactionDto } from '../../entity/events'
 
 const ONCE_PER_100_BLOCKS = 100
 const ETH_1K = ETH_DECIMALS.times(1000)
 const ETH_50 = ETH_DECIMALS.times(50)
+
+export abstract class IVaultClient {
+  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getETHDistributedEvent(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, ETHDistributedEvent | null>>
+}
 
 export class VaultSrv {
   private readonly logger: Logger

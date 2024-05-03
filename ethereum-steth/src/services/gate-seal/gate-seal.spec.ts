@@ -9,7 +9,7 @@ import {
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
-} from '../../generated'
+} from '../../generated/typechain'
 import { GateSealSrv } from './GateSeal.srv'
 import { GateSealCache } from './GateSeal.cache'
 import * as Winston from 'winston'
@@ -138,7 +138,6 @@ describe('GateSeal srv functional tests', () => {
       const transactionDto: TransactionDto = {
         logs: receipt.logs,
         to: trx.to ? trx.to : null,
-        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
         block: {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
@@ -172,7 +171,6 @@ describe('GateSeal srv functional tests', () => {
       const trxDTOWithEmptyFindings: TransactionDto = {
         logs: receiptWithEmptyFindings.logs,
         to: trxWithEmptyFindings.to ? trxWithEmptyFindings.to : null,
-        timestamp: trxWithEmptyFindings.timestamp ? trxWithEmptyFindings.timestamp : new Date().getTime(),
         block: {
           timestamp: trxWithEmptyFindings.timestamp ? trxWithEmptyFindings.timestamp : new Date().getTime(),
           number: trxWithEmptyFindings.blockNumber ? trxWithEmptyFindings.blockNumber : 1,

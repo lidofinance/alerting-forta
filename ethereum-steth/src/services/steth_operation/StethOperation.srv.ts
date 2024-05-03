@@ -4,11 +4,14 @@ import * as E from 'fp-ts/Either'
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
-import { IStethClient } from './contracts'
 import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
 import { BlockDto } from '../../entity/events'
+import { TransactionResponse } from '@ethersproject/abstract-provider'
+import type { BigNumber } from 'bignumber.js'
+import type { TypedEvent } from '../../generated/typechain/common'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
@@ -22,6 +25,36 @@ const HOURS_4 = 60 * 60 * 4 // 4 Hours
 const HOURS_12 = 60 * 60 * 12 // 12 Hours
 export const DAYS_3 = 60 * 60 * 72 // 72 Hours
 export const ETH_2 = 2 // 2 ETH
+
+export abstract class IStethClient {
+  public abstract getHistory(
+    depositSecurityAddress: string,
+    startBlock: number,
+    endBlock: number,
+  ): Promise<E.Either<Error, TransactionResponse[]>>
+
+  public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getUnbufferedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>>
+
+  public abstract getWithdrawalsFinalizedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>>
+
+  public abstract getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
+}
 
 export class StethOperationSrv {
   private readonly name = 'StethOperationSrv'
@@ -165,7 +198,7 @@ export class StethOperationSrv {
     const out: Finding[] = []
 
     if (txEvent.to !== null && txEvent.to.toLowerCase() == this.depositSecurityAddress.toLowerCase()) {
-      this.cache.setLastDepositorTxTime(txEvent.timestamp)
+      this.cache.setLastDepositorTxTime(txEvent.block.timestamp)
     }
 
     const lidoFindings = handleEventsOfNotice(txEvent, this.lidoEvents)

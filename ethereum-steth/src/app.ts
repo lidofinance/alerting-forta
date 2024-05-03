@@ -1,5 +1,5 @@
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
-import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { ethers, Finding, getEthersProvider } from 'forta-agent'
 import { Address } from './utils/constants'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { ETHProvider } from './clients/eth_provider'
@@ -9,7 +9,7 @@ import {
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
-} from './generated'
+} from './generated/typechain'
 import { getDepositSecurityEvents } from './utils/events/deposit_security_events'
 import { getLidoEvents } from './utils/events/lido_events'
 import { getInsuranceFundEvents } from './utils/events/insurance_fund_events'
@@ -22,19 +22,21 @@ import { DataRW } from './utils/mutex'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
 import * as Winston from 'winston'
 import { VaultSrv } from './services/vault/Vault.srv'
-import * as E from 'fp-ts/Either'
 import { Knex, knex } from 'knex'
 import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
+import promClient from 'prom-client'
 
 export type Container = {
+  db: Knex
+  logger: Winston.Logger
+  prometheus: promClient.Registry
   ethClient: ETHProvider
   StethOperationSrv: StethOperationSrv
   WithdrawalsSrv: WithdrawalsSrv
   GateSealSrv: GateSealSrv
   VaultSrv: VaultSrv
   findingsRW: DataRW<Finding>
-  db: Knex
   healthChecker: HealthChecker
 }
 
@@ -42,29 +44,6 @@ export class App {
   private static instance: Container
 
   private constructor() {}
-
-  public static async getJwt(): Promise<E.Either<Error, string>> {
-    let token: string
-    try {
-      token = await fetchJwt({})
-    } catch (e) {
-      return E.left(new Error(`Could not fetch jwt. Cause ${e}`))
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        const isTokenOk = await verifyJwt(token)
-        if (!isTokenOk) {
-          return E.left(new Error(`Token verification failed`))
-        }
-      } catch (e) {
-        return E.left(new Error(`Token verification failed`))
-      }
-    }
-
-    return E.right(token)
-  }
-
   private static getConnection(): Knex {
     const config: knex.Knex.Config = {
       client: 'sqlite3',
@@ -174,7 +153,14 @@ export class App {
         address.LIDO_STETH_ADDRESS,
       )
 
+      const m = promClient
+      m.collectDefaultMetrics({
+        prefix: 'ethereum_steth_',
+      })
+
       App.instance = {
+        logger: logger,
+        prometheus: m.register,
         ethClient: ethClient,
         StethOperationSrv: stethOperationSrv,
         WithdrawalsSrv: withdrawalsSrv,

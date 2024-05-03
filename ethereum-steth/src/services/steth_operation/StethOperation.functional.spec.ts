@@ -91,7 +91,6 @@ describe('Steth.srv functional tests', () => {
       const transactionDto: TransactionDto = {
         logs: receipt.logs,
         to: trx.to ? trx.to : null,
-        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
         block: {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
@@ -150,7 +149,6 @@ describe('Steth.srv functional tests', () => {
       const transactionDto: TransactionDto = {
         logs: receipt.logs,
         to: trx.to ? trx.to : null,
-        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
         block: {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
@@ -207,7 +205,6 @@ describe('Steth.srv functional tests', () => {
       const transactionDto: TransactionDto = {
         logs: receipt.logs,
         to: trx.to ? trx.to : null,
-        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
         block: {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,

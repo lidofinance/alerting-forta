@@ -18,8 +18,8 @@ import { Logger } from 'winston'
 import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { WithdrawalsRepo } from './Withdrawals.repo'
 import { dbAlert, networkAlert } from '../../utils/errors'
-import { IWithdrawalsClient } from './contract'
 import { BlockDto } from '../../entity/events'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -34,6 +34,34 @@ const ONCE_PER_100_BLOCKS = 100 // 20 minutes (100 blocks x 12 sec = 12000 secon
 const THRESHOLD_095 = 0.95
 const THRESHOLD_02 = 0.2
 const CLAIMED_MORE_THEN_REQUESTED_5_ATTEMPT_PER_HOUR = 5
+
+export abstract class IWithdrawalsClient {
+  public abstract getUnfinalizedStETH(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getWithdrawalStatuses(
+    requestsRange: number[],
+    currentBlock: number,
+  ): Promise<E.Either<Error, WithdrawalRequest[]>>
+
+  public abstract getTotalPooledEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getTotalShares(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract isBunkerModeActive(blockNumber: number): Promise<E.Either<Error, boolean>>
+
+  public abstract getBunkerTimestamp(blockNumber: number): Promise<E.Either<Error, number>>
+
+  public abstract getWithdrawalLastRequestId(blockNumber: number): Promise<E.Either<Error, number>>
+
+  public abstract getWithdrawalStatus(
+    requestId: number,
+    blockNumber: number,
+  ): Promise<E.Either<Error, WithdrawalRequest>>
+
+  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
+}
 
 export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
@@ -621,7 +649,7 @@ export class WithdrawalsSrv {
           }),
         )
 
-        this.cache.setLastBigRequestAfterRebaseAlertTimestamp(txEvent.timestamp)
+        this.cache.setLastBigRequestAfterRebaseAlertTimestamp(txEvent.block.timestamp)
       }
     }
 
@@ -634,7 +662,7 @@ export class WithdrawalsSrv {
       return
     }
 
-    this.cache.setLastTokenRebaseTimestamp(txEvent.timestamp)
+    this.cache.setLastTokenRebaseTimestamp(txEvent.block.timestamp)
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
   }
 
