@@ -52,7 +52,7 @@
     "lint": "yarn run prettier:check && yarn run eslint:lint",
     "format": "yarn run eslint:format && yarn run prettier:format",
     "postinstall": "yarn generate-types && yarn generate-proto",
-    "nats": "node --require ts-node/register src/nats.ts"
+    "nats": "node --require ts-node/register src/main.ts"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.0.0",

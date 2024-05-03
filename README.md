@@ -129,3 +129,14 @@ And finally:
 yarn install
 yarn format
 ```
+
+
+## Consuming events from DRPC
+### Prerequesites:
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Steps:
+1. Rename `.env.example` to `.env` and fill in the required values (DRPC API key).
+2. Run `docker-compose up --build`.
+3. The bot will start consuming events from DRPC and logging them to the console.
