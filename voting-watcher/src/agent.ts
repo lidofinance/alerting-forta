@@ -35,7 +35,7 @@ const maxHandlerRetries = 5;
 
 let findingsOnInit: Finding[] = [];
 
-const initialize = async () => {
+export const initialize = async () => {
   const metadata: Metadata = {
     "version.commitHash": VERSION.commitHash,
     "version.commitMsg": VERSION.commitMsg,
@@ -104,7 +104,7 @@ const timeout = async (agent: SubAgent) =>
     }, processingTimeout);
   });
 
-const handleBlock: HandleBlock = async (
+export const handleBlock: HandleBlock = async (
   blockEvent: BlockEvent,
 ): Promise<Finding[]> => {
   let blockFindings: Finding[] = [];
@@ -156,7 +156,7 @@ const handleBlock: HandleBlock = async (
   return blockFindings;
 };
 
-const handleTransaction: HandleTransaction = async (
+export const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent,
 ) => {
   let txFindings: Finding[] = [];

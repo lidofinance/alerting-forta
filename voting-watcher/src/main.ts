@@ -1,35 +1,9 @@
 import { AckPolicy, connect } from 'nats'
-import { handleBlock, handleTransaction } from './agent'
+import { initialize, handleBlock, handleTransaction } from './agent'
 import { Block, BlockEvent, EventType, Log, Network, Trace, Transaction, TxEventBlock } from 'forta-agent'
-import { EvaluateBlockRequest, EvaluateTxRequest } from './generated/agent'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import * as process from 'node:process'
-import { App } from './app'
-import { elapsedTime } from './shared/time'
-
-const initialize = async (blockNumber: number) => {
-  const startTime = new Date().getTime()
-  const app = await App.getInstance()
-
-  const [, aragonVotingSrvErr] = await Promise.all([
-    app.AclChangesSrv.initialize(blockNumber),
-    app.AragonVotingSrv.initialize(blockNumber),
-    app.EasyTrackSrv.initialize(blockNumber),
-    app.EnsNamesSrv.initialize(blockNumber),
-    app.ProxyWatcherSrv.initialize(blockNumber),
-    app.TrpChangesSrv.initialize(blockNumber),
-    app.StonksSrv.initialize(blockNumber),
-  ])
-
-  if (aragonVotingSrvErr !== null) {
-    console.error(`Error: ${aragonVotingSrvErr.message}`)
-    console.error(`Stack: ${aragonVotingSrvErr.stack}`)
-
-    process.exit(1)
-  }
-
-  console.log(elapsedTime('Agent.initialize', startTime) + '\n')
-}
+import { EvaluateBlockRequest, EvaluateTxRequest } from './generated/agent'
 
 const main = async () => {
   // In this case the bot name will be ethereum-governance-v2 (parent of parent directory name).
@@ -83,11 +57,11 @@ const main = async () => {
         )
         if (!initialized) {
           console.log('Initializing...')
-          await initialize(event.blockNumber)
+          await initialize()
           initialized = true
         }
 
-        const findings = await handleBlock()(event)
+        const findings = await handleBlock(event)
         if (findings.length > 0) {
           console.log(findings)
         }
@@ -108,7 +82,7 @@ const main = async () => {
           request.event?.logs as unknown as Log[],
           request.event?.contractAddress as string | null,
         )
-        const findings = await handleTransaction()(event)
+        const findings = await handleTransaction(event)
         if (findings.length > 0) {
           console.log(findings)
         }
