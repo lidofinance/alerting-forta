@@ -64,7 +64,7 @@ export const INSURANCE_FUND_ADDRESS =
 export const GATE_SEAL_FACTORY_ADDRESS =
   "0x6c82877cac5a7a739f16ca0a89c0a328b8764a24";
 export const GATE_SEAL_DEFAULT_ADDRESS =
-  "0x1ad5cb2955940f998081c1ef5f5f00875431aa90";
+  "0x79243345edbe01a7e42edff5900156700d22611c";
 
 // EasyTrack
 export const EASY_TRACK_ADDRESS = "0xf0211b7660680b49de1a7e9f25c65660f0a13fea";
@@ -74,6 +74,8 @@ export const INCREASE_STAKING_LIMIT_ADDRESS =
   "0xfebd8fac16de88206d4b18764e826af38546afe0";
 export const REWARD_PROGRAMS_REGISTRY_ADDRESS =
   "0xfcad241d9d2a2766979a2de208e8210edf7b7d4f";
+export const STONKS_TOP_UP_ALLOWED_RECIPIENTS_ADDRESS =
+  "0x6e04aed774b7c89bb43721acdd7d03c872a51b69";
 
 // Other
 export const DEPOSIT_EXECUTOR_ADDRESS =
@@ -131,3 +133,17 @@ export interface IProxyContractData {
   name: string;
   shortABI: string;
 }
+
+export type ERC20 = {
+  decimals: number;
+  name: string;
+};
+
+export const KNOWN_ERC20 = new Map<string, ERC20>([
+  [LIDO_STETH_ADDRESS, { decimals: 18, name: "stETH" }],
+  [WSTETH_ADDRESS, { decimals: 18, name: "wstETH" }],
+  [LDO_ADDRESS, { decimals: 18, name: "LDO" }],
+  [DAI_ADDRESS, { decimals: 18, name: "DAI" }],
+  [USDT_ADDRESS, { decimals: 6, name: "USDT" }],
+  [USDC_ADDRESS, { decimals: 6, name: "USDC" }],
+]);

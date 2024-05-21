@@ -41,22 +41,6 @@ export async function handleBlock(blockEvent: BlockEvent) {
       findings,
       BRIDGE_PARAMS_WSTETH.Optimism,
     ),
-    handleBridgeBalanceWstETH(
-      blockEvent,
-      findings,
-      BRIDGE_PARAMS_WSTETH.ZkSync,
-    ),
-    handleBridgeBalanceWstETH(
-      blockEvent,
-      findings,
-      BRIDGE_PARAMS_WSTETH.Mantle,
-    ),
-    handleBridgeBalanceWstETH(blockEvent, findings, BRIDGE_PARAMS_WSTETH.Linea),
-    handleBridgeBalanceWstETH(
-      blockEvent,
-      findings,
-      BRIDGE_PARAMS_WSTETH.Scroll,
-    ),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Arbitrum),
     handleBridgeBalanceLDO(blockEvent, findings, BRIDGE_PARAMS_LDO.Optimism),
   ]);

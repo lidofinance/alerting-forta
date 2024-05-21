@@ -1,6 +1,6 @@
 import { App } from '../app'
 import * as E from 'fp-ts/Either'
-import { Address, ETH_DECIMALS } from '../utils/constants'
+import { Address, ETH_DECIMALS, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../utils/constants'
 import { GateSeal } from '../entity/gate_seal'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { ethers } from 'forta-agent'
@@ -37,7 +37,7 @@ describe('eth provider tests', () => {
 
     const blockNumber = 19140476
 
-    const resp = await app.ethClient.checkGateSeal(blockNumber, Address.GATE_SEAL_DEFAULT_ADDRESS)
+    const resp = await app.ethClient.checkGateSeal(blockNumber, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024)
     if (E.isLeft(resp)) {
       throw resp.left.message
     }

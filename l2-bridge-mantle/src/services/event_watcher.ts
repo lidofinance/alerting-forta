@@ -21,19 +21,19 @@ export class EventWatcher {
     return this.name
   }
 
-  public handleLogs(logs: Log[]): Finding[] {
+  public handleL2Logs(l2logs: Log[]): Finding[] {
     const start = new Date().getTime()
     const addresses: string[] = []
 
-    for (const log of logs) {
-      addresses.push(log.address)
+    for (const l2log of l2logs) {
+      addresses.push(l2log.address)
     }
 
     const findings: Finding[] = []
     for (const eventToFinding of this.eventsToFinding) {
       const ind = addresses.indexOf(formatAddress(eventToFinding.address))
       if (ind >= 0) {
-        const filteredEvents = filterLog(logs, eventToFinding.event, eventToFinding.address)
+        const filteredEvents = filterLog(l2logs, eventToFinding.event, eventToFinding.address)
 
         for (const event of filteredEvents) {
           findings.push(
@@ -44,14 +44,14 @@ export class EventWatcher {
               severity: eventToFinding.severity,
               type: eventToFinding.type,
               metadata: { args: String(event.args) },
-              uniqueKey: getUniqueKey(eventToFinding.uniqueKey, logs[ind].blockNumber),
+              uniqueKey: getUniqueKey(eventToFinding.uniqueKey, l2logs[ind].blockNumber),
             }),
           )
         }
       }
     }
 
-    this.logger.info(elapsedTime(this.getName() + '.' + this.handleLogs.name, start))
+    this.logger.info(elapsedTime(this.getName() + '.' + this.handleL2Logs.name, start))
     return findings
   }
 }

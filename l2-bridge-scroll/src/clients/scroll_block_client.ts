@@ -1,34 +1,46 @@
 import { BlockDto } from 'src/entity/blockDto'
-import { IScrollProvider } from './scroll_provider'
-import { Log } from '@ethersproject/abstract-provider'
+import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provider'
 import { Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
-import { networkAlert } from '../utils/finding.helpers'
 import { Logger } from 'winston'
 import { elapsedTime } from '../utils/time'
+import { networkAlert } from '../utils/finding.helpers'
+import { NetworkError } from '../utils/error'
 
-export class ScrollBlockClient {
-  private scrollProvider: IScrollProvider
+export abstract class IScrollProvider {
+  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
+
+  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
+
+  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
+
+  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
+
+  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
+}
+
+export class BlockClient {
+  private provider: IScrollProvider
   private logger: Logger
   private cachedBlockDto: BlockDto | undefined = undefined
 
   constructor(provider: IScrollProvider, logger: Logger) {
-    this.scrollProvider = provider
+    this.provider = provider
     this.logger = logger
   }
 
-  public async getBlocks(): Promise<E.Either<Finding, BlockDto[]>> {
+  public async getL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
     const start = new Date().getTime()
     const blocks = await this.fetchBlocks()
-    this.logger.info(elapsedTime(ScrollBlockClient.name + '.' + this.getBlocks.name, start))
+    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getL2Blocks.name, start))
 
     return blocks
   }
 
-  public async getLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
+  public async getL2Logs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
     const start = new Date().getTime()
     const logs = await this.fetchLogs(workingBlocks)
-    this.logger.info(elapsedTime(ScrollBlockClient.name + '.' + this.getLogs.name, start))
+    this.logger.info(elapsedTime(BlockClient.name + '.' + this.getL2Logs.name, start))
 
     return logs
   }
@@ -37,13 +49,13 @@ export class ScrollBlockClient {
     const out: BlockDto[] = []
 
     if (this.cachedBlockDto === undefined) {
-      const block = await this.scrollProvider.getLatestBlock()
+      const block = await this.provider.getLatestBlock()
       if (E.isLeft(block)) {
         return E.left(
           networkAlert(
             block.left,
-            `Error in ${ScrollBlockClient.name}.${this.getBlocks.name}:21`,
-            `Could not call scrollProvider.getLatestBlock`,
+            `Error in ${BlockClient.name}.${this.getL2Blocks.name}:21`,
+            `Could not call provider.getLatestBlock`,
             0,
           ),
         )
@@ -56,20 +68,20 @@ export class ScrollBlockClient {
 
       out.push(this.cachedBlockDto)
     } else {
-      const latestBlock = await this.scrollProvider.getLatestBlock()
+      const latestBlock = await this.provider.getLatestBlock()
       if (E.isLeft(latestBlock)) {
         this.cachedBlockDto = undefined
         return E.left(
           networkAlert(
             latestBlock.left,
-            `Error in ${ScrollBlockClient.name}.${this.getBlocks.name}:39`,
-            `Could not call scrollProvider.getLatestBlock`,
+            `Error in ${BlockClient.name}.${this.getL2Blocks.name}:39`,
+            `Could not call provider.getLatestBlock`,
             0,
           ),
         )
       }
 
-      const blocks = await this.scrollProvider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
+      const blocks = await this.provider.fetchBlocks(this.cachedBlockDto.number, latestBlock.right.number - 1)
       for (const block of blocks) {
         out.push({
           number: block.number,
@@ -94,16 +106,13 @@ export class ScrollBlockClient {
   }
 
   private async fetchLogs(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
-    const logs = await this.scrollProvider.getLogs(
-      workingBlocks[0].number,
-      workingBlocks[workingBlocks.length - 1].number,
-    )
+    const logs = await this.provider.getLogs(workingBlocks[0].number, workingBlocks[workingBlocks.length - 1].number)
     if (E.isLeft(logs)) {
       return E.left(
         networkAlert(
           logs.left,
-          `Error in ${ScrollBlockClient.name}.${this.getLogs.name}:76`,
-          `Could not call scrollProvider.getLogs`,
+          `Error in ${BlockClient.name}.${this.getL2Logs.name}:76`,
+          `Could not call provider.getLogs`,
           workingBlocks[workingBlocks.length - 1].number,
         ),
       )

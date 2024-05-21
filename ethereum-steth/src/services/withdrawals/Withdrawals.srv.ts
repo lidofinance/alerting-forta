@@ -4,7 +4,6 @@ import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { elapsedTime, formatDelay } from '../../utils/time'
-import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import {
   LIDO_TOKEN_REBASED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
@@ -14,7 +13,7 @@ import {
   WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT,
 } from '../../utils/events/withdrawals_events'
 import { etherscanAddress, etherscanNft } from '../../utils/string'
-import { EventOfNotice, BlockDto } from '../../entity/events'
+import { EventOfNotice, handleEventsOfNotice, TransactionDto, BlockDto } from '../../entity/events'
 import { Logger } from 'winston'
 import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { WithdrawalsRepo } from './Withdrawals.repo'
@@ -31,10 +30,10 @@ const THRESHOLD_OF_100K_STETH = new BigNumber(100_000)
 const THRESHOLD_OF_5K_STETH = new BigNumber(5_000)
 const THRESHOLD_OF_150K_STETH = new BigNumber(150_000)
 
-const BLOCK_CHECK_INTERVAL = 100 // 20 minutes (100 blocks x 12 sec = 12000 seconds = 20 minutes)
-const QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD = 0.95
-const UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD = 0.2
-const CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR = 5
+const ONCE_PER_100_BLOCKS = 100 // 20 minutes (100 blocks x 12 sec = 12000 seconds = 20 minutes)
+const THRESHOLD_095 = 0.95
+const THRESHOLD_02 = 0.2
+const CLAIMED_MORE_THEN_REQUESTED_5_ATTEMPT_PER_HOUR = 5
 
 export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
@@ -182,7 +181,7 @@ export class WithdrawalsSrv {
       }
     }
 
-    if (blockDto.number % BLOCK_CHECK_INTERVAL === 0) {
+    if (blockDto.number % ONCE_PER_100_BLOCKS === 0) {
       const [queueOnParWithStakeLimitFindings, unfinalizedRequestNumberFindings, unclaimedRequestsFindings] =
         await Promise.all([
           this.handleQueueOnParWithStakeLimit(blockDto),
@@ -202,16 +201,18 @@ export class WithdrawalsSrv {
     return findings
   }
 
-  public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
+  public async handleTransaction(txEvent: TransactionDto): Promise<Finding[]> {
     const out: Finding[] = []
 
+    const withdrawalsEventsFindings = handleEventsOfNotice(txEvent, this.withdrawalsEvents)
     const bunkerStatusFindings = this.handleBunkerStatus(txEvent)
     this.handleLastTokenRebase(txEvent)
 
-    const finalizedFindings = await this.handleWithdrawalFinalized(txEvent)
-    const withdrawalRequestFindings = await this.handleWithdrawalRequest(txEvent)
-    const withdrawalClaimedFindings = await this.handleWithdrawalClaimed(txEvent)
-    const withdrawalsEventsFindings = this.handleEventsOfNotice(txEvent, this.withdrawalsEvents)
+    const [finalizedFindings, withdrawalRequestFindings, withdrawalClaimedFindings] = await Promise.all([
+      this.handleWithdrawalFinalized(txEvent),
+      this.handleWithdrawalRequest(txEvent),
+      this.handleWithdrawalClaimed(txEvent),
+    ])
 
     out.push(
       ...bunkerStatusFindings,
@@ -258,7 +259,7 @@ export class WithdrawalsSrv {
     }
     const spentStakeLimit = stakeLimitFullInfo.right.maxStakeLimit.minus(stakeLimitFullInfo.right.currentStakeLimit)
     const spentStakeLimitRate = spentStakeLimit.div(stakeLimitFullInfo.right.maxStakeLimit)
-    const thresholdStakeLimit = stakeLimitFullInfo.right.maxStakeLimit.times(QUEUE_ON_PAR_STAKE_LIMIT_RATE_THRESHOLD)
+    const thresholdStakeLimit = stakeLimitFullInfo.right.maxStakeLimit.times(THRESHOLD_095)
 
     const findings: Finding[] = []
     if (spentStakeLimit.gte(thresholdStakeLimit) && unfinalizedStETH.right.gte(thresholdStakeLimit)) {
@@ -449,7 +450,7 @@ export class WithdrawalsSrv {
     const totalFinalizedSize = claimedStETH.plus(unclaimedStETH)
     const unclaimedSizeRate = unclaimedStETH.div(totalFinalizedSize)
     if (currentBlockTimestamp - this.cache.getLastUnclaimedRequestsAlertTimestamp() > ONE_DAY) {
-      if (unclaimedSizeRate.gte(UNCLAIMED_REQUESTS_SIZE_RATE_THRESHOLD)) {
+      if (unclaimedSizeRate.gte(THRESHOLD_02)) {
         out.push(
           Finding.fromObject({
             name: `ℹ️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
@@ -497,7 +498,7 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public handleBunkerStatus(txEvent: TransactionEvent): Finding[] {
+  public handleBunkerStatus(txEvent: TransactionDto): Finding[] {
     const [bunkerEnabled] = filterLog(txEvent.logs, WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT, this.withdrawalsQueueAddress)
 
     const out: Finding[] = []
@@ -544,7 +545,7 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public async handleWithdrawalRequest(txEvent: TransactionEvent): Promise<Finding[]> {
+  public async handleWithdrawalRequest(txEvent: TransactionDto): Promise<Finding[]> {
     const requestEvents = filterLog(
       txEvent.logs,
       WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED_EVENT,
@@ -627,7 +628,7 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public handleLastTokenRebase(txEvent: TransactionEvent): void {
+  public handleLastTokenRebase(txEvent: TransactionDto): void {
     const [rebaseEvent] = filterLog(txEvent.logs, LIDO_TOKEN_REBASED_EVENT, this.lidoStethAddress)
     if (!rebaseEvent) {
       return
@@ -637,7 +638,7 @@ export class WithdrawalsSrv {
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
   }
 
-  public async handleWithdrawalFinalized(txEvent: TransactionEvent): Promise<Finding[]> {
+  public async handleWithdrawalFinalized(txEvent: TransactionDto): Promise<Finding[]> {
     const [withdrawalEvent] = filterLog(
       txEvent.logs,
       WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
@@ -677,7 +678,7 @@ export class WithdrawalsSrv {
     return []
   }
 
-  public async handleWithdrawalClaimed(txEvent: TransactionEvent): Promise<Finding[]> {
+  public async handleWithdrawalClaimed(txEvent: TransactionDto): Promise<Finding[]> {
     const claimedEvents = filterLog(
       txEvent.logs,
       WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
@@ -692,10 +693,7 @@ export class WithdrawalsSrv {
       this.cache.setClaimedAmountMoreThanRequestedAlertsCount(0)
     }
 
-    if (
-      this.cache.getClaimedAmountMoreThanRequestedAlertsCount() >=
-      CLAIMED_AMOUNT_MORE_THAN_REQUESTED_MAX_ALERTS_PER_HOUR
-    ) {
+    if (this.cache.getClaimedAmountMoreThanRequestedAlertsCount() >= CLAIMED_MORE_THEN_REQUESTED_5_ATTEMPT_PER_HOUR) {
       return []
     }
 
@@ -748,30 +746,6 @@ export class WithdrawalsSrv {
 
         withdrawalRequest.isClaimed = true
         withdrawalRequest.amountOfStETH = new BigNumber(String(event.args.amountOfETH))
-      }
-    }
-
-    return out
-  }
-
-  public handleEventsOfNotice(txEvent: TransactionEvent, eventsOfNotice: EventOfNotice[]): Finding[] {
-    const out: Finding[] = []
-    for (const eventInfo of eventsOfNotice) {
-      if (formatAddress(eventInfo.address) in txEvent.addresses) {
-        const filteredEvents = filterLog(txEvent.logs, eventInfo.event, eventInfo.address)
-
-        for (const filteredEvent of filteredEvents) {
-          out.push(
-            Finding.fromObject({
-              name: eventInfo.name,
-              description: eventInfo.description(filteredEvent.args),
-              alertId: eventInfo.alertId,
-              severity: eventInfo.severity,
-              type: eventInfo.type,
-              metadata: { args: String(filteredEvent.args) },
-            }),
-          )
-        }
       }
     }
 

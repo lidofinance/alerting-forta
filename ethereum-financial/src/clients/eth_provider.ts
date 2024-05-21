@@ -57,8 +57,9 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
+          const block = await this.jsonRpcProvider.getBlock(blockHash)
           const [totalSupply] = await this.astEthContract.functions.totalSupply({
-            blockTag: blockHash,
+            blockTag: block.number,
           })
 
           return totalSupply
@@ -76,8 +77,9 @@ export class ETHProvider implements IAaveClient, IPoolBalanceClient {
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
+          const block = await this.jsonRpcProvider.getBlock(blockHash)
           const [balanceOf] = await this.stethContract.functions.balanceOf(address, {
-            blockTag: blockHash,
+            blockTag: block.number,
           })
 
           return balanceOf

@@ -1,3 +1,5 @@
+import BigNumber from 'bignumber.js'
+
 export type ContractInfo = {
   name: string
   address: string
@@ -5,19 +7,22 @@ export type ContractInfo = {
 
 export type RoleHashToName = Map<string, string>
 
+export const ETH_DECIMALS = new BigNumber(10).pow(18)
 export const Constants = {
   L2_NETWORK_RPC: 'https://rpc.scroll.io',
   L2_NETWORK_ID: 534352,
   SCROLL_APPROX_BLOCK_TIME_3_SECONDS: 3,
-  L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34D07Eb348716a1f0a48A507A9de8a3A6DcE45',
-  GOV_BRIDGE_ADDRESS: '0x0c67D8D067E349669dfEAB132A7c03A90594eE09',
+  L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',
+  GOV_BRIDGE_ADDRESS: '0x0c67d8d067e349669dfeab132a7c03a90594ee09',
+  L1_WSTETH_ADDRESS: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
+  L1_ERC20_TOKEN_GATEWAY_ADDRESS: '0x6625c6332c9f91f2d27c304e729b86db87a3f504',
   L2_ERC20_TOKEN_GATEWAY: {
     name: 'L2_ERC20_TOKEN_GATEWAY',
-    address: '0x8aE8f22226B9d789A36AC81474e633f8bE2856c9',
+    address: '0x8ae8f22226b9d789a36ac81474e633f8be2856c9',
   },
   SCROLL_WSTETH_BRIDGED: {
     name: 'SCROLL_WSTETH_BRIDGED',
-    address: '0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32',
+    address: '0xf610a9dfb7c89644979b4a0f27063e9e7d7cda32',
   },
   RolesMap: new Map<string, string>([
     ['0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a', 'DEPOSITS_ENABLER_ROLE'],

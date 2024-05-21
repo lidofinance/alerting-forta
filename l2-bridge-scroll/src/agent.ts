@@ -80,7 +80,7 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const blocksDto = await app.blockSrv.getBlocks()
+    const blocksDto = await app.blockSrv.getL2Blocks()
     if (E.isLeft(blocksDto)) {
       isHandleBLockRunning = false
       return [blocksDto.left]
@@ -91,7 +91,7 @@ export const handleBlock = (): HandleBlock => {
       }. Total: ${blocksDto.right.length}`,
     )
 
-    const logs = await app.blockSrv.getLogs(blocksDto.right)
+    const logs = await app.blockSrv.getL2Logs(blocksDto.right)
     if (E.isLeft(logs)) {
       isHandleBLockRunning = false
       return [logs.left]
@@ -102,12 +102,17 @@ export const handleBlock = (): HandleBlock => {
     const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
     const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
 
-    const blockNumbers: Set<number> = new Set<number>()
+    const l2blockNumbersSet: Set<number> = new Set<number>()
     for (const log of logs.right) {
-      blockNumbers.add(new BigNumber(log.blockNumber, 10).toNumber())
+      l2blockNumbersSet.add(new BigNumber(log.blockNumber, 10).toNumber())
     }
 
-    const proxyWatcherFindings = await app.proxyWatcher.handleBlocks(Array.from(blockNumbers))
+    const l2blockNumbers = Array.from(l2blockNumbersSet)
+
+    const [proxyWatcherFindings, bridgeBalanceFindings] = await Promise.all([
+      app.proxyWatcher.handleBlocks(l2blockNumbers),
+      app.bridgeBalanceSrv.handleBlock(blockEvent.block.number, l2blockNumbers),
+    ])
 
     findings.push(
       ...bridgeEventFindings,
@@ -115,6 +120,7 @@ export const handleBlock = (): HandleBlock => {
       ...proxyAdminEventFindings,
       ...monitorWithdrawalsFindings,
       ...proxyWatcherFindings,
+      ...bridgeBalanceFindings,
     )
 
     app.logger.info(elapsedTime('handleBlock', startTime) + '\n')

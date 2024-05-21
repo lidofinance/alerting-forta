@@ -23,7 +23,7 @@ export function getWithdrawalsEvents(WITHDRAWAL_QUEUE_ADDRESS: string): EventOfN
   return [
     {
       address: WITHDRAWAL_QUEUE_ADDRESS,
-      event: 'event Paused(uint256 duration)',
+      abi: 'event Paused(uint256 duration)',
       alertId: 'WITHDRAWALS-PAUSED',
       name: '🚨 Withdrawals: contract was paused',
       description: (args: Result) => `For ${new BigNumber(args.duration).div(60 * 60)} hours`,
@@ -32,7 +32,7 @@ export function getWithdrawalsEvents(WITHDRAWAL_QUEUE_ADDRESS: string): EventOfN
     },
     {
       address: WITHDRAWAL_QUEUE_ADDRESS,
-      event: 'event Resumed()',
+      abi: 'event Resumed()',
       alertId: 'WITHDRAWALS-UNPAUSED',
       name: '⚠️ Withdrawals: contract was unpaused',
       description: () => 'Contract was resumed',

@@ -16,14 +16,15 @@ the cache.
 ## Alerts
 
 1. Bridge events
-   1. 🚨🚨🚨 Mantle L2 Bridge: Implementation initialized
-   2. 🚨 Mantle L2 Bridge: Deposits Disabled
-   3. 🚨 Mantle L2 Bridge: Role Admin changed
-   4. 🚨 Mantle L2 Bridge: Withdrawals Disabled
-   5. ⚠️ Mantle L2 Bridge: Role granted
-   6. ⚠️ Mantle L2 Bridge: Role revoked
-   7. ℹ️ Mantle L2 Bridge: Deposits Enabled
-   8. ℹ️ Mantle L2 Bridge: Withdrawals Enabled
+   1. 🚨🚨🚨 Mantle bridge balance mismatch 🚨🚨🚨
+   2. 🚨🚨🚨 Mantle L2 Bridge: Implementation initialized
+   3. 🚨 Mantle L2 Bridge: Deposits Disabled
+   4. 🚨 Mantle L2 Bridge: Role Admin changed
+   5. 🚨 Mantle L2 Bridge: Withdrawals Disabled
+   6. ⚠️ Mantle L2 Bridge: Role granted
+   7. ⚠️ Mantle L2 Bridge: Role revoked
+   8. ℹ️ Mantle L2 Bridge: Deposits Enabled
+   9. ℹ️ Mantle L2 Bridge: Withdrawals Enabled
 2. Gov Events
    1. 🚨 Mantle Gov Bridge: Ethereum Governance Executor Updated
    2. 🚨 Mantle Gov Bridge: Guardian Updated
@@ -55,13 +56,5 @@ yarn install
 Running in a live mode:
 
 ```
-yarn start:dev
-```
-
-Testing on a specific block/range/transaction:
-
-```
-yarn block 13626668
-yarn range '13626667..13626668'
-yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
+yarn start
 ```

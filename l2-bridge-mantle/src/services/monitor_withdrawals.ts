@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { BlockDto, WithdrawalRecord } from 'src/entity/blockDto'
+import { BlockDto, WithdrawalRecord } from '../entity/blockDto'
 import { Log } from '@ethersproject/abstract-provider'
 import * as E from 'fp-ts/Either'
 import { IMonitorWithdrawalsClient } from '../clients/mantle_provider'
@@ -8,16 +8,17 @@ import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { getUniqueKey } from '../utils/finding.helpers'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
-const MAX_WITHDRAWALS_SUM = 10000
+const MAX_WITHDRAWALS_10K_WstEth = 10_000
 
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
 }
-const TWO_DAYS = 60 * 60 * 24 * 2
-const MANTLE_BLOCK_AVERAGE_TIME_2_SECS = 2
+const HOURS_48 = 60 * 60 * 24 * 2
+const AVG_BLOCK_TIME_2SECONDS: number = 2
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
@@ -28,8 +29,8 @@ export class MonitorWithdrawals {
   private readonly l2Erc20TokenGatewayAddress: string
   private readonly withdrawalsClient: IMonitorWithdrawalsClient
 
-  private withdrawalsCache: WithdrawalRecord[] = []
-  private lastReportedToManyWithdrawals = 0
+  private withdrawalStore: WithdrawalRecord[] = []
+  private toManyWithdrawalsTimestamp = 0
 
   constructor(withdrawalsClient: IMonitorWithdrawalsClient, l2Erc20TokenGatewayAddress: string, logger: Logger) {
     this.withdrawalsClient = withdrawalsClient
@@ -43,7 +44,7 @@ export class MonitorWithdrawals {
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
     // TODO: Fix actually on Mantle block time is not constant and the check logic must be updated
-    const pastBlock = currentBlock - Math.ceil(TWO_DAYS / MANTLE_BLOCK_AVERAGE_TIME_2_SECS)
+    const pastBlock = currentBlock - Math.ceil(HOURS_48 / AVG_BLOCK_TIME_2SECONDS)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
     if (E.isLeft(withdrawalEvents)) {
@@ -58,7 +59,7 @@ export class MonitorWithdrawals {
     const withdrawalsSum = new BigNumber(0)
     for (const wc of withdrawalRecords.right) {
       withdrawalsSum.plus(wc.amount)
-      this.withdrawalsCache.push(wc)
+      this.withdrawalStore.push(wc)
     }
 
     this.logger.info(`${MonitorWithdrawals.name} started on block ${currentBlock}`)
@@ -67,40 +68,46 @@ export class MonitorWithdrawals {
     })
   }
 
-  public handleBlocks(logs: Log[], blocksDto: BlockDto[]): Finding[] {
+  public handleL2Blocks(l2Logs: Log[], l2BlocksDto: BlockDto[]): Finding[] {
     const start = new Date().getTime()
 
     // adds records into withdrawalsCache
-    const withdrawalRecords = this.getWithdrawalRecords(logs, blocksDto)
-    this.withdrawalsCache.push(...withdrawalRecords)
+    const withdrawalRecords = this.getWithdrawalRecords(l2Logs, l2BlocksDto)
+    if (withdrawalRecords.length !== 0) {
+      this.logger.info(`Withdrawals count = ${withdrawalRecords.length}`)
+    }
+
+    this.withdrawalStore.push(...withdrawalRecords)
 
     const out: Finding[] = []
 
-    for (const block of blocksDto) {
+    for (const l2block of l2BlocksDto) {
       // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
       const withdrawalsCache: WithdrawalRecord[] = []
-      for (const wc of this.withdrawalsCache) {
-        if (wc.time > block.timestamp - TWO_DAYS) {
+      for (const wc of this.withdrawalStore) {
+        if (l2block.timestamp - HOURS_48 < wc.timestamp) {
           withdrawalsCache.push(wc)
         }
       }
 
-      this.withdrawalsCache = withdrawalsCache
+      this.withdrawalStore = withdrawalsCache
 
       const withdrawalsSum = new BigNumber(0)
-      for (const wc of this.withdrawalsCache) {
+      for (const wc of this.withdrawalStore) {
         withdrawalsSum.plus(wc.amount)
       }
 
       // block number condition is meant to "sync" agents alerts
-      if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && block.number % 10 === 0) {
+      if (
+        withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_10K_WstEth) &&
+        l2block.number % 10 === 0
+      ) {
         const period =
-          block.timestamp - this.lastReportedToManyWithdrawals < TWO_DAYS
-            ? block.timestamp - this.lastReportedToManyWithdrawals
-            : TWO_DAYS
+          l2block.timestamp - this.toManyWithdrawalsTimestamp < HOURS_48
+            ? l2block.timestamp - this.toManyWithdrawalsTimestamp
+            : HOURS_48
 
-        const uniqueKey = `82fd9b59-0cb2-42bd-b660-1c01bc18bfd2`
-
+        const uniqueKey = `71f5c9a4-90c5-4678-ad1d-c359b653413e`
         const finding: Finding = Finding.fromObject({
           name: `⚠️ Mantle: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`,
           description:
@@ -109,25 +116,25 @@ export class MonitorWithdrawals {
           alertId: 'HUGE-WITHDRAWALS-FROM-L2',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
-          uniqueKey: getUniqueKey(uniqueKey, block.number),
+          uniqueKey: getUniqueKey(uniqueKey, l2block.number),
         })
 
         out.push(finding)
 
-        this.lastReportedToManyWithdrawals = block.timestamp
+        this.toManyWithdrawalsTimestamp = l2block.timestamp
 
         const tmp: WithdrawalRecord[] = []
-        for (const wc of this.withdrawalsCache) {
-          if (wc.time > block.timestamp - this.lastReportedToManyWithdrawals) {
+        for (const wc of this.withdrawalStore) {
+          if (l2block.timestamp - this.toManyWithdrawalsTimestamp < wc.timestamp) {
             tmp.push(wc)
           }
         }
 
-        this.withdrawalsCache = tmp
+        this.withdrawalStore = tmp
       }
     }
 
-    this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this.handleBlocks.name, start))
+    this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this.handleL2Blocks.name, start))
     return out
   }
 
@@ -138,7 +145,7 @@ export class MonitorWithdrawals {
 
     for (const log of logs) {
       logIndexToLogs.set(log.logIndex, log)
-      addresses.push(log.address)
+      addresses.push(formatAddress(log.address))
     }
 
     for (const blockDto of blocksDto) {
@@ -147,7 +154,7 @@ export class MonitorWithdrawals {
 
     const out: WithdrawalRecord[] = []
     if (this.l2Erc20TokenGatewayAddress in addresses) {
-      const events = filterLog(logs, this.withdrawalInitiatedEvent, this.l2Erc20TokenGatewayAddress)
+      const events = filterLog(logs, this.withdrawalInitiatedEvent, formatAddress(this.l2Erc20TokenGatewayAddress))
 
       for (const event of events) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -158,7 +165,7 @@ export class MonitorWithdrawals {
         const blockDto: BlockDto = blockNumberToBlock.get(log.blockNumber)
 
         out.push({
-          time: blockDto.timestamp,
+          timestamp: blockDto.timestamp,
           amount: new BigNumber(String(event.args.amount)),
         })
       }

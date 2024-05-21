@@ -3,11 +3,16 @@ import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/error'
-import { Logger } from 'winston'
-import { L2ERC20TokenBridge } from '../generated'
-import { WithdrawERC20Event } from '../generated/L2ERC20TokenBridge'
+import { WithdrawERC20Event, L2LidoGateway } from '../generated/L2LidoGateway'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
+import { Logger } from 'winston'
+import { IL2BridgeBalanceClient } from '../services/bridge_balance'
+import { ERC20Short as BridgedWstEthRunner } from '../generated'
+import { IScrollProvider } from './scroll_block_client'
+
+const DELAY_IN_500MS = 500
+const ATTEMPTS_5 = 5
 
 export abstract class IMonitorWithdrawalsClient {
   public abstract getWithdrawalEvents(
@@ -20,31 +25,22 @@ export abstract class IMonitorWithdrawalsClient {
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
-export abstract class IScrollProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
-
-  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
-
-  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
-
-  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
-
-  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
-}
-
-export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClient {
-  private readonly logger: Logger
+export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private readonly L2ERC20TokenBridge: L2ERC20TokenBridge
+  private readonly scrollTokenBridge: L2LidoGateway
+  private readonly logger: Logger
+  private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    scrollTokenBridge: L2LidoGateway,
     logger: Logger,
-    L2ERC20TokenBridge: L2ERC20TokenBridge,
+    bridgedWstEthRunner: BridgedWstEthRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
+    this.scrollTokenBridge = scrollTokenBridge
     this.logger = logger
-    this.L2ERC20TokenBridge = L2ERC20TokenBridge
+    this.bridgedWstEthRunner = bridgedWstEthRunner
   }
 
   public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
@@ -104,7 +100,7 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
         const blocks = await doRequest(request)
         out.push(...blocks)
       } catch (e) {
-        this.logger.warning(`${e}`)
+        this.logger.warn(`${e}`)
         if (allowedExtraRequest === 0) {
           break
         }
@@ -136,10 +132,10 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
               },
             ])
           },
-          { delay: 500, maxTry: 5 },
+          { delay: 1000, maxTry: 5 },
         )
       } catch (e) {
-        this.logger.warning(
+        this.logger.warn(
           `Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${end - start}`,
         )
 
@@ -214,8 +210,8 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
     try {
       const out = await retryAsync<WithdrawERC20Event[]>(
         async (): Promise<WithdrawERC20Event[]> => {
-          return await this.L2ERC20TokenBridge.queryFilter(
-            this.L2ERC20TokenBridge.filters.WithdrawERC20(),
+          return await this.scrollTokenBridge.queryFilter(
+            this.scrollTokenBridge.filters.WithdrawERC20(),
             fromBlockNumber,
             toBlockNumber,
           )
@@ -258,5 +254,24 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
     }
 
     return E.right(out)
+  }
+
+  public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const [balance] = await this.bridgedWstEthRunner.functions.totalSupply({
+            blockTag: l2blockNumber,
+          })
+
+          return balance.toString()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(out))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
+    }
   }
 }

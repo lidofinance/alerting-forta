@@ -79,8 +79,8 @@
       2. 🚨🚨🚨 Withdrawal Vault balance mismatch. [within oracle report]
       3. 🚨🚨🚨 EL Vault balance mismatch. [without oracle report]
       4. 🚨🚨🚨 EL Vault balance mismatch. [within oracle report]
-      5. 💵 Withdrawal Vault Balance significant change (checks every on 100-th block)
-      6. 💵 EL Vault Balance significant change
+      5. ℹ️ Withdrawal Vault Balance significant change (checks every on 100-th block)
+      6. ℹ️ EL Vault Balance significant change
    2. HandleTransaction
       1. 🚨 Burner shares transfer
 
@@ -96,12 +96,4 @@ Running in a live mode:
 
 ```
 yarn start:dev
-```
-
-Testing on a specific block/range/transaction:
-
-```
-yarn block 13626668
-yarn range '13626667..13626668'
-yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
 ```

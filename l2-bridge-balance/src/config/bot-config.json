@@ -4,20 +4,5 @@
   },
   "Optimism": {
     "RpcUrl": "https://mainnet.optimism.io"
-  },
-  "Base": {
-    "RpcUrl": "https://mainnet.base.org"
-  },
-  "ZkSync": {
-    "RpcUrl": "https://mainnet.era.zksync.io"
-  },
-  "Mantle": {
-    "RpcUrl": "https://mantle.publicnode.com"
-  },
-  "Linea": {
-    "RpcUrl": "https://linea.blockpi.network/v1/rpc/public"
-  },
-  "Scroll": {
-    "RpcUrl": "https://rpc.scroll.io"
   }
 }

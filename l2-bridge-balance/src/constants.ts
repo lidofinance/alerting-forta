@@ -18,10 +18,6 @@ export interface BridgeParamWstETH {
 export interface BridgeParamsWstETH {
   Arbitrum: BridgeParamWstETH;
   Optimism: BridgeParamWstETH;
-  ZkSync: BridgeParamWstETH;
-  Mantle: BridgeParamWstETH;
-  Linea: BridgeParamWstETH;
-  Scroll: BridgeParamWstETH;
 }
 
 export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
@@ -36,30 +32,6 @@ export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
     l1Gateway: "0x76943c0d61395d8f2edf9060e1533529cae05de6",
     wstEthBridged: "0x1f32b1c2345538c0c6f582fcb022739c4a194ebb",
     rpcUrl: config.Optimism.RpcUrl,
-  },
-  ZkSync: {
-    name: "ZkSync",
-    l1Gateway: "0x41527B2d03844dB6b0945f25702cB958b6d55989",
-    wstEthBridged: "0x703b52F2b28fEbcB60E1372858AF5b18849FE867",
-    rpcUrl: config.ZkSync.RpcUrl,
-  },
-  Mantle: {
-    name: "Mantle",
-    l1Gateway: "0x2D001d79E5aF5F65a939781FE228B267a8Ed468B",
-    wstEthBridged: "0x458ed78EB972a369799fb278c0243b25e5242A83",
-    rpcUrl: config.Mantle.RpcUrl,
-  },
-  Linea: {
-    name: "Linea",
-    l1Gateway: "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319",
-    wstEthBridged: "0xB5beDd42000b71FddE22D3eE8a79Bd49A568fC8F",
-    rpcUrl: config.Linea.RpcUrl,
-  },
-  Scroll: {
-    name: "Scroll",
-    l1Gateway: "0x6625c6332c9f91f2d27c304e729b86db87a3f504",
-    wstEthBridged: "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
-    rpcUrl: config.Scroll.RpcUrl,
   },
 };
 

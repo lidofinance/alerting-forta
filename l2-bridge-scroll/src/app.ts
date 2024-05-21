@@ -1,11 +1,11 @@
 import { FortaGuardClient } from './clients/forta_guard_client'
 import { ethers, Finding } from 'forta-agent'
-import { IScrollProvider as IScrollProvider, ScrollProvider } from './clients/scroll_provider'
+import { ScrollProvider } from './clients/scroll_provider'
 import { EventWatcher } from './services/event_watcher'
 import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { ProxyContractClient } from './clients/proxy_contract_client'
-import { L2ERC20TokenBridge__factory, ProxyAdmin__factory } from './generated'
-import { ScrollBlockClient } from './clients/scroll_block_client'
+import { L2LidoGateway__factory, ProxyAdmin__factory, ERC20Short__factory } from './generated'
+import { BlockClient } from './clients/scroll_block_client'
 import { ProxyWatcher } from './services/proxy_watcher'
 import { MonitorWithdrawals } from './services/monitor_withdrawals'
 import { DataRW } from './utils/mutex'
@@ -14,17 +14,24 @@ import { getBridgeEvents } from './utils/events/bridge_events'
 import { getGovEvents } from './utils/events/gov_events'
 import { Constants } from './utils/constants'
 import { Logger } from 'winston'
+import { ETHProvider } from './clients/eth_provider_client'
+import { BridgeBalanceSrv } from './services/bridge_balance'
+import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
+import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
+
 
 export type Container = {
-  scrollClient: IScrollProvider
+  scrollClient: ScrollProvider
   proxyWatcher: ProxyWatcher
   monitorWithdrawals: MonitorWithdrawals
-  blockSrv: ScrollBlockClient
+  blockSrv: BlockClient
   bridgeWatcher: EventWatcher
+  bridgeBalanceSrv: BridgeBalanceSrv
   govWatcher: EventWatcher
   proxyEventWatcher: EventWatcher
   findingsRW: DataRW<Finding>
   logger: Logger
+  healthChecker: HealthChecker
 }
 
 export class App {
@@ -44,9 +51,10 @@ export class App {
 
       const nodeClient = new ethers.providers.JsonRpcProvider(scrollRpcURL, adr.L2_NETWORK_ID)
 
-      const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
+      const l2Bridge = L2LidoGateway__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
+      const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.SCROLL_WSTETH_BRIDGED.address, nodeClient)
 
-      const scrollClient = new ScrollProvider(nodeClient, logger, l2Bridge)
+      const scrollClient = new ScrollProvider(nodeClient, l2Bridge, logger, bridgedWSthEthRunner)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
@@ -73,10 +81,21 @@ export class App {
         ),
       ]
 
-      const blockSrv: ScrollBlockClient = new ScrollBlockClient(scrollClient, logger)
-      const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
+      const blockSrv = new BlockClient(scrollClient, logger)
+      const proxyWorker = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
       const monitorWithdrawals = new MonitorWithdrawals(scrollClient, adr.L2_ERC20_TOKEN_GATEWAY.address, logger)
+
+      const mainnet = 1
+      const drpcUrl = 'https://eth.drpc.org/'
+      const ethProvider = new ethers.providers.FallbackProvider([
+        new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), mainnet),
+        new ethers.providers.JsonRpcProvider(drpcUrl, mainnet),
+      ])
+
+      const wSthEthRunner = ERC20Short__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
+      const ethClient = new ETHProvider(logger, wSthEthRunner)
+      const bridgeBalanceSrv = new BridgeBalanceSrv(logger, ethClient, scrollClient, adr.L1_ERC20_TOKEN_GATEWAY_ADDRESS)
 
       App.instance = {
         scrollClient: scrollClient,
@@ -84,10 +103,12 @@ export class App {
         monitorWithdrawals: monitorWithdrawals,
         blockSrv: blockSrv,
         bridgeWatcher: bridgeEventWatcher,
+        bridgeBalanceSrv: bridgeBalanceSrv,
         govWatcher: govEventWatcher,
         proxyEventWatcher: proxyEventWatcher,
         findingsRW: new DataRW<Finding>([]),
         logger: logger,
+        healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
       }
     }
 

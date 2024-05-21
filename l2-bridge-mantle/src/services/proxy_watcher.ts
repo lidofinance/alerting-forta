@@ -1,175 +1,162 @@
 import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { IProxyContractClient } from '../clients/proxy_contract_client'
 import * as E from 'fp-ts/Either'
-import { retry } from 'ts-retry'
-import { DataRW } from '../utils/mutex'
 import { getUniqueKey, networkAlert } from '../utils/finding.helpers'
 import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 
-export type ProxyWatcherInitResp = {
-  lastImpls: string
-  lastAdmins: string
-}
-
 export class ProxyWatcher {
   private readonly name: string = 'ProxyWatcher'
 
-  private lastImpls = new Map<string, string>()
-  private lastAdmins = new Map<string, string>()
+  private lastImpl: string = ''
+  private lastAdmin: string = ''
 
-  private readonly contractCallers: IProxyContractClient[]
+  private readonly proxyContract: IProxyContractClient
   private readonly logger: Logger
 
-  constructor(contractCallers: IProxyContractClient[], logger: Logger) {
-    this.contractCallers = contractCallers
+  constructor(proxyContract: IProxyContractClient, logger: Logger) {
+    this.proxyContract = proxyContract
     this.logger = logger
   }
 
   public getName(): string {
-    return this.name
+    return this.proxyContract.getName() + `(${this.proxyContract.getAddress()}).` + this.name
   }
 
-  async initialize(currentBlock: number): Promise<E.Either<Error, ProxyWatcherInitResp>> {
-    for (const contract of this.contractCallers) {
-      const [lastImpl, lastAdmin] = await retry(
-        async () => {
-          return await Promise.all([
-            contract.getProxyImplementation(currentBlock),
-            contract.getProxyAdmin(currentBlock),
-          ])
-        },
-        { delay: 1000, maxTry: 5 },
-      )
+  public getAdmin(): string {
+    return this.lastAdmin.toLowerCase()
+  }
 
-      if (E.isLeft(lastImpl)) {
-        return lastImpl
-      }
+  public getImpl(): string {
+    return this.lastImpl.toLowerCase()
+  }
 
-      if (E.isLeft(lastAdmin)) {
-        return lastAdmin
-      }
+  public setAdmin(admin: string) {
+    this.lastAdmin = admin.toLowerCase()
+  }
 
-      this.lastImpls.set(contract.getAddress(), lastImpl.right)
-      this.lastAdmins.set(contract.getAddress(), lastAdmin.right)
+  public setImpl(impl: string) {
+    this.lastImpl = impl.toLowerCase()
+  }
+
+  async initialize(currentL2Block: number): Promise<Error | null> {
+    const [lastImpl, lastAdmin] = await Promise.all([
+      this.proxyContract.getProxyImplementation(currentL2Block),
+      this.proxyContract.getProxyAdmin(currentL2Block),
+    ])
+
+    if (E.isLeft(lastImpl)) {
+      return lastImpl.left
     }
 
-    this.logger.info(`${ProxyWatcher.name} started on block ${currentBlock}`)
-    return E.right({
-      lastImpls: JSON.stringify(Object.fromEntries(this.lastImpls)),
-      lastAdmins: JSON.stringify(Object.fromEntries(this.lastAdmins)),
-    })
+    if (E.isLeft(lastAdmin)) {
+      return lastAdmin.left
+    }
+
+    this.setImpl(lastImpl.right)
+    this.setAdmin(lastAdmin.right)
+
+    this.logger.info(`${this.getName()}. started on block ${currentL2Block}`)
+
+    return null
   }
 
-  async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
+  async handleL2Blocks(l2blockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
 
     const BLOCK_INTERVAL = 25
-    const batchPromises: Promise<void>[] = []
-    const out = new DataRW<Finding>([])
+    const out: Finding[] = []
 
-    for (const blockNumber of blockNumbers) {
-      if (blockNumber % BLOCK_INTERVAL === 0) {
-        const promiseProxyImpl = this.handleProxyImplementationChanges(blockNumber).then((findings: Finding[]) => {
-          out.write(findings)
-        })
+    for (const l2blockNumber of l2blockNumbers) {
+      if (l2blockNumber % BLOCK_INTERVAL === 0) {
+        const [impl, admin] = await Promise.all([
+          this.handleProxyImplementationChanges(l2blockNumber),
+          this.handleProxyAdminChanges(l2blockNumber),
+        ])
 
-        const promiseAdminChanges = this.handleProxyAdminChanges(blockNumber).then((findings: Finding[]) => {
-          out.write(findings)
-        })
-
-        batchPromises.push(promiseProxyImpl, promiseAdminChanges)
+        out.push(...impl, ...admin)
       }
     }
 
-    await Promise.all(batchPromises)
-    this.logger.info(elapsedTime(ProxyWatcher.name + '.' + this.handleBlocks.name, start))
-
-    return await out.read()
+    this.logger.info(this.getName() + '.impl = ' + this.getImpl())
+    this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
+    this.logger.info(elapsedTime(this.proxyContract.getName() + `.` + this.handleL2Blocks.name, start))
+    return out
   }
 
-  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(l2BlockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    for (const contract of this.contractCallers) {
-      const lastImpl = this.lastImpls.get(contract.getAddress()) || ''
+    const newImpl = await this.proxyContract.getProxyImplementation(l2BlockNumber)
+    if (E.isLeft(newImpl)) {
+      return [
+        networkAlert(
+          newImpl.left,
+          `Error in ${this.getName()}.${this.handleProxyImplementationChanges.name}:98`,
+          `Could not fetch proxyImplementation on ${l2BlockNumber}`,
+          l2BlockNumber,
+        ),
+      ]
+    }
 
-      const newImpl = await contract.getProxyImplementation(blockNumber)
-      if (E.isLeft(newImpl)) {
-        return [
-          networkAlert(
-            newImpl.left,
-            `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:89`,
-            newImpl.left.message,
-            blockNumber,
-          ),
-        ]
-      }
+    if (newImpl.right.toLowerCase() != this.getImpl()) {
+      const uniqueKey = '3d1b3e5b-5eb1-4926-896a-230d5f51070c'
 
-      if (newImpl.right != lastImpl) {
-        const uniqueKey = '3d1b3e5b-5eb1-4926-896a-230d5f51070c'
+      out.push(
+        Finding.fromObject({
+          name: '🚨 Mantle: Proxy implementation changed',
+          description:
+            `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
+            `was changed form ${this.getImpl()} to ${newImpl}` +
+            `\n(detected by func call)`,
+          alertId: 'PROXY-UPGRADED',
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+          metadata: { newImpl: newImpl.right, lastImpl: this.getImpl() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getAddress(), l2BlockNumber),
+        }),
+      )
 
-        out.push(
-          Finding.fromObject({
-            name: '🚨 Mantle: Proxy implementation changed',
-            description:
-              `Proxy implementation for ${contract.getName()}(${contract.getAddress()}) ` +
-              `was changed form ${lastImpl} to ${newImpl}` +
-              `\n(detected by func call)`,
-            alertId: 'PROXY-UPGRADED',
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-            metadata: { newImpl: newImpl.right, lastImpl: lastImpl },
-            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), blockNumber),
-          }),
-        )
-      }
-
-      this.lastImpls.set(contract.getAddress(), newImpl.right)
+      this.setImpl(newImpl.right)
     }
 
     return out
   }
 
-  private async handleProxyAdminChanges(blockNumber: number): Promise<Finding[]> {
+  private async handleProxyAdminChanges(l2blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    for (const contract of this.contractCallers) {
-      const lastAdmin: string = this.lastAdmins.get(contract.getAddress()) || ''
-
-      const newAdmin = await contract.getProxyAdmin(blockNumber)
-      if (E.isLeft(newAdmin)) {
-        return [
-          networkAlert(
-            newAdmin.left,
-            `Error in ${ProxyWatcher.name}.${this.handleProxyAdminChanges.name}:132`,
-            newAdmin.left.message,
-            blockNumber,
-          ),
-        ]
-      }
-
-      if (newAdmin.right != lastAdmin) {
-        const uniqueKey = 'a5c757e0-22b2-4a9b-83cd-cdf6f2915ddc'
-        out.push(
-          Finding.fromObject({
-            name: '🚨 Mantle: Proxy admin changed',
-            description:
-              `Proxy admin for ${contract.getName()}(${contract.getAddress()}) ` +
-              `was changed from ${lastAdmin} to ${newAdmin}` +
-              `\n(detected by func call)`,
-            alertId: 'PROXY-ADMIN-CHANGED',
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-            metadata: { newAdmin: newAdmin.right, lastAdmin: lastAdmin },
-            uniqueKey: getUniqueKey(uniqueKey + '-' + contract.getAddress(), blockNumber),
-          }),
-        )
-      }
-
-      this.lastAdmins.set(contract.getAddress(), newAdmin.right)
+    const newAdmin = await this.proxyContract.getProxyAdmin(l2blockNumber)
+    if (E.isLeft(newAdmin)) {
+      return [
+        networkAlert(
+          newAdmin.left,
+          `Error in ${this.getName()}.${this.handleProxyAdminChanges.name}:138`,
+          `Could not fetch getProxyAdmin on ${l2blockNumber}`,
+          l2blockNumber,
+        ),
+      ]
     }
 
+    if (newAdmin.right.toLowerCase() != this.getAdmin()) {
+      const uniqueKey = 'a5c757e0-22b2-4a9b-83cd-cdf6f2915ddc'
+      out.push(
+        Finding.fromObject({
+          name: '🚨 Mantle: Proxy admin changed',
+          description:
+            `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
+            `was changed from ${this.getAdmin()} to ${newAdmin}` +
+            `\n(detected by func call)`,
+          alertId: 'PROXY-ADMIN-CHANGED',
+          severity: FindingSeverity.High,
+          type: FindingType.Info,
+          metadata: { newAdmin: newAdmin.right, lastAdmin: this.getAdmin() },
+          uniqueKey: getUniqueKey(uniqueKey + '-' + this.proxyContract.getAddress(), l2blockNumber),
+        }),
+      )
+
+      this.setAdmin(newAdmin.right)
+    }
     return out
   }
 }

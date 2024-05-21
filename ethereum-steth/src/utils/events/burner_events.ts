@@ -7,7 +7,7 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
   return [
     {
       address: BURNER_ADDRESS,
-      event: 'event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)',
+      abi: 'event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)',
       alertId: 'LIDO-BURNER-ERC20-RECOVERED',
       name: 'ℹ️ Lido Burner: ERC20 recovered',
       description: (args: Result) =>
@@ -20,7 +20,7 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: BURNER_ADDRESS,
-      event: 'event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)',
+      abi: 'event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)',
       alertId: 'LIDO-BURNER-ERC721-RECOVERED',
       name: 'ℹ️ Lido Burner: ERC721 recovered',
       description: (args: Result) =>

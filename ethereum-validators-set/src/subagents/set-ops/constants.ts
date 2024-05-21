@@ -3,6 +3,7 @@ import BigNumber from "bignumber.js";
 import { etherscanAddress } from "../../common/utils";
 import {
   LIDO_STETH_ADDRESS as lidoStethAddress,
+  STAKING_ROUTER_ADDRESS as srAddress,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS as curatedNorAddress,
   SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS as simpleDvtNorAddress,
   WITHDRAWAL_QUEUE_ADDRESS as wqAddress,
@@ -36,6 +37,9 @@ export const TRP_FACTORY_ADDRESS = trpFactoryAddress;
 export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
 export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const STAKING_ROUTER_ADDRESS = srAddress;
 
 export const MIN_AVAILABLE_KEYS_COUNT = 1000;
 
@@ -97,13 +101,21 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = [
 ];
 
 export const STAKING_MODULES: {
+  moduleId: number;
   moduleAddress: string;
   moduleName: string;
   alertPrefix: string;
 }[] = [
   {
+    moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
     moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "Curated",
     alertPrefix: "",
+  },
+  {
+    moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+    moduleName: "SimpleDVT",
+    alertPrefix: "SDVT-",
   },
 ];

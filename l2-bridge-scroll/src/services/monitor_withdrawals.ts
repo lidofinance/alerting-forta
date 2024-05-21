@@ -12,12 +12,13 @@ import { Constants } from '../utils/constants'
 
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
-const MAX_WITHDRAWALS_SUM = 10000
+const MAX_WITHDRAWALS_SUM = 10_000
 
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
 }
 export const TWO_DAYS = 60 * 60 * 24 * 2
+
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'

@@ -1,4 +1,4 @@
-import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provider'
+import { Block, Log } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
@@ -6,8 +6,9 @@ import { NetworkError } from '../utils/error'
 import { Logger } from 'winston'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
-import { L2ERC20Bridge } from '../generated'
 import { WithdrawalInitiatedEvent } from '../generated/L2ERC20Bridge'
+import { IL2BridgeBalanceClient } from '../services/bridge_balance'
+import { ERC20Short as BridgedWstEthRunner, L2ERC20Bridge as ZkSyncL2BridgeRunner } from '../generated'
 
 export abstract class IMonitorWithdrawalsClient {
   public abstract getWithdrawalEvents(
@@ -20,30 +21,33 @@ export abstract class IMonitorWithdrawalsClient {
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
-export abstract class IZkSyncProvider {
-  public abstract fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]>
+export abstract class IZkSyncClient {
+  public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
 
-  public abstract getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
+  public abstract getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
 
-  public abstract getLatestBlock(): Promise<E.Either<NetworkError, Block>>
-
-  public abstract getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>>
-
-  public abstract getBlockNumber(): Promise<E.Either<NetworkError, number>>
+  public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
 }
 
-export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClient {
+export class ZkSyncClient implements IZkSyncClient, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
   private readonly logger: Logger
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private readonly L2ERC20Bridge: L2ERC20Bridge
+  private readonly zkSyncL2BridgeRunner: ZkSyncL2BridgeRunner
+  private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, logger: Logger, L2ERC20Bridge: L2ERC20Bridge) {
+  constructor(
+    jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    logger: Logger,
+    zkSyncL2BridgeRunner: ZkSyncL2BridgeRunner,
+    bridgedWstEthRunner: BridgedWstEthRunner,
+  ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.logger = logger
-    this.L2ERC20Bridge = L2ERC20Bridge
+    this.zkSyncL2BridgeRunner = zkSyncL2BridgeRunner
+    this.bridgedWstEthRunner = bridgedWstEthRunner
   }
 
-  public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
+  public async fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]> {
     const batchRequests = []
     for (let i = startBlock; i <= endBlock; i++) {
       batchRequests.push({
@@ -110,10 +114,10 @@ export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClien
       }
     }
 
-    return out
+    return out.toSorted((a, b) => a.number - b.number)
   }
 
-  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
+  public async getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
     const logs: Log[] = []
     const batchSize = 15
 
@@ -148,7 +152,7 @@ export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClien
     return E.right(logs)
   }
 
-  public async getLatestBlock(): Promise<E.Either<NetworkError, Block>> {
+  public async getLatestL2Block(): Promise<E.Either<NetworkError, Block>> {
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
@@ -163,46 +167,6 @@ export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClien
     }
   }
 
-  public async getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>> {
-    try {
-      const out = await retryAsync<TransactionResponse>(
-        async (): Promise<TransactionResponse> => {
-          const tx = await this.jsonRpcProvider.getTransaction(txHash)
-
-          if (!tx) {
-            throw new NetworkError(`Can't find transaction ${txHash}`)
-          }
-
-          if (tx.blockNumber === undefined) {
-            throw new NetworkError(`Transaction ${txHash} was not yet included into block`)
-          }
-
-          return tx
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch transaction`))
-    }
-  }
-
-  public async getBlockNumber(): Promise<E.Either<NetworkError, number>> {
-    try {
-      const out = await retryAsync<number>(
-        async (): Promise<number> => {
-          return await this.jsonRpcProvider.getBlockNumber()
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch latest getBlockNumber`))
-    }
-  }
-
   public async getWithdrawalEvents(
     fromBlockNumber: number,
     toBlockNumber: number,
@@ -210,8 +174,8 @@ export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClien
     try {
       const out = await retryAsync<WithdrawalInitiatedEvent[]>(
         async (): Promise<WithdrawalInitiatedEvent[]> => {
-          return await this.L2ERC20Bridge.queryFilter(
-            this.L2ERC20Bridge.filters.WithdrawalInitiated(),
+          return await this.zkSyncL2BridgeRunner.queryFilter(
+            this.zkSyncL2BridgeRunner.filters.WithdrawalInitiated(),
             fromBlockNumber,
             toBlockNumber,
           )
@@ -242,7 +206,7 @@ export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClien
           )
 
           const record: WithdrawalRecord = {
-            time: block.timestamp,
+            timestamp: block.timestamp,
             amount: new BigNumber(String(withdrawEvent.args.amount)),
           }
 
@@ -254,5 +218,24 @@ export class ZkSyncProvider implements IZkSyncProvider, IMonitorWithdrawalsClien
     }
 
     return E.right(out)
+  }
+
+  public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const [balance] = await this.bridgedWstEthRunner.functions.totalSupply({
+            blockTag: l2blockNumber,
+          })
+
+          return balance.toString()
+        },
+        { delay: 500, maxTry: 5 },
+      )
+
+      return E.right(new BigNumber(out))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
+    }
   }
 }
