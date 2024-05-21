@@ -26,14 +26,14 @@
     "push": "yarn run update-version && forta-agent push",
     "test": "jest",
     "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated/typechain ./src/brief/abi/*",
-    "generate-proto-ts": "make gen_ts",
+    "generate-proto": "make gen_ts && make gen_js",
     "eslint:lint": "eslint ./src",
     "eslint:format": "eslint ./src --fix",
     "prettier:check": "prettier --check ./src",
     "prettier:format": "prettier --write ./src README.md",
     "lint": "yarn run prettier:check && yarn run eslint:lint",
     "format": "yarn run eslint:format && yarn run prettier:format",
-    "postinstall": "yarn generate-types && yarn generate-proto-ts"
+    "postinstall": "yarn generate-types && yarn generate-proto"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.0.0",
