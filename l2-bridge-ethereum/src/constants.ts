@@ -2,7 +2,7 @@ import { FindingSeverity, FindingType } from "forta-agent";
 import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 import proxyAdminABI from "./abi/ProxyAdminABI.json";
 import { Result } from "@ethersproject/abi/lib";
-import { getAddress } from "./ethers";
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 type EventOfNotice = {
   address: string;
@@ -586,7 +586,7 @@ const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
     event:
       "event SetERC20Gateway(address indexed token, address indexed oldGateway, address indexed newGateway)",
     condition: (args: Result) => {
-      return getAddress(args.token) === getAddress(WSTETH_ADDRESS);
+      return formatAddress(args.token) === formatAddress(WSTETH_ADDRESS);
     },
     alertId: "THIRD-PARTY-ROUTER-CHANGED",
     name: "🚨 Scroll Bridge: L1 Gateway for wstETH changed on router",

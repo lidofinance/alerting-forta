@@ -19,21 +19,21 @@ export function initialize(): Initialize {
   return async function (): Promise<InitializeResponse | void> {
     const app = await App.getInstance()
 
-    const latestBlock = await app.scrollClient.getLatestBlock()
-    if (E.isLeft(latestBlock)) {
-      app.logger.error(latestBlock.left)
+    const latestL2Block = await app.scrollClient.getLatestL2Block()
+    if (E.isLeft(latestL2Block)) {
+      app.logger.error(latestL2Block.left)
 
       process.exit(1)
     }
 
-    const agentMeta = await app.proxyWatcher.initialize(latestBlock.right.number)
+    const agentMeta = await app.proxyWatcher.initialize(latestL2Block.right.number)
     if (E.isLeft(agentMeta)) {
       app.logger.error(agentMeta.left)
 
       process.exit(1)
     }
 
-    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestBlock.right.number)
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestL2Block.right.number)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
       app.logger.error(monitorWithdrawalsInitResp.left)
 
@@ -80,18 +80,18 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const blocksDto = await app.blockSrv.getL2Blocks()
-    if (E.isLeft(blocksDto)) {
+    const l2blocksDto = await app.blockSrv.getL2Blocks()
+    if (E.isLeft(l2blocksDto)) {
       isHandleBLockRunning = false
-      return [blocksDto.left]
+      return [l2blocksDto.left]
     }
     app.logger.info(
-      `ETH block ${blockEvent.blockNumber.toString()}. Fetched Scroll blocks from ${blocksDto.right[0].number} to ${
-        blocksDto.right[blocksDto.right.length - 1].number
-      }. Total: ${blocksDto.right.length}`,
+      `ETH block ${blockEvent.blockNumber.toString()}. Fetched Scroll blocks from ${l2blocksDto.right[0].number} to ${
+        l2blocksDto.right[l2blocksDto.right.length - 1].number
+      }. Total: ${l2blocksDto.right.length}`,
     )
 
-    const logs = await app.blockSrv.getL2Logs(blocksDto.right)
+    const logs = await app.blockSrv.getL2Logs(l2blocksDto.right)
     if (E.isLeft(logs)) {
       isHandleBLockRunning = false
       return [logs.left]
@@ -100,7 +100,7 @@ export const handleBlock = (): HandleBlock => {
     const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
     const govEventFindings = app.govWatcher.handleLogs(logs.right)
     const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
-    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, blocksDto.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, l2blocksDto.right)
 
     const l2blockNumbersSet: Set<number> = new Set<number>()
     for (const log of logs.right) {

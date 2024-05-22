@@ -1,11 +1,11 @@
 import { FortaGuardClient } from './clients/forta_guard_client'
 import { ethers, Finding } from 'forta-agent'
-import { ScrollProvider } from './clients/scroll_provider'
+import { ScrollClient } from './clients/scroll_client'
 import { EventWatcher } from './services/event_watcher'
 import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { ProxyContractClient } from './clients/proxy_contract_client'
 import { L2LidoGateway__factory, ProxyAdmin__factory, ERC20Short__factory } from './generated'
-import { BlockClient } from './clients/scroll_block_client'
+import { ScrollBlockClient } from './clients/scroll_block_client'
 import { ProxyWatcher } from './services/proxy_watcher'
 import { MonitorWithdrawals } from './services/monitor_withdrawals'
 import { DataRW } from './utils/mutex'
@@ -21,10 +21,10 @@ import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './servi
 
 
 export type Container = {
-  scrollClient: ScrollProvider
+  scrollClient: ScrollClient
   proxyWatcher: ProxyWatcher
   monitorWithdrawals: MonitorWithdrawals
-  blockSrv: BlockClient
+  blockSrv: ScrollBlockClient
   bridgeWatcher: EventWatcher
   bridgeBalanceSrv: BridgeBalanceSrv
   govWatcher: EventWatcher
@@ -54,7 +54,7 @@ export class App {
       const l2Bridge = L2LidoGateway__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
       const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.SCROLL_WSTETH_BRIDGED.address, nodeClient)
 
-      const scrollClient = new ScrollProvider(nodeClient, l2Bridge, logger, bridgedWSthEthRunner)
+      const scrollClient = new ScrollClient(nodeClient, logger, l2Bridge, bridgedWSthEthRunner)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
@@ -81,7 +81,7 @@ export class App {
         ),
       ]
 
-      const blockSrv = new BlockClient(scrollClient, logger)
+      const blockSrv = new ScrollBlockClient(scrollClient, logger)
       const proxyWorker = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
       const monitorWithdrawals = new MonitorWithdrawals(scrollClient, adr.L2_ERC20_TOKEN_GATEWAY.address, logger)

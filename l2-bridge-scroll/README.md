@@ -16,14 +16,15 @@ the cache.
 ## Alerts
 
 1. Bridge events
-   1. 🚨 Scroll L2 Bridge: (re-)initialized
-   2. 🚨 Scroll L2 Bridge: Deposits Disabled
-   3. 🚨 Scroll: L2 gateway owner changed
-   4. 🚨 Scroll L2 Bridge: Withdrawals Disabled
-   5. ⚠️ Scroll L2 Bridge: Role granted
-   6. ⚠️ Scroll L2 Bridge: Role revoked
-   7. ℹ️ Scroll L2 Bridge: Deposits Enabled
-   8. ℹ️ Scroll L2 Bridge: Withdrawals Enabled
+   1. 🚨🚨🚨 Scroll bridge balance mismatch 🚨🚨🚨
+   2. 🚨 Scroll L2 Bridge: (re-)initialized
+   3. 🚨 Scroll L2 Bridge: Deposits Disabled
+   4. 🚨 Scroll: L2 gateway owner changed
+   5. 🚨 Scroll L2 Bridge: Withdrawals Disabled
+   6. ⚠️ Scroll L2 Bridge: Role granted
+   7. ⚠️ Scroll L2 Bridge: Role revoked
+   8. ℹ️ Scroll L2 Bridge: Deposits Enabled
+   9. ℹ️ Scroll L2 Bridge: Withdrawals Enabled
 2. Gov Events
    1. 🚨 Scroll Gov Bridge: Ethereum Governance Executor Updated
    2. 🚨 Scroll Gov Bridge: Guardian Updated
@@ -41,7 +42,7 @@ the cache.
    4. 🚨 Scroll: Proxy beacon upgraded
 4. Monitor Withdrawals
    1. ⚠️ Scroll: Huge withdrawals during the last ...
-5. Agent balance
+
 
 ## Development (Forta specific)
 

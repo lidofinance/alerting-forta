@@ -12,7 +12,6 @@ import type { BigNumber } from 'bignumber.js'
 import type { TypedEvent } from '../../generated/typechain/common'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { Finding } from '../../generated/proto/alert_pb'
-import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
 const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)

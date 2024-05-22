@@ -139,10 +139,6 @@ describe('GateSeal srv functional tests', () => {
       const transactionDto: TransactionDto = {
         logs: receipt.logs,
         to: trx.to ? trx.to : null,
-<<<<<<< HEAD
-        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
-=======
->>>>>>> main
         block: {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
@@ -151,11 +147,7 @@ describe('GateSeal srv functional tests', () => {
 
       const results = gateSealSrv.handleTransaction(transactionDto)
 
-<<<<<<< HEAD
-      const expected = Finding.fromObject({
-=======
       const expected = {
->>>>>>> main
         alertId: 'GATE-SEAL-NEW-ONE-CREATED',
         description:
           'New instance address: [0x79243345eDbe01A7E42EDfF5900156700d22611c](https://etherscan.io/address/0x79243345eDbe01A7E42EDfF5900156700d22611c)\n' +
@@ -180,10 +172,6 @@ describe('GateSeal srv functional tests', () => {
       const trxDTOWithEmptyFindings: TransactionDto = {
         logs: receiptWithEmptyFindings.logs,
         to: trxWithEmptyFindings.to ? trxWithEmptyFindings.to : null,
-<<<<<<< HEAD
-        timestamp: trxWithEmptyFindings.timestamp ? trxWithEmptyFindings.timestamp : new Date().getTime(),
-=======
->>>>>>> main
         block: {
           timestamp: trxWithEmptyFindings.timestamp ? trxWithEmptyFindings.timestamp : new Date().getTime(),
           number: trxWithEmptyFindings.blockNumber ? trxWithEmptyFindings.blockNumber : 1,

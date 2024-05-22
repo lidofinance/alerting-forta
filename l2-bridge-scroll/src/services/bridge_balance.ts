@@ -20,18 +20,18 @@ export class BridgeBalanceSrv {
   private readonly clientL1: IL1BridgeBalanceClient
   private readonly clientL2: IL2BridgeBalanceClient
 
-  private readonly zkSyncL1TokenBridge: string
+  private readonly scrollL1TokenBridge: string
 
   constructor(
     logger: Logger,
     clientL1: IL1BridgeBalanceClient,
     clientL2: IL2BridgeBalanceClient,
-    zkSyncL1TokenBridge: string,
+    scrollL1TokenBridge: string,
   ) {
     this.logger = logger
     this.clientL1 = clientL1
     this.clientL2 = clientL2
-    this.zkSyncL1TokenBridge = zkSyncL1TokenBridge
+    this.scrollL1TokenBridge = scrollL1TokenBridge
   }
 
   async handleBlock(l1BlockNumber: number, l2BlockNumbers: number[]): Promise<Finding[]> {
@@ -44,13 +44,13 @@ export class BridgeBalanceSrv {
   }
 
   private async handleBridgeBalanceWstETH(l1BlockNumber: number, l2BlockNumbers: number[]): Promise<Finding[]> {
-    const wstETHBalance_onL1ZkSyncBridge = await this.clientL1.getWstEthBalance(l1BlockNumber, this.zkSyncL1TokenBridge)
+    const wstETHBalance_onL1ScrollBridge = await this.clientL1.getWstEthBalance(l1BlockNumber, this.scrollL1TokenBridge)
 
     const out: Finding[] = []
-    if (E.isLeft(wstETHBalance_onL1ZkSyncBridge)) {
+    if (E.isLeft(wstETHBalance_onL1ScrollBridge)) {
       return [
         networkAlert(
-          wstETHBalance_onL1ZkSyncBridge.left,
+          wstETHBalance_onL1ScrollBridge.left,
           `Error in ${BridgeBalanceSrv.name}.${this.handleBridgeBalanceWstETH.name}:36`,
           `Could not call clientL1.getWstEth`,
           l1BlockNumber,
@@ -59,12 +59,12 @@ export class BridgeBalanceSrv {
     }
 
     for (const l2blockNumber of l2BlockNumbers) {
-      const wstETHTotalSupply_onZkSync = await this.clientL2.getWstEthTotalSupply(l2blockNumber)
+      const wstETHTotalSupply_onScroll = await this.clientL2.getWstEthTotalSupply(l2blockNumber)
 
-      if (E.isLeft(wstETHTotalSupply_onZkSync)) {
+      if (E.isLeft(wstETHTotalSupply_onScroll)) {
         out.push(
           networkAlert(
-            wstETHTotalSupply_onZkSync.left,
+            wstETHTotalSupply_onScroll.left,
             `Error in ${BridgeBalanceSrv.name}.${this.handleBridgeBalanceWstETH.name}:62`,
             `Could not call clientL2.getWstEth`,
             l2blockNumber,
@@ -74,20 +74,20 @@ export class BridgeBalanceSrv {
         continue
       }
 
-      if (wstETHTotalSupply_onZkSync.right.isGreaterThan(wstETHBalance_onL1ZkSyncBridge.right)) {
+      if (wstETHTotalSupply_onScroll.right.isGreaterThan(wstETHBalance_onL1ScrollBridge.right)) {
         out.push(
           Finding.fromObject({
-            name: `🚨🚨🚨 ZkSync bridge balance mismatch 🚨🚨🚨`,
+            name: `🚨🚨🚨 Scroll bridge balance mismatch 🚨🚨🚨`,
             description:
               `Total supply of bridged wstETH is greater than balanceOf L1 bridge side!\n` +
-              `L2 total supply: ${wstETHTotalSupply_onZkSync.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n` +
-              `L1 balanceOf: ${wstETHBalance_onL1ZkSyncBridge.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n\n` +
+              `L2 total supply: ${wstETHTotalSupply_onScroll.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n` +
+              `L1 balanceOf: ${wstETHBalance_onL1ScrollBridge.right.dividedBy(ETH_DECIMALS).toFixed(2)}\n\n` +
               `ETH: ${l1BlockNumber}\n` +
-              `ZkSync: ${l2blockNumber}\n`,
+              `Scroll: ${l2blockNumber}\n`,
             alertId: 'BRIDGE-BALANCE-MISMATCH',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
-            uniqueKey: getUniqueKey('e1f68776-1a0b-4e66-8b92-60415d7c0a16', l1BlockNumber + l2blockNumber),
+            uniqueKey: getUniqueKey('c0563986-fce6-4036-898e-31cc9583d49e', l1BlockNumber + l2blockNumber),
           }),
         )
       }
