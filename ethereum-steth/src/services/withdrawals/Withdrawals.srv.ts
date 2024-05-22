@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js'
 import { WithdrawalsCache } from './Withdrawals.cache'
-import { filterLog, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { elapsedTime, formatDelay } from '../../utils/time'
@@ -18,8 +17,10 @@ import { Logger } from 'winston'
 import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { WithdrawalsRepo } from './Withdrawals.repo'
 import { dbAlert, networkAlert } from '../../utils/errors'
-import { IWithdrawalsClient } from './contract'
 import { BlockDto } from '../../entity/events'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
+import { Finding } from '../../generated/proto/alert_pb'
+import { filterLog } from 'forta-agent'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -34,6 +35,34 @@ const ONCE_PER_100_BLOCKS = 100 // 20 minutes (100 blocks x 12 sec = 12000 secon
 const THRESHOLD_095 = 0.95
 const THRESHOLD_02 = 0.2
 const CLAIMED_MORE_THEN_REQUESTED_5_ATTEMPT_PER_HOUR = 5
+
+export abstract class IWithdrawalsClient {
+  public abstract getUnfinalizedStETH(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getWithdrawalStatuses(
+    requestsRange: number[],
+    currentBlock: number,
+  ): Promise<E.Either<Error, WithdrawalRequest[]>>
+
+  public abstract getTotalPooledEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getTotalShares(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract isBunkerModeActive(blockNumber: number): Promise<E.Either<Error, boolean>>
+
+  public abstract getBunkerTimestamp(blockNumber: number): Promise<E.Either<Error, number>>
+
+  public abstract getWithdrawalLastRequestId(blockNumber: number): Promise<E.Either<Error, number>>
+
+  public abstract getWithdrawalStatus(
+    requestId: number,
+    blockNumber: number,
+  ): Promise<E.Either<Error, WithdrawalRequest>>
+
+  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
+}
 
 export class WithdrawalsSrv {
   private name = `WithdrawalsSrv`
@@ -263,19 +292,22 @@ export class WithdrawalsSrv {
 
     const findings: Finding[] = []
     if (spentStakeLimit.gte(thresholdStakeLimit) && unfinalizedStETH.right.gte(thresholdStakeLimit)) {
-      findings.push(
-        Finding.fromObject({
-          name: `⚠️ Withdrawals: ${spentStakeLimitRate.times(
-            100,
-          )}% of stake limit is drained and unfinalized queue is on par with drained stake limit`,
-          description:
-            `Unfinalized queue: ${unfinalizedStETH.right.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
-            `Spent stake limit: ${spentStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
-          alertId: 'WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Suspicious,
-        }),
+      const f: Finding = new Finding()
+      f.setName(
+        `⚠️ Withdrawals: ${spentStakeLimitRate.times(
+          100,
+        )}% of stake limit is drained and unfinalized queue is on par with drained stake limit`,
       )
+      f.setDescription(
+        `Unfinalized queue: ${unfinalizedStETH.right.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+          `Spent stake limit: ${spentStakeLimit.div(ETH_DECIMALS).toFixed(2)} stETH`,
+      )
+      f.setAlertid('WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT')
+      f.setSeverity(Finding.Severity.MEDIUM)
+      f.setType(Finding.FindingType.SUSPICIOUS)
+
+      findings.push(f)
+
       this.cache.setLastQueueOnParStakeLimitAlertTimestamp(blockTimestamp)
     }
 
@@ -327,15 +359,15 @@ export class WithdrawalsSrv {
         if (unfinalizedStETH.gte(THRESHOLD_OF_100K_STETH)) {
           // if alert hasn't been sent after last finalized batch
           // and unfinalized queue is more than `THRESHOLD_OF_100K_STETH` StETH
-          out.push(
-            Finding.fromObject({
-              name: `⚠️ Withdrawals: unfinalized queue is more than ${THRESHOLD_OF_100K_STETH} stETH`,
-              description: `Unfinalized queue is ${unfinalizedStETH.toFixed(2)} stETH`,
-              alertId: 'WITHDRAWALS-BIG-UNFINALIZED-QUEUE',
-              severity: FindingSeverity.Medium,
-              type: FindingType.Info,
-            }),
-          )
+
+          const f: Finding = new Finding()
+          f.setName(`⚠️ Withdrawals: unfinalized queue is more than ${THRESHOLD_OF_100K_STETH} stETH`)
+          f.setDescription(`Unfinalized queue is ${unfinalizedStETH.toFixed(2)} stETH`)
+          f.setAlertid('WITHDRAWALS-BIG-UNFINALIZED-QUEUE')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.INFORMATION)
+
+          out.push(f)
 
           this.cache.setLastBigUnfinalizedQueueAlertTimestamp(currentBlockTimestamp)
         }
@@ -349,17 +381,18 @@ export class WithdrawalsSrv {
         if (timeSinceLastAlert > ONE_DAY) {
           // if we are in turbo mode and unfinalized queue is not finalized for 5 days
           // and alert hasn't been sent for 1 day
-          out.push(
-            Finding.fromObject({
-              name: `⚠️ Withdrawals: unfinalized queue wait time is more than ${FIVE_DAYS / ONE_DAY} days`,
-              description: `Withdrawal request #${firstUnfinalizedRequest.right.id} has been waiting for ${formatDelay(
-                currentBlockTimestamp - firstUnfinalizedRequest.right.timestamp,
-              )} at the moment`,
-              alertId: 'WITHDRAWALS-LONG-UNFINALIZED-QUEUE',
-              severity: FindingSeverity.Medium,
-              type: FindingType.Info,
-            }),
+          const f: Finding = new Finding()
+          f.setName(`⚠️ Withdrawals: unfinalized queue wait time is more than ${FIVE_DAYS / ONE_DAY} days`)
+          f.setDescription(
+            `Withdrawal request #${firstUnfinalizedRequest.right.id} has been waiting for ${formatDelay(
+              currentBlockTimestamp - firstUnfinalizedRequest.right.timestamp,
+            )} at the moment`,
           )
+          f.setAlertid('WITHDRAWALS-LONG-UNFINALIZED-QUEUE')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.INFORMATION)
+
+          out.push(f)
 
           this.cache.setLastLongUnfinalizedQueueAlertTimestamp(currentBlockTimestamp)
         }
@@ -451,18 +484,19 @@ export class WithdrawalsSrv {
     const unclaimedSizeRate = unclaimedStETH.div(totalFinalizedSize)
     if (currentBlockTimestamp - this.cache.getLastUnclaimedRequestsAlertTimestamp() > ONE_DAY) {
       if (unclaimedSizeRate.gte(THRESHOLD_02)) {
-        out.push(
-          Finding.fromObject({
-            name: `ℹ️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`,
-            description:
-              `Unclaimed (for all time): ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
-              `Claimed (for 2 weeks): ${claimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
-              `Total finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
-            alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS',
-            severity: FindingSeverity.Info,
-            type: FindingType.Suspicious,
-          }),
+        const f: Finding = new Finding()
+        f.setName(`ℹ️ Withdrawals: ${unclaimedSizeRate.times(100).toFixed(2)}% of finalized requests are unclaimed`)
+        f.setDescription(
+          `Unclaimed (for all time): ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+            `Claimed (for 2 weeks): ${claimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+            `Total finalized: ${totalFinalizedSize.div(ETH_DECIMALS).toFixed(2)} stETH`,
         )
+        f.setAlertid('WITHDRAWALS-UNCLAIMED-REQUESTS')
+        f.setSeverity(Finding.Severity.INFO)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+
+        out.push(f)
+
         this.cache.setLastUnclaimedRequestsAlertTimestamp(currentBlockTimestamp)
       }
     }
@@ -479,18 +513,19 @@ export class WithdrawalsSrv {
       }
 
       if (unclaimedStETH.gt(withdrawalQueueBalance.right)) {
-        out.push(
-          Finding.fromObject({
-            name: `🚨🚨🚨 Withdrawals: unclaimed requests size is more than withdrawal queue balance`,
-            description:
-              `Unclaimed: ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
-              `Withdrawal queue balance: ${withdrawalQueueBalance.right.div(ETH_DECIMALS).toFixed(2)} ETH\n` +
-              `Difference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
-            alertId: 'WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
+        const f: Finding = new Finding()
+        f.setName(`🚨🚨🚨 Withdrawals: unclaimed requests size is more than withdrawal queue balance`)
+        f.setDescription(
+          `Unclaimed: ${unclaimedStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+            `Withdrawal queue balance: ${withdrawalQueueBalance.right.div(ETH_DECIMALS).toFixed(2)} ETH\n` +
+            `Difference: ${unclaimedStETH.minus(withdrawalQueueBalance.right)} wei`,
         )
+        f.setAlertid('WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+
+        out.push(f)
+
         this.cache.setLastUnclaimedMoreThanBalanceAlertTimestamp(currentBlockTimestamp)
       }
     }
@@ -500,24 +535,22 @@ export class WithdrawalsSrv {
 
   public handleBunkerStatus(txEvent: TransactionDto): Finding[] {
     const [bunkerEnabled] = filterLog(txEvent.logs, WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT, this.withdrawalsQueueAddress)
-
     const out: Finding[] = []
 
     if (bunkerEnabled) {
       this.cache.setIsBunkerMode(true)
       this.cache.setBunkerModeEnabledSinceTimestamp(bunkerEnabled.args._sinceTimestamp)
 
-      out.push(
-        Finding.fromObject({
-          name: '🚨 Withdrawals: BUNKER MODE ON! 🚨',
-          description: `Started from ${new Date(
-            String(this.cache.getBunkerModeEnabledSinceTimestamp()),
-          ).toUTCString()}`,
-          alertId: 'WITHDRAWALS-BUNKER-ENABLED',
-          severity: FindingSeverity.Critical,
-          type: FindingType.Degraded,
-        }),
+      const f: Finding = new Finding()
+      f.setName('🚨 Withdrawals: BUNKER MODE ON! 🚨')
+      f.setDescription(
+        `Started from ${new Date(String(this.cache.getBunkerModeEnabledSinceTimestamp())).toUTCString()}`,
       )
+      f.setAlertid('WITHDRAWALS-BUNKER-ENABLED')
+      f.setSeverity(Finding.Severity.CRITICAL)
+      f.setType(Finding.FindingType.DEGRADED)
+
+      out.push(f)
 
       return out
     }
@@ -530,15 +563,16 @@ export class WithdrawalsSrv {
     if (bunkerDisabled) {
       this.cache.setIsBunkerMode(false)
       const delay = formatDelay(txEvent.block.timestamp - Number(this.cache.getBunkerModeEnabledSinceTimestamp()))
-      out.push(
-        Finding.fromObject({
-          name: '⚠️ Withdrawals: BUNKER MODE OFF! ✅',
-          description: `Bunker lasted ${delay}`,
-          alertId: 'WITHDRAWALS-BUNKER-DISABLED',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-        }),
-      )
+
+      const f: Finding = new Finding()
+      f.setName('⚠️ Withdrawals: BUNKER MODE OFF! ✅')
+      f.setDescription(`Bunker lasted ${delay}`)
+      f.setAlertid('WITHDRAWALS-BUNKER-DISABLED')
+      f.setSeverity(Finding.Severity.MEDIUM)
+      f.setType(Finding.FindingType.INFORMATION)
+
+      out.push(f)
+
       return out
     }
 
@@ -593,15 +627,14 @@ export class WithdrawalsSrv {
     const out: Finding[] = []
     for (const [requester, amounts] of perRequesterAmounts.entries()) {
       if (amounts.gte(THRESHOLD_OF_5K_STETH)) {
-        out.push(
-          Finding.fromObject({
-            name: `ℹ️ Huge stETH withdrawal requests batch`,
-            description: `Requester: ${etherscanAddress(requester)}\n` + `Amount: ${amounts.toFixed(2)} stETH`,
-            alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH',
-            severity: FindingSeverity.Info,
-            type: FindingType.Info,
-          }),
-        )
+        const f: Finding = new Finding()
+        f.setName(`ℹ️ Huge stETH withdrawal requests batch`)
+        f.setDescription(`Requester: ${etherscanAddress(requester)}\n` + `Amount: ${amounts.toFixed(2)} stETH`)
+        f.setAlertid('WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH')
+        f.setSeverity(Finding.Severity.INFO)
+        f.setType(Finding.FindingType.INFORMATION)
+
+        out.push(f)
       }
 
       this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(
@@ -611,17 +644,18 @@ export class WithdrawalsSrv {
 
     if (this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().gte(THRESHOLD_OF_150K_STETH)) {
       if (this.cache.getLastBigRequestAfterRebaseAlertTimestamp() < this.cache.getLastTokenRebaseTimestamp()) {
-        out.push(
-          Finding.fromObject({
-            name: `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${THRESHOLD_OF_150K_STETH} stETH (max staking limit)`,
-            description: `Amount: ${this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().toFixed(2)} stETH`,
-            alertId: 'WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Info,
-          }),
+        const f: Finding = new Finding()
+        f.setName(
+          `⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than ${THRESHOLD_OF_150K_STETH} stETH (max staking limit)`,
         )
+        f.setDescription(`Amount: ${this.cache.getAmountOfRequestedStETHSinceLastTokenRebase().toFixed(2)} stETH`)
+        f.setAlertid('WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.INFORMATION)
 
-        this.cache.setLastBigRequestAfterRebaseAlertTimestamp(txEvent.timestamp)
+        out.push(f)
+
+        this.cache.setLastBigRequestAfterRebaseAlertTimestamp(txEvent.block.timestamp)
       }
     }
 
@@ -634,7 +668,7 @@ export class WithdrawalsSrv {
       return
     }
 
-    this.cache.setLastTokenRebaseTimestamp(txEvent.timestamp)
+    this.cache.setLastTokenRebaseTimestamp(txEvent.block.timestamp)
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
   }
 
@@ -721,21 +755,21 @@ export class WithdrawalsSrv {
         const claimedAmount = new BigNumber(String(event.args.amountOfETH))
 
         if (claimedAmount.gt(withdrawalRequest.amountOfStETH)) {
-          out.push(
-            Finding.fromObject({
-              name: `🚨🚨🚨 Withdrawals: claimed amount is more than requested`,
-              description:
-                `Request ID: ${etherscanNft(this.withdrawalsQueueAddress, reqId)}\n` +
-                `Claimed: ${claimedAmount.div(ETH_DECIMALS).toFixed(2)} ETH\n` +
-                `Requested: ${withdrawalRequest.amountOfStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
-                `Difference: ${claimedAmount.minus(withdrawalRequest.amountOfStETH)} wei\n` +
-                `Owner: ${etherscanAddress(event.args.owner)}\n` +
-                `Receiver: ${etherscanAddress(event.args.receiver)}`,
-              alertId: 'WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED',
-              severity: FindingSeverity.Critical,
-              type: FindingType.Suspicious,
-            }),
+          const f: Finding = new Finding()
+          f.setName(`🚨🚨🚨 Withdrawals: claimed amount is more than requested`)
+          f.setDescription(
+            `Request ID: ${etherscanNft(this.withdrawalsQueueAddress, reqId)}\n` +
+              `Claimed: ${claimedAmount.div(ETH_DECIMALS).toFixed(2)} ETH\n` +
+              `Requested: ${withdrawalRequest.amountOfStETH.div(ETH_DECIMALS).toFixed(2)} stETH\n` +
+              `Difference: ${claimedAmount.minus(withdrawalRequest.amountOfStETH)} wei\n` +
+              `Owner: ${etherscanAddress(event.args.owner)}\n` +
+              `Receiver: ${etherscanAddress(event.args.receiver)}`,
           )
+          f.setAlertid('WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED')
+          f.setSeverity(Finding.Severity.CRITICAL)
+          f.setType(Finding.FindingType.INFORMATION)
+
+          out.push(f)
 
           this.cache.setClaimedAmountMoreThanRequestedAlertsCount(
             this.cache.getClaimedAmountMoreThanRequestedAlertsCount() + 1,
@@ -750,5 +784,55 @@ export class WithdrawalsSrv {
     }
 
     return out
+  }
+
+  async getStatistic(): Promise<E.Either<Error, string>> {
+    const data = await this.repo.getAll()
+    if (E.isLeft(data)) {
+      return data
+    }
+
+    let stETH = new BigNumber(0)
+
+    let finalizedStETH = new BigNumber(0)
+    let nonFinalizedStETH = new BigNumber(0)
+
+    let claimedStEth = new BigNumber(0)
+    let nonClaimedStEth = new BigNumber(0)
+
+    let finalized: number = 0
+    let claimed: number = 0
+    let notFinalized: number = 0
+    let notClaimed: number = 0
+
+    for (const wr of data.right) {
+      stETH = stETH.plus(wr.amountOfStETH)
+
+      if (wr.isFinalized) {
+        finalized += 1
+        finalizedStETH = finalizedStETH.plus(wr.amountOfStETH)
+      } else {
+        notFinalized += 1
+        nonFinalizedStETH = nonFinalizedStETH.plus(wr.amountOfStETH)
+      }
+
+      if (wr.isClaimed) {
+        claimed += 1
+        claimedStEth = claimedStEth.plus(wr.amountOfStETH)
+      } else {
+        notClaimed += 1
+        nonClaimedStEth = nonClaimedStEth.plus(wr.amountOfStETH)
+      }
+    }
+
+    return E.right(
+      `\n` +
+        `\tStEth:         ${stETH.dividedBy(ETH_DECIMALS).toFixed(4)} \n` +
+        `\tfinalized:     ${finalizedStETH.dividedBy(ETH_DECIMALS).toFixed(4)} ${finalized} \n` +
+        `\tnot finalized: ${nonFinalizedStETH.dividedBy(ETH_DECIMALS).toFixed(4)}  ${notFinalized}  \n` +
+        `\tclaimed:       ${claimedStEth.dividedBy(ETH_DECIMALS).toFixed(4)} ${claimed} \n` +
+        `\tnot claimed:   ${nonClaimedStEth.dividedBy(ETH_DECIMALS).toFixed(4)}  ${notClaimed}\n` +
+        `\ttotal:         ${data.right.length} wr`,
+    )
   }
 }

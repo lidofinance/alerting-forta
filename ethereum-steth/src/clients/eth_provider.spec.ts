@@ -5,6 +5,7 @@ import { GateSeal } from '../entity/gate_seal'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { ethers } from 'forta-agent'
 import BigNumber from 'bignumber.js'
+import { expect } from '@jest/globals'
 
 describe('eth provider tests', () => {
   let ethProvider: JsonRpcProvider
@@ -100,5 +101,17 @@ describe('eth provider tests', () => {
     const expectedBalance = 38186.88677324665
     expect(resp.right.dividedBy(ETH_DECIMALS).toNumber()).toEqual(expectedBalance)
     expect(resp2.div(ETH_DECIMALS).toNumber()).toEqual(expectedBalance)
+  }, 120_000)
+
+  test('getShareRate is 1.16583492875463847628', async () => {
+    const app = await App.getInstance(drpcProvider)
+
+    const blockNumber = 19_811_012
+    const shareRate = await app.ethClient.getShareRate(blockNumber)
+    if (E.isLeft(shareRate)) {
+      throw shareRate.left.message
+    }
+
+    expect('1.16583492875463847628').toEqual(shareRate.right.toString())
   }, 120_000)
 })

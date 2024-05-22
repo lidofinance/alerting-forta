@@ -162,4 +162,20 @@ export class WithdrawalsRepo {
       return E.left(new KnexErr(`${e}`))
     }
   }
+
+  public async getAll(): Promise<E.Either<Error, WithdrawalRequest[]>> {
+    try {
+      const data = await this.knex<WithdrawalRequestSql>(this.tblName).select('*')
+
+      const out: WithdrawalRequest[] = []
+      for (const r of data) {
+        const wr = WithdrawalRequest.sqlToWithdrawalRequest(r)
+        out.push(wr)
+      }
+
+      return E.right(out)
+    } catch (e) {
+      return E.left(new KnexErr(`${e}`))
+    }
+  }
 }
