@@ -90,10 +90,12 @@ Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your
 
 ```
 yarn install
+yarn build
+yarn start
 ```
 
-Running in a live mode:
+In separate console run
 
 ```
-yarn start:dev
+docker-compose up -d
 ```

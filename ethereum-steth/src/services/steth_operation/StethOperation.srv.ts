@@ -1,13 +1,17 @@
 import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
 import * as E from 'fp-ts/Either'
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { EventOfNotice, handleEventsOfNotice, TransactionDto, BlockDto } from '../../entity/events'
+import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
-import { IStethClient } from './contracts'
 import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
+import { BlockDto } from '../../entity/events'
+import { TransactionResponse } from '@ethersproject/abstract-provider'
+import type { BigNumber } from 'bignumber.js'
+import type { TypedEvent } from '../../generated/typechain/common'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
+import { Finding } from '../../generated/proto/alert_pb'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 // Formula: (60 * 60 * 72) / 13 = 19_938
@@ -22,6 +26,36 @@ const HOURS_4 = 60 * 60 * 4 // 4 Hours
 const HOURS_12 = 60 * 60 * 12 // 12 Hours
 export const DAYS_3 = 60 * 60 * 72 // 72 Hours
 export const ETH_2 = 2 // 2 ETH
+
+export abstract class IStethClient {
+  public abstract getHistory(
+    depositSecurityAddress: string,
+    startBlock: number,
+    endBlock: number,
+  ): Promise<E.Either<Error, TransactionResponse[]>>
+
+  public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getUnbufferedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>>
+
+  public abstract getWithdrawalsFinalizedEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<Error, TypedEvent[]>>
+
+  public abstract getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+
+  public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
+}
 
 export class StethOperationSrv {
   private readonly name = 'StethOperationSrv'
@@ -140,18 +174,19 @@ export class StethOperationSrv {
 
         // deviation by 0.0001 (1 bp or 0.01%)
         if (Math.abs(deviation) >= 0.01) {
-          findings.push(
-            Finding.fromObject({
-              name: `🚨🚨🚨 Share rate unexpected has changed`,
-              description:
-                `Prev.shareRate(${shareRateFromReport.blockNumber}) = ${shareRateFromReport.amount.toNumber()} \n` +
-                `Curr.shareRate(${blockNumber}) = ${shareRate.right.toNumber()} \n` +
-                `Diff: ${shareRate.right.minus(shareRateFromReport.amount).toNumber()}`,
-              alertId: 'LIDO-INVARIANT-ERROR',
-              severity: FindingSeverity.Critical,
-              type: FindingType.Suspicious,
-            }),
+          const f: Finding = new Finding()
+
+          f.setName(`🚨🚨🚨 Share rate unexpected has changed`)
+          f.setDescription(
+            `Prev.shareRate(${shareRateFromReport.blockNumber}) = ${shareRateFromReport.amount.toNumber()} \n` +
+              `Curr.shareRate(${blockNumber}) = ${shareRate.right.toNumber()} \n` +
+              `Diff: ${shareRate.right.minus(shareRateFromReport.amount).toNumber()}`,
           )
+          f.setAlertid('LIDO-INVARIANT-ERROR')
+          f.setSeverity(Finding.Severity.CRITICAL)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+
+          findings.push(f)
         }
       }
     }
@@ -165,7 +200,7 @@ export class StethOperationSrv {
     const out: Finding[] = []
 
     if (txEvent.to !== null && txEvent.to.toLowerCase() == this.depositSecurityAddress.toLowerCase()) {
-      this.cache.setLastDepositorTxTime(txEvent.timestamp)
+      this.cache.setLastDepositorTxTime(txEvent.block.timestamp)
     }
 
     const lidoFindings = handleEventsOfNotice(txEvent, this.lidoEvents)
@@ -175,7 +210,7 @@ export class StethOperationSrv {
     out.push(...lidoFindings, ...depositSecFindings, ...insuranceFundFindings, ...burnerFindings)
 
     for (const f of lidoFindings) {
-      if (f.alertId === alertId_token_rebased) {
+      if (f.getAlertid() === alertId_token_rebased) {
         const shareRate = await this.ethProvider.getShareRate(txEvent.block.number)
         if (E.isLeft(shareRate)) {
           const f: Finding = networkAlert(
@@ -263,20 +298,20 @@ export class StethOperationSrv {
       }
 
       if (unbufferedEvents.right.length === 0 && wdReqFinalizedEvents.right.length === 0) {
-        out.push(
-          Finding.fromObject({
-            name: '🚨🚨🚨 Buffered ETH drain',
-            description:
-              `Buffered ETH amount decreased from ` +
-              `${shifte4dBufferedEthRaw.right.div(ETH_DECIMALS).toFixed(2)} ` +
-              `to ${shifte3dBufferedEthRaw.right.div(ETH_DECIMALS).toFixed(2)} ` +
-              `without Unbuffered or WithdrawalsFinalized events\n\n` +
-              `Note: actual handled block number is ${shiftedBlockNumber}`,
-            alertId: 'BUFFERED-ETH-DRAIN',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
+        const f: Finding = new Finding()
+        f.setName('🚨🚨🚨 Buffered ETH drain')
+        f.setDescription(
+          `Buffered ETH amount decreased from ` +
+            `${shifte4dBufferedEthRaw.right.div(ETH_DECIMALS).toFixed(2)} ` +
+            `to ${shifte3dBufferedEthRaw.right.div(ETH_DECIMALS).toFixed(2)} ` +
+            `without Unbuffered or WithdrawalsFinalized events\n\n` +
+            `Note: actual handled block number is ${shiftedBlockNumber}`,
         )
+        f.setAlertid('BUFFERED-ETH-DRAIN')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+
+        out.push(f)
       }
     }
 
@@ -309,17 +344,18 @@ export class StethOperationSrv {
           this.cache.getCriticalDepositableAmountTimestamp() + HOUR_1 < blockTimestamp
         ) {
           out.push(
-            Finding.fromObject({
-              name: '🚨 Huge depositable ETH amount',
-              description:
+            new Finding()
+              .setName('🚨 Huge depositable ETH amount')
+              .setDescription(
                 `There are ${depositableEther.toFixed(2)} ` +
-                `depositable ETH in DAO for more than ` +
-                `${Math.floor(HOUR_1 / (60 * 60))} hour(s)`,
-              alertId: 'HUGE-DEPOSITABLE-ETH',
-              severity: FindingSeverity.High,
-              type: FindingType.Suspicious,
-            }),
+                  `depositable ETH in DAO for more than ` +
+                  `${Math.floor(HOUR_1 / (60 * 60))} hour(s)`,
+              )
+              .setAlertid('HUGE-DEPOSITABLE-ETH')
+              .setSeverity(Finding.Severity.HIGH)
+              .setType(Finding.FindingType.SUSPICIOUS),
           )
+
           this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
         } else if (
           depositableEther > ETH_10K &&
@@ -328,19 +364,19 @@ export class StethOperationSrv {
         ) {
           const bufferedEth = bufferedEthRaw.right.div(ETH_DECIMALS).toNumber()
 
-          out.push(
-            Finding.fromObject({
-              name: '⚠️ High depositable ETH amount',
-              description:
-                `There are ${bufferedEth.toFixed(2)} ` +
-                `depositable ETH in DAO and there are more than ` +
-                `${Math.floor(DAYS_3 / (60 * 60))} ` +
-                `hours since last Depositor TX`,
-              alertId: 'HIGH-DEPOSITABLE-ETH',
-              severity: FindingSeverity.Medium,
-              type: FindingType.Suspicious,
-            }),
+          const f: Finding = new Finding()
+          f.setName('⚠️ High depositable ETH amount')
+          f.setDescription(
+            `There are ${bufferedEth.toFixed(2)} ` +
+              `depositable ETH in DAO and there are more than ` +
+              `${Math.floor(DAYS_3 / (60 * 60))} ` +
+              `hours since last Depositor TX`,
           )
+          f.setAlertid('HIGH-DEPOSITABLE-ETH')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+          out.push(f)
+
           this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
         }
       }
@@ -367,16 +403,16 @@ export class StethOperationSrv {
         const executorBalance = executorBalanceRaw.right.div(ETH_DECIMALS).toNumber()
         if (executorBalance < ETH_2) {
           this.cache.setLastReportedExecutorBalanceTimestamp(currentBlockTimestamp)
-          out.push(
-            Finding.fromObject({
-              name: '⚠️ Low deposit executor balance',
-              description:
-                `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` + `This is extremely low! 😱`,
-              alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
-              severity: FindingSeverity.Medium,
-              type: FindingType.Suspicious,
-            }),
+
+          const f: Finding = new Finding()
+          f.setName('⚠️ Low deposit executor balance')
+          f.setDescription(
+            `Balance of deposit executor is ${executorBalance.toFixed(4)}. ` + `This is extremely low! 😱`,
           )
+          f.setAlertid('LOW-DEPOSIT-EXECUTOR-BALANCE')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+          out.push(f)
         }
       }
     }
@@ -405,32 +441,31 @@ export class StethOperationSrv {
         this.cache.getLastReportedStakingLimit10Timestamp() + HOURS_12 < currentBlockTimestamp &&
         currentStakingLimit.isLessThan(maxStakingLimit.times(0.1))
       ) {
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ Unspent staking limit below 10%',
-            description: `Current staking limit is lower than 10% of max staking limit`,
-            alertId: 'LOW-STAKING-LIMIT',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Info,
-          }),
-        )
+        const f: Finding = new Finding()
+        f.setName('⚠️ Unspent staking limit below 10%')
+        f.setDescription(`Current staking limit is lower than 10% of max staking limit`)
+        f.setAlertid('LOW-STAKING-LIMIT')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.INFORMATION)
+        out.push(f)
+
         this.cache.setLastReportedStakingLimit10Timestamp(currentBlockTimestamp)
       } else if (
         this.cache.getLastReportedStakingLimit30Timestamp() + HOURS_12 < currentBlockTimestamp &&
         currentStakingLimit.isLessThan(maxStakingLimit.times(0.3))
       ) {
-        out.push(
-          Finding.fromObject({
-            name: '📉 Unspent staking limit below 30%',
-            description:
-              `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
-              `this is lower than 30% of max staking limit ` +
-              `${maxStakingLimit.toFixed(2)} ETH`,
-            alertId: 'LOW-STAKING-LIMIT',
-            severity: FindingSeverity.Info,
-            type: FindingType.Info,
-          }),
+        const f: Finding = new Finding()
+        f.setName('📉 Unspent staking limit below 30%')
+        f.setDescription(
+          `Current staking limit is ${currentStakingLimit.toFixed(2)} ETH ` +
+            `this is lower than 30% of max staking limit ` +
+            `${maxStakingLimit.toFixed(2)} ETH`,
         )
+        f.setAlertid('LOW-STAKING-LIMIT')
+        f.setSeverity(Finding.Severity.INFO)
+        f.setType(Finding.FindingType.INFORMATION)
+        out.push(f)
+
         this.cache.setLastReportedStakingLimit30Timestamp(currentBlockTimestamp)
       }
     }

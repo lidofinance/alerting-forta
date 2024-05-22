@@ -11,19 +11,19 @@ import {
   Lido as LidoRunner,
   ValidatorsExitBusOracle as VeboRunner,
   WithdrawalQueueERC721 as WithdrawalQueueRunner,
-} from '../generated'
+} from '../generated/typechain'
 import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
-import { ETHDistributedEvent } from '../generated/Lido'
+import { ETHDistributedEvent } from '../generated/typechain/Lido'
 import { DataRW } from '../utils/mutex'
 import { WithdrawalRequest } from '../entity/withdrawal_request'
-import { TypedEvent } from '../generated/common'
+import { TypedEvent } from '../generated/typechain/common'
 import { NetworkError } from '../utils/errors'
-import { IStethClient } from '../services/steth_operation/contracts'
-import { IVaultClient } from '../services/vault/contract'
-import { IWithdrawalsClient } from '../services/withdrawals/contract'
 import { Logger } from 'winston'
 import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
 import { BlockTag } from '@ethersproject/providers'
+import { IStethClient } from '../services/steth_operation/StethOperation.srv'
+import { IVaultClient } from '../services/vault/Vault.srv'
+import { IWithdrawalsClient } from '../services/withdrawals/Withdrawals.srv'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -69,57 +69,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     this.logger = logger
   }
 
-  public async getStartedBlockForApp(argv: string[]): Promise<E.Either<Error, number>> {
-    let latestBlockNumber: number = -1
-
-    if (argv.includes('--block')) {
-      latestBlockNumber = parseInt(argv[4])
-    } else if (argv.includes('--range')) {
-      latestBlockNumber = parseInt(argv[4].slice(0, argv[4].indexOf('.')))
-    } else if (argv.includes('--tx')) {
-      const txHash = argv[4]
-      const tx = await this.getTransaction(txHash)
-      if (E.isLeft(tx)) {
-        return E.left(tx.left)
-      }
-
-      if (tx.right.blockNumber !== undefined) {
-        latestBlockNumber = tx.right.blockNumber
-      }
-    }
-    if (latestBlockNumber == -1) {
-      try {
-        latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
-      } catch (e) {
-        return E.left(new NetworkError(e, `Could not fetch latest block number`))
-      }
-    }
-
-    return E.right(latestBlockNumber)
-  }
-
-  public async getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>> {
+  public async getBlockNumber(): Promise<E.Either<Error, number>> {
     try {
-      const out = await retryAsync<TransactionResponse>(
-        async (): Promise<TransactionResponse> => {
-          const tx = await this.jsonRpcProvider.getTransaction(txHash)
-
-          if (!tx) {
-            throw new Error(`Can't find transaction ${txHash}`)
-          }
-
-          if (tx.blockNumber === undefined) {
-            throw new Error(`Transaction ${txHash} was not yet included into block`)
-          }
-
-          return tx
-        },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-      )
-
-      return E.right(out)
+      const latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
+      return E.right(latestBlockNumber)
     } catch (e) {
-      return E.left(new NetworkError(e, `Could not call getTransaction`))
+      return E.left(new NetworkError(e, `Could not fetch latest block number`))
     }
   }
 
@@ -196,44 +151,18 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   public async getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>> {
-    type balanceResponse = {
-      id: number | null
-      jsonrpc: string
-      result: string
-    }
-
-    type BadResponse = {
-      id: number | null
-      jsonrpc: string
-      error: {
-        message: string
-        code: number
-      }
-    }
-
     try {
-      const out = await retryAsync<balanceResponse>(
-        async (): Promise<balanceResponse> => {
-          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
-            method: 'POST',
-            body: JSON.stringify({
-              method: 'eth_getBalance',
-              params: [address, blockHash],
-            }),
-          })
+      const out = await retryAsync<string>(
+        async (): Promise<string> => {
+          const block = await this.jsonRpcProvider.getBlock(blockHash)
+          const balance = await this.jsonRpcProvider.getBalance(address, new BigNumber(block.number, 10).toNumber())
 
-          if (response.status !== 200) {
-            const e = await response.json()
-            this.logger.error(e)
-            throw new Error((e as BadResponse).error.message)
-          }
-
-          return (await response.json()) as balanceResponse
+          return balance.toString()
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      return E.right(new BigNumber(String(out.result)))
+      return E.right(new BigNumber(out))
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address} and blockHash ${blockHash}`))
     }
@@ -317,7 +246,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     }
 
     const chunkPromises: Promise<void>[] = []
-    const MAX_REQUESTS_CHUNK_SIZE = 1750
+    const MAX_REQUESTS_CHUNK_SIZE = 875
     const out = new DataRW<WithdrawalRequest>([])
 
     for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
@@ -551,8 +480,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     if (E.isLeft(totalShares)) {
       return E.left(totalShares.left)
     }
-    // Formula: shareRate = (totalPooledEth * 10**27) / totalShares
-    return E.right(totalPooledEth.right.multipliedBy(new BigNumber(10).pow(27)).div(totalShares.right))
+
+    return E.right(totalPooledEth.right.div(totalShares.right))
   }
 
   public async isBunkerModeActive(blockNumber: number): Promise<E.Either<Error, boolean>> {

@@ -1,4 +1,4 @@
-import { Block, Log, TransactionResponse } from '@ethersproject/abstract-provider'
+import { Block, Log } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
@@ -6,6 +6,7 @@ import { NetworkError } from '../utils/error'
 import { WithdrawERC20Event, L2LidoGateway } from '../generated/L2LidoGateway'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
+<<<<<<<< HEAD:l2-bridge-scroll/src/clients/scroll_provider.ts
 import { Logger } from 'winston'
 import { IL2BridgeBalanceClient } from '../services/bridge_balance'
 import { ERC20Short as BridgedWstEthRunner } from '../generated'
@@ -13,6 +14,11 @@ import { IScrollProvider } from './scroll_block_client'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
+========
+import { WithdrawalInitiatedEvent } from '../generated/L2ERC20Bridge'
+import { IL2BridgeBalanceClient } from '../services/bridge_balance'
+import { ERC20Short as BridgedWstEthRunner, L2ERC20Bridge as ZkSyncL2BridgeRunner } from '../generated'
+>>>>>>>> main:l2-bridge-zksync/src/clients/zksync_client.ts
 
 export abstract class IMonitorWithdrawalsClient {
   public abstract getWithdrawalEvents(
@@ -25,25 +31,49 @@ export abstract class IMonitorWithdrawalsClient {
   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
 }
 
+<<<<<<<< HEAD:l2-bridge-scroll/src/clients/scroll_provider.ts
 export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly scrollTokenBridge: L2LidoGateway
   private readonly logger: Logger
+========
+export abstract class IZkSyncClient {
+  public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
+
+  public abstract getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
+
+  public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
+}
+
+export class ZkSyncClient implements IZkSyncClient, IMonitorWithdrawalsClient, IL2BridgeBalanceClient {
+  private readonly logger: Logger
+  private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
+  private readonly zkSyncL2BridgeRunner: ZkSyncL2BridgeRunner
+>>>>>>>> main:l2-bridge-zksync/src/clients/zksync_client.ts
   private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
+<<<<<<<< HEAD:l2-bridge-scroll/src/clients/scroll_provider.ts
     scrollTokenBridge: L2LidoGateway,
     logger: Logger,
+========
+    logger: Logger,
+    zkSyncL2BridgeRunner: ZkSyncL2BridgeRunner,
+>>>>>>>> main:l2-bridge-zksync/src/clients/zksync_client.ts
     bridgedWstEthRunner: BridgedWstEthRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.scrollTokenBridge = scrollTokenBridge
     this.logger = logger
+<<<<<<<< HEAD:l2-bridge-scroll/src/clients/scroll_provider.ts
+========
+    this.zkSyncL2BridgeRunner = zkSyncL2BridgeRunner
+>>>>>>>> main:l2-bridge-zksync/src/clients/zksync_client.ts
     this.bridgedWstEthRunner = bridgedWstEthRunner
   }
 
-  public async fetchBlocks(startBlock: number, endBlock: number): Promise<Block[]> {
+  public async fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]> {
     const batchRequests = []
     for (let i = startBlock; i <= endBlock; i++) {
       batchRequests.push({
@@ -110,10 +140,10 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
       }
     }
 
-    return out
+    return out.toSorted((a, b) => a.number - b.number)
   }
 
-  public async getLogs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
+  public async getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
     const logs: Log[] = []
     const batchSize = 15
 
@@ -148,7 +178,7 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
     return E.right(logs)
   }
 
-  public async getLatestBlock(): Promise<E.Either<NetworkError, Block>> {
+  public async getLatestL2Block(): Promise<E.Either<NetworkError, Block>> {
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
@@ -163,55 +193,22 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
     }
   }
 
-  public async getTransaction(txHash: string): Promise<E.Either<NetworkError, TransactionResponse>> {
-    try {
-      const out = await retryAsync<TransactionResponse>(
-        async (): Promise<TransactionResponse> => {
-          const tx = await this.jsonRpcProvider.getTransaction(txHash)
-
-          if (!tx) {
-            throw new NetworkError(`Can't find transaction ${txHash}`)
-          }
-
-          if (tx.blockNumber === undefined) {
-            throw new NetworkError(`Transaction ${txHash} was not yet included into block`)
-          }
-
-          return tx
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch transaction`))
-    }
-  }
-
-  public async getBlockNumber(): Promise<E.Either<NetworkError, number>> {
-    try {
-      const out = await retryAsync<number>(
-        async (): Promise<number> => {
-          return await this.jsonRpcProvider.getBlockNumber()
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch latest getBlockNumber`))
-    }
-  }
-
   public async getWithdrawalEvents(
     fromBlockNumber: number,
     toBlockNumber: number,
   ): Promise<E.Either<NetworkError, WithdrawERC20Event[]>> {
     try {
+<<<<<<<< HEAD:l2-bridge-scroll/src/clients/scroll_provider.ts
       const out = await retryAsync<WithdrawERC20Event[]>(
         async (): Promise<WithdrawERC20Event[]> => {
           return await this.scrollTokenBridge.queryFilter(
             this.scrollTokenBridge.filters.WithdrawERC20(),
+========
+      const out = await retryAsync<WithdrawalInitiatedEvent[]>(
+        async (): Promise<WithdrawalInitiatedEvent[]> => {
+          return await this.zkSyncL2BridgeRunner.queryFilter(
+            this.zkSyncL2BridgeRunner.filters.WithdrawalInitiated(),
+>>>>>>>> main:l2-bridge-zksync/src/clients/zksync_client.ts
             fromBlockNumber,
             toBlockNumber,
           )
@@ -242,7 +239,7 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
           )
 
           const record: WithdrawalRecord = {
-            time: block.timestamp,
+            timestamp: block.timestamp,
             amount: new BigNumber(String(withdrawEvent.args.amount)),
           }
 
@@ -266,7 +263,11 @@ export class ScrollProvider implements IScrollProvider, IMonitorWithdrawalsClien
 
           return balance.toString()
         },
+<<<<<<<< HEAD:l2-bridge-scroll/src/clients/scroll_provider.ts
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+========
+        { delay: 500, maxTry: 5 },
+>>>>>>>> main:l2-bridge-zksync/src/clients/zksync_client.ts
       )
 
       return E.right(new BigNumber(out))

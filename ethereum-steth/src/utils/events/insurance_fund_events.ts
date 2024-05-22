@@ -1,9 +1,9 @@
 import { EventOfNotice } from '../../entity/events'
 import { ERC20, ETH_DECIMALS } from '../constants'
 import BigNumber from 'bignumber.js'
-import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
+import { Finding } from '../../generated/proto/alert_pb'
 
 export function getInsuranceFundEvents(
   INSURANCE_FUND_ADDRESS: string,
@@ -24,8 +24,8 @@ export function getInsuranceFundEvents(
           args._token,
         )}(${tokenInfo.name}) were transferred from insurance fund to ${etherscanAddress(args._recipient)}`
       },
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
+      severity: Finding.Severity.HIGH,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: INSURANCE_FUND_ADDRESS,
@@ -36,8 +36,8 @@ export function getInsuranceFundEvents(
         `Owner of the insurance fund was transferred from ${etherscanAddress(args.previousOwner)} to ${etherscanAddress(
           args.newOwner,
         )}`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
+      severity: Finding.Severity.HIGH,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: INSURANCE_FUND_ADDRESS,
@@ -48,8 +48,8 @@ export function getInsuranceFundEvents(
         `${new BigNumber(String(args._amount))
           .div(ETH_DECIMALS)
           .toFixed(2)} ETH were transferred from insurance fund to ${etherscanAddress(args._recipient)}`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: INSURANCE_FUND_ADDRESS,
@@ -60,8 +60,8 @@ export function getInsuranceFundEvents(
         `ERC721 token (address: ${etherscanAddress(args._token)}, id: ${
           args._tokenId
         }) was transferred form insurance fund to ${etherscanAddress(args._recipient)}`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: INSURANCE_FUND_ADDRESS,
@@ -72,8 +72,8 @@ export function getInsuranceFundEvents(
         `${args._amount} of ERC1155 token (address: ${etherscanAddress(args._token)}, id: ${
           args._tokenId
         }) was transferred form insurance fund to ${etherscanAddress(args._recipient)}`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
   ]
 }

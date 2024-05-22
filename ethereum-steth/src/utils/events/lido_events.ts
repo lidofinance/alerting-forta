@@ -1,7 +1,7 @@
-import { FindingSeverity, FindingType } from 'forta-agent'
 import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
+import { Finding } from '../../generated/proto/alert_pb'
 
 export const alertId_token_rebased = 'LIDO-TOKEN-REBASED'
 
@@ -13,8 +13,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-STOPPED',
       name: '🚨🚨🚨 Lido: Stopped 🚨🚨🚨',
       description: () => `Lido DAO contract was stopped`,
-      severity: FindingSeverity.Critical,
-      type: FindingType.Info,
+      severity: Finding.Severity.CRITICAL,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -22,8 +22,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-STAKING-LIMIT-REMOVED',
       name: '🚨 Lido: Staking limit removed',
       description: () => `Staking limit was removed`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
+      severity: Finding.Severity.HIGH,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -31,8 +31,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-LOCATOR-SET',
       name: '🚨 Lido: Locator set',
       description: (args: Result) => `Lido locator was set to: ${etherscanAddress(args.lidoLocator)}`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
+      severity: Finding.Severity.HIGH,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -40,8 +40,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-STAKING-PAUSED',
       name: '🚨 Lido: Staking paused',
       description: () => `Staking was paused!`,
-      severity: FindingSeverity.High,
-      type: FindingType.Info,
+      severity: Finding.Severity.HIGH,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -49,8 +49,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-RESUMED',
       name: '⚠️ Lido: Resumed',
       description: () => `Lido DAO contract was resumed`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -58,8 +58,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-STAKING-RESUMED',
       name: '⚠️ Lido: Staking resumed',
       description: () => `Staking was resumed!`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -70,8 +70,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
         `Staking limit was set with:\n` +
         `Max staking limit: ${args.maxStakeLimit}\n` +
         `Stake limit increase per block: ${args.stakeLimitIncreasePerBlock}`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -83,8 +83,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
         `Vault: ${etherscanAddress(args.vault)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
         `Amount: ${args.amount}`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -92,8 +92,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: 'LIDO-CONTRACT-VERSION-SET',
       name: '⚠️ Lido: Contract version set',
       description: (args: Result) => `Contract version set:\n` + `Version: ${args.version}`,
-      severity: FindingSeverity.Medium,
-      type: FindingType.Info,
+      severity: Finding.Severity.MEDIUM,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: LIDO_STETH_ADDRESS,
@@ -101,8 +101,8 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
       alertId: alertId_token_rebased,
       name: 'ℹ️ Lido: Token rebased',
       description: (args: Result) => `reportTimestamp: ${args.reportTimestamp}`,
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
+      severity: Finding.Severity.INFO,
+      type: Finding.FindingType.INFORMATION,
     },
   ]
 }

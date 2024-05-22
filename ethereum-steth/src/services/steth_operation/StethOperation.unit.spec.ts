@@ -1,4 +1,4 @@
-import { ETH_20K, HOUR_1, ETH_10K, DAYS_3, ETH_2, StethOperationSrv } from './StethOperation.srv'
+import { ETH_20K, HOUR_1, ETH_10K, DAYS_3, ETH_2, StethOperationSrv, IStethClient } from './StethOperation.srv'
 import { StethOperationCache } from './StethOperation.cache'
 import * as E from 'fp-ts/Either'
 import { Address, ETH_DECIMALS } from '../../utils/constants'
@@ -11,13 +11,12 @@ import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { faker } from '@faker-js/faker'
 import { BigNumber as EtherBigNumber } from 'ethers'
 import BigNumber from 'bignumber.js'
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import * as Winston from 'winston'
-import { TypedEvent } from '../../generated/common'
+import { TypedEvent } from '../../generated/typechain/common'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
-import { IStethClient } from './contracts'
 import { StethClientMock } from './mocks/mock'
 import { TypedEventMock } from './mocks/eth_evnt.mock'
+import { Finding } from '../../generated/proto/alert_pb'
 
 describe('StethOperationSrv', () => {
   let ethProviderMock: jest.Mocked<IStethClient>
@@ -177,20 +176,20 @@ describe('StethOperationSrv', () => {
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: 'Could not call ethProvider.bufferedEthRaw',
         name: 'Error in StethOperationSrv.handleBufferedEth:240',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test(`lidoContract.getDepositableEther error`, async () => {
@@ -216,20 +215,20 @@ describe('StethOperationSrv', () => {
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: 'Could not call ethProvider.getDepositableEther',
         name: 'Error in StethOperationSrv.handleBufferedEth:321',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
     test(`lidoContract.shifte3dBufferedEthRaw error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
@@ -257,20 +256,20 @@ describe('StethOperationSrv', () => {
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: 'Could not call ethProvider.shifte3dBufferedEthRaw',
         name: 'Error in StethOperationSrv.handleBufferedEth:241',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
     test(`lidoContract.shifte4dBufferedEthRaw error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
@@ -300,20 +299,20 @@ describe('StethOperationSrv', () => {
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: 'Could not call ethProvider.shifte4dBufferedEthRaw',
         name: 'Error in StethOperationSrv.handleBufferedEth:242',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test(`unbufferedEventsErr error`, async () => {
@@ -349,20 +348,20 @@ describe('StethOperationSrv', () => {
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: 'Could not call ethProvider.getUnbufferedEvents',
         name: 'Error in StethOperationSrv.handleBufferedEth:278',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test(`wdReqFinalizedEvents error`, async () => {
@@ -402,20 +401,20 @@ describe('StethOperationSrv', () => {
       const currentBlockTimestamp = faker.date.past().getTime()
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: 'Could not call ethProvider.getWithdrawalsFinalizedEvents',
         name: 'Error in StethOperationSrv.handleBufferedEth:279',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test(`unbufferedEvents.length === 0 && wdReqFinalizedEvents.length === 0`, async () => {
@@ -454,7 +453,7 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const shiftedBlockNumber = currentBlock - 3
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'BUFFERED-ETH-DRAIN',
         description:
           `Buffered ETH amount decreased from ` +
@@ -462,16 +461,16 @@ describe('StethOperationSrv', () => {
           `to ${shifte3dBufferedEthRaw.div(ETH_DECIMALS).toFixed(2)} ` +
           `without Unbuffered or WithdrawalsFinalized events\n\nNote: actual handled block number is ${shiftedBlockNumber}`,
         name: '🚨🚨🚨 Buffered ETH drain',
-        severity: FindingSeverity.Critical,
-        type: FindingType.Suspicious,
-      })
+        severity: Finding.Severity.CRITICAL,
+        type: Finding.FindingType.SUSPICIOUS,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test(`⚠️ High depositable ETH amount`, async () => {
@@ -517,7 +516,7 @@ describe('StethOperationSrv', () => {
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
       const bufferedEth = bufferedEther.div(ETH_DECIMALS).toNumber()
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'HIGH-DEPOSITABLE-ETH',
         description:
           `There are ${bufferedEth.toFixed(2)} ` +
@@ -525,16 +524,16 @@ describe('StethOperationSrv', () => {
           `${Math.floor(DAYS_3 / (60 * 60))} ` +
           `hours since last Depositor TX`,
         name: '⚠️ High depositable ETH amount',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Suspicious,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.SUSPICIOUS,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
 
       expect(cache.getLastReportedDepositableEthTimestamp()).toEqual(currentBlockTimestamp)
     })
@@ -582,21 +581,21 @@ describe('StethOperationSrv', () => {
 
       const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'HUGE-DEPOSITABLE-ETH',
         description:
           `There are 20001.00 depositable ETH in DAO for more than ` + `${Math.floor(HOUR_1 / (60 * 60))} hour(s)`,
         name: '🚨 Huge depositable ETH amount',
-        severity: FindingSeverity.High,
-        type: FindingType.Suspicious,
-      })
+        severity: Finding.Severity.HIGH,
+        type: Finding.FindingType.SUSPICIOUS,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
 
       expect(cache.getLastReportedDepositableEthTimestamp()).toEqual(currentBlockTimestamp)
     })
@@ -626,20 +625,20 @@ describe('StethOperationSrv', () => {
       const currentBlockDate = new Date('2022-01-21')
       const result = await srv.handleDepositExecutorBalance(blockNumber, currentBlockDate.getTime())
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: `Could not call ethProvider.getBalance`,
         name: 'Error in StethOperationSrv.handleDepositExecutorBalance:396',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test('⚠️ Low deposit executor balance', async () => {
@@ -665,20 +664,20 @@ describe('StethOperationSrv', () => {
       const currentBlockDate = new Date('2022-01-21')
       const result = await srv.handleDepositExecutorBalance(blockNumber, currentBlockDate.getTime())
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
         description: `Balance of deposit executor is 1.0000. This is extremely low! 😱`,
         name: '⚠️ Low deposit executor balance',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Suspicious,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.SUSPICIOUS,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
 
       expect(cache.getLastReportedExecutorBalanceTimestamp()).toEqual(currentBlockDate.getTime())
     })
@@ -708,20 +707,20 @@ describe('StethOperationSrv', () => {
       const currentBlockDate = new Date('2022-01-21')
       const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'NETWORK-ERROR',
         description: `Could not call ethProvider.getStakingLimitInfo`,
         name: 'Error in StethOperationSrv.handleStakingLimit:430',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
     })
 
     test('⚠️ Unspent staking limit below 10%', async () => {
@@ -751,20 +750,20 @@ describe('StethOperationSrv', () => {
       const currentBlockDate = new Date('2022-01-21')
       const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is lower than 10% of max staking limit`,
         name: '⚠️ Unspent staking limit below 10%',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.INFORMATION,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
 
       expect(cache.getLastReportedStakingLimit10Timestamp()).toEqual(currentBlockDate.getTime())
     })
@@ -796,20 +795,20 @@ describe('StethOperationSrv', () => {
       const currentBlockDate = new Date('2022-01-21')
       const result = await srv.handleStakingLimit(blockNumber, currentBlockDate.getTime())
 
-      const expected = Finding.fromObject({
+      const expected = {
         alertId: 'LOW-STAKING-LIMIT',
         description: `Current staking limit is 250.00 ETH this is lower than 30% of max staking limit 1000.00 ETH`,
         name: '📉 Unspent staking limit below 30%',
-        severity: FindingSeverity.Info,
-        type: FindingType.Info,
-      })
+        severity: Finding.Severity.INFO,
+        type: Finding.FindingType.INFORMATION,
+      }
 
       expect(result.length).toEqual(1)
-      expect(result[0].alertId).toEqual(expected.alertId)
-      expect(result[0].description).toEqual(expected.description)
-      expect(result[0].name).toEqual(expected.name)
-      expect(result[0].severity).toEqual(expected.severity)
-      expect(result[0].type).toEqual(expected.type)
+      expect(result[0].getAlertid()).toEqual(expected.alertId)
+      expect(result[0].getDescription()).toEqual(expected.description)
+      expect(result[0].getName()).toEqual(expected.name)
+      expect(result[0].getSeverity()).toEqual(expected.severity)
+      expect(result[0].getType()).toEqual(expected.type)
 
       expect(srv.getStorage().getLastReportedStakingLimit30Timestamp()).toEqual(currentBlockDate.getTime())
     })
@@ -843,19 +842,19 @@ describe('StethOperationSrv', () => {
 
       const result = await srv.handleShareRateChange(currentBlock)
 
-      const expectedShareRateErrFinding = Finding.fromObject({
+      const expectedShareRateErrFinding = {
         alertId: 'NETWORK-ERROR',
         description: `Could not call ethProvider.getShareRate`,
         name: 'Error in StethOperationSrv.handleShareRateChange:137',
-        severity: FindingSeverity.Unknown,
-        type: FindingType.Degraded,
-      })
+        severity: Finding.Severity.UNKNOWN,
+        type: Finding.FindingType.DEGRADED,
+      }
 
-      expect(result[0].name).toEqual(expectedShareRateErrFinding.name)
-      expect(result[0].description).toEqual(expectedShareRateErrFinding.description)
-      expect(result[0].alertId).toEqual(expectedShareRateErrFinding.alertId)
-      expect(result[0].severity).toEqual(expectedShareRateErrFinding.severity)
-      expect(result[0].type).toEqual(expectedShareRateErrFinding.type)
+      expect(result[0].getAlertid()).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[0].getDescription()).toEqual(expectedShareRateErrFinding.description)
+      expect(result[0].getName()).toEqual(expectedShareRateErrFinding.name)
+      expect(result[0].getSeverity()).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[0].getType()).toEqual(expectedShareRateErrFinding.type)
     })
 
     test(`should found invariant on +0.15`, async () => {
@@ -888,21 +887,21 @@ describe('StethOperationSrv', () => {
 
       const result = await srv.handleShareRateChange(currentBlock)
 
-      const expectedShareRateErrFinding = Finding.fromObject({
+      const expectedShareRateErrFinding = {
         alertId: 'LIDO-INVARIANT-ERROR',
-        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
-Curr.shareRate(19061449) = 1.3098009112103954e+27 
+        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27
+Curr.shareRate(19061449) = 1.3098009112103954e+27
 Diff: 1.5490045560519778e+26`,
         name: '🚨🚨🚨 Share rate unexpected has changed',
-        severity: FindingSeverity.Critical,
-        type: FindingType.Suspicious,
-      })
+        severity: Finding.Severity.CRITICAL,
+        type: Finding.FindingType.SUSPICIOUS,
+      }
 
-      expect(result[0].name).toEqual(expectedShareRateErrFinding.name)
-      expect(result[0].description).toEqual(expectedShareRateErrFinding.description)
-      expect(result[0].alertId).toEqual(expectedShareRateErrFinding.alertId)
-      expect(result[0].severity).toEqual(expectedShareRateErrFinding.severity)
-      expect(result[0].type).toEqual(expectedShareRateErrFinding.type)
+      expect(result[0].getName()).toEqual(expectedShareRateErrFinding.name)
+      expect(result[0].getDescription()).toEqual(expectedShareRateErrFinding.description)
+      expect(result[0].getAlertid()).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[0].getSeverity()).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[0].getType()).toEqual(expectedShareRateErrFinding.type)
     })
 
     test(`should found invariant on -0.15`, async () => {
@@ -935,21 +934,21 @@ Diff: 1.5490045560519778e+26`,
 
       const result = await srv.handleShareRateChange(currentBlock)
 
-      const expectedShareRateErrFinding = Finding.fromObject({
+      const expectedShareRateErrFinding = {
         alertId: 'LIDO-INVARIANT-ERROR',
-        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
-Curr.shareRate(19061449) = 1e+27 
+        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27
+Curr.shareRate(19061449) = 1e+27
 Diff: -1.5490045560519778e+26`,
         name: '🚨🚨🚨 Share rate unexpected has changed',
-        severity: FindingSeverity.Critical,
-        type: FindingType.Suspicious,
-      })
+        severity: Finding.Severity.CRITICAL,
+        type: Finding.FindingType.SUSPICIOUS,
+      }
 
-      expect(result[0].name).toEqual(expectedShareRateErrFinding.name)
-      expect(result[0].description).toEqual(expectedShareRateErrFinding.description)
-      expect(result[0].alertId).toEqual(expectedShareRateErrFinding.alertId)
-      expect(result[0].severity).toEqual(expectedShareRateErrFinding.severity)
-      expect(result[0].type).toEqual(expectedShareRateErrFinding.type)
+      expect(result[0].getAlertid()).toEqual(expectedShareRateErrFinding.alertId)
+      expect(result[0].getDescription()).toEqual(expectedShareRateErrFinding.description)
+      expect(result[0].getName()).toEqual(expectedShareRateErrFinding.name)
+      expect(result[0].getSeverity()).toEqual(expectedShareRateErrFinding.severity)
+      expect(result[0].getType()).toEqual(expectedShareRateErrFinding.type)
     })
 
     test(`should not found invariant on 0.00001`, async () => {

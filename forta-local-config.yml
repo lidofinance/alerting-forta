@@ -2,7 +2,7 @@ chainId: 1
 
 scan:
   jsonRpc:
-    url: https://mainnet.infura.io/v3/<your secret key>
+    url: https://eth.drpc.org
 
 localMode:
   enable: true

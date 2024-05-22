@@ -1,5 +1,5 @@
-import { Finding } from 'forta-agent'
 import { NetworkErrorFinding } from '../../utils/errors'
+import { Finding } from '../../generated/proto/alert_pb'
 
 export const BorderTime = 15 * 60 * 1000 // 15 minutes
 export const MaxNumberErrorsPerBorderTime = 25
@@ -25,7 +25,7 @@ export class HealthChecker {
 
     let errCount: number = 0
     for (const f of findings) {
-      if (f.alertId === NetworkErrorFinding) {
+      if (f.getAlertid() === NetworkErrorFinding) {
         errCount += 1
       }
     }

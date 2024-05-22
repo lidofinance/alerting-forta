@@ -1,35 +1,37 @@
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { Finding } from '../generated/proto/alert_pb'
 
 export const NetworkErrorFinding = 'NETWORK-ERROR'
 
 export function networkAlert(err: Error, name: string, desc: string): Finding {
-  return Finding.fromObject({
-    name: name,
-    description: desc,
-    alertId: NetworkErrorFinding,
-    severity: FindingSeverity.Unknown,
-    type: FindingType.Degraded,
-    metadata: {
-      stack: `${err.stack}`,
-      message: `${err.message}`,
-      name: `${err.name}`,
-    },
-  })
+  const f: Finding = new Finding()
+  f.setName(name)
+  f.setDescription(desc)
+  f.setAlertid(NetworkErrorFinding)
+  f.setSeverity(Finding.Severity.UNKNOWN)
+  f.setType(Finding.FindingType.DEGRADED)
+
+  const m = f.getMetadataMap()
+  m.set('stack', `${err.stack}`)
+  m.set('message', `${err.message}`)
+  m.set('name', `${err.name}`)
+
+  return f
 }
 
 export function dbAlert(err: Error, name: string, desc: string): Finding {
-  return Finding.fromObject({
-    name: name,
-    description: desc,
-    alertId: 'DB-ERROR',
-    severity: FindingSeverity.Unknown,
-    type: FindingType.Degraded,
-    metadata: {
-      stack: `${err.stack}`,
-      message: `${err.message}`,
-      name: `${err.name}`,
-    },
-  })
+  const f: Finding = new Finding()
+  f.setName(name)
+  f.setDescription(desc)
+  f.setAlertid('DB-ERROR')
+  f.setSeverity(Finding.Severity.UNKNOWN)
+  f.setType(Finding.FindingType.DEGRADED)
+
+  const m = f.getMetadataMap()
+  m.set('stack', `${err.stack}`)
+  m.set('message', `${err.message}`)
+  m.set('name', `${err.name}`)
+
+  return f
 }
 
 export class NetworkError extends Error {

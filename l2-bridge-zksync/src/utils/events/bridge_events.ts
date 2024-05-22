@@ -3,7 +3,6 @@ import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
 import { RoleHashToNameMap } from '../constants'
 
-
 export function getBridgeEvents(
   ZKSYNC_L2ERC20_TOKEN_BRIDGE_ADDRESS: string,
   RolesAddrToNameMap: RoleHashToNameMap,

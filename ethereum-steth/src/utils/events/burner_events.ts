@@ -1,7 +1,7 @@
 import { EventOfNotice } from '../../entity/events'
-import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
+import { Finding } from '../../generated/proto/alert_pb'
 
 export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
   return [
@@ -15,8 +15,8 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
         `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
         `Amount: ${args.amount}`,
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
+      severity: Finding.Severity.INFO,
+      type: Finding.FindingType.INFORMATION,
     },
     {
       address: BURNER_ADDRESS,
@@ -28,8 +28,8 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
         `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
         `Token ID: ${args.tokenId}`,
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
+      severity: Finding.Severity.INFO,
+      type: Finding.FindingType.INFORMATION,
     },
   ]
 }

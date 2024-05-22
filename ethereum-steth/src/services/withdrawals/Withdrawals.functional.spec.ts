@@ -1,4 +1,3 @@
-import { Finding, FindingSeverity, FindingType, filterLog, getEthersProvider } from 'forta-agent'
 import { App, Container } from '../../app'
 import { WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
 import { Address } from '../../utils/constants'
@@ -6,11 +5,22 @@ import BigNumber from 'bignumber.js'
 import { WithdrawalsRepo } from './Withdrawals.repo'
 import * as E from 'fp-ts/Either'
 import { BlockDto, TransactionDto } from '../../entity/events'
+import { JsonRpcProvider } from '@ethersproject/providers'
+import { ethers } from 'ethers'
+import { Finding } from '../../generated/proto/alert_pb'
+import { filterLog } from 'forta-agent'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('Withdrawals.srv functional tests', () => {
-  const ethProvider = getEthersProvider()
+  let ethProvider: JsonRpcProvider
+  const mainnet = 1
+  const drpcProvider = 'https://eth.drpc.org/'
+
+  beforeAll(async () => {
+    ethProvider = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+  })
+
   let app: Container
   let repo: WithdrawalsRepo
 
@@ -47,20 +57,20 @@ describe('Withdrawals.srv functional tests', () => {
       const resultsBigOnly = await app.WithdrawalsSrv.handleUnfinalizedRequestNumber(blockDto)
       expect(resultsBigOnly.length).toEqual(1)
 
-      const expectedBig = Finding.fromObject({
+      const expectedBig = {
         alertId: 'WITHDRAWALS-BIG-UNFINALIZED-QUEUE',
         description: 'Unfinalized queue is 140275.70 stETH',
         name: '⚠️ Withdrawals: unfinalized queue is more than 100000 stETH',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.INFORMATION,
+      }
 
       expect(resultsBigOnly.length).toEqual(1)
-      expect(resultsBigOnly[0].alertId).toEqual(expectedBig.alertId)
-      expect(resultsBigOnly[0].description).toEqual(expectedBig.description)
-      expect(resultsBigOnly[0].name).toEqual(expectedBig.name)
-      expect(resultsBigOnly[0].severity).toEqual(expectedBig.severity)
-      expect(resultsBigOnly[0].type).toEqual(expectedBig.type)
+      expect(resultsBigOnly[0].getAlertid()).toEqual(expectedBig.alertId)
+      expect(resultsBigOnly[0].getDescription()).toEqual(expectedBig.description)
+      expect(resultsBigOnly[0].getName()).toEqual(expectedBig.name)
+      expect(resultsBigOnly[0].getSeverity()).toEqual(expectedBig.severity)
+      expect(resultsBigOnly[0].getType()).toEqual(expectedBig.type)
 
       const neededBlockNumber = 19_609_410
       const neededBlock = await ethProvider.getBlock(neededBlockNumber)
@@ -72,20 +82,20 @@ describe('Withdrawals.srv functional tests', () => {
 
       const results = await app.WithdrawalsSrv.handleUnfinalizedRequestNumber(neededBlockDto)
 
-      const expectedLong = Finding.fromObject({
+      const expectedLong = {
         alertId: 'WITHDRAWALS-LONG-UNFINALIZED-QUEUE',
         description: 'Withdrawal request #33321 has been waiting for 120 hrs 12 sec at the moment',
         name: '⚠️ Withdrawals: unfinalized queue wait time is more than 5 days',
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-      })
+        severity: Finding.Severity.MEDIUM,
+        type: Finding.FindingType.INFORMATION,
+      }
 
       expect(results.length).toEqual(1)
-      expect(results[0].alertId).toEqual(expectedLong.alertId)
-      expect(results[0].description).toEqual(expectedLong.description)
-      expect(results[0].name).toEqual(expectedLong.name)
-      expect(results[0].severity).toEqual(expectedLong.severity)
-      expect(results[0].type).toEqual(expectedLong.type)
+      expect(results[0].getAlertid()).toEqual(expectedLong.alertId)
+      expect(results[0].getDescription()).toEqual(expectedLong.description)
+      expect(results[0].getName()).toEqual(expectedLong.name)
+      expect(results[0].getSeverity()).toEqual(expectedLong.severity)
+      expect(results[0].getType()).toEqual(expectedLong.type)
     },
     TEST_TIMEOUT,
   )
@@ -101,7 +111,6 @@ describe('Withdrawals.srv functional tests', () => {
       const transactionDto: TransactionDto = {
         logs: receipt.logs,
         to: trx.to ? trx.to : null,
-        timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
         block: {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,

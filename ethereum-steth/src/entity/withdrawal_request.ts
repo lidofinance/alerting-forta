@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-import { WithdrawalQueueBase } from '../generated/WithdrawalQueueERC721'
+import { WithdrawalQueueBase } from '../generated/typechain/WithdrawalQueueERC721'
 
 export type WithdrawalRequestSql = {
   id: number
