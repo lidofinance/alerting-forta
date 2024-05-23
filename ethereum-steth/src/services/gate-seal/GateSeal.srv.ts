@@ -64,6 +64,7 @@ export class GateSealSrv {
         f.setAlertid('GATE-SEAL-DEFAULT-EXPIRED')
         f.setSeverity(Finding.Severity.MEDIUM)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
         this.logger.info(elapsedTime(`[${this.name}.initialize]`, start) + `on block ${currentBlock}`)
@@ -91,6 +92,7 @@ export class GateSealSrv {
       f.setAlertid('GATE-SEAL-DEFAULT-WITHOUT-ROLE')
       f.setSeverity(Finding.Severity.MEDIUM)
       f.setType(Finding.FindingType.INFORMATION)
+      f.setProtocol('ethereum')
 
       out.push(f)
     }
@@ -134,6 +136,7 @@ export class GateSealSrv {
         f.setAlertid('GATE-SEAL-DEFAULT-EXPIRED')
         f.setSeverity(Finding.Severity.MEDIUM)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
 
@@ -168,6 +171,7 @@ export class GateSealSrv {
         f.setAlertid('GATE-SEAL-DEFAULT-EXPIRED')
         f.setSeverity(Finding.Severity.HIGH)
         f.setType(Finding.FindingType.DEGRADED)
+        f.setProtocol('ethereum')
 
         this.cache.setLastNoPauseRoleAlertTimestamp(currentBlockTimestamp)
       }
@@ -202,6 +206,7 @@ export class GateSealSrv {
       f.setAlertid('GATE-SEAL-IS-EXPIRED')
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.DEGRADED)
+      f.setProtocol('ethereum')
 
       out.push(f)
 
@@ -216,6 +221,7 @@ export class GateSealSrv {
         f.setAlertid('GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED')
         f.setSeverity(Finding.Severity.MEDIUM)
         f.setType(Finding.FindingType.DEGRADED)
+        f.setProtocol('ethereum')
         out.push(f)
 
         this.cache.setLastExpiryGateSealAlertTimestamp(currentBlockTimestamp)
@@ -263,6 +269,7 @@ export class GateSealSrv {
         f.setAlertid('GATE-SEAL-IS-SEALED')
         f.setSeverity(Finding.Severity.CRITICAL)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
       } catch (e) {
@@ -297,6 +304,7 @@ export class GateSealSrv {
         f.setAlertid('GATE-SEAL-NEW-ONE-CREATED')
         f.setSeverity(Finding.Severity.MEDIUM)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
         this.gateSealAddress = gate_seal

@@ -3,3 +3,5 @@
 *.yml
 **/.yarn
 **/dist
+**/coverage
+**/src/generated
