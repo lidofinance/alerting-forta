@@ -1,4 +1,3 @@
-import { FortaGuardClient } from './clients/forta_guard_client'
 import { ethers, Finding } from 'forta-agent'
 import { ScrollClient } from './clients/scroll_client'
 import { EventWatcher } from './services/event_watcher'
@@ -18,7 +17,6 @@ import { ETHProvider } from './clients/eth_provider_client'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-
 
 export type Container = {
   scrollClient: ScrollClient
@@ -47,9 +45,9 @@ export class App {
       })
 
       const adr = Constants
-      const scrollRpcURL = FortaGuardClient.getSecret()
+      const scrollRpcURL = adr.SCROLL_NETWORK_RPC
 
-      const nodeClient = new ethers.providers.JsonRpcProvider(scrollRpcURL, adr.L2_NETWORK_ID)
+      const nodeClient = new ethers.providers.JsonRpcProvider(scrollRpcURL, adr.SCROLL_NETWORK_ID)
 
       const l2Bridge = L2LidoGateway__factory.connect(adr.L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
       const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.SCROLL_WSTETH_BRIDGED.address, nodeClient)

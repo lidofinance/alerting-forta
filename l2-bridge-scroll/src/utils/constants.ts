@@ -9,8 +9,8 @@ export type RoleHashToName = Map<string, string>
 
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
 export const Constants = {
-  L2_NETWORK_RPC: 'https://rpc.scroll.io',
-  L2_NETWORK_ID: 534352,
+  SCROLL_NETWORK_RPC: 'https://rpc.scroll.io',
+  SCROLL_NETWORK_ID: 534352,
   SCROLL_APPROX_BLOCK_TIME_3_SECONDS: 3,
   L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',
   GOV_BRIDGE_ADDRESS: '0x0c67d8d067e349669dfeab132a7c03a90594ee09',

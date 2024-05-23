@@ -11,8 +11,8 @@ describe('ScrollProvider', () => {
     async () => {
       const app = await App.getInstance()
 
-      const startL2BlockNumber = 31_653_550
-      const endL2BlockNumber = 31_653_600
+      const startL2BlockNumber = 5_927_000
+      const endL2BlockNumber = 5_927_050
       const l2Blocks = await app.scrollClient.fetchL2Blocks(startL2BlockNumber, endL2BlockNumber)
 
       expect(l2Blocks.length).toEqual(endL2BlockNumber - startL2BlockNumber + 1)
@@ -21,17 +21,17 @@ describe('ScrollProvider', () => {
   )
 
   test(
-    'getWstEthTotalSupply is 1177.342778779487684996 wstEth',
+    'getWstEthTotalSupply is 7620.760541243359204164 wstEth',
     async () => {
       const app = await App.getInstance()
 
-      const baseBlockNumber = 31_653_550
+      const baseBlockNumber = 5_927_366
       const balance = await app.scrollClient.getWstEthTotalSupply(baseBlockNumber)
       if (E.isLeft(balance)) {
         throw balance.left
       }
 
-      expect(balance.right.dividedBy(ETH_DECIMALS)).toEqual(new BigNumber('1177.342778779487684996'))
+      expect(balance.right.dividedBy(ETH_DECIMALS)).toEqual(new BigNumber('7620.760541243359204164'))
     },
     TEST_TIMEOUT,
   )

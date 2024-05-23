@@ -2,7 +2,6 @@ import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { IProxyContractClient } from '../clients/proxy_contract_client'
 import * as E from 'fp-ts/Either'
 import { retry } from 'ts-retry'
-import { DataRW } from '../utils/mutex'
 import { getUniqueKey, networkAlert } from '../utils/finding.helpers'
 import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
@@ -63,29 +62,21 @@ export class ProxyWatcher {
 
   async handleBlocks(blockNumbers: number[]): Promise<Finding[]> {
     const start = new Date().getTime()
+    const findings: Finding[] = []
 
     const BLOCK_INTERVAL = 25
-    const batchPromises: Promise<void>[] = []
-    const out = new DataRW<Finding>([])
-
-    for (const blockNumber of blockNumbers) {
-      if (blockNumber % BLOCK_INTERVAL === 0) {
-        const promiseProxyImpl = this.handleProxyImplementationChanges(blockNumber).then((findings: Finding[]) => {
-          out.write(findings)
-        })
-
-        const promiseAdminChanges = this.handleProxyAdminChanges(blockNumber).then((findings: Finding[]) => {
-          out.write(findings)
-        })
-
-        batchPromises.push(promiseProxyImpl, promiseAdminChanges)
+    for (const l2BlockNumber of blockNumbers) {
+      if (l2BlockNumber % BLOCK_INTERVAL === 0) {
+        const [implFindings, adminFindings] = await Promise.all([
+          this.handleProxyImplementationChanges(l2BlockNumber),
+          this.handleProxyAdminChanges(l2BlockNumber),
+        ])
+        findings.push(...implFindings, ...adminFindings)
       }
     }
 
-    await Promise.all(batchPromises)
     this.logger.info(elapsedTime(ProxyWatcher.name + '.' + this.handleBlocks.name, start))
-
-    return await out.read()
+    return findings
   }
 
   private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {

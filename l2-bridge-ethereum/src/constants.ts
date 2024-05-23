@@ -517,8 +517,8 @@ const SCROLL_L1_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-  // There is also `event UpdateFeeVault(address _oldFeeVault, address _newFeeVault)`
-  // for skipping it as not significant enough
+  // There is also `event UpdateFeeVault(address _oldFeeVault, address _newFeeVault)`,
+  // but it is skipped as not significant enough
 ];
 
 const SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
@@ -597,7 +597,8 @@ const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
       `\non Gateway Router ${SCROLL_L1_GATEWAY_ROUTER}`,
     severity: FindingSeverity.Critical,
     type: FindingType.Info,
-    // Occurred in block 18318378 but than there were no Lido custom gateway contracts
+    // Occurred in block 18318378 but than there were no Lido custom gateway contracts,
+    // thus it cannot be used in tests
   },
 ];
 
