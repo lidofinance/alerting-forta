@@ -5,6 +5,7 @@ import { roleByName } from '../../src/shared/string'
 import { App } from '../../src/app'
 import { createTransactionEvent } from './utils'
 import * as E from 'fp-ts/Either'
+import { ORACLE_DAEMON_CONFIG_ADDRESS } from 'constants/common'
 
 const TEST_TIMEOUT = 60_000 // ms
 
@@ -69,11 +70,7 @@ describe('agent-acl-changes e2e tests', () => {
   it(
     "should get role's members of a contract",
     async () => {
-      const admins = await getRoleMembers(
-        '0xbf05A929c3D7885a6aeAd833a992dA6E5ac23b09', // OracleDaemonConfig
-        roleByName('DEFAULT_ADMIN_ROLE').hash,
-        'latest',
-      )
+      const admins = await getRoleMembers(ORACLE_DAEMON_CONFIG_ADDRESS, roleByName('DEFAULT_ADMIN_ROLE').hash, 'latest')
       if (E.isLeft(admins)) {
         throw new Error(E.left.name)
       }
