@@ -184,6 +184,7 @@ export class StethOperationSrv {
           f.setAlertid('LIDO-INVARIANT-ERROR')
           f.setSeverity(Finding.Severity.CRITICAL)
           f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
 
           findings.push(f)
         }
@@ -309,6 +310,7 @@ export class StethOperationSrv {
         f.setAlertid('BUFFERED-ETH-DRAIN')
         f.setSeverity(Finding.Severity.CRITICAL)
         f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
 
         out.push(f)
       }
@@ -352,7 +354,8 @@ export class StethOperationSrv {
               )
               .setAlertid('HUGE-DEPOSITABLE-ETH')
               .setSeverity(Finding.Severity.HIGH)
-              .setType(Finding.FindingType.SUSPICIOUS),
+              .setType(Finding.FindingType.SUSPICIOUS)
+              .setProtocol('ethereum'),
           )
 
           this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
@@ -374,6 +377,7 @@ export class StethOperationSrv {
           f.setAlertid('HIGH-DEPOSITABLE-ETH')
           f.setSeverity(Finding.Severity.MEDIUM)
           f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
           out.push(f)
 
           this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
@@ -411,6 +415,7 @@ export class StethOperationSrv {
           f.setAlertid('LOW-DEPOSIT-EXECUTOR-BALANCE')
           f.setSeverity(Finding.Severity.MEDIUM)
           f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
           out.push(f)
         }
       }
@@ -446,6 +451,7 @@ export class StethOperationSrv {
         f.setAlertid('LOW-STAKING-LIMIT')
         f.setSeverity(Finding.Severity.MEDIUM)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
         out.push(f)
 
         this.cache.setLastReportedStakingLimit10Timestamp(currentBlockTimestamp)
@@ -463,6 +469,7 @@ export class StethOperationSrv {
         f.setAlertid('LOW-STAKING-LIMIT')
         f.setSeverity(Finding.Severity.INFO)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
         out.push(f)
 
         this.cache.setLastReportedStakingLimit30Timestamp(currentBlockTimestamp)

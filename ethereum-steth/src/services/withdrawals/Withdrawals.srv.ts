@@ -305,6 +305,7 @@ export class WithdrawalsSrv {
       f.setAlertid('WITHDRAWALS-UNFINALIZED-QUEUE-AND-STAKE-LIMIT')
       f.setSeverity(Finding.Severity.MEDIUM)
       f.setType(Finding.FindingType.SUSPICIOUS)
+      f.setProtocol('ethereum')
 
       findings.push(f)
 
@@ -366,6 +367,7 @@ export class WithdrawalsSrv {
           f.setAlertid('WITHDRAWALS-BIG-UNFINALIZED-QUEUE')
           f.setSeverity(Finding.Severity.MEDIUM)
           f.setType(Finding.FindingType.INFORMATION)
+          f.setProtocol('ethereum')
 
           out.push(f)
 
@@ -391,6 +393,7 @@ export class WithdrawalsSrv {
           f.setAlertid('WITHDRAWALS-LONG-UNFINALIZED-QUEUE')
           f.setSeverity(Finding.Severity.MEDIUM)
           f.setType(Finding.FindingType.INFORMATION)
+          f.setProtocol('ethereum')
 
           out.push(f)
 
@@ -494,6 +497,7 @@ export class WithdrawalsSrv {
         f.setAlertid('WITHDRAWALS-UNCLAIMED-REQUESTS')
         f.setSeverity(Finding.Severity.INFO)
         f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
 
         out.push(f)
 
@@ -523,6 +527,7 @@ export class WithdrawalsSrv {
         f.setAlertid('WITHDRAWALS-UNCLAIMED-REQUESTS-MORE-THAN-BALANCE')
         f.setSeverity(Finding.Severity.CRITICAL)
         f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
 
         out.push(f)
 
@@ -549,6 +554,7 @@ export class WithdrawalsSrv {
       f.setAlertid('WITHDRAWALS-BUNKER-ENABLED')
       f.setSeverity(Finding.Severity.CRITICAL)
       f.setType(Finding.FindingType.DEGRADED)
+      f.setProtocol('ethereum')
 
       out.push(f)
 
@@ -570,6 +576,7 @@ export class WithdrawalsSrv {
       f.setAlertid('WITHDRAWALS-BUNKER-DISABLED')
       f.setSeverity(Finding.Severity.MEDIUM)
       f.setType(Finding.FindingType.INFORMATION)
+      f.setProtocol('ethereum')
 
       out.push(f)
 
@@ -633,6 +640,7 @@ export class WithdrawalsSrv {
         f.setAlertid('WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-BATCH')
         f.setSeverity(Finding.Severity.INFO)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
       }
@@ -652,6 +660,7 @@ export class WithdrawalsSrv {
         f.setAlertid('WITHDRAWALS-BIG-WITHDRAWAL-REQUEST-AFTER-REBASE')
         f.setSeverity(Finding.Severity.MEDIUM)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
 
@@ -768,6 +777,7 @@ export class WithdrawalsSrv {
           f.setAlertid('WITHDRAWALS-CLAIMED-AMOUNT-MORE-THAN-REQUESTED')
           f.setSeverity(Finding.Severity.CRITICAL)
           f.setType(Finding.FindingType.INFORMATION)
+          f.setProtocol('ethereum')
 
           out.push(f)
 

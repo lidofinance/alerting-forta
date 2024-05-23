@@ -189,6 +189,7 @@ export class VaultSrv {
         f.setAlertid('WITHDRAWAL-VAULT-BALANCE-CHANGE')
         f.setSeverity(Finding.Severity.INFO)
         f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
         out.push(f)
       }
@@ -219,6 +220,7 @@ export class VaultSrv {
       f.setAlertid('EL-VAULT-BALANCE-CHANGE')
       f.setSeverity(Finding.Severity.INFO)
       f.setType(Finding.FindingType.INFORMATION)
+      f.setProtocol('ethereum')
 
       out.push(f)
     }
@@ -255,6 +257,7 @@ export class VaultSrv {
         f.setAlertid('WITHDRAWAL-VAULT-BALANCE-DRAIN')
         f.setSeverity(Finding.Severity.CRITICAL)
         f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
 
         out.push(f)
       }
@@ -276,6 +279,7 @@ export class VaultSrv {
       f.setAlertid('WITHDRAWAL-VAULT-BALANCE-DRAIN')
       f.setSeverity(Finding.Severity.CRITICAL)
       f.setType(Finding.FindingType.SUSPICIOUS)
+      f.setProtocol('ethereum')
 
       out.push(f)
     }
@@ -312,6 +316,7 @@ export class VaultSrv {
         f.setAlertid('EL-VAULT-BALANCE-DRAIN')
         f.setSeverity(Finding.Severity.CRITICAL)
         f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
 
         out.push(f)
       }
@@ -333,6 +338,7 @@ export class VaultSrv {
       f.setAlertid('EL-VAULT-BALANCE-DRAIN')
       f.setSeverity(Finding.Severity.CRITICAL)
       f.setType(Finding.FindingType.SUSPICIOUS)
+      f.setProtocol('ethereum')
 
       out.push(f)
     }
@@ -361,6 +367,7 @@ export class VaultSrv {
           f.setAlertid('BURNER-SHARES-TRANSFER')
           f.setSeverity(Finding.Severity.HIGH)
           f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
 
           out.push(f)
         }
