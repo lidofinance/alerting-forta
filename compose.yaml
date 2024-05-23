@@ -1,0 +1,54 @@
+volumes:
+  nats:
+  last_data:
+
+services:
+  big-ear:
+    image: feofanov/big-ear
+    env_file:
+      - .env
+    environment:
+#        - BLOCK=19788401 # uncomment to run only for a specific block (catches Easy Track event)
+#        - BLOCK=19718592 # uncomment to run only for a specific block (catches Aragon voting event)
+        - NATS_URL=nats://nats:4222
+        - LAST_DATA_DIR=/home/appuser/lastdata
+    depends_on:
+      - nats
+    volumes:
+      - last_data:/home/appuser/last_data
+  nats:
+    image: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats:/data
+    command:
+      - "--name=nats"
+      - "--http_port=8222"
+      - "--js"
+      - "--sd=/data"
+
+# bots section
+  ethereum-governance-v2:
+    env_file:
+      - .env
+    build:
+        context: ethereum-governance-v2
+        dockerfile: nats.Dockerfile
+    environment:
+        - BOT_NAME=ethereum-governance-v2 # REQUIRED! SHOULD BE UNIQUE!
+        - NATS_URL=nats://nats:4222
+    depends_on:
+      - big-ear
+  voting-watcher:
+    env_file:
+      - .env
+    build:
+        context: voting-watcher
+        dockerfile: nats.Dockerfile
+    environment:
+        - BOT_NAME=voting-watcher # REQUIRED! SHOULD BE UNIQUE!
+        - NATS_URL=nats://nats:4222
+    depends_on:
+      - big-ear

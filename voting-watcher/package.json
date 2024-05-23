@@ -26,11 +26,14 @@
     "disable": "forta-agent disable",
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "nats": "node --require ts-node/register src/main.ts",
+    "generate-proto": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated --ts_proto_opt=esModuleInterop=true  -I=./src//proto/  ./src/proto/agent.proto"
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.48"
+    "forta-agent": "^0.1.48",
+    "nats": "^2.23.0"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
@@ -38,6 +41,7 @@
     "jest": "^27.0.6",
     "nodemon": "^2.0.8",
     "ts-jest": "^27.0.3",
+    "ts-proto": "^1.172.0",
     "typescript": "^4.3.4"
   },
   "packageManager": "yarn@3.3.0"
