@@ -109,7 +109,7 @@ export class MantleClient implements IMantleClient, IMonitorWithdrawalsClient, I
         const blocks = await doRequest(request)
         out.push(...blocks)
       } catch (e) {
-        this.logger.warning(`${e}`)
+        this.logger.warn(`${e}`)
         if (allowedExtraRequest === 0) {
           break
         }
@@ -144,7 +144,7 @@ export class MantleClient implements IMantleClient, IMonitorWithdrawalsClient, I
           { delay: 500, maxTry: 5 },
         )
       } catch (e) {
-        this.logger.warning(
+        this.logger.warn(
           `Could not fetch blocks logs. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${end - start}`,
         )
 
@@ -213,25 +213,40 @@ export class MantleClient implements IMantleClient, IMonitorWithdrawalsClient, I
   }
 
   public async getWithdrawalEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
+    startBlock: number,
+    endBlock: number,
   ): Promise<E.Either<NetworkError, WithdrawalInitiatedEvent[]>> {
-    try {
-      const out = await retryAsync<WithdrawalInitiatedEvent[]>(
-        async (): Promise<WithdrawalInitiatedEvent[]> => {
-          return await this.L2ERC20TokenBridge.queryFilter(
-            this.L2ERC20TokenBridge.filters.WithdrawalInitiated(),
-            fromBlockNumber,
-            toBlockNumber,
-          )
-        },
-        { delay: 500, maxTry: 5 },
-      )
+    const batchSize = 10_000
 
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch withdrawEvents`))
+    const events: WithdrawalInitiatedEvent[] = []
+    for (let i = startBlock; i <= endBlock; i += batchSize) {
+      const start = i
+      const end = Math.min(i + batchSize - 1, endBlock)
+
+      let chunkEvents: WithdrawalInitiatedEvent[] = []
+      try {
+        chunkEvents = await retryAsync<WithdrawalInitiatedEvent[]>(
+          async (): Promise<WithdrawalInitiatedEvent[]> => {
+            return await this.L2ERC20TokenBridge.queryFilter(
+              this.L2ERC20TokenBridge.filters.WithdrawalInitiated(),
+              start,
+              end,
+            )
+          },
+          { delay: 500, maxTry: 5 },
+        )
+      } catch (e) {
+        this.logger.warn(
+          `Could not fetch withdrawEvents. cause: ${e}, startBlock: ${start}, toBlock: ${end}. Total ${end - start}`,
+        )
+
+        continue
+      }
+
+      events.push(...chunkEvents)
     }
+
+    return E.right(events)
   }
 
   public async getWithdrawalRecords(
