@@ -84,6 +84,7 @@ export function handleEventsOfNotice(txEvent: TransactionDto, eventsOfNotice: Ev
           f.setAlertid(eventInfo.alertId)
           f.setSeverity(eventInfo.severity)
           f.setType(eventInfo.type)
+          f.setProtocol('ethereum')
           const m = f.getMetadataMap()
           m.set('args', String(logDesc.args))
 

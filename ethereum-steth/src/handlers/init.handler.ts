@@ -66,6 +66,7 @@ export class InitHandler {
       f.setAlertid('LIDO-AGENT-LAUNCHED')
       f.setSeverity(Finding.Severity.INFO)
       f.setType(Finding.FindingType.INFORMATION)
+      f.setProtocol('ethereum')
 
       this.logger.info(
         `[${this.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
