@@ -9,6 +9,7 @@ export function networkAlert(err: Error, name: string, desc: string): Finding {
   f.setAlertid(NetworkErrorFinding)
   f.setSeverity(Finding.Severity.UNKNOWN)
   f.setType(Finding.FindingType.DEGRADED)
+  f.setProtocol('ethereum')
 
   const m = f.getMetadataMap()
   m.set('stack', `${err.stack}`)
@@ -25,6 +26,7 @@ export function dbAlert(err: Error, name: string, desc: string): Finding {
   f.setAlertid('DB-ERROR')
   f.setSeverity(Finding.Severity.UNKNOWN)
   f.setType(Finding.FindingType.DEGRADED)
+  f.setProtocol('ethereum')
 
   const m = f.getMetadataMap()
   m.set('stack', `${err.stack}`)
