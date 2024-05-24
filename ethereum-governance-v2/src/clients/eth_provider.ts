@@ -79,7 +79,7 @@ export class ETHProvider
     try {
       const logs = await retryAsync(
         async () => {
-          return await this.jsonRpcProvider.getLogs(filter)
+          return this.jsonRpcProvider.getLogs(filter)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
