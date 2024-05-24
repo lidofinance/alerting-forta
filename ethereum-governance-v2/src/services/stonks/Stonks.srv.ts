@@ -15,10 +15,10 @@ import {
   STONKS_ORDER_CREATION,
 } from 'constants/stonks'
 import BigNumber from 'bignumber.js'
-import { etherscanAddress } from '../../shared/string'
-import { networkAlert } from '../../shared/errors'
+import { etherscanAddress, formatAmount } from '../../shared/string'
 import { handleEventsOfNotice } from '../../shared/notice'
 import { EventOfNotice } from '../../entity/events'
+import { KNOWN_ERC20 } from '../../shared/constants'
 
 export class StonksSrv {
   private readonly logger: Logger
@@ -73,6 +73,7 @@ export class StonksSrv {
                 address: event?.args?.orderContract,
                 orderDuration: orderDuration.toNumber(),
                 timestamp: block.timestamp,
+                blockNumber: block.number,
                 active: currentBlock.timestamp - block.timestamp < orderDuration.toNumber(),
               })
             }),
@@ -114,31 +115,67 @@ export class StonksSrv {
     const timestamp = txBlock.block.timestamp
 
     const lastCreatedOrders = [...this.createdOrders]
-    for (const order of lastCreatedOrders) {
-      const duration = timestamp - order.timestamp
-      if (duration < order.orderDuration) {
-        continue
-      }
 
-      const tokenToSell = await this.ethProvider.getOrderBalance(order.tokenFrom)
-      if (E.isLeft(tokenToSell)) {
-        findings.push(
-          networkAlert(
-            tokenToSell.left,
-            `Error in ${this.name}.${this.handleOrderSettlement.name} (uid:88ea9fb0)`,
-            `Could not call ethProvider.getOrderBalance for address - ${order.tokenFrom}`,
-          ),
-        )
+    let operationInfo = ''
+    const orderInfo = await Promise.all(
+      lastCreatedOrders.map(async (order) => {
+        const duration = timestamp - order.timestamp
+
+        const balanceResponse = await this.ethProvider.getOrderBalance(order.address)
+        if (E.isLeft(balanceResponse)) {
+          console.error(balanceResponse.left)
+          throw new Error(`Could not get balance for ${order.address}`)
+        }
+
+        const balance = new BigNumber(balanceResponse.right.toString())
+
+        const fulfilled = balance.lte(STETH_MAX_PRECISION)
+
+        if (order.active && fulfilled) {
+          const ioResp = await this.ethProvider.getStonksCOWInfo(order.blockNumber, txBlock.block.number, order.address)
+          if (E.isLeft(ioResp)) {
+            console.error(ioResp.left)
+            throw new Error(`Could not get order params for ${order.address}`)
+          }
+          const args = ioResp.right
+
+          let sellInfo = `unknown token`
+          const sellToken = KNOWN_ERC20.get(args?.sellToken?.toLowerCase())
+          if (sellToken) {
+            const sellAmount = formatAmount(args?.sellAmount, sellToken.decimals, 4)
+            sellInfo = `${sellAmount} ${sellToken?.name}`
+          }
+
+          let buyInfo = `unknown token`
+          const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase())
+          if (buyToken) {
+            const buyAmount = formatAmount(args?.buyAmount, buyToken?.decimals, 4)
+            buyInfo = `${buyAmount} ${buyToken?.name}`
+          }
+
+          operationInfo = `${sellInfo} -> ${buyInfo}`
+        }
+
+        return {
+          order,
+          balance,
+          fulfilled,
+          duration,
+        }
+      }),
+    )
+
+    for (const { order, fulfilled, duration, balance } of orderInfo) {
+      if (duration < order.orderDuration && !fulfilled) {
         continue
       }
-      const balance = new BigNumber(tokenToSell.right.toString())
 
       if (order.active) {
-        if (balance.lte(STETH_MAX_PRECISION)) {
+        if (fulfilled) {
           findings.push(
             Finding.fromObject({
-              name: '✅ Stonks: order fulfill',
-              description: `Stonks order ${etherscanAddress(order.address)} was fulfill`,
+              name: '✅ Stonks: order fulfilled',
+              description: `Stonks order ${etherscanAddress(order.address)} was fulfilled ${operationInfo}`,
               alertId: 'STONKS-ORDER-FULFILL',
               severity: FindingSeverity.Info,
               type: FindingType.Info,
@@ -188,6 +225,7 @@ export class StonksSrv {
           address: orderAddress,
           orderDuration: orderDuration.toNumber(),
           timestamp: txEvent.block.timestamp,
+          blockNumber: txEvent.block.number,
           active: true,
         })
       }

@@ -1,4 +1,5 @@
 import { keccak256 } from 'forta-agent'
+import BigNumber from 'bignumber.js'
 
 export function etherscanAddress(address: string): string {
   const subpath = process.env.FORTA_AGENT_RUN_TIER == 'testnet' ? 'goerli.' : ''
@@ -31,4 +32,8 @@ export function roleByName(name: string): INamedRole {
     name: name.replace(/_/g, ' '),
     hash,
   }
+}
+
+export function formatAmount(amount: unknown, decimals: number, dp: number = 2): string {
+  return new BigNumber(String(amount)).div(new BigNumber(10).pow(decimals)).toFixed(dp)
 }

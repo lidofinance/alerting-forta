@@ -4,6 +4,7 @@ export type CreatedOrder = {
   orderDuration: number
   timestamp: number
   active: boolean
+  blockNumber: number
 }
 
 export type EventArgs = {

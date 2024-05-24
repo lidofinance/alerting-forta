@@ -8,6 +8,7 @@ import {
   AragonVoting as AragonVotingContract,
   IncreaseStakingLimit as IncreaseStakingLimitContract,
   NodeOperatorsRegistry as NodeOperatorsRegistryContract,
+  Swap__factory,
 } from '../generated'
 import { IEtherscanProvider } from './contracts'
 import { NetworkError } from '../shared/errors'
@@ -18,7 +19,7 @@ import { BlockTag } from '@ethersproject/providers'
 import { AclEnumerableABI } from 'constants/acl-changes'
 import { IAclChangesClient } from '../services/acl-changes/contract'
 import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contract'
-import { BLOCK_TO_WATCH } from 'constants/stonks'
+import { BLOCK_TO_WATCH, COW_PROTOCOL_ADDRESS } from 'constants/stonks'
 import { TypedEvent } from '../generated/common'
 import { Stonks__factory } from '../generated'
 import { formatEther } from 'ethers/lib/utils'
@@ -71,6 +72,20 @@ export class ETHProvider
       return E.right(block)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not get block #${blockNumber}`))
+    }
+  }
+
+  public async getLogs(filter: ethers.providers.Filter): Promise<E.Either<Error, ethers.providers.Log[]>> {
+    try {
+      const logs = await retryAsync(
+        async () => {
+          return await this.jsonRpcProvider.getLogs(filter)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(logs)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get logs`))
     }
   }
 
@@ -379,6 +394,30 @@ export class ETHProvider
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
       return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
+    }
+  }
+
+  public async getStonksCOWInfo(fromBlock: number, toBlock: number, orderAddress: string) {
+    try {
+      const result = await retryAsync(
+        async () => {
+          return this.jsonRpcProvider.getLogs({
+            fromBlock: `0x${fromBlock.toString(16)}`,
+            toBlock: `0x${toBlock.toString(16)}`,
+            address: COW_PROTOCOL_ADDRESS,
+            topics: [
+              null, // any
+              orderAddress.replace('0x', '0x000000000000000000000000'),
+            ],
+          })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      const iface = Swap__factory.createInterface()
+      const args = iface.parseLog(result[0]).args
+      return E.right(args)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
     }
