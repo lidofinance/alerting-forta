@@ -47,7 +47,7 @@ const EL_REWARDS_VAULT_ADDRESS: string = '0x388c818ca8b9251b393131c08a736a67ccb1
 
 const ENS_BASE_REGISTRAR_ADDRESS = '0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85'
 
-const KNOWN_ERC20 = new Map<string, ERC20>([
+export const KNOWN_ERC20 = new Map<string, ERC20>([
   [LIDO_STETH_ADDRESS, { decimals: 18, name: 'stETH' }],
   [WSTETH_ADDRESS, { decimals: 18, name: 'wstETH' }],
   [LDO_ADDRESS, { decimals: 18, name: 'LDO' }],
