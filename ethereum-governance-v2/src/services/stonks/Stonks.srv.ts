@@ -132,24 +132,28 @@ export class StonksSrv {
         const fulfilled = balance.lte(STETH_MAX_PRECISION)
 
         if (order.active && fulfilled) {
-          const ioResp = await this.ethProvider.getStonksCOWInfo(order.blockNumber, txBlock.block.number, order.address)
-          if (E.isLeft(ioResp)) {
-            console.error(ioResp.left)
+          const cowResp = await this.ethProvider.getStonksCOWInfo(
+            order.blockNumber,
+            txBlock.block.number,
+            order.address,
+          )
+          if (E.isLeft(cowResp)) {
+            console.error(cowResp.left)
             throw new Error(`Could not get order params for ${order.address}`)
           }
-          const args = ioResp.right
+          const cowOrderArgs = cowResp.right
 
           let sellInfo = `unknown token`
-          const sellToken = KNOWN_ERC20.get(args?.sellToken?.toLowerCase())
+          const sellToken = KNOWN_ERC20.get(cowOrderArgs?.sellToken?.toLowerCase())
           if (sellToken) {
-            const sellAmount = formatAmount(args?.sellAmount, sellToken.decimals, 4)
+            const sellAmount = formatAmount(cowOrderArgs?.sellAmount, sellToken.decimals, 4)
             sellInfo = `${sellAmount} ${sellToken?.name}`
           }
 
           let buyInfo = `unknown token`
-          const buyToken = KNOWN_ERC20.get(args?.buyToken?.toLowerCase())
+          const buyToken = KNOWN_ERC20.get(cowOrderArgs?.buyToken?.toLowerCase())
           if (buyToken) {
-            const buyAmount = formatAmount(args?.buyAmount, buyToken?.decimals, 4)
+            const buyAmount = formatAmount(cowOrderArgs?.buyAmount, buyToken?.decimals, 4)
             buyInfo = `${buyAmount} ${buyToken?.name}`
           }
 
