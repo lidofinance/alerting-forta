@@ -49,7 +49,8 @@
 12. Add new folder to .github/CODEOWNERS file
 13. Add new bot for root [Readme.md](README.md)
 14. Add alerts of bot to bot's Readme.md
-15. Finish. Type yarn run in your CLI
+15. Add github CI flow for the network (see `.github/workflows/test-l2-bridge-mantle.yml`)
+16. Finish. Type yarn run in your CLI
 
 ## Update l2-bridge-balance bot
 
