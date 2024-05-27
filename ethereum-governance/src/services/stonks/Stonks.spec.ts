@@ -9,6 +9,8 @@ import { BigNumber } from 'ethers'
 import { faker } from '@faker-js/faker'
 import { STETH_MAX_PRECISION, STONKS, STONKS_ORDER_CREATED_EVENT } from '../../shared/constants/stonks/mainnet'
 import { TypedEvent } from '../../generated/common'
+import { DAI_ADDRESS, LIDO_STETH_ADDRESS } from '../../shared/constants/common/mainnet'
+import { ETH_DECIMALS } from '../../shared/constants'
 
 describe('StonksSrv', () => {
   let logger: Logger
@@ -23,6 +25,7 @@ describe('StonksSrv', () => {
       getStonksOrderParams: jest.fn(),
       getStonksOrderEvents: jest.fn(),
       getOrderBalance: jest.fn(),
+      getStonksCOWInfo: jest.fn(),
     } as unknown as ETHProvider
     stonksSrv = new StonksSrv(logger, ethProvider)
     mocked(ethProvider.getBlock).mockResolvedValue(
@@ -76,8 +79,9 @@ describe('StonksSrv', () => {
     {
       name: 'order fulfilled',
       orderBalance: STETH_MAX_PRECISION.minus(10),
-      expectedName: '✅ Stonks: order fulfill',
-      expectedDescription: 'Stonks order [0x123](https://etherscan.io/address/0x123) was fulfill',
+      expectedName: '✅ Stonks: order fulfilled',
+      expectedDescription:
+        'Stonks order [0x123](https://etherscan.io/address/0x123) was fulfilled 10.0000 stETH -> 10.0000 DAI',
       expectedAlertId: 'STONKS-ORDER-FULFILL',
     },
     {
@@ -99,6 +103,14 @@ describe('StonksSrv', () => {
       mocked(ethProvider.getStonksOrderEvents).mockResolvedValue(E.right([event]))
       mocked(ethProvider.getStonksOrderParams).mockResolvedValue(E.right(['0x123', '1000', BigNumber.from(10000)]))
       mocked(ethProvider.getOrderBalance).mockResolvedValue(E.right(BigNumber.from(orderBalance.toString())))
+      mocked(ethProvider.getStonksCOWInfo).mockResolvedValue(
+        E.right({
+          sellAmount: 10 * ETH_DECIMALS.toNumber(),
+          sellToken: LIDO_STETH_ADDRESS,
+          buyAmount: 10 * ETH_DECIMALS.toNumber(),
+          buyToken: DAI_ADDRESS,
+        } as unknown as ethers.utils.Result),
+      )
       await stonksSrv.initialize(100)
 
       const findings = await stonksSrv.handleOrderSettlement(blockEvent)
