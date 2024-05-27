@@ -216,7 +216,9 @@ export class GateSealSrv {
         const f: Finding = new Finding()
         f.setName('⚠️ GateSeal: is about to be expired')
         f.setDescription(
-          `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(expiryTimestamp.right.toNumber() * 1000).toUTCString()}`,
+          `GateSeal address: ${etherscanAddress(this.gateSealAddress)}\nExpiry date ${new Date(
+            expiryTimestamp.right.toNumber() * 1000,
+          ).toUTCString()}`,
         )
         f.setAlertid('GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED')
         f.setSeverity(Finding.Severity.MEDIUM)

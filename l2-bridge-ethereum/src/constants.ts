@@ -2,7 +2,7 @@ import { FindingSeverity, FindingType } from "forta-agent";
 import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 import proxyAdminABI from "./abi/ProxyAdminABI.json";
 import { Result } from "@ethersproject/abi/lib";
-import { formatAddress } from 'forta-agent/dist/cli/utils'
+import { formatAddress } from "forta-agent/dist/cli/utils";
 
 type EventOfNotice = {
   address: string;

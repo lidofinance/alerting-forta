@@ -43,7 +43,6 @@ the cache.
 4. Monitor Withdrawals
    1. ⚠️ Scroll: Huge withdrawals during the last ...
 
-
 ## Development (Forta specific)
 
 Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
