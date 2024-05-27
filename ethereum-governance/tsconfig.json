@@ -1,21 +1,24 @@
 {
+  "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
-    "target": "es5",
-    "sourceMap": true,
-    "module": "commonjs",
     "outDir": "dist",
-    "strict": true,
-    "moduleResolution": "node",
     "baseUrl": ".",
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "paths": {
+      "constants/common": ["./src/shared/constants/common/mainnet"],
+      "constants/easy-track": ["./src/shared/constants/easy-track/mainnet"],
+      "constants/ens-names": ["./src/shared/constants/ens-names/mainnet"],
+      "constants/proxy-watcher": ["./src/shared/constants/proxy-watcher/mainnet"],
+      "constants/acl-changes": ["./src/shared/constants/acl-changes/mainnet"],
+      "constants/trp-changes": ["./src/shared/constants/trp-changes/mainnet"],
+      "constants/aragon-voting": ["./src/shared/constants/aragon-voting/mainnet"],
+      "constants/stonks": ["./src/shared/constants/stonks/mainnet"]
+    }
   },
   "exclude": [
-    "e2e"
+    "node_modules",
+    "tests",
+    "dist",
+    "**/*spec.ts",
+    "**/*mock.ts"
   ]
 }

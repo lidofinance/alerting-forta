@@ -3,7 +3,6 @@
 ## Supported chains
 
 - Ethereum mainnet
-- Ethereum Goerli testnet (dev)
 
 ## Sub-bots
 
@@ -92,11 +91,11 @@ For example, you need to add `testnet` tier support for some new sub-agent:
      SIGNING_KEY_REMOVED_EVENT,
      NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
      NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-   } from "./constants";
+   } from './constants'
    ```
    ##### After:
    ```typescript
-   import type * as Constants from "./constants";
+   import type * as Constants from './constants'
    const {
      NODE_OPERATORS_REGISTRY_ADDRESS,
      EASY_TRACK_ADDRESS,
@@ -104,7 +103,7 @@ For example, you need to add `testnet` tier support for some new sub-agent:
      SIGNING_KEY_REMOVED_EVENT,
      NODE_OPERATOR_STAKING_LIMIT_SET_EVENT,
      NODE_OPERATORS_REGISTRY_EVENTS_OF_NOTICE,
-   } = requireWithTier<typeof Constants>(module, "./constants");
+   } = requireWithTier<typeof Constants>(module, './constants')
    ```
 2. Copy `./constants.ts` file to `./constants.testnet.ts` and change the addresses and other vars to the testnet ones.
 3. Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your Testnet JSON-RPC provider.
