@@ -17,8 +17,8 @@ const MAX_WITHDRAWALS_10K_WstEth = 10_000
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string
 }
-const HOURS_48 = 60 * 60 * 24 * 2
-const AVG_BLOCK_TIME_2SECONDS: number = 2
+export const HOURS_48 = 60 * 60 * 24 * 2
+export const AVG_BLOCK_TIME_2SECONDS: number = 2 //s
 
 export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'

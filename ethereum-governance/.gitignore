@@ -6,3 +6,5 @@ forta.config.json
 *.log
 version.json
 .DS_Store
+/coverage/
+/src/generated/

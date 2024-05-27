@@ -1,259 +1,159 @@
 import {
   BlockEvent,
-  TransactionEvent,
+  decodeJwt,
+  Finding,
+  FindingSeverity,
+  FindingType,
   HandleBlock,
   HandleTransaction,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+  HealthCheck,
+} from 'forta-agent'
+import * as process from 'process'
+import { argv } from 'process'
+import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
+import { Initialize } from 'forta-agent/dist/sdk/handlers'
+import * as E from 'fp-ts/Either'
+import { App } from './app'
+import { elapsedTime } from './shared/time'
+import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
+import Version from './shared/version'
+import { Metadata } from './entity/metadata'
 
-import { ethersProvider } from "./ethers";
-
-import { argv } from "process";
-
-import * as agentEasyTrack from "./subagents/easy-track/agent-easy-track";
-import * as agentEnsNames from "./subagents/ens-names/agent-ens-names";
-import * as trpChanges from "./subagents/trp-changes/agent-trp-changes";
-import * as agentProxy from "./subagents/proxy-watcher/agent-proxy-watcher";
-import * as agentAragon from "./subagents/aragon-voting/agent-aragon-voting";
-import * as agentACL from "./subagents/acl-changes/agent-acl-changes";
-import * as stonksOrderWatcher from "./subagents/stonks-order-watcher/stonks-order-watcher";
-
-import VERSION from "./version";
-import { mergeFindings } from "./common/utils";
-import { RUN_TIER } from "./common/constants";
-
-type Metadata = { [key: string]: string };
-interface SubAgent {
-  __tier__?: string;
-  name: string;
-  handleBlock?: HandleBlock;
-  handleTransaction?: HandleTransaction;
-  initialize?: (blockNumber: number) => Promise<Metadata>;
-}
-
-const subAgents: SubAgent[] = [
-  agentEasyTrack,
-  agentEnsNames,
-  trpChanges,
-  agentProxy,
-  agentAragon,
-  agentACL,
-  stonksOrderWatcher,
-].filter((agent: SubAgent) => {
-  if (!RUN_TIER) return true;
-  if (agent.__tier__ == RUN_TIER) return true;
-  console.warn(
-    `Skipping sub-agent [${agent.name}]: unsupported run tier '${RUN_TIER}'`,
-  );
-});
-
-// block or tx handling should take no more than 300 sec.
-// If not all processing is done it interrupts the execution, sends current findings and errors as findings too
-const processingTimeout = 300_000;
-
-const maxHandlerRetries = 5;
-
-let findingsOnInit: Finding[] = [];
-
-const initialize = async () => {
-  let blockNumber: number = -1;
-
-  if (argv.includes("--block")) {
-    blockNumber = parseInt(argv[4]);
-  } else if (argv.includes("--range")) {
-    blockNumber = parseInt(argv[4].slice(0, argv[4].indexOf(".")));
-  } else if (argv.includes("--tx")) {
-    const txHash = argv[4];
-    const tx = await ethersProvider.getTransaction(txHash);
-    if (!tx) {
-      throw new Error(`Can't find transaction ${txHash}`);
-    }
-    if (!tx.blockNumber) {
-      throw new Error(`Transaction ${txHash} was not yet included into block`);
-    }
-    blockNumber = tx.blockNumber;
-  }
-
-  if (blockNumber == -1) {
-    blockNumber = await ethersProvider.getBlockNumber();
-  }
-
+export function initialize(): Initialize {
   const metadata: Metadata = {
-    "version.commitHash": VERSION.commitHash,
-    "version.commitMsg": VERSION.commitMsg,
-  };
-
-  await Promise.all(
-    subAgents.map(async (agent, _) => {
-      if (agent.initialize) {
-        try {
-          const agentMeta = await agent.initialize(blockNumber);
-          for (const metaKey in agentMeta) {
-            metadata[`${agent.name}.${metaKey}`] = agentMeta[metaKey];
-          }
-        } catch (err: any) {
-          console.log(`Exiting due to init failure on ${agent.name}`);
-          console.log(`Error: ${err}`);
-          console.log(`Stack: ${err.stack}`);
-          process.exit(1);
-        }
-      }
-    }),
-  );
-
-  metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
-
-  findingsOnInit.push(
-    Finding.fromObject({
-      name: "Agent launched",
-      description: `Version: ${VERSION.desc}`,
-      alertId: "LIDO-AGENT-LAUNCHED",
-      severity: FindingSeverity.Info,
-      type: FindingType.Info,
-      metadata,
-    }),
-  );
-  console.log("Bot initialization is done!");
-};
-
-const timeout = async (agent: SubAgent) =>
-  new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      const err = new Error(`Sub-agent ${agent.name} timed out`);
-      reject(err);
-    }, processingTimeout);
-  });
-
-const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent,
-): Promise<Finding[]> => {
-  let blockFindings: Finding[] = [];
-  // report findings from init. Will be done only for the first block report.
-  if (findingsOnInit.length) {
-    blockFindings = blockFindings.concat(findingsOnInit);
-    findingsOnInit = [];
+    'version.commitHash': Version.commitHash,
+    'version.commitMsg': Version.commitMsg,
   }
 
-  const run = async (agent: SubAgent, blockEvent: BlockEvent) => {
-    if (!agent.handleBlock) return;
-    let retries = maxHandlerRetries;
-    let success = false;
-    let lastError;
-    while (retries-- > 0 && !success) {
-      try {
-        const newFindings = await agent.handleBlock(blockEvent);
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings);
-          blockFindings = blockFindings.concat(newFindings);
-        }
-        success = true;
-      } catch (err) {
-        lastError = err;
-      }
+  return async function (): Promise<InitializeResponse | void> {
+    const startTime = new Date().getTime()
+    const app = await App.getInstance()
+
+    const token = await App.getJwt()
+    if (E.isLeft(token)) {
+      console.error(`Error: ${token.left.message}`)
+      console.error(`Stack: ${token.left.stack}`)
+
+      process.exit(1)
     }
-    if (!success) {
-      blockFindings.push(errorToFinding(lastError, agent, "handleBlock"));
+
+    const latestBlockNumber = await app.ethClient.getStartedBlockForApp(argv)
+    if (E.isLeft(latestBlockNumber)) {
+      console.error(`Error: ${latestBlockNumber.left.message}`)
+      console.error(`Stack: ${latestBlockNumber.left.stack}`)
+
+      process.exit(1)
     }
-  };
 
-  // run agents handlers
-  // wait all results whether success or failure (include timeout errors)
+    const [, aragonVotingSrvErr] = await Promise.all([
+      app.AclChangesSrv.initialize(latestBlockNumber.right),
+      app.AragonVotingSrv.initialize(latestBlockNumber.right),
+      app.EasyTrackSrv.initialize(latestBlockNumber.right),
+      app.EnsNamesSrv.initialize(latestBlockNumber.right),
+      app.ProxyWatcherSrv.initialize(latestBlockNumber.right),
+      app.TrpChangesSrv.initialize(latestBlockNumber.right),
+      app.StonksSrv.initialize(latestBlockNumber.right),
+    ])
 
-  const runs = await Promise.allSettled(
-    subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, blockEvent), timeout(agent)]);
-    }),
-  );
+    if (aragonVotingSrvErr !== null) {
+      console.error(`Error: ${aragonVotingSrvErr.message}`)
+      console.error(`Stack: ${aragonVotingSrvErr.stack}`)
 
-  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
-    if (r.status == "rejected") {
-      blockFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
-      );
+      process.exit(1)
     }
-  });
 
-  if (blockFindings.length > 50) {
-    blockFindings = mergeFindings(blockFindings);
+    const agents: string[] = [app.EnsNamesSrv.getName(), app.EasyTrackSrv.getName()]
+    metadata.agents = '[' + agents.toString() + ']'
+
+    const decodedJwt = decodeJwt(token.right)
+
+    await app.findingsRW.write([
+      Finding.fromObject({
+        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
+        description: `Version: ${Version.desc}`,
+        alertId: 'LIDO-AGENT-LAUNCHED',
+        severity: FindingSeverity.Info,
+        type: FindingType.Info,
+        metadata,
+      }),
+    ])
+
+    console.log(elapsedTime('Agent.initialize', startTime) + '\n')
   }
-  return blockFindings;
-};
-
-const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent,
-): Promise<Finding[]> => {
-  let txFindings: Finding[] = [];
-  const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
-    if (!agent.handleTransaction) return;
-    let retries = maxHandlerRetries;
-    let success = false;
-    let lastError;
-    while (retries-- > 0 && !success) {
-      try {
-        const newFindings = await agent.handleTransaction(txEvent);
-        if (newFindings.length) {
-          enrichFindingsMetadata(newFindings);
-          txFindings = txFindings.concat(newFindings);
-        }
-        success = true;
-      } catch (err) {
-        lastError = err;
-      }
-    }
-    if (!success) {
-      txFindings.push(errorToFinding(lastError, agent, "handleTransaction"));
-    }
-  };
-
-  // run agents handlers
-  // wait all results whether success or failure (include timeout errors)
-  const runs = await Promise.allSettled(
-    subAgents.map(async (agent) => {
-      return await Promise.race([run(agent, txEvent), timeout(agent)]);
-    }),
-  );
-
-  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
-    if (r.status == "rejected") {
-      txFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
-      );
-    }
-  });
-
-  if (txFindings.length > 50) {
-    txFindings = mergeFindings(txFindings);
-  }
-  return txFindings;
-};
-
-function enrichFindingsMetadata(findings: Finding[]) {
-  return findings.forEach(enrichFindingMetadata);
 }
 
-function enrichFindingMetadata(finding: Finding) {
-  finding.metadata["version.commitHash"] = VERSION.commitHash;
+let isHandleBlockRunning: boolean = false
+export const handleBlock = (): HandleBlock => {
+  return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    console.log(`#ETH block: ${blockEvent.block.number}`)
+    const startTime = new Date().getTime()
+    if (isHandleBlockRunning) {
+      return []
+    }
+
+    isHandleBlockRunning = true
+    const app = await App.getInstance()
+
+    const findings: Finding[] = []
+    const findingsAsync = await app.findingsRW.read()
+    if (findingsAsync.length > 0) {
+      findings.push(...findingsAsync)
+    }
+
+    const servicesFindings = (
+      await Promise.all([
+        app.AclChangesSrv.handleBlock(blockEvent),
+        app.AragonVotingSrv.handleBlock(blockEvent),
+        app.EnsNamesSrv.handleBlock(blockEvent),
+        app.ProxyWatcherSrv.handleBlock(blockEvent),
+        app.StonksSrv.handleBlock(blockEvent),
+      ])
+    ).flat()
+    findings.push(...servicesFindings)
+
+    app.healthChecker.check(findings)
+
+    console.log(elapsedTime('handleBlock', startTime) + '\n')
+    isHandleBlockRunning = false
+    return findings
+  }
 }
 
-function errorToFinding(e: unknown, agent: SubAgent, fnName: string): Finding {
-  const err: Error =
-    e instanceof Error ? e : new Error(`non-Error thrown: ${e}`);
-  const finding = Finding.fromObject({
-    name: `Error in ${agent.name}.${fnName}`,
-    description: `${err}`,
-    alertId: "LIDO-AGENT-ERROR",
-    severity: FindingSeverity.High,
-    type: FindingType.Degraded,
-    metadata: { stack: `${err.stack}` },
-  });
-  enrichFindingMetadata(finding);
-  return finding;
+export const handleTransaction = (): HandleTransaction => {
+  return async function (txEvent: TransactionEvent): Promise<Finding[]> {
+    const app = await App.getInstance()
+
+    const findings: Finding[] = (
+      await Promise.all([
+        await app.AclChangesSrv.handleTransaction(txEvent),
+        await app.AragonVotingSrv.handleTransaction(txEvent),
+        await app.EasyTrackSrv.handleTransaction(txEvent),
+        await app.TrpChangesSrv.handleTransaction(txEvent),
+        await app.StonksSrv.handleTransaction(txEvent),
+      ])
+    ).flat()
+
+    app.healthChecker.check(findings)
+
+    return findings
+  }
+}
+
+export const healthCheck = (): HealthCheck => {
+  return async function (): Promise<string[] | void> {
+    const app = await App.getInstance()
+
+    if (!app.healthChecker.isHealth()) {
+      return ['There is too much network errors']
+    }
+
+    return []
+  }
 }
 
 export default {
-  initialize,
-  handleBlock,
-  handleTransaction,
-};
+  initialize: initialize(),
+  handleBlock: handleBlock(),
+  handleTransaction: handleTransaction(),
+  healthCheck: healthCheck(),
+}
