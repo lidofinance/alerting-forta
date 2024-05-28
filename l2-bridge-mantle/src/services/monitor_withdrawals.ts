@@ -8,7 +8,6 @@ import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { getUniqueKey } from '../utils/finding.helpers'
-import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
@@ -43,7 +42,7 @@ export class MonitorWithdrawals {
   }
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    // TODO: Fix actually on Mantle block time is not constant and the check logic must be updated
+    // 48 hours
     const pastBlock = currentBlock - Math.ceil(HOURS_48 / AVG_BLOCK_TIME_2SECONDS)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
@@ -107,7 +106,8 @@ export class MonitorWithdrawals {
             ? l2block.timestamp - this.toManyWithdrawalsTimestamp
             : HOURS_48
 
-        const uniqueKey = `71f5c9a4-90c5-4678-ad1d-c359b653413e`
+        const uniqueKey: string = `2aba9cff-a81f-4069-8e64-32ec9473e7b9`
+
         const finding: Finding = Finding.fromObject({
           name: `⚠️ Mantle: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`,
           description:
@@ -145,7 +145,7 @@ export class MonitorWithdrawals {
 
     for (const log of logs) {
       logIndexToLogs.set(log.logIndex, log)
-      addresses.push(formatAddress(log.address))
+      addresses.push(log.address.toLowerCase())
     }
 
     for (const blockDto of blocksDto) {
@@ -154,7 +154,7 @@ export class MonitorWithdrawals {
 
     const out: WithdrawalRecord[] = []
     if (this.l2Erc20TokenGatewayAddress in addresses) {
-      const events = filterLog(logs, this.withdrawalInitiatedEvent, formatAddress(this.l2Erc20TokenGatewayAddress))
+      const events = filterLog(logs, this.withdrawalInitiatedEvent, this.l2Erc20TokenGatewayAddress.toLowerCase())
 
       for (const event of events) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

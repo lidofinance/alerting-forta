@@ -106,7 +106,7 @@ export class MonitorWithdrawals {
             ? l2Block.timestamp - this.lastReportedToManyWithdrawals
             : HOURS_48
 
-        const uniqueKey = `4EB8F1CA-19C1-4AD3-81E4-E63D251F9981`
+        const uniqueKey: string = `82fd9b59-0cb2-42bd-b660-1c01bc18bfd2`
 
         const finding: Finding = Finding.fromObject({
           name: `⚠️ ZkSync: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`,

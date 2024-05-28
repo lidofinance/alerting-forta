@@ -152,7 +152,7 @@ const handleBlock: HandleBlock = async (
     }),
   );
 
-  runs.forEach((r: PromiseSettledResult<unknown>, index: number) => {
+  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
       blockFindings.push(
         errorToFinding(r.reason, subAgents[index], "handleBlock"),
@@ -199,7 +199,7 @@ const handleTransaction: HandleTransaction = async (
     }),
   );
 
-  runs.forEach((r: PromiseSettledResult<unknown>, index: number) => {
+  runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
       txFindings.push(
         errorToFinding(r.reason, subAgents[index], "handleBlock"),

@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { formatAddress } from "forta-agent/dist/cli/utils";
+
 import {
   ethers,
   BlockEvent,
@@ -131,7 +131,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 }
 
 function handleWithdrawalEvent(txEvent: TransactionEvent, findings: Finding[]) {
-  if (formatAddress(L2_ERC20_TOKEN_GATEWAY) in txEvent.addresses) {
+  if (L2_ERC20_TOKEN_GATEWAY in txEvent.addresses) {
     const events = txEvent.filterLog(
       WITHDRAWAL_INITIATED_EVENT,
       L2_ERC20_TOKEN_GATEWAY,
