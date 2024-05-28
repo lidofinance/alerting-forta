@@ -30,6 +30,8 @@ mainnet)
 
 [l2-bridge-zkSync](./l2-bridge-zksync) - Detection bot for ZkSync part of L2 bridge
 
+[l2-bridge-scroll](./l2-bridge-scroll) - Detection bot for Scroll part of L2 bridge
+
 [phishing-detect](./phishing-detect) - Phishing detection bot for the Lido ERC20 tokens
 
 [multisig-watcher](./multisig-watcher) - Multisig events detector bot
