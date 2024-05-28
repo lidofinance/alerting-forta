@@ -8,6 +8,7 @@ import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { getUniqueKey } from '../utils/finding.helpers'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
@@ -42,7 +43,7 @@ export class MonitorWithdrawals {
   }
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    // 48 hours
+    // TODO: Fix actually on Mantle block time is not constant and the check logic must be updated
     const pastBlock = currentBlock - Math.ceil(HOURS_48 / AVG_BLOCK_TIME_2SECONDS)
 
     const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
@@ -145,7 +146,7 @@ export class MonitorWithdrawals {
 
     for (const log of logs) {
       logIndexToLogs.set(log.logIndex, log)
-      addresses.push(log.address.toLowerCase())
+      addresses.push(formatAddress(log.address))
     }
 
     for (const blockDto of blocksDto) {
@@ -154,7 +155,7 @@ export class MonitorWithdrawals {
 
     const out: WithdrawalRecord[] = []
     if (this.l2Erc20TokenGatewayAddress in addresses) {
-      const events = filterLog(logs, this.withdrawalInitiatedEvent, this.l2Erc20TokenGatewayAddress.toLowerCase())
+      const events = filterLog(logs, this.withdrawalInitiatedEvent, formatAddress(this.l2Erc20TokenGatewayAddress))
 
       for (const event of events) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

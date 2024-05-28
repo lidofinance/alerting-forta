@@ -1,8 +1,6 @@
 import BigNumber from "bignumber.js";
 import config from "./config/bot-config.json";
 
-// COMMON CONSTS
-
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18);
 
@@ -37,7 +35,7 @@ export const BRIDGE_PARAMS_WSTETH: BridgeParamsWstETH = {
   },
 };
 
-export const LDO_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+export const LDO_L1_ADDRESS = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
 
 export interface BridgeParamLDO {
   name: string;

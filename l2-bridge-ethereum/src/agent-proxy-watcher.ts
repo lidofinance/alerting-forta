@@ -6,6 +6,7 @@ import {
   FindingType,
   TransactionEvent,
 } from "forta-agent";
+import { formatAddress } from "forta-agent/dist/cli/utils";
 import {
   ARBITRUM_GATEWAY_SET_EVENT,
   ARBITRUM_L1_GATEWAY_ROUTER,
@@ -57,7 +58,7 @@ function handleProxyAdminEvents(
   findings: Finding[],
 ) {
   PROXY_ADMIN_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
+    if (formatAddress(eventInfo.address) in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(
@@ -80,7 +81,7 @@ function handleThirdPartyProxyAdminEvents(
   findings: Finding[],
 ) {
   THIRD_PARTY_PROXY_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
+    if (formatAddress(eventInfo.address) in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(
@@ -96,7 +97,7 @@ function handleThirdPartyProxyAdminEvents(
       });
     }
   });
-  if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
+  if (formatAddress(ARBITRUM_L1_GATEWAY_ROUTER) in txEvent.addresses) {
     const events = txEvent.filterLog(
       ARBITRUM_GATEWAY_SET_EVENT,
       ARBITRUM_L1_GATEWAY_ROUTER,
@@ -117,7 +118,7 @@ function handleThirdPartyProxyAdminEvents(
     });
   }
 
-  if (LINEA_L1_CROSS_DOMAIN_MESSENGER in txEvent.addresses) {
+  if (formatAddress(LINEA_L1_CROSS_DOMAIN_MESSENGER) in txEvent.addresses) {
     const events = txEvent.filterLog(
       LINEA_CUSTOM_CONTRACT_SET_EVENT,
       LINEA_L1_CROSS_DOMAIN_MESSENGER,

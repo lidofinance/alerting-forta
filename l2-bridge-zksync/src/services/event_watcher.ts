@@ -4,6 +4,7 @@ import { filterLog, Finding } from 'forta-agent'
 import { getUniqueKey } from '../utils/finding.helpers'
 import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 import BigNumber from 'bignumber.js'
 
 export class EventWatcher {
@@ -27,14 +28,15 @@ export class EventWatcher {
     const logIndexToLog = new Map<number, Log>()
 
     for (const l2Log of l2Logs) {
-      addresses.add(l2Log.address.toLowerCase())
+      addresses.add(formatAddress(l2Log.address))
       logIndexToLog.set(l2Log.logIndex, l2Log)
     }
 
     const findings: Finding[] = []
     for (const eventToFinding of this.eventsToFinding) {
-      if (addresses.has(eventToFinding.address.toLowerCase())) {
-        const filteredEvents = filterLog(l2Logs, eventToFinding.event, eventToFinding.address.toLowerCase())
+      const eventAddress = formatAddress(eventToFinding.address)
+      if (addresses.has(eventAddress)) {
+        const filteredEvents = filterLog(l2Logs, eventToFinding.event, eventAddress)
 
         for (const event of filteredEvents) {
           findings.push(
