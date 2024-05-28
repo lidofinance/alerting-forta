@@ -2,26 +2,6 @@ import { FindingSeverity, FindingType } from "forta-agent";
 import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 import proxyAdminABI from "./abi/ProxyAdminABI.json";
 import { Result } from "@ethersproject/abi/lib";
-import { formatAddress } from "forta-agent/dist/cli/utils";
-
-type EventOfNotice = {
-  address: string;
-  event: string;
-  alertId: string;
-  name: string;
-  description: CallableFunction;
-  severity: FindingSeverity;
-  type: FindingType;
-  condition?: (args: Result) => boolean;
-};
-
-export interface BridgeProxyInfo {
-  name: string;
-  address: string;
-  shortABI: string;
-  functions: Map<string, string>;
-  proxyAdminAddress: string | null;
-}
 
 export const ROLES = new Map<string, string>([
   [
@@ -90,17 +70,6 @@ export const LINEA_L1_TOKEN_BRIDGE =
 export const ADMIN_OF_LINEA_L1_TOKEN_BRIDGE =
   "0x5b0bb17755fba06028530682e2fd5bc373931768";
 
-export const SCROLL_L1_TOKEN_BRIDGE =
-  "0x6625c6332c9f91f2d27c304e729b86db87a3f504";
-
-export const ADMIN_OF_SCROLL_L1_TOKEN_BRIDGE =
-  "0xCC2C53556Bc75217cf698721b29071d6f12628A9";
-
-export const SCROLL_L1_MESSENGER = "0x6774Bcbd5ceCeF1336b5300fb5186a12DDD8b367";
-
-export const SCROLL_L1_GATEWAY_ROUTER =
-  "0xF8B1378579659D8F7EE5f3C929c2f3E332E41Fd6";
-
 export const ARBITRUM_GATEWAY_SET_EVENT =
   "event GatewaySet(address indexed l1Token, address indexed gateway)";
 
@@ -132,13 +101,27 @@ export const L1_ERC20_TOKEN_GATEWAYS = [
     name: "Linea",
     address: LINEA_L1_TOKEN_BRIDGE,
   },
-  {
-    name: "Scroll",
-    address: SCROLL_L1_TOKEN_BRIDGE,
-  },
 ];
 
-export const L1_BRIDGES: BridgeProxyInfo[] = [
+type EventOfNotice = {
+  address: string;
+  event: string;
+  alertId: string;
+  name: string;
+  description: CallableFunction;
+  severity: FindingSeverity;
+  type: FindingType;
+};
+
+export interface LidoProxy {
+  name: string;
+  address: string;
+  shortABI: string;
+  functions: Map<string, string>;
+  proxyAdminAddress: string | null;
+}
+
+export const LIDO_PROXY_CONTRACTS: LidoProxy[] = [
   {
     name: "L1ERC20TokenGateway to Arbitrum",
     address: ARBITRUM_L1ERC20_TOKEN_GATEWAY,
@@ -209,20 +192,10 @@ export const L1_BRIDGES: BridgeProxyInfo[] = [
     ]),
     proxyAdminAddress: ADMIN_OF_LINEA_L1_TOKEN_BRIDGE,
   },
-  {
-    name: "L1 TokenBridge to Scroll",
-    address: SCROLL_L1_TOKEN_BRIDGE,
-    shortABI: JSON.stringify(proxyAdminABI),
-    functions: new Map<string, string>([
-      ["admin", "getProxyAdmin"],
-      ["implementation", "getProxyImplementation"],
-    ]),
-    proxyAdminAddress: ADMIN_OF_SCROLL_L1_TOKEN_BRIDGE,
-  },
 ];
 
-export const L1_BRIDGES_PROXY_EVENTS: EventOfNotice[] = L1_BRIDGES.map(
-  (proxyInfo: BridgeProxyInfo) => {
+export const PROXY_ADMIN_EVENTS: EventOfNotice[] = LIDO_PROXY_CONTRACTS.map(
+  (proxyInfo: LidoProxy) => {
     const eventsDesc: EventOfNotice[] = [
       {
         address: proxyInfo.address,
@@ -277,7 +250,7 @@ export const L1_BRIDGES_PROXY_EVENTS: EventOfNotice[] = L1_BRIDGES.map(
   },
 ).reduce((a, b) => [...a, ...b]);
 
-const ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
+export const THIRD_PARTY_PROXY_EVENTS = [
   {
     address: ARBITRUM_L1_GATEWAY_ROUTER, // Arbitrum One: L1 Gateway Router
     event: "event AdminChanged(address previousAdmin, address newAdmin)",
@@ -300,9 +273,6 @@ const ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-];
-
-const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
     address: OPTIMISM_L1_CROSS_DOMAIN_MESSENGER, // Optimism: Proxy OVM L1 Cross Domain Messenger
     event:
@@ -327,9 +297,6 @@ const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-];
-
-const BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
     address: BASE_L1_CROSS_DOMAIN_MESSENGER, // Base: Proxy OVM L1 Cross Domain Messenger
     event:
@@ -354,9 +321,6 @@ const BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-];
-
-const ZKSYNC_L1_DIAMOND_PROXY_EVENTS = [
   {
     address: ZKSYNC_L1_DIAMOND_PROXY, // ZkSync: DIAMOND proxy has changed
     event:
@@ -369,9 +333,6 @@ const ZKSYNC_L1_DIAMOND_PROXY_EVENTS = [
     severity: FindingSeverity.Medium,
     type: FindingType.Info,
   },
-];
-
-const MANTLE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
     address: MANTLE_L1_CROSS_DOMAIN_MESSENGER,
     event:
@@ -396,9 +357,6 @@ const MANTLE_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
-];
-
-const LINEA_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
     address: LINEA_L1_CROSS_DOMAIN_MESSENGER,
     event:
@@ -426,193 +384,13 @@ const LINEA_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
     event:
       "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
     alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
-    name: "🚨 Linea Native Bridge: L1 Cross Domain Messenger proxy admin changed",
+    name: "🚨 Linea Native Bridge: L1 Token Bridge proxy admin changed",
     description: (args: Result) =>
-      `Proxy admin of L1 Cross Domain Messenger ${LINEA_L1_CROSS_DOMAIN_MESSENGER} was changed` +
-      `\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
+      `Proxy admin for Linea: L1 Token Bridge was changed\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
 ];
-
-const SCROLL_L1_MESSENGER_PROXY_EVENTS = [
-  {
-    address: SCROLL_L1_MESSENGER,
-    event: "event AdminChanged(address previousAdmin, address newAdmin)",
-    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger proxy admin changed",
-    description: (args: Result) =>
-      `Proxy admin of Scroll L1 Messenger ${SCROLL_L1_MESSENGER} ` +
-      `changed\nfrom: ${args.previousAdmin}\nto: ${args.newAdmin}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_MESSENGER,
-    event: "event Upgraded(address indexed implementation)",
-    alertId: "THIRD-PARTY-PROXY-UPGRADED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger proxy upgraded",
-    description: (args: Result) =>
-      `Proxy of Scroll L1 Messenger ${SCROLL_L1_MESSENGER} ` +
-      `was upgraded to ${args.implementation}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_MESSENGER,
-    event: "event BeaconUpgraded(address indexed beacon)",
-    alertId: "THIRD-PARTY-PROXY-BEACON-UPGRADED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger proxy beacon upgraded",
-    description: (args: Result) =>
-      `Proxy beacon of Scroll L1 Messenger ${SCROLL_L1_MESSENGER} ` +
-      `was upgraded to ${args.implementation}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-];
-
-const SCROLL_L1_MESSENGER_EVENTS = [
-  {
-    address: SCROLL_L1_MESSENGER,
-    event:
-      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
-    alertId: "THIRD-PARTY-OWNER-CHANGED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger owner changed",
-    description: (args: Result) =>
-      `Owner of Scroll L1 Messenger ${SCROLL_L1_MESSENGER} changed` +
-      `\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_MESSENGER,
-    event: "event Initialized(uint8 version)",
-    alertId: "THIRD-PARTY-INITIALIZED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger (re-)initialized",
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    description: (args: Result) =>
-      `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} (re-)initialized`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_MESSENGER,
-    event: "event Paused(address account)",
-    alertId: "THIRD-PARTY-MESSENGER-PAUSED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger paused",
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    description: (args: Result) =>
-      `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} paused`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_MESSENGER,
-    event: "event Unpaused(address account)",
-    alertId: "THIRD-PARTY-MESSENGER-UNPAUSED",
-    name: "🚨 Scroll Native Bridge: L1 Messenger unpaused",
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    description: (args: Result) =>
-      `Scroll L1 Messenger ${SCROLL_L1_MESSENGER} unpaused`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  // There is also `event UpdateFeeVault(address _oldFeeVault, address _newFeeVault)`,
-  // but it is skipped as not significant enough
-];
-
-const SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
-  {
-    address: SCROLL_L1_GATEWAY_ROUTER,
-    event: "event AdminChanged(address previousAdmin, address newAdmin)",
-    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
-    name: "🚨 Scroll Native Bridge: L1 Gateway Router proxy admin changed",
-    description: (args: Result) =>
-      `Proxy admin of Scroll L1 Gateway Router ${SCROLL_L1_GATEWAY_ROUTER} ` +
-      `changed\nfrom: ${args.previousAdmin}\nto: ${args.newAdmin}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_GATEWAY_ROUTER,
-    event: "event Upgraded(address indexed implementation)",
-    alertId: "THIRD-PARTY-PROXY-UPGRADED",
-    name: "🚨 Scroll Native Bridge: L1 Gateway Router proxy upgraded",
-    description: (args: Result) =>
-      `Proxy of Scroll L1 Gateway Router ${SCROLL_L1_GATEWAY_ROUTER} ` +
-      `was upgraded to ${args.implementation}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_GATEWAY_ROUTER,
-    event: "event BeaconUpgraded(address indexed beacon)",
-    alertId: "THIRD-PARTY-PROXY-BEACON-UPGRADED",
-    name: "🚨 Scroll Native Bridge: L1 Gateway Router proxy beacon upgraded",
-    description: (args: Result) =>
-      `Proxy beacon of Scroll L1 Gateway Router ${SCROLL_L1_GATEWAY_ROUTER} ` +
-      `was upgraded to ${args.implementation}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-];
-
-const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
-  {
-    address: SCROLL_L1_GATEWAY_ROUTER,
-    event:
-      "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
-    alertId: "THIRD-PARTY-OWNER-CHANGED",
-    name: "🚨 Scroll Native Bridge: L1 Gateway Router owner changed",
-    description: (args: Result) =>
-      `Owner of Scroll L1 Gateway Router ${SCROLL_L1_GATEWAY_ROUTER} changed` +
-      `\nfrom: ${args.previousOwner}\nto: ${args.newOwner}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_GATEWAY_ROUTER,
-    event: "event Initialized(uint8 version)",
-    alertId: "THIRD-PARTY-INITIALIZED",
-    name: "🚨 Scroll Native Bridge: L1 Gateway Router (re-)initialized",
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    description: (args: Result) =>
-      `Scroll L1 Gateway Router ${SCROLL_L1_GATEWAY_ROUTER} (re-)initialized`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: SCROLL_L1_GATEWAY_ROUTER,
-    event:
-      "event SetERC20Gateway(address indexed token, address indexed oldGateway, address indexed newGateway)",
-    condition: (args: Result) => {
-      return formatAddress(args.token) === formatAddress(WSTETH_ADDRESS);
-    },
-    alertId: "THIRD-PARTY-ROUTER-CHANGED",
-    name: "🚨 Scroll Bridge: L1 Gateway for wstETH changed on router",
-    description: (args: Result) =>
-      `Scroll L1 Gateway for wstETH changed ` +
-      `\nfrom ${args.oldGateway}` +
-      `\nto ${args.newGateway}` +
-      `\non Gateway Router ${SCROLL_L1_GATEWAY_ROUTER}`,
-    severity: FindingSeverity.Critical,
-    type: FindingType.Info,
-    // Occurred in block 18318378 but than there were no Lido custom gateway contracts,
-    // thus it cannot be used in tests
-  },
-];
-
-export const THIRD_PARTY_PROXY_EVENTS = new Array()
-  .concat(ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS)
-  .concat(OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
-  .concat(BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
-  .concat(ZKSYNC_L1_DIAMOND_PROXY_EVENTS)
-  .concat(MANTLE_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
-  .concat(LINEA_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
-  .concat(SCROLL_L1_MESSENGER_PROXY_EVENTS)
-  .concat(SCROLL_L1_MESSENGER_EVENTS)
-  .concat(SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS)
-  .concat(SCROLL_L1_GATEWAY_ROUTER_EVENTS);
 
 export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
   (gw) => {
