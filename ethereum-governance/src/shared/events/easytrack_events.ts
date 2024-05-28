@@ -30,9 +30,9 @@ export const EASY_TRACK_EVENTS: EventOfNotice[] = [
     alertId: 'EASY-TRACK-ROLE-GRANTED',
     name: '🚨 EasyTrack: Role was granted on EasyTrack contract',
     description: (args: Result) =>
-      `Role ${args.role} was granted to ${etherscanAddress(args.account)} on EasyTrack contract by ${etherscanAddress(
-        args.sender,
-      )}`,
+      `Role ${args.role} was granted to ${etherscanAddress(
+        args.account,
+      )} on EasyTrack contract by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },
@@ -42,9 +42,9 @@ export const EASY_TRACK_EVENTS: EventOfNotice[] = [
     alertId: 'EASY-TRACK-ROLE-REVOKED',
     name: '🚨 EasyTrack: Role was revoked on EasyTrack contract',
     description: (args: Result) =>
-      `Role ${args.role} was revoked from ${etherscanAddress(args.account)} on EasyTrack contract by ${etherscanAddress(
-        args.sender,
-      )}`,
+      `Role ${args.role} was revoked from ${etherscanAddress(
+        args.account,
+      )} on EasyTrack contract by ${etherscanAddress(args.sender)}`,
     severity: FindingSeverity.High,
     type: FindingType.Info,
   },
@@ -128,9 +128,9 @@ export const EASY_TRACK_EVENTS: EventOfNotice[] = [
     alertId: 'EVM-SCRIPT-EXECUTOR-OWNERSHIP-TRANSFERRED',
     name: "🚨 EasyTrack: EVMScriptExecutor's ownership transferred",
     description: (args: Result) =>
-      `EVMScriptExecutor's ownership transferred from ${etherscanAddress(args.previousOwner)} to ${etherscanAddress(
-        args.newOwner,
-      )}`,
+      `EVMScriptExecutor's ownership transferred from ${etherscanAddress(
+        args.previousOwner,
+      )} to ${etherscanAddress(args.newOwner)}`,
     severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },

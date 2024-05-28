@@ -316,9 +316,7 @@ export class PoolBalanceSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ stETH:ETH price on Chainlink decreased',
-          description: `stETH:ETH price on Chainlink decreased to ${chainlinkStEthToEthPrice.right.toFixed(
-            4,
-          )}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
+          description: `stETH:ETH price on Chainlink decreased to ${chainlinkStEthToEthPrice.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
           alertId: 'STETH-CHAINLINK-PRICE-DECREASE',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -338,9 +336,7 @@ export class PoolBalanceSrv {
         out.push(
           Finding.fromObject({
             name: '🚨Super low stETH:ETH price on Chainlink',
-            description: `Current stETH:ETH price on Chainlink - ${chainlinkStEthToEthPrice.right.toFixed(
-              4,
-            )}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
+            description: `Current stETH:ETH price on Chainlink - ${chainlinkStEthToEthPrice.right.toFixed(4)}, [source](${CHAINLINK_STETH_ETH_PAGE})`,
             alertId: 'LOW-STETH-CHAINLINK-PEG',
             severity: FindingSeverity.High,
             type: FindingType.Degraded,

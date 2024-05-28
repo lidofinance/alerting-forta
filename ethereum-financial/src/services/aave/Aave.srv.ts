@@ -95,9 +95,7 @@ export class AaveSrv {
             description:
               `stETH.balanceOf(${this.aaveAstethAddress})` +
               `=${astEthBalance.right.div(GWEI_DECIMALS).toFixed(0)} ` +
-              `gwei differs from astETH.totalSupply = ${astEthTotalSupply.right
-                .div(GWEI_DECIMALS)
-                .toFixed(0)} gwei by ` +
+              `gwei differs from astETH.totalSupply = ${astEthTotalSupply.right.div(GWEI_DECIMALS).toFixed(0)} gwei by ` +
               `${difference.div(GWEI_DECIMALS).toFixed(0)} gwei.\n` +
               `NOTE: This difference occurred at block ` +
               `${blockEvent.number - 1}`,

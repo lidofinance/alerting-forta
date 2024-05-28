@@ -124,9 +124,7 @@ describe('ProxyWatcherSrv', () => {
     await expect(proxyWatcherSrv.handleProxyImplementations(blockEvent)).resolves.toMatchObject([
       {
         name: '🚨 Proxy implementation changed',
-        description: `Implementation of ${dataName} ([${lidoStethAddress}](https://etherscan.io/address/${lidoStethAddress})) changed from ${etherscanAddress(
-          '0x1234',
-        )} to ${etherscanAddress('0x5678')}`,
+        description: `Implementation of ${dataName} ([${lidoStethAddress}](https://etherscan.io/address/${lidoStethAddress})) changed from ${etherscanAddress('0x1234')} to ${etherscanAddress('0x5678')}`,
         alertId: 'PROXY-IMPL-CHANGED',
         severity: FindingSeverity.Critical,
       },

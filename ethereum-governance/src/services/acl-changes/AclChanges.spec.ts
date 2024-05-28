@@ -148,9 +148,7 @@ describe('AclChangesSrv', () => {
       true,
       {
         name: '🚨 Contract owner set to address not in whitelist',
-        description: `Deposit Security module contract (${etherscanAddress(
-          dsAddress,
-        )}) owner is set to contract address ${etherscanAddress(fakeAddress)}`,
+        description: `Deposit Security module contract (${etherscanAddress(dsAddress)}) owner is set to contract address ${etherscanAddress(fakeAddress)}`,
         alertId: 'SUSPICIOUS-CONTRACT-OWNER',
         type: FindingType.Suspicious,
         severity: FindingSeverity.High,
@@ -166,9 +164,7 @@ describe('AclChangesSrv', () => {
       false,
       {
         name: '🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨',
-        description: `Deposit Security module contract (${etherscanAddress(
-          dsAddress,
-        )}) owner is set to EOA address ${etherscanAddress(fakeAddress)}`,
+        description: `Deposit Security module contract (${etherscanAddress(dsAddress)}) owner is set to EOA address ${etherscanAddress(fakeAddress)}`,
         alertId: 'SUSPICIOUS-CONTRACT-OWNER',
         type: FindingType.Suspicious,
         severity: FindingSeverity.Critical,
