@@ -6,7 +6,7 @@ import { NetworkError } from '../utils/error'
 import { Logger } from 'winston'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
-import { WithdrawERC20Event } from '../generated/L2ERC20TokenBridge'
+import { WithdrawERC20Event } from '../generated/L2LidoGateway'
 import { IL2BridgeBalanceClient } from '../services/bridge_balance'
 import { ERC20Short as BridgedWstEthRunner, L2LidoGateway as ScrollL2BridgeRunner } from '../generated'
 
