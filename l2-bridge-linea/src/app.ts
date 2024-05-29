@@ -49,7 +49,7 @@ export class App {
       const drpcLineaProvider = new ethers.providers.JsonRpcProvider(LineaRpcURL, lineaNetworkID)
       const adr: Address = Address
 
-      const l2Bridge = TokenBridge__factory.connect(adr.LINEA_TOKEN_BRIDGE, drpcLineaProvider)
+      const l2Bridge = TokenBridge__factory.connect(adr.LINEA_L2_TOKEN_BRIDGE, drpcLineaProvider)
 
       const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.LINEA_WST_CUSTOM_BRIDGED_TOKEN, drpcLineaProvider)
 
@@ -85,7 +85,7 @@ export class App {
       const blockSrv: BlockClient = new BlockClient(lineaClient, logger)
       const proxyWorker: ProxyWatcher = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
-      const monitorWithdrawals = new MonitorWithdrawals(lineaClient, adr.LINEA_TOKEN_BRIDGE, logger)
+      const monitorWithdrawals = new MonitorWithdrawals(lineaClient, adr.LINEA_L2_TOKEN_BRIDGE, logger)
 
       const mainnet = 1
       const drpcUrl = 'https://eth.drpc.org/'
