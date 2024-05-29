@@ -9,8 +9,8 @@ import { dateTimeFormat, elapsedTime } from '../utils/time'
 import { getUniqueKey } from '../utils/finding.helpers'
 
 // 12 hours
-const HOURS_12 = 60 * 60 * 12
-const AVG_BLOCK_TIME_2SECONDS: number = 2 //s
+export const HOURS_12 = 60 * 60 * 12
+export const AVG_BLOCK_TIME_2SECONDS: number = 2 //s
 const ETH_DECIMALS = new BigNumber(10).pow(18)
 // 10k wstETH
 const MAX_WITHDRAWALS_10K_WstEth = 10_000

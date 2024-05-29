@@ -17,14 +17,7 @@ export function initialize(): Initialize {
   }
 
   return async function (): Promise<InitializeResponse | void> {
-    const app = await App.getInstance()
-
-    const token = await App.getJwt()
-    if (E.isLeft(token)) {
-      app.logger.error(token.left)
-
-      process.exit(1)
-    }
+    const app = App.getInstance()
 
     const latestL2Block = await app.baseClient.getLatestL2Block()
     if (E.isLeft(latestL2Block)) {
@@ -84,7 +77,7 @@ export const handleBlock = (): HandleBlock => {
     }
 
     isHandleBLockRunning = true
-    const app = await App.getInstance()
+    const app = App.getInstance()
 
     const findings: Finding[] = []
     const findingsAsync = await app.findingsRW.read()
@@ -148,7 +141,7 @@ export const handleBlock = (): HandleBlock => {
 
 export const healthCheck = (): HealthCheck => {
   return async function (): Promise<string[] | void> {
-    const app = await App.getInstance()
+    const app = App.getInstance()
 
     if (!app.healthChecker.isHealth()) {
       return ['There is too much network errors']

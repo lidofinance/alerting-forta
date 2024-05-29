@@ -1,21 +1,29 @@
 import { App } from './app'
 import * as E from 'fp-ts/Either'
 import { Finding } from 'forta-agent'
+import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 
 describe('agent-base functional test', () => {
-  test('should process app on 13_022_644 and 13_022_720 (25 l2 blocks)', async () => {
-    const app = await App.getInstance()
+  test('should process app on latest 25 l2 blocks', async () => {
+    const l1rpcURL = 'https://eth.drpc.org'
+    const app = App.getInstance()
 
-    const l1Block = 19_632_237
-    const l2StartBlock = 13_022_720
-    const l2EndBlock = 13_022_745
-    const l2BlocksDto = await app.baseClient.fetchL2Blocks(l2StartBlock, l2EndBlock)
+    const ehtProvider = new ethers.providers.JsonRpcProvider(l1rpcURL)
+    const l1Block = await ehtProvider.getBlockNumber()
+
+    const l2EndBlock = await app.baseClient.getLatestL2Block()
+    if (E.isLeft(l2EndBlock)) {
+      throw l2EndBlock
+    }
+
+    const l2StartBlock = l2EndBlock.right.number - 25
+    const l2BlocksDto = await app.baseClient.fetchL2Blocks(l2StartBlock, l2EndBlock.right.number)
 
     for (const proxyWatcher of app.proxyWatchers) {
       const err = await proxyWatcher.initialize(l2StartBlock)
       if (err !== null) {
-        throw null
+        throw err
       }
     }
 

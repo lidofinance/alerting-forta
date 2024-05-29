@@ -185,7 +185,7 @@ export class BaseClient implements IBaseClient, IMonitorWithdrawalsClient, IL2Br
       batchRequests.push(i)
     }
 
-    const chunkSize = 125
+    const chunkSize = 10_000
     const out: WithdrawalInitiatedEvent[] = []
 
     const batchPromises: Promise<WithdrawalInitiatedEvent[]>[] = []
