@@ -10,6 +10,7 @@ describe('Steth.srv functional tests', () => {
   const drpcURL = `https://eth.drpc.org`
   const mainnet = 1
   const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+  const quickNode = 'https://docs-demo.quiknode.pro'
 
   test(
     'LOW-STAKING-LIMIT',
@@ -82,7 +83,7 @@ describe('Steth.srv functional tests', () => {
     async () => {
       const app = await App.getInstance()
       const txHash = '0x11a48020ae69cf08bd063f1fbc8ecf65bd057015aaa991bf507dbc598aadb68e'
-
+      const ethProvider = new ethers.providers.JsonRpcProvider(quickNode, mainnet)
       const trx = await ethProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
@@ -139,6 +140,7 @@ describe('Steth.srv functional tests', () => {
     'Insurance fund',
     async () => {
       const app = await App.getInstance()
+      const ethProvider = new ethers.providers.JsonRpcProvider(quickNode, mainnet)
       const txHash = '0x91c7c2f33faf3b5fb097138c1d49c1d4e83f99e1c3b346b3cad35a5928c03b3a'
 
       const trx = await ethProvider.getTransaction(txHash)
