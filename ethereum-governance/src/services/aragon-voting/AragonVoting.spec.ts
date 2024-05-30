@@ -15,7 +15,7 @@ describe('AragonVotingSrv', () => {
   let txEvent: TransactionEvent
 
   beforeEach(() => {
-    logger = { info: jest.fn() } as unknown as Logger
+    logger = { info: jest.fn(), debug: jest.fn() } as unknown as Logger
     ethProvider = { getStartedVotes: jest.fn(), getVote: jest.fn() } as unknown as IAragonVotingClient
     jest.spyOn(ethProvider, 'getStartedVotes').mockResolvedValue(E.right(new Map<number, IVoteInfo>()))
     aragonVotingSrv = new AragonVotingSrv(logger, ethProvider)
