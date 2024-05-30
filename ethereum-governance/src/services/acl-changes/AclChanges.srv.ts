@@ -80,7 +80,6 @@ export class AclChangesSrv {
     ])
 
     findings.push(...rolesMembersFindings, ...ownerChangeFindings)
-
     this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
@@ -96,7 +95,7 @@ export class AclChangesSrv {
 
     findings.push(...setPermissionFindings, ...changePermissionManager)
 
-    this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleTransaction.name, start))
+    this.logger.debug(elapsedTime(AclChangesSrv.name + '.' + this.handleTransaction.name, start))
 
     return findings
   }
