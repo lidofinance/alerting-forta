@@ -1,9 +1,20 @@
 import { keccak256 } from 'forta-agent'
 import BigNumber from 'bignumber.js'
+import { BigNumberish, utils } from 'ethers'
 
-export function etherscanAddress(address: string): string {
-  const subpath = process.env.FORTA_AGENT_RUN_TIER == 'testnet' ? 'goerli.' : ''
-  return `[${address}](https://${subpath}etherscan.io/address/${address})`
+function getSubpathForNetwork(): string {
+  const runTier = process.env.FORTA_AGENT_RUN_TIER
+  if (runTier === 'testnet') {
+    return `goerli.`
+  }
+  if (runTier && runTier !== 'mainnet') {
+    return `${runTier}.`
+  }
+  return ''
+}
+
+export function etherscanAddress(address: string, text = address): string {
+  return `[${text}](https://${getSubpathForNetwork()}etherscan.io/address/${address})`
 }
 
 export const getMotionType = (types: Map<string, string>, evmScriptFactory: string) => {
@@ -37,3 +48,16 @@ export function roleByName(name: string): INamedRole {
 export function formatAmount(amount: unknown, decimals: number, dp: number = 2): string {
   return new BigNumber(String(amount)).div(new BigNumber(10).pow(decimals)).toFixed(dp)
 }
+
+export const formatToken = (amount: BigNumberish, decimals: BigNumberish): string => {
+  const amountStr = utils.formatUnits(amount, decimals)
+
+  const formatter = new Intl.NumberFormat('en', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  })
+
+  return formatter.format(parseFloat(amountStr))
+}
+
+export const formatEth = (amount: BigNumberish): string => formatToken(amount, 18)

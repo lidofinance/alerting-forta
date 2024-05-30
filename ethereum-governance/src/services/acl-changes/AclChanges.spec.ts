@@ -36,14 +36,17 @@ describe('AclChangesSrv', () => {
   const roleMembersMap = new Map<string, string[]>()
   ACL_ENUMERABLE_CONTRACTS.forEach((contract, address) => {
     Array.from(contract.roles.entries()).forEach(([role, members]) => {
-      roleMembersMap.set(role.hash + address, members)
+      roleMembersMap.set(
+        role.hash + address,
+        members.map((member) => member.toLowerCase()),
+      )
     })
   })
   const fakeAddress = '0x123'
 
   beforeEach(() => {
     whitelistedOwner = WHITELISTED_OWNERS[0]
-    logger = { info: jest.fn() } as unknown as Logger
+    logger = { info: jest.fn(), debug: jest.fn() } as unknown as Logger
     ethProvider = {
       getRoleMembers: jest.fn(),
       getContractOwner: jest.fn(),

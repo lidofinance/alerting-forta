@@ -22,6 +22,9 @@ export const STETH_MAX_PRECISION = new BigNumber(4)
 export const BLOCK_WINDOW = 5 // about 1 min (one block is 12 sec)
 export const BLOCK_TO_WATCH = 600 // about 120 min (one block is 12 sec)
 export const BLOCK_TO_WATCH_TIME = 12 * BLOCK_TO_WATCH
+
+export const STONKS_TOP_UP_ALLOWED_RECIPIENTS_ADDRESS = '0x6e04aed774b7c89bb43721acdd7d03c872a51b69'
+
 export const STONKS = [
   {
     address: STONKS_STETH_DAI_ADDRESS,
