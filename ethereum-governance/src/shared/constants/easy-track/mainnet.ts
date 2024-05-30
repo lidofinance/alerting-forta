@@ -4,6 +4,7 @@ import {
   EVM_SCRIPT_EXECUTOR_ADDRESS as evmExecutorAddress,
   REWARD_PROGRAMS_REGISTRY_ADDRESS as rewardProgramRegistryAddress,
 } from 'constants/common'
+import { STONKS_TOP_UP_ALLOWED_RECIPIENTS_ADDRESS } from 'constants/stonks'
 
 export const INCREASE_STAKING_LIMIT_ADDRESS = increaseStakingLimitAddress
 export const EVM_SCRIPT_EXECUTOR_ADDRESS = evmExecutorAddress
@@ -30,3 +31,5 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0x22010d1747cafc370b1f1fbba61022a313c5693b', 'Remove recipient (stETH reWARDS)'],
   ['0x1f2b79fe297b7098875930bba6dd17068103897e', 'Top up recipients (stETH reWARDS)'],
 ])
+
+export const EASY_TRACK_STONKS_CONTRACTS = [STONKS_TOP_UP_ALLOWED_RECIPIENTS_ADDRESS]
