@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-acl-changes e2e tests should process tx with permission change 1`] = `undefined`;
+
+exports[`agent-acl-changes e2e tests should process tx with permission manager changed 1`] = `undefined`;
