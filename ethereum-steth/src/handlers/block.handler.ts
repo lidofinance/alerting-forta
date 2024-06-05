@@ -74,6 +74,18 @@ export class BlockHandler {
       const WithdrawalStat = await this.WithdrawalsSrv.getStatistic()
       const stat: string = E.isLeft(WithdrawalStat) ? WithdrawalStat.left.message : WithdrawalStat.right
 
+      if (blockDtoEvent.number % 5 === 0) {
+        const f: Finding = new Finding()
+        f.setName(`DevOps findings`)
+        f.setDescription(`Some text for description`)
+        f.setAlertid('LIDO-DevOPS-ID')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
+
+        findings.push(f)
+      }
+
       findings.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
       this.healthChecker.check(findings)
