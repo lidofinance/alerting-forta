@@ -1,4 +1,5 @@
 import { Finding, TransactionEvent } from "forta-agent";
+import { formatAddress } from "forta-agent/dist/cli/utils";
 import { L1_BRIDGE_EVENTS } from "./constants";
 
 export const name = "BridgeWatcher";
@@ -20,7 +21,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 
 function handleL1BridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
   L1_BRIDGE_EVENTS.forEach((eventInfo) => {
-    if (eventInfo.address in txEvent.addresses) {
+    if (formatAddress(eventInfo.address) in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
         findings.push(

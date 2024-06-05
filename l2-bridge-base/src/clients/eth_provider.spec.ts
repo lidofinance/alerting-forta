@@ -5,7 +5,7 @@ import BigNumber from 'bignumber.js'
 
 describe('eth provider tests', () => {
   test('getBalanceByBlockHash is 10786.9163900726000737487 wsETH', async () => {
-    const app = await App.getInstance()
+    const app = App.getInstance()
     const adr = Address
 
     const blockNumber = 19_619_102

@@ -1,4 +1,5 @@
-import { ethers, fetchJwt, getJsonRpcUrl } from 'forta-agent'
+import { getJsonRpcUrl } from 'forta-agent'
+import { ethers } from 'ethers'
 import { BaseClient } from './clients/base_client'
 import { EventWatcher } from './services/event_watcher'
 import { getL2BridgeEvents } from './utils/events/bridge_events'
@@ -14,8 +15,6 @@ import { FindingsRW } from './utils/mutex'
 import * as Winston from 'winston'
 import { Logger } from 'winston'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { verifyJwt } from 'forta-agent/dist/sdk/jwt'
-import * as E from 'fp-ts/Either'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { ETHProvider } from './clients/eth_provider_client'
 
@@ -39,29 +38,7 @@ export class App {
 
   private constructor() {}
 
-  public static async getJwt(): Promise<E.Either<Error, string>> {
-    let token: string
-    try {
-      token = await fetchJwt({})
-    } catch (e) {
-      return E.left(new Error(`Could not fetch jwt. Cause ${e}`))
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        const isTokenOk = await verifyJwt(token)
-        if (!isTokenOk) {
-          return E.left(new Error(`Token verification failed`))
-        }
-      } catch (e) {
-        return E.left(new Error(`Token verification failed`))
-      }
-    }
-
-    return E.right(token)
-  }
-
-  public static async getInstance(): Promise<Container> {
+  public static getInstance(): Container {
     if (!App.instance) {
       const logger: Winston.Logger = Winston.createLogger({
         format: Winston.format.simple(),

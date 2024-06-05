@@ -889,9 +889,10 @@ describe('StethOperationSrv', () => {
 
       const expectedShareRateErrFinding = {
         alertId: 'LIDO-INVARIANT-ERROR',
-        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
-Curr.shareRate(19061449) = 1.3098009112103954e+27 
-Diff: 1.5490045560519778e+26`,
+        description:
+          `Prev.shareRate(19061448) = 1.1549004556051977e+27 \n` +
+          `Curr.shareRate(19061449) = 1.3098009112103954e+27 \n` +
+          `Diff: 1.5490045560519778e+26`,
         name: '🚨🚨🚨 Share rate unexpected has changed',
         severity: Finding.Severity.CRITICAL,
         type: Finding.FindingType.SUSPICIOUS,
@@ -936,9 +937,10 @@ Diff: 1.5490045560519778e+26`,
 
       const expectedShareRateErrFinding = {
         alertId: 'LIDO-INVARIANT-ERROR',
-        description: `Prev.shareRate(19061448) = 1.1549004556051977e+27 
-Curr.shareRate(19061449) = 1e+27 
-Diff: -1.5490045560519778e+26`,
+        description:
+          `Prev.shareRate(19061448) = 1.1549004556051977e+27 \n` +
+          `Curr.shareRate(19061449) = 1e+27 \n` +
+          `Diff: -1.5490045560519778e+26`,
         name: '🚨🚨🚨 Share rate unexpected has changed',
         severity: Finding.Severity.CRITICAL,
         type: Finding.FindingType.SUSPICIOUS,
