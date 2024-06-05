@@ -88,7 +88,7 @@ export const LINEA_L1_TOKEN_BRIDGE =
   "0x051f1d88f0af5763fb888ec4378b4d8b29ea3319";
 
 export const ADMIN_OF_LINEA_L1_TOKEN_BRIDGE =
-  "0x5b0bb17755fba06028530682e2fd5bc373931768";
+  "0xf5058616517c068c7b8c7ebc69ff636ade9066d6";
 
 export const SCROLL_L1_TOKEN_BRIDGE =
   "0x6625c6332c9f91f2d27c304e729b86db87a3f504";
@@ -240,7 +240,7 @@ export const L1_BRIDGES_PROXY_EVENTS: EventOfNotice[] = L1_BRIDGES.map(
         address: proxyInfo.address,
         event: "event AdminChanged(address previousAdmin, address newAdmin)",
         alertId: "PROXY-ADMIN-CHANGED",
-        name: `🚨 ${proxyInfo.name}: Proxy admin changed`,
+        name: `🚨🚨🚨 ${proxyInfo.name}: Proxy admin changed`,
         description: (args: Result) =>
           `Proxy admin for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
@@ -252,7 +252,7 @@ export const L1_BRIDGES_PROXY_EVENTS: EventOfNotice[] = L1_BRIDGES.map(
         address: proxyInfo.address,
         event: "event Upgraded(address indexed implementation)",
         alertId: "PROXY-UPGRADED",
-        name: `🚨 ${proxyInfo.name}: Proxy upgraded`,
+        name: `🚨🚨🚨 ${proxyInfo.name}: Proxy upgraded`,
         description: (args: Result) =>
           `Proxy for ${proxyInfo.name}(${proxyInfo.address}) ` +
           `was updated to ${args.implementation}` +
