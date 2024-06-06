@@ -17,12 +17,12 @@ const gitStatusOutput = childProcess
 const commitHashShort = commitHash.substr(0, 7);
 const commitMsgShort = commitMsg.split("\n")[0];
 const isWdClean = gitStatusOutput === "";
-const commitHashSuffix = isWdClean ? "" : " [dirty]";
+const commitHashSuffux = isWdClean ? "" : " [dirty]";
 
 const version = {
-  desc: `${commitHashShort}${commitHashSuffix} (${commitMsgShort})`,
-  commitHash: commitHash + commitHashSuffix,
-  commitHashShort: commitHashShort + commitHashSuffix,
+  desc: `${commitHashShort}${commitHashSuffux} (${commitMsgShort})`,
+  commitHash: commitHash + commitHashSuffux,
+  commitHashShort: commitHashShort + commitHashSuffux,
   commitMsg,
   commitMsgShort,
   isWdClean,
