@@ -5,7 +5,10 @@ import { WithdrawERC20Event } from './generated/L2LidoGateway'
 
 export type RoleHashToName = Map<string, string>
 export type L2BridgeWithdrawalEvent = WithdrawERC20Event
-
+export type ContractInfo = {
+  name: string
+  address: string
+}
 
 export const Constants = {
   L2_NAME: 'Scroll',
@@ -31,6 +34,7 @@ export const Constants = {
     ['0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c', 'WITHDRAWALS_DISABLER_ROLE'],
     ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
   ]),
+  withdrawalInitiatedEvent: 'event WithdrawERC20(address indexed l1Token, address indexed l2Token, address indexed from, uint256 amount, bytes data)',
 }
 
 
@@ -123,6 +127,192 @@ export function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: Ro
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: 'E42BC7A0-0715-4D55-AB9D-0A041F639B20',
+    },
+  ]
+}
+
+
+export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
+  return [
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event:
+        'event EthereumGovernanceExecutorUpdate(address oldEthereumGovernanceExecutor, address newEthereumGovernanceExecutor)',
+      alertId: 'GOV-BRIDGE-EXEC-UPDATED',
+      name: '🚨 Scroll Gov Bridge: Ethereum Governance Executor Updated',
+      description: (args: Result) =>
+        `Ethereum Governance Executor was updated from ` +
+        `${args.oldEthereumGovernanceExecutor} to ${args.newEthereumGovernanceExecutor}`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '73EE62B0-E0CF-4527-8E44-566D72667F22',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event GuardianUpdate(address oldGuardian, address newGuardian)',
+      alertId: 'GOV-BRIDGE-GUARDIAN-UPDATED',
+      name: '🚨 Scroll Gov Bridge: Guardian Updated',
+      description: (args: Result) => `Guardian was updated from ` + `${args.oldGuardian} to ${args.newGuardian}`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '8C586373-5040-4BDA-8EF8-16CBE582D6B0',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event DelayUpdate(uint256 oldDelay, uint256 newDelay)',
+      alertId: 'GOV-BRIDGE-DELAY-UPDATED',
+      name: '⚠️ Scroll Gov Bridge: Delay Updated',
+      description: (args: Result) => `Delay was updated from ` + `${args.oldDelay} to ${args.newDelay}`,
+      severity: FindingSeverity.Medium,
+      type: FindingType.Info,
+      uniqueKey: '073F04A8-B232-4671-A34E-D42A3729FE34',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event GracePeriodUpdate(uint256 oldGracePeriod, uint256 newGracePeriod)',
+      alertId: 'GOV-BRIDGE-GRACE-PERIOD-UPDATED',
+      name: '⚠️ Scroll Gov Bridge: Grace Period Updated',
+      description: (args: Result) =>
+        `Grace Period was updated from ` + `${args.oldGracePeriod} to ${args.newGracePeriod}`,
+      severity: FindingSeverity.Medium,
+      type: FindingType.Info,
+      uniqueKey: '26574C78-EBD1-42D3-A9C7-3E4A2976FCB7',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event MinimumDelayUpdate(uint256 oldMinimumDelay, uint256 newMinimumDelay)',
+      alertId: 'GOV-BRIDGE-MIN-DELAY-UPDATED',
+      name: '⚠️ Scroll Gov Bridge: Min Delay Updated',
+      description: (args: Result) =>
+        `Min Delay was updated from ` + `${args.oldMinimumDelay} to ${args.newMinimumDelay}`,
+      severity: FindingSeverity.Medium,
+      type: FindingType.Info,
+      uniqueKey: '35391E05-CBB4-4013-ACA1-A75F8C5D6991',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event MaximumDelayUpdate(uint256 oldMaximumDelay, uint256 newMaximumDelay)',
+      alertId: 'GOV-BRIDGE-MAX-DELAY-UPDATED',
+      name: '⚠️ Scroll Gov Bridge: Max Delay Updated',
+      description: (args: Result) =>
+        `Max Delay was updated from ` + `${args.oldMaximumDelay} to ${args.newMaximumDelay}`,
+      severity: FindingSeverity.Medium,
+      type: FindingType.Info,
+      uniqueKey: '003CCEDE-551A-4310-86A7-F8EC22135C45',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event:
+        'event ActionsSetQueued(uint256 indexed id, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, bool[] withDelegatecalls, uint256 executionTime)',
+      alertId: 'GOV-BRIDGE-ACTION-SET-QUEUED',
+      name: 'ℹ️ Scroll Gov Bridge: Action set queued',
+      description: (args: Result) => `Action set ${args.id} was queued`,
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      uniqueKey: '84D309D8-AB13-4B41-A9CE-8DE4AB77E77A',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event ActionsSetExecuted(uint256 indexed id, address indexed initiatorExecution, bytes[] returnedData)',
+      alertId: 'GOV-BRIDGE-ACTION-SET-EXECUTED',
+      name: 'ℹ️ Scroll Gov Bridge: Action set executed',
+      description: (args: Result) => `Action set ${args.id} was executed`,
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      uniqueKey: '31FE6EEB-4619-4579-9C0B-58EECC3D7724',
+    },
+    {
+      address: GOV_BRIDGE_ADDRESS,
+      event: 'event ActionsSetCanceled(uint256 indexed id)',
+      alertId: 'GOV-BRIDGE-ACTION-SET-CANCELED',
+      name: 'ℹ️ Scroll Gov Bridge: Action set canceled',
+      description: (args: Result) => `Action set ${args.id} was canceled`,
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      uniqueKey: '76022839-385E-4AD7-85E9-3739C1CACA09',
+    },
+  ]
+}
+
+export function getProxyAdminEvents(l2WstethContract: ContractInfo, l2GatewayContract: ContractInfo): EventOfNotice[] {
+  return [
+    {
+      address: l2WstethContract.address,
+      event: 'event AdminChanged(address previousAdmin, address newAdmin)',
+      alertId: 'PROXY-ADMIN-CHANGED',
+      name: '🚨 Scroll: Proxy admin changed',
+      description: (args: Result) =>
+        `Proxy admin for ${l2WstethContract.name}(${l2WstethContract.address}) ` +
+        `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '18BA44FB-E5AC-4F7D-A556-3B49D9381B0C',
+    },
+    {
+      address: l2WstethContract.address,
+      event: 'event Upgraded(address indexed implementation)',
+      alertId: 'PROXY-UPGRADED',
+      name: '🚨 Scroll: Proxy upgraded',
+      description: (args: Result) =>
+        `Proxy for ${l2WstethContract.name}(${l2WstethContract.address}) ` +
+        `was updated to ${args.implementation}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '6D0FC28D-0D3E-41D3-8F9A-2A52AFDA7543',
+    },
+    {
+      address: l2WstethContract.address,
+      event: 'event BeaconUpgraded(address indexed beacon)',
+      alertId: 'PROXY-BEACON-UPGRADED',
+      name: '🚨 Scroll: Proxy beacon upgraded',
+      description: (args: Result) =>
+        `Proxy for ${l2WstethContract.name}(${l2WstethContract.address}) ` +
+        `beacon was updated to ${args.beacon}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: '913345D0-B591-4699-9E5B-384C2640A9C3',
+    },
+    {
+      address: l2GatewayContract.address,
+      event: 'event AdminChanged(address previousAdmin, address newAdmin)',
+      alertId: 'PROXY-ADMIN-CHANGED',
+      name: '🚨 Scroll: Proxy admin changed',
+      description: (args: Result) =>
+        `Proxy admin for ${l2GatewayContract.name}(${l2GatewayContract.address}) ` +
+        `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: 'DE3F6E46-984B-435F-B88C-E5198386CCF6',
+    },
+    {
+      address: l2GatewayContract.address,
+      event: 'event Upgraded(address indexed implementation)',
+      alertId: 'PROXY-UPGRADED',
+      name: '🚨 Scroll: Proxy upgraded',
+      description: (args: Result) =>
+        `Proxy for ${l2GatewayContract.name}(${l2GatewayContract.address}) ` +
+        `was updated to ${args.implementation}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: 'CFA25A7F-69C4-45BE-8CAE-884EE8FEF5CA',
+    },
+    {
+      address: l2GatewayContract.address,
+      event: 'event BeaconUpgraded(address indexed beacon)',
+      alertId: 'PROXY-BEACON-UPGRADED',
+      name: '🚨 Scroll: Proxy beacon upgraded',
+      description: (args: Result) =>
+        `Proxy for ${l2GatewayContract.name}(${l2GatewayContract.address}) ` +
+        `beacon was updated to ${args.beacon}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.High,
+      type: FindingType.Info,
+      uniqueKey: 'B7193990-458E-4F41-ADD9-82848D235F5B',
     },
   ]
 }

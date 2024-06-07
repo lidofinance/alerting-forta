@@ -7,20 +7,19 @@ import { Logger } from 'winston'
 import { WithdrawalRecord } from '../entity/blockDto'
 import { Event } from '@ethersproject/contracts'
 import BigNumber from 'bignumber.js'
-// import { WithdrawERC20Event } from '../generated/L2LidoGateway'
 import { IL2BridgeBalanceClient } from '../services/bridge_balance'
-import { ERC20Short as BridgedWstEthRunner, /*L2LidoGateway as ScrollL2BridgeRunner */ } from '../generated'
+import { ERC20Short as BridgedWstEthRunner } from '../generated'
 
-// export abstract class IMonitorWithdrawalsClient {
-//   public abstract getWithdrawalEvents(
-//     fromBlockNumber: number,
-//     toBlockNumber: number,
-//   ): Promise<E.Either<NetworkError, WithdrawERC20Event[]>>
+export abstract class IMonitorWithdrawalsClient<L2BridgeWithdrawalEvent extends Event> {
+  public abstract getWithdrawalEvents(
+    fromBlockNumber: number,
+    toBlockNumber: number,
+  ): Promise<E.Either<NetworkError, L2BridgeWithdrawalEvent[]>>
 
-//   public abstract getWithdrawalRecords(
-//     withdrawalEvents: WithdrawERC20Event[],
-//   ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
-// }
+  public abstract getWithdrawalRecords(
+    withdrawalEvents: L2BridgeWithdrawalEvent[],
+  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
+}
 
 export abstract class IL2Client {
   public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
@@ -30,23 +29,20 @@ export abstract class IL2Client {
   public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
 }
 
-export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Client, /*IMonitorWithdrawalsClient,*/ IL2BridgeBalanceClient {
+export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Client, IMonitorWithdrawalsClient<L2BridgeWithdrawalEvent>, IL2BridgeBalanceClient {
   private readonly logger: Logger
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
-  // private readonly scrollL2BridgeRunner: ScrollL2BridgeRunner
   private readonly withdrawalEventsFetcher: (fromBlockNumber: number, toBlockNumber: number) => Promise<L2BridgeWithdrawalEvent[]>
   private readonly bridgedWstEthRunner: BridgedWstEthRunner
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     logger: Logger,
-    // scrollL2BridgeRunner: ScrollL2BridgeRunner,
     withdrawalEventsFetcher: (fromBlockNumber: number, toBlockNumber: number) => Promise<L2BridgeWithdrawalEvent[]>,
     bridgedWstEthRunner: BridgedWstEthRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.logger = logger
-    // this.scrollL2BridgeRunner = scrollL2BridgeRunner
     this.withdrawalEventsFetcher = withdrawalEventsFetcher
     this.bridgedWstEthRunner = bridgedWstEthRunner
   }
@@ -180,11 +176,6 @@ export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Clien
 
         async (): Promise<L2BridgeWithdrawalEvent[]> => {
           return await this.withdrawalEventsFetcher(fromBlockNumber, toBlockNumber)
-          //  this.scrollL2BridgeRunner.queryFilter(
-          //   this.scrollL2BridgeRunner.filters.WithdrawERC20(),
-          //   fromBlockNumber,
-          //   toBlockNumber,
-          // )
         },
         { delay: 500, maxTry: 5 },
       )

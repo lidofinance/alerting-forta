@@ -9,18 +9,16 @@ import BigNumber from 'bignumber.js'
 
 import { L2Client } from '../../common/clients/l2_client'
 import { EventWatcher } from '../../common/services/event_watcher'
-// import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
 // import { ProxyContractClient } from './clients/proxy_contract_client'
 import { L2LidoGateway__factory } from './generated'
 import { ERC20Short__factory } from '../../common/generated'
 import { L2BlockClient } from '../../common/clients/l2_block_client'
 // import { ProxyWatcher } from './services/proxy_watcher'
-// import { MonitorWithdrawals } from './services/monitor_withdrawals'
+import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
 import { DataRW } from '../../common/utils/mutex'
 import * as Winston from 'winston'
-// import { getGovEvents } from './utils/events/gov_events'
 import { MAINNET_CHAIN_ID, DRPC_URL } from '../../common/utils/constants'
-import { Constants, getBridgeEvents, L2BridgeWithdrawalEvent } from './constants'
+import { Constants, getBridgeEvents, getGovEvents, getProxyAdminEvents, L2BridgeWithdrawalEvent } from './constants'
 import { Logger } from 'winston'
 import { ETHProvider } from '../../common/clients/eth_provider_client'
 import { BridgeBalanceSrv } from '../../common/services/bridge_balance'
@@ -31,12 +29,12 @@ import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
 export type Container = {
   l2Client: L2Client<L2BridgeWithdrawalEvent>
   // proxyWatcher: ProxyWatcher
-  // monitorWithdrawals: MonitorWithdrawals
+  monitorWithdrawals: MonitorWithdrawals<L2BridgeWithdrawalEvent>
   blockClient: L2BlockClient
   bridgeWatcher: EventWatcher
   bridgeBalanceSrv: BridgeBalanceSrv
-  // govWatcher: EventWatcher
-  // proxyEventWatcher: EventWatcher
+  govWatcher: EventWatcher
+  proxyEventWatcher: EventWatcher
   findingsRW: DataRW<Finding>
   logger: Logger
   // healthChecker: HealthChecker
@@ -66,7 +64,6 @@ export class App {
             toBlockNumber,
           )
       }
-
       const l2Client = new L2Client(nodeClient, logger, withdrawalEventsFetcher, bridgedWstethRunner)
 
       const bridgeEventWatcher = new EventWatcher(
@@ -74,12 +71,12 @@ export class App {
         getBridgeEvents(Constants.L2_ERC20_TOKEN_GATEWAY.address, Constants.RolesMap),
         logger,
       )
-      // const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(Constants.GOV_BRIDGE_ADDRESS), logger)
-      // const proxyEventWatcher = new EventWatcher(
-      //   'ProxyEventWatcher',
-      //   getProxyAdminEvents(Constants.L2_WSTETH_BRIDGED, Constants.L2_ERC20_TOKEN_GATEWAY),
-      //   logger,
-      // )
+      const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(Constants.GOV_BRIDGE_ADDRESS), logger)
+      const proxyEventWatcher = new EventWatcher(
+        'ProxyEventWatcher',
+        getProxyAdminEvents(Constants.L2_WSTETH_BRIDGED, Constants.L2_ERC20_TOKEN_GATEWAY),
+        logger,
+      )
 
       // const LIDO_PROXY_CONTRACTS: ProxyContractClient[] = [
       //   new ProxyContractClient(
@@ -97,7 +94,8 @@ export class App {
       const blockSrv = new L2BlockClient(l2Client, logger)
       // const proxyWorker = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
-      // const monitorWithdrawals = new MonitorWithdrawals(l2Client, Constants.L2_ERC20_TOKEN_GATEWAY.address, logger)
+      const monitorWithdrawals = new MonitorWithdrawals<L2BridgeWithdrawalEvent>(
+        l2Client, Constants.L2_ERC20_TOKEN_GATEWAY.address, logger, Constants.withdrawalInitiatedEvent, Constants.SCROLL_APPROX_BLOCK_TIME_3_SECONDS)
 
 
       const ethProvider = new ethers.providers.FallbackProvider([
@@ -112,12 +110,12 @@ export class App {
       App.instance = {
         l2Client: l2Client,
         // proxyWatcher: proxyWorker,
-        // monitorWithdrawals: monitorWithdrawals,
+        monitorWithdrawals: monitorWithdrawals,
         blockClient: blockSrv,
         bridgeWatcher: bridgeEventWatcher,
         bridgeBalanceSrv: bridgeBalanceSrv,
-        // govWatcher: govEventWatcher,
-        // proxyEventWatcher: proxyEventWatcher,
+        govWatcher: govEventWatcher,
+        proxyEventWatcher: proxyEventWatcher,
         findingsRW: new DataRW<Finding>([]),
         logger: logger,
         // healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
@@ -154,21 +152,20 @@ export function initialize(): Initialize {
     //   process.exit(1)
     // }
 
-    // const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestL2Block.right.number)
-    // if (E.isLeft(monitorWithdrawalsInitResp)) {
-    //   app.logger.error(monitorWithdrawalsInitResp.left)
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestL2Block.right.number)
+    if (E.isLeft(monitorWithdrawalsInitResp)) {
+      app.logger.error(monitorWithdrawalsInitResp.left)
 
-    //   process.exit(1)
-    // }
+      process.exit(1)
+    }
 
     // metadata[`${app.proxyWatcher.getName()}.lastAdmins`] = agentMeta.right.lastAdmins
     // metadata[`${app.proxyWatcher.getName()}.lastImpls`] = agentMeta.right.lastImpls
     // metadata[`${app.monitorWithdrawals.getName()}.currentWithdrawals`] =
     //   monitorWithdrawalsInitResp.right.currentWithdrawals
 
-    // const agents: string[] = [app.proxyWatcher.getName(), app.monitorWithdrawals.getName()]
-    // metadata.agents = '[' + agents.toString() + ']'
-    metadata.agents = '[' + ']'
+    const agents: string[] = [/*app.proxyWatcher.getName(),*/ app.monitorWithdrawals.getName()]
+    metadata.agents = '[' + agents.toString() + ']'
 
     await app.findingsRW.write([
       Finding.fromObject({
@@ -220,9 +217,9 @@ export const handleBlock = (): HandleBlock => {
     }
 
     const bridgeEventFindings = app.bridgeWatcher.handleLogs(logs.right)
-    // const govEventFindings = app.govWatcher.handleLogs(logs.right)
-    // const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
-    // const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, l2blocksDto.right)
+    const govEventFindings = app.govWatcher.handleLogs(logs.right)
+    const proxyAdminEventFindings = app.proxyEventWatcher.handleLogs(logs.right)
+    const monitorWithdrawalsFindings = app.monitorWithdrawals.handleBlocks(logs.right, l2blocksDto.right)
 
     const l2blockNumbersSet: Set<number> = new Set<number>()
     for (const log of logs.right) {
@@ -239,9 +236,9 @@ export const handleBlock = (): HandleBlock => {
     findings.push(
       ...bridgeEventFindings,
       ...bridgeBalanceFindings,
-      // ...govEventFindings,
-      // ...proxyAdminEventFindings,
-      // ...monitorWithdrawalsFindings,
+      ...govEventFindings,
+      ...proxyAdminEventFindings,
+      ...monitorWithdrawalsFindings,
       // ...proxyWatcherFindings,
     )
 
