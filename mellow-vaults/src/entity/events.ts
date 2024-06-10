@@ -8,4 +8,5 @@ export type EventOfNotice = {
   description: CallableFunction
   severity: FindingSeverity
   type?: FindingType
+  uniqueKey?: string
 }

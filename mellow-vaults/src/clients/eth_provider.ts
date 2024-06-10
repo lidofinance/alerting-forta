@@ -6,7 +6,9 @@ import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { LidoDAO } from 'src/generated'
+import { LidoDAO, Vault__factory, VaultConfigurator__factory } from 'src/generated'
+import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
+import { WSTETH_ADDRESS } from 'constants/common'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -16,7 +18,7 @@ export interface IProxyContractData {
   shortABI: string
 }
 
-export class ETHProvider {
+export class ETHProvider implements VaultWatcherClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly stethContract: LidoDAO
 
@@ -113,23 +115,77 @@ export class ETHProvider {
     }
   }
 
-  public async getStethBalance(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>> {
+  public async getVaultUnderlyingTvl(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const block = await this.jsonRpcProvider.getBlock(blockHash)
-          const [balanceOf] = await this.stethContract.functions.balanceOf(address, {
+          const vaultContract = Vault__factory.connect(address, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const [tokens, amounts] = await vaultContract.functions.underlyingTvl({
             blockTag: block.number,
           })
 
-          return balanceOf
+          const idWstETH = tokens.findIndex((token) => token.toLowerCase() === WSTETH_ADDRESS.toLowerCase())
+          if (idWstETH === -1) {
+            throw new Error('Could not find wstETH token in underlyingTvl')
+          }
+
+          return amounts[idWstETH]
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch aSteth balance`))
+      return E.left(new NetworkError(e, `Could not fetch getVaultUnderlyingTvl amount`))
+    }
+  }
+
+  public async getVaultTotalSupply(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EthersBigNumber>(
+        async (): Promise<EthersBigNumber> => {
+          const vaultContract = Vault__factory.connect(address, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const [totalSupply] = await vaultContract.functions.totalSupply({
+            blockTag: block.number,
+          })
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch totalSupply balance`))
+    }
+  }
+
+  public async getVaultConfiguratorMaxTotalSupply(
+    address: string,
+    blockNumber: number,
+  ): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EthersBigNumber>(
+        async (): Promise<EthersBigNumber> => {
+
+          const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const [totalSupply] = await vaultConfiguratorContract.functions.maximalTotalSupply({
+            blockTag: block.number,
+          })
+
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch ConfiguratorMaxTotalSupply balance`))
     }
   }
 }

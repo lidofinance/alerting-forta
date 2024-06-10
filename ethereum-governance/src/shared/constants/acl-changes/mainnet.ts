@@ -35,6 +35,8 @@ import {
   ANCHOR_VAULT_ADDRESS as anchorVaultAddress,
   EMERGENCY_BRAKES_MS_ADDRESS as emergencyMsAddress,
   DEV_MS_ADDRESS as devMsAddress,
+  MELLOW_VAULT_PROXY_ADDRESS as vaultProxyAddress,
+  MELLOW_VAULT_PROXY_OWNER as vaultProxyOwner,
 } from 'constants/common'
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60 // 24h
@@ -133,6 +135,7 @@ export const LIDO_ROLES = new Map([
 export interface IOwnable {
   name: string
   ownershipMethod: string
+  ownerAddress?: string
 }
 
 // List of contracts to monitor for owner
@@ -194,17 +197,25 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
   [
-    anchorVaultAddress,
-    {
-      name: 'AnchorVault',
-      ownershipMethod: 'admin',
-    },
-  ],
-  [
     evmExecutorAddress,
     {
       name: 'Easy Track EVMScriptExecutor',
       ownershipMethod: 'owner',
+    },
+  ],
+  [
+    vaultProxyAddress,
+    {
+      name: 'Mellow Vault upgradeable Proxy Admin',
+      ownershipMethod: 'owner',
+      ownerAddress: vaultProxyOwner,
+    },
+  ],
+  [
+    anchorVaultAddress,
+    {
+      name: 'AnchorVault',
+      ownershipMethod: 'admin',
     },
   ],
   [

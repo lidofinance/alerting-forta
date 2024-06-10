@@ -24,6 +24,7 @@ describe('handleEventsOfNotice', () => {
         alertId: 'TEST-EVENT',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
+        uniqueKey: '0ffd86b0-7044-4fb8-baa1-4204a2733559',
       },
     ]
   })

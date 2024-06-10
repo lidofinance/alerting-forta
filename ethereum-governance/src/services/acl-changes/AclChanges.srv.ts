@@ -177,14 +177,19 @@ export class AclChangesSrv {
         out.push(
           networkAlert(
             curOwner.left,
-            `Error in ${AclChangesSrv.name}.${this.handleOwnerChange.name} (uid:790dc305)`,
+            `Error in ${AclChangesSrv.name}.${this.handleOwnerChange.name} (uid:3197e652)`,
             `Could not call ethProvider.getOwner for address - ${address}`,
           ),
         )
         return
       }
 
-      if (WHITELISTED_OWNERS.includes(curOwner.right.toLowerCase())) {
+      const curOwnerAddress = curOwner.right.toLowerCase()
+      if (data?.ownerAddress && data?.ownerAddress === curOwnerAddress) {
+        return
+      }
+
+      if (!data?.ownerAddress && WHITELISTED_OWNERS.includes(curOwnerAddress)) {
         return
       }
 

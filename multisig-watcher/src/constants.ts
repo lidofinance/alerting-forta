@@ -124,6 +124,7 @@ export const SAFES = {
       "Relay Maintenance Committee",
     ],
     ["0x8772e3a2d86b9347a2688f9bc1808a6d8917760c", "Gate Seal Committee"],
+    ["0x9437b2a8cf3b69d782a61f9814baabc172f72003", "Mellow Vaults Admin multisig"],
   ],
   [Blockchain.POLYGON]: [
     [

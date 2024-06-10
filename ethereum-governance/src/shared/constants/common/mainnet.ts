@@ -61,6 +61,9 @@ export const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
 export const EMERGENCY_BRAKES_MS_ADDRESS = '0x73b047fe6337183a454c5217241d780a932777bd'
 export const DEV_MS_ADDRESS = '0x3cd9f71f80ab08ea5a7dca348b5e94bc595f26a0'
 
+export const MELLOW_VAULT_PROXY_ADDRESS = '0xed792a3fdeb9044c70c951260aaae974fb3db38f'
+export const MELLOW_VAULT_PROXY_OWNER = '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0'
+
 // COMMON CONSTS
 export const BN_ZERO = new BigNumber(0)
 export const RUN_TIER = process.env.FORTA_AGENT_RUN_TIER

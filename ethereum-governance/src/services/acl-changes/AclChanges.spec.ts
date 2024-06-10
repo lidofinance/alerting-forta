@@ -130,7 +130,7 @@ describe('AclChangesSrv', () => {
     jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.left(new Error('Test error')))
     const finding = networkAlert(
       new Error('Test error'),
-      `Error in AclChangesSrv.handleOwnerChange (uid:790dc305)`,
+      `Error in AclChangesSrv.handleOwnerChange (uid:3197e652)`,
       `Could not call ethProvider.getOwner for address - ${dsAddress}`,
     )
 

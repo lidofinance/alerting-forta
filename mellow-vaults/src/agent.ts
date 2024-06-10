@@ -35,10 +35,7 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const vaultWatcherSrvErr = await app.VaultWatcherSrv.initialize(
-      latestBlock.right.number,
-      latestBlock.right.timestamp,
-    )
+    const vaultWatcherSrvErr = await app.VaultWatcherSrv.initialize(latestBlock.right.number)
 
     if (vaultWatcherSrvErr !== null) {
       console.error(`Error: ${vaultWatcherSrvErr.message}`)
@@ -87,8 +84,6 @@ export const handleBlock = (): HandleBlock => {
 
     const servicesFindings = await app.VaultWatcherSrv.handleBlock(blockEvent)
     findings.push(...servicesFindings)
-
-    app.healthChecker.check(findings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
     isHandleBlockRunning = false
