@@ -6,9 +6,9 @@ import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { LidoDAO, Vault__factory, VaultConfigurator__factory } from 'src/generated'
+import { LidoDAO, Vault__factory, VaultConfigurator__factory } from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from "constants/common";
+import { Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from 'constants/common'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -202,7 +202,7 @@ export class ETHProvider implements VaultWatcherClient {
           )
           const resultStr = results.map((result: any) => result[0].toString().toLowerCase())
           const storage: Storage = {}
-          resultStr.forEach((value:keyof Storage, index:number) => (storage[keys[index]] = value))
+          resultStr.forEach((value: keyof Storage, index: number) => (storage[keys[index]] = value))
           return storage
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },

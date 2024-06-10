@@ -38,7 +38,7 @@ yarn start:dev
 Testing on a specific block/range/transaction:
 
 ```
-yarn block 13626668
-yarn range '13626667..13626668'
-yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
+yarn block 20061166
+yarn range '20061165..20061166'
+yarn tx 0xb8b96ee47cadb80ec41dafceba1fe5b10b1d50b75e7ad9114ee16180bda2d2b4
 ```
