@@ -9,8 +9,8 @@ const TEST_TIMEOUT = 60_000 // ms
 describe('vault-acl-changes e2e tests', () => {
   let ethProvider: JsonRpcProvider
   // let getRoleMembers: (address: string, hash: string, currentBlock: BlockTag) => Promise<E.Either<Error, string[]>>
-  let runTransaction: (txHash: string) => Promise<Finding[]>
-  let runBlock: (blockHashOrNumber: string | number, initBlock: number) => Promise<Finding[]>
+  let runTransaction: (txHash: string, initBlock?: number) => Promise<Finding[]>
+  let runBlock: (blockHashOrNumber: string | number, initBlock?: number) => Promise<Finding[]>
   let logSpy: jest.SpyInstance
   let timeSpy: jest.SpyInstance
 
@@ -22,7 +22,7 @@ describe('vault-acl-changes e2e tests', () => {
     timeSpy = jest.spyOn(Date, 'now')
     timeSpy.mockImplementation(() => new Date('2023-12-31'))
 
-    runTransaction = async (txHash: string) => {
+    runTransaction = async (txHash: string, initBlock?: number) => {
       const app = await App.getInstance()
 
       const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
@@ -31,6 +31,9 @@ describe('vault-acl-changes e2e tests', () => {
         true,
       ])
       const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
+      if (initBlock) {
+        await app.VaultWatcherSrv.initialize(initBlock)
+      }
 
       const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
 
@@ -42,8 +45,9 @@ describe('vault-acl-changes e2e tests', () => {
 
       const blockNumber = initBlock
       const block = await ethProvider.getBlock(blockHashOrNumber)
-
-      await app.VaultWatcherSrv.initialize(blockNumber)
+      if (blockNumber) {
+        await app.VaultWatcherSrv.initialize(blockNumber)
+      }
       const blockEvent = etherBlockToFortaBlockEvent(block)
       return app.VaultWatcherSrv.handleBlock(blockEvent)
     }
@@ -81,9 +85,12 @@ describe('vault-acl-changes e2e tests', () => {
   )
 
   it(
-    'should detect slot change',
+    'should be not slot changes',
     async () => {
-      const findings = await runTransaction('0xffef3e8046d882ccd5773582438ebf6576e4093dec734ed27e0f5065d1a89d7b')
+      const findings = await runTransaction(
+        '0xffef3e8046d882ccd5773582438ebf6576e4093dec734ed27e0f5065d1a89d7b',
+        20061165,
+      )
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,

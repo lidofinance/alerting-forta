@@ -16,6 +16,8 @@ export type VaultWatcherClient = {
   getVaultConfigurationStorage(address: string, blockHash: number): Promise<E.Either<Error, Storage>>
 }
 
+const vaultStorages: Storage[] = []
+
 export class VaultWatcherSrv {
   private readonly logger: Logger
   private readonly ethClient: VaultWatcherClient
@@ -42,12 +44,12 @@ export class VaultWatcherSrv {
         return storage.right
       }),
     )
-
+    // TODO: Store value better
     results.forEach((result, index) => {
       if (result instanceof Finding) {
-        VAULT_LIST[index].storage = {}
+        vaultStorages[index] = {}
       } else {
-        VAULT_LIST[index].storage = result
+        vaultStorages[index] = result
       }
     })
 
@@ -121,10 +123,10 @@ export class VaultWatcherSrv {
         out.push(storageOrError)
         return
       }
-      const storage = storageOrError
+      const currentStorage = storageOrError
       const vault = VAULT_LIST[index]
-      const vaultStorage = vault?.storage
-      const keys = Object.keys(vault?.storage)
+      const vaultStorage = vaultStorages[index]
+      const keys = Object.keys(vaultStorage)
 
       if (!keys.length) {
         out.push(
@@ -140,7 +142,7 @@ export class VaultWatcherSrv {
 
       keys.forEach((key) => {
         const slotName = key as keyof Storage
-        if (storage[slotName] !== vaultStorage?.[slotName]) {
+        if (currentStorage[slotName] !== vaultStorage?.[slotName]) {
           out.push(
             Finding.fromObject({
               name: `🚨 Vault critical storage slot value changed`,
@@ -148,12 +150,13 @@ export class VaultWatcherSrv {
                 `Value of the storage slot \`'${slotName}'\` ` +
                 `for contract ${vault.vault} (${vault.name}) has changed!` +
                 `\nPrev value: ${vaultStorage?.[slotName]}` +
-                `\nNew value: ${storage[slotName]}`,
+                `\nNew value: ${currentStorage[slotName]}`,
               alertId: 'VAULT-STORAGE-SLOT-VALUE-CHANGED',
               severity: FindingSeverity.Critical,
               type: FindingType.Suspicious,
             }),
           )
+          vaultStorage[slotName] = currentStorage[slotName]
         }
       })
     })
