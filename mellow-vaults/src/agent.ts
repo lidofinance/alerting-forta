@@ -1,4 +1,4 @@
-import { BlockEvent, decodeJwt, Finding, FindingSeverity, FindingType, HandleBlock, HealthCheck } from 'forta-agent'
+import { BlockEvent, decodeJwt, Finding, FindingSeverity, FindingType, HandleBlock, HealthCheck, HandleTransaction } from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
@@ -8,6 +8,7 @@ import { App } from './app'
 import { elapsedTime } from './shared/time'
 import Version from './shared/version'
 import { Metadata } from './entity/metadata'
+import { TransactionEventContract } from './shared/notice'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -91,17 +92,17 @@ export const handleBlock = (): HandleBlock => {
   }
 }
 
-// export const handleTransaction = (): HandleTransaction => {
-//   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
-//     const app = await App.getInstance()
+export const handleTransaction = (): HandleTransaction => {
+  return async function (txEvent: TransactionEventContract): Promise<Finding[]> {
+    const app = await App.getInstance()
 
-//     const findings = await app.VaultWatcherSrv.handleTransaction(txEvent)
+    const findings = await app.VaultWatcherSrv.handleTransaction(txEvent)
 
-//     app.healthChecker.check(findings)
+    app.healthChecker.check(findings)
 
-//     return findings
-//   }
-// }
+    return findings
+  }
+}
 
 export const healthCheck = (): HealthCheck => {
   return async function (): Promise<string[] | void> {
@@ -118,6 +119,6 @@ export const healthCheck = (): HealthCheck => {
 export default {
   initialize: initialize(),
   handleBlock: handleBlock(),
-  // handleTransaction: handleTransaction(),
+  handleTransaction: handleTransaction(),
   healthCheck: healthCheck(),
 }
