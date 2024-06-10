@@ -1,4 +1,4 @@
-import { ethers, fetchJwt, Finding, verifyJwt } from 'forta-agent'
+import { getEthersProvider, fetchJwt, Finding, verifyJwt } from 'forta-agent'
 import { LIDO_STETH_ADDRESS } from 'constants/common'
 import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
