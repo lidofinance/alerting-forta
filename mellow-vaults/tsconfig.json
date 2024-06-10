@@ -6,7 +6,7 @@
     "downlevelIteration": true,
     "sourceMap": true,
     "paths": {
-      "constants/common": ["./src/shared/constants/common/mainnet"],
+      "constants/common": ["./src/shared/constants/common/mainnet"]
     }
   },
   "exclude": [
