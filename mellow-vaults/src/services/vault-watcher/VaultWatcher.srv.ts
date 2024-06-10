@@ -29,6 +29,28 @@ export class VaultWatcherSrv {
   async initialize(blockNumber: number): Promise<NetworkError | null> {
     const start = new Date().getTime()
 
+    const results = await Promise.all(
+      VAULT_LIST.map(async (vault) => {
+        const storage = await this.ethClient.getVaultConfigurationStorage(vault.configurator, blockNumber)
+        if (E.isLeft(storage)) {
+          return networkAlert(
+            storage.left as unknown as Error, // TODO
+            `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:a9f31f4f)`,
+            `Could not call ethProvider.getVaultConfigurationStorage`,
+          )
+        }
+        return storage.right
+      }),
+    )
+
+    results.forEach((result, index) => {
+      if (result instanceof Finding) {
+        VAULT_LIST[index].storage = {}
+      } else {
+        VAULT_LIST[index].storage = result
+      }
+    })
+
     this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.initialize.name, start))
 
     return null
@@ -102,7 +124,20 @@ export class VaultWatcherSrv {
       const storage = storageOrError
       const vault = VAULT_LIST[index]
       const vaultStorage = vault?.storage
-      const keys = Object.keys(storage)
+      const keys = Object.keys(vault?.storage)
+
+      if (!keys.length) {
+        out.push(
+          Finding.fromObject({
+            name: `🚨 Vault critical storage not loaded`,
+            description: `Can't load of the storage ` + `for contract ${vault.vault} (${vault.name})`,
+            alertId: 'VAULT-STORAGE-NOT-LOADED',
+            severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+          }),
+        )
+      }
+
       keys.forEach((key) => {
         const slotName = key as keyof Storage
         if (storage[slotName] !== vaultStorage?.[slotName]) {
