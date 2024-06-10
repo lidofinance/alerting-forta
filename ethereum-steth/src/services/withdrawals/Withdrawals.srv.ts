@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { WithdrawalsCache } from './Withdrawals.cache'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { elapsedTime, formatDelay } from '../../utils/time'
 import {

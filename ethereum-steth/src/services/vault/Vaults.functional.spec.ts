@@ -1,30 +1,64 @@
-import { App } from '../../app'
 import { BlockDto } from '../../entity/events'
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { expect } from '@jest/globals'
 import { ethers } from 'ethers'
 import { Finding } from '../../generated/proto/alert_pb'
+import { Config } from '../../utils/env/env'
+import * as Winston from 'winston'
+import { Address } from '../../utils/constants'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import {
+  GateSeal__factory,
+  Lido__factory,
+  ValidatorsExitBusOracle__factory,
+  WithdrawalQueueERC721__factory,
+} from '../../generated/typechain'
+import { ETHProvider } from '../../clients/eth_provider'
+import { IVaultClient, VaultSrv } from './Vault.srv'
+import { EtherscanProviderMock } from '../../clients/mocks/mock'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('Vaults.srv functional tests', () => {
-  let ethProvider: JsonRpcProvider
-  const mainnet = 1
-  const drpcProvider = 'https://eth.drpc.org/'
+  const config = new Config()
 
-  beforeAll(async () => {
-    ethProvider = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+  const logger: Winston.Logger = Winston.createLogger({
+    format: Winston.format.simple(),
+    transports: [new Winston.transports.Console()],
   })
+  const address: Address = Address
+
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
+  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+
+  const vaultClient: IVaultClient = new ETHProvider(
+    logger,
+    fortaEthersProvider,
+    EtherscanProviderMock(),
+    lidoRunner,
+    wdQueueRunner,
+    gateSealRunner,
+    veboRunner,
+  )
+
+  const vaultSrv = new VaultSrv(
+    logger,
+    vaultClient,
+    address.WITHDRAWALS_VAULT_ADDRESS,
+    address.EL_REWARDS_VAULT_ADDRESS,
+    address.BURNER_ADDRESS,
+    address.LIDO_STETH_ADDRESS,
+  )
 
   test(
     'EL-VAULT-BALANCE-CHANGE',
     async () => {
-      const app = await App.getInstance(drpcProvider)
-
       const blockNumber = 17_007_842
-      const block = await ethProvider.getBlock(blockNumber)
+      const block = await fortaEthersProvider.getBlock(blockNumber)
 
-      app.VaultSrv.initialize(blockNumber)
+      vaultSrv.initialize(blockNumber)
 
       const blockEvent: BlockDto = {
         number: block.number,
@@ -32,7 +66,7 @@ describe('Vaults.srv functional tests', () => {
         parentHash: block.parentHash,
       }
 
-      const result = await app.VaultSrv.handleBlock(blockEvent)
+      const result = await vaultSrv.handleBlock(blockEvent)
 
       const expected = {
         alertId: 'EL-VAULT-BALANCE-CHANGE',

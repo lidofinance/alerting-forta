@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { ETH_DECIMALS } from '../../utils/constants'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { elapsedTime } from '../../utils/time'
 import { toEthString } from '../../utils/string'
 import { ETHDistributedEvent } from '../../generated/typechain/Lido'

@@ -10,8 +10,7 @@ import { elapsedTime } from '../utils/time'
 import { BlockDto } from '../entity/events'
 import BigNumber from 'bignumber.js'
 import { Finding } from '../generated/proto/alert_pb'
-import * as E from 'fp-ts/Either'
-import { ETH_DECIMALS } from '../utils/constants'
+import { either as E } from 'fp-ts'
 
 export class BlockHandler {
   private logger: Logger
