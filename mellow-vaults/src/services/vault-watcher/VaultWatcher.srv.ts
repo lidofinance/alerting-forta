@@ -133,8 +133,8 @@ export class VaultWatcherSrv {
           Finding.fromObject({
             name: `🚨 Vault critical storage not loaded`,
             description: `Can't load of the storage ` + `for contract ${vault.vault} (${vault.name})`,
-            alertId: 'VAULT-STORAGE-NOT-LOADED',
-            severity: FindingSeverity.Critical,
+            alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
+            severity: FindingSeverity.High,
             type: FindingType.Suspicious,
           }),
         )
@@ -145,13 +145,13 @@ export class VaultWatcherSrv {
         if (currentStorage[slotName] !== vaultStorage?.[slotName]) {
           out.push(
             Finding.fromObject({
-              name: `🚨 Vault critical storage slot value changed`,
+              name: `🚨🚨🚨 Vault critical storage slot value changed`,
               description:
                 `Value of the storage slot \`'${slotName}'\` ` +
                 `for contract ${vault.vault} (${vault.name}) has changed!` +
                 `\nPrev value: ${vaultStorage?.[slotName]}` +
                 `\nNew value: ${currentStorage[slotName]}`,
-              alertId: 'VAULT-STORAGE-SLOT-VALUE-CHANGED',
+              alertId: 'MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED',
               severity: FindingSeverity.Critical,
               type: FindingType.Suspicious,
             }),
@@ -203,7 +203,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
-            description: `Vault - ${result.address}`,
+            description: `MELLOW-Vault - ${result.address}`,
             alertId: 'VAULT-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
@@ -258,7 +258,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is almost same',
-            description: `Vault - ${result.address}`,
+            description: `MELLOW-Vault - ${result.address}`,
             alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
