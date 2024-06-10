@@ -8,7 +8,7 @@ import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import { LidoDAO, Vault__factory, VaultConfigurator__factory } from 'src/generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { WSTETH_ADDRESS } from 'constants/common'
+import { Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from "constants/common";
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -170,7 +170,6 @@ export class ETHProvider implements VaultWatcherClient {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-
           const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
@@ -186,6 +185,32 @@ export class ETHProvider implements VaultWatcherClient {
       return E.right(new BigNumber(String(out)))
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch ConfiguratorMaxTotalSupply balance`))
+    }
+  }
+
+  public async getVaultConfigurationStorage(address: string, blockNumber: number): Promise<E.Either<Error, Storage>> {
+    try {
+      const out = await retryAsync<any>(
+        async (): Promise<any> => {
+          const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const keys = Object.keys(STORAGE_MEV_CAP) as (keyof Storage)[]
+          const results = await Promise.all(
+            //@ts-ignore
+            keys.map((key: string) => vaultConfiguratorContract.functions?.[key]({ blockTag: block.number })),
+          )
+          const resultStr = results.map((result: any) => result[0].toString().toLowerCase())
+          const storage: Storage = {}
+          resultStr.forEach((value:keyof Storage, index:number) => (storage[keys[index]] = value))
+          return storage
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch getVaultConfigurationStorage`))
     }
   }
 }

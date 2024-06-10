@@ -85,6 +85,15 @@ describe('vault-acl-changes e2e tests', () => {
   )
 
   it(
+    'should detect slot change',
+    async () => {
+      const findings = await runTransaction('0xffef3e8046d882ccd5773582438ebf6576e4093dec734ed27e0f5065d1a89d7b')
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
     'should everything is fine',
     async () => {
       const findings = await runBlock(20061165, 20061166)

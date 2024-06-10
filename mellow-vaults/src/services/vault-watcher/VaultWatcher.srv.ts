@@ -6,7 +6,7 @@ import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { PoolBalanceCache } from './VaultWatcher.cache'
 import { NetworkError, networkAlert } from 'src/shared/errors'
 import { elapsedTime } from 'src/shared/time'
-import { VAULT_LIST } from 'constants/common'
+import { Storage, VAULT_LIST } from 'constants/common'
 import { getACLEvents } from '../../shared/events/acl_events'
 import { handleEventsOfNotice, TransactionEventContract } from '../../shared/notice'
 
@@ -15,6 +15,7 @@ export type VaultWatcherClient = {
   getVaultTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
   getVaultConfiguratorMaxTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
   getVaultUnderlyingTvl(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
+  getVaultConfigurationStorage(address: string, blockHash: number): Promise<E.Either<Error, Storage>>
 }
 
 export class VaultWatcherSrv {
@@ -54,7 +55,7 @@ export class VaultWatcherSrv {
     const findings: Finding[] = []
 
     VAULT_LIST.forEach((vault) => {
-      const aclFindings = handleEventsOfNotice(txEvent, getACLEvents(vault.DefaultBondStrategy))
+      const aclFindings = handleEventsOfNotice(txEvent, getACLEvents(vault.defaultBondStrategy))
       findings.push(...aclFindings)
     })
 
@@ -65,24 +66,76 @@ export class VaultWatcherSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [limitsIntegrityFindings, handleWstETHIntegrity] = await Promise.all([
-      this.handleLimitsIntegrity(blockEvent),
-      this.handleWstETHIntegrity(blockEvent),
-    ])
-    findings.push(...limitsIntegrityFindings, ...handleWstETHIntegrity)
+    const [limitsIntegrityFindings, handleWstETHIntegrityFindings, handleVaultConfigurationChangeFindings] =
+      await Promise.all([
+        this.handleLimitsIntegrity(blockEvent),
+        this.handleWstETHIntegrity(blockEvent),
+        this.handleVaultConfigurationChange(blockEvent),
+      ])
+    findings.push(
+      ...limitsIntegrityFindings,
+      ...handleWstETHIntegrityFindings,
+      ...handleVaultConfigurationChangeFindings,
+    )
 
     this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.handleBlock.name, start))
     return findings
   }
 
+  public async handleVaultConfigurationChange(blockEvent: BlockEvent): Promise<Finding[]> {
+    const out: Finding[] = []
+    const results = await Promise.all(
+      VAULT_LIST.map(async (vault) => {
+        const storage = await this.ethClient.getVaultConfigurationStorage(vault.configurator, blockEvent.blockNumber)
+        if (E.isLeft(storage)) {
+          return networkAlert(
+            storage.left as unknown as Error, // TODO
+            `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:a9f31f4f)`,
+            `Could not call ethProvider.getVaultConfigurationStorage`,
+          )
+        }
+        return storage.right
+      }),
+    )
+
+    results.forEach((storageOrError, index) => {
+      if (storageOrError instanceof Finding) {
+        out.push(storageOrError)
+        return
+      }
+      const storage = storageOrError
+      const vault = VAULT_LIST[index]
+      const vaultStorage = vault?.storage
+      const keys = Object.keys(storage)
+      keys.forEach((key) => {
+        const slotName = key as keyof Storage
+        if (storage[slotName] !== vaultStorage?.[slotName]) {
+          out.push(
+            Finding.fromObject({
+              name: `🚨 Vault critical storage slot value changed`,
+              description:
+                `Value of the storage slot \`'${slotName}'\` ` +
+                `for contract ${vault.vault} (${vault.name}) has changed!` +
+                `\nPrev value: ${vaultStorage?.[slotName]}` +
+                `\nNew value: ${storage[slotName]}`,
+              alertId: 'VAULT-STORAGE-SLOT-VALUE-CHANGED',
+              severity: FindingSeverity.Critical,
+              type: FindingType.Suspicious,
+            }),
+          )
+        }
+      })
+    })
+    return out
+  }
   private async handleLimitsIntegrity(blockEvent: BlockEvent): Promise<Finding[]> {
     const out: Finding[] = []
 
     const results = await Promise.all(
       VAULT_LIST.map(async (vault) => {
         const [vaultTotalSupply, vaultConfiguratorMaxTotalSupply] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(vault.Vault, blockEvent.blockNumber),
-          this.ethClient.getVaultConfiguratorMaxTotalSupply(vault.Configurator, blockEvent.blockNumber),
+          this.ethClient.getVaultTotalSupply(vault.vault, blockEvent.blockNumber),
+          this.ethClient.getVaultConfiguratorMaxTotalSupply(vault.configurator, blockEvent.blockNumber),
         ])
         if (E.isLeft(vaultTotalSupply)) {
           return networkAlert(
@@ -100,7 +153,7 @@ export class VaultWatcherSrv {
           )
         }
         return {
-          address: vault.Vault,
+          address: vault.vault,
           diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
         }
       }),
@@ -134,8 +187,8 @@ export class VaultWatcherSrv {
     const results = await Promise.all(
       VAULT_LIST.map(async (vault) => {
         const [vaultTotalSupply, vaultUnderlyingTvl] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(vault.Vault, blockEvent.blockNumber),
-          this.ethClient.getVaultUnderlyingTvl(vault.Vault, blockEvent.blockNumber),
+          this.ethClient.getVaultTotalSupply(vault.vault, blockEvent.blockNumber),
+          this.ethClient.getVaultUnderlyingTvl(vault.vault, blockEvent.blockNumber),
         ])
 
         if (E.isLeft(vaultTotalSupply)) {
@@ -155,7 +208,7 @@ export class VaultWatcherSrv {
         }
 
         return {
-          address: vault.Vault,
+          address: vault.vault,
           supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
         }
       }),
