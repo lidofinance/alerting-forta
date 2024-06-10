@@ -28,7 +28,7 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       address: DEFAULT_BOND_STRATEGY_ADDRESS,
       event: 'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'MELLOW-VAULT-ROLE-GRANTED',
-      name: '⚠️ Vault: Role granted',
+      name: '🚨 Vault: Role granted',
       description: (args: Result) =>
         `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
         `was granted to ${args.account} by ${args.sender}`,
@@ -40,7 +40,7 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       address: DEFAULT_BOND_STRATEGY_ADDRESS,
       event: 'event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'MELLOW-VAULT-ROLE-REVOKED',
-      name: '⚠️ Vault: Role revoked',
+      name: '🚨  Vault: Role revoked',
       description: (args: Result) =>
         `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
         `was revoked to ${args.account} by ${args.sender}`,

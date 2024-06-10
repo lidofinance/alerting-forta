@@ -1,10 +1,10 @@
 {
-  "name": "lido-governance-forta-bot",
+  "name": "lido-mellow-vaults-forta-bot",
   "version": "1.0.0",
-  "description": "Forta Bot for Lido protocol governance",
+  "description": "Forta Bot for Mellow Vault",
   "repository": {
     "type": "git",
-    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/ethereum-steth"
+    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/mellow-vaults"
   },
   "license": "MIT",
   "chainIds": [

@@ -1,9 +1,7 @@
-// TODO: this is just a copy of the pool-balance.srv.ts file from ethereum-financial bot
 import { Logger } from 'winston'
 import BigNumber from 'bignumber.js'
 import * as E from 'fp-ts/Either'
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { PoolBalanceCache } from './VaultWatcher.cache'
 import { NetworkError, networkAlert } from 'src/shared/errors'
 import { elapsedTime } from 'src/shared/time'
 import { Storage, VAULT_LIST } from 'constants/common'
@@ -21,13 +19,11 @@ export type VaultWatcherClient = {
 export class VaultWatcherSrv {
   private readonly logger: Logger
   private readonly ethClient: VaultWatcherClient
-  private readonly cache: PoolBalanceCache
   private readonly name = 'VaultWatcherSrv'
 
-  constructor(logger: Logger, ethClient: VaultWatcherClient, cache: PoolBalanceCache) {
+  constructor(logger: Logger, ethClient: VaultWatcherClient) {
     this.logger = logger
     this.ethClient = ethClient
-    this.cache = cache
   }
 
   async initialize(blockNumber: number): Promise<NetworkError | null> {
@@ -171,7 +167,7 @@ export class VaultWatcherSrv {
             name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
             description: `Vault - ${result.address}`,
             alertId: 'VAULT-LIMITS-INTEGRITY',
-            severity: FindingSeverity.Medium,
+            severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
           }),
         )
@@ -225,8 +221,8 @@ export class VaultWatcherSrv {
           Finding.fromObject({
             name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is almost same',
             description: `Vault - ${result.address}`,
-            alertId: 'VAULT-LIMITS-INTEGRITY',
-            severity: FindingSeverity.Medium,
+            alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
+            severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
           }),
         )

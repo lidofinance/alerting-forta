@@ -8,7 +8,6 @@ import * as E from 'fp-ts/Either'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/HealthChecker.srv'
 import { LidoDAO__factory } from './generated'
 import { VaultWatcherSrv } from './services/vault-watcher/VaultWatcher.srv'
-import { PoolBalanceCache } from './services/vault-watcher/VaultWatcher.cache'
 
 export type Container = {
   ethClient: ETHProvider
@@ -56,8 +55,7 @@ export class App {
         transports: [new Winston.transports.Console()],
       })
 
-      const poolBalanceCache = new PoolBalanceCache()
-      const vaultWatcherSrv = new VaultWatcherSrv(logger, ethClient, poolBalanceCache)
+      const vaultWatcherSrv = new VaultWatcherSrv(logger, ethClient)
 
       App.instance = {
         ethClient: ethClient,

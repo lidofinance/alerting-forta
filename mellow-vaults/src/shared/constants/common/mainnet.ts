@@ -5,26 +5,26 @@ export const LIDO_STETH_ADDRESS = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84'
 export const WSTETH_ADDRESS = '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0'
 
 export type Storage = {
-  baseDelay?: string,
-  depositCallbackDelay?: string,
-  withdrawalCallbackDelay?: string,
-  withdrawalFeeD9Delay?: string,
-  maximalTotalSupplyDelay?: string,
-  isDepositLockedDelay?: string,
-  areTransfersLockedDelay?: string,
-  ratiosOracleDelay?: string,
-  priceOracleDelay?: string,
-  validatorDelay?: string,
-  emergencyWithdrawalDelay?: string,
-  depositCallback?: string,
-  withdrawalCallback?: string,
-  withdrawalFeeD9?: string,
-  maximalTotalSupply?: string,
-  isDepositLocked?: string,
-  areTransfersLocked?: string,
-  ratiosOracle?: string,
-  priceOracle?: string,
-  validator?: string,
+  baseDelay?: string
+  depositCallbackDelay?: string
+  withdrawalCallbackDelay?: string
+  withdrawalFeeD9Delay?: string
+  maximalTotalSupplyDelay?: string
+  isDepositLockedDelay?: string
+  areTransfersLockedDelay?: string
+  ratiosOracleDelay?: string
+  priceOracleDelay?: string
+  validatorDelay?: string
+  emergencyWithdrawalDelay?: string
+  depositCallback?: string
+  withdrawalCallback?: string
+  withdrawalFeeD9?: string
+  maximalTotalSupply?: string
+  isDepositLocked?: string
+  areTransfersLocked?: string
+  ratiosOracle?: string
+  priceOracle?: string
+  validator?: string
 }
 
 export const STORAGE_MEV_CAP: Storage = {

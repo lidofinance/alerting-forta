@@ -47,10 +47,6 @@ describe('vault-acl-changes e2e tests', () => {
       const blockEvent = etherBlockToFortaBlockEvent(block)
       return app.VaultWatcherSrv.handleBlock(blockEvent)
     }
-    // getRoleMembers = async (address: string, hash: string, currentBlock: BlockTag) => {
-    //   const app = await App.getInstance()
-    //   return app.ethClient.getRoleMembers(address, hash, currentBlock)
-    // }
   })
 
   afterAll(() => {
