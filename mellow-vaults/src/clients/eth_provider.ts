@@ -190,19 +190,20 @@ export class ETHProvider implements VaultWatcherClient {
 
   public async getVaultConfigurationStorage(address: string, blockNumber: number): Promise<E.Either<Error, Storage>> {
     try {
-      const out = await retryAsync<any>(
-        async (): Promise<any> => {
+      const out = await retryAsync<Storage>(
+        async (): Promise<Storage> => {
           const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
           const keys = Object.keys(STORAGE_MEV_CAP) as (keyof Storage)[]
           const results = await Promise.all(
-            //@ts-ignore
-            keys.map((key: string) => vaultConfiguratorContract.functions?.[key]({ blockTag: block.number })),
+            keys.map((key: keyof Storage) => vaultConfiguratorContract.functions?.[key]({ blockTag: block.number })),
           )
-          const resultStr = results.map((result: any) => result[0].toString().toLowerCase())
+          const resultStr = results.map((result) => result[0].toString().toLowerCase())
           const storage: Storage = {}
-          resultStr.forEach((value: keyof Storage, index: number) => (storage[keys[index]] = value))
+          resultStr.forEach((value: string, index: number) => {
+            storage[keys[index]] = value
+          })
           return storage
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
