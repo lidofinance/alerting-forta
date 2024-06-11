@@ -12,6 +12,7 @@
       2. 🚨🚨🚨 Vault totalSupply more than maximalTotalSupply
       3. 🚨🚨🚨 Vault critical storage slot value changed
       4. 🚨 Vault critical storage not loaded
+      5. ⚠️ Vault totalSupply close to maximalTotalSupply
    2. HandleTransaction
       1. 🚨 Vault: Role Admin changed
       2. 🚨 Vault: Role revoked
@@ -31,8 +32,9 @@
       10. ✅ Gnosis Safe: Execution success from module
 3. ACL
    1. HandleBlock
-      2. 🚨 Vault Contract owner set to address not in whitelist
-      3. 🚨🚨🚨 Vault Contract owner set to EOA 🚨🚨🚨
+      1. 🚨 Vault Contract owner set to address not in whitelist
+      2. 🚨🚨🚨 Vault Contract owner set to EOA 🚨🚨🚨
+
 ## Development
 
 Install deps:

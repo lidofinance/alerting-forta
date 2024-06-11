@@ -190,6 +190,7 @@ export class VaultWatcherSrv {
         return {
           address: vault.vault,
           diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
+          low: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
         }
       }),
     )
@@ -204,9 +205,19 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
-            description: `MELLOW-Vault - ${result.address}`,
+            description: `Mellow Vault - ${result.address}`,
             alertId: 'VAULT-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+          }),
+        )
+      } else if (result.low.gt(0)) {
+        out.push(
+          Finding.fromObject({
+            name: '⚠️ Vault totalSupply close to maximalTotalSupply',
+            description: `Mellow Vault ${result.address} totalSupply more than 90% of maximalTotalSupply`,
+            alertId: 'VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX',
+            severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
           }),
         )
@@ -259,7 +270,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is almost same',
-            description: `MELLOW-Vault - ${result.address}`,
+            description: `Mellow Vault - ${result.address}`,
             alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
