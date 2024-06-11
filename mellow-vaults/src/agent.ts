@@ -1,4 +1,13 @@
-import { BlockEvent, decodeJwt, Finding, FindingSeverity, FindingType, HandleBlock, HealthCheck, HandleTransaction } from 'forta-agent'
+import {
+  BlockEvent,
+  decodeJwt,
+  Finding,
+  FindingSeverity,
+  FindingType,
+  HandleBlock,
+  HealthCheck,
+  HandleTransaction,
+} from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
@@ -8,7 +17,7 @@ import { App } from './app'
 import { elapsedTime } from './shared/time'
 import Version from './shared/version'
 import { Metadata } from './entity/metadata'
-import { TransactionEventContract } from './shared/notice'
+import { TransactionEvent } from 'forta-agent'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -45,7 +54,7 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const agents = [app.VaultWatcherSrv.getName()]
+    const agents = [app.VaultWatcherSrv.getName(), app.MultisigWatcherSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
     const decodedJwt = decodeJwt(token.right)
@@ -93,11 +102,13 @@ export const handleBlock = (): HandleBlock => {
 }
 
 export const handleTransaction = (): HandleTransaction => {
-  return async function (txEvent: TransactionEventContract): Promise<Finding[]> {
+  return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
 
-    const findings = await app.VaultWatcherSrv.handleTransaction(txEvent)
+    const vaultFindings = await app.VaultWatcherSrv.handleTransaction(txEvent)
+    const multisigFindings = await app.MultisigWatcherSrv.handleTransaction(txEvent)
 
+    const findings = [...vaultFindings, ...multisigFindings]
     app.healthChecker.check(findings)
 
     return findings

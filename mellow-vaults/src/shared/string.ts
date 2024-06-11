@@ -1,5 +1,6 @@
 import { keccak256 } from 'forta-agent'
 import BigNumber from 'bignumber.js'
+import { SafeTX, BLOCKCHAIN_INFO } from 'constants/common'
 
 export function etherscanAddress(address: string): string {
   const subpath = process.env.FORTA_AGENT_RUN_TIER == 'testnet' ? 'goerli.' : ''
@@ -28,4 +29,16 @@ export function roleByName(name: string): INamedRole {
 
 export function formatAmount(amount: unknown, decimals: number, dp: number = 2): string {
   return new BigNumber(String(amount)).div(new BigNumber(10).pow(decimals)).toFixed(dp)
+}
+
+export function getSafeLink(safeTx: SafeTX): string {
+  return `[${safeTx.safeName}](${BLOCKCHAIN_INFO.safeUrlPrefix}${safeTx.safeAddress})`
+}
+
+export function getTxLink(safeTx: SafeTX): string {
+  return `${BLOCKCHAIN_INFO.txUrlPrefix}${safeTx.tx}`
+}
+
+export function getSafeTxLink(safeTx: SafeTX): string {
+  return `${BLOCKCHAIN_INFO.safeTxUrlPrefix}${safeTx.safeAddress}&id=multisig_${safeTx.safeAddress}_${safeTx.safeTx}`
 }

@@ -44,7 +44,7 @@ export class VaultWatcherSrv {
         return storage.right
       }),
     )
-    // TODO: Store value better
+    // TODO: make better way to store state
     results.forEach((result, index) => {
       if (result instanceof Finding) {
         vaultStorages[index] = {}
@@ -102,7 +102,7 @@ export class VaultWatcherSrv {
     return findings
   }
 
-  public async handleVaultConfigurationChange(blockEvent: BlockEvent): Promise<Finding[]> {
+  private async handleVaultConfigurationChange(blockEvent: BlockEvent): Promise<Finding[]> {
     const out: Finding[] = []
     const results = await Promise.all(
       VAULT_LIST.map(async (vault) => {
@@ -162,6 +162,7 @@ export class VaultWatcherSrv {
     })
     return out
   }
+
   private async handleLimitsIntegrity(blockEvent: BlockEvent): Promise<Finding[]> {
     const out: Finding[] = []
 
