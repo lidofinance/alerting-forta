@@ -31,7 +31,9 @@ export class Config {
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL! || 'https://eth.drpc.org'
 
     this.promPrefix = this.appName.replace('-', '_')
-    this.etherscanKey = Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
+    this.etherscanKey =
+      process.env.ETHERSCAN_KEY! ||
+      Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
 
     this.knexConfig = {
       client: 'sqlite3',
