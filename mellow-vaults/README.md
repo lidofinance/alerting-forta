@@ -16,7 +16,19 @@
       1. 🚨 Vault: Role Admin changed
       2. 🚨 Vault: Role revoked
       3. 🚨 Vault: Role granted
-
+2. Multisig
+   1. HandleTransaction
+      1. 🚨 Gnosis Safe: Owner added
+      2. 🚨 Gnosis Safe: Owner removed
+      3. 🚨 Gnosis Safe: Fallback handler changed
+      3. 🚨 Gnosis Safe: Guard changed
+      4. 🚨 Gnosis Safe: Threshold changed
+      5. 🚨 Gnosis Safe: Module disabled
+      6. 🚨 Gnosis Safe: Module enabled
+      7. ❌ Gnosis Safe: TX Execution faile
+      8. ✅ Gnosis Safe: TX Executed
+      9. ❌ Gnosis Safe: Execution failed from module
+      10. ✅ Gnosis Safe: Execution success from module
 ## Development
 
 Install deps:
