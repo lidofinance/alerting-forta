@@ -67,7 +67,7 @@ const main = async () => {
   const imageIpfsCid = cidLine.substring(cidStartIndex, cidEndIndex)
   const imageReference = `${imageIpfsCid}@sha256:${imageDigest}`
 
-  console.log(`\nThe docker image reference: ${imageReference}`);
+  console.log(`\nThe docker image reference: ${imageReference}`)
 }
 
 main()

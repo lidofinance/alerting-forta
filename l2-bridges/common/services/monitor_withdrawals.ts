@@ -4,13 +4,15 @@ import { Logger } from 'winston'
 import { Log } from '@ethersproject/abstract-provider'
 import * as E from 'fp-ts/Either'
 import { BlockDto, WithdrawalRecord } from '../entity/blockDto'
-import { IMonitorWithdrawalsClient } from '../clients/l2_client'
+import { L2Client } from '../clients/l2_client'
 import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
 import { getUniqueKey } from '../utils/finding.helpers'
 import { ETH_DECIMALS } from '../utils/constants'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
-import { Event } from '@ethersproject/contracts'
+import { ethers } from 'ethers'
+import { WithdrawalInfo } from '../utils/constants'
+import assert from 'assert'
 
 // 10k wstETH
 const MAX_WITHDRAWALS_SUM = 10_000
@@ -20,24 +22,30 @@ export type MonitorWithdrawalsInitResp = {
 }
 export const HOURS_48 = 60 * 60 * 24 * 2
 
-export class MonitorWithdrawals<L2BridgeWithdrawalEvent extends Event> {
+export class MonitorWithdrawals {
   private readonly name: string = 'WithdrawalsMonitor'
 
   private readonly logger: Logger
   private readonly l2Erc20TokenGatewayAddress: string
-  private readonly withdrawalsClient: IMonitorWithdrawalsClient<L2BridgeWithdrawalEvent>
-  private readonly withdrawalInitiatedEvent: string
+  private readonly l2Client: L2Client
+  private readonly withdrawalInfo: WithdrawalInfo & { eventSignature: string, eventInterface: ethers.utils.Interface }
   private readonly l2BlockAverageTime: number
 
   private withdrawalsStore: WithdrawalRecord[] = []
   private lastReportedTooManyWithdrawalsTimestamp = 0
 
-  constructor(withdrawalsClient: IMonitorWithdrawalsClient<L2BridgeWithdrawalEvent>, l2Erc20TokenGatewayAddress: string, logger: Logger, withdrawalInitiatedEvent: string, l2BlockAverageTime: number) {
-    this.withdrawalsClient = withdrawalsClient
+  constructor(l2Client: L2Client, l2Erc20TokenGatewayAddress: string, logger: Logger, withdrawalInfo: WithdrawalInfo, l2BlockAverageTime: number) {
+    const eventInterface = new ethers.utils.Interface([withdrawalInfo.eventDefinition])
+    this.l2Client = l2Client
     this.l2Erc20TokenGatewayAddress = l2Erc20TokenGatewayAddress
     this.logger = logger
-    this.withdrawalInitiatedEvent = withdrawalInitiatedEvent
+    this.withdrawalInfo = {
+      ...withdrawalInfo,
+      eventSignature: eventInterface.getEventTopic(withdrawalInfo.eventName),
+      eventInterface: eventInterface,
+    }
     this.l2BlockAverageTime = l2BlockAverageTime
+
   }
 
   public getName(): string {
@@ -45,16 +53,13 @@ export class MonitorWithdrawals<L2BridgeWithdrawalEvent extends Event> {
   }
 
   public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    const pastBlock = currentBlock - Math.ceil(HOURS_48 / this.l2BlockAverageTime)
+    const start = new Date().getTime()
+    const startBlock = currentBlock - Math.ceil(HOURS_48 / this.l2BlockAverageTime)
+    const endBlock = currentBlock - 1
 
-    const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
-    if (E.isLeft(withdrawalEvents)) {
-      return withdrawalEvents
-    }
-
-    const withdrawalRecords = await this.withdrawalsClient.getWithdrawalRecords(withdrawalEvents.right)
+    const withdrawalRecords = await this._getWithdrawalRecordsInBlockRange(startBlock, endBlock)
     if (E.isLeft(withdrawalRecords)) {
-      return withdrawalRecords
+      return E.left(withdrawalRecords.left)
     }
 
     const withdrawalsSum = new BigNumber(0)
@@ -64,6 +69,7 @@ export class MonitorWithdrawals<L2BridgeWithdrawalEvent extends Event> {
     }
 
     this.logger.info(`${MonitorWithdrawals.name} started on block ${currentBlock}`)
+    this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this._getWithdrawalRecordsInBlockRange.name, start))
     return E.right({
       currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
     })
@@ -136,6 +142,36 @@ export class MonitorWithdrawals<L2BridgeWithdrawalEvent extends Event> {
     return out
   }
 
+  public async _getWithdrawalRecordsInBlockRange(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, WithdrawalRecord[]>> {
+    const withdrawalLogsE = await this.l2Client.getL2Logs(startBlock, endBlock, this.l2Erc20TokenGatewayAddress, this.withdrawalInfo.eventSignature)
+    if (E.isLeft(withdrawalLogsE)) {
+      return E.left(withdrawalLogsE.left)
+    }
+
+    const blocksToRequest = new Set<number>()
+    const blockNumberToTime = new Map<number, number>()
+    const withdrawalRecordsAux: { amount: BigNumber, blockNumber: number }[] = []
+    for (const log of withdrawalLogsE.right) {
+     const event = this.withdrawalInfo.eventInterface.parseLog(log)
+      // NB: log.blockNumber is actually a string, although its typescript type is number
+      const blockNumber = (typeof log.blockNumber === 'number') ? log.blockNumber : Number(log.blockNumber)
+      withdrawalRecordsAux.push({ blockNumber: blockNumber, amount: new BigNumber(String(event.args.amount)) })
+      blocksToRequest.add(blockNumber)
+    }
+    const blocks = await this.l2Client.fetchL2Blocks(blocksToRequest)
+    for (const oneBlock of blocks) {
+      blockNumberToTime.set(oneBlock.number, oneBlock.timestamp)
+    }
+    const result: WithdrawalRecord[] = []
+    for (const record of withdrawalRecordsAux) {
+      const blockTime = blockNumberToTime.get(record.blockNumber)
+      assert(blockTime)
+      result.push({ time: blockTime, amount: record.amount })
+    }
+
+    return E.right(result)
+  }
+
   private getWithdrawalRecords(l2Logs: Log[], l2BlocksDto: BlockDto[]): WithdrawalRecord[] {
     const blockNumberToBlock = new Map<number, BlockDto>()
     const logIndexToLogs = new Map<number, Log>()
@@ -152,7 +188,7 @@ export class MonitorWithdrawals<L2BridgeWithdrawalEvent extends Event> {
 
     const out: WithdrawalRecord[] = []
     if (formatAddress(this.l2Erc20TokenGatewayAddress) in addresses) {
-      const events = filterLog(l2Logs, this.withdrawalInitiatedEvent, formatAddress(this.l2Erc20TokenGatewayAddress))
+      const events = filterLog(l2Logs, this.withdrawalInfo.eventDefinition, formatAddress(this.l2Erc20TokenGatewayAddress))
 
       for (const event of events) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

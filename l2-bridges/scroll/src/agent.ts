@@ -12,13 +12,12 @@ import { EventWatcher } from '../../common/services/event_watcher'
 // import { ProxyContractClient } from './clients/proxy_contract_client'
 import { L2LidoGateway__factory } from './generated'
 import { ERC20Short__factory } from '../../common/generated'
-import { L2BlockClient } from '../../common/clients/l2_block_client'
 // import { ProxyWatcher } from './services/proxy_watcher'
 import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
 import { DataRW } from '../../common/utils/mutex'
 import * as Winston from 'winston'
 import { MAINNET_CHAIN_ID, DRPC_URL } from '../../common/utils/constants'
-import { Constants, getBridgeEvents, getGovEvents, getProxyAdminEvents, L2BridgeWithdrawalEvent } from './constants'
+import { Constants, getBridgeEvents, getGovEvents, getProxyAdminEvents } from './constants'
 import { Logger } from 'winston'
 import { ETHProvider } from '../../common/clients/eth_provider_client'
 import { BridgeBalanceSrv } from '../../common/services/bridge_balance'
@@ -27,10 +26,10 @@ import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
 
 
 export type Container = {
-  l2Client: L2Client<L2BridgeWithdrawalEvent>
+  l2Client: L2Client
   // proxyWatcher: ProxyWatcher
-  monitorWithdrawals: MonitorWithdrawals<L2BridgeWithdrawalEvent>
-  blockClient: L2BlockClient
+  monitorWithdrawals: MonitorWithdrawals
+  // blockClient: L2BlockClient
   bridgeWatcher: EventWatcher
   bridgeBalanceSrv: BridgeBalanceSrv
   govWatcher: EventWatcher
@@ -57,14 +56,7 @@ export class App {
       const bridgedWstethRunner = ERC20Short__factory.connect(Constants.L2_WSTETH_BRIDGED.address, nodeClient)
 
       const l2Bridge = L2LidoGateway__factory.connect(Constants.L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
-      const withdrawalEventsFetcher = (fromBlockNumber: number, toBlockNumber: number) => {
-        return l2Bridge.queryFilter(
-            l2Bridge.filters.WithdrawERC20(),
-            fromBlockNumber,
-            toBlockNumber,
-          )
-      }
-      const l2Client = new L2Client(nodeClient, logger, withdrawalEventsFetcher, bridgedWstethRunner)
+      const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, Constants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
       const bridgeEventWatcher = new EventWatcher(
         'BridgeEventWatcher',
@@ -91,11 +83,12 @@ export class App {
       //   ),
       // ]
 
-      const blockSrv = new L2BlockClient(l2Client, logger)
       // const proxyWorker = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
 
-      const monitorWithdrawals = new MonitorWithdrawals<L2BridgeWithdrawalEvent>(
-        l2Client, Constants.L2_ERC20_TOKEN_GATEWAY.address, logger, Constants.withdrawalInitiatedEvent, Constants.SCROLL_APPROX_BLOCK_TIME_3_SECONDS)
+      const monitorWithdrawals = new MonitorWithdrawals(
+        l2Client, Constants.L2_ERC20_TOKEN_GATEWAY.address, logger, Constants.withdrawalInfo,
+        Constants.SCROLL_APPROX_BLOCK_TIME_3_SECONDS
+      )
 
 
       const ethProvider = new ethers.providers.FallbackProvider([
@@ -111,7 +104,6 @@ export class App {
         l2Client: l2Client,
         // proxyWatcher: proxyWorker,
         monitorWithdrawals: monitorWithdrawals,
-        blockClient: blockSrv,
         bridgeWatcher: bridgeEventWatcher,
         bridgeBalanceSrv: bridgeBalanceSrv,
         govWatcher: govEventWatcher,
@@ -199,7 +191,7 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const l2blocksDto = await app.blockClient.getL2Blocks()
+    const l2blocksDto = await app.l2Client.getNotYetProcessedL2Blocks()
     if (E.isLeft(l2blocksDto)) {
       isHandleBlockRunning = false
       return [l2blocksDto.left]
@@ -210,7 +202,7 @@ export const handleBlock = (): HandleBlock => {
       }. Total: ${l2blocksDto.right.length}`,
     )
 
-    const logs = await app.blockClient.getL2Logs(l2blocksDto.right)
+    const logs = await app.l2Client.getL2LogsOrNetworkAlert(l2blocksDto.right)
     if (E.isLeft(logs)) {
       isHandleBlockRunning = false
       return [logs.left]

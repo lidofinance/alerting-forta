@@ -1,18 +1,19 @@
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../common/entity/events'
-import { WithdrawERC20Event } from './generated/L2LidoGateway'
+import { utils } from "ethers"
 
 export type RoleHashToName = Map<string, string>
-export type L2BridgeWithdrawalEvent = WithdrawERC20Event
 export type ContractInfo = {
   name: string
   address: string
 }
 
+
 export const Constants = {
   L2_NAME: 'Scroll',
   L2_NETWORK_RPC: 'https://rpc.scroll.io',
+  MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: 50_000,
   L2_NETWORK_ID: 534352,
   SCROLL_APPROX_BLOCK_TIME_3_SECONDS: 3,
   L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',
@@ -34,7 +35,17 @@ export const Constants = {
     ['0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c', 'WITHDRAWALS_DISABLER_ROLE'],
     ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
   ]),
-  withdrawalInitiatedEvent: 'event WithdrawERC20(address indexed l1Token, address indexed l2Token, address indexed from, uint256 amount, bytes data)',
+  withdrawalInfo: {
+    eventName: 'WithdrawERC20',
+    eventDefinition: `event WithdrawERC20(
+  address indexed l1Token,
+  address indexed l2Token,
+  address indexed from,
+  address to,
+  uint256 amount,
+  bytes data
+)`,
+  }
 }
 
 

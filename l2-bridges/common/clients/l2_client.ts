@@ -1,60 +1,57 @@
 import { Block, Log } from '@ethersproject/abstract-provider'
-import { ethers } from 'forta-agent'
+import { ethers, Finding } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/error'
+import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
-import { WithdrawalRecord } from '../entity/blockDto'
-import { Event } from '@ethersproject/contracts'
+import { BlockDto } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
 import { IL2BridgeBalanceClient } from '../services/bridge_balance'
 import { ERC20Short as BridgedWstEthRunner } from '../generated'
+import { networkAlert } from '../utils/finding.helpers'
 
-export abstract class IMonitorWithdrawalsClient<L2BridgeWithdrawalEvent extends Event> {
-  public abstract getWithdrawalEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<NetworkError, L2BridgeWithdrawalEvent[]>>
 
-  public abstract getWithdrawalRecords(
-    withdrawalEvents: L2BridgeWithdrawalEvent[],
-  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
-}
-
-export abstract class IL2Client {
-  public abstract fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]>
-
-  public abstract getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>>
-
-  public abstract getLatestL2Block(): Promise<E.Either<NetworkError, Block>>
-}
-
-export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Client, IMonitorWithdrawalsClient<L2BridgeWithdrawalEvent>, IL2BridgeBalanceClient {
+export class L2Client implements IL2BridgeBalanceClient {
   private readonly logger: Logger
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private readonly withdrawalEventsFetcher: (fromBlockNumber: number, toBlockNumber: number) => Promise<L2BridgeWithdrawalEvent[]>
   private readonly bridgedWstEthRunner: BridgedWstEthRunner
+  private readonly maxBlocksPerGetLogsRequest: number
+
+  private cachedBlockDto: BlockDto | undefined = undefined
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     logger: Logger,
-    withdrawalEventsFetcher: (fromBlockNumber: number, toBlockNumber: number) => Promise<L2BridgeWithdrawalEvent[]>,
     bridgedWstEthRunner: BridgedWstEthRunner,
+    maxBlocksPerGetLogsRequest: number,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.logger = logger
-    this.withdrawalEventsFetcher = withdrawalEventsFetcher
     this.bridgedWstEthRunner = bridgedWstEthRunner
+    this.maxBlocksPerGetLogsRequest = maxBlocksPerGetLogsRequest
   }
 
-  public async fetchL2Blocks(startBlock: number, endBlock: number): Promise<Block[]> {
-    const batchRequests = []
+  public async fetchL2Blocks(blockNumbers: Set<number>): Promise<Block[]> {
+    return this._fetchL2Blocks(blockNumbers)
+  }
+
+  public async fetchL2BlocksRange(startBlock: number, endBlock: number): Promise<Block[]> {
+    const blockNumbers = new Set<number>()
     for (let i = startBlock; i <= endBlock; i++) {
+      blockNumbers.add(i)
+    }
+    return this._fetchL2Blocks(blockNumbers)
+  }
+
+  private async _fetchL2Blocks(blockNumbers: Set<number>): Promise<Block[]> {
+    const batchRequests = []
+    for (const n of blockNumbers) {
       batchRequests.push({
         jsonrpc: '2.0',
         method: 'eth_getBlockByNumber',
-        params: [`0x${i.toString(16)}`, false],
-        id: i, // Use a unique identifier for each request
+        params: [`0x${n.toString(16)}`, false],
+        id: n, // Use a unique identifier for each request
       })
     }
     const formatter = new ethers.providers.Formatter()
@@ -104,6 +101,7 @@ export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Clien
         const blocks = await doRequest(request)
         out.push(...blocks)
       } catch (e) {
+
         this.logger.warn(`${e}`)
         if (allowedExtraRequest === 0) {
           break
@@ -117,24 +115,31 @@ export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Clien
     return out.toSorted((a, b) => a.number - b.number)
   }
 
-  public async getL2Logs(startBlock: number, endBlock: number): Promise<E.Either<NetworkError, Log[]>> {
+  public async getL2Logs(
+    startBlock: number,
+    endBlock: number,
+    address: string | undefined = undefined,
+    eventSignature: string | undefined = undefined,
+  ): Promise<E.Either<NetworkError, Log[]>>
+  {
     const logs: Log[] = []
-    const batchSize = 15
-
+    const batchSize = Math.min(endBlock - startBlock + 1, this.maxBlocksPerGetLogsRequest)
     for (let i = startBlock; i <= endBlock; i += batchSize) {
       const start = i
       const end = Math.min(i + batchSize - 1, endBlock)
-
       let chunkLogs: Log[] = []
       try {
         chunkLogs = await retryAsync<Log[]>(
           async (): Promise<Log[]> => {
-            return await this.jsonRpcProvider.send('eth_getLogs', [
-              {
-                fromBlock: `0x${start.toString(16)}`,
-                toBlock: `0x${end.toString(16)}`,
-              },
-            ])
+            const params: {[key: string]: unknown} = {
+              fromBlock: `0x${start.toString(16)}`,
+              toBlock: `0x${end.toString(16)}`,
+              address,
+            }
+            if (eventSignature) {
+              params['topics'] = [eventSignature]
+            }
+            return await this.jsonRpcProvider.send('eth_getLogs', [params])
           },
           { delay: 500, maxTry: 5 },
         )
@@ -167,57 +172,6 @@ export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Clien
     }
   }
 
-  public async getWithdrawalEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<NetworkError, L2BridgeWithdrawalEvent[]>> {
-    try {
-      const out = await retryAsync<L2BridgeWithdrawalEvent[]>(
-
-        async (): Promise<L2BridgeWithdrawalEvent[]> => {
-          return await this.withdrawalEventsFetcher(fromBlockNumber, toBlockNumber)
-        },
-        { delay: 500, maxTry: 5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch l2 bridge withdrawal events`))
-    }
-  }
-
-  public async getWithdrawalRecords(
-    withdrawalEvents: L2BridgeWithdrawalEvent[],
-  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>> {
-    const out: WithdrawalRecord[] = []
-
-    for (const withdrawEvent of withdrawalEvents) {
-      if (withdrawEvent.args) {
-        let block: Block
-        try {
-          block = await retryAsync<Block>(
-            async (): Promise<Block> => {
-              return await withdrawEvent.getBlock()
-            },
-            { delay: 500, maxTry: 5 },
-          )
-
-          const record: WithdrawalRecord = {
-            time: block.timestamp,
-            // TODO: args.amount might be different for L2 networks
-            amount: new BigNumber(String(withdrawEvent.args.amount)),
-          }
-
-          out.push(record)
-        } catch (e) {
-          return E.left(new NetworkError(e, `Could not fetch block from withdrawEvent`))
-        }
-      }
-    }
-
-    return E.right(out)
-  }
-
   public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<string>(
@@ -236,4 +190,99 @@ export class L2Client<L2BridgeWithdrawalEvent extends Event> implements IL2Clien
       return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
     }
   }
+
+  public async getNotYetProcessedL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
+    const start = new Date().getTime()
+    const blocks = await this._fetchNotYetProcessedL2Blocks()
+    this.logger.info(elapsedTime(this.constructor.name + '.' + this._fetchNotYetProcessedL2Blocks.name, start))
+
+    return blocks
+  }
+
+  public async getL2LogsOrNetworkAlert(workingBlocks: BlockDto[]): Promise<E.Either<Finding, Log[]>> {
+    const start = new Date().getTime()
+
+    let result: E.Either<Finding, Log[]>
+    const logs = await this.getL2Logs(
+      workingBlocks[0].number,
+      workingBlocks[workingBlocks.length - 1].number
+    )
+    if (E.isLeft(logs)) {
+      result = E.left(
+        networkAlert(
+          logs.left,
+          `Error in ${this.constructor.name}.${this.getL2Logs.name}:76`,
+          `Could not call getL2Logs`,
+          workingBlocks[workingBlocks.length - 1].number,
+        ),
+      )
+    } else {
+      result = E.right(logs.right)
+    }
+
+    this.logger.info(elapsedTime(this.constructor.name + '.' + this.getL2Logs.name, start))
+
+    return result
+  }
+
+  private async _fetchNotYetProcessedL2Blocks(): Promise<E.Either<Finding, BlockDto[]>> {
+    const out: BlockDto[] = []
+
+    if (this.cachedBlockDto === undefined) {
+      const l2Block = await this.getLatestL2Block()
+      if (E.isLeft(l2Block)) {
+        return E.left(
+          networkAlert(
+            l2Block.left,
+            `Error in ${this.constructor.name}.${this._fetchNotYetProcessedL2Blocks.name}:21`,
+            `Could not call l2Provider.getLatestL2Block`,
+            0,
+          ),
+        )
+      }
+
+      this.cachedBlockDto = {
+        number: l2Block.right.number,
+        timestamp: l2Block.right.timestamp,
+      }
+
+      out.push(this.cachedBlockDto)
+    } else {
+      const latestL2Block = await this.getLatestL2Block()
+      if (E.isLeft(latestL2Block)) {
+        this.cachedBlockDto = undefined
+        return E.left(
+          networkAlert(
+            latestL2Block.left,
+            `Error in ${this.constructor.name}.${this._fetchNotYetProcessedL2Blocks.name}:39`,
+            `Could not call l2Provider.getLatestL2Block`,
+            0,
+          ),
+        )
+      }
+
+      const l2Blocks = await this.fetchL2BlocksRange(this.cachedBlockDto.number, latestL2Block.right.number - 1)
+      for (const l2Block of l2Blocks) {
+        out.push({
+          number: l2Block.number,
+          timestamp: l2Block.timestamp,
+        })
+      }
+
+      this.cachedBlockDto = {
+        number: latestL2Block.right.number,
+        timestamp: latestL2Block.right.timestamp,
+      }
+
+      // hint: we requested blocks like [cachedBlockDto.number, latestBlock.number)
+      // and here we do [cachedBlockDto.number, latestBlock.number]
+      out.push({
+        number: latestL2Block.right.number,
+        timestamp: latestL2Block.right.timestamp,
+      })
+    }
+
+    return E.right(out)
+  }
+
 }
