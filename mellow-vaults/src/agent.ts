@@ -92,8 +92,9 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const servicesFindings = await app.VaultWatcherSrv.handleBlock(blockEvent)
-    findings.push(...servicesFindings)
+    const vaultWatcherSrvFindings = await app.VaultWatcherSrv.handleBlock(blockEvent)
+    const aclChangesSrvFindings = await app.AclChangesSrv.handleBlock(blockEvent)
+    findings.push(...vaultWatcherSrvFindings, ...aclChangesSrvFindings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
     isHandleBlockRunning = false

@@ -7,6 +7,7 @@
   "testPathIgnorePatterns": ["dist"],
   "moduleNameMapper": {
     "^src/(.*)": "<rootDir>/src/$1",
-    "constants/common": "<rootDir>/src/shared/constants/common/mainnet"
+    "constants/common": "<rootDir>/src/shared/constants/common/mainnet",
+    "constants/acl-changes": "<rootDir>/src/shared/constants/acl-changes/mainnet"
   }
 }

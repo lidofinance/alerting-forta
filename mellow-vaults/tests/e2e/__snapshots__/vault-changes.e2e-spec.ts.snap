@@ -130,3 +130,7 @@ exports[`vault-acl-changes e2e tests should RoleRevokedRoleRevoked 1`] = `
 exports[`vault-acl-changes e2e tests should be not slot changes 1`] = `[]`;
 
 exports[`vault-acl-changes e2e tests should everything is fine 1`] = `[]`;
+
+exports[`vault-acl-changes e2e tests should process tx with Added Owner and Execution Success 1`] = `[]`;
+
+exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;

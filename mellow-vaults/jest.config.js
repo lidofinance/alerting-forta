@@ -5,5 +5,6 @@ module.exports = {
   testPathIgnorePatterns: ['dist'],
   moduleNameMapper: {
     'constants/common': '<rootDir>/src/shared/constants/common/mainnet',
+    'constants/acl-changes': '<rootDir>/src/shared/constants/acl-changes/mainnet',
   },
 }

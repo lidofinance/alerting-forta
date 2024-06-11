@@ -9,11 +9,13 @@ import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './servi
 import { LidoDAO__factory } from './generated'
 import { VaultWatcherSrv } from './services/vault-watcher/VaultWatcher.srv'
 import { MultisigWatcherSrv } from './services/multisig-watcher/MultisigWatcher.srv'
+import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
 
 export type Container = {
   ethClient: ETHProvider
   VaultWatcherSrv: VaultWatcherSrv
   MultisigWatcherSrv: MultisigWatcherSrv
+  AclChangesSrv: AclChangesSrv
   findingsRW: DataRW<Finding>
   healthChecker: HealthChecker
 }
@@ -59,11 +61,13 @@ export class App {
 
       const vaultWatcherSrv = new VaultWatcherSrv(logger, ethClient)
       const multisigWatcherSrv = new MultisigWatcherSrv(logger)
+      const aclChangesSrv = new AclChangesSrv(logger, ethClient)
 
       App.instance = {
         ethClient: ethClient,
         VaultWatcherSrv: vaultWatcherSrv,
         MultisigWatcherSrv: multisigWatcherSrv,
+        AclChangesSrv: aclChangesSrv,
         findingsRW: new DataRW([]),
         healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
       }

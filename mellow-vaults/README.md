@@ -29,6 +29,10 @@
       8. ✅ Gnosis Safe: TX Executed
       9. ❌ Gnosis Safe: Execution failed from module
       10. ✅ Gnosis Safe: Execution success from module
+3. Vault
+   1. HandleBlock
+      2. 🚨 Vault Contract owner set to address not in whitelist
+      3. 🚨🚨🚨 Vault Contract owner set to EOA 🚨🚨🚨
 ## Development
 
 Install deps:

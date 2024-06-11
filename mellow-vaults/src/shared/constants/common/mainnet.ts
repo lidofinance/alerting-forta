@@ -47,6 +47,9 @@ export const BLOCKCHAIN_INFO: BlockchainInfo = {
 export const LIDO_STETH_ADDRESS = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84'
 export const WSTETH_ADDRESS = '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0'
 
+export const MELLOW_VAULT_PROXY_ADDRESS = '0xed792a3fdeb9044c70c951260aaae974fb3db38f'
+export const MELLOW_VAULT_PROXY_OWNER = '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0'
+
 export const STORAGE_MEV_CAP: Storage = {
   baseDelay: '2592000',
   depositCallbackDelay: '86400',

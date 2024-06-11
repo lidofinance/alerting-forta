@@ -35,8 +35,6 @@ import {
   ANCHOR_VAULT_ADDRESS as anchorVaultAddress,
   EMERGENCY_BRAKES_MS_ADDRESS as emergencyMsAddress,
   DEV_MS_ADDRESS as devMsAddress,
-  MELLOW_VAULT_PROXY_ADDRESS as vaultProxyAddress,
-  MELLOW_VAULT_PROXY_OWNER as vaultProxyOwner,
 } from 'constants/common'
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60 // 24h
@@ -135,7 +133,6 @@ export const LIDO_ROLES = new Map([
 export interface IOwnable {
   name: string
   ownershipMethod: string
-  ownerAddress?: string
 }
 
 // List of contracts to monitor for owner
@@ -197,25 +194,17 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
   [
-    evmExecutorAddress,
-    {
-      name: 'Easy Track EVMScriptExecutor',
-      ownershipMethod: 'owner',
-    },
-  ],
-  [
-    vaultProxyAddress,
-    {
-      name: 'Mellow Vault upgradeable Proxy Admin',
-      ownershipMethod: 'owner',
-      ownerAddress: vaultProxyOwner,
-    },
-  ],
-  [
     anchorVaultAddress,
     {
       name: 'AnchorVault',
       ownershipMethod: 'admin',
+    },
+  ],
+  [
+    evmExecutorAddress,
+    {
+      name: 'Easy Track EVMScriptExecutor',
+      ownershipMethod: 'owner',
     },
   ],
   [
@@ -350,7 +339,10 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('REQUEST_BURN_MY_STETH_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('RECOVER_ASSETS_ROLE'), []],
-        [roleByName('REQUEST_BURN_SHARES_ROLE'), [ROLES_OWNERS.lido, ROLES_OWNERS.curatedNor]],
+        [
+          roleByName('REQUEST_BURN_SHARES_ROLE'),
+          [ROLES_OWNERS.lido, ROLES_OWNERS.curatedNor, ROLES_OWNERS.simpleDvtNor],
+        ],
       ]),
     },
   ],
@@ -366,8 +358,8 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName('ANNUAL_BALANCE_INCREASE_LIMIT_MANAGER_ROLE'), []],
         [roleByName('SHARE_RATE_DEVIATION_LIMIT_MANAGER_ROLE'), []],
         [roleByName('MAX_VALIDATOR_EXIT_REQUESTS_PER_REPORT_ROLE'), []],
-        [roleByName('MAX_ACCOUNTING_EXTRA_DATA_LIST_ITEMS_COUNT_ROLE'), []],
-        [roleByName('MAX_NODE_OPERATORS_PER_EXTRA_DATA_ITEM_COUNT_ROLE'), []],
+        [roleByName('MAX_ACCOUNTING_EXTRA_DATA_LIST_ITEMS_COUNT_ROLE'), [ROLES_OWNERS.agent]],
+        [roleByName('MAX_NODE_OPERATORS_PER_EXTRA_DATA_ITEM_COUNT_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('REQUEST_TIMESTAMP_MARGIN_MANAGER_ROLE'), []],
         [roleByName('MAX_POSITIVE_TOKEN_REBASE_MANAGER_ROLE'), []],
       ]),

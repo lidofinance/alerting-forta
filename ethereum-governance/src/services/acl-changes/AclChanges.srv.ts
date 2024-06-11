@@ -96,7 +96,7 @@ export class AclChangesSrv {
 
     findings.push(...setPermissionFindings, ...changePermissionManager)
 
-    this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleTransaction.name, start))
+    this.logger.debug(elapsedTime(AclChangesSrv.name + '.' + this.handleTransaction.name, start))
 
     return findings
   }
@@ -184,12 +184,7 @@ export class AclChangesSrv {
         return
       }
 
-      const curOwnerAddress = curOwner.right.toLowerCase()
-      if (data?.ownerAddress && data?.ownerAddress === curOwnerAddress) {
-        return
-      }
-
-      if (!data?.ownerAddress && WHITELISTED_OWNERS.includes(curOwnerAddress)) {
+      if (WHITELISTED_OWNERS.includes(curOwner.right.toLowerCase())) {
         return
       }
 

@@ -214,4 +214,75 @@ export class ETHProvider implements VaultWatcherClient {
       return E.left(new NetworkError(e, `Could not fetch getVaultConfigurationStorage`))
     }
   }
+  public async getContractOwner(
+    address: string,
+    method: string,
+    currentBlock: number,
+  ): Promise<E.Either<Error, string>> {
+    /*
+    getContractOwner calls the method written in the ownershipMethod field in contract description
+    and returns the owner of the contract address.
+    */
+    try {
+      const members = await retryAsync(
+        async (): Promise<string> => {
+          const abi = [`function ${method}() view returns (address)`]
+          const contract = new ethers.Contract(address, abi, this.jsonRpcProvider)
+          return contract.functions[method]({ blockTag: currentBlock })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(String(members))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.Contract for address ${address}`))
+    }
+  }
+
+  public async getProxyImplementation(
+    address: string,
+    data: IProxyContractData,
+    currentBlock: number,
+  ): Promise<E.Either<Error, string[]>> {
+    try {
+      const str = await retryAsync(
+        async (): Promise<string[]> => {
+          const proxyContract = new ethers.Contract(address, data.shortABI, this.jsonRpcProvider)
+          if ('implementation' in proxyContract.functions) {
+            return await proxyContract.functions.implementation({
+              blockTag: currentBlock,
+            })
+          }
+          if ('proxy__getImplementation' in proxyContract.functions) {
+            return await proxyContract.functions.proxy__getImplementation({
+              blockTag: currentBlock,
+            })
+          }
+
+          throw new Error(
+            `Proxy contract ${address} does not have "implementation" or "proxy__getImplementation" functions`,
+          )
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(str)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.Contract for address ${address}`))
+    }
+  }
+
+  public async isDeployed(address: string, blockNumber?: number): Promise<E.Either<Error, boolean>> {
+    try {
+      const result = await retryAsync(
+        async (): Promise<boolean> => {
+          const code = await this.jsonRpcProvider.getCode(address, blockNumber)
+          return code !== '0x'
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getCode for address ${address}`))
+    }
+  }
 }
