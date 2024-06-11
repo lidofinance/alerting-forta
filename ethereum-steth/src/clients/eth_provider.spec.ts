@@ -1,31 +1,54 @@
-import { App } from '../app'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { Address, ETH_DECIMALS, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../utils/constants'
 import { GateSeal } from '../entity/gate_seal'
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { ethers } from 'forta-agent'
 import BigNumber from 'bignumber.js'
 import { expect } from '@jest/globals'
+import * as Winston from 'winston'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import {
+  GateSeal__factory,
+  Lido__factory,
+  ValidatorsExitBusOracle__factory,
+  WithdrawalQueueERC721__factory,
+} from '../generated/typechain'
+import { Config } from '../utils/env/env'
+import { EtherscanProviderMock } from './mocks/mock'
+import { ETHProvider } from './eth_provider'
 
 describe('eth provider tests', () => {
-  let ethProvider: JsonRpcProvider
-  const mainnet = 1
-  const drpcProvider = 'https://eth.drpc.org/'
+  const config = new Config()
 
-  beforeAll(async () => {
-    ethProvider = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+  const logger: Winston.Logger = Winston.createLogger({
+    format: Winston.format.simple(),
+    transports: [new Winston.transports.Console()],
   })
+  const address: Address = Address
+
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
+  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+
+  const ethClient = new ETHProvider(
+    logger,
+    fortaEthersProvider,
+    EtherscanProviderMock(),
+    lidoRunner,
+    wdQueueRunner,
+    gateSealRunner,
+    veboRunner,
+  )
 
   test('getWithdrawalStatuses should return 1750 withdrawal statuses', async () => {
-    const app = await App.getInstance(drpcProvider)
-
     const blockNumber = 19112800
     const requestsRange: number[] = []
     for (let i = 21001; i <= 22750; i++) {
       requestsRange.push(i)
     }
 
-    const statuses = await app.ethClient.getWithdrawalStatuses(requestsRange, blockNumber)
+    const statuses = await ethClient.getWithdrawalStatuses(requestsRange, blockNumber)
     if (E.isLeft(statuses)) {
       throw statuses.left.message
     }
@@ -34,11 +57,9 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('checkGateSeal should be success', async () => {
-    const app = await App.getInstance(drpcProvider)
-
     const blockNumber = 19140476
 
-    const resp = await app.ethClient.checkGateSeal(blockNumber, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024)
+    const resp = await ethClient.checkGateSeal(blockNumber, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024)
     if (E.isLeft(resp)) {
       throw resp.left.message
     }
@@ -54,23 +75,21 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getBalanceByBlockHash is 16619.29059680177', async () => {
-    const app = await App.getInstance(drpcProvider)
-
     const blockNumber = 19_140_476
-    const block = await ethProvider.getBlock(blockNumber)
+    const block = await fortaEthersProvider.getBlock(blockNumber)
     const parentBlockHash = '0x55fdadee696dd3b08c0752c2fa5feba7abd19992fd3d2f18f9a87baa62fa34ae'
     expect(block.parentHash).toEqual(parentBlockHash)
 
-    const parentBlock = await ethProvider.getBlock(parentBlockHash)
+    const parentBlock = await fortaEthersProvider.getBlock(parentBlockHash)
     expect(parentBlock.number).toEqual(blockNumber - 1)
-    const resp = await app.ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
+    const resp = await ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
 
     if (E.isLeft(resp)) {
       throw resp.left.message
     }
 
     const resp2 = new BigNumber(
-      (await ethProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
+      (await fortaEthersProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
     )
 
     const expectedBalance = 16619.29059680177
@@ -79,23 +98,21 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getBalanceByBlockHash is 38186.88677324665', async () => {
-    const app = await App.getInstance(drpcProvider)
-
     const blockNumber = 19_619_102
-    const block = await ethProvider.getBlock(blockNumber)
+    const block = await fortaEthersProvider.getBlock(blockNumber)
     const parentBlockHash = '0x0667f8c4447dfcac0f667cd1c6dbb2b5a6dfed35a051a44d8f512710191938a9'
     expect(block.parentHash).toEqual(parentBlockHash)
 
-    const parentBlock = await ethProvider.getBlock(parentBlockHash)
+    const parentBlock = await fortaEthersProvider.getBlock(parentBlockHash)
     expect(parentBlock.number).toEqual(blockNumber - 1)
-    const resp = await app.ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
+    const resp = await ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
 
     if (E.isLeft(resp)) {
       throw resp.left.message
     }
 
     const resp2 = new BigNumber(
-      (await ethProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
+      (await fortaEthersProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
     )
 
     const expectedBalance = 38186.88677324665
@@ -104,10 +121,8 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getShareRate is 1.16583492875463847628', async () => {
-    const app = await App.getInstance(drpcProvider)
-
     const blockNumber = 19_811_012
-    const shareRate = await app.ethClient.getShareRate(blockNumber)
+    const shareRate = await ethClient.getShareRate(blockNumber)
     if (E.isLeft(shareRate)) {
       throw shareRate.left.message
     }
