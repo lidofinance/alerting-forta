@@ -1,13 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "sourceMap": true,
     "module": "commonjs",
     "outDir": "dist",
     "strict": true,
     "moduleResolution": "node",
     "baseUrl": ".",
-    "downlevelIteration": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
