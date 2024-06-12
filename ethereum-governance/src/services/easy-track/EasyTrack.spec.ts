@@ -8,12 +8,10 @@ import {
   INCREASE_STAKING_LIMIT_ADDRESS as increaseStakingLimitAddress,
 } from '../../shared/constants/common/mainnet'
 import BigNumber from 'bignumber.js'
-import {
-  STONKS_STETH_DAI_ADDRESS,
-  STONKS_TOP_UP_ALLOWED_RECIPIENTS_ADDRESS,
-} from '../../shared/constants/stonks/mainnet'
+import { STONKS_STETH_DAI_ADDRESS, STONKS_ALLOWED_RECIPIENT_ADDRESS } from '../../shared/constants/stonks/mainnet'
 import { TopUpAllowedRecipients__factory } from '../../generated'
 import { ETH_DECIMALS } from '../../shared/constants'
+import { TOP_UP_ALLOWED_RECIPIENTS_CONTRACT } from '../../shared/constants/easy-track/mainnet'
 
 describe('EasyTrackSrv', () => {
   let logger: Logger
@@ -100,7 +98,7 @@ describe('EasyTrackSrv', () => {
     },
   )
 
-  it('handles EasyTrack motion - Stonks popup', async () => {
+  it('handles EasyTrack motion - Stonks topup', async () => {
     TopUpAllowedRecipients__factory.connect = jest.fn().mockReturnValue({
       decodeEVMScriptCallData: jest.fn().mockResolvedValue({
         recipients: [STONKS_STETH_DAI_ADDRESS],
@@ -112,7 +110,7 @@ describe('EasyTrackSrv', () => {
     jest.mocked(txEvent.filterLog).mockReturnValue([
       {
         args: {
-          _evmScriptFactory: STONKS_TOP_UP_ALLOWED_RECIPIENTS_ADDRESS,
+          _evmScriptFactory: STONKS_ALLOWED_RECIPIENT_ADDRESS,
           _motionId: '1',
           _creator: '0x123',
           _evmScriptCallData: '0x123',
@@ -126,6 +124,38 @@ describe('EasyTrackSrv', () => {
     expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
     expect(findings[0].description).toBe(
       'New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nTop up STONKS:\n[stETH -> DAI](https://etherscan.io/address/0x3e2D251275A92a8169A3B17A2C49016e2de492a7) pair with 100.00 stETH',
+    )
+    expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
+  })
+
+  it('handles EasyTrack motion - Single allowed recipient topup', async () => {
+    ethProvider.getTokenSymbol = jest.fn().mockResolvedValue(E.right('stETH'))
+    const rccAddress = '0xde06d17db9295fa8c4082d4f73ff81592a3ac437'
+    TopUpAllowedRecipients__factory.connect = jest.fn().mockReturnValue({
+      decodeEVMScriptCallData: jest.fn().mockResolvedValue({
+        recipients: [rccAddress],
+        amounts: [ETH_DECIMALS.multipliedBy(100).toString()],
+      }),
+      token: jest.fn().mockResolvedValue('0x123'),
+    } as unknown as TopUpAllowedRecipients__factory)
+    txEvent.addresses[EASY_TRACK_ADDRESS] = true
+    jest.mocked(txEvent.filterLog).mockReturnValue([
+      {
+        args: {
+          _evmScriptFactory: TOP_UP_ALLOWED_RECIPIENTS_CONTRACT,
+          _motionId: '1',
+          _creator: '0x123',
+          _evmScriptCallData: '0x123',
+        },
+      } as unknown as LogDescription,
+    ])
+
+    const findings = await easyTrackSrv.handleEasyTrackMotionCreated(txEvent)
+
+    expect(findings).toHaveLength(1)
+    expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
+    expect(findings[0].description).toBe(
+      'New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nTop up allowed recipient Resourcing and Compensation Committee (RCC) for [0xde06d17db9295fa8c4082d4f73ff81592a3ac437](https://etherscan.io/address/0xde06d17db9295fa8c4082d4f73ff81592a3ac437) with 100.00 stETH',
     )
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })

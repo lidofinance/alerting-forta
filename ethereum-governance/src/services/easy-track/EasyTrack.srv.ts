@@ -13,12 +13,15 @@ import {
   EASY_TRACK_STONKS_CONTRACTS,
   EASY_TRACK_TYPES_BY_FACTORIES,
   INCREASE_STAKING_LIMIT_ADDRESS,
+  SAFES,
+  TOP_UP_ALLOWED_RECIPIENTS_CONTRACT,
 } from 'constants/easy-track'
 import * as E from 'fp-ts/Either'
 import { networkAlert } from '../../shared/errors'
 import { EASY_TRACK_EVENTS } from '../../shared/events/easytrack_events'
 import { STONKS } from 'constants/stonks'
 import { TopUpAllowedRecipients__factory } from '../../generated'
+import { Blockchain } from '../../shared/contracts'
 
 export class EasyTrackSrv {
   private readonly logger: Logger
@@ -69,6 +72,7 @@ export class EasyTrackSrv {
         let description =
           `${getMotionType(EASY_TRACK_TYPES_BY_FACTORIES, args._evmScriptFactory)} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`
+
         if (args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS) {
           const NOInfo = await this.ethProvider.getNOInfoByMotionData(args._evmScriptCallData)
           if (E.isLeft(NOInfo)) {
@@ -94,6 +98,22 @@ export class EasyTrackSrv {
           }
         } else if (EASY_TRACK_STONKS_CONTRACTS.includes(args._evmScriptFactory.toLowerCase())) {
           description += `\n${await buildStonksTopUpDescription(args)}`
+        } else if (args._evmScriptFactory.toLowerCase() == TOP_UP_ALLOWED_RECIPIENTS_CONTRACT) {
+          const topUpContract = TopUpAllowedRecipients__factory.connect(args._evmScriptFactory, getEthersProvider())
+          const tokenAddress = await topUpContract.token()
+          const tokenSymbol = await this.ethProvider.getTokenSymbol(tokenAddress)
+          if (E.isLeft(tokenSymbol)) {
+            return [
+              networkAlert(
+                tokenSymbol.left,
+                `Error in ${EasyTrackSrv.name}.${this.handleEasyTrackMotionCreated.name} (uid:10ed392e)`,
+                `Could not call ethProvider.getTokenName for address - ${tokenAddress}`,
+              ),
+            ]
+          }
+          const contractPayload = await topUpContract.decodeEVMScriptCallData(args._evmScriptCallData)
+          const safeName = getSafeNameByAddress(contractPayload.recipients[0])
+          description += `\nTop up allowed recipient ${safeName} for ${etherscanAddress(contractPayload.recipients[0])} with ${formatEth(contractPayload.amounts[0])} ${tokenSymbol.right}`
         }
         out.push(
           Finding.fromObject({
@@ -125,4 +145,18 @@ export const buildStonksTopUpDescription = async (args: ethers.utils.Result): Pr
 
 const getStonksContractInfo = (address: string) => {
   return STONKS.find((c) => c.address === address)
+}
+
+export const getSafeNameByAddress = (address: string) => {
+  let safeName = address
+  Object.keys(SAFES).forEach((key) => {
+    const safe = SAFES[key as Blockchain].find(
+      (safeData: string[]) => safeData[0].toLowerCase() === address.toLowerCase(),
+    )
+    if (safe) {
+      safeName = safe[1]
+      return
+    }
+  })
+  return safeName
 }
