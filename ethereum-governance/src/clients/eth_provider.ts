@@ -436,4 +436,28 @@ export class ETHProvider
       return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
     }
   }
+
+  public async getTokenSymbol(tokenAddress: string) {
+    const abi = [
+      {
+        inputs: [],
+        name: 'symbol',
+        outputs: [{ internalType: 'string', name: '', type: 'string' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+    ]
+    try {
+      const result = await retryAsync(
+        async () => {
+          const tokenContract = new ethers.Contract(tokenAddress, abi, this.jsonRpcProvider)
+          return await tokenContract.symbol()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get symbol for token ${tokenAddress}`))
+    }
+  }
 }
