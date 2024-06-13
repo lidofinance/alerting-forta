@@ -12,6 +12,7 @@ import { STONKS_STETH_DAI_ADDRESS, STONKS_ALLOWED_RECIPIENT_ADDRESS } from '../.
 import { TopUpAllowedRecipients__factory } from '../../generated'
 import { ETH_DECIMALS } from '../../shared/constants'
 import { TOP_UP_ALLOWED_RECIPIENTS_CONTRACT } from '../../shared/constants/easy-track/mainnet'
+import { etherscanAddress, formatAmount } from '../../shared/string'
 
 describe('EasyTrackSrv', () => {
   let logger: Logger
@@ -128,13 +129,37 @@ describe('EasyTrackSrv', () => {
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })
 
-  it('handles EasyTrack motion - Single allowed recipient topup', async () => {
+  it.each([
+    {
+      name: 'Single allowed recipient topup',
+      recipients: [
+        {
+          address: '0x17f6b2c738a63a8d3a113a228cfd0b373244633d',
+          name: 'Pool Maintenance Labs Ltd. (PML)',
+        },
+      ],
+      amounts: [ETH_DECIMALS.multipliedBy(100).toString()],
+    },
+    {
+      name: 'Multiple allowed recipient topup',
+      recipients: [
+        {
+          address: '0x17f6b2c738a63a8d3a113a228cfd0b373244633d',
+          name: 'Pool Maintenance Labs Ltd. (PML)',
+        },
+        {
+          address: '0x9b1cebf7616f2bc73b47d226f90b01a7c9f86956',
+          name: 'Argo Technology Consulting Ltd. (ATC)',
+        },
+      ],
+      amounts: [ETH_DECIMALS.multipliedBy(100).toString(), ETH_DECIMALS.multipliedBy(200).toString()],
+    },
+  ])('handles EasyTrack motion - $name', async ({ recipients, amounts }) => {
     ethProvider.getTokenSymbol = jest.fn().mockResolvedValue(E.right('stETH'))
-    const rccAddress = '0xde06d17db9295fa8c4082d4f73ff81592a3ac437'
     TopUpAllowedRecipients__factory.connect = jest.fn().mockReturnValue({
       decodeEVMScriptCallData: jest.fn().mockResolvedValue({
-        recipients: [rccAddress],
-        amounts: [ETH_DECIMALS.multipliedBy(100).toString()],
+        recipients: recipients.map((r) => r.address),
+        amounts: amounts,
       }),
       token: jest.fn().mockResolvedValue('0x123'),
     } as unknown as TopUpAllowedRecipients__factory)
@@ -149,13 +174,19 @@ describe('EasyTrackSrv', () => {
         },
       } as unknown as LogDescription,
     ])
+    const expectedDescription = recipients
+      .map((r, idx) => {
+        const amount = formatAmount(amounts[idx], 18)
+        return `Top up allowed recipient ${r.name} for ${etherscanAddress(r.address)} with ${amount} stETH`
+      })
+      .join('\n')
 
     const findings = await easyTrackSrv.handleEasyTrackMotionCreated(txEvent)
 
     expect(findings).toHaveLength(1)
     expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
     expect(findings[0].description).toBe(
-      'New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nTop up allowed recipient Resourcing and Compensation Committee (RCC) for [0xde06d17db9295fa8c4082d4f73ff81592a3ac437](https://etherscan.io/address/0xde06d17db9295fa8c4082d4f73ff81592a3ac437) with 100.00 stETH',
+      `New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\n${expectedDescription}`,
     )
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })

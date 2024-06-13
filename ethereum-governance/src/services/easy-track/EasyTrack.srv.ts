@@ -112,8 +112,12 @@ export class EasyTrackSrv {
             ]
           }
           const contractPayload = await topUpContract.decodeEVMScriptCallData(args._evmScriptCallData)
-          const safeName = getSafeNameByAddress(contractPayload.recipients[0])
-          description += `\nTop up allowed recipient ${safeName} for ${etherscanAddress(contractPayload.recipients[0])} with ${formatEth(contractPayload.amounts[0])} ${tokenSymbol.right}`
+          contractPayload.recipients.forEach((recipient: string, idx: number) => {
+            const safeName = getSafeNameByAddress(recipient)
+            description += `\nTop up allowed recipient ${safeName} for ${etherscanAddress(recipient)} with ${formatEth(
+              contractPayload.amounts[idx],
+            )} ${tokenSymbol.right}`
+          })
         }
         out.push(
           Finding.fromObject({

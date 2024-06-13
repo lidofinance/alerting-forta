@@ -43,7 +43,7 @@ export const SAFES = {
     ['0xde06d17db9295fa8c4082d4f73ff81592a3ac437', 'Resourcing and Compensation Committee (RCC)'],
     ['0x87d93d9b2c672bf9c9642d853a8682546a5012b5', 'Liquidity Observation Lab (Ethereum)'],
     ['0x12a43b049a7d330cb8aeab5113032d18ae9a9030', 'LEGO Committee'],
-    ['0xe2a682a9722354d825d1bbdf372cc86b2ea82c8c', 'Referral Program Committee'],
+    ['0xe2a682a9722354d825d1bbdf372cc86b2ea82c8c', 'Rewards Share Committee'],
     ['0x3cd9f71f80ab08ea5a7dca348b5e94bc595f26a0', 'Lido Dev team (Ethereum)'],
     ['0x5181d5d56af4f823b96fe05f062d7a09761a5a53', 'Depositor bot gas funding (Ethereum)'],
     ['0x73b047fe6337183A454c5217241D780a932777bD', 'Emergency Brakes (Ethereum)'],
