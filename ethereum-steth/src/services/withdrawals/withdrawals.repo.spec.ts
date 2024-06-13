@@ -9,8 +9,7 @@ import { knex } from 'knex'
 const timeout = 120_000
 
 describe('Withdrawals repo tests', () => {
-  const config = new Config()
-  const dbClient = knex(config.knexConfig)
+  const dbClient = knex(Config.getKnexConfig())
   const repo = new WithdrawalsRepo(dbClient)
 
   const requests: WithdrawalRequest[] = [

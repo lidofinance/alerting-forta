@@ -12,27 +12,38 @@ import {
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../generated/typechain'
-import { Config } from '../utils/env/env'
 import { EtherscanProviderMock } from './mocks/mock'
 import { ETHProvider } from './eth_provider'
 
-describe('eth provider tests', () => {
-  const config = new Config()
+import { Metrics } from '../utils/metrics/metrics'
+import promClient from 'prom-client'
 
+describe('eth provider tests', () => {
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
   })
   const address: Address = Address
+  const chainId = 1
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
 
+  const defaultRegistry = promClient
+  const prefix = 'test_'
+  defaultRegistry.collectDefaultMetrics({
+    prefix: prefix,
+  })
+
+  const registry = new promClient.Registry()
+  const metrics = new Metrics(registry, prefix)
+
   const ethClient = new ETHProvider(
     logger,
+    metrics,
     fortaEthersProvider,
     EtherscanProviderMock(),
     lidoRunner,

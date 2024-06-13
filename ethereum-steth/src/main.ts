@@ -48,8 +48,22 @@ const main = async () => {
     transports: [new Winston.transports.Console()],
   })
 
+  const defaultRegistry = promClient
+  defaultRegistry.collectDefaultMetrics({
+    prefix: config.promPrefix,
+  })
+
+  const customRegister = new promClient.Registry()
+  const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
+  mergedRegistry.setDefaultLabels({ instance: config.instance })
+
+  const metrics = new Metrics(mergedRegistry, config.promPrefix)
+
   const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
-  const fortaEthersProvider = getEthersProvider()
+  let fortaEthersProvider = getEthersProvider()
+  if (!config.useFortaProvider) {
+    fortaEthersProvider = ethProvider
+  }
 
   const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
   const address: Address = Address
@@ -62,6 +76,7 @@ const main = async () => {
 
   const ethClient = new ETHProvider(
     logger,
+    metrics,
     fortaEthersProvider,
     etherscanProvider,
     lidoRunner,
@@ -72,6 +87,7 @@ const main = async () => {
 
   const drpcClient = new ETHProvider(
     logger,
+    metrics,
     ethProvider,
     etherscanProvider,
     lidoRunner,
@@ -121,17 +137,6 @@ const main = async () => {
     address.LIDO_STETH_ADDRESS,
   )
 
-  const defaultRegistry = promClient
-  defaultRegistry.collectDefaultMetrics({
-    prefix: config.promPrefix,
-  })
-
-  const customRegister = new promClient.Registry()
-  const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
-  mergedRegistry.setDefaultLabels({ instance: config.instance })
-
-  const metrics = new Metrics(mergedRegistry, config.promPrefix)
-
   try {
     await dbClient.migrate.latest()
 
@@ -143,11 +148,12 @@ const main = async () => {
 
   const onAppFindings: Finding[] = []
 
-  const healthChecker = new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime)
+  const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
 
   const gRPCserver = new grpc.Server()
   const blockH = new BlockHandler(
     logger,
+    metrics,
     stethOperationSrv,
     withdrawalsSrv,
     gateSealSrv,
@@ -155,16 +161,24 @@ const main = async () => {
     healthChecker,
     onAppFindings,
   )
-  const txH = new TxHandler(stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
-  const healthH = new HealthHandler(healthChecker, metrics)
-  const initH = new InitHandler(logger, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, onAppFindings)
+  const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
+  const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
+  const initH = new InitHandler(
+    config.appName,
+    logger,
+    stethOperationSrv,
+    withdrawalsSrv,
+    gateSealSrv,
+    vaultSrv,
+    onAppFindings,
+  )
   const alertH = new AlertHandler()
 
   gRPCserver.addService(AgentService, {
     initialize: initH.handleInit(),
     evaluateBlock: blockH.handleBlock(),
     evaluateTx: txH.handleTx(),
-    healthCheck: healthH.handleHealth(),
+    healthCheck: healthH.healthGrpc(),
     // not used, but required for grpc contract
     evaluateAlert: alertH.handleAlert(),
   })
@@ -199,7 +213,7 @@ const main = async () => {
     process.exit(1)
   }
 
-  metrics.build().set({ commitHash: Version.commitHash }, 1)
+  metrics.buildInfo.set({ commitHash: Version.commitHash }, 1)
 
   gRPCserver.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err != null) {
@@ -217,10 +231,7 @@ const main = async () => {
     res.send(await mergedRegistry.metrics())
   })
 
-  httpService.get('/health', async (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'application/json')
-    res.send(JSON.stringify('ok'))
-  })
+  httpService.get('/health', healthH.healthHttp())
 
   httpService.listen(config.httpPort, () => {
     logger.info(`Http server is running at http://localhost:${config.httpPort}`)

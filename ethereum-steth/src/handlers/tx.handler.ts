@@ -7,8 +7,10 @@ import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { newTransactionDto } from '../entity/events'
 import { Finding } from '../generated/proto/alert_pb'
+import { HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 
 export class TxHandler {
+  private metrics: Metrics
   private StethOperationSrv: StethOperationSrv
   private WithdrawalsSrv: WithdrawalsSrv
   private GateSealSrv: GateSealSrv
@@ -16,12 +18,14 @@ export class TxHandler {
   private healthChecker: HealthChecker
 
   constructor(
+    metrics: Metrics,
     StethOperationSrv: StethOperationSrv,
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
     healthChecker: HealthChecker,
   ) {
+    this.metrics = metrics
     this.StethOperationSrv = StethOperationSrv
     this.WithdrawalsSrv = WithdrawalsSrv
     this.GateSealSrv = GateSealSrv
@@ -34,6 +38,9 @@ export class TxHandler {
       call: ServerUnaryCall<EvaluateTxRequest, EvaluateTxResponse>,
       callback: sendUnaryData<EvaluateTxResponse>,
     ) => {
+      const end = this.metrics.summaryHandlers.labels({ method: HandleTxLabel }).startTimer()
+      this.metrics.lastAgentTouch.labels({ method: HandleTxLabel }).set(new Date().getTime())
+
       const txEvent = newTransactionDto(call.request)
 
       const findings: Finding[] = []
@@ -45,7 +52,10 @@ export class TxHandler {
 
       findings.push(...stethOperationFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
-      this.healthChecker.check(findings)
+      const errCount = this.healthChecker.check(findings)
+      errCount === 0
+        ? this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusOK }).inc()
+        : this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusFail }).inc()
 
       const txResponse = new EvaluateTxResponse()
       txResponse.setStatus(ResponseStatus.SUCCESS)
@@ -54,6 +64,7 @@ export class TxHandler {
       const m = txResponse.getMetadataMap()
       m.set('timestamp', new Date().toISOString())
 
+      end()
       callback(null, txResponse)
     }
   }

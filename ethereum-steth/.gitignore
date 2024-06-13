@@ -7,6 +7,8 @@ forta.config.json
 version.json
 .DS_Store
 /coverage/
-tools
+
+tools/vendor
+bin
 
 .env

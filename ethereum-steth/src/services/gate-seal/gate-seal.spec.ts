@@ -18,11 +18,13 @@ import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { Config } from '../../utils/env/env'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
+import promClient from 'prom-client'
+import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('GateSeal srv functional tests', () => {
-  const config = new Config()
+  const chainId = 1
 
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
@@ -31,14 +33,18 @@ describe('GateSeal srv functional tests', () => {
 
   const adr: Address = Address
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const lidoRunner = Lido__factory.connect(adr.LIDO_STETH_ADDRESS, fortaEthersProvider)
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(adr.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
   const gateSealRunner = GateSeal__factory.connect(adr.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
 
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
+
   const gateSealClient: IGateSealClient = new ETHProvider(
     logger,
+    m,
     fortaEthersProvider,
     EtherscanProviderMock(),
     lidoRunner,
