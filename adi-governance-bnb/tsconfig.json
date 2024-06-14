@@ -1,0 +1,8 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+  },
+  "exclude": ["e2e", "node_modules", "tests"],
+}
