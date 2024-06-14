@@ -1,14 +1,15 @@
 import { BlockEvent, Finding, FindingSeverity, FindingType, LogDescription, TransactionEvent } from 'forta-agent'
-import { etherscanAddress } from '../../shared/string'
-import { CROSS_CHAIN_CONTROLLER } from 'constants/common'
+import { etherscanAddress } from '../../utils/string'
 import * as E from 'fp-ts/Either'
-import { elapsedTime } from '../../shared/time'
+import { elapsedTime } from '../../utils/time'
 import { Logger } from 'winston'
-import { networkAlert } from '../../shared/errors'
-import { APPROVED_SENDER_ETH } from 'src/shared/constants/bnb-adi/mainnet'
-import { IBnbAdiEthClient } from './contract'
-import { SENDER_UPDATED_EVENT } from 'src/shared/events/cross_chain_controller_events'
+import { networkAlert } from '../../utils/errors'
+import { SENDER_UPDATED_EVENT } from 'src/utils/events/cross_chain_controller_events'
+import { ADI_CROSS_CHAIN_CONTROLLER, ARAGON_AGENT_ADDRESS } from 'src/utils/constants'
 
+export interface IBnbAdiEthClient {
+  isSenderApproved: (address: string, blockNumber: number) => Promise<E.Either<Error, boolean>>
+}
 interface IPermission {
   app: string
   entity: string
@@ -79,14 +80,14 @@ export class BnbAdiSrv {
   public async handleApprovedSender(blockEvent: BlockEvent): Promise<Finding[]> {
     const findings: Finding[] = []
 
-    const isSenderApproved = await this.ethProvider.isSenderApproved(APPROVED_SENDER_ETH, blockEvent.blockNumber)
+    const isSenderApproved = await this.ethProvider.isSenderApproved(ARAGON_AGENT_ADDRESS, blockEvent.blockNumber)
 
     if (E.isLeft(isSenderApproved)) {
       findings.push(
         networkAlert(
           isSenderApproved.left,
           `Error in ${BnbAdiSrv.name}.${this.handleApprovedSender.name}`,
-          `Could not call thProvider.isSenderApproved for address - ${APPROVED_SENDER_ETH}`,
+          `Could not call thProvider.isSenderApproved for address - ${ARAGON_AGENT_ADDRESS}`,
         ),
       )
     } else if (!isSenderApproved.right) {
@@ -94,7 +95,7 @@ export class BnbAdiSrv {
         Finding.fromObject({
           name: `🚨🚨🚨 BNB a.DI: Approved sender (DAO Agent) changed`,
           description:
-            `Address ${etherscanAddress(APPROVED_SENDER_ETH)} is not an approved sender anymore.` +
+            `Address ${etherscanAddress(ARAGON_AGENT_ADDRESS)} is not an approved sender anymore.` +
             `\nPlease update the constants file if the change was expected.`,
           alertId: 'ADI-BNB-DAO-AGENT-NOT-APPROVED',
           severity: FindingSeverity.Critical,
@@ -109,11 +110,11 @@ export class BnbAdiSrv {
   public async handleSenderUpdated(txEvent: TransactionEvent) {
     const findings: Finding[] = []
 
-    const senderUpdatedEvents = txEvent.filterLog(SENDER_UPDATED_EVENT, CROSS_CHAIN_CONTROLLER)
+    const senderUpdatedEvents = txEvent.filterLog(SENDER_UPDATED_EVENT, ADI_CROSS_CHAIN_CONTROLLER)
     senderUpdatedEvents.sort(byLogIndexAsc)
 
     senderUpdatedEvents.forEach((event) => {
-      if (event.args.address?.toLowerCase() !== APPROVED_SENDER_ETH) {
+      if (event.args.address?.toLowerCase() !== ARAGON_AGENT_ADDRESS) {
         findings.push(
           Finding.fromObject({
             name: `🚨🚨🚨 BNB a.DI: Approved senders list updated`,

@@ -1,6 +1,6 @@
 import { handleEventsOfNotice, TransactionEventContract } from './notice'
 import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-agent'
-import { EventOfNotice } from '../entity/events'
+import { EventOfNotice } from './types'
 
 describe('handleEventsOfNotice', () => {
   let txEvent: TransactionEventContract

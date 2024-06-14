@@ -14,10 +14,10 @@ import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
 import { Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
 import { App } from './app'
-import { elapsedTime } from './shared/time'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import Version from './shared/version'
-import { Metadata } from './entity/metadata'
+import { elapsedTime } from './utils/time'
+import Version from './utils/version'
+import { Metadata } from './utils/types'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {

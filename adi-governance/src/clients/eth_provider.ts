@@ -3,17 +3,12 @@ import { ethers } from 'forta-agent'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { CrossChainController } from '../generated'
-import { NetworkError } from '../shared/errors'
 import { BlockTag } from '@ethersproject/providers'
-import { IBnbAdiEthClient } from 'src/services/bnb-adi/contract'
+import { NetworkError } from 'src/utils/errors'
+import { IBnbAdiEthClient } from 'src/services/bnb-adi/BnbAdi.srv'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
-
-export interface IProxyContractData {
-  name: string
-  shortABI: string
-}
 
 export class ETHProvider implements IBnbAdiEthClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider

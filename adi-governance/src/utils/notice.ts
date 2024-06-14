@@ -1,5 +1,5 @@
 import { Finding, FindingType, Log, LogDescription } from 'forta-agent'
-import { EventOfNotice } from '../entity/events'
+import { EventOfNotice } from './types'
 
 export type TransactionEventContract = {
   addresses: {

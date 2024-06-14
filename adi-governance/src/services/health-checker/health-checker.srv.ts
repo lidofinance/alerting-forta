@@ -1,5 +1,5 @@
 import { Finding } from 'forta-agent'
-import { NetworkErrorFinding } from '../../shared/errors'
+import { NetworkErrorFinding } from '../../utils/errors'
 
 export const BorderTime = 15 * 60 * 1000 // 15 minutes
 export const MaxNumberErrorsPerBorderTime = 25

@@ -9,3 +9,5 @@ export type EventOfNotice = {
   severity: FindingSeverity
   type?: FindingType
 }
+
+export type Metadata = { [key: string]: string }

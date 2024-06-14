@@ -4,7 +4,7 @@
   "description": "Forta Bot for Lido protocol governance",
   "repository": {
     "type": "git",
-    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/ethereum-steth"
+    "directory": "https://github.com/lidofinance/alerting-forta/tree/main/adi-governance"
   },
   "license": "MIT",
   "chainIds": [
