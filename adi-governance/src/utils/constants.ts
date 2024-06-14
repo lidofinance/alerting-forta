@@ -1,4 +1,0 @@
-// TODO: replace with mainnet address
-export const CROSS_CHAIN_FORWARDER_ADDRESS = '0x9d8548963Fa0a9BE7C434cA482dd5b79E8062d3A'
-
-export const ARAGON_AGENT_ADDRESS = '0x3e40d73eb977dc6a537af587d48316fee66e9c8c'
