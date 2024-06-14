@@ -7,7 +7,6 @@ export type EventOfNotice = {
   alertId: string
   description: CallableFunction
   severity: FindingSeverity
-  type?: FindingType
+  type: FindingType
+  uniqueKey: string
 }
-
-export type Metadata = { [key: string]: string }

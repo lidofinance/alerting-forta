@@ -34,3 +34,7 @@ export class NetworkError extends Error {
     }
   }
 }
+
+export function getUniqueKey(uniqueKey: string, blockNumber: number): string {
+  return uniqueKey + '-' + blockNumber.toString()
+}

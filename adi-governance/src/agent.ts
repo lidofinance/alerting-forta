@@ -5,19 +5,19 @@ import {
   FindingSeverity,
   FindingType,
   HandleBlock,
-  HandleTransaction,
   HealthCheck,
+  TransactionEvent,
 } from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
-import { Initialize } from 'forta-agent/dist/sdk/handlers'
+import { HandleTransaction, Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
 import { App } from './app'
-import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { elapsedTime } from './utils/time'
 import Version from './utils/version'
-import { Metadata } from './utils/types'
+
+type Metadata = { [key: string]: string }
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -45,9 +45,7 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    app.BnbAdiSrv.initialize(latestBlockNumber.right)
-
-    const agents: string[] = [app.BnbAdiSrv.getName()]
+    const agents: string[] = [app.crossChainForwarderSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
     const decodedJwt = decodeJwt(token.right)
@@ -85,8 +83,9 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const servicesFindings = (await Promise.all([app.BnbAdiSrv.handleBlock(blockEvent)])).flat()
-    findings.push(...servicesFindings)
+    // const govEventFindings = app.crossChainForwarderEventWatcher.handleLogs(l2logs.right)
+    // const servicesFindings = (await Promise.all([app.BnbAdiSrv.handleBlock(blockEvent)])).flat()
+    // findings.push(...servicesFindings)
 
     app.healthChecker.check(findings)
 
@@ -100,7 +99,7 @@ export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
 
-    const findings: Finding[] = (await Promise.all([await app.BnbAdiSrv.handleTransaction(txEvent)])).flat()
+    const findings = await app.crossChainForwarderSrv.handleTransaction(txEvent)
 
     app.healthChecker.check(findings)
 
