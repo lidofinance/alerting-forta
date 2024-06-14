@@ -3,9 +3,9 @@ import { filterLog, Finding } from 'forta-agent'
 import { EventOfNotice } from '../../utils/types'
 import { Logger } from 'winston'
 import { elapsedTime } from '../../utils/time'
-import { getUniqueKey } from 'src/utils/finding.helpers'
+import { getUniqueKey } from '../../utils/finding.helpers'
 
-export class EventWatcher {
+export class EventWatcherSrv {
   private readonly name: string
   private readonly eventsToFinding: EventOfNotice[]
   private readonly logger: Logger
