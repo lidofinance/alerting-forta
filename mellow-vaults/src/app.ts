@@ -1,12 +1,10 @@
 import { getEthersProvider, fetchJwt, Finding, verifyJwt } from 'forta-agent'
-import { LIDO_STETH_ADDRESS } from 'constants/common'
 import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
 import { DataRW } from './shared/mutex'
 import * as Winston from 'winston'
 import * as E from 'fp-ts/Either'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/HealthChecker.srv'
-import { LidoDAO__factory } from './generated'
 import { VaultWatcherSrv } from './services/vault-watcher/VaultWatcher.srv'
 import { MultisigWatcherSrv } from './services/multisig-watcher/MultisigWatcher.srv'
 import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
@@ -50,9 +48,7 @@ export class App {
       const ethersProvider = getEthersProvider()
       ethersProvider.formatter = new FormatterWithEIP1898()
 
-      const stethContract = LidoDAO__factory.connect(LIDO_STETH_ADDRESS, ethersProvider)
-
-      const ethClient = new ETHProvider(ethersProvider, stethContract)
+      const ethClient = new ETHProvider(ethersProvider)
 
       const logger: Winston.Logger = Winston.createLogger({
         format: Winston.format.simple(),

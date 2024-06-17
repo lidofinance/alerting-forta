@@ -2,8 +2,8 @@ import { Logger } from 'winston'
 import { Finding, FindingType, TransactionEvent } from 'forta-agent'
 import { NetworkError } from '../../shared/errors'
 import { elapsedTime } from '../../shared/time'
-import { GNOSIS_SAFE_EVENTS_OF_NOTICE, MELLOW_VAULT_ADMIN_MULTISIGS, SafeTX } from 'constants/common'
-
+import { MELLOW_VAULT_ADMIN_MULTISIGS, SafeTX } from 'constants/common'
+import { GNOSIS_SAFE_EVENTS_OF_NOTICE } from '../../shared/events/safe_events'
 const safes = MELLOW_VAULT_ADMIN_MULTISIGS
 
 export class MultisigWatcherSrv {

@@ -12,11 +12,13 @@
       2. 🚨🚨🚨 Vault totalSupply more than maximalTotalSupply
       3. 🚨🚨🚨 Vault critical storage slot value changed
       4. 🚨 Vault critical storage not loaded
-      5. ⚠️ Vault totalSupply close to maximalTotalSupply
+      5. ⚠️ Vault totalSupply close to maximalTotalSupply (every 1800 blocks)
+      6. ⚠️ Vault totalSupply reached maximalTotalSupply (every 1800 blocks)
    2. HandleTransaction
       1. 🚨 Vault: Role Admin changed
       2. 🚨 Vault: Role revoked
       3. 🚨 Vault: Role granted
+      4. ⚠️ Vault: Symbiotic limit increased
 2. Multisig
    1. HandleTransaction
       1. 🚨 Gnosis Safe: Owner added

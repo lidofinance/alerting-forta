@@ -4,9 +4,10 @@ import * as E from 'fp-ts/Either'
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { NetworkError, networkAlert } from '../../shared/errors'
 import { elapsedTime } from '../../shared/time'
-import { Storage, VAULT_LIST } from 'constants/common'
+import { MELLOW_SYMBIOTIC_ADDRESS, SIX_HOUR_BLOCK_COUNT, Storage, VAULT_LIST } from 'constants/common'
 import { getACLEvents } from '../../shared/events/acl_events'
 import { handleEventsOfNotice, TransactionEventContract } from '../../shared/notice'
+import { getLimitEvents } from '../../shared/events/limit_events'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type VaultWatcherClient = {
@@ -73,6 +74,9 @@ export class VaultWatcherSrv {
 
   public handleAclChanges(txEvent: TransactionEventContract): Finding[] {
     const findings: Finding[] = []
+
+    const limitFindings = handleEventsOfNotice(txEvent, getLimitEvents(MELLOW_SYMBIOTIC_ADDRESS))
+    findings.push(...limitFindings)
 
     VAULT_LIST.forEach((vault) => {
       const aclFindings = handleEventsOfNotice(txEvent, getACLEvents(vault.defaultBondStrategy))
@@ -191,6 +195,7 @@ export class VaultWatcherSrv {
           address: vault.vault,
           diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
           low: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
+          eq: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9999999)),
         }
       }),
     )
@@ -211,7 +216,17 @@ export class VaultWatcherSrv {
             type: FindingType.Suspicious,
           }),
         )
-      } else if (result.low.gt(0)) {
+      } else if (result.eq.gt(0) && blockEvent.blockNumber % SIX_HOUR_BLOCK_COUNT == 0) {
+        out.push(
+          Finding.fromObject({
+            name: '⚠️ Vault totalSupply reached maximalTotalSupply',
+            description: `Mellow Vault ${result.address} maximalTotalSupply reached`,
+            alertId: 'VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX',
+            severity: FindingSeverity.Medium,
+            type: FindingType.Suspicious,
+          }),
+        )
+      } else if (result.low.gt(0) && blockEvent.blockNumber % SIX_HOUR_BLOCK_COUNT == 0) {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault totalSupply close to maximalTotalSupply',

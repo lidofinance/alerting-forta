@@ -6,7 +6,7 @@ import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { LidoDAO, Vault__factory, VaultConfigurator__factory } from '../generated'
+import { Vault__factory, VaultConfigurator__factory } from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
 import { Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from 'constants/common'
 
@@ -20,11 +20,9 @@ export interface IProxyContractData {
 
 export class ETHProvider implements VaultWatcherClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private readonly stethContract: LidoDAO
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, stethContract: LidoDAO) {
+  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider) {
     this.jsonRpcProvider = jsonRpcProvider
-    this.stethContract = stethContract
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
