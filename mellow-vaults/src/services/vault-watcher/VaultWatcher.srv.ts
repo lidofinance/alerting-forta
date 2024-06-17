@@ -15,6 +15,8 @@ export type VaultWatcherClient = {
   getVaultConfiguratorMaxTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
   getVaultUnderlyingTvl(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
   getVaultConfigurationStorage(address: string, blockHash: number): Promise<E.Either<Error, Storage>>
+  getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 }
 
 const vaultStorages: Storage[] = []
@@ -90,16 +92,22 @@ export class VaultWatcherSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [limitsIntegrityFindings, handleWstETHIntegrityFindings, handleVaultConfigurationChangeFindings] =
-      await Promise.all([
-        this.handleLimitsIntegrity(blockEvent),
-        this.handleWstETHIntegrity(blockEvent),
-        this.handleVaultConfigurationChange(blockEvent),
-      ])
+    const [
+      limitsIntegrityFindings,
+      handleWstETHIntegrityFindings,
+      handleVaultConfigurationChangeFindings,
+      handleSymbioticWstETHLimitFindings,
+    ] = await Promise.all([
+      this.handleLimitsIntegrity(blockEvent),
+      this.handleWstETHIntegrity(blockEvent),
+      this.handleVaultConfigurationChange(blockEvent),
+      this.handleSymbioticWstETHLimit(blockEvent),
+    ])
     findings.push(
       ...limitsIntegrityFindings,
       ...handleWstETHIntegrityFindings,
       ...handleVaultConfigurationChangeFindings,
+      ...handleSymbioticWstETHLimitFindings,
     )
 
     this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.handleBlock.name, start))
@@ -194,7 +202,7 @@ export class VaultWatcherSrv {
         return {
           address: vault.vault,
           diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
-          low: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
+          near: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
           eq: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9999999)),
         }
       }),
@@ -226,7 +234,7 @@ export class VaultWatcherSrv {
             type: FindingType.Suspicious,
           }),
         )
-      } else if (result.low.gt(0) && blockEvent.blockNumber % SIX_HOUR_BLOCK_COUNT == 0) {
+      } else if (result.near.gt(0) && blockEvent.blockNumber % SIX_HOUR_BLOCK_COUNT == 0) {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault totalSupply close to maximalTotalSupply',
@@ -281,10 +289,10 @@ export class VaultWatcherSrv {
         out.push(result)
         return
       }
-      if (result.supplyToUnderlying.minus(1).abs().gt(1e9)) {
+      if (result.supplyToUnderlying.minus(1).abs().gte(1e-9)) {
         out.push(
           Finding.fromObject({
-            name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is almost same',
+            name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same',
             description: `Mellow Vault - ${result.address}`,
             alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
@@ -293,6 +301,55 @@ export class VaultWatcherSrv {
         )
       }
     })
+
+    return out
+  }
+
+  private async handleSymbioticWstETHLimit(blockEvent: BlockEvent): Promise<Finding[]> {
+    const out: Finding[] = []
+
+    if (blockEvent.blockNumber % SIX_HOUR_BLOCK_COUNT != 0) {
+      return out
+    }
+
+    const [symbioticWstTotalSupply, symbioticWstLimit] = await Promise.all([
+      this.ethClient.getSymbioticWstTotalSupply(blockEvent.blockNumber),
+      this.ethClient.getSymbioticWstLimit(blockEvent.blockNumber),
+    ])
+
+    if (E.isLeft(symbioticWstTotalSupply)) {
+      out.push(
+        networkAlert(
+          symbioticWstTotalSupply.left as unknown as Error, // TODO
+          `Error in ${VaultWatcherSrv.name}.${this.handleSymbioticWstETHLimit.name} (uid:9e488c8c)`,
+          `Could not call ethProvider.getSymbioticWstTotalSupply`,
+        ),
+      )
+      return out
+    }
+
+    if (E.isLeft(symbioticWstLimit)) {
+      out.push(
+        networkAlert(
+          symbioticWstLimit.left as unknown as Error, // TODO
+          `Error in ${VaultWatcherSrv.name}.${this.handleSymbioticWstETHLimit.name} (uid:db70b1bb)`,
+          `Could not call ethProvider.getSymbioticWstLimit`,
+        ),
+      )
+      return out
+    }
+
+    if (symbioticWstLimit.right.minus(symbioticWstTotalSupply.right).abs().lt(1e-9)) {
+      out.push(
+        Finding.fromObject({
+          name: '⚠️ Vault: Symbiotic limit reached',
+          description: `Symbiotic - ${MELLOW_SYMBIOTIC_ADDRESS}`,
+          alertId: 'VAULT-WSTETH-LIMIT-REACHED',
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        }),
+      )
+    }
 
     return out
   }

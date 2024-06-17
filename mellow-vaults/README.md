@@ -8,7 +8,7 @@
 
 1. Vault operations
    1. HandleBlock
-      1. 🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is almost same
+      1. 🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same
       2. 🚨🚨🚨 Vault totalSupply more than maximalTotalSupply
       3. 🚨🚨🚨 Vault critical storage slot value changed
       4. 🚨 Vault critical storage not loaded
@@ -19,6 +19,7 @@
       2. 🚨 Vault: Role revoked
       3. 🚨 Vault: Role granted
       4. ⚠️ Vault: Symbiotic limit increased
+      5. ⚠️ Vault: Symbiotic limit reached
 2. Multisig
    1. HandleTransaction
       1. 🚨 Gnosis Safe: Owner added

@@ -6,9 +6,9 @@ import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { Vault__factory, VaultConfigurator__factory } from '../generated'
+import { Vault__factory, VaultConfigurator__factory, SymbioticWstETH__factory } from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from 'constants/common'
+import { MELLOW_SYMBIOTIC_ADDRESS, Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from 'constants/common'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -186,6 +186,50 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
+  public async getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EthersBigNumber>(
+        async (): Promise<EthersBigNumber> => {
+          const symbioticWstContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const [totalSupply] = await symbioticWstContract.functions.limit({
+            blockTag: block.number,
+          })
+
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch getVaultSymbioticWstLimit value`))
+    }
+  }
+
+  public async getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EthersBigNumber>(
+        async (): Promise<EthersBigNumber> => {
+          const symbioticWstContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const [totalSupply] = await symbioticWstContract.functions.totalSupply({
+            blockTag: block.number,
+          })
+
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch SymbioticWstTotalSupply value`))
+    }
+  }
+
   public async getVaultConfigurationStorage(address: string, blockNumber: number): Promise<E.Either<Error, Storage>> {
     try {
       const out = await retryAsync<Storage>(
@@ -212,6 +256,7 @@ export class ETHProvider implements VaultWatcherClient {
       return E.left(new NetworkError(e, `Could not fetch getVaultConfigurationStorage`))
     }
   }
+
   public async getContractOwner(
     address: string,
     method: string,
