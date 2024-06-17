@@ -42,7 +42,7 @@ export class CrossChainForwarderSrv {
           description: event.args.isApproved
             ? `Address ${etherscanAddress(event.args.address)} was set as an approved sender`
             : `Address ${etherscanAddress(event.args.address)} was removed from the approved senders list`,
-          alertId: 'ADI-APPROVED-SENDER-UPDATED',
+          alertId: 'BNB-ADI-APPROVED-SENDER-UPDATED',
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
           metadata: { args: String(event.args) },
