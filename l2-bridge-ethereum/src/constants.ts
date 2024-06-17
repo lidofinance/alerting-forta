@@ -107,6 +107,8 @@ export const ARBITRUM_GATEWAY_SET_EVENT =
 export const LINEA_CUSTOM_CONTRACT_SET_EVENT =
   "event CustomContractSet(address indexed nativeToken, address indexed customContract, address indexed setBy);";
 
+export const BSC_CROSS_CHAIN_FORWARDER = "";
+
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
     name: "Arbitrum",
@@ -602,6 +604,22 @@ const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
   },
 ];
 
+const BSC_L1_CROSS_CHAIN_FORWARDER_EVENTS = [
+  {
+    address: BSC_CROSS_CHAIN_FORWARDER,
+    event:
+      "event SenderUpdated(address indexed sender, bool indexed isApproved)",
+    alertId: "BSC-ADI-APPROVED-SENDER-UPDATED",
+    name: "🚨🚨🚨 BSC a.DI: Approved sender changed",
+    description: (args: Result) =>
+      args.isApproved
+        ? `Address ${args.sender} was set as an approved sender`
+        : `Address ${args.sender} was removed from the approved senders list`,
+    severity: FindingSeverity.Critical,
+    type: FindingType.Info,
+  },
+];
+
 export const THIRD_PARTY_PROXY_EVENTS: EventOfNotice[] =
   ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS.concat(
     OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS,
@@ -613,7 +631,8 @@ export const THIRD_PARTY_PROXY_EVENTS: EventOfNotice[] =
     .concat(SCROLL_L1_MESSENGER_PROXY_EVENTS)
     .concat(SCROLL_L1_MESSENGER_EVENTS)
     .concat(SCROLL_L1_GATEWAY_ROUTER_PROXY_EVENTS)
-    .concat(SCROLL_L1_GATEWAY_ROUTER_EVENTS);
+    .concat(SCROLL_L1_GATEWAY_ROUTER_EVENTS)
+    .concat(BSC_L1_CROSS_CHAIN_FORWARDER_EVENTS);
 
 export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
   (gw) => {
