@@ -6,13 +6,13 @@
 
 ## Sub-bots
 
-### Governance
+### CrossChainExecutor
 
-Alerts about events on the gov-bridge (optimism side)
+Alerts about events on the CrossChainExecutor
 
 **Alerts:**
 
-- Alerts on all events in gov-bridge (optimism side)
+- 🚨🚨🚨 BSC a.DI: Guardians updated
 
 ## Development
 

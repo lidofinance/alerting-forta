@@ -1,17 +1,10 @@
-import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
-import { L2_BRIDGE_EVENTS } from "./constants";
+import { TransactionEvent, Finding } from "forta-agent";
+import { CROSS_CHAIN_EXECUTOR_EVENTS } from "./constants";
 
-export const name = "BridgeWatcher";
+export const name = "CrossChainExecutorBot";
 
 export async function initialize(
-  currentBlock: number,
+  currentBlock: number
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}]`);
   return {};
@@ -20,13 +13,16 @@ export async function initialize(
 export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
-  handleL2BridgeEvents(txEvent, findings);
+  handleCrossChainExecutorEvents(txEvent, findings);
 
   return findings;
 }
 
-function handleL2BridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
-  L2_BRIDGE_EVENTS.forEach((eventInfo) => {
+function handleCrossChainExecutorEvents(
+  txEvent: TransactionEvent,
+  findings: Finding[]
+) {
+  CROSS_CHAIN_EXECUTOR_EVENTS.forEach((eventInfo) => {
     if (eventInfo.address in txEvent.addresses) {
       const events = txEvent.filterLog(eventInfo.event, eventInfo.address);
       events.forEach((event) => {
@@ -38,7 +34,7 @@ function handleL2BridgeEvents(txEvent: TransactionEvent, findings: Finding[]) {
             severity: eventInfo.severity,
             type: eventInfo.type,
             metadata: { args: String(event.args) },
-          }),
+          })
         );
       });
     }
