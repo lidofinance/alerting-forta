@@ -9,10 +9,7 @@ import BigNumber from 'bignumber.js'
 
 import { L2Client } from '../../common/clients/l2_client'
 import { EventWatcher } from '../../common/services/event_watcher'
-// import { ProxyContractClient } from './clients/proxy_contract_client'
-import { L2LidoGateway__factory } from './generated'
 import { ERC20Short__factory } from '../../common/generated'
-// import { ProxyWatcher } from './services/proxy_watcher'
 import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
 import { DataRW } from '../../common/utils/mutex'
 import * as Winston from 'winston'
@@ -27,9 +24,7 @@ import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
 
 export type Container = {
   l2Client: L2Client
-  // proxyWatcher: ProxyWatcher
   monitorWithdrawals: MonitorWithdrawals
-  // blockClient: L2BlockClient
   bridgeWatcher: EventWatcher
   bridgeBalanceSrv: BridgeBalanceSrv
   govWatcher: EventWatcher
@@ -51,11 +46,9 @@ export class App {
         transports: [new Winston.transports.Console()],
       })
 
-
       const nodeClient = new ethers.providers.JsonRpcProvider(Constants.L2_NETWORK_RPC, Constants.L2_NETWORK_ID)
       const bridgedWstethRunner = ERC20Short__factory.connect(Constants.L2_WSTETH_BRIDGED.address, nodeClient)
 
-      const l2Bridge = L2LidoGateway__factory.connect(Constants.L2_ERC20_TOKEN_GATEWAY.address, nodeClient)
       const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, Constants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
       const bridgeEventWatcher = new EventWatcher(
@@ -70,26 +63,10 @@ export class App {
         logger,
       )
 
-      // const LIDO_PROXY_CONTRACTS: ProxyContractClient[] = [
-      //   new ProxyContractClient(
-      //     Constants.L2_ERC20_TOKEN_GATEWAY.name,
-      //     Constants.L2_ERC20_TOKEN_GATEWAY.address,
-      //     ProxyAdmin__factory.connect(Constants.L2_PROXY_ADMIN_CONTRACT_ADDRESS, nodeClient),
-      //   ),
-      //   new ProxyContractClient(
-      //     Constants.L2_WSTETH_BRIDGED.name,
-      //     Constants.L2_WSTETH_BRIDGED.address,
-      //     ProxyAdmin__factory.connect(Constants.L2_PROXY_ADMIN_CONTRACT_ADDRESS, nodeClient),
-      //   ),
-      // ]
-
-      // const proxyWorker = new ProxyWatcher(LIDO_PROXY_CONTRACTS, logger)
-
       const monitorWithdrawals = new MonitorWithdrawals(
         l2Client, Constants.L2_ERC20_TOKEN_GATEWAY.address, logger, Constants.withdrawalInfo,
         Constants.SCROLL_APPROX_BLOCK_TIME_3_SECONDS
       )
-
 
       const ethProvider = new ethers.providers.FallbackProvider([
         new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), MAINNET_CHAIN_ID),
@@ -102,7 +79,6 @@ export class App {
 
       App.instance = {
         l2Client: l2Client,
-        // proxyWatcher: proxyWorker,
         monitorWithdrawals: monitorWithdrawals,
         bridgeWatcher: bridgeEventWatcher,
         bridgeBalanceSrv: bridgeBalanceSrv,
@@ -137,13 +113,6 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    // const agentMeta = await app.proxyWatcher.initialize(latestL2Block.right.number)
-    // if (E.isLeft(agentMeta)) {
-    //   app.logger.error(agentMeta.left)
-
-    //   process.exit(1)
-    // }
-
     const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(latestL2Block.right.number)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
       app.logger.error(monitorWithdrawalsInitResp.left)
@@ -151,12 +120,10 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    // metadata[`${app.proxyWatcher.getName()}.lastAdmins`] = agentMeta.right.lastAdmins
-    // metadata[`${app.proxyWatcher.getName()}.lastImpls`] = agentMeta.right.lastImpls
-    // metadata[`${app.monitorWithdrawals.getName()}.currentWithdrawals`] =
-    //   monitorWithdrawalsInitResp.right.currentWithdrawals
+    metadata[`${app.monitorWithdrawals.getName()}.currentWithdrawals`] =
+      monitorWithdrawalsInitResp.right.currentWithdrawals
 
-    const agents: string[] = [/*app.proxyWatcher.getName(),*/ app.monitorWithdrawals.getName()]
+    const agents: string[] = [app.monitorWithdrawals.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
     await app.findingsRW.write([
@@ -220,8 +187,7 @@ export const handleBlock = (): HandleBlock => {
 
     const l2blockNumbers = Array.from(l2blockNumbersSet)
 
-    const [/*proxyWatcherFindings,*/ bridgeBalanceFindings] = await Promise.all([
-      // app.proxyWatcher.handleBlocks(l2blockNumbers),
+    const [bridgeBalanceFindings] = await Promise.all([
       app.bridgeBalanceSrv.handleBlock(blockEvent.block.number, l2blockNumbers),
     ])
 
@@ -231,7 +197,6 @@ export const handleBlock = (): HandleBlock => {
       ...govEventFindings,
       ...proxyAdminEventFindings,
       ...monitorWithdrawalsFindings,
-      // ...proxyWatcherFindings,
     )
 
     app.logger.info(elapsedTime('handleBlock', startTime) + '\n')
