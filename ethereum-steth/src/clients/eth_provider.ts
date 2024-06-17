@@ -78,12 +78,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     try {
       const latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
 
-      this.metrics.etherCalls.labels({ method: 'getBlockNumber', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBlockNumber', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(latestBlockNumber)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getBlockNumber', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBlockNumber', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch latest block number`))
@@ -105,10 +105,10 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
           { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
 
-        this.metrics.etherCalls.labels({ method: 'getHistory', status: StatusOK }).inc()
+        this.metrics.etherJsRequest.labels({ method: 'getHistory', status: StatusOK }).inc()
         return out
       } catch (err) {
-        this.metrics.etherCalls.labels({ method: 'getHistory', status: StatusFail }).inc()
+        this.metrics.etherJsRequest.labels({ method: 'getHistory', status: StatusFail }).inc()
         throw new NetworkError(err, `Could not fetch transaction history between ${start} and ${end} blocks`)
       }
     }
@@ -149,12 +149,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
-      this.metrics.etherCalls.labels({ method: 'etherscanProvider.getBalance', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'etherscanProvider.getBalance', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'etherscanProvider.getBalance', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'etherscanProvider.getBalance', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch Steth balance`))
@@ -174,12 +174,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'getBalance', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBalance', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getBalance', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBalance', status: StatusFail }).inc()
       end({ status: StatusOK })
 
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address}`))
@@ -200,12 +200,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'getBalanceByBlockHash', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBalanceByBlockHash', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(out))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getBalanceByBlockHash', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBalanceByBlockHash', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address} and blockHash ${blockHash}`))
@@ -231,12 +231,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'getStakeLimitFullInfo', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getStakeLimitFullInfo', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(out)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getStakeLimitFullInfo', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getStakeLimitFullInfo', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call lidoContract.getStakeLimitFullInfo`))
@@ -258,12 +258,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'unfinalizedStETH', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'unfinalizedStETH', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(out)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'unfinalizedStETH', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'unfinalizedStETH', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.unfinalizedStETH`))
@@ -298,10 +298,10 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
           { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
 
-        this.metrics.etherCalls.labels({ method: 'getWithdrawalStatus', status: StatusOK }).inc()
+        this.metrics.etherJsRequest.labels({ method: 'getWithdrawalStatus', status: StatusOK }).inc()
         return out
       } catch (e) {
-        this.metrics.etherCalls.labels({ method: 'getWithdrawalStatus', status: StatusFail }).inc()
+        this.metrics.etherJsRequest.labels({ method: 'getWithdrawalStatus', status: StatusFail }).inc()
         throw new NetworkError(
           e,
           `Could not call wdQueueContract.getWithdrawalStatus on ${blockNumber} between ${requestIds[0]} and ${
@@ -350,12 +350,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'getBufferedEther', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBufferedEther', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(resp.toString()))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getBufferedEther', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getBufferedEther', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call lidoContract.getBufferedEther`))
@@ -417,12 +417,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'gate_seal_get_expiry_timestamp', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_get_expiry_timestamp', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(expiryTimestamp)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'gate_seal_get_expiry_timestamp', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_get_expiry_timestamp', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call gateSeal.functions.get_expiry_timestamp`))
@@ -453,12 +453,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'lido_get_eth_distributed_events', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_eth_distributed_events', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(report)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'lido_get_eth_distributed_events', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_eth_distributed_events', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call this.lidoContract.filters.ETHDistributed"`))
@@ -482,12 +482,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'gate_seal_is_expired', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_is_expired', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(isExpired)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'gate_seal_is_expired', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_is_expired', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call gateSeal.functions.is_expired`))
@@ -513,12 +513,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'wd_queue_hasRole', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wd_queue_hasRole', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(queuePauseRoleMember)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'wd_queue_hasRole', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wd_queue_hasRole', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.functions.hasRole`))
@@ -545,12 +545,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'vebo_hasRole', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'vebo_hasRole', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(exitBusPauseRoleMember)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'vebo_hasRole', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'vebo_hasRole', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call this.exitBusContract.functions.hasRole`))
@@ -570,12 +570,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'getTotalPooledEther', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getTotalPooledEther', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getTotalPooledEther', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getTotalPooledEther', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call this.getTotalPooledEther`))
@@ -595,12 +595,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'getTotalShares', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getTotalShares', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'getTotalShares', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'getTotalShares', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call lidoContract.getTotalShares`))
@@ -644,12 +644,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'wq_queue_is_bunker_mode_active', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_is_bunker_mode_active', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(isBunkerMode)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'wq_queue_is_bunker_mode_active', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_is_bunker_mode_active', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.isBunkerModeActive`))
@@ -671,12 +671,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'wq_queue_bunker_mode_since_timestamp', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_bunker_mode_since_timestamp', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(bunkerModeSinceTimestamp)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'wq_queue_bunker_mode_since_timestamp', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_bunker_mode_since_timestamp', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.bunkerModeSinceTimestamp`))
@@ -698,12 +698,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'wq_queue_get_last_request_id', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_last_request_id', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(lastRequestId)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'wq_queue_get_last_request_id', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_last_request_id', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.getLastRequestId`))
@@ -728,12 +728,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'wq_queue_get_withdrawal_status', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_withdrawal_status', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(out)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'wq_queue_get_withdrawal_status', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_withdrawal_status', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.getWithdrawalStatus`))
@@ -756,12 +756,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'lido_get_unbuffered_events', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_unbuffered_events', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(out)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'lido_get_unbuffered_events', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_unbuffered_events', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call lidoContract.queryFilter`))
@@ -784,12 +784,16 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'wd_queue_get_withdrawals_finalized_events', status: StatusOK }).inc()
+      this.metrics.etherJsRequest
+        .labels({ method: 'wd_queue_get_withdrawals_finalized_events', status: StatusOK })
+        .inc()
       end({ status: StatusOK })
 
       return E.right(out)
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'wd_queue_get_withdrawals_finalized_events', status: StatusFail }).inc()
+      this.metrics.etherJsRequest
+        .labels({ method: 'wd_queue_get_withdrawals_finalized_events', status: StatusFail })
+        .inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call wdQueueContract.queryFilter`))
@@ -809,12 +813,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherCalls.labels({ method: 'lido_get_depositable_ether', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_depositable_ether', status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
-      this.metrics.etherCalls.labels({ method: 'lido_get_depositable_ether', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_depositable_ether', status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call lidoContract.getDepositableEther"`))

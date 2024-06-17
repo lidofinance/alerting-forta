@@ -42,6 +42,10 @@ import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
 const main = async () => {
   const config = new Config()
   const dbClient = knex(config.knexConfig)
+  if (config.dataProvider === '') {
+    console.log('Could not set up dataProvider')
+    process.exit(1)
+  }
 
   const logger: Winston.Logger = Winston.createLogger({
     format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
@@ -55,7 +59,7 @@ const main = async () => {
 
   const customRegister = new promClient.Registry()
   const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
-  mergedRegistry.setDefaultLabels({ instance: config.instance })
+  mergedRegistry.setDefaultLabels({ instance: config.instance, dataProvider: config.dataProvider })
 
   const metrics = new Metrics(mergedRegistry, config.promPrefix)
 

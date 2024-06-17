@@ -12,7 +12,7 @@ export class Metrics {
   public readonly healthStatus: Gauge
   public readonly buildInfo: Gauge
 
-  public readonly etherCalls: Counter
+  public readonly etherJsRequest: Counter
   public readonly networkErrors: Counter
   public readonly lastBlockNumber: Gauge
   public readonly etherJsDurationHistogram: Histogram
@@ -38,7 +38,7 @@ export class Metrics {
       registers: [this.registry],
     })
 
-    this.etherCalls = new Counter({
+    this.etherJsRequest = new Counter({
       name: this.prefix + 'etherjs_request_total',
       help: 'Total number of requests via ether.js library',
       labelNames: ['method' as const, 'status' as const] as const,

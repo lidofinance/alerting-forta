@@ -6,6 +6,7 @@ export class Config {
   public readonly nodeEnv: string
   public readonly instance: string
   public readonly ethereumRpcUrl: string
+  public readonly dataProvider: string
 
   public readonly grpcPort: number
   public readonly httpPort: number
@@ -39,6 +40,14 @@ export class Config {
     this.useFortaProvider = JSON.parse(process.env.USE_FORTA_RPC_URL!)
 
     this.knexConfig = Config.getKnexConfig()
+
+    const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^\/\n]+)/
+
+    this.dataProvider = ''
+    const match = this.ethereumRpcUrl.match(urlRegex)
+    if (match) {
+      this.dataProvider = match[1]
+    }
   }
 
   public static getKnexConfig(): knex.Knex.Config {
