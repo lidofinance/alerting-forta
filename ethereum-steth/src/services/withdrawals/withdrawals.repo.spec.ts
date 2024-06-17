@@ -1,15 +1,17 @@
-import { App, Container } from '../../app'
 import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import BigNumber from 'bignumber.js'
 import { faker } from '@faker-js/faker'
 import { NotFound, WithdrawalsRepo } from './Withdrawals.repo'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
+import { Config } from '../../utils/env/env'
+import { knex } from 'knex'
 
 const timeout = 120_000
 
 describe('Withdrawals repo tests', () => {
-  let app: Container
-  let repo: WithdrawalsRepo
+  const config = new Config()
+  const dbClient = knex(config.knexConfig)
+  const repo = new WithdrawalsRepo(dbClient)
 
   const requests: WithdrawalRequest[] = [
     new WithdrawalRequest(
@@ -51,12 +53,8 @@ describe('Withdrawals repo tests', () => {
   ]
 
   beforeAll(async () => {
-    app = await App.getInstance()
-
-    await app.db.migrate.down()
-    await app.db.migrate.latest()
-
-    repo = new WithdrawalsRepo(app.db)
+    await dbClient.migrate.down()
+    await dbClient.migrate.latest()
 
     const err = await repo.createOrUpdate(requests)
     if (err !== null) {
@@ -65,7 +63,7 @@ describe('Withdrawals repo tests', () => {
   })
 
   afterAll(async () => {
-    await app.db.destroy()
+    await dbClient.destroy()
   })
 
   test(

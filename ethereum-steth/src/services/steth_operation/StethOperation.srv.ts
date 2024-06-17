@@ -1,6 +1,6 @@
 import { StethOperationCache } from './StethOperation.cache'
 import { ETH_DECIMALS } from '../../utils/constants'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
 import { Logger } from 'winston'
@@ -137,14 +137,14 @@ export class StethOperationSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [bufferedEthFindings, depositorBalanceFindings, stakingLimitFindings] = await Promise.all([
+    const [bufferedEthFindings, depositorBalanceFindings, stakingLimitFindings, shareRateFindings] = await Promise.all([
       this.handleBufferedEth(blockDto.number, blockDto.timestamp),
       this.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp),
       this.handleStakingLimit(blockDto.number, blockDto.timestamp),
       this.handleShareRateChange(blockDto.number),
     ])
 
-    findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings)
+    findings.push(...bufferedEthFindings, ...depositorBalanceFindings, ...stakingLimitFindings, ...shareRateFindings)
     this.logger.info(elapsedTime(StethOperationSrv.name + '.' + this.handleBlock.name, start))
 
     return findings

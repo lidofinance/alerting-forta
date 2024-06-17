@@ -1,6 +1,6 @@
 import { Knex } from 'knex'
 import { WithdrawalRequest, WithdrawalRequestSql } from '../../entity/withdrawal_request'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 
 export const KnexErr = Error
 export const NotFound = new Error('Not found')

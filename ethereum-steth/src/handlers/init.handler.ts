@@ -7,13 +7,11 @@ import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { Metadata } from '../entity/metadata'
 import Version from '../utils/version'
-import { ETHProvider } from '../clients/eth_provider'
 import { elapsedTime } from '../utils/time'
 import { ETH_DECIMALS } from '../utils/constants'
 import { Finding } from '../generated/proto/alert_pb'
 
 export class InitHandler {
-  private readonly ethClient: ETHProvider
   private readonly logger: Logger
   private readonly StethOperationSrv: StethOperationSrv
   private readonly WithdrawalsSrv: WithdrawalsSrv
@@ -23,7 +21,6 @@ export class InitHandler {
   private onAppStartFindings: Finding[] = []
 
   constructor(
-    ethClient: ETHProvider,
     logger: Logger,
     StethOperationSrv: StethOperationSrv,
     WithdrawalsSrv: WithdrawalsSrv,
@@ -31,7 +28,6 @@ export class InitHandler {
     VaultSrv: VaultSrv,
     onAppStartFindings: Finding[],
   ) {
-    this.ethClient = ethClient
     this.logger = logger
     this.StethOperationSrv = StethOperationSrv
     this.WithdrawalsSrv = WithdrawalsSrv

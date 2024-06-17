@@ -1,60 +1,94 @@
-import { App, Container } from '../../app'
-import { WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
+import { getWithdrawalsEvents, WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
 import { Address } from '../../utils/constants'
 import BigNumber from 'bignumber.js'
 import { WithdrawalsRepo } from './Withdrawals.repo'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { BlockDto, TransactionDto } from '../../entity/events'
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { ethers } from 'ethers'
 import { Finding } from '../../generated/proto/alert_pb'
 import { filterLog } from 'forta-agent'
+import { Config } from '../../utils/env/env'
+import { knex } from 'knex'
+import * as Winston from 'winston'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import {
+  GateSeal__factory,
+  Lido__factory,
+  ValidatorsExitBusOracle__factory,
+  WithdrawalQueueERC721__factory,
+} from '../../generated/typechain'
+import { WithdrawalsSrv } from './Withdrawals.srv'
+import { WithdrawalsCache } from './Withdrawals.cache'
+import { ETHProvider } from '../../clients/eth_provider'
+import { EtherscanProviderMock } from '../../clients/mocks/mock'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('Withdrawals.srv functional tests', () => {
-  let ethProvider: JsonRpcProvider
-  const mainnet = 1
-  const drpcProvider = 'https://eth.drpc.org/'
+  const config = new Config()
+  const dbClient = knex(config.knexConfig)
+  const repo = new WithdrawalsRepo(dbClient)
 
-  beforeAll(async () => {
-    ethProvider = new ethers.providers.JsonRpcProvider(drpcProvider, mainnet)
+  const logger: Winston.Logger = Winston.createLogger({
+    format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
+    transports: [new Winston.transports.Console()],
   })
 
-  let app: Container
-  let repo: WithdrawalsRepo
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+
+  const address: Address = Address
+  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
+
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
+
+  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+
+  const ethClient = new ETHProvider(
+    logger,
+    fortaEthersProvider,
+    EtherscanProviderMock(),
+    lidoRunner,
+    wdQueueRunner,
+    gateSealRunner,
+    veboRunner,
+  )
+
+  const withdrawalsSrv = new WithdrawalsSrv(
+    logger,
+    new WithdrawalsRepo(dbClient),
+    ethClient,
+    new WithdrawalsCache(),
+    getWithdrawalsEvents(address.WITHDRAWALS_QUEUE_ADDRESS),
+    address.WITHDRAWALS_QUEUE_ADDRESS,
+    address.LIDO_STETH_ADDRESS,
+  )
 
   beforeAll(async () => {
-    app = await App.getInstance()
-
-    await app.db.migrate.down()
-    await app.db.migrate.latest()
-
-    repo = new WithdrawalsRepo(app.db)
+    await dbClient.migrate.down()
+    await dbClient.migrate.latest()
   }, TEST_TIMEOUT)
 
   afterAll(async () => {
-    await app.db.destroy()
+    await dbClient.destroy()
   }, TEST_TIMEOUT)
 
   test(
     'should emit WITHDRAWALS-LONG-UNFINALIZED-QUEUE when the withdrawal queue is clogged',
     async () => {
-      const app = await App.getInstance()
-
       const blockNumber = 19_609_409
-      const block = await ethProvider.getBlock(blockNumber)
+      const block = await fortaEthersProvider.getBlock(blockNumber)
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
       }
 
-      const initErr = await app.WithdrawalsSrv.initialize(blockNumber)
+      const initErr = await withdrawalsSrv.initialize(blockNumber)
       if (initErr !== null) {
         fail(initErr.message)
       }
-      const resultsBigOnly = await app.WithdrawalsSrv.handleUnfinalizedRequestNumber(blockDto)
+      const resultsBigOnly = await withdrawalsSrv.handleUnfinalizedRequestNumber(blockDto)
       expect(resultsBigOnly.length).toEqual(1)
 
       const expectedBig = {
@@ -73,14 +107,14 @@ describe('Withdrawals.srv functional tests', () => {
       expect(resultsBigOnly[0].getType()).toEqual(expectedBig.type)
 
       const neededBlockNumber = 19_609_410
-      const neededBlock = await ethProvider.getBlock(neededBlockNumber)
+      const neededBlock = await fortaEthersProvider.getBlock(neededBlockNumber)
       const neededBlockDto: BlockDto = {
         number: neededBlock.number,
         timestamp: neededBlock.timestamp,
         parentHash: neededBlock.parentHash,
       }
 
-      const results = await app.WithdrawalsSrv.handleUnfinalizedRequestNumber(neededBlockDto)
+      const results = await withdrawalsSrv.handleUnfinalizedRequestNumber(neededBlockDto)
 
       const expectedLong = {
         alertId: 'WITHDRAWALS-LONG-UNFINALIZED-QUEUE',
@@ -105,7 +139,7 @@ describe('Withdrawals.srv functional tests', () => {
     async () => {
       const txHash = '0xdf4c31a9886fc4269bfef601c6d0a287633d516d16d61d5b62b9341e704eb52c'
 
-      const trx = await ethProvider.getTransaction(txHash)
+      const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -117,11 +151,11 @@ describe('Withdrawals.srv functional tests', () => {
         },
       }
 
-      const initErr = await app.WithdrawalsSrv.initialize(19113262)
+      const initErr = await withdrawalsSrv.initialize(19113262)
       if (initErr !== null) {
         fail(initErr.message)
       }
-      const result = await app.WithdrawalsSrv.handleWithdrawalClaimed(transactionDto)
+      const result = await withdrawalsSrv.handleWithdrawalClaimed(transactionDto)
       expect(result.length).toEqual(0)
 
       const requestID = 24651

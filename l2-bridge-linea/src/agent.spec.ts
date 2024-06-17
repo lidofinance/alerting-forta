@@ -6,14 +6,14 @@ describe('agent-linea e2e tests', () => {
   test('should process handleBlocks', async () => {
     const app = await App.getInstance()
 
-    const blocksDto = await app.LineaClient.fetchBlocks(2476530, 2476540)
+    const blocksDto = await app.LineaClient.fetchBlocks(5348550, 5348560)
 
-    const agentMeta = await app.proxyWatcher.initialize(2476540)
+    const agentMeta = await app.proxyWatcher.initialize(5348560)
     if (E.isLeft(agentMeta)) {
       throw agentMeta
     }
 
-    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(2476540)
+    const monitorWithdrawalsInitResp = await app.monitorWithdrawals.initialize(5348560)
     if (E.isLeft(monitorWithdrawalsInitResp)) {
       throw monitorWithdrawalsInitResp
     }

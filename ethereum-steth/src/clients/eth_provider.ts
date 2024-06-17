@@ -1,6 +1,6 @@
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import BigNumber from 'bignumber.js'

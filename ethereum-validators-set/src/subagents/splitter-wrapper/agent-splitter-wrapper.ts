@@ -148,6 +148,10 @@ async function handleCreateObolLidoSplitEvent(
       if (expectedAlloc - 1 === percent) {
         return true;
       }
+      // 142858, 142857, 142857, 142857, 142857, 142857, 142857
+      if (expectedAlloc + 1 === percent) {
+        return true;
+      }
 
       return false;
     });
