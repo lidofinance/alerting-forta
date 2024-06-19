@@ -62,13 +62,12 @@ export function initialize(): Initialize {
 export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
+    const findings: Finding[] = []
 
-    const findings: Finding[] = (
-      await Promise.all([
-        app.crossChainExecutorWatcherSrv.handleTransaction(txEvent),
-        await app.crossChainControllerSrv.handleTransaction(txEvent),
-      ])
-    ).flat()
+    const crossChainExecutorFindings = app.crossChainExecutorWatcherSrv.handleTransaction(txEvent)
+    const crossChainControllerFindings = await app.crossChainControllerSrv.handleTransaction(txEvent)
+
+    findings.push(...crossChainExecutorFindings, ...crossChainControllerFindings)
 
     app.healthChecker.check(findings)
 
