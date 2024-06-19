@@ -33,7 +33,13 @@
     "keyfile": "forta-agent keyfile",
     "test": "jest",
     "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
-    "postinstall": "yarn generate-types"
+    "postinstall": "yarn generate-types",
+    "eslint:lint": "eslint ./src",
+    "eslint:format": "eslint ./src --fix",
+    "prettier:check": "prettier --check ./src",
+    "prettier:format": "prettier --write ./src README.md",
+    "lint": "yarn run prettier:check && yarn run eslint:lint",
+    "format": "yarn run eslint:format && yarn run prettier:format"
   },
   "dependencies": {
     "async-mutex": "^0.4.0",

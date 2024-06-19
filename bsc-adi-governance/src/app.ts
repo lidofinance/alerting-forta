@@ -1,4 +1,4 @@
-import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
 import * as Winston from 'winston'
 import * as E from 'fp-ts/Either'
 import { BSCProvider } from './clients/bsc_provider'
