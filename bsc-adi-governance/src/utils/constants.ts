@@ -28,9 +28,6 @@ export type LogDescription = ethers.utils.LogDescription
 const CROSS_CHAIN_EXECUTOR_ADDRESS = ''
 export const CROSS_CHAIN_CONTROLLER_ADDRESS = ''
 
-export const CROSS_CHAIN_CONTROLLER_TRANSACTION_RECEIVED_EVENT =
-  'event TransactionReceived(bytes32 transactionId, bytes32 indexed envelopeId, uint256 indexed originChainId, Transaction transaction, address indexed bridgeAdapter, uint8 confirmations)'
-
 export const CROSS_CHAIN_EXECUTOR_EVENTS: EventOfNotice[] = [
   {
     address: CROSS_CHAIN_EXECUTOR_ADDRESS,
