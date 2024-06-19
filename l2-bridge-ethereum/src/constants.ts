@@ -107,7 +107,7 @@ export const ARBITRUM_GATEWAY_SET_EVENT =
 export const LINEA_CUSTOM_CONTRACT_SET_EVENT =
   "event CustomContractSet(address indexed nativeToken, address indexed customContract, address indexed setBy);";
 
-export const BSC_CROSS_CHAIN_CONTROLLER = "";
+export const BSC_L1_CROSS_CHAIN_CONTROLLER = "";
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
@@ -606,7 +606,7 @@ const SCROLL_L1_GATEWAY_ROUTER_EVENTS = [
 
 const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
   {
-    address: BSC_CROSS_CHAIN_CONTROLLER,
+    address: BSC_L1_CROSS_CHAIN_CONTROLLER,
     event:
       "event SenderUpdated(address indexed sender, bool indexed isApproved)",
     alertId: "BSC-ADI-APPROVED-SENDER-UPDATED",
