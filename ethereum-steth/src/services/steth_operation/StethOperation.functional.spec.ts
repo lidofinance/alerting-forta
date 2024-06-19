@@ -20,11 +20,13 @@ import { getLidoEvents } from '../../utils/events/lido_events'
 import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
 import { getBurnerEvents } from '../../utils/events/burner_events'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
+import promClient from 'prom-client'
+import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 60_000 // ms
 
 describe('Steth.srv functional tests', () => {
-  const config = new Config()
+  const chainId = 1
 
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
@@ -32,14 +34,17 @@ describe('Steth.srv functional tests', () => {
   })
   const address: Address = Address
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
 
   const ethClient = new ETHProvider(
     logger,
+    m,
     fortaEthersProvider,
     EtherscanProviderMock(),
     lidoRunner,

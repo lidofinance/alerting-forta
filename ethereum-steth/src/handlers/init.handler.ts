@@ -17,10 +17,12 @@ export class InitHandler {
   private readonly WithdrawalsSrv: WithdrawalsSrv
   private readonly GateSealSrv: GateSealSrv
   private readonly VaultSrv: VaultSrv
+  private readonly appName: string
 
   private onAppStartFindings: Finding[] = []
 
   constructor(
+    appName: string,
     logger: Logger,
     StethOperationSrv: StethOperationSrv,
     WithdrawalsSrv: WithdrawalsSrv,
@@ -28,6 +30,7 @@ export class InitHandler {
     VaultSrv: VaultSrv,
     onAppStartFindings: Finding[],
   ) {
+    this.appName = appName
     this.logger = logger
     this.StethOperationSrv = StethOperationSrv
     this.WithdrawalsSrv = WithdrawalsSrv
@@ -57,7 +60,7 @@ export class InitHandler {
       metadata.agents = '[' + agents.toString() + ']'
 
       const f: Finding = new Finding()
-      f.setName(`Agent launched`)
+      f.setName(`${this.appName} launched`)
       f.setDescription(`Version: ${Version.desc}`)
       f.setAlertid('LIDO-AGENT-LAUNCHED')
       f.setSeverity(Finding.Severity.INFO)

@@ -1,5 +1,8 @@
 import { networkAlert } from '../../utils/errors'
 import { HealthChecker } from './health-checker.srv'
+import promClient from 'prom-client'
+import * as Winston from 'winston'
+import { Metrics } from '../../utils/metrics/metrics'
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -10,9 +13,16 @@ describe('HealthChecker', () => {
   const borderTime = 1_000
   const timeForNextCheck = 250
 
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
+  const logger: Winston.Logger = Winston.createLogger({
+    format: Winston.format.simple(),
+    transports: [new Winston.transports.Console()],
+  })
+
   test('should become healthy', async () => {
     const maxCountErrors = 6
-    const healthChecker = new HealthChecker(borderTime, maxCountErrors)
+    const healthChecker = new HealthChecker(logger, m, borderTime, maxCountErrors)
 
     // 0 250 500 750 1000 1250 1500 1750 2000 2250
     //                 | <- found 5 errors on  1000-th millisecond
@@ -28,7 +38,7 @@ describe('HealthChecker', () => {
 
   test('should become unhealthy', async () => {
     const maxCountErrors = 5
-    const healthChecker = new HealthChecker(borderTime, maxCountErrors)
+    const healthChecker = new HealthChecker(logger, m, borderTime, maxCountErrors)
 
     // 0 250 500 750 1000 1250 1500 1750 2000 2250
     //                 | <- found 5 errors on  1000-th millisecond
@@ -44,7 +54,7 @@ describe('HealthChecker', () => {
 
   test('should become unhealthy', async () => {
     const maxCountErrors = 3
-    const healthChecker = new HealthChecker(borderTime, maxCountErrors)
+    const healthChecker = new HealthChecker(logger, m, borderTime, maxCountErrors)
 
     // Found per once 3 errors -> app is unhealthy
     const findings3 = [
