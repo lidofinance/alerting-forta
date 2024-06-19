@@ -53,12 +53,24 @@ export class BSCProvider implements ICRossChainControllerClient {
     }
   }
 
-  public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>> {
+  public async getBridgeAdapters(): Promise<E.Either<Error, string[]>> {
     try {
       const bridgeAdapters = await this.crossChainControllerRunner.getReceiverBridgeAdaptersByChain(MAINNET_CHAIN_ID)
+      return E.right(bridgeAdapters)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get bridge adapters list from CrossChainController contract`))
+    }
+  }
+
+  public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>> {
+    try {
+      const bridgeAdapters = await this.getBridgeAdapters()
+      if (E.isLeft(bridgeAdapters)) {
+        return E.left(bridgeAdapters.left)
+      }
       const result = new Map<string, string>()
 
-      for (const adapterAddress of bridgeAdapters) {
+      for (const adapterAddress of bridgeAdapters.right) {
         const bridgeAdapterContract = BaseAdapter__factory.connect(adapterAddress, this.jsonRpcProvider)
         try {
           const adapterName = await bridgeAdapterContract.adapterName()
