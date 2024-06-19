@@ -12,11 +12,11 @@ const MAINNET_CHAIN_ID = 1
 
 export class BSCProvider implements ICRossChainControllerClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private crossChainControllerContract: CrossChainController
+  private crossChainControllerRunner: CrossChainController
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, crossChainControllerContract: CrossChainController) {
+  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, crossChainControllerRunner: CrossChainController) {
     this.jsonRpcProvider = jsonRpcProvider
-    this.crossChainControllerContract = crossChainControllerContract
+    this.crossChainControllerRunner = crossChainControllerRunner
   }
 
   public async getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>> {
@@ -55,7 +55,7 @@ export class BSCProvider implements ICRossChainControllerClient {
 
   public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>> {
     try {
-      const bridgeAdapters = await this.crossChainControllerContract.getReceiverBridgeAdaptersByChain(MAINNET_CHAIN_ID)
+      const bridgeAdapters = await this.crossChainControllerRunner.getReceiverBridgeAdaptersByChain(MAINNET_CHAIN_ID)
       const result = new Map<string, string>()
 
       for (const adapterAddress of bridgeAdapters) {

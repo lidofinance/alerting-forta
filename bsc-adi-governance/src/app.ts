@@ -23,12 +23,12 @@ export class App {
     if (!App.instance) {
       const ethersProvider = getEthersProvider()
 
-      const crossChainControllerContract = CrossChainController__factory.connect(
+      const crossChainControllerRunner = CrossChainController__factory.connect(
         CROSS_CHAIN_CONTROLLER_ADDRESS,
         ethersProvider,
       )
 
-      const bscClient = new BSCProvider(ethersProvider, crossChainControllerContract)
+      const bscClient = new BSCProvider(ethersProvider, crossChainControllerRunner)
 
       const logger: Winston.Logger = Winston.createLogger({
         format: Winston.format.simple(),
