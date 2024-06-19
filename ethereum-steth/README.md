@@ -99,3 +99,14 @@ In separate console run
 ```
 docker-compose up -d
 ```
+
+## Testing alerts
+
+1. For testing alerts you have to install promtool on your machine.
+   ```
+   make tools
+   ```
+2. Check alerts
+   ```
+   make test_alerts
+   ```
