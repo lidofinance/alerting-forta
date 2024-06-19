@@ -1,6 +1,5 @@
-import { decodeJwt, Finding, FindingSeverity, FindingType, HandleTransaction, HealthCheck } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType, HandleTransaction, HealthCheck } from 'forta-agent'
 import * as process from 'process'
-import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
 import { Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
@@ -21,15 +20,7 @@ export function initialize(): Initialize {
     const startTime = new Date().getTime()
     const app = await App.getInstance()
 
-    const token = await App.getJwt()
-    if (E.isLeft(token)) {
-      console.error(`Error: ${token.left.message}`)
-      console.error(`Stack: ${token.left.stack}`)
-
-      process.exit(1)
-    }
-
-    const latestBlockNumber = await app.bscClient.getBlockNumber(argv)
+    const latestBlockNumber = await app.bscClient.getBlockNumber()
     if (E.isLeft(latestBlockNumber)) {
       console.error(`Error: ${latestBlockNumber.left.message}`)
       console.error(`Stack: ${latestBlockNumber.left.stack}`)
@@ -49,11 +40,9 @@ export function initialize(): Initialize {
     const agents: string[] = [app.crossChainControllerSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
-    const decodedJwt = decodeJwt(token.right)
-
     await app.findingsRW.write([
       Finding.fromObject({
-        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
+        name: `Agent launched`,
         description: `Version: ${Version.desc}`,
         alertId: 'LIDO-AGENT-LAUNCHED',
         severity: FindingSeverity.Info,

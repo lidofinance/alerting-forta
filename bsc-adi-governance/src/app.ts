@@ -1,6 +1,5 @@
-import { fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { Finding, getEthersProvider } from 'forta-agent'
 import * as Winston from 'winston'
-import * as E from 'fp-ts/Either'
 import { BSCProvider } from './clients/bsc_provider'
 import { EventWatcherSrv } from './services/event-watcher/EventWatcher.srv'
 import { CrossChainControllerSrv } from './services/cross-chain-controller/CrossChainController.srv'
@@ -19,28 +18,6 @@ export type Container = {
 
 export class App {
   private static instance: Container
-
-  public static async getJwt(): Promise<E.Either<Error, string>> {
-    let token: string
-    try {
-      token = await fetchJwt({})
-    } catch (e) {
-      return E.left(new Error(`Could not fetch jwt. Cause ${e}`))
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        const isTokenOk = await verifyJwt(token)
-        if (!isTokenOk) {
-          return E.left(new Error(`Token verification failed`))
-        }
-      } catch (e) {
-        return E.left(new Error(`Token verification failed`))
-      }
-    }
-
-    return E.right(token)
-  }
 
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {

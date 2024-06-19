@@ -44,33 +44,13 @@ export class BSCProvider implements ICRossChainControllerClient {
     }
   }
 
-  public async getBlockNumber(argv: string[]): Promise<E.Either<Error, number>> {
-    let latestBlockNumber: number = -1
-
-    if (argv.includes('--block')) {
-      latestBlockNumber = parseInt(argv[4])
-    } else if (argv.includes('--range')) {
-      latestBlockNumber = parseInt(argv[4].slice(0, argv[4].indexOf('.')))
-    } else if (argv.includes('--tx')) {
-      const txHash = argv[4]
-      const tx = await this.getTransaction(txHash)
-      if (E.isLeft(tx)) {
-        return E.left(tx.left)
-      }
-
-      if (tx.right.blockNumber !== undefined) {
-        latestBlockNumber = tx.right.blockNumber
-      }
+  public async getBlockNumber(): Promise<E.Either<Error, number>> {
+    try {
+      const latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
+      return E.right(latestBlockNumber)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch latest block number`))
     }
-    if (latestBlockNumber == -1) {
-      try {
-        latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
-      } catch (e) {
-        return E.left(new NetworkError(e, `Could not fetch latest block number`))
-      }
-    }
-
-    return E.right(latestBlockNumber)
   }
 
   public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>> {
