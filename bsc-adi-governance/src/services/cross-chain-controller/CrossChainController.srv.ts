@@ -9,7 +9,7 @@ export abstract class ICRossChainControllerClient {
 
 export class CrossChainControllerSrv {
   private readonly logger: Logger
-  private readonly name = 'CrossChainControllerSrv'
+  private readonly name = 'CrossChainController'
   private readonly bscClient: ICRossChainControllerClient
 
   private readonly transactionReceivedEvent =

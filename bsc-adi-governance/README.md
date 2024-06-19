@@ -6,13 +6,26 @@
 
 ## Sub-bots
 
-### CrossChainExecutor
+### CrossChainExecutorWatcher
 
 Alerts about events on the CrossChainExecutor
 
 **Alerts:**
 
 - 🚨🚨🚨 BSC a.DI: Guardians updated
+- ⚠️ BSC a.DI: Cross-chain executor delay updated
+- ⚠️ BSC a.DI: Cross-chain executor Grace Period updated
+- ⚠️ BSC a.DI: Cross-chain executor Min Delay updated
+- ⚠️ BSC a.DI: Cross-chain executor Max Delay updated
+- ℹ️ BSC a.DI: Action set queued
+- ℹ️ BSC a.DI: Action set executed
+- ℹ️ BSC a.DI: Action set canceled
+
+### CrossChainController
+
+Alerts about events on the CrossChainController
+
+- ℹ️ BSC a.DI: Message received by the X adapter
 
 ## Development
 
