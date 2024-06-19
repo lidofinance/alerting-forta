@@ -1,13 +1,4 @@
-import {
-  BlockEvent,
-  decodeJwt,
-  Finding,
-  FindingSeverity,
-  FindingType,
-  HandleBlock,
-  HandleTransaction,
-  HealthCheck,
-} from 'forta-agent'
+import { decodeJwt, Finding, FindingSeverity, FindingType, HandleTransaction, HealthCheck } from 'forta-agent'
 import * as process from 'process'
 import { argv } from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'

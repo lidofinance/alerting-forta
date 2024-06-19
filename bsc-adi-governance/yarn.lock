@@ -1362,6 +1362,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tsconfig/node20@npm:^20.1.2":
+  version: 20.1.4
+  resolution: "@tsconfig/node20@npm:20.1.4"
+  checksum: 345dba8074647f6c11b8d78afa76d9c16e3436cb56a8e78fe2060014d33a09f3f4fd6ed81dc90e955d3509f926cd7fd61c6ddfd3d5a1d80758d7844f7cc3a99e
+  languageName: node
+  linkType: hard
+
 "@typechain/ethers-v5@npm:^11.1.2":
   version: 11.1.2
   resolution: "@typechain/ethers-v5@npm:11.1.2"
@@ -4818,6 +4825,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "lido-bsc-adi-governance-bot@workspace:."
   dependencies:
+    "@tsconfig/node20": ^20.1.2
     "@typechain/ethers-v5": ^11.1.2
     "@types/jest": ^27.0.1
     "@types/nodemon": ^1.19.0

@@ -95,15 +95,3 @@ export const CROSS_CHAIN_EXECUTOR_EVENTS: EventOfNotice[] = [
     type: FindingType.Info,
   },
 ]
-
-export const CROSS_CHAIN_CONTROLLER_EVENTS: EventOfNotice[] = [
-  {
-    address: CROSS_CHAIN_CONTROLLER_ADDRESS,
-    event: 'event ConfirmationsUpdated(uint8 newConfirmations, uint256 indexed chainId)',
-    alertId: 'BSC-ADI-CONFIRMATIONS-UPDATED',
-    name: '🚨 BSC a.DI: Allowed Bridges quorum updated',
-    description: (args: Result) => `Guardian was updated from ` + `${args.oldGuardian} to ${args.newGuardian}`,
-    severity: FindingSeverity.Critical,
-    type: FindingType.Info,
-  },
-]
