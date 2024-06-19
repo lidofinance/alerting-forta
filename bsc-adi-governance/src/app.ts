@@ -6,7 +6,7 @@ import { EventWatcherSrv } from './services/event-watcher/EventWatcher.srv'
 import { CrossChainControllerSrv } from './services/cross-chain-controller/CrossChainController.srv'
 import { DataRW } from './utils/mutex'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { CROSS_CHAIN_EXECUTOR_EVENTS } from './constants'
+import { CROSS_CHAIN_EXECUTOR_EVENTS } from './utils/constants'
 
 export type Container = {
   bscClient: BSCProvider

@@ -1,7 +1,7 @@
 import { Logger } from 'winston'
 import { elapsedTime } from '../../utils/time'
 import { TransactionEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
-import { CROSS_CHAIN_CONTROLLER_ADDRESS } from '../../constants'
+import { CROSS_CHAIN_CONTROLLER_ADDRESS } from '../../utils/constants'
 
 export abstract class ICRossChainControllerClient {
   public abstract getAdapterName(address: string): Promise<string>
