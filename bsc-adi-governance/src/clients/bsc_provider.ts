@@ -8,7 +8,7 @@ import { BaseAdapter__factory, CrossChainController } from '../generated'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
-const BSC_CHAIN_ID = 56
+const MAINNET_CHAIN_ID = 1
 
 export class BSCProvider implements ICRossChainControllerClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
@@ -75,7 +75,7 @@ export class BSCProvider implements ICRossChainControllerClient {
 
   public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Record<string, string | undefined>>> {
     try {
-      const bridgeAdapters = await this.crossChainControllerContract.getReceiverBridgeAdaptersByChain(BSC_CHAIN_ID)
+      const bridgeAdapters = await this.crossChainControllerContract.getReceiverBridgeAdaptersByChain(MAINNET_CHAIN_ID)
       const result: Record<string, string | undefined> = {}
 
       for (const adapterAddress of bridgeAdapters) {
