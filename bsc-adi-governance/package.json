@@ -57,6 +57,7 @@
     "husky": "^8.0.3",
     "jest": "^27.0.6",
     "nodemon": "^2.0.8",
+    "prettier": "^3.1.0",
     "ts-jest": "^27.0.3",
     "typechain": "^8.3.2",
     "typescript": "^5.3.2"
