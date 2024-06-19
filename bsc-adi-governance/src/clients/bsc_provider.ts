@@ -4,16 +4,19 @@ import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
 import { ICRossChainControllerClient } from '../services/cross-chain-controller/CrossChainController.srv'
 import { NetworkError } from '../utils/errors'
-import { BaseAdapter__factory } from '../generated'
+import { BaseAdapter__factory, CrossChainController } from '../generated'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
+const BSC_CHAIN_ID = 56
 
 export class BSCProvider implements ICRossChainControllerClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
+  private crossChainControllerContract: CrossChainController
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider) {
+  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider, crossChainControllerContract: CrossChainController) {
     this.jsonRpcProvider = jsonRpcProvider
+    this.crossChainControllerContract = crossChainControllerContract
   }
 
   public async getTransaction(txHash: string): Promise<E.Either<Error, TransactionResponse>> {
@@ -70,12 +73,24 @@ export class BSCProvider implements ICRossChainControllerClient {
     return E.right(latestBlockNumber)
   }
 
-  public async getAdapterName(adapterAddress: string): Promise<string> {
+  public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Record<string, string | undefined>>> {
     try {
-      const adapterContract = BaseAdapter__factory.connect(adapterAddress, this.jsonRpcProvider)
-      return await adapterContract.adapterName()
+      const bridgeAdapters = await this.crossChainControllerContract.getReceiverBridgeAdaptersByChain(BSC_CHAIN_ID)
+      const result: Record<string, string | undefined> = {}
+
+      for (const adapterAddress of bridgeAdapters) {
+        const bridgeAdapterContract = BaseAdapter__factory.connect(adapterAddress, this.jsonRpcProvider)
+        try {
+          const adapterName = await bridgeAdapterContract.adapterName()
+          result[adapterAddress] = adapterName
+        } catch (error) {
+          return E.left(new NetworkError(error, `Could not get adapter name from ${adapterAddress}`))
+        }
+      }
+
+      return E.right(result)
     } catch (e) {
-      return 'Unknown adapter'
+      return E.left(new NetworkError(e, `Could not get bridge adapters list from CrossChainController contract`))
     }
   }
 }
