@@ -6,3 +6,4 @@ forta.config.json
 *.log
 version.json
 .DS_Store
+src/generated/

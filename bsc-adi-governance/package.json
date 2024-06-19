@@ -11,6 +11,11 @@
       "target": 5
     }
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint"
+    }
+  },
   "scripts": {
     "update-version": "node scripts/write-version.js",
     "build": "tsc --resolveJsonModule",
@@ -26,19 +31,34 @@
     "disable": "forta-agent disable",
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
-    "test": "jest"
+    "test": "jest",
+    "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
+    "postinstall": "yarn generate-types"
   },
   "dependencies": {
+    "async-mutex": "^0.4.0",
     "bignumber.js": "^9.0.1",
-    "forta-agent": "^0.1.48"
+    "forta-agent": "^0.1.48",
+    "fp-ts": "^2.16.1",
+    "ts-retry": "^4.2.4",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@typechain/ethers-v5": "^11.1.2",
     "@types/jest": "^27.0.1",
     "@types/nodemon": "^1.19.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "husky": "^8.0.3",
     "jest": "^27.0.6",
     "nodemon": "^2.0.8",
     "ts-jest": "^27.0.3",
-    "typescript": "^4.3.4"
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.2"
   },
   "packageManager": "yarn@3.3.0"
 }
