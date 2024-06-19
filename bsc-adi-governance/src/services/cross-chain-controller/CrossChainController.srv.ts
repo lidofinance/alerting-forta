@@ -2,9 +2,10 @@ import { Logger } from 'winston'
 import { elapsedTime } from '../../utils/time'
 import { TransactionEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { either as E } from 'fp-ts'
+import { filterLogs } from '../../utils/filter_logs'
 
 export abstract class ICRossChainControllerClient {
-  public abstract getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Record<string, string | undefined>>>
+  public abstract getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>>
 }
 
 export class CrossChainControllerSrv {
@@ -14,24 +15,27 @@ export class CrossChainControllerSrv {
   private readonly crossChainControllerAddress: string
   private readonly transactionReceivedEvent =
     'event TransactionReceived(bytes32 transactionId, bytes32 indexed envelopeId, uint256 indexed originChainId, Transaction transaction, address indexed bridgeAdapter, uint8 confirmations)'
-  private adaptersNamesMap: Record<string, string | undefined>
+  private adaptersNamesMap: Map<string, string>
 
   constructor(logger: Logger, bscClient: ICRossChainControllerClient, crossChainControllerAddress: string) {
     this.logger = logger
     this.bscClient = bscClient
     this.crossChainControllerAddress = crossChainControllerAddress
-    this.adaptersNamesMap = {}
+    this.adaptersNamesMap = new Map()
   }
 
-  public async initialize(currentBlock: number) {
+  public async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
     this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
 
     const initResult = await this.bscClient.getBridgeAdaptersNamesMap()
     if (E.isLeft(initResult)) {
-      throw new Error(`Could not initialize ${this.name}. Cause: ${initResult.left}`)
+      return initResult.left
     }
+
     this.adaptersNamesMap = initResult.right
+
+    return null
   }
 
   public getName(): string {
@@ -52,10 +56,12 @@ export class CrossChainControllerSrv {
 
   public async handleMessageReceived(txEvent: TransactionEvent) {
     const findings: Finding[] = []
-    const events = txEvent.filterLog(this.transactionReceivedEvent, this.crossChainControllerAddress)
+    const events = filterLogs(txEvent, this.transactionReceivedEvent, this.crossChainControllerAddress)
 
     for (const event of events) {
-      const adapterName = this.adaptersNamesMap[event.args.bridgeAdapter] ?? 'Unknown adapter'
+      const adapterName = this.adaptersNamesMap.has(event.args.bridgeAdapter)
+        ? this.adaptersNamesMap.get(event.args.bridgeAdapter)
+        : 'Unknown adapter'
 
       findings.push(
         Finding.fromObject({

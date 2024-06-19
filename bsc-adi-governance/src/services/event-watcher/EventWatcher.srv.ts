@@ -2,6 +2,7 @@ import { Finding, TransactionEvent } from 'forta-agent'
 import { EventOfNotice } from '../../utils/constants'
 import { Logger } from 'winston'
 import { elapsedTime } from '../../utils/time'
+import { filterLogs } from '../../utils/filter_logs'
 
 export class EventWatcherSrv {
   private readonly name: string
@@ -24,7 +25,7 @@ export class EventWatcherSrv {
 
     this.eventsToFinding.forEach((eventInfo) => {
       if (eventInfo.address in txEvent.addresses) {
-        const events = txEvent.filterLog(eventInfo.event, eventInfo.address)
+        const events = filterLogs(txEvent, eventInfo.event, eventInfo.address)
         events.forEach((event) => {
           findings.push(
             Finding.fromObject({

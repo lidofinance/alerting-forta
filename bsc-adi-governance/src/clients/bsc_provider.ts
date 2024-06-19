@@ -73,16 +73,16 @@ export class BSCProvider implements ICRossChainControllerClient {
     return E.right(latestBlockNumber)
   }
 
-  public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Record<string, string | undefined>>> {
+  public async getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>> {
     try {
       const bridgeAdapters = await this.crossChainControllerContract.getReceiverBridgeAdaptersByChain(MAINNET_CHAIN_ID)
-      const result: Record<string, string | undefined> = {}
+      const result = new Map<string, string>()
 
       for (const adapterAddress of bridgeAdapters) {
         const bridgeAdapterContract = BaseAdapter__factory.connect(adapterAddress, this.jsonRpcProvider)
         try {
           const adapterName = await bridgeAdapterContract.adapterName()
-          result[adapterAddress] = adapterName
+          result.set(adapterAddress, adapterName)
         } catch (error) {
           return E.left(new NetworkError(error, `Could not get adapter name from ${adapterAddress}`))
         }

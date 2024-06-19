@@ -37,7 +37,14 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    app.crossChainControllerSrv.initialize(latestBlockNumber.right)
+    const crossChainControllerSrvErr = await app.crossChainControllerSrv.initialize(latestBlockNumber.right)
+
+    if (crossChainControllerSrvErr !== null) {
+      console.error(`Error: ${crossChainControllerSrvErr.message}`)
+      console.error(`Stack: ${crossChainControllerSrvErr.stack}`)
+
+      process.exit(1)
+    }
 
     const agents: string[] = [app.crossChainControllerSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'

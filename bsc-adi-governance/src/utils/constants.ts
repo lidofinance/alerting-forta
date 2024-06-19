@@ -1,5 +1,6 @@
-import { FindingSeverity, FindingType } from 'forta-agent'
+import { FindingSeverity, FindingType, ethers } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
+import { Log } from '@ethersproject/abstract-provider'
 
 // ADDRESSES AND EVENTS
 
@@ -12,6 +13,17 @@ export type EventOfNotice = {
   severity: FindingSeverity
   type: FindingType
 }
+
+export type TransactionDto = {
+  logs: Log[]
+  to: string | null
+  block: {
+    timestamp: number
+    number: number
+  }
+}
+
+export type LogDescription = ethers.utils.LogDescription
 
 const CROSS_CHAIN_EXECUTOR_ADDRESS = ''
 export const CROSS_CHAIN_CONTROLLER_ADDRESS = ''
