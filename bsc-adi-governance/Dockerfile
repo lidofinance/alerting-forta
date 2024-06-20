@@ -14,12 +14,9 @@ LABEL "network.forta.settings.agent-logs.enable"="true"
 ENV NODE_ENV=production
 WORKDIR /app
 
-RUN apk add --no-cache tini=0.19.0-r0
-
 COPY package*.json yarn.lock ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./src
 COPY version.json ./
 
-ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["yarn", "run", "start:prod"]
