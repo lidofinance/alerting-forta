@@ -121,10 +121,20 @@ describe('vault-acl-changes e2e tests', () => {
     },
     TEST_TIMEOUT,
   )
+
   it(
-    'should withdrawal',
+    'should withdrawal from contract',
     async () => {
       const findings = await runTransaction('0x17c222325fa85abc5a0e74708264c751cbf54e6f06fdfd852d520e3bee1b0596')
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should withdrawal from curator',
+    async () => {
+      const findings = await runTransaction('0x07f911ae589572a8f73404289932e9faf70735eaa9347c79557888dd10624fb5')
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,

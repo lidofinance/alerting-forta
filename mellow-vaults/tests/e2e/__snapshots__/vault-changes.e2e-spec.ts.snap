@@ -131,12 +131,6 @@ exports[`vault-acl-changes e2e tests should be not slot changes 1`] = `[]`;
 
 exports[`vault-acl-changes e2e tests should everything is fine 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should process tx with Added Owner and Execution Success 1`] = `[]`;
-
-exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
-
-exports[`vault-acl-changes e2e tests should should find 1 withdrawal 1`] = `[]`;
-
 exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] = `
 [
   Finding {
@@ -178,7 +172,7 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
     "severity": 3,
     "source": {},
     "timestamp": 2023-12-31T00:00:00.000Z,
-    "type": 2,
+    "type": 4,
     "uniqueKey": "",
   },
   Finding {
@@ -212,7 +206,13 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should withdrawal 1`] = `
+exports[`vault-acl-changes e2e tests should process tx with Added Owner and Execution Success 1`] = `[]`;
+
+exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
+
+exports[`vault-acl-changes e2e tests should should find 1 withdrawal 1`] = `[]`;
+
+exports[`vault-acl-changes e2e tests should withdrawal from contract 1`] = `
 [
   Finding {
     "addresses": [],
@@ -221,6 +221,27 @@ exports[`vault-acl-changes e2e tests should withdrawal 1`] = `
     "labels": [],
     "metadata": {
       "args": "0xE9229230D3768b42e7c2a54cffbfE0f0288261aC,0x7fF11ad66Ec323C6A5D40363946De553D8cf2B2E,0x1A63572CF23505DDBCCB2Bdd0cE516Be9f98E842,0x21ded9833e786Ea941410312e7e78Fc79fc879Af,0x9A3b9ae785C399bcdb04115fe78ad866EE39c877,1718609063",
+    },
+    "name": "ℹ️ Vault: Withdrawal all",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`vault-acl-changes e2e tests should withdrawal from curator 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "MELLOW-VAULT-WITHDRAWAL-ALL",
+    "description": "Vault withdrawal, bond strategy address - 0xc3a149b5ca3f4a5f17f5d865c14aa9dbb570f10a",
+    "labels": [],
+    "metadata": {
+      "args": "0xf41BF1334ea7399ae21F94a434AE8B5486f9dF37,0x737E37dfcCAd5B6bEf491202072170290EcAA1aF,1718890811",
     },
     "name": "ℹ️ Vault: Withdrawal all",
     "protocol": "ethereum",

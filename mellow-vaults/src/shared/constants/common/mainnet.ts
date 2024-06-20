@@ -166,6 +166,7 @@ export const VAULT_STEAKHOUSE = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   storage: STORAGE_STEAKHOUSE,
+  curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
 }
 export const VAULT_RE7LABS = {
   name: 'Re7 Vault',
@@ -180,6 +181,7 @@ export const VAULT_RE7LABS = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   storage: STORAGE_RE7LABS,
+  curator: '0xe86399fe6d7007fdecb08a2ee1434ee677a04433',
 }
 export const VAULT_MEV_CAP = {
   name: 'Mev Capital Vault',
@@ -194,6 +196,7 @@ export const VAULT_MEV_CAP = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   storage: STORAGE_MEV_CAP,
+  curator: '0xa1e38210b06a05882a7e7bfe167cd67f07fa234a',
 }
 
 export const VAULT_P2P = {
@@ -209,6 +212,7 @@ export const VAULT_P2P = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   storage: STORAGE_P2P,
+  curator: '0x4a3c7f2470aa00ebe6ae7cb1faf95964b9de1ef4',
 }
 export const MELLOW_VAULT_ADMIN_MULTISIGS = [
   ['0x9437b2a8cf3b69d782a61f9814baabc172f72003', 'Mellow Vaults Admin multisig'],

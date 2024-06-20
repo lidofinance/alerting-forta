@@ -110,11 +110,15 @@ export class VaultWatcherSrv {
   public handleWithdrawals(txEvent: TransactionEvent): Finding[] {
     const out: Finding[] = []
 
-    const all = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('processAll()')).substring(0, 10)
-
-    const getEvents = txEvent.transaction.data === all ? getProcessAllEvents : getProcessWithdrawalsEvents
+    const all = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('processAll()')).substring(2, 10).toLowerCase()
 
     VAULT_LIST.forEach((vault) => {
+      const isProcessAll =
+        [vault.defaultBondStrategy, vault.curator].includes(`${txEvent.transaction.to}`) &&
+        txEvent.transaction.data.includes(all)
+      // all can be function or function inside transaction
+      const getEvents = isProcessAll ? getProcessAllEvents : getProcessWithdrawalsEvents
+
       const findings = handleEventsOfNotice(txEvent, getEvents(vault.defaultBondStrategy))
       out.push(...findings)
     })
