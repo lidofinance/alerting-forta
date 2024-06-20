@@ -6,7 +6,12 @@ import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { Vault__factory, VaultConfigurator__factory, SymbioticWstETH__factory } from '../generated'
+import {
+  Vault__factory,
+  VaultConfigurator__factory,
+  SymbioticWstETH__factory,
+  DefaultBondStrategy__factory,
+} from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
 import { MELLOW_SYMBIOTIC_ADDRESS, Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from 'constants/common'
 
@@ -161,6 +166,30 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
+  public async getVaultPendingWithdrawersCount(
+    address: string,
+    blockNumber: number,
+  ): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const out = await retryAsync<EthersBigNumber>(
+        async (): Promise<EthersBigNumber> => {
+          const vaultContract = Vault__factory.connect(address, this.jsonRpcProvider)
+
+          const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const [pendingWithdrawersCount] = await vaultContract.functions.pendingWithdrawersCount({
+            blockTag: block.number,
+          })
+          return pendingWithdrawersCount
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not fetch totalSupply balance`))
+    }
+  }
+
   public async getVaultConfiguratorMaxTotalSupply(
     address: string,
     blockNumber: number,
@@ -171,11 +200,11 @@ export class ETHProvider implements VaultWatcherClient {
           const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
-          const [totalSupply] = await vaultConfiguratorContract.functions.maximalTotalSupply({
+          const [maximalTotalSupply] = await vaultConfiguratorContract.functions.maximalTotalSupply({
             blockTag: block.number,
           })
 
-          return totalSupply
+          return maximalTotalSupply
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
@@ -193,11 +222,11 @@ export class ETHProvider implements VaultWatcherClient {
           const symbioticWstContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
-          const [totalSupply] = await symbioticWstContract.functions.limit({
+          const [limit] = await symbioticWstContract.functions.limit({
             blockTag: block.number,
           })
 
-          return totalSupply
+          return limit
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
@@ -326,6 +355,31 @@ export class ETHProvider implements VaultWatcherClient {
       return E.right(result)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getCode for address ${address}`))
+    }
+  }
+
+  public async getDefaultBondStrategyWithdrawalEvents(fromBlock: number, toBlock: number, address: string) {
+    try {
+      const results = await retryAsync(
+        async () => {
+          const keccakEvent = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes('DefaultBondStrategyProcessWithdrawals(address[],uint256)'),
+          )
+
+          return this.jsonRpcProvider.getLogs({
+            fromBlock: `0x${fromBlock.toString(16)}`,
+            toBlock: `0x${toBlock.toString(16)}`,
+            address: address,
+            topics: [keccakEvent],
+          })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      const iface = DefaultBondStrategy__factory.createInterface()
+      const out = results.map((result) => iface.parseLog(result))
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
     }
   }
 }

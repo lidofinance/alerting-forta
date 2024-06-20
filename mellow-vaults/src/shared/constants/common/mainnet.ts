@@ -41,7 +41,10 @@ export const BLOCKCHAIN_INFO: BlockchainInfo = {
   safeTxUrlPrefix: 'https://app.safe.global/transactions/tx?safe=eth:',
   safeUrlPrefix: 'https://app.safe.global/home?safe=eth:',
 }
-export const SIX_HOUR_BLOCK_COUNT = 1800
+const SECONDS_PER_BLOCK = 12
+export const PERIODICAL_BLOCK_INTERVAL = (6 * 60 * 60) / SECONDS_PER_BLOCK
+export const HOURS_24_IN_BLOCK = (24 * 60 * 60) / SECONDS_PER_BLOCK
+export const HOURS_48_IN_BLOCK = 2 * HOURS_24_IN_BLOCK
 
 export const LIDO_STETH_ADDRESS = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84'
 export const WSTETH_ADDRESS = '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0'

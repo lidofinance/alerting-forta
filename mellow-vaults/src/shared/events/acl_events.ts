@@ -19,7 +19,8 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       name: '🚨 Vault: Role Admin changed',
       description: (args: Result) =>
         `Role Admin for role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
-        `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
+        `was changed from ${args.previousAdminRole} to ${args.newAdminRole} ` +
+        `bond strategy address - ${DEFAULT_BOND_STRATEGY_ADDRESS}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[0],
@@ -31,7 +32,8 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       name: '🚨 Vault: Role granted',
       description: (args: Result) =>
         `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
-        `was granted to ${args.account} by ${args.sender}`,
+        `was granted to ${args.account} by ${args.sender} ` +
+        `bond strategy address - ${DEFAULT_BOND_STRATEGY_ADDRESS}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[1],
@@ -43,7 +45,8 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       name: '🚨  Vault: Role revoked',
       description: (args: Result) =>
         `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
-        `was revoked to ${args.account} by ${args.sender}`,
+        `was revoked to ${args.account} by ${args.sender} ` +
+        `bond strategy address - ${DEFAULT_BOND_STRATEGY_ADDRESS}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[2],

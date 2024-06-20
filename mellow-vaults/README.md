@@ -12,14 +12,18 @@
       2. 🚨🚨🚨 Vault totalSupply more than maximalTotalSupply
       3. 🚨🚨🚨 Vault critical storage slot value changed
       4. 🚨 Vault critical storage not loaded
-      5. ⚠️ Vault totalSupply close to maximalTotalSupply (every 1800 blocks)
-      6. ⚠️ Vault totalSupply reached maximalTotalSupply (every 1800 blocks)
+      5. ⚠️ Vault withdrawals haven’t been called for at least 48 hours
+      6. ⚠️ Vault totalSupply close to maximalTotalSupply (every 1800 blocks)
+      7. ⚠️ Vault totalSupply reached maximalTotalSupply (every 1800 blocks)
    2. HandleTransaction
       1. 🚨 Vault: Role Admin changed
       2. 🚨 Vault: Role revoked
       3. 🚨 Vault: Role granted
       4. ⚠️ Vault: Symbiotic limit increased
       5. ⚠️ Vault: Symbiotic limit reached
+      6. ⚠️ Vault: Withdrawals haven’t been called for at least 48 hours
+      7. ⚠️ Vault: Withdrawal partial
+      8. ℹ️ Vault: Withdrawal all
 2. Multisig
    1. HandleTransaction
       1. 🚨 Gnosis Safe: Owner added

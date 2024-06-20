@@ -121,4 +121,30 @@ describe('vault-acl-changes e2e tests', () => {
     },
     TEST_TIMEOUT,
   )
+  it(
+    'should withdrawal',
+    async () => {
+      const findings = await runTransaction('0x17c222325fa85abc5a0e74708264c751cbf54e6f06fdfd852d520e3bee1b0596')
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should should find 1 withdrawal',
+    async () => {
+      const findings = await runBlock(20109999, 20109998)
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should find no withdrawals at 2 vaults',
+    async () => {
+      const findings = await runBlock(20116800, 20116799)
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
 })
