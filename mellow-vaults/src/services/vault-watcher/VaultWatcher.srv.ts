@@ -383,7 +383,7 @@ export class VaultWatcherSrv {
           description: `Symbiotic - ${MELLOW_SYMBIOTIC_ADDRESS}`,
           alertId: 'VAULT-WSTETH-LIMIT-REACHED',
           severity: FindingSeverity.Medium,
-          type: FindingType.Suspicious,
+          type: FindingType.Info,
         }),
       )
     }
