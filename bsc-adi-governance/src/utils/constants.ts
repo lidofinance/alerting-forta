@@ -25,8 +25,8 @@ export type TransactionDto = {
 
 export type LogDescription = ethers.utils.LogDescription
 
-const CROSS_CHAIN_EXECUTOR_ADDRESS = ''
-export const CROSS_CHAIN_CONTROLLER_ADDRESS = ''
+const CROSS_CHAIN_EXECUTOR_ADDRESS = '0x8E5175D17f74d1D512de59b2f5d5A5d8177A123d'
+export const CROSS_CHAIN_CONTROLLER_ADDRESS = '0x40C4464fCa8caCd550C33B39d674fC257966022F'
 
 export const CROSS_CHAIN_EXECUTOR_EVENTS: EventOfNotice[] = [
   {
