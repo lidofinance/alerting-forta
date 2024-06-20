@@ -1,7 +1,7 @@
-import { Finding, FindingSeverity, FindingType, HandleTransaction, HealthCheck } from 'forta-agent'
+import { BlockEvent, Finding, FindingSeverity, FindingType, HandleTransaction, HealthCheck } from 'forta-agent'
 import * as process from 'process'
 import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
-import { Initialize } from 'forta-agent/dist/sdk/handlers'
+import { HandleBlock, Initialize } from 'forta-agent/dist/sdk/handlers'
 import * as E from 'fp-ts/Either'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
@@ -55,6 +55,32 @@ export function initialize(): Initialize {
   }
 }
 
+let isHandleBlockRunning: boolean = false
+export const handleBlock = (): HandleBlock => {
+  return async function (blockEvent: BlockEvent): Promise<Finding[]> {
+    console.log(`#BSC block: ${blockEvent.block.number}`)
+    const startTime = new Date().getTime()
+    if (isHandleBlockRunning) {
+      return []
+    }
+
+    isHandleBlockRunning = true
+    const app = await App.getInstance()
+
+    const findings: Finding[] = []
+    const findingsAsync = await app.findingsRW.read()
+    if (findingsAsync.length > 0) {
+      findings.push(...findingsAsync)
+    }
+
+    app.healthChecker.check(findings)
+
+    console.log(elapsedTime('handleBlock', startTime) + '\n')
+    isHandleBlockRunning = false
+    return findings
+  }
+}
+
 export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
@@ -85,6 +111,7 @@ export const healthCheck = (): HealthCheck => {
 
 export default {
   initialize: initialize(),
+  handleBlock: handleBlock(),
   handleTransaction: handleTransaction(),
   healthCheck: healthCheck(),
 }
