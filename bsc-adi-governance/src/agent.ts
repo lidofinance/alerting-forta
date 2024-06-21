@@ -37,7 +37,7 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const agents: string[] = [app.crossChainControllerSrv.getName()]
+    const agents: string[] = [app.crossChainControllerSrv.getName(), app.crossChainExecutorWatcherSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
     await app.findingsRW.write([
