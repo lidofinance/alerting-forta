@@ -5,8 +5,9 @@ import { EventWatcherSrv } from './services/event-watcher/EventWatcher.srv'
 import { CrossChainControllerSrv } from './services/cross-chain-controller/CrossChainController.srv'
 import { DataRW } from './utils/mutex'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { CROSS_CHAIN_CONTROLLER_ADDRESS, CROSS_CHAIN_EXECUTOR_EVENTS } from './utils/constants'
+import { CROSS_CHAIN_CONTROLLER_ADDRESS, CROSS_CHAIN_EXECUTOR_ADDRESS } from './utils/constants'
 import { CrossChainController__factory } from './generated'
+import { getCrossChainExecutorEvents } from './utils/events/cross_chain_executor_events'
 
 export type Container = {
   bscClient: BSCProvider
@@ -38,7 +39,7 @@ export class App {
       const crossChainControllerSrv = new CrossChainControllerSrv(logger, bscClient, CROSS_CHAIN_CONTROLLER_ADDRESS)
       const crossChainExecutorWatcherSrv = new EventWatcherSrv(
         'CrossChainExecutorWatcher',
-        CROSS_CHAIN_EXECUTOR_EVENTS,
+        getCrossChainExecutorEvents(CROSS_CHAIN_EXECUTOR_ADDRESS),
         logger,
       )
 

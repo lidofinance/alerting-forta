@@ -1,5 +1,5 @@
 import { Finding, FindingType } from 'forta-agent'
-import { EventOfNotice, TransactionDto } from './constants'
+import { EventOfNotice, TransactionDto } from './types'
 import { filterLogs } from './filter_logs'
 
 export function handleEventsOfNotice(txEvent: TransactionDto, eventsOfNotice: EventOfNotice[]) {

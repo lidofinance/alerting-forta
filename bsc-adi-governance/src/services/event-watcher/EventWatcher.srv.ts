@@ -1,5 +1,5 @@
 import { Finding, TransactionEvent } from 'forta-agent'
-import { EventOfNotice } from '../../utils/constants'
+import { EventOfNotice } from '../../utils/types'
 import { Logger } from 'winston'
 import { elapsedTime } from '../../utils/time'
 import { handleEventsOfNotice } from '../../utils/handle_events_of_notice'

@@ -1,5 +1,5 @@
 import { ethers } from 'forta-agent'
-import { LogDescription, TransactionDto } from './constants'
+import { LogDescription, TransactionDto } from './types'
 
 export function filterLogs(txEvent: TransactionDto, eventSignature: string, eventAddress: string): LogDescription[] {
   const iface = new ethers.utils.Interface([eventSignature])
