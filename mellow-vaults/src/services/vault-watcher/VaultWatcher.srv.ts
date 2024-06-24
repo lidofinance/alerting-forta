@@ -114,8 +114,9 @@ export class VaultWatcherSrv {
 
     VAULT_LIST.forEach((vault) => {
       const isProcessAll =
-        [vault.defaultBondStrategy, vault.curator].includes(`${txEvent.transaction.to}`) &&
-        txEvent.transaction.data.includes(all)
+        txEvent.transaction.data.includes(all) &&
+        ([vault.defaultBondStrategy, vault.curator].includes(`${txEvent.transaction.to}`) ||
+          txEvent.transaction.data.includes(vault.curator.substring(2)))
       // all can be function or function inside transaction
       const getEvents = isProcessAll ? getProcessAllEvents : getProcessWithdrawalsEvents
 
@@ -185,7 +186,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: `🚨 Vault critical storage not loaded`,
-            description: `Can't load of the storage ` + `for contract ${vault.vault} (${vault.name})`,
+            description: `Mellow Vault [${vault?.name}] can't load of the storage for contract ${vault.vault}`,
             alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
             severity: FindingSeverity.High,
             type: FindingType.Suspicious,
@@ -200,8 +201,9 @@ export class VaultWatcherSrv {
             Finding.fromObject({
               name: `🚨🚨🚨 Vault critical storage slot value changed`,
               description:
+                `Mellow Vault [${vault?.name}] ` +
                 `Value of the storage slot \`'${slotName}'\` ` +
-                `for contract ${vault.vault} (${vault.name}) has changed!` +
+                `for contract ${vault.vault} has changed!` +
                 `\nPrev value: ${vaultStorage?.[slotName]}` +
                 `\nNew value: ${currentStorage[slotName]}`,
               alertId: 'MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED',
@@ -242,6 +244,7 @@ export class VaultWatcherSrv {
         }
         return {
           address: vault.vault,
+          name: vault.name,
           diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
           near: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
           eq: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9999999)),
@@ -259,7 +262,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
-            description: `Mellow Vault - ${result.address}`,
+            description: `Mellow Vault [${result?.name}] (${result.address}) - more than maximalTotalSupply`,
             alertId: 'VAULT-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
@@ -269,7 +272,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault totalSupply reached maximalTotalSupply',
-            description: `Mellow Vault ${result.address} maximalTotalSupply reached`,
+            description: `Mellow Vault [${result?.name}] (${result.address}) - maximalTotalSupply reached`,
             alertId: 'VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX',
             severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
@@ -279,7 +282,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault totalSupply close to maximalTotalSupply',
-            description: `Mellow Vault ${result.address} totalSupply more than 90% of maximalTotalSupply`,
+            description: `Mellow Vault [${result?.name}] (${result.address}) - totalSupply more than 90% of maximalTotalSupply`,
             alertId: 'VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX',
             severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,
@@ -319,6 +322,7 @@ export class VaultWatcherSrv {
 
         return {
           address: vault.vault,
+          name: vault.name,
           supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
         }
       }),
@@ -334,7 +338,7 @@ export class VaultWatcherSrv {
         out.push(
           Finding.fromObject({
             name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same',
-            description: `Mellow Vault - ${result.address}`,
+            description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
             alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
@@ -404,7 +408,8 @@ export class VaultWatcherSrv {
 
     const results = await Promise.all(
       VAULT_LIST.map(async (vault) => {
-        const [withdrawalEvents] = await Promise.all([
+        const [pendingCount, withdrawalEvents] = await Promise.all([
+          this.ethClient.getVaultPendingWithdrawersCount(vault.vault, blockEvent.blockNumber),
           this.ethClient.getDefaultBondStrategyWithdrawalEvents(
             blockEvent.blockNumber - HOURS_48_IN_BLOCK,
             blockEvent.blockNumber,
@@ -420,9 +425,19 @@ export class VaultWatcherSrv {
           )
         }
 
+        if (E.isLeft(pendingCount)) {
+          return networkAlert(
+            pendingCount.left as unknown as Error, // TODO
+            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:5fb6076f)`,
+            `Could not call ethProvider.getVaultPendingWithdrawersCount`,
+          )
+        }
+
         return {
           address: vault.vault,
+          name: vault.name,
           events: withdrawalEvents.right,
+          count: pendingCount.right,
         }
       }),
     )
@@ -434,11 +449,11 @@ export class VaultWatcherSrv {
         return
       }
 
-      if (!result.events[0]) {
+      if (!result.events[0] && result.count.gt(0)) {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault: Withdrawals haven’t been called for at least 48 hours',
-            description: `Mellow Vault - ${result.address}`,
+            description: `Mellow Vault [${result?.name}] (${result?.address})`,
             alertId: 'VAULT-NO-WITHDRAWAL-48',
             severity: FindingSeverity.Medium,
             type: FindingType.Suspicious,

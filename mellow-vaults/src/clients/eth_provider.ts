@@ -186,7 +186,7 @@ export class ETHProvider implements VaultWatcherClient {
 
       return E.right(new BigNumber(String(out)))
     } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch totalSupply balance`))
+      return E.left(new NetworkError(e, `Could not fetch getVaultPendingWithdrawersCount`))
     }
   }
 

@@ -141,6 +141,15 @@ describe('vault-acl-changes e2e tests', () => {
   )
 
   it(
+    'should withdrawal from curator multicall',
+    async () => {
+      const findings = await runTransaction('0x5fb0b597627bfc2c4031738f99ee28df7e831b8ca9277cc4d5fe62e16506ce51')
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
     'should should find 1 withdrawal',
     async () => {
       const findings = await runBlock(20109999, 20109998)

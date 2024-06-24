@@ -1,7 +1,7 @@
 import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
-import { ACL_ROLES } from 'constants/common'
+import { ACL_ROLES, VAULT_LIST } from 'constants/common'
 
 export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNotice[] {
   const uniqueKeys = [
@@ -9,7 +9,7 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
     'd45a13a5-940c-439f-96e2-2cec78f9de24',
     '19ba7243-ff94-45af-aa3d-6b12a7f0b83d',
   ]
-
+  const vault = VAULT_LIST.find((vault) => vault.defaultBondStrategy === DEFAULT_BOND_STRATEGY_ADDRESS)
   return [
     {
       address: DEFAULT_BOND_STRATEGY_ADDRESS,
@@ -18,6 +18,7 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       alertId: 'MELLOW-VAULT-ROLE-ADMIN-CHANGED',
       name: '🚨 Vault: Role Admin changed',
       description: (args: Result) =>
+        `Mellow Vault [${vault?.name}] bond strategy ` +
         `Role Admin for role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
         `was changed from ${args.previousAdminRole} to ${args.newAdminRole} ` +
         `bond strategy address - ${DEFAULT_BOND_STRATEGY_ADDRESS}`,
@@ -31,6 +32,7 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       alertId: 'MELLOW-VAULT-ROLE-GRANTED',
       name: '🚨 Vault: Role granted',
       description: (args: Result) =>
+        `Mellow Vault [${vault?.name}] bond strategy ` +
         `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
         `was granted to ${args.account} by ${args.sender} ` +
         `bond strategy address - ${DEFAULT_BOND_STRATEGY_ADDRESS}`,
@@ -44,6 +46,7 @@ export function getACLEvents(DEFAULT_BOND_STRATEGY_ADDRESS: string): EventOfNoti
       alertId: 'MELLOW-VAULT-ROLE-REVOKED',
       name: '🚨  Vault: Role revoked',
       description: (args: Result) =>
+        `Mellow Vault [${vault?.name}] bond strategy ` +
         `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
         `was revoked to ${args.account} by ${args.sender} ` +
         `bond strategy address - ${DEFAULT_BOND_STRATEGY_ADDRESS}`,

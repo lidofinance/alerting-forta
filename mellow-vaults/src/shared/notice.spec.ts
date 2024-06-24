@@ -1,6 +1,16 @@
-import { handleEventsOfNotice, TransactionEventContract } from './notice'
-import { Finding, FindingSeverity, FindingType, LogDescription } from 'forta-agent'
+import { handleEventsOfNotice } from './notice'
+import { Finding, FindingSeverity, FindingType, LogDescription, Log, TransactionEvent } from 'forta-agent'
 import { EventOfNotice } from '../entity/events'
+
+export type TransactionEventContract = {
+  addresses: {
+    [key: string]: boolean
+  }
+  logs: Log[]
+  filterLog: (eventAbi: string | string[], contractAddress?: string | string[]) => LogDescription[]
+  to: string | null
+  timestamp: number
+}
 
 describe('handleEventsOfNotice', () => {
   let txEvent: TransactionEventContract
@@ -32,7 +42,7 @@ describe('handleEventsOfNotice', () => {
   it('returns empty array when no matching addresses', () => {
     txEvent.addresses = { '0x456': true }
 
-    const findings = handleEventsOfNotice(txEvent, eventsOfNotice)
+    const findings = handleEventsOfNotice(txEvent as TransactionEvent, eventsOfNotice)
 
     expect(findings).toEqual([])
   })
@@ -40,7 +50,7 @@ describe('handleEventsOfNotice', () => {
   it('returns empty array when no matching events', () => {
     jest.mocked(txEvent.filterLog).mockReturnValue([])
 
-    const findings = handleEventsOfNotice(txEvent, eventsOfNotice)
+    const findings = handleEventsOfNotice(txEvent as TransactionEvent, eventsOfNotice)
 
     expect(findings).toEqual([])
   })
@@ -49,7 +59,7 @@ describe('handleEventsOfNotice', () => {
     const mockArgs = { value: 'test' }
     jest.mocked(txEvent.filterLog).mockReturnValue([{ args: mockArgs } as unknown as LogDescription])
 
-    const findings = handleEventsOfNotice(txEvent, eventsOfNotice)
+    const findings = handleEventsOfNotice(txEvent as TransactionEvent, eventsOfNotice)
 
     expect(findings).toEqual([
       Finding.fromObject({

@@ -5,7 +5,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-ADMIN-CHANGED",
-    "description": "Role Admin for role 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8(ADMIN ROLE) was changed from 0x0000000000000000000000000000000000000000000000000000000000000000 to 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role Admin for role 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8(ADMIN ROLE) was changed from 0x0000000000000000000000000000000000000000000000000000000000000000 to 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8,0x0000000000000000000000000000000000000000000000000000000000000000,0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8",
@@ -21,7 +21,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-ADMIN-CHANGED",
-    "description": "Role Admin for role 0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7(ADMIN DELEGATE ROLE) was changed from 0x0000000000000000000000000000000000000000000000000000000000000000 to 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role Admin for role 0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7(ADMIN DELEGATE ROLE) was changed from 0x0000000000000000000000000000000000000000000000000000000000000000 to 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7,0x0000000000000000000000000000000000000000000000000000000000000000,0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8",
@@ -37,7 +37,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-ADMIN-CHANGED",
-    "description": "Role Admin for role 0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622(OPERATOR) was changed from 0x0000000000000000000000000000000000000000000000000000000000000000 to 0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role Admin for role 0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622(OPERATOR) was changed from 0x0000000000000000000000000000000000000000000000000000000000000000 to 0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622,0x0000000000000000000000000000000000000000000000000000000000000000,0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7",
@@ -53,7 +53,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-GRANTED",
-    "description": "Role 0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622(OPERATOR) was granted to 0x188858AC61a74350116d1CB6958fBc509FD6afA1 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role 0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622(OPERATOR) was granted to 0x188858AC61a74350116d1CB6958fBc509FD6afA1 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622,0x188858AC61a74350116d1CB6958fBc509FD6afA1,0x188858AC61a74350116d1CB6958fBc509FD6afA1",
@@ -69,7 +69,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-GRANTED",
-    "description": "Role 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8(ADMIN ROLE) was granted to 0x188858AC61a74350116d1CB6958fBc509FD6afA1 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role 0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8(ADMIN ROLE) was granted to 0x188858AC61a74350116d1CB6958fBc509FD6afA1 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8,0x188858AC61a74350116d1CB6958fBc509FD6afA1,0x188858AC61a74350116d1CB6958fBc509FD6afA1",
@@ -90,7 +90,7 @@ exports[`vault-acl-changes e2e tests should RoleGranted 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-GRANTED",
-    "description": "Role 0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622(OPERATOR) was granted to 0x2afc096981c2CFe3501bE4054160048718F6C0C8 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role 0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622(OPERATOR) was granted to 0x2afc096981c2CFe3501bE4054160048718F6C0C8 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0x46a52cf33029de9f84853745a87af28464c80bf0346df1b32e205fc73319f622,0x2afc096981c2CFe3501bE4054160048718F6C0C8,0x188858AC61a74350116d1CB6958fBc509FD6afA1",
@@ -111,7 +111,7 @@ exports[`vault-acl-changes e2e tests should RoleRevokedRoleRevoked 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-ROLE-REVOKED",
-    "description": "Role 0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7(ADMIN DELEGATE ROLE) was revoked to 0x188858AC61a74350116d1CB6958fBc509FD6afA1 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] bond strategy Role 0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7(ADMIN DELEGATE ROLE) was revoked to 0x188858AC61a74350116d1CB6958fBc509FD6afA1 by 0x188858AC61a74350116d1CB6958fBc509FD6afA1 bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7,0x188858AC61a74350116d1CB6958fBc509FD6afA1,0x188858AC61a74350116d1CB6958fBc509FD6afA1",
@@ -136,7 +136,7 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
   Finding {
     "addresses": [],
     "alertId": "VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX",
-    "description": "Mellow Vault 0xbeef69ac7870777598a04b2bd4771c71212e6abc totalSupply more than 90% of maximalTotalSupply",
+    "description": "Mellow Vault [Steakhouse Vault] (0xbeef69ac7870777598a04b2bd4771c71212e6abc) - totalSupply more than 90% of maximalTotalSupply",
     "labels": [],
     "metadata": {},
     "name": "⚠️ Vault totalSupply close to maximalTotalSupply",
@@ -150,7 +150,7 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
   Finding {
     "addresses": [],
     "alertId": "VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX",
-    "description": "Mellow Vault 0x7a4effd87c2f3c55ca251080b1343b605f327e3a maximalTotalSupply reached",
+    "description": "Mellow Vault [P2P Vault] (0x7a4effd87c2f3c55ca251080b1343b605f327e3a) - maximalTotalSupply reached",
     "labels": [],
     "metadata": {},
     "name": "⚠️ Vault totalSupply reached maximalTotalSupply",
@@ -178,7 +178,7 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
   Finding {
     "addresses": [],
     "alertId": "VAULT-NO-WITHDRAWAL-48",
-    "description": "Mellow Vault - 0x84631c0d0081fde56deb72f6de77abbbf6a9f93a",
+    "description": "Mellow Vault [Re7 Vault] (0x84631c0d0081fde56deb72f6de77abbbf6a9f93a)",
     "labels": [],
     "metadata": {},
     "name": "⚠️ Vault: Withdrawals haven’t been called for at least 48 hours",
@@ -192,7 +192,7 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
   Finding {
     "addresses": [],
     "alertId": "VAULT-NO-WITHDRAWAL-48",
-    "description": "Mellow Vault - 0x7a4effd87c2f3c55ca251080b1343b605f327e3a",
+    "description": "Mellow Vault [P2P Vault] (0x7a4effd87c2f3c55ca251080b1343b605f327e3a)",
     "labels": [],
     "metadata": {},
     "name": "⚠️ Vault: Withdrawals haven’t been called for at least 48 hours",
@@ -217,7 +217,7 @@ exports[`vault-acl-changes e2e tests should withdrawal from contract 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-WITHDRAWAL-ALL",
-    "description": "Vault withdrawal, bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
+    "description": "Mellow Vault [Steakhouse Vault] (0xbeef69ac7870777598a04b2bd4771c71212e6abc) - withdrawal, bond strategy address - 0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268",
     "labels": [],
     "metadata": {
       "args": "0xE9229230D3768b42e7c2a54cffbfE0f0288261aC,0x7fF11ad66Ec323C6A5D40363946De553D8cf2B2E,0x1A63572CF23505DDBCCB2Bdd0cE516Be9f98E842,0x21ded9833e786Ea941410312e7e78Fc79fc879Af,0x9A3b9ae785C399bcdb04115fe78ad866EE39c877,1718609063",
@@ -238,10 +238,31 @@ exports[`vault-acl-changes e2e tests should withdrawal from curator 1`] = `
   Finding {
     "addresses": [],
     "alertId": "MELLOW-VAULT-WITHDRAWAL-ALL",
-    "description": "Vault withdrawal, bond strategy address - 0xc3a149b5ca3f4a5f17f5d865c14aa9dbb570f10a",
+    "description": "Mellow Vault [Mev Capital Vault] (0x5fd13359ba15a84b76f7f87568309040176167cd) - withdrawal, bond strategy address - 0xc3a149b5ca3f4a5f17f5d865c14aa9dbb570f10a",
     "labels": [],
     "metadata": {
       "args": "0xf41BF1334ea7399ae21F94a434AE8B5486f9dF37,0x737E37dfcCAd5B6bEf491202072170290EcAA1aF,1718890811",
+    },
+    "name": "ℹ️ Vault: Withdrawal all",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`vault-acl-changes e2e tests should withdrawal from curator multicall 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "MELLOW-VAULT-WITHDRAWAL-ALL",
+    "description": "Mellow Vault [Re7 Vault] (0x84631c0d0081fde56deb72f6de77abbbf6a9f93a) - withdrawal, bond strategy address - 0xce3a8820265ad186e8c1ceaed16ae97176d020ba",
+    "labels": [],
+    "metadata": {
+      "args": "0x718E7B7e03F9370394CC8a3BD41B395C72B90fa2,0x3DA0C44465d7b662208Fe6216d17B7f535A472Ad,0x09B0dfBBF2e6d98FB665b9694DBcA7b08193db4e,1718960795",
     },
     "name": "ℹ️ Vault: Withdrawal all",
     "protocol": "ethereum",
