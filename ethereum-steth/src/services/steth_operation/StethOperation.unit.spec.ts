@@ -17,9 +17,10 @@ import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { StethClientMock } from './mocks/mock'
 import { TypedEventMock } from './mocks/eth_evnt.mock'
 import { Finding } from '../../generated/proto/alert_pb'
+import { BlockDto } from '../../entity/events'
 
 describe('StethOperationSrv', () => {
-  let ethProviderMock: jest.Mocked<IStethClient>
+  let stethClientMock: jest.Mocked<IStethClient>
 
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
@@ -28,18 +29,18 @@ describe('StethOperationSrv', () => {
 
   const address = Address
   beforeEach(() => {
-    ethProviderMock = StethClientMock()
+    stethClientMock = StethClientMock()
   })
 
   describe('initialize', () => {
-    test(`ethProvider.getHistory error`, async () => {
+    test(`stethClient.getHistory error`, async () => {
       const want = new Error(`getHistory error`)
-      ethProviderMock.getHistory.mockResolvedValue(E.left(want))
+      stethClientMock.getHistory.mockResolvedValue(E.left(want))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -55,7 +56,7 @@ describe('StethOperationSrv', () => {
       expect(result).toStrictEqual(new Error('getHistory error'))
     })
 
-    test(`ethProvider.getStethBalance error`, async () => {
+    test(`stethClient.getStethBalance error`, async () => {
       const want = new Error(`getStethBalance error`)
 
       const TransactionResponseMock: TransactionResponse[] = [
@@ -71,13 +72,13 @@ describe('StethOperationSrv', () => {
           wait: jest.fn(),
         },
       ]
-      ethProviderMock.getHistory.mockResolvedValue(E.right(TransactionResponseMock))
-      ethProviderMock.getStethBalance.mockResolvedValue(E.left(want))
+      stethClientMock.getHistory.mockResolvedValue(E.right(TransactionResponseMock))
+      stethClientMock.getStethBalance.mockResolvedValue(E.left(want))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -124,16 +125,25 @@ describe('StethOperationSrv', () => {
           timestamp: depositorTxTimeLater,
         },
       ]
-      ethProviderMock.getHistory.mockResolvedValue(E.right(TransactionResponseMock))
+      stethClientMock.getHistory.mockResolvedValue(E.right(TransactionResponseMock))
 
       const stethBalanceMock = new BigNumber(faker.number.bigInt().toString())
-      ethProviderMock.getStethBalance.mockResolvedValue(E.right(stethBalanceMock))
+      stethClientMock.getStethBalance.mockResolvedValue(E.right(stethBalanceMock))
+
+      const blockDtoMock: BlockDto = {
+        number: faker.number.int(),
+        timestamp: faker.date.anytime().getTime(),
+        parentHash: faker.string.hexadecimal(),
+        hash: faker.string.hexadecimal(),
+      }
+      stethClientMock.getBlockByNumber.mockResolvedValue(E.right(blockDtoMock))
+      stethClientMock.getChainPrevBlocks.mockResolvedValue(E.right([]))
 
       const cache = new StethOperationCache()
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -154,14 +164,58 @@ describe('StethOperationSrv', () => {
   })
 
   describe('handleBufferedEth', () => {
-    test(`ethProvider.getBufferedEther error`, async () => {
+    const currentBlock = 19_061_500
+
+    let prev4Block: BlockDto[]
+    let blockDto: BlockDto
+
+    const date = new Date('2024-01-22')
+    const currentBlockTimestamp = date.getTime()
+
+    beforeEach(() => {
+      prev4Block = [
+        {
+          number: currentBlock - 4,
+          timestamp: faker.date.past().getTime(),
+          hash: `0x221`,
+          parentHash: `0x121`,
+        },
+        {
+          number: currentBlock - 3,
+          timestamp: faker.date.past().getTime(),
+          hash: `0x321`,
+          parentHash: `0x221`,
+        },
+        {
+          number: currentBlock - 2,
+          timestamp: faker.date.past().getTime(),
+          hash: `0x421`,
+          parentHash: `0x321`,
+        },
+        {
+          number: currentBlock - 1,
+          timestamp: faker.date.past().getTime(),
+          hash: `0x521`,
+          parentHash: `0x421`,
+        },
+      ]
+
+      blockDto = {
+        number: currentBlock,
+        timestamp: currentBlockTimestamp,
+        hash: `0x621`,
+        parentHash: `0x521`,
+      }
+    })
+
+    test(`stethClient.getBufferedEther error`, async () => {
       const getBufferedEtherErr = new Error(`getBufferedEther error`)
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.left(getBufferedEtherErr))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.left(getBufferedEtherErr))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -172,13 +226,13 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      srv.getStorage().setPrev4Blocks(prev4Block)
+
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: 'Could not call ethProvider.bufferedEthRaw',
+        description: 'Could not call stethClient.bufferedEthRaw',
         name: 'Error in StethOperationSrv.handleBufferedEth:240',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -195,13 +249,13 @@ describe('StethOperationSrv', () => {
     test(`lidoContract.getDepositableEther error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
 
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.right(getBufferedEther))
-      ethProviderMock.getDepositableEther.mockResolvedValue(E.left(new Error('getDepositableEtherErr')))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.right(getBufferedEther))
+      stethClientMock.getDepositableEther.mockResolvedValue(E.left(new Error('getDepositableEtherErr')))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -211,13 +265,12 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061500
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      srv.getStorage().setPrev4Blocks(prev4Block)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: 'Could not call ethProvider.getDepositableEther',
+        description: 'Could not call stethClient.getDepositableEther',
         name: 'Error in StethOperationSrv.handleBufferedEth:321',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -232,16 +285,16 @@ describe('StethOperationSrv', () => {
     })
     test(`lidoContract.shifte3dBufferedEthRaw error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
+      stethClientMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.left(new Error('shifte3dBufferedEthRawErr')))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.left(new Error('shifte3dBufferedEthRawErr')))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -252,13 +305,12 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      srv.getStorage().setPrev4Blocks(prev4Block)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: 'Could not call ethProvider.shifte3dBufferedEthRaw',
+        description: 'Could not call stethClient.shifte3dBufferedEthRaw',
         name: 'Error in StethOperationSrv.handleBufferedEth:241',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -273,18 +325,18 @@ describe('StethOperationSrv', () => {
     })
     test(`lidoContract.shifte4dBufferedEthRaw error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      ethProviderMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(faker.number.int())))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
+      stethClientMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
       // shifte4dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.left(new Error('shifte4dBufferedEthRawErr')))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.left(new Error('shifte4dBufferedEthRawErr')))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -295,13 +347,12 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      srv.getStorage().setPrev4Blocks(prev4Block)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: 'Could not call ethProvider.shifte4dBufferedEthRaw',
+        description: 'Could not call stethClient.shifte4dBufferedEthRaw',
         name: 'Error in StethOperationSrv.handleBufferedEth:242',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -317,23 +368,23 @@ describe('StethOperationSrv', () => {
 
     test(`unbufferedEventsErr error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
+      stethClientMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(faker.number.int())
       const shifte4dBufferedEthRaw = new BigNumber(shifte3dBufferedEthRaw.plus(faker.number.int()))
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
       // shifte4dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       // lidoContractMock.filters.Unbuffered.mockResolvedValue()
-      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.left(new Error('UnbufferedEventsErr')))
+      stethClientMock.getUnbufferedEvents.mockResolvedValue(E.left(new Error('UnbufferedEventsErr')))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -344,13 +395,12 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      srv.getStorage().setPrev4Blocks(prev4Block)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: 'Could not call ethProvider.getUnbufferedEvents',
+        description: 'Could not call stethClient.getUnbufferedEvents',
         name: 'Error in StethOperationSrv.handleBufferedEth:278',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -366,27 +416,27 @@ describe('StethOperationSrv', () => {
 
     test(`wdReqFinalizedEvents error`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
-      ethProviderMock.getUnbufferedEvents.mockResolvedValueOnce(E.right([]))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
+      stethClientMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
+      stethClientMock.getUnbufferedEvents.mockResolvedValueOnce(E.right([]))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(faker.number.int())
       const shifte4dBufferedEthRaw = new BigNumber(shifte3dBufferedEthRaw.plus(faker.number.int()))
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
       // shifte4dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = [TypedEventMock(), TypedEventMock()]
 
-      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
+      stethClientMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
 
-      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.left(new Error('wdReqFinalizedEventsErr')))
+      stethClientMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.left(new Error('wdReqFinalizedEventsErr')))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -397,13 +447,13 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      srv.getStorage().setPrev4Blocks(prev4Block)
+
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: 'Could not call ethProvider.getWithdrawalsFinalizedEvents',
+        description: 'Could not call stethClient.getWithdrawalsFinalizedEvents',
         name: 'Error in StethOperationSrv.handleBufferedEth:279',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -419,25 +469,27 @@ describe('StethOperationSrv', () => {
 
     test(`unbufferedEvents.length === 0 && wdReqFinalizedEvents.length === 0`, async () => {
       const getBufferedEther = new BigNumber(faker.number.int())
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
-      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(getBufferedEther))
+      stethClientMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(faker.number.int())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(faker.number.int())
       const shifte4dBufferedEthRaw = new BigNumber(shifte3dBufferedEthRaw.plus(faker.number.int()))
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
       // shifte4dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = []
-      ethProviderMock.getUnbufferedEvents.mockResolvedValueOnce(E.right(unbufferedEvents))
+      stethClientMock.getUnbufferedEvents.mockResolvedValueOnce(E.right(unbufferedEvents))
       const wdReqFinalizedEvents: TypedEvent[] = []
-      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValueOnce(E.right(wdReqFinalizedEvents))
+      stethClientMock.getWithdrawalsFinalizedEvents.mockResolvedValueOnce(E.right(wdReqFinalizedEvents))
 
+      const cache = new StethOperationCache()
+      cache.setPrev4Blocks(prev4Block)
       const srv = new StethOperationSrv(
         logger,
-        new StethOperationCache(),
-        ethProviderMock,
+        cache,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -448,9 +500,7 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const currentBlock = 19061449
-      const currentBlockTimestamp = faker.date.past().getTime()
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const shiftedBlockNumber = currentBlock - 3
       const expected = {
@@ -475,34 +525,31 @@ describe('StethOperationSrv', () => {
 
     test(`⚠️ High depositable ETH amount`, async () => {
       const bufferedEther = new BigNumber(180).multipliedBy(ETH_DECIMALS)
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(bufferedEther))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(bufferedEther))
 
       const mockDepositableEther = EtherBigNumber.from(ETH_10K + 1).mul(EtherBigNumber.from(ETH_DECIMALS.toString()))
-      ethProviderMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(mockDepositableEther.toString())))
+      stethClientMock.getDepositableEther.mockResolvedValue(E.right(new BigNumber(mockDepositableEther.toString())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(200)
       const shifte4dBufferedEthRaw = new BigNumber(100)
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
       // shifte4dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = [TypedEventMock()]
-      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
+      stethClientMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
       const wdReqFinalizedEvents: TypedEvent[] = [TypedEventMock()]
-      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.right(wdReqFinalizedEvents))
-
-      const currentBlock = 19061500
-      const date = new Date('2024-01-22')
-      const currentBlockTimestamp = date.getTime()
+      stethClientMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.right(wdReqFinalizedEvents))
 
       const cache = new StethOperationCache()
 
       cache.setLastDepositorTxTime(date.setHours(-(DAYS_3 + 1)))
+      cache.setPrev4Blocks(prev4Block)
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -513,7 +560,7 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const bufferedEth = bufferedEther.div(ETH_DECIMALS).toNumber()
       const expected = {
@@ -540,35 +587,31 @@ describe('StethOperationSrv', () => {
 
     test(`🚨 Huge depositable ETH amount`, async () => {
       const bufferedEther = new BigNumber(180).multipliedBy(ETH_DECIMALS)
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(bufferedEther))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(bufferedEther))
 
       const mockDepositableEther = EtherBigNumber.from(ETH_20K + 1).mul(EtherBigNumber.from(ETH_DECIMALS.toString()))
-      ethProviderMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(mockDepositableEther.toString())))
+      stethClientMock.getDepositableEther.mockResolvedValueOnce(E.right(new BigNumber(mockDepositableEther.toString())))
 
       // shifte3dBufferedEthRaw
       const shifte3dBufferedEthRaw = new BigNumber(200)
       const shifte4dBufferedEthRaw = new BigNumber(100)
-      ethProviderMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValueOnce(E.right(shifte3dBufferedEthRaw))
       // shifte4dBufferedEthRaw
-      ethProviderMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
+      stethClientMock.getBufferedEther.mockResolvedValue(E.right(shifte4dBufferedEthRaw))
 
       const unbufferedEvents: TypedEvent[] = [TypedEventMock()]
-      ethProviderMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
+      stethClientMock.getUnbufferedEvents.mockResolvedValue(E.right(unbufferedEvents))
       const wdReqFinalizedEvents: TypedEvent[] = [TypedEventMock()]
-      ethProviderMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.right(wdReqFinalizedEvents))
-
-      const currentBlock = 19061500
-      const date = new Date('2024-01-22')
-      const currentBlockTimestamp = date.getTime()
+      stethClientMock.getWithdrawalsFinalizedEvents.mockResolvedValue(E.right(wdReqFinalizedEvents))
 
       const cache = new StethOperationCache()
 
       cache.setCriticalDepositableAmountTimestamp(date.setHours(-26))
-
+      cache.setPrev4Blocks(prev4Block)
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -579,7 +622,7 @@ describe('StethOperationSrv', () => {
         getBurnerEvents(address.BURNER_ADDRESS),
       )
 
-      const result = await srv.handleBufferedEth(currentBlock, currentBlockTimestamp)
+      const result = await srv.handleBufferedEth(blockDto)
 
       const expected = {
         alertId: 'HUGE-DEPOSITABLE-ETH',
@@ -604,13 +647,13 @@ describe('StethOperationSrv', () => {
   describe('handleDepositExecutorBalance', () => {
     test('getBalanceErr', async () => {
       const executorBalanceRaw = new Error('getBalanceErr')
-      ethProviderMock.getBalance.mockResolvedValueOnce(E.left(executorBalanceRaw))
+      stethClientMock.getBalance.mockResolvedValueOnce(E.left(executorBalanceRaw))
 
       const cache = new StethOperationCache()
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -627,7 +670,7 @@ describe('StethOperationSrv', () => {
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: `Could not call ethProvider.getBalance`,
+        description: `Could not call stethClient.getBalance`,
         name: 'Error in StethOperationSrv.handleDepositExecutorBalance:396',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -643,13 +686,13 @@ describe('StethOperationSrv', () => {
 
     test('⚠️ Low deposit executor balance', async () => {
       const executorBalanceRaw = new BigNumber(ETH_2 - 1).multipliedBy(ETH_DECIMALS)
-      ethProviderMock.getBalance.mockResolvedValueOnce(E.right(executorBalanceRaw))
+      stethClientMock.getBalance.mockResolvedValueOnce(E.right(executorBalanceRaw))
 
       const cache = new StethOperationCache()
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -686,13 +729,13 @@ describe('StethOperationSrv', () => {
   describe('handleStakingLimit', () => {
     test('getStakingLimitInfoErr', async () => {
       const getStakingLimitInfo = new Error('getStakingLimitInfoErr')
-      ethProviderMock.getStakingLimitInfo.mockResolvedValueOnce(E.left(getStakingLimitInfo))
+      stethClientMock.getStakingLimitInfo.mockResolvedValueOnce(E.left(getStakingLimitInfo))
 
       const cache = new StethOperationCache()
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -709,7 +752,7 @@ describe('StethOperationSrv', () => {
 
       const expected = {
         alertId: 'NETWORK-ERROR',
-        description: `Could not call ethProvider.getStakingLimitInfo`,
+        description: `Could not call stethClient.getStakingLimitInfo`,
         name: 'Error in StethOperationSrv.handleStakingLimit:430',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -729,13 +772,13 @@ describe('StethOperationSrv', () => {
         isStakingPaused: false,
         maxStakeLimit: new BigNumber(100),
       }
-      ethProviderMock.getStakingLimitInfo.mockResolvedValueOnce(E.right(getStakingLimitInfo))
+      stethClientMock.getStakingLimitInfo.mockResolvedValueOnce(E.right(getStakingLimitInfo))
 
       const cache = new StethOperationCache()
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -774,13 +817,13 @@ describe('StethOperationSrv', () => {
         isStakingPaused: false,
         maxStakeLimit: new BigNumber(1000),
       }
-      ethProviderMock.getStakingLimitInfo.mockResolvedValueOnce(E.right(getStakingLimitInfo))
+      stethClientMock.getStakingLimitInfo.mockResolvedValueOnce(E.right(getStakingLimitInfo))
 
       const cache = new StethOperationCache()
       const srv = new StethOperationSrv(
         logger,
         cache,
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -815,14 +858,14 @@ describe('StethOperationSrv', () => {
   })
 
   describe('handleShareRateChange', () => {
-    test(`ethProviderErr`, async () => {
+    test(`stethClientErr`, async () => {
       const want = new Error(`getShareRateErr`)
-      ethProviderMock.getShareRate.mockResolvedValue(E.left(want))
+      stethClientMock.getShareRate.mockResolvedValue(E.left(want))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -844,7 +887,7 @@ describe('StethOperationSrv', () => {
 
       const expectedShareRateErrFinding = {
         alertId: 'NETWORK-ERROR',
-        description: `Could not call ethProvider.getShareRate`,
+        description: `Could not call stethClient.getShareRate`,
         name: 'Error in StethOperationSrv.handleShareRateChange:137',
         severity: Finding.Severity.UNKNOWN,
         type: Finding.FindingType.DEGRADED,
@@ -860,14 +903,14 @@ describe('StethOperationSrv', () => {
     test(`should found invariant on +0.15`, async () => {
       const cachedShareRate = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
 
-      ethProviderMock.getShareRate.mockResolvedValue(
+      stethClientMock.getShareRate.mockResolvedValue(
         E.right(cachedShareRate.plus(new BigNumber('0.15490045560519776042410219381324898101464198621e+27'))),
       )
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -908,14 +951,14 @@ describe('StethOperationSrv', () => {
     test(`should found invariant on -0.15`, async () => {
       const cachedShareRate = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
 
-      ethProviderMock.getShareRate.mockResolvedValue(
+      stethClientMock.getShareRate.mockResolvedValue(
         E.right(cachedShareRate.minus(new BigNumber('0.15490045560519776042410219381324898101464198621e+27'))),
       )
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,
@@ -956,12 +999,12 @@ describe('StethOperationSrv', () => {
     test(`should not found invariant on 0.00001`, async () => {
       const cachedShareRate = new BigNumber('1.15490045560519776042410219381324898101464198621e+27')
 
-      ethProviderMock.getShareRate.mockResolvedValue(E.right(cachedShareRate.plus(new BigNumber('0.00001'))))
+      stethClientMock.getShareRate.mockResolvedValue(E.right(cachedShareRate.plus(new BigNumber('0.00001'))))
 
       const srv = new StethOperationSrv(
         logger,
         new StethOperationCache(),
-        ethProviderMock,
+        stethClientMock,
         address.DEPOSIT_SECURITY_ADDRESS,
         address.LIDO_STETH_ADDRESS,
         address.DEPOSIT_EXECUTOR_ADDRESS,

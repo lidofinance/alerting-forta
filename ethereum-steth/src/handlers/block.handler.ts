@@ -59,6 +59,7 @@ export class BlockHandler {
         number: new BigNumber(block.getNumber(), 10).toNumber(),
         timestamp: new BigNumber(block.getTimestamp(), 10).toNumber(),
         parentHash: block.getParenthash(),
+        hash: block.getHash(),
       }
 
       this.logger.info(`#ETH block: ${blockDtoEvent.number}`)
