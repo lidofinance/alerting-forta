@@ -3,6 +3,8 @@ import { elapsedTime } from '../../utils/time'
 import { TransactionEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { either as E } from 'fp-ts'
 import { filterLogs } from '../../utils/filter_logs'
+import { handleEventsOfNotice } from '../../utils/handle_events_of_notice'
+import { getCrossChainControllerEvents } from '../../utils/events/cross_chain_controller_events'
 
 export abstract class ICRossChainControllerClient {
   public abstract getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>>
@@ -47,8 +49,12 @@ export class CrossChainControllerSrv {
     const findings: Finding[] = []
 
     const messageReceivedFindings = await this.handleMessageReceived(txEvent)
+    const eventsFindings = handleEventsOfNotice(
+      txEvent,
+      getCrossChainControllerEvents(this.crossChainControllerAddress),
+    )
 
-    findings.push(...messageReceivedFindings)
+    findings.push(...messageReceivedFindings, ...eventsFindings)
 
     this.logger.info(elapsedTime(this.getName() + '.' + this.handleTransaction.name, start))
     return findings

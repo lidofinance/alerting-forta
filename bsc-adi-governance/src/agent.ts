@@ -6,7 +6,7 @@ import * as E from 'fp-ts/Either'
 import { App } from './app'
 import { elapsedTime } from './utils/time'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import Version from './utils/version'
+import Version from './version'
 
 type Metadata = { [key: string]: string }
 
@@ -37,7 +37,7 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const agents: string[] = [app.crossChainControllerSrv.getName()]
+    const agents: string[] = [app.crossChainControllerSrv.getName(), app.crossChainExecutorWatcherSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'
 
     await app.findingsRW.write([
