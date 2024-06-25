@@ -108,7 +108,7 @@ export const LINEA_CUSTOM_CONTRACT_SET_EVENT =
   "event CustomContractSet(address indexed nativeToken, address indexed customContract, address indexed setBy);";
 
 export const BSC_L1_CROSS_CHAIN_CONTROLLER =
-  "0x93559892D3C7F66DE4570132d68b69BD3c369A7C";
+  "0x93559892d3c7f66de4570132d68b69bd3c369a7c";
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
