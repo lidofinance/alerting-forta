@@ -68,6 +68,7 @@ describe('Vaults.srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const result = await vaultSrv.handleBlock(blockEvent)

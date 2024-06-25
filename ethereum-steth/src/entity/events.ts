@@ -20,6 +20,7 @@ export type BlockDto = {
   number: number
   timestamp: number
   parentHash: string
+  hash: string
 }
 
 export type TransactionDto = {

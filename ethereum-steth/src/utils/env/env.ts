@@ -41,7 +41,7 @@ export class Config {
 
     this.knexConfig = Config.getKnexConfig()
 
-    const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^\/\n]+)/
+    const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^/\n]+)/
 
     this.dataProvider = ''
     const match = this.ethereumRpcUrl.match(urlRegex)

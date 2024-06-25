@@ -10,4 +10,6 @@ export const StethClientMock = (): jest.Mocked<IStethClient> => ({
   getDepositableEther: jest.fn(),
   getStakingLimitInfo: jest.fn(),
   getUnbufferedEvents: jest.fn(),
+  getChainPrevBlocks: jest.fn(),
+  getBlockByNumber: jest.fn(),
 })

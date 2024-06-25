@@ -2,7 +2,6 @@ import BigNumber from 'bignumber.js'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import { ethers } from 'ethers'
 import { Finding } from '../../generated/proto/alert_pb'
-import { Config } from '../../utils/env/env'
 import * as Winston from 'winston'
 import { Address } from '../../utils/constants'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
@@ -77,6 +76,7 @@ describe('Steth.srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const result = await stethOperationSrv.handleBlock(blockDto)
@@ -109,6 +109,7 @@ describe('Steth.srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const result = await stethOperationSrv.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp)
@@ -283,5 +284,25 @@ describe('Steth.srv functional tests', () => {
       expect(findings.length).toEqual(0)
     },
     TEST_TIMEOUT,
+  )
+
+  test(
+    'handleBufferedEth',
+    async () => {
+      const blockNumber = 20_149_739 + 3
+      const block = await fortaEthersProvider.getBlock(blockNumber)
+
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
+        hash: block.hash,
+      }
+
+      const result = await stethOperationSrv.handleBufferedEth(blockDto)
+
+      expect(result.length).toEqual(0)
+    },
+    2 * TEST_TIMEOUT,
   )
 })

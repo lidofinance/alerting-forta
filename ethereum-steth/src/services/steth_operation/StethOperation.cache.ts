@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { ShareRate } from '../../entity/share_rate'
+import { BlockDto } from '../../entity/events'
 
 export class StethOperationCache {
   private _lastDepositorTxTime = 0
@@ -10,12 +11,15 @@ export class StethOperationCache {
   private _lastReportedStakingLimit10Timestamp = 0
   private _lastReportedStakingLimit30Timestamp = 0
   private _shareRate: ShareRate
+  private _prev4Blocks: Array<BlockDto>
 
   constructor() {
     this._shareRate = {
       amount: new BigNumber(0),
       blockNumber: 0,
     }
+
+    this._prev4Blocks = []
   }
 
   public getLastDepositorTxTime(): number {
@@ -80,5 +84,25 @@ export class StethOperationCache {
 
   public setShareRate(shareRate: ShareRate) {
     this._shareRate = shareRate
+  }
+
+  public setPrevBlock(curBlock: BlockDto) {
+    for (let i = 0; i < this._prev4Blocks.length - 1; i++) {
+      this._prev4Blocks[i] = this._prev4Blocks[i + 1]
+    }
+
+    this._prev4Blocks[this._prev4Blocks.length - 1] = curBlock
+  }
+
+  public setPrev4Blocks(prev4Blocks: Array<BlockDto>) {
+    this._prev4Blocks = prev4Blocks
+  }
+
+  public getPrev4Blocks(): Array<BlockDto> {
+    return this._prev4Blocks
+  }
+
+  public getParentBlock(): BlockDto {
+    return this._prev4Blocks[this._prev4Blocks.length - 1]
   }
 }

@@ -16,7 +16,6 @@ import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
 import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
-import { Config } from '../../utils/env/env'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
@@ -70,6 +69,7 @@ describe('GateSeal srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const initErr = await gateSealSrv.initialize(blockNumber)
@@ -113,6 +113,7 @@ describe('GateSeal srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
       const result = await gateSealSrv.handleExpiryGateSeal(blockDto)
 

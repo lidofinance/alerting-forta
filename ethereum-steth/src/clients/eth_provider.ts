@@ -20,11 +20,12 @@ import { TypedEvent } from '../generated/typechain/common'
 import { NetworkError } from '../utils/errors'
 import { Logger } from 'winston'
 import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
-import { BlockTag } from '@ethersproject/providers'
+import { Block, BlockTag } from '@ethersproject/providers'
 import { IStethClient } from '../services/steth_operation/StethOperation.srv'
 import { IVaultClient } from '../services/vault/Vault.srv'
 import { IWithdrawalsClient } from '../services/withdrawals/Withdrawals.srv'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { BlockDto } from '../entity/events'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -823,5 +824,97 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
 
       return E.left(new NetworkError(e, `Could not call lidoContract.getDepositableEther"`))
     }
+  }
+
+  public async getBlockByHash(blockHash: string): Promise<E.Either<Error, BlockDto>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getBlockByHash' })
+
+    try {
+      const out = await retryAsync<Block>(
+        async (): Promise<Block> => {
+          return await this.jsonRpcProvider.getBlock(blockHash)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        number: out.number,
+        timestamp: out.timestamp,
+        parentHash: out.parentHash,
+        hash: out.hash,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getBlock(blockHash)`))
+    }
+  }
+
+  public async getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getBlockByNumber.name })
+
+    try {
+      const out = await retryAsync<Block>(
+        async (): Promise<Block> => {
+          return await this.jsonRpcProvider.getBlock(blockNumber)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByNumber.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        number: out.number,
+        timestamp: out.timestamp,
+        parentHash: out.parentHash,
+        hash: out.hash,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByNumber.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.${this.getBlockByNumber.name}`))
+    }
+  }
+
+  public async getChainPrevBlocks(parentHash: string, depth: number): Promise<E.Either<Error, BlockDto[]>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getChainPrevBlocks' })
+    const chain = new Array<BlockDto>(depth)
+
+    while (depth > 0) {
+      try {
+        const prevBlock = await retryAsync<BlockDto>(
+          async (): Promise<BlockDto> => {
+            const parentBlock = await this.getBlockByHash(parentHash)
+
+            if (E.isLeft(parentBlock)) {
+              throw parentBlock.left
+            }
+
+            return parentBlock.right
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+
+        chain[depth - 1] = prevBlock
+        parentHash = prevBlock.parentHash
+        depth -= 1
+      } catch (e) {
+        this.metrics.etherJsRequest.labels({ method: 'getChainPrevBlocks', status: StatusFail }).inc()
+        end({ status: StatusFail })
+
+        return E.left(new NetworkError(e, `Could not call this.getBlockByHash(parentHash)`))
+      }
+    }
+
+    this.metrics.etherJsRequest.labels({ method: 'getChainPrevBlocks', status: StatusOK }).inc()
+    end({ status: StatusOK })
+
+    return E.right(chain)
   }
 }

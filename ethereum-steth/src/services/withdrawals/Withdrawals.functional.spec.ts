@@ -88,6 +88,7 @@ describe('Withdrawals.srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const initErr = await withdrawalsSrv.initialize(blockNumber)
@@ -118,6 +119,7 @@ describe('Withdrawals.srv functional tests', () => {
         number: neededBlock.number,
         timestamp: neededBlock.timestamp,
         parentHash: neededBlock.parentHash,
+        hash: neededBlock.hash,
       }
 
       const results = await withdrawalsSrv.handleUnfinalizedRequestNumber(neededBlockDto)

@@ -140,4 +140,42 @@ describe('eth provider tests', () => {
 
     expect('1.16583492875463847628').toEqual(shareRate.right.toString())
   }, 120_000)
+
+  test('getBlock by hash', async () => {
+    const blockHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
+    const block = await ethClient.getBlockByHash(blockHash)
+    if (E.isLeft(block)) {
+      throw block.left.message
+    }
+
+    expect(20_160_727).toEqual(block.right.number)
+  }, 120_000)
+
+  test('getBufferedEther by blockNumber', async () => {
+    const blockNumber = 20_160_727
+    const bufferedEther = await ethClient.getBufferedEther(blockNumber)
+    if (E.isLeft(bufferedEther)) {
+      throw bufferedEther.left.message
+    }
+
+    expect(6016.430655102903).toEqual(bufferedEther.right.dividedBy(ETH_DECIMALS).toNumber())
+  }, 120_000)
+
+  test('getChainBlocks by hash', async () => {
+    const parentHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
+    const chain = await ethClient.getChainPrevBlocks(parentHash, 4)
+    if (E.isLeft(chain)) {
+      throw chain.left.message
+    }
+
+    expect(chain.right[3].hash).toEqual(parentHash)
+    expect(chain.right[0].number).toEqual(20_160_724)
+    expect(chain.right[1].number).toEqual(20_160_725)
+    expect(chain.right[2].number).toEqual(20_160_726)
+    expect(chain.right[3].number).toEqual(20_160_727)
+
+    expect(chain.right[0].hash).toEqual(chain.right[1].parentHash)
+    expect(chain.right[1].hash).toEqual(chain.right[2].parentHash)
+    expect(chain.right[2].hash).toEqual(chain.right[3].parentHash)
+  }, 120_000)
 })
