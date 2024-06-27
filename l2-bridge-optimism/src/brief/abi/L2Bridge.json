@@ -260,40 +260,40 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "l1Token",
+        "name": "_l1Token",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "from",
+        "name": "_l2Token",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "to",
+        "name": "_from",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "l2ToL1Id",
+        "name": "_amount",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "exitNum",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        "name": "_data",
+        "type": "bytes"
       }
     ],
     "name": "WithdrawalInitiated",
