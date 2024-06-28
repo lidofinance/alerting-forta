@@ -4,9 +4,9 @@ import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { WithdrawalRecord } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
-import { ERC20Short, L2Bridge as L2BridgeRunner } from '../generated/typechain'
+import { ERC20Bridged, L2ERC20TokenBridge as L2BridgeRunner } from '../generated/typechain'
 import { NetworkError } from '../utils/errors'
-import { WithdrawalInitiatedEvent } from '../generated/typechain/L2Bridge'
+import { WithdrawalInitiatedEvent } from '../generated/typechain/L2ERC20TokenBridge'
 import { IMonitorWithdrawalsClient } from '../services/monitor_withdrawals'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { IL2BridgeBalanceClient } from '../services/bridge_balance'
@@ -16,15 +16,15 @@ export class OptimismClient implements IMonitorWithdrawalsClient, IL2BridgeBalan
   private readonly l2BridgeRunner: L2BridgeRunner
   private readonly metrics: Metrics
 
-  private readonly bridgedWstEthRunner: ERC20Short
-  private readonly bridgedLdoRunner: ERC20Short
+  private readonly bridgedWstEthRunner: ERC20Bridged
+  private readonly bridgedLdoRunner: ERC20Bridged
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     metrics: Metrics,
     l2BridgeRunner: L2BridgeRunner,
-    bridgedWstEthRunner: ERC20Short,
-    bridgedLdoRunner: ERC20Short,
+    bridgedWstEthRunner: ERC20Bridged,
+    bridgedLdoRunner: ERC20Bridged,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.metrics = metrics

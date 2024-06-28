@@ -1,4 +1,4 @@
-import { ProxyShortABI__factory } from '../generated/typechain'
+import { OssifiableProxy__factory } from '../generated/typechain'
 import { Address } from '../utils/constants'
 import { ethers } from 'forta-agent'
 import { Config } from '../utils/env/env'
@@ -22,13 +22,13 @@ describe('ProxyContractClient', () => {
 
   const wstProxy = new ProxyContractClient(
     adr.OPTIMISM_WSTETH_BRIDGED.name,
-    ProxyShortABI__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, optimismProvider),
+    OssifiableProxy__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, optimismProvider),
     metrics,
   )
 
   const l2TokenGateway = new ProxyContractClient(
     adr.OPTIMISM_L2_TOKEN_GATEWAY.name,
-    ProxyShortABI__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, optimismProvider),
+    OssifiableProxy__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, optimismProvider),
     metrics,
   )
 

@@ -1,4 +1,4 @@
-import { ERC20Short__factory, L2Bridge__factory } from '../generated/typechain'
+import { ERC20Bridged__factory, L2ERC20TokenBridge__factory } from '../generated/typechain'
 import { OptimismClient } from './optimism_client'
 import { Address, ETH_DECIMALS } from '../utils/constants'
 import { ethers } from 'forta-agent'
@@ -16,9 +16,9 @@ describe('OptimismProvider', () => {
 
   const optimismProvider = new ethers.providers.JsonRpcProvider(config.optimismRpcUrl, config.chainId)
 
-  const l2Bridge = L2Bridge__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, optimismProvider)
-  const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, optimismProvider)
-  const bridgedLdoRunner = ERC20Short__factory.connect(adr.OPTIMISM_LDO_BRIDGED_ADDRESS, optimismProvider)
+  const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, optimismProvider)
+  const bridgedWSthEthRunner = ERC20Bridged__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, optimismProvider)
+  const bridgedLdoRunner = ERC20Bridged__factory.connect(adr.OPTIMISM_LDO_BRIDGED_ADDRESS, optimismProvider)
 
   const customRegister = new promClient.Registry()
   const metrics = new Metrics(customRegister, config.promPrefix)

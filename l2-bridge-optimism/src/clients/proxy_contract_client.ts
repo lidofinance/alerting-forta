@@ -1,4 +1,4 @@
-import { ProxyShortABI as ProxyAdmin } from '../generated/typechain'
+import { OssifiableProxy } from '../generated/typechain'
 import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import { NetworkError } from '../utils/errors'
@@ -16,10 +16,10 @@ export abstract class IProxyContractClient {
 
 export class ProxyContractClient implements IProxyContractClient {
   private readonly name: string
-  private readonly proxyAdminContract: ProxyAdmin
+  private readonly proxyAdminContract: OssifiableProxy
   private readonly metrics: Metrics
 
-  constructor(name: string, proxyAdmin: ProxyAdmin, metric: Metrics) {
+  constructor(name: string, proxyAdmin: OssifiableProxy, metric: Metrics) {
     this.name = name
     this.proxyAdminContract = proxyAdmin
     this.metrics = metric

@@ -1,5 +1,5 @@
 import { ethers } from 'forta-agent'
-import { ERC20Short__factory } from '../generated/typechain'
+import { ERC20Bridged__factory } from '../generated/typechain'
 import { ETHProvider } from './eth_provider_client'
 import { Config } from '../utils/env/env'
 import { Address, ETH_DECIMALS } from '../utils/constants'
@@ -18,8 +18,8 @@ describe('ethProvider', () => {
   const mainnet = 1
   const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, mainnet)
 
-  const wSthEthRunner = ERC20Short__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
-  const ldoRunner = ERC20Short__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
+  const wSthEthRunner = ERC20Bridged__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
+  const ldoRunner = ERC20Bridged__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
 
   const customRegister = new promClient.Registry()
   const metrics = new Metrics(customRegister, config.promPrefix)

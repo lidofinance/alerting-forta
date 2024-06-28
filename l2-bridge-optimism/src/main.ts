@@ -10,7 +10,6 @@ import { Finding } from './generated/proto/alert_pb'
 import { Config } from './utils/env/env'
 import * as Winston from 'winston'
 import { Address } from './utils/constants'
-import { ERC20Short__factory, L2Bridge__factory, ProxyShortABI__factory } from './generated/typechain'
 import promClient from 'prom-client'
 import { Metrics } from './utils/metrics/metrics'
 import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
@@ -29,6 +28,7 @@ import { AlertHandler } from './handlers/alert.handler'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { ETHProvider } from './clients/eth_provider_client'
 import { ethers } from 'forta-agent'
+import { ERC20Bridged__factory, L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated/typechain'
 
 const main = async () => {
   const config = new Config()
@@ -60,9 +60,9 @@ const main = async () => {
   const onAppFindings: Finding[] = []
   const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
 
-  const l2Bridge = L2Bridge__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, nodeClient)
-  const bridgedWSthEthRunner = ERC20Short__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, nodeClient)
-  const bridgedLdoRunner = ERC20Short__factory.connect(adr.OPTIMISM_LDO_BRIDGED_ADDRESS, nodeClient)
+  const l2Bridge = L2ERC20TokenBridge__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, nodeClient)
+  const bridgedWSthEthRunner = ERC20Bridged__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, nodeClient)
+  const bridgedLdoRunner = ERC20Bridged__factory.connect(adr.OPTIMISM_LDO_BRIDGED_ADDRESS, nodeClient)
 
   const optimismClient = new OptimismClient(nodeClient, metrics, l2Bridge, bridgedWSthEthRunner, bridgedLdoRunner)
   const withdrawalsSrv = new MonitorWithdrawals(optimismClient, adr.OPTIMISM_L2_TOKEN_GATEWAY.address, logger)
@@ -71,7 +71,7 @@ const main = async () => {
     new ProxyWatcher(
       new ProxyContractClient(
         adr.OPTIMISM_WSTETH_BRIDGED.name,
-        ProxyShortABI__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, nodeClient),
+        OssifiableProxy__factory.connect(adr.OPTIMISM_WSTETH_BRIDGED.address, nodeClient),
         metrics,
       ),
       logger,
@@ -79,7 +79,7 @@ const main = async () => {
     new ProxyWatcher(
       new ProxyContractClient(
         adr.OPTIMISM_L2_TOKEN_GATEWAY.name,
-        ProxyShortABI__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, nodeClient),
+        OssifiableProxy__factory.connect(adr.OPTIMISM_L2_TOKEN_GATEWAY.address, nodeClient),
         metrics,
       ),
       logger,
@@ -99,8 +99,8 @@ const main = async () => {
   const mainnet = 1
   const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, mainnet)
 
-  const wSthEthRunner = ERC20Short__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
-  const ldoRunner = ERC20Short__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
+  const wSthEthRunner = ERC20Bridged__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
+  const ldoRunner = ERC20Bridged__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
 
   const l1Client = new ETHProvider(metrics, wSthEthRunner, ldoRunner, ethProvider)
   const bridgeBalanceSrv = new BridgeBalanceSrv(

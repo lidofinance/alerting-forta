@@ -2,7 +2,7 @@ import { IL1BridgeBalanceClient } from '../services/bridge_balance'
 import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
 import { retryAsync } from 'ts-retry'
-import { ERC20Short } from '../generated/typechain'
+import { ERC20Bridged } from '../generated/typechain'
 import { NetworkError } from '../utils/errors'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { ethers } from 'ethers'
@@ -12,14 +12,14 @@ const ATTEMPTS_5 = 5
 
 export class ETHProvider implements IL1BridgeBalanceClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private readonly wStEthRunner: ERC20Short
-  private readonly ldoRunner: ERC20Short
+  private readonly wStEthRunner: ERC20Bridged
+  private readonly ldoRunner: ERC20Bridged
   private readonly metrics: Metrics
 
   constructor(
     metric: Metrics,
-    wStEthRunner: ERC20Short,
-    ldoRunner: ERC20Short,
+    wStEthRunner: ERC20Bridged,
+    ldoRunner: ERC20Bridged,
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
   ) {
     this.metrics = metric
