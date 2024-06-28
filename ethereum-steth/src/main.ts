@@ -167,6 +167,14 @@ const main = async () => {
   )
   const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
+
+  const latestBlockNumber = await ethClient.getBlockNumber()
+  if (E.isLeft(latestBlockNumber)) {
+    logger.error(latestBlockNumber.left)
+
+    process.exit(1)
+  }
+
   const initH = new InitHandler(
     config.appName,
     logger,
@@ -175,6 +183,7 @@ const main = async () => {
     gateSealSrv,
     vaultSrv,
     onAppFindings,
+    latestBlockNumber.right,
   )
   const alertH = new AlertHandler()
 
@@ -186,13 +195,6 @@ const main = async () => {
     // not used, but required for grpc contract
     evaluateAlert: alertH.handleAlert(),
   })
-
-  const latestBlockNumber = await ethClient.getBlockNumber()
-  if (E.isLeft(latestBlockNumber)) {
-    logger.error(latestBlockNumber.left)
-
-    process.exit(1)
-  }
 
   const stethOperationSrvErr = await stethOperationSrv.initialize(latestBlockNumber.right)
   if (stethOperationSrvErr !== null) {
@@ -208,13 +210,6 @@ const main = async () => {
     process.exit(1)
   } else {
     onAppFindings.push(...gateSealSrvErr)
-  }
-
-  const withdrawalsSrvErr = await withdrawalsSrv.initialize(latestBlockNumber.right)
-  if (withdrawalsSrvErr !== null) {
-    logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
-
-    process.exit(1)
   }
 
   metrics.buildInfo.set({ commitHash: Version.commitHash }, 1)
