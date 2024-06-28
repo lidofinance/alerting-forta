@@ -1,14 +1,14 @@
 # Build stage: compile Typescript to Javascript
 FROM node:20.15.0-alpine3.20 AS base
 
+RUN apk add --no-cache g++=13.2.1_git20240309-r0 make=4.4.1-r2
+
 FROM base as builder
 
 WORKDIR /app
 
 COPY . .
 RUN yarn install --immutable && yarn run build
-# Build app
-RUN yarn run build
 
 # Final stage: copy compiled Javascript from previous stage and install production dependencies
 FROM base as production

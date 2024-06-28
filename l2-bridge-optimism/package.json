@@ -13,8 +13,7 @@
   },
   "scripts": {
     "update-version": "node ../utils/write-version.js",
-    "move-migrations": "mkdir -p dist/db/migrations && cp src/db/migrations/* dist/db/migrations/",
-    "build": "tsc && yarn run copy-version && yarn run move-migrations && mkdir dist/generated/proto && make gen_proto_prod",
+    "build": "tsc && yarn run copy-version && mkdir dist/generated/proto && make gen_proto_prod",
     "copy-version": "cp version.json dist",
     "start": "ts-node src/main.ts",
     "start:prod": "node dist/main.js",
@@ -44,10 +43,8 @@
     "express": "^4.19.2",
     "forta-agent": "^0.1.48",
     "fp-ts": "^2.16.1",
-    "knex": "^3.1.0",
     "lodash": "^4.17.21",
     "prom-client": "^15.1.2",
-    "sqlite": "3",
     "ts-retry": "^4.2.4",
     "winston": "^3.11.0"
   },
