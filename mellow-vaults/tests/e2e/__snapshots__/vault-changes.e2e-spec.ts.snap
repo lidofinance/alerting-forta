@@ -210,6 +210,27 @@ exports[`vault-acl-changes e2e tests should process tx with Added Owner and Exec
 
 exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
 
+exports[`vault-acl-changes e2e tests should process tx with Re7 Vault withdrawal all 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "MELLOW-VAULT-WITHDRAWAL-ALL",
+    "description": "Mellow Vault [Re7 Vault] (0x84631c0d0081fde56deb72f6de77abbbf6a9f93a) - withdrawal, bond strategy address - 0xce3a8820265ad186e8c1ceaed16ae97176d020ba",
+    "labels": [],
+    "metadata": {
+      "args": "0x15C273AA5aDd5433D5e806a3DB968A8656797fbA,0x61ae94dd817357B59413202Ac60B5997192AAE0F,0x520F977ff2fb5fc3a188B9B7821d583BC8741BC7,0x7Bd350bb79fD41d9F95E39005FcD973DD9d9a087,0xc4899b8AA371917e382E989078Ce22469B822f18,0x9fb1750Da6266a05601855bb62767eBC742707B1,1719575915",
+    },
+    "name": "ℹ️ Vault: Withdrawal all",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
 exports[`vault-acl-changes e2e tests should should find 1 withdrawal 1`] = `[]`;
 
 exports[`vault-acl-changes e2e tests should withdrawal from contract 1`] = `

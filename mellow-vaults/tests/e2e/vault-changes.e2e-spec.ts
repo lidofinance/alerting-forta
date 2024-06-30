@@ -113,6 +113,7 @@ describe('vault-acl-changes e2e tests', () => {
     },
     TEST_TIMEOUT,
   )
+
   it(
     'should process tx with Changed Threshold and Execution Success',
     async () => {
@@ -162,6 +163,15 @@ describe('vault-acl-changes e2e tests', () => {
     'should find no withdrawals at 2 vaults',
     async () => {
       const findings = await runBlock(20116800, 20116799)
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should process tx with Re7 Vault withdrawal all',
+    async () => {
+      const findings = await runTransaction('0x74ba54139103dc266b50cb6e2f04d53398809290851a4c90d8d40e73a4db5e8e')
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,
