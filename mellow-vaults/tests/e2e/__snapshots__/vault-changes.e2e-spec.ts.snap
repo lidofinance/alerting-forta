@@ -131,36 +131,8 @@ exports[`vault-acl-changes e2e tests should be not slot changes 1`] = `[]`;
 
 exports[`vault-acl-changes e2e tests should everything is fine 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] = `
+exports[`vault-acl-changes e2e tests should find no withdrawals at 3 vaults 1`] = `
 [
-  Finding {
-    "addresses": [],
-    "alertId": "VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX",
-    "description": "Mellow Vault [Steakhouse Vault] (0xbeef69ac7870777598a04b2bd4771c71212e6abc) - totalSupply more than 90% of maximalTotalSupply",
-    "labels": [],
-    "metadata": {},
-    "name": "⚠️ Vault totalSupply close to maximalTotalSupply",
-    "protocol": "ethereum",
-    "severity": 3,
-    "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
-    "type": 2,
-    "uniqueKey": "",
-  },
-  Finding {
-    "addresses": [],
-    "alertId": "VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX",
-    "description": "Mellow Vault [P2P Vault] (0x7a4effd87c2f3c55ca251080b1343b605f327e3a) - maximalTotalSupply reached",
-    "labels": [],
-    "metadata": {},
-    "name": "⚠️ Vault totalSupply reached maximalTotalSupply",
-    "protocol": "ethereum",
-    "severity": 3,
-    "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
-    "type": 2,
-    "uniqueKey": "",
-  },
   Finding {
     "addresses": [],
     "alertId": "VAULT-WSTETH-LIMIT-REACHED",
@@ -192,7 +164,21 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 2 vaults 1`] 
   Finding {
     "addresses": [],
     "alertId": "VAULT-NO-WITHDRAWAL-48",
-    "description": "Mellow Vault [P2P Vault] (0x7a4effd87c2f3c55ca251080b1343b605f327e3a)",
+    "description": "Mellow Vault [Mev Capital Vault] (0x5fd13359ba15a84b76f7f87568309040176167cd)",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ Vault: Withdrawals haven’t been called for at least 48 hours",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 2,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "VAULT-NO-WITHDRAWAL-48",
+    "description": "Mellow Vault [InfStones Restaked ETH Vault] (0x49cd586dd9ba227be9654c735a659a1db08232a9)",
     "labels": [],
     "metadata": {},
     "name": "⚠️ Vault: Withdrawals haven’t been called for at least 48 hours",

@@ -99,7 +99,7 @@ describe('vault-acl-changes e2e tests', () => {
   it(
     'should everything is fine',
     async () => {
-      const findings = await runBlock(20061165, 20061166)
+      const findings = await runBlock(20207135, 20207134)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,
@@ -153,16 +153,16 @@ describe('vault-acl-changes e2e tests', () => {
   it(
     'should should find 1 withdrawal',
     async () => {
-      const findings = await runBlock(20109999, 20109998)
+      const findings = await runBlock(20203686, 20203685)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,
   )
 
   it(
-    'should find no withdrawals at 2 vaults',
+    'should find no withdrawals at 3 vaults',
     async () => {
-      const findings = await runBlock(20116800, 20116799)
+      const findings = await runBlock(20188800, 20188799)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,
