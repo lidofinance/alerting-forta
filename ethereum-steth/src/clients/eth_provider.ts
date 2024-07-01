@@ -26,6 +26,7 @@ import { IVaultClient } from '../services/vault/Vault.srv'
 import { IWithdrawalsClient } from '../services/withdrawals/Withdrawals.srv'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { BlockDto } from '../entity/events'
+import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -272,10 +273,10 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   public async getWithdrawalStatuses(
-    requestsRange: number[],
+    requestIds: number[],
     currentBlock: number,
   ): Promise<E.Either<Error, WithdrawalRequest[]>> {
-    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getWithdrawalStatus' })
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getWithdrawalStatuses.name })
 
     const fetchStatusesChunk = async (requestIds: number[], blockNumber: number): Promise<WithdrawalRequest[]> => {
       try {
@@ -299,10 +300,10 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
           { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
 
-        this.metrics.etherJsRequest.labels({ method: 'getWithdrawalStatus', status: StatusOK }).inc()
+        this.metrics.etherJsRequest.labels({ method: this.getWithdrawalStatuses.name, status: StatusOK }).inc()
         return out
       } catch (e) {
-        this.metrics.etherJsRequest.labels({ method: 'getWithdrawalStatus', status: StatusFail }).inc()
+        this.metrics.etherJsRequest.labels({ method: this.getWithdrawalStatuses.name, status: StatusFail }).inc()
         throw new NetworkError(
           e,
           `Could not call wdQueueContract.getWithdrawalStatus on ${blockNumber} between ${requestIds[0]} and ${
@@ -316,8 +317,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     const MAX_REQUESTS_CHUNK_SIZE = 875
     const out = new DataRW<WithdrawalRequest>([])
 
-    for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
-      const requestChunk = requestsRange.slice(i, i + MAX_REQUESTS_CHUNK_SIZE)
+    for (let i = 0; i < requestIds.length; i += MAX_REQUESTS_CHUNK_SIZE) {
+      const requestChunk = requestIds.slice(i, i + MAX_REQUESTS_CHUNK_SIZE)
 
       const promise = fetchStatusesChunk(requestChunk, currentBlock).then((statuses) => {
         out.write(statuses)
@@ -916,5 +917,52 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     end({ status: StatusOK })
 
     return E.right(chain)
+  }
+
+  public async getClaimedEvents(currentBlock: number): Promise<E.Either<Error, WithdrawalClaimedEvent[]>> {
+    const startedBlock = 17_264_250
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getClaimedEvents.name })
+
+    const fetchClaimedEvents = async (from: number, to: number): Promise<WithdrawalClaimedEvent[]> => {
+      try {
+        return await retryAsync<WithdrawalClaimedEvent[]>(
+          async (): Promise<WithdrawalClaimedEvent[]> => {
+            const claimedFilter = this.wdQueueRunner.filters.WithdrawalClaimed()
+            return await this.wdQueueRunner.queryFilter(claimedFilter, from, to)
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+      } catch (e) {
+        throw new NetworkError(e, `Could not call this.getClaimedEvents`)
+      }
+    }
+
+    const batchPromises: Promise<void>[] = []
+    const out = new DataRW<WithdrawalClaimedEvent>([])
+    const batchSize = 10_000
+
+    for (let i = startedBlock; i <= currentBlock; i += batchSize) {
+      const start = i
+      const end = Math.min(i + batchSize - 1, currentBlock)
+
+      const promise = fetchClaimedEvents(start, end).then((chunkTrxResp) => {
+        out.write(chunkTrxResp)
+      })
+
+      batchPromises.push(promise)
+    }
+
+    try {
+      await Promise.all(batchPromises)
+
+      this.metrics.etherJsRequest.labels({ method: this.getClaimedEvents.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+      return E.right(await out.read())
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getClaimedEvents.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch claimed events`))
+    }
   }
 }

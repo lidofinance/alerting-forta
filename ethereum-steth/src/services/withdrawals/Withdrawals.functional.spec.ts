@@ -93,7 +93,7 @@ describe('Withdrawals.srv functional tests', () => {
 
       const initErr = await withdrawalsSrv.initialize(blockNumber)
       if (initErr !== null) {
-        fail(initErr.message)
+        throw initErr.message
       }
       const resultsBigOnly = await withdrawalsSrv.handleUnfinalizedRequestNumber(blockDto)
       expect(resultsBigOnly.length).toEqual(1)
@@ -159,9 +159,9 @@ describe('Withdrawals.srv functional tests', () => {
         },
       }
 
-      const initErr = await withdrawalsSrv.initialize(19113262)
+      const initErr = await withdrawalsSrv.initialize(19_113_262)
       if (initErr !== null) {
-        fail(initErr.message)
+        throw initErr.message
       }
       const result = await withdrawalsSrv.handleWithdrawalClaimed(transactionDto)
       expect(result.length).toEqual(0)

@@ -178,4 +178,13 @@ describe('eth provider tests', () => {
     expect(chain.right[1].hash).toEqual(chain.right[2].parentHash)
     expect(chain.right[2].hash).toEqual(chain.right[3].parentHash)
   }, 120_000)
+
+  test('getClaimedEvents', async () => {
+    const events = await ethClient.getClaimedEvents(20_210_931)
+    if (E.isLeft(events)) {
+      throw events.left.message
+    }
+
+    expect(events.right.length).toBeGreaterThan(1)
+  }, 120_000)
 })

@@ -18,7 +18,8 @@
   "scripts": {
     "update-version": "node ../utils/write-version.js",
     "move-migrations": "mkdir -p dist/db/migrations && cp src/db/migrations/* dist/db/migrations/",
-    "build": "tsc && yarn run copy-version && yarn run move-migrations && mkdir dist/generated/proto && make gen_proto_prod",
+    "move-db": "cp src/db/*.sql dist/db/",
+    "build": "tsc && yarn run copy-version && yarn run move-migrations && yarn run move-db && mkdir dist/generated/proto && make gen_proto_prod",
     "copy-version": "cp version.json dist",
     "start": "ts-node src/main.ts",
     "start:prod": "node dist/main.js",
