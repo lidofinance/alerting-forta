@@ -16,7 +16,6 @@ import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
 import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
@@ -45,7 +44,6 @@ describe('GateSeal srv functional tests', () => {
     logger,
     m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,

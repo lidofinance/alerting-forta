@@ -38,6 +38,7 @@ import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
 import { VaultSrv } from './services/vault/Vault.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
+import * as fs from 'node:fs'
 
 const main = async () => {
   const config = new Config()
@@ -69,7 +70,6 @@ const main = async () => {
     fortaEthersProvider = ethProvider
   }
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
   const address: Address = Address
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
 
@@ -82,7 +82,6 @@ const main = async () => {
     logger,
     metrics,
     fortaEthersProvider,
-    etherscanProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -93,7 +92,6 @@ const main = async () => {
     logger,
     metrics,
     ethProvider,
-    etherscanProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -143,6 +141,9 @@ const main = async () => {
 
   try {
     await dbClient.migrate.latest()
+
+    const sql = fs.readFileSync('./src/db/withdrawal_requests_01_07_25.sql', 'utf8')
+    await dbClient.raw(sql)
 
     logger.info('Migrations have been run successfully.')
   } catch (error) {

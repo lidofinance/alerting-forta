@@ -13,7 +13,6 @@ import {
 } from '../../generated/typechain'
 import { ETHProvider } from '../../clients/eth_provider'
 import { IVaultClient, VaultSrv } from './Vault.srv'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
@@ -40,7 +39,6 @@ describe('Vaults.srv functional tests', () => {
     logger,
     m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
