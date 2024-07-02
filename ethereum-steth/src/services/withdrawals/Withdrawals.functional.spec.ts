@@ -20,7 +20,6 @@ import {
 import { WithdrawalsSrv } from './Withdrawals.srv'
 import { WithdrawalsCache } from './Withdrawals.cache'
 import { ETHProvider } from '../../clients/eth_provider'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
@@ -53,7 +52,6 @@ describe('Withdrawals.srv functional tests', () => {
     logger,
     m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,

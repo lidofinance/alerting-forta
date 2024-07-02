@@ -12,11 +12,10 @@ import {
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../generated/typechain'
-import { EtherscanProviderMock } from './mocks/mock'
 import { ETHProvider } from './eth_provider'
-
 import { Metrics } from '../utils/metrics/metrics'
 import promClient from 'prom-client'
+import { HISTORY_BLOCK_OFFSET } from '../services/steth_operation/StethOperation.srv'
 
 describe('eth provider tests', () => {
   const logger: Winston.Logger = Winston.createLogger({
@@ -45,7 +44,6 @@ describe('eth provider tests', () => {
     logger,
     metrics,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -179,12 +177,43 @@ describe('eth provider tests', () => {
     expect(chain.right[2].hash).toEqual(chain.right[3].parentHash)
   }, 120_000)
 
-  test('getClaimedEvents', async () => {
-    const events = await ethClient.getClaimedEvents(20_210_931)
+  test('getETHDistributedEvent', async () => {
+    const currBlock = 20_211_671
+    const events = await ethClient.getETHDistributedEvents(currBlock, currBlock)
     if (E.isLeft(events)) {
       throw events.left.message
     }
 
-    expect(events.right.length).toBeGreaterThan(1)
+    expect(events.right.length).toEqual(1)
+  }, 120_000)
+
+  test('getUnbufferedEvents', async () => {
+    const currBlock = 20_212_690
+    const events = await ethClient.getUnbufferedEvents(currBlock - HISTORY_BLOCK_OFFSET, currBlock)
+    if (E.isLeft(events)) {
+      throw events.left.message
+    }
+
+    const latestDepositBlock = await ethClient.getBlockByNumber(events.right[events.right.length - 1].blockNumber)
+    if (E.isLeft(latestDepositBlock)) {
+      throw latestDepositBlock.left
+    }
+
+    const expectedBlockNumber = 20190032
+    const expectedTimestamp = 1719575867
+
+    expect(latestDepositBlock.right.number).toEqual(expectedBlockNumber)
+    expect(latestDepositBlock.right.timestamp).toEqual(expectedTimestamp)
+  }, 120_000)
+
+  test('getStethBalance', async () => {
+    const currBlock = 20_218_548
+
+    const stBalance = await ethClient.getStethBalance(address.LIDO_STETH_ADDRESS, currBlock)
+    if (E.isLeft(stBalance)) {
+      throw stBalance.left.message
+    }
+
+    console.log(stBalance.right.div(ETH_DECIMALS).toNumber())
   }, 120_000)
 })

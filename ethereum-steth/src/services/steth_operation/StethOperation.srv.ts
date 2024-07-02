@@ -7,14 +7,14 @@ import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
 import { BlockDto } from '../../entity/events'
-import { TransactionResponse } from '@ethersproject/abstract-provider'
 import type { BigNumber } from 'bignumber.js'
 import type { TypedEvent } from '../../generated/typechain/common'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { Finding } from '../../generated/proto/alert_pb'
+import { UnbufferedEvent } from '../../generated/typechain/Lido'
 
-// Formula: (60 * 60 * 72) / 13 = 19_938
-const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
+// Formula: (60 * 60 * 24 * 7) / 12 = 50_400
+export const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 24 * 7) / 12)
 const ONCE_PER_100_BLOCKS: number = 100
 const ONCE_PER_25_BLOCKS: number = 25
 export const ETH_10K = 10_000 // 10000 ETH
@@ -27,22 +27,13 @@ export const DAYS_3 = 60 * 60 * 72 // 72 Hours
 export const ETH_2 = 2 // 2 ETH
 
 export abstract class IStethClient {
-  public abstract getHistory(
-    depositSecurityAddress: string,
-    startBlock: number,
-    endBlock: number,
-  ): Promise<E.Either<Error, TransactionResponse[]>>
+  public abstract getUnbufferedEvents(startBlock: number, endBlock: number): Promise<E.Either<Error, UnbufferedEvent[]>>
 
   public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getUnbufferedEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<Error, TypedEvent[]>>
 
   public abstract getWithdrawalsFinalizedEvents(
     fromBlockNumber: number,
@@ -51,7 +42,7 @@ export abstract class IStethClient {
 
   public abstract getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
-  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
 
@@ -101,25 +92,22 @@ export class StethOperationSrv {
 
   public async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
-    const history = await this.stethClient.getHistory(
-      this.depositSecurityAddress,
-      currentBlock - HISTORY_BLOCK_OFFSET,
-      currentBlock - 1,
-    )
-    if (E.isLeft(history)) {
+    const events = await this.stethClient.getUnbufferedEvents(currentBlock - HISTORY_BLOCK_OFFSET, currentBlock - 1)
+
+    if (E.isLeft(events)) {
       this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
-      return history.left
+      return events.left
     }
 
-    const depositorTxTimestamps: number[] = []
-    for (const record of history.right) {
-      depositorTxTimestamps.push(record.timestamp ? record.timestamp : 0)
+    const latestDepositBlock = await this.stethClient.getBlockByNumber(
+      events.right[events.right.length - 1].blockNumber,
+    )
+    if (E.isLeft(latestDepositBlock)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return latestDepositBlock.left
     }
 
-    if (depositorTxTimestamps.length > 0) {
-      depositorTxTimestamps.sort((a, b) => b - a)
-      this.cache.setLastDepositorTxTime(depositorTxTimestamps[0])
-    }
+    this.cache.setLastDepositorTxTime(latestDepositBlock.right.timestamp)
 
     const bufferedEthRaw = await this.stethClient.getStethBalance(this.lidoStethAddress, currentBlock)
     if (E.isLeft(bufferedEthRaw)) {
@@ -428,7 +416,7 @@ export class StethOperationSrv {
     const out: Finding[] = []
     if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
       if (this.cache.getLastReportedExecutorBalanceTimestamp() + HOURS_4 < currentBlockTimestamp) {
-        const executorBalanceRaw = await this.stethClient.getBalance(this.lidoDepositExecutorAddress, blockNumber)
+        const executorBalanceRaw = await this.stethClient.getEthBalance(this.lidoDepositExecutorAddress, blockNumber)
         if (E.isLeft(executorBalanceRaw)) {
           return [
             networkAlert(

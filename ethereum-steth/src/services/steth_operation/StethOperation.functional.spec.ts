@@ -18,7 +18,6 @@ import { getDepositSecurityEvents } from '../../utils/events/deposit_security_ev
 import { getLidoEvents } from '../../utils/events/lido_events'
 import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
 import { getBurnerEvents } from '../../utils/events/burner_events'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
@@ -45,7 +44,6 @@ describe('Steth.srv functional tests', () => {
     logger,
     m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -154,7 +152,7 @@ describe('Steth.srv functional tests', () => {
       const expected = [
         {
           name: '⚠️ Lido: Staking resumed',
-          description: 'Staking was resumed!',
+          description: 'Staking was resumed!\n\nBlockNumber 14860268',
           alertId: 'LIDO-STAKING-RESUMED',
           protocol: 'ethereum',
           severity: 3,
@@ -165,7 +163,7 @@ describe('Steth.srv functional tests', () => {
           description:
             'Staking limit was set with:\n' +
             'Max staking limit: 150000000000000000000000\n' +
-            'Stake limit increase per block: 23437500000000000000',
+            'Stake limit increase per block: 23437500000000000000\n\nBlockNumber 14860268',
           alertId: 'LIDO-STAKING-LIMIT-SET',
           protocol: 'ethereum',
           severity: 3,
@@ -211,7 +209,7 @@ describe('Steth.srv functional tests', () => {
         {
           name: '🚨 Insurance fund: Ownership transferred',
           description:
-            'Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)',
+            'Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)\n\nBlockNumber 15639078',
           alertId: 'INS-FUND-OWNERSHIP-TRANSFERRED',
           protocol: 'ethereum',
           severity: 4,
@@ -220,7 +218,7 @@ describe('Steth.srv functional tests', () => {
         {
           name: '🚨 Insurance fund: Ownership transferred',
           description:
-            'Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)',
+            'Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)\n\nBlockNumber 15639078',
           alertId: 'INS-FUND-OWNERSHIP-TRANSFERRED',
           protocol: 'ethereum',
           severity: 4,
@@ -265,7 +263,7 @@ describe('Steth.srv functional tests', () => {
 
       const expected = {
         name: 'ℹ️ Lido: Token rebased',
-        description: 'reportTimestamp: 1706011211',
+        description: 'reportTimestamp: 1706011211\n\nBlockNumber 19069339',
         alertId: 'LIDO-TOKEN-REBASED',
         severity: 1,
         type: 4,

@@ -60,7 +60,7 @@ export abstract class IWithdrawalsClient {
     blockNumber: number,
   ): Promise<E.Either<Error, WithdrawalRequest>>
 
-  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
 
@@ -158,9 +158,9 @@ export class WithdrawalsSrv {
       return insertErr
     }
 
-    /* Need when we have to prefill up db
-
-    const claimedRequests = await this.ethProvider.getClaimedEvents(currentBlock)
+    /*
+    Need when we have to prefill up db (Don't remove)
+    const claimedRequests = await this.ethProvider.getClaimedEvents(currentBlock - 1000)
     if (E.isLeft(claimedRequests)) {
       return claimedRequests.left
     }
@@ -170,8 +170,7 @@ export class WithdrawalsSrv {
       claimedRequestIds.push(new BigNumber(e.args.requestId.toString()).toNumber())
     }
 
-    await this.repo.removeByIds(claimedRequestIds)
-    */
+    await this.repo.removeByIds(claimedRequestIds)*/
 
     return null
   }
@@ -532,7 +531,7 @@ export class WithdrawalsSrv {
       }
     }
     if (currentBlockTimestamp - this.cache.getLastUnclaimedMoreThanBalanceAlertTimestamp() > ONE_DAY) {
-      const withdrawalQueueBalance = await this.ethProvider.getBalance(this.withdrawalsQueueAddress, blockDto.number)
+      const withdrawalQueueBalance = await this.ethProvider.getEthBalance(this.withdrawalsQueueAddress, blockDto.number)
       if (E.isLeft(withdrawalQueueBalance)) {
         return [
           networkAlert(
