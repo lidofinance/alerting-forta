@@ -88,16 +88,6 @@ const main = async () => {
     veboRunner,
   )
 
-  const drpcClient = new ETHProvider(
-    logger,
-    metrics,
-    ethProvider,
-    lidoRunner,
-    wdQueueRunner,
-    gateSealRunner,
-    veboRunner,
-  )
-
   const stethOperationCache = new StethOperationCache()
   const stethOperationSrv = new StethOperationSrv(
     logger,
@@ -132,7 +122,7 @@ const main = async () => {
 
   const vaultSrv = new VaultSrv(
     logger,
-    drpcClient,
+    ethClient,
     address.WITHDRAWALS_VAULT_ADDRESS,
     address.EL_REWARDS_VAULT_ADDRESS,
     address.BURNER_ADDRESS,
