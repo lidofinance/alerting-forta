@@ -303,4 +303,42 @@ describe('Steth.srv functional tests', () => {
     },
     2 * TEST_TIMEOUT,
   )
+
+  test(
+    '⚠️ High depositable ETH amount',
+    async () => {
+      const blockNumber = 20227000
+      const block = await fortaEthersProvider.getBlock(blockNumber)
+
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
+        hash: block.hash,
+      }
+
+      await stethOperationSrv.initialize(blockNumber)
+      const results = await stethOperationSrv.handleBufferedEth(blockDto)
+
+      const expected = {
+        name: '⚠️ High depositable ETH amount',
+        description:
+          'There are: \n' +
+          'Buffered: 34250.21 \n' +
+          'Depositable: 10683.20 \n' +
+          'ETH in DAO and there are more than 72 hours since last Depositor TX',
+        alertId: 'HIGH-DEPOSITABLE-ETH',
+        severity: 3,
+        type: 2,
+      }
+
+      expect(results.length).toEqual(1)
+      expect(results[0].getAlertid()).toEqual(expected.alertId)
+      expect(results[0].getDescription()).toEqual(expected.description)
+      expect(results[0].getName()).toEqual(expected.name)
+      expect(results[0].getSeverity()).toEqual(expected.severity)
+      expect(results[0].getType()).toEqual(expected.type)
+    },
+    2 * TEST_TIMEOUT,
+  )
 })
