@@ -42,6 +42,8 @@ jobs:
           $HOME/.forta/forta.config.json
         env:
           URL: ${{ secrets.ETHEREUM_RPC_URL }}
+          ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
 
       - name: Run unit tests
         run: yarn test
