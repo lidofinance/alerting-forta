@@ -13,7 +13,7 @@ import {
   DefaultBondStrategy__factory,
 } from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { MELLOW_SYMBIOTIC_ADDRESS, Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS } from 'constants/common'
+import { MELLOW_SYMBIOTIC_ADDRESS, Storage, STORAGE_MEV_CAP, Vault, WSTETH_ADDRESS } from 'constants/common'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -259,16 +259,19 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
-  public async getVaultConfigurationStorage(address: string, blockNumber: number): Promise<E.Either<Error, Storage>> {
+  public async getVaultConfigurationStorage(vault: Vault, blockNumber: number): Promise<E.Either<Error, Storage>> {
     try {
+      console.time(`getVaultConfigurationStorage ${vault.name}`)
       const out = await retryAsync<Storage>(
         async (): Promise<Storage> => {
-          const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
+          const vaultConfiguratorContract = VaultConfigurator__factory.connect(vault.configurator, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
           const keys = Object.keys(STORAGE_MEV_CAP) as (keyof Storage)[]
           const results = await Promise.all(
-            keys.map((key: keyof Storage) => vaultConfiguratorContract.functions?.[key]({ blockTag: block.number })),
+            keys.map((key: keyof Storage) => {
+              return vaultConfiguratorContract.functions?.[key]({ blockTag: block.number })
+            }),
           )
           const resultStr = results.map((result) => result[0].toString().toLowerCase())
           const storage: Storage = {}
@@ -279,7 +282,7 @@ export class ETHProvider implements VaultWatcherClient {
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
-
+      console.timeEnd(`getVaultConfigurationStorage ${vault.name}`)
       return E.right(out)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch getVaultConfigurationStorage`))

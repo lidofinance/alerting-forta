@@ -10,6 +10,7 @@ import {
   MELLOW_SYMBIOTIC_ADDRESS,
   PERIODICAL_BLOCK_INTERVAL,
   Storage,
+  Vault,
   VAULT_LIST,
 } from 'constants/common'
 import { getACLEvents } from '../../shared/events/acl_events'
@@ -31,7 +32,7 @@ export type VaultWatcherClient = {
   ): Promise<E.Either<Error, LogDescription[]>>
 
   getVaultConfiguratorMaxTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultConfigurationStorage(address: string, blockHash: number): Promise<E.Either<Error, Storage>>
+  getVaultConfigurationStorage(vault: Vault, blockHash: number): Promise<E.Either<Error, Storage>>
 
   getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
   getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
@@ -54,7 +55,7 @@ export class VaultWatcherSrv {
 
     const results = await Promise.all(
       VAULT_LIST.map(async (vault) => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(vault.configurator, blockNumber)
+        const storage = await this.ethClient.getVaultConfigurationStorage(vault, blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
             storage.left as unknown as Error, // TODO
@@ -158,9 +159,10 @@ export class VaultWatcherSrv {
 
   private async handleVaultConfigurationChange(blockEvent: BlockEvent): Promise<Finding[]> {
     const out: Finding[] = []
+    const vaultIdx = blockEvent.blockNumber % VAULT_LIST.length // distributing vault config check by block because of Forta slow RPC responses. Expected One vault check per block
     const results = await Promise.all(
-      VAULT_LIST.map(async (vault) => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(vault.configurator, blockEvent.blockNumber)
+      VAULT_LIST.filter((vault, idx) => idx === vaultIdx).map(async (vault) => {
+        const storage = await this.ethClient.getVaultConfigurationStorage(vault, blockEvent.blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
             storage.left as unknown as Error, // TODO
@@ -173,6 +175,9 @@ export class VaultWatcherSrv {
     )
 
     results.forEach((storageOrError, index) => {
+      if (index !== vaultIdx) {
+        return
+      }
       if (storageOrError instanceof Finding) {
         out.push(storageOrError)
         return

@@ -21,6 +21,22 @@ export interface Storage {
   validator?: string
 }
 
+export interface Vault {
+  name: string
+  vault: string
+  initializer: string
+  configurator: string
+  validator: string
+  defaultBondStrategy: string
+  depositWrapper: string
+  upgradeableProxyProxyAdmin: string
+  deployer: string
+  proxyAdmin: string
+  admin: string
+  storage: Storage
+  curator: string
+}
+
 export interface SafeTX {
   safeAddress: string
   safeName: string
