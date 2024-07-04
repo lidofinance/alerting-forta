@@ -14,7 +14,7 @@ RUN yarn install --immutable && yarn run build
 FROM base as production
 LABEL "network.forta.settings.agent-logs.enable"="true"
 
-ENV APP_NAME=l2-bridge-optimism
+ENV APP_NAME=l2-bridge-arbitrum
 ENV NODE_ENV=production
 ENV ETHEREUM_RPC_URL=https://eth.drpc.org
 ENV ARBITRUM_RPC_URL=https://arbitrum.drpc.org

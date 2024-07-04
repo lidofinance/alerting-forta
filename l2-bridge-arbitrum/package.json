@@ -1,9 +1,9 @@
 {
-  "name": "lido-l2-bridge-optimism-bot",
+  "name": "lido-l2-bridge-arbitrum-bot",
   "version": "0.0.1",
-  "description": "Lido Detection Bot for Optimism part of L2 bridge",
+  "description": "Lido Detection Bot for Arbitrum part of L2 bridge",
   "chainIds": [
-    10
+    42161
   ],
   "chainSettings": {
     "default": {
