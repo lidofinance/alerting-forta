@@ -4,60 +4,33 @@
 
 - Arbitrum
 
-## Sub-bots
+## Alerts
 
-### Bridge-watcher
-
-Alerts about events on the L2-bridge (Arbitrum side)
-
-**Alerts:**
-
-- Alerts on the admin events in L2-bridge (Arbitrum side)
-
-### Governance
-
-Alerts about events on the gov-bridge (Arbitrum side)
-
-**Alerts:**
-
-- Alerts on all events in gov-bridge (Arbitrum side)
-
-### Proxy-watcher
-
-Alert on proxy state changes
-
-**Alerts:**
-
-- PROXY-UPGRADED - One of the proxies on the Arbitrum side was upgraded
-- PROXY-ADMIN-CHANGED - Admin for of the proxies on the Arbitrum side was changed
-- Alerts on the admin events in L2-bridge (Arbitrum side)
-
-### Withdrawals
-
-Alert on huge withdrawals
-
-**Alerts:**
-
-- HUGE-WITHDRAWALS-FROM-L2 - There were more than 10k wstETH withdrawal requests over the last 48h or less
-
-## Development
-
-Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
-
-```
-yarn install
-```
-
-Running in a live mode:
-
-```
-yarn start:dev
-```
-
-Testing on a specific block/range/transaction:
-
-```
-yarn block 13626668
-yarn range '13626667..13626668'
-yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
-```
+1. Bridge events
+   1. 🚨🚨🚨 Arbitrum bridge wstETH:stEth balance mismatch
+   2. 🚨🚨🚨 Arbitrum bridge LDO balance mismatch
+   3. 🚨 Arbitrum L2 Bridge: Deposits Disabled
+   4. 🚨 Arbitrum L2 Bridge: Role Admin changed
+   5. 🚨 Arbitrum L2 Bridge: Withdrawals Disabled
+   6. ⚠️ Arbitrum L2 Bridge: Role granted
+   7. ⚠️ Arbitrum L2 Bridge: Role revoked
+   8. ℹ️ Arbitrum L2 Bridge: Deposits Enabled
+   9. ℹ️ Arbitrum L2 Bridge: Withdrawals Enabled
+2. Gov Events
+   1. 🚨 Arbitrum Gov Bridge: Ethereum Governance Executor Updated
+   2. 🚨 Arbitrum Gov Bridge: Guardian Updated
+   3. ⚠️ Arbitrum Gov Bridge: Delay Updated
+   4. ⚠️ Arbitrum Gov Bridge: Grace Period Updated
+   5. ⚠️ Arbitrum Gov Bridge: Min Delay Updated
+   6. ⚠️ Arbitrum Gov Bridge: Max Delay Updated
+   7. ℹ️ Arbitrum Gov Bridge: Action set queued
+   8. ℹ️ Arbitrum Gov Bridge: Action set executed
+   9. ℹ️ Arbitrum Gov Bridge: Action set canceled
+3. Proxy events
+   1. 🚨 Arbitrum: Proxy ossified
+   2. 🚨 Arbitrum: Proxy admin changed
+   3. 🚨 Arbitrum: Proxy implementation changed
+   4. 🚨 Arbitrum: Proxy upgraded
+   5. 🚨 Arbitrum: Proxy beacon upgraded
+4. Monitor Withdrawals
+   1. ⚠️ Arbitrum: Huge withdrawals during the last ...
