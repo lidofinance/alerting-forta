@@ -12,7 +12,7 @@ import * as Winston from 'winston'
 import { Address } from './utils/constants'
 import promClient from 'prom-client'
 import { Metrics } from './utils/metrics/metrics'
-import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
+import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
 import { MonitorWithdrawals } from './services/monitor_withdrawals'
 import { OptimismClient } from './clients/optimism_client'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
@@ -27,7 +27,7 @@ import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { AlertHandler } from './handlers/alert.handler'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { ETHProvider } from './clients/eth_provider_client'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { ERC20Bridged__factory, L2ERC20TokenBridge__factory, OssifiableProxy__factory } from './generated/typechain'
 
 const main = async () => {
@@ -49,11 +49,9 @@ const main = async () => {
 
   const metrics = new Metrics(mergedRegistry, config.promPrefix)
 
-  const optimismProvider = new ethers.providers.JsonRpcProvider(config.optimismRpcUrl, config.chainId)
-  let nodeClient = getEthersProvider()
-  if (!config.useFortaProvider) {
-    nodeClient = optimismProvider
-  }
+  const nodeClient = config.useFortaProvider
+    ? new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), config.chainId)
+    : new ethers.providers.JsonRpcProvider(config.optimismRpcUrl, config.chainId)
 
   const adr: Address = Address
 
