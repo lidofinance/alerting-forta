@@ -2,7 +2,8 @@ import { Counter, Gauge, Histogram, Registry, Summary } from 'prom-client'
 
 export const StatusOK = 'ok'
 export const StatusFail = 'fail'
-export const HandleBlockLabel = 'handleBlock'
+export const HandleL1BlockLabel = 'handleL1Block'
+export const HandleL2BlockLabel = 'handleL2Block'
 export const HandleTxLabel = 'handleTx'
 
 export class Metrics {

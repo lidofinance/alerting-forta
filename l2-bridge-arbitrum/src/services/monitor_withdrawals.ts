@@ -1,14 +1,13 @@
 import BigNumber from 'bignumber.js'
-import { BlockDto, WithdrawalRecord } from '../entity/blockDto'
+import { BlockDto, TransactionDto, WithdrawalRecord } from '../entity/blockDto'
 import * as E from 'fp-ts/Either'
-import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { NetworkError } from '../utils/errors'
 import { WithdrawalInitiatedEvent } from '../generated/typechain/L2ERC20TokenGateway'
 import { Finding } from '../generated/proto/alert_pb'
-import { TransactionDto } from '../entity/events'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { ETH_DECIMALS } from '../utils/constants'
+import { LRUCache } from 'lru-cache'
 
 // 10k wstETH
 const MAX_WITHDRAWALS_10K_WstEth = 10_000
@@ -43,10 +42,18 @@ export class MonitorWithdrawals {
   private withdrawalStore: WithdrawalRecord[] = []
   private toManyWithdrawalsTimestamp = 0
 
-  constructor(withdrawalsClient: IMonitorWithdrawalsClient, arbitrumL2TokenGateway: string, logger: Logger) {
+  private readonly processedWithdrawalBlock: LRUCache<number, boolean>
+
+  constructor(
+    withdrawalsClient: IMonitorWithdrawalsClient,
+    arbitrumL2TokenGateway: string,
+    logger: Logger,
+    processedWithdrawalBlock: LRUCache<number, boolean>,
+  ) {
     this.withdrawalsClient = withdrawalsClient
     this.arbitrumL2TokenGateway = arbitrumL2TokenGateway
     this.logger = logger
+    this.processedWithdrawalBlock = processedWithdrawalBlock
   }
 
   public getName(): string {
@@ -80,7 +87,9 @@ export class MonitorWithdrawals {
   }
 
   public handleL2Block(l2BlockDto: BlockDto): Finding[] {
-    const start = new Date().getTime()
+    if (this.processedWithdrawalBlock.has(l2BlockDto.number)) {
+      return []
+    }
 
     const out: Finding[] = []
 
@@ -110,7 +119,7 @@ export class MonitorWithdrawals {
           : HOURS_48
 
       const f: Finding = new Finding()
-      f.setName(`⚠️ arbitrum: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`)
+      f.setName(`⚠️ Arbitrum: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`)
       f.setDescription(
         `There were withdrawals requests from L2 to L1 for the ` +
           `${withdrawalsSum.div(ETH_DECIMALS).toFixed(4)} wstETH in total`,
@@ -118,7 +127,8 @@ export class MonitorWithdrawals {
       f.setAlertid('HUGE-WITHDRAWALS-FROM-L2')
       f.setSeverity(Finding.Severity.MEDIUM)
       f.setType(Finding.FindingType.SUSPICIOUS)
-      f.setProtocol('arbitrum')
+      f.setProtocol('ethereum')
+      f.setUniquekey(l2BlockDto.number.toString())
 
       out.push(f)
 
@@ -134,7 +144,7 @@ export class MonitorWithdrawals {
       this.withdrawalStore = tmp
     }
 
-    this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this.handleL2Block.name, start))
+    this.processedWithdrawalBlock.set(l2BlockDto.number, true)
     return out
   }
 

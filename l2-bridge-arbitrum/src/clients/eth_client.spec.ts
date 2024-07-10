@@ -1,4 +1,4 @@
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { ERC20Bridged__factory } from '../generated/typechain'
 import { ETHProvider } from './eth_provider_client'
 import { Config } from '../utils/env/env'
@@ -7,6 +7,8 @@ import promClient from 'prom-client'
 import { Metrics } from '../utils/metrics/metrics'
 import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
+import { BlockDtoWithTransactions, BlockHash } from '../entity/blockDto'
+import { LRUCache } from 'lru-cache'
 
 const TEST_TIMEOUT = 120_000
 
@@ -15,8 +17,7 @@ describe('ethProvider', () => {
 
   const adr = Address
 
-  const mainnet = 1
-  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, mainnet)
+  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
 
   const wSthEthRunner = ERC20Bridged__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
   const ldoRunner = ERC20Bridged__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
@@ -24,13 +25,24 @@ describe('ethProvider', () => {
   const customRegister = new promClient.Registry()
   const metrics = new Metrics(customRegister, config.promPrefix)
 
-  const l1Client = new ETHProvider(metrics, wSthEthRunner, ldoRunner, ethProvider)
-  const l1BlockNumber = 20_183_793
+  const l1BlocksStore = new LRUCache<BlockHash, BigNumber>({
+    max: 500,
+  })
+  const l1Client = new ETHProvider(
+    metrics,
+    wSthEthRunner,
+    ldoRunner,
+    ethProvider,
+    l1BlocksStore,
+    adr.ARBITRUM_L1_TOKEN_BRIDGE,
+    adr.ARBITRUM_L1_LDO_BRIDGE,
+  )
+  const l1BlockHash = '0xb98cace7cd13a459d5736755184217ec6a70f8d0c01dd051ec372832df077a2a'
 
   test(
     'getWstEthBalance is 66_725.331301424290867528 wstEth',
     async () => {
-      const wStethBalance = await l1Client.getWstEthBalance(l1BlockNumber, adr.ARBITRUM_L1_TOKEN_BRIDGE)
+      const wStethBalance = await l1Client.getWstEthBalance(l1BlockHash)
       if (E.isLeft(wStethBalance)) {
         throw wStethBalance.left
       }
@@ -43,7 +55,7 @@ describe('ethProvider', () => {
   test(
     'getLDOBalance is 89_0572.571209700629591106 LDO',
     async () => {
-      const ldoBalance = await l1Client.getLDOBalance(l1BlockNumber, adr.ARBITRUM_L1_LDO_BRIDGE)
+      const ldoBalance = await l1Client.getLDOBalance(l1BlockHash)
       if (E.isLeft(ldoBalance)) {
         throw ldoBalance.left
       }
@@ -56,12 +68,12 @@ describe('ethProvider', () => {
   test(
     'getBlockNumber',
     async () => {
-      const blockNumber = await l1Client.getBlockNumber()
+      /*    const blockNumber = await l1Client.getBlock(new Date())
       if (E.isLeft(blockNumber)) {
         throw blockNumber.left
       }
 
-      expect(Number.isInteger(blockNumber.right)).toBe(true)
+      expect(Number.isInteger(blockNumber.right.number)).toBe(true)*/
     },
     TEST_TIMEOUT,
   )

@@ -1,6 +1,6 @@
 import { Mutex, MutexInterface, withTimeout } from 'async-mutex'
 
-export class DataRW<T> {
+export class ArrRW<T> {
   private mutex: MutexInterface
   private value: T[]
 
@@ -10,21 +10,33 @@ export class DataRW<T> {
   }
 
   async read(): Promise<T[]> {
+    await this.mutex.waitForUnlock()
+    await this.mutex.acquire()
+    let out: T[]
+    try {
+      out = this.value
+    } finally {
+      this.mutex.release()
+    }
+
+    return out
+  }
+
+  async write(newValue: T[]): Promise<void> {
+    await this.mutex.waitForUnlock()
     await this.mutex.acquire()
     try {
-      const out = this.value
-      this.value = []
-
-      return out
+      this.value.push(...newValue)
     } finally {
       this.mutex.release()
     }
   }
 
-  async write(newValue: T[]): Promise<void> {
+  async clear(): Promise<void> {
+    await this.mutex.waitForUnlock()
     await this.mutex.acquire()
     try {
-      this.value.push(...newValue)
+      this.value = []
     } finally {
       this.mutex.release()
     }

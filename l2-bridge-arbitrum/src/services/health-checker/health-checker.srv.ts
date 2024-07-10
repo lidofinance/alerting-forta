@@ -35,11 +35,9 @@ export class HealthChecker {
       if (f.getAlertid() === NetworkErrorFinding) {
         this.logger.warn(f.getName(), {
           desc: f.getDescription(),
-          err: {
-            stack: f.getMetadataMap()['stack'],
-            msg: f.getMetadataMap()['message'],
-            err: f.getMetadataMap()['name'],
-          },
+          stack: f.getMetadataMap()['stack'],
+          msg: f.getMetadataMap()['message'],
+          err: f.getMetadataMap()['name'],
         })
         errCount += 1
 
