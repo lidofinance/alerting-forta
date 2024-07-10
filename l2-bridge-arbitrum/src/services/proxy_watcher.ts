@@ -4,6 +4,7 @@ import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { networkAlert } from '../utils/errors'
 import { Finding } from '../generated/proto/alert_pb'
+import { BlockDto } from '../entity/blockDto'
 
 export class ProxyWatcher {
   private readonly name: string = 'ProxyWatcher'
@@ -61,16 +62,16 @@ export class ProxyWatcher {
     return null
   }
 
-  async handleL2Block(l2blockNumber: number): Promise<Finding[]> {
+  async handleL2Block(l2Block: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
 
     const BLOCK_INTERVAL = 25
     const out: Finding[] = []
 
-    if (l2blockNumber % BLOCK_INTERVAL === 0) {
+    if (l2Block.number % BLOCK_INTERVAL === 0) {
       const [impl, admin] = await Promise.all([
-        this.handleProxyImplementationChanges(l2blockNumber),
-        this.handleProxyAdminChanges(l2blockNumber),
+        this.handleProxyImplementationChanges(l2Block.number),
+        this.handleProxyAdminChanges(l2Block.number),
       ])
 
       out.push(...impl, ...admin)
@@ -78,7 +79,9 @@ export class ProxyWatcher {
 
     this.logger.info(this.getName() + '.impl = ' + this.getImpl())
     this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
-    this.logger.info(elapsedTime(this.proxyContract.getName() + `.` + this.handleL2Block.name, start))
+    this.logger.info(
+      elapsedTime(this.proxyContract.getName() + `.` + this.handleL2Block.name + `(${l2Block.number})`, start),
+    )
     return out
   }
 
@@ -99,7 +102,7 @@ export class ProxyWatcher {
     if (newImpl.right.toLowerCase() != this.getImpl().toLowerCase()) {
       const f: Finding = new Finding()
 
-      f.setName('🚨 arbitrum: Proxy implementation changed')
+      f.setName('🚨 Arbitrum: Proxy implementation changed')
       f.setDescription(
         `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
           `was changed form ${this.getImpl()} to ${newImpl}` +
@@ -107,7 +110,8 @@ export class ProxyWatcher {
       )
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('arbitrum')
+      f.setProtocol('ethereum')
+      f.setUniquekey(l2BlockNumber.toString())
 
       const m = f.getMetadataMap()
       m.set('newImpl', newImpl.right)
@@ -145,7 +149,8 @@ export class ProxyWatcher {
       )
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('arbitrum')
+      f.setProtocol('ethereum')
+      f.setUniquekey(l2blockNumber.toString())
 
       const m = f.getMetadataMap()
       m.set('newAdmin', newAdmin.right)

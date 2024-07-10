@@ -5,11 +5,11 @@ import { Config } from '../utils/env/env'
 import promClient from 'prom-client'
 import { Metrics } from '../utils/metrics/metrics'
 import { MonitorWithdrawals } from './monitor_withdrawals'
-import { TransactionDto } from '../entity/events'
 import { ArbitrumClient } from '../clients/arbitrum_client'
 import * as Winston from 'winston'
 import BigNumber from 'bignumber.js'
-import { WithdrawalRecord } from '../entity/blockDto'
+import { BlockDtoWithTransactions, BlockHash, TransactionDto, WithdrawalRecord } from '../entity/blockDto'
+import { LRUCache } from 'lru-cache'
 
 const TEST_TIMEOUT = 120_000
 
@@ -22,7 +22,7 @@ describe('monitor_withdrawals', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const arbitrumProvider = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.chainId)
+  const arbitrumProvider = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.arbChainID)
 
   const l2Bridge = L2ERC20TokenGateway__factory.connect(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, arbitrumProvider)
   const bridgedWSthEthRunner = ERC20Bridged__factory.connect(adr.ARBITRUM_WSTETH_BRIDGED.address, arbitrumProvider)
@@ -30,9 +30,41 @@ describe('monitor_withdrawals', () => {
 
   const customRegister = new promClient.Registry()
   const metrics = new Metrics(customRegister, config.promPrefix)
-  const l2Client = new ArbitrumClient(arbitrumProvider, metrics, l2Bridge, bridgedWSthEthRunner, bridgedLdoRunner)
 
-  const withdrawalsSrv = new MonitorWithdrawals(l2Client, adr.ARBITRUM_L2_TOKEN_GATEWAY.address, logger)
+  const l2BlocksStore = new LRUCache<BlockHash, BlockDtoWithTransactions>({
+    max: 500,
+    ttl: 1000 * 60 * 2,
+  })
+
+  const l2BridgeCache = new LRUCache<BlockHash, BigNumber>({
+    max: 500,
+    ttl: 1000 * 60 * 2,
+    updateAgeOnGet: true,
+    updateAgeOnHas: true,
+  })
+  const l2Client = new ArbitrumClient(
+    arbitrumProvider,
+    metrics,
+    l2Bridge,
+    bridgedWSthEthRunner,
+    bridgedLdoRunner,
+    l2BlocksStore,
+    l2BridgeCache,
+  )
+
+  const processedWithdrawalBlock = new LRUCache<number, boolean>({
+    max: 20_000,
+    ttl: 1000 * 60 * 60,
+    updateAgeOnGet: true,
+    updateAgeOnHas: true,
+  })
+
+  const withdrawalsSrv = new MonitorWithdrawals(
+    l2Client,
+    adr.ARBITRUM_L2_TOKEN_GATEWAY.address,
+    logger,
+    processedWithdrawalBlock,
+  )
 
   test(
     'handleTransaction is 1.732302579999414411',

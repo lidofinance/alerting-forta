@@ -1,3 +1,6 @@
+export const SECONDS_60 = 60
+export const SECONDS_768 = 120
+
 export function formatTime(timeInMillis: number): string {
   const seconds = (timeInMillis / 1000).toFixed(3)
   return `${seconds} seconds`
@@ -17,11 +20,11 @@ function formatTimeToHumanReadable(date: Date): string {
 export function formatDelay(fullDelaySec: number): string {
   const sign = fullDelaySec >= 0 ? 1 : -1
   let delayHours = 0
-  let delayMin = Math.floor((sign * fullDelaySec) / 60)
-  const delaySec = sign * fullDelaySec - delayMin * 60
-  if (delayMin >= 60) {
-    delayHours = Math.floor(delayMin / 60)
-    delayMin -= delayHours * 60
+  let delayMin = Math.floor((sign * fullDelaySec) / SECONDS_60)
+  const delaySec = sign * fullDelaySec - delayMin * SECONDS_60
+  if (delayMin >= SECONDS_60) {
+    delayHours = Math.floor(delayMin / SECONDS_60)
+    delayMin -= delayHours * SECONDS_60
   }
   return (
     (sign == 1 ? '' : '-') +
@@ -29,4 +32,12 @@ export function formatDelay(fullDelaySec: number): string {
     (delayMin > 0 ? `${delayMin} min ` : '') +
     `${delaySec} sec`
   )
+}
+
+export function isWorkInterval(l1BlockTimesTamp: number, l2BlockTimesTamp: number): boolean {
+  return -SECONDS_768 <= l2BlockTimesTamp - l1BlockTimesTamp && l2BlockTimesTamp - l1BlockTimesTamp <= SECONDS_60
+}
+
+export function toDate(unixTimestamp: number): string {
+  return new Date(unixTimestamp * 1000).toISOString()
 }

@@ -42,7 +42,8 @@ export class EventWatcher {
             f.setAlertid(eventToFinding.alertId)
             f.setSeverity(eventToFinding.severity)
             f.setType(eventToFinding.type)
-            f.setProtocol('arbitrum')
+            f.setProtocol('ethereum')
+            f.setUniquekey(log.blockNumber.toString())
 
             const m = f.getMetadataMap()
             m.set('args', String(logDesc.args))
