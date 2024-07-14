@@ -5,7 +5,7 @@ import { expect } from '@jest/globals'
 import BigNumber from 'bignumber.js'
 import * as Winston from 'winston'
 import { ERC20Short__factory } from '../../common/generated'
-import { Constants } from '../src/constants'
+import { scrollConstants } from '../src/agent'
 import { L2Client } from '../../common/clients/l2_client'
 import assert from 'assert'
 
@@ -18,14 +18,14 @@ describe('MonitorWithdrawals', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const nodeClient = new ethers.providers.JsonRpcProvider(Constants.L2_NETWORK_RPC, Constants.L2_NETWORK_ID)
-  const bridgedWstethRunner = ERC20Short__factory.connect(Constants.L2_WSTETH_BRIDGED.address, nodeClient)
+  const nodeClient = new ethers.providers.JsonRpcProvider(scrollConstants.L2_NETWORK_RPC, scrollConstants.L2_NETWORK_ID)
+  const bridgedWstethRunner = ERC20Short__factory.connect(scrollConstants.L2_WSTETH_BRIDGED.address, nodeClient)
 
-  const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, Constants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
+  const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, scrollConstants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
   const monitorWithdrawals = new MonitorWithdrawals(
-    l2Client, Constants.L2_ERC20_TOKEN_GATEWAY.address, logger, Constants.withdrawalInfo,
-    Constants.SCROLL_APPROX_BLOCK_TIME_3_SECONDS
+    l2Client, scrollConstants.L2_ERC20_TOKEN_GATEWAY.address, logger, scrollConstants.withdrawalInfo,
+    scrollConstants.L2_APPROX_BLOCK_TIME_SECONDS
   )
 
   test(`getWithdrawalRecordsInBlockRange: 3 withdrawals, 3889 blocks`, async () => {
@@ -45,13 +45,13 @@ describe('MonitorWithdrawals', () => {
         amount: new BigNumber('16222703281150365'),
       },
     ])
-  })
+  }, 20 * SECOND)
 
   test(`getWithdrawalRecordsInBlockRange: 25 withdrawals (51_984 blocks)`, async () => {
     const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(6581354, 6633338)
     assert(E.isRight(withdrawalRecords))
     expect(withdrawalRecords.right).toHaveLength(25)
-  })
+  }, 40 * SECOND)
 
   xtest(`getWithdrawalRecordsInBlockRange for 1_000_000 blocks`, async () => {
     const endBlock = 6_633_338

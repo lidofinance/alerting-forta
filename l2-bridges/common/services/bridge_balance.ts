@@ -4,7 +4,7 @@ import { Logger } from 'winston'
 import BigNumber from 'bignumber.js'
 import * as E from 'fp-ts/Either'
 import { getUniqueKey, networkAlert } from '../utils/finding.helpers'
-import { ETH_DECIMALS } from '../utils/constants'
+import { ETH_DECIMALS } from '../constants'
 
 export abstract class IL1BridgeBalanceClient {
   abstract getWstEthBalance(l1blockNumber: number, address: string): Promise<E.Either<Error, BigNumber>>

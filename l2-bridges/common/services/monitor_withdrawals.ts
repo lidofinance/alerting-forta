@@ -8,10 +8,10 @@ import { L2Client } from '../clients/l2_client'
 import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
 import { getUniqueKey } from '../utils/finding.helpers'
-import { ETH_DECIMALS } from '../utils/constants'
+import { ETH_DECIMALS } from '../constants'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
 import { ethers } from 'ethers'
-import { WithdrawalInfo } from '../utils/constants'
+import { WithdrawalInfo } from '../constants'
 import assert from 'assert'
 
 // 10k wstETH
@@ -62,16 +62,17 @@ export class MonitorWithdrawals {
       return E.left(withdrawalRecords.left)
     }
 
-    const withdrawalsSum = new BigNumber(0)
+    let withdrawalsSum = 0n
     for (const wc of withdrawalRecords.right) {
-      withdrawalsSum.plus(wc.amount)
+      withdrawalsSum += BigInt(wc.amount.toString())
       this.withdrawalsStore.push(wc)
     }
 
-    this.logger.info(`${MonitorWithdrawals.name} started on block ${currentBlock}`)
+    this.logger.info(`${MonitorWithdrawals.name} started on block ${currentBlock}.`
+      + ` Fetched past withdrawal events in blocks range [${startBlock}, ${endBlock}]`)
     this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this._getWithdrawalRecordsInBlockRange.name, start))
     return E.right({
-      currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
+      currentWithdrawals: (new BigNumber(withdrawalsSum.toString())).div(ETH_DECIMALS).toFixed(4),
     })
   }
 
@@ -147,7 +148,6 @@ export class MonitorWithdrawals {
     if (E.isLeft(withdrawalLogsE)) {
       return E.left(withdrawalLogsE.left)
     }
-
     const blocksToRequest = new Set<number>()
     const blockNumberToTime = new Map<number, number>()
     const withdrawalRecordsAux: { amount: BigNumber, blockNumber: number }[] = []
