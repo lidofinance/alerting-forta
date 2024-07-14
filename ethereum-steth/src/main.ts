@@ -38,20 +38,38 @@ import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
 import { VaultSrv } from './services/vault/Vault.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
+import * as fs from 'node:fs'
 
 const main = async () => {
   const config = new Config()
   const dbClient = knex(config.knexConfig)
+  if (config.dataProvider === '') {
+    console.log('Could not set up dataProvider')
+    process.exit(1)
+  }
 
   const logger: Winston.Logger = Winston.createLogger({
     format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
     transports: [new Winston.transports.Console()],
   })
 
-  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
-  const fortaEthersProvider = getEthersProvider()
+  const defaultRegistry = promClient
+  defaultRegistry.collectDefaultMetrics({
+    prefix: config.promPrefix,
+  })
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
+  const customRegister = new promClient.Registry()
+  const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
+  mergedRegistry.setDefaultLabels({ instance: config.instance, dataProvider: config.dataProvider })
+
+  const metrics = new Metrics(mergedRegistry, config.promPrefix)
+
+  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
+  let fortaEthersProvider = getEthersProvider()
+  if (!config.useFortaProvider) {
+    fortaEthersProvider = ethProvider
+  }
+
   const address: Address = Address
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
 
@@ -62,18 +80,8 @@ const main = async () => {
 
   const ethClient = new ETHProvider(
     logger,
+    metrics,
     fortaEthersProvider,
-    etherscanProvider,
-    lidoRunner,
-    wdQueueRunner,
-    gateSealRunner,
-    veboRunner,
-  )
-
-  const drpcClient = new ETHProvider(
-    logger,
-    ethProvider,
-    etherscanProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -114,26 +122,18 @@ const main = async () => {
 
   const vaultSrv = new VaultSrv(
     logger,
-    drpcClient,
+    ethClient,
     address.WITHDRAWALS_VAULT_ADDRESS,
     address.EL_REWARDS_VAULT_ADDRESS,
     address.BURNER_ADDRESS,
     address.LIDO_STETH_ADDRESS,
   )
 
-  const defaultRegistry = promClient
-  defaultRegistry.collectDefaultMetrics({
-    prefix: config.promPrefix,
-  })
-
-  const customRegister = new promClient.Registry()
-  const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
-  mergedRegistry.setDefaultLabels({ instance: config.instance })
-
-  const metrics = new Metrics(mergedRegistry, config.promPrefix)
-
   try {
     await dbClient.migrate.latest()
+
+    const sql = fs.readFileSync('./src/db/withdrawal_requests_01_07_25.sql', 'utf8')
+    await dbClient.raw(sql)
 
     logger.info('Migrations have been run successfully.')
   } catch (error) {
@@ -143,11 +143,12 @@ const main = async () => {
 
   const onAppFindings: Finding[] = []
 
-  const healthChecker = new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime)
+  const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
 
   const gRPCserver = new grpc.Server()
   const blockH = new BlockHandler(
     logger,
+    metrics,
     stethOperationSrv,
     withdrawalsSrv,
     gateSealSrv,
@@ -155,19 +156,8 @@ const main = async () => {
     healthChecker,
     onAppFindings,
   )
-  const txH = new TxHandler(stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
-  const healthH = new HealthHandler(healthChecker, metrics)
-  const initH = new InitHandler(logger, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, onAppFindings)
-  const alertH = new AlertHandler()
-
-  gRPCserver.addService(AgentService, {
-    initialize: initH.handleInit(),
-    evaluateBlock: blockH.handleBlock(),
-    evaluateTx: txH.handleTx(),
-    healthCheck: healthH.handleHealth(),
-    // not used, but required for grpc contract
-    evaluateAlert: alertH.handleAlert(),
-  })
+  const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
+  const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
 
   const latestBlockNumber = await ethClient.getBlockNumber()
   if (E.isLeft(latestBlockNumber)) {
@@ -175,6 +165,27 @@ const main = async () => {
 
     process.exit(1)
   }
+
+  const initH = new InitHandler(
+    config.appName,
+    logger,
+    stethOperationSrv,
+    withdrawalsSrv,
+    gateSealSrv,
+    vaultSrv,
+    onAppFindings,
+    latestBlockNumber.right,
+  )
+  const alertH = new AlertHandler()
+
+  gRPCserver.addService(AgentService, {
+    initialize: initH.handleInit(),
+    evaluateBlock: blockH.handleBlock(),
+    evaluateTx: txH.handleTx(),
+    healthCheck: healthH.healthGrpc(),
+    // not used, but required for grpc contract
+    evaluateAlert: alertH.handleAlert(),
+  })
 
   const stethOperationSrvErr = await stethOperationSrv.initialize(latestBlockNumber.right)
   if (stethOperationSrvErr !== null) {
@@ -192,14 +203,7 @@ const main = async () => {
     onAppFindings.push(...gateSealSrvErr)
   }
 
-  const withdrawalsSrvErr = await withdrawalsSrv.initialize(latestBlockNumber.right)
-  if (withdrawalsSrvErr !== null) {
-    logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
-
-    process.exit(1)
-  }
-
-  metrics.build().set({ commitHash: Version.commitHash }, 1)
+  metrics.buildInfo.set({ commitHash: Version.commitHash }, 1)
 
   gRPCserver.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err != null) {
@@ -217,10 +221,7 @@ const main = async () => {
     res.send(await mergedRegistry.metrics())
   })
 
-  httpService.get('/health', async (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'application/json')
-    res.send(JSON.stringify('ok'))
-  })
+  httpService.get('/health', healthH.healthHttp())
 
   httpService.listen(config.httpPort, () => {
     logger.info(`Http server is running at http://localhost:${config.httpPort}`)

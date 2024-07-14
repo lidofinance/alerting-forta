@@ -1,0 +1,72 @@
+{
+  "name": "lido-bsc-adi-governance-bot",
+  "version": "0.0.1",
+  "description": "Lido Detection Bot for BSC part of aDI",
+  "chainIds": [
+    56
+  ],
+  "chainSettings": {
+    "default": {
+      "shards": 1,
+      "target": 5
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint"
+    }
+  },
+  "scripts": {
+    "update-version": "node ../utils/write-version.js",
+    "build": "tsc --resolveJsonModule",
+    "start": "yarn run start:dev",
+    "start:dev": "nodemon --watch src --watch forta.config.json -e js,ts,json  --exec \"yarn run build && forta-agent run\"",
+    "start:prod": "forta-agent run --prod",
+    "tx": "yarn run build && forta-agent run --tx",
+    "block": "yarn run build && forta-agent run --block",
+    "range": "yarn run build && forta-agent run --range",
+    "file": "yarn run build && forta-agent run --file",
+    "publish": "yarn run update-version && forta-agent publish",
+    "push": "yarn run update-version && forta-agent push",
+    "disable": "forta-agent disable",
+    "enable": "forta-agent enable",
+    "keyfile": "forta-agent keyfile",
+    "test": "jest",
+    "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
+    "postinstall": "yarn generate-types",
+    "eslint:lint": "eslint ./src",
+    "eslint:format": "eslint ./src --fix",
+    "prettier:check": "prettier --check ./src",
+    "prettier:format": "prettier --write ./src README.md",
+    "lint": "yarn run prettier:check && yarn run eslint:lint",
+    "format": "yarn run eslint:format && yarn run prettier:format"
+  },
+  "dependencies": {
+    "async-mutex": "^0.4.0",
+    "bignumber.js": "^9.0.1",
+    "forta-agent": "^0.1.48",
+    "fp-ts": "^2.16.1",
+    "ts-retry": "^4.2.4",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@typechain/ethers-v5": "^11.1.2",
+    "@types/jest": "^27.0.1",
+    "@types/nodemon": "^1.19.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "husky": "^8.0.3",
+    "jest": "^27.0.6",
+    "nodemon": "^2.0.8",
+    "prettier": "^3.1.0",
+    "ts-jest": "^27.0.3",
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.2"
+  },
+  "packageManager": "yarn@1.22.22"
+}

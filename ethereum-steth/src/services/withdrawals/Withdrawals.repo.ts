@@ -154,7 +154,7 @@ export class WithdrawalsRepo {
         .limit(1)
 
       if (data.length === 0) {
-        return E.left(NotFound)
+        return E.right(0)
       }
 
       return E.right(data[0])
@@ -176,6 +176,25 @@ export class WithdrawalsRepo {
       return E.right(out)
     } catch (e) {
       return E.left(new KnexErr(`${e}`))
+    }
+  }
+
+  public async setWithdrawalRequestClaimed(
+    withdrawalRequestId: number,
+    isClaimed: boolean,
+    amountOfStETH: string,
+  ): Promise<Error | null> {
+    try {
+      await this.knex(this.tblName)
+        .where('id', withdrawalRequestId)
+        .update({
+          isClaimed: Number(isClaimed),
+          amountOfStETH: amountOfStETH,
+        })
+
+      return null
+    } catch (e) {
+      return new KnexErr(`${e}`)
     }
   }
 }

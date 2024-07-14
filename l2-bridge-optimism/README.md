@@ -4,60 +4,33 @@
 
 - Optimism
 
-## Sub-bots
+## Alerts
 
-### Bridge-watcher
-
-Alerts about events on the L2-bridge (optimism side)
-
-**Alerts:**
-
-- Alerts on the admin events in L2-bridge (optimism side)
-
-### Governance
-
-Alerts about events on the gov-bridge (optimism side)
-
-**Alerts:**
-
-- Alerts on all events in gov-bridge (optimism side)
-
-### Proxy-watcher
-
-Alert on proxy state changes
-
-**Alerts:**
-
-- PROXY-UPGRADED - One of the proxies on the Optimism side was upgraded
-- PROXY-ADMIN-CHANGED - Admin for of the proxies on the Optimism side was changed
-- Alerts on the admin events in L2-bridge (optimism side)
-
-### Withdrawals
-
-Alert on huge withdrawals
-
-**Alerts:**
-
-- HUGE-WITHDRAWALS-FROM-L2 - There were more than 10k wstETH withdrawal requests over the last 48h or less
-
-## Development
-
-Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
-
-```
-yarn install
-```
-
-Running in a live mode:
-
-```
-yarn start:dev
-```
-
-Testing on a specific block/range/transaction:
-
-```
-yarn block 13626668
-yarn range '13626667..13626668'
-yarn tx 0x2d2774c04e3faf9f17cd26e0978bb812081b9d0b5cc6fd8bf04cc441f92c0a8c
-```
+1. Bridge events
+   1. 🚨🚨🚨 Optimism bridge wstETH:stEth balance mismatch
+   2. 🚨🚨🚨 Optimism bridge LDO balance mismatch
+   3. 🚨 Optimism L2 Bridge: Deposits Disabled
+   4. 🚨 Optimism L2 Bridge: Role Admin changed
+   5. 🚨 Optimism L2 Bridge: Withdrawals Disabled
+   6. ⚠️ Optimism L2 Bridge: Role granted
+   7. ⚠️ Optimism L2 Bridge: Role revoked
+   8. ℹ️ Optimism L2 Bridge: Deposits Enabled
+   9. ℹ️ Optimism L2 Bridge: Withdrawals Enabled
+2. Gov Events
+   1. 🚨 Optimism Gov Bridge: Ethereum Governance Executor Updated
+   2. 🚨 Optimism Gov Bridge: Guardian Updated
+   3. ⚠️ Optimism Gov Bridge: Delay Updated
+   4. ⚠️ Optimism Gov Bridge: Grace Period Updated
+   5. ⚠️ Optimism Gov Bridge: Min Delay Updated
+   6. ⚠️ Optimism Gov Bridge: Max Delay Updated
+   7. ℹ️ Optimism Gov Bridge: Action set queued
+   8. ℹ️ Optimism Gov Bridge: Action set executed
+   9. ℹ️ Optimism Gov Bridge: Action set canceled
+3. Proxy events
+   1. 🚨 Optimism: Proxy ossified
+   2. 🚨 Optimism: Proxy admin changed
+   3. 🚨 Optimism: Proxy implementation changed
+   4. 🚨 Optimism: Proxy upgraded
+   5. 🚨 Optimism: Proxy beacon upgraded
+4. Monitor Withdrawals
+   1. ⚠️ Optimism: Huge withdrawals during the last ...

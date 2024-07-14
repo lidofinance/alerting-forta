@@ -20,21 +20,22 @@ import {
 import { WithdrawalsSrv } from './Withdrawals.srv'
 import { WithdrawalsCache } from './Withdrawals.cache'
 import { ETHProvider } from '../../clients/eth_provider'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
+import promClient from 'prom-client'
+import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('Withdrawals.srv functional tests', () => {
-  const config = new Config()
-  const dbClient = knex(config.knexConfig)
+  const chainId = 1
+  const dbClient = knex(Config.getKnexConfig())
   const repo = new WithdrawalsRepo(dbClient)
 
   const logger: Winston.Logger = Winston.createLogger({
-    format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
+    format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
   })
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
 
   const address: Address = Address
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
@@ -44,10 +45,13 @@ describe('Withdrawals.srv functional tests', () => {
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
 
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
+
   const ethClient = new ETHProvider(
     logger,
+    m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -82,11 +86,12 @@ describe('Withdrawals.srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const initErr = await withdrawalsSrv.initialize(blockNumber)
       if (initErr !== null) {
-        fail(initErr.message)
+        throw initErr.message
       }
       const resultsBigOnly = await withdrawalsSrv.handleUnfinalizedRequestNumber(blockDto)
       expect(resultsBigOnly.length).toEqual(1)
@@ -112,6 +117,7 @@ describe('Withdrawals.srv functional tests', () => {
         number: neededBlock.number,
         timestamp: neededBlock.timestamp,
         parentHash: neededBlock.parentHash,
+        hash: neededBlock.hash,
       }
 
       const results = await withdrawalsSrv.handleUnfinalizedRequestNumber(neededBlockDto)
@@ -151,9 +157,9 @@ describe('Withdrawals.srv functional tests', () => {
         },
       }
 
-      const initErr = await withdrawalsSrv.initialize(19113262)
+      const initErr = await withdrawalsSrv.initialize(19_113_262)
       if (initErr !== null) {
-        fail(initErr.message)
+        throw initErr.message
       }
       const result = await withdrawalsSrv.handleWithdrawalClaimed(transactionDto)
       expect(result.length).toEqual(0)

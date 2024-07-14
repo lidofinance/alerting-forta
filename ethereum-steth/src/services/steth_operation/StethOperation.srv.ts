@@ -7,14 +7,14 @@ import { Logger } from 'winston'
 import { alertId_token_rebased } from '../../utils/events/lido_events'
 import { networkAlert } from '../../utils/errors'
 import { BlockDto } from '../../entity/events'
-import { TransactionResponse } from '@ethersproject/abstract-provider'
 import type { BigNumber } from 'bignumber.js'
 import type { TypedEvent } from '../../generated/typechain/common'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { Finding } from '../../generated/proto/alert_pb'
+import { UnbufferedEvent } from '../../generated/typechain/Lido'
 
-// Formula: (60 * 60 * 72) / 13 = 19_938
-const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 72) / 13)
+// Formula: (60 * 60 * 24 * 7) / 12 = 50_400
+export const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 24 * 7) / 12)
 const ONCE_PER_100_BLOCKS: number = 100
 const ONCE_PER_25_BLOCKS: number = 25
 export const ETH_10K = 10_000 // 10000 ETH
@@ -27,22 +27,13 @@ export const DAYS_3 = 60 * 60 * 72 // 72 Hours
 export const ETH_2 = 2 // 2 ETH
 
 export abstract class IStethClient {
-  public abstract getHistory(
-    depositSecurityAddress: string,
-    startBlock: number,
-    endBlock: number,
-  ): Promise<E.Either<Error, TransactionResponse[]>>
+  public abstract getUnbufferedEvents(startBlock: number, endBlock: number): Promise<E.Either<Error, UnbufferedEvent[]>>
 
   public abstract getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-
-  public abstract getUnbufferedEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<Error, TypedEvent[]>>
 
   public abstract getWithdrawalsFinalizedEvents(
     fromBlockNumber: number,
@@ -51,16 +42,20 @@ export abstract class IStethClient {
 
   public abstract getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
-  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
+
+  public abstract getChainPrevBlocks(parentHash: string, depth: number): Promise<E.Either<Error, BlockDto[]>>
+
+  public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
 }
 
 export class StethOperationSrv {
   private readonly name = 'StethOperationSrv'
   private readonly logger: Logger
   private readonly cache: StethOperationCache
-  private readonly ethProvider: IStethClient
+  private readonly stethClient: IStethClient
   private readonly depositSecurityAddress: string
   private readonly lidoStethAddress: string
   private readonly lidoDepositExecutorAddress: string
@@ -73,7 +68,7 @@ export class StethOperationSrv {
   constructor(
     logger: Logger,
     cache: StethOperationCache,
-    ethProvider: IStethClient,
+    stethClient: IStethClient,
     depositSecurityAddress: string,
     lidoStethAddress: string,
     lidoDepositExecutorAddress: string,
@@ -84,7 +79,7 @@ export class StethOperationSrv {
   ) {
     this.logger = logger
     this.cache = cache
-    this.ethProvider = ethProvider
+    this.stethClient = stethClient
     this.depositSecurityAddress = depositSecurityAddress
     this.lidoStethAddress = lidoStethAddress
     this.lidoDepositExecutorAddress = lidoDepositExecutorAddress
@@ -97,33 +92,44 @@ export class StethOperationSrv {
 
   public async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
-    const history = await this.ethProvider.getHistory(
-      this.depositSecurityAddress,
-      currentBlock - HISTORY_BLOCK_OFFSET,
-      currentBlock - 1,
+    const events = await this.stethClient.getUnbufferedEvents(currentBlock - HISTORY_BLOCK_OFFSET, currentBlock - 1)
+
+    if (E.isLeft(events)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return events.left
+    }
+
+    const latestDepositBlock = await this.stethClient.getBlockByNumber(
+      events.right[events.right.length - 1].blockNumber,
     )
-    if (E.isLeft(history)) {
-      this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-      return history.left
+    if (E.isLeft(latestDepositBlock)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return latestDepositBlock.left
     }
 
-    const depositorTxTimestamps: number[] = []
-    for (const record of history.right) {
-      depositorTxTimestamps.push(record.timestamp ? record.timestamp : 0)
-    }
+    this.cache.setLastDepositorTxTime(latestDepositBlock.right.timestamp)
 
-    if (depositorTxTimestamps.length > 0) {
-      depositorTxTimestamps.sort((a, b) => b - a)
-      this.cache.setLastDepositorTxTime(depositorTxTimestamps[0])
-    }
-
-    const bufferedEthRaw = await this.ethProvider.getStethBalance(this.lidoStethAddress, currentBlock)
+    const bufferedEthRaw = await this.stethClient.getStethBalance(this.lidoStethAddress, currentBlock)
     if (E.isLeft(bufferedEthRaw)) {
-      this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
       return bufferedEthRaw.left
     }
 
     this.cache.setLastBufferedEth(bufferedEthRaw.right)
+
+    const currBlock = await this.stethClient.getBlockByNumber(currentBlock)
+    if (E.isLeft(currBlock)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return currBlock.left
+    }
+
+    const prev4Blocks = await this.stethClient.getChainPrevBlocks(currBlock.right.parentHash, 4)
+    if (E.isLeft(prev4Blocks)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return prev4Blocks.left
+    }
+
+    this.cache.setPrev4Blocks(prev4Blocks.right)
 
     this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return null
@@ -138,7 +144,7 @@ export class StethOperationSrv {
     const findings: Finding[] = []
 
     const [bufferedEthFindings, depositorBalanceFindings, stakingLimitFindings, shareRateFindings] = await Promise.all([
-      this.handleBufferedEth(blockDto.number, blockDto.timestamp),
+      this.handleBufferedEth(blockDto),
       this.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp),
       this.handleStakingLimit(blockDto.number, blockDto.timestamp),
       this.handleShareRateChange(blockDto.number),
@@ -155,13 +161,13 @@ export class StethOperationSrv {
     const findings: Finding[] = []
 
     if (this.cache.getShareRate().blockNumber !== 0) {
-      const shareRate = await this.ethProvider.getShareRate(blockNumber)
+      const shareRate = await this.stethClient.getShareRate(blockNumber)
       if (E.isLeft(shareRate)) {
         return [
           networkAlert(
             shareRate.left,
             `Error in ${StethOperationSrv.name}.${this.handleShareRateChange.name}:137`,
-            `Could not call ethProvider.getShareRate`,
+            `Could not call stethClient.getShareRate`,
           ),
         ]
       }
@@ -211,12 +217,12 @@ export class StethOperationSrv {
 
     for (const f of lidoFindings) {
       if (f.getAlertid() === alertId_token_rebased) {
-        const shareRate = await this.ethProvider.getShareRate(txEvent.block.number)
+        const shareRate = await this.stethClient.getShareRate(txEvent.block.number)
         if (E.isLeft(shareRate)) {
           const f: Finding = networkAlert(
             shareRate.left,
             `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:192`,
-            `Could not call ethProvider.getShareRate`,
+            `Could not call stethClient.getShareRate`,
           )
 
           out.push(f)
@@ -232,12 +238,28 @@ export class StethOperationSrv {
     return out
   }
 
-  public async handleBufferedEth(blockNumber: number, blockTimestamp: number): Promise<Finding[]> {
-    const shiftedBlockNumber = blockNumber - 3
+  public async handleBufferedEth(blockDto: BlockDto): Promise<Finding[]> {
+    if (this.cache.getPrev4Blocks().length === 0 || this.cache.getParentBlock().hash !== blockDto.parentHash) {
+      const prev4Blocks = await this.stethClient.getChainPrevBlocks(blockDto.parentHash, 4)
+      if (E.isLeft(prev4Blocks)) {
+        const f: Finding = networkAlert(
+          prev4Blocks.left,
+          `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:255`,
+          `Could not call stethClient.getChainPrevBlocks`,
+        )
+
+        return [f]
+      }
+
+      this.cache.setPrev4Blocks(prev4Blocks.right)
+    }
+
+    const prev4Blocks = this.cache.getPrev4Blocks()
+    const shiftedBlockNumber = prev4Blocks[1].number
     const [bufferedEthRaw, shifte3dBufferedEthRaw, shifte4dBufferedEthRaw] = await Promise.all([
-      this.ethProvider.getBufferedEther(blockNumber),
-      this.ethProvider.getBufferedEther(shiftedBlockNumber),
-      this.ethProvider.getBufferedEther(shiftedBlockNumber - 1),
+      this.stethClient.getBufferedEther(blockDto.number),
+      this.stethClient.getBufferedEther(prev4Blocks[1].number),
+      this.stethClient.getBufferedEther(prev4Blocks[0].number),
     ])
 
     if (E.isLeft(bufferedEthRaw)) {
@@ -245,7 +267,7 @@ export class StethOperationSrv {
         networkAlert(
           bufferedEthRaw.left,
           `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:240`,
-          `Could not call ethProvider.bufferedEthRaw`,
+          `Could not call stethClient.bufferedEthRaw`,
         ),
       ]
     }
@@ -255,7 +277,7 @@ export class StethOperationSrv {
         networkAlert(
           shifte3dBufferedEthRaw.left,
           `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:241`,
-          `Could not call ethProvider.shifte3dBufferedEthRaw`,
+          `Could not call stethClient.shifte3dBufferedEthRaw`,
         ),
       ]
     }
@@ -265,7 +287,7 @@ export class StethOperationSrv {
         networkAlert(
           shifte4dBufferedEthRaw.left,
           `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:242`,
-          `Could not call ethProvider.shifte4dBufferedEthRaw`,
+          `Could not call stethClient.shifte4dBufferedEthRaw`,
         ),
       ]
     }
@@ -273,8 +295,8 @@ export class StethOperationSrv {
     const out: Finding[] = []
     if (shifte3dBufferedEthRaw.right.lt(shifte4dBufferedEthRaw.right)) {
       const [unbufferedEvents, wdReqFinalizedEvents] = await Promise.all([
-        this.ethProvider.getUnbufferedEvents(shiftedBlockNumber, shiftedBlockNumber),
-        this.ethProvider.getWithdrawalsFinalizedEvents(shiftedBlockNumber, shiftedBlockNumber),
+        this.stethClient.getUnbufferedEvents(shiftedBlockNumber, shiftedBlockNumber),
+        this.stethClient.getWithdrawalsFinalizedEvents(shiftedBlockNumber, shiftedBlockNumber),
       ])
 
       if (E.isLeft(unbufferedEvents)) {
@@ -282,7 +304,7 @@ export class StethOperationSrv {
           networkAlert(
             unbufferedEvents.left,
             `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:278`,
-            `Could not call ethProvider.getUnbufferedEvents`,
+            `Could not call stethClient.getUnbufferedEvents`,
           ),
         ]
       }
@@ -292,7 +314,7 @@ export class StethOperationSrv {
           networkAlert(
             wdReqFinalizedEvents.left,
             `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:279`,
-            `Could not call ethProvider.getWithdrawalsFinalizedEvents`,
+            `Could not call stethClient.getWithdrawalsFinalizedEvents`,
           ),
         ]
       }
@@ -316,14 +338,14 @@ export class StethOperationSrv {
       }
     }
 
-    if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
-      const depositableEtherRaw = await this.ethProvider.getDepositableEther(blockNumber)
+    if (blockDto.number % ONCE_PER_100_BLOCKS === 0) {
+      const depositableEtherRaw = await this.stethClient.getDepositableEther(blockDto.number)
       if (E.isLeft(depositableEtherRaw)) {
         return [
           networkAlert(
             depositableEtherRaw.left,
             `Error in ${StethOperationSrv.name}.${this.handleBufferedEth.name}:321`,
-            `Could not call ethProvider.getDepositableEther`,
+            `Could not call stethClient.getDepositableEther`,
           ),
         ]
       }
@@ -332,17 +354,17 @@ export class StethOperationSrv {
       // Keep track of buffer size above MAX_BUFFERED_ETH_AMOUNT_CRITICAL
       if (depositableEther > ETH_20K) {
         if (this.cache.getCriticalDepositableAmountTimestamp() === 0) {
-          this.cache.setCriticalDepositableAmountTimestamp(blockTimestamp)
+          this.cache.setCriticalDepositableAmountTimestamp(blockDto.timestamp)
         }
       } else {
         // reset counter if buffered amount goes below MAX_BUFFERED_ETH_AMOUNT_CRITICAL
         this.cache.setCriticalDepositableAmountTimestamp(0)
       }
 
-      if (this.cache.getLastReportedDepositableEthTimestamp() + HOURS_24 < blockTimestamp) {
+      if (this.cache.getLastReportedDepositableEthTimestamp() + HOURS_24 < blockDto.timestamp) {
         if (
           depositableEther > ETH_20K &&
-          this.cache.getCriticalDepositableAmountTimestamp() + HOUR_1 < blockTimestamp
+          this.cache.getCriticalDepositableAmountTimestamp() + HOUR_1 < blockDto.timestamp
         ) {
           out.push(
             new Finding()
@@ -358,21 +380,21 @@ export class StethOperationSrv {
               .setProtocol('ethereum'),
           )
 
-          this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
+          this.cache.setLastReportedDepositableEthTimestamp(blockDto.timestamp)
         } else if (
           depositableEther > ETH_10K &&
           this.cache.getLastDepositorTxTime() !== 0 &&
-          this.cache.getLastDepositorTxTime() + DAYS_3 < blockTimestamp
+          this.cache.getLastDepositorTxTime() + DAYS_3 < blockDto.timestamp
         ) {
           const bufferedEth = bufferedEthRaw.right.div(ETH_DECIMALS).toNumber()
 
           const f: Finding = new Finding()
           f.setName('⚠️ High depositable ETH amount')
           f.setDescription(
-            `There are ${bufferedEth.toFixed(2)} ` +
-              `depositable ETH in DAO and there are more than ` +
-              `${Math.floor(DAYS_3 / (60 * 60))} ` +
-              `hours since last Depositor TX`,
+            `There are: \n` +
+              `Buffered: ${bufferedEth.toFixed(2)} \n` +
+              `Depositable: ${depositableEther.toFixed(2)} \n` +
+              `ETH in DAO and there are more than ${Math.floor(DAYS_3 / (60 * 60))} hours since last Depositor TX`,
           )
           f.setAlertid('HIGH-DEPOSITABLE-ETH')
           f.setSeverity(Finding.Severity.MEDIUM)
@@ -380,10 +402,12 @@ export class StethOperationSrv {
           f.setProtocol('ethereum')
           out.push(f)
 
-          this.cache.setLastReportedDepositableEthTimestamp(blockTimestamp)
+          this.cache.setLastReportedDepositableEthTimestamp(blockDto.timestamp)
         }
       }
     }
+
+    this.cache.setPrevBlock(blockDto)
 
     return out
   }
@@ -392,13 +416,13 @@ export class StethOperationSrv {
     const out: Finding[] = []
     if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
       if (this.cache.getLastReportedExecutorBalanceTimestamp() + HOURS_4 < currentBlockTimestamp) {
-        const executorBalanceRaw = await this.ethProvider.getBalance(this.lidoDepositExecutorAddress, blockNumber)
+        const executorBalanceRaw = await this.stethClient.getEthBalance(this.lidoDepositExecutorAddress, blockNumber)
         if (E.isLeft(executorBalanceRaw)) {
           return [
             networkAlert(
               executorBalanceRaw.left,
               `Error in ${StethOperationSrv.name}.${this.handleDepositExecutorBalance.name}:396`,
-              `Could not call ethProvider.getBalance`,
+              `Could not call stethClient.getBalance`,
             ),
           ]
         }
@@ -427,13 +451,13 @@ export class StethOperationSrv {
   public async handleStakingLimit(blockNumber: number, currentBlockTimestamp: number): Promise<Finding[]> {
     const out: Finding[] = []
     if (blockNumber % ONCE_PER_25_BLOCKS === 0) {
-      const stakingLimitInfo = await this.ethProvider.getStakingLimitInfo(blockNumber)
+      const stakingLimitInfo = await this.stethClient.getStakingLimitInfo(blockNumber)
       if (E.isLeft(stakingLimitInfo)) {
         return [
           networkAlert(
             stakingLimitInfo.left,
             `Error in ${StethOperationSrv.name}.${this.handleStakingLimit.name}:430`,
-            `Could not call ethProvider.getStakingLimitInfo`,
+            `Could not call stethClient.getStakingLimitInfo`,
           ),
         ]
       }

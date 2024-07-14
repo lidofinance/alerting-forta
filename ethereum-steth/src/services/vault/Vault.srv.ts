@@ -16,14 +16,14 @@ const ETH_1K = ETH_DECIMALS.times(1000)
 const ETH_50 = ETH_DECIMALS.times(50)
 
 export abstract class IVaultClient {
-  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>>
 
-  public abstract getETHDistributedEvent(
+  public abstract getETHDistributedEvents(
     fromBlockNumber: number,
     toBlockNumber: number,
-  ): Promise<E.Either<Error, ETHDistributedEvent | null>>
+  ): Promise<E.Either<Error, ETHDistributedEvent[]>>
 }
 
 export class VaultSrv {
@@ -95,15 +95,20 @@ export class VaultSrv {
       ]
     }
 
-    const report = await this.ethProvider.getETHDistributedEvent(currentBlock, currentBlock)
-    if (E.isLeft(report)) {
+    const reports = await this.ethProvider.getETHDistributedEvents(currentBlock, currentBlock)
+    if (E.isLeft(reports)) {
       return [
         networkAlert(
-          report.left,
+          reports.left,
           `Error in ${VaultSrv.name}.${this.handleBlock.name}:90`,
           `Could not call ethProvider.getETHDistributedEvent`,
         ),
       ]
+    }
+
+    let report: ETHDistributedEvent | null = null
+    if (reports.right.length !== 0) {
+      report = reports.right[0]
     }
 
     const [
@@ -114,8 +119,8 @@ export class VaultSrv {
     ] = await Promise.all([
       this.handleWithdrawalVaultBalance(currentBlock),
       this.handleELVaultBalance(currentBlock, prevBlockElVaultBalance.right),
-      this.handleNoWithdrawalVaultDrains(currentBlock, prevBlockWithdrawalVaultBalance.right, report.right),
-      this.handleNoELVaultDrains(currentBlock, prevBlockElVaultBalance.right, report.right),
+      this.handleNoWithdrawalVaultDrains(currentBlock, prevBlockWithdrawalVaultBalance.right, report),
+      this.handleNoELVaultDrains(currentBlock, prevBlockElVaultBalance.right, report),
     ])
 
     findings.push(
@@ -133,18 +138,23 @@ export class VaultSrv {
   public async handleWithdrawalVaultBalance(blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
     if (blockNumber % ONCE_PER_100_BLOCKS === 0) {
-      const report = await this.ethProvider.getETHDistributedEvent(blockNumber - ONCE_PER_100_BLOCKS, blockNumber)
-      if (E.isLeft(report)) {
+      const reports = await this.ethProvider.getETHDistributedEvents(blockNumber - ONCE_PER_100_BLOCKS, blockNumber)
+      if (E.isLeft(reports)) {
         return [
           networkAlert(
-            report.left,
+            reports.left,
             `Error in ${VaultSrv.name}.${this.handleWithdrawalVaultBalance.name}:128`,
             `Could not call ethProvider.getETHDistributedEvent`,
           ),
         ]
       }
 
-      const prevWithdrawalVaultBalance = await this.ethProvider.getBalance(
+      let report: ETHDistributedEvent | null = null
+      if (reports.right.length !== 0) {
+        report = reports.right[0]
+      }
+
+      const prevWithdrawalVaultBalance = await this.ethProvider.getEthBalance(
         this.withdrawalsVaultAddress,
         blockNumber - ONCE_PER_100_BLOCKS,
       )
@@ -158,7 +168,7 @@ export class VaultSrv {
         ]
       }
 
-      const withdrawalVaultBalance = await this.ethProvider.getBalance(this.withdrawalsVaultAddress, blockNumber)
+      const withdrawalVaultBalance = await this.ethProvider.getEthBalance(this.withdrawalsVaultAddress, blockNumber)
       if (E.isLeft(withdrawalVaultBalance)) {
         return [
           networkAlert(
@@ -170,8 +180,8 @@ export class VaultSrv {
       }
 
       let withdrawalsWithdrawn = new BigNumber(0)
-      if (report.right !== null) {
-        withdrawalsWithdrawn = new BigNumber(String(report.right.args.withdrawalsWithdrawn))
+      if (report !== null) {
+        withdrawalsWithdrawn = new BigNumber(String(report.args.withdrawalsWithdrawn))
       }
 
       const withdrawalVaultBalanceDiff = withdrawalVaultBalance.right
@@ -199,7 +209,7 @@ export class VaultSrv {
   }
 
   public async handleELVaultBalance(blockNumber: number, prevBalance: BigNumber): Promise<Finding[]> {
-    const elVaultBalance = await this.ethProvider.getBalance(this.elRewardsVaultAddress, blockNumber)
+    const elVaultBalance = await this.ethProvider.getEthBalance(this.elRewardsVaultAddress, blockNumber)
     if (E.isLeft(elVaultBalance)) {
       return [
         networkAlert(
@@ -234,7 +244,7 @@ export class VaultSrv {
     report: ETHDistributedEvent | null,
   ): Promise<Finding[]> {
     const out: Finding[] = []
-    const currentBalance = await this.ethProvider.getBalance(this.withdrawalsVaultAddress, currentBlock)
+    const currentBalance = await this.ethProvider.getEthBalance(this.withdrawalsVaultAddress, currentBlock)
     if (E.isLeft(currentBalance)) {
       return [
         networkAlert(
@@ -252,7 +262,8 @@ export class VaultSrv {
         f.setDescription(
           `Withdrawal Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance.right),
-          )} without Oracle report`,
+          )} without Oracle report\n\n
+          BlockNumber: ${currentBlock}`,
         )
         f.setAlertid('WITHDRAWAL-VAULT-BALANCE-DRAIN')
         f.setSeverity(Finding.Severity.CRITICAL)
@@ -274,7 +285,8 @@ export class VaultSrv {
       f.setDescription(
         `Withdrawal Vault Balance has decreased by ${toEthString(
           expectedBalance.minus(currentBalance.right),
-        )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}`,
+        )} but Oracle report shows ${toEthString(withdrawalsWithdrawn)}\n\n
+        BlockNumber: ${currentBlock}`,
       )
       f.setAlertid('WITHDRAWAL-VAULT-BALANCE-DRAIN')
       f.setSeverity(Finding.Severity.CRITICAL)
@@ -292,7 +304,7 @@ export class VaultSrv {
     prevBalance: BigNumber,
     report: ETHDistributedEvent | null,
   ): Promise<Finding[]> {
-    const currentBalance = await this.ethProvider.getBalance(this.elRewardsVaultAddress, currentBlock)
+    const currentBalance = await this.ethProvider.getEthBalance(this.elRewardsVaultAddress, currentBlock)
     if (E.isLeft(currentBalance)) {
       return [
         networkAlert(
@@ -311,7 +323,8 @@ export class VaultSrv {
         f.setDescription(
           `EL Vault Balance has decreased by ${toEthString(
             prevBalance.minus(currentBalance.right),
-          )} without Oracle report`,
+          )} without Oracle report\n\n
+          BlockNumber: ${currentBlock}`,
         )
         f.setAlertid('EL-VAULT-BALANCE-DRAIN')
         f.setSeverity(Finding.Severity.CRITICAL)
@@ -329,7 +342,7 @@ export class VaultSrv {
 
     if (currentBalance.right.lt(expectedBalance)) {
       const f: Finding = new Finding()
-      f.setName('🚨🚨🚨 EL Vault balance mismatch. [within oracle report]')
+      f.setName(`🚨🚨🚨 EL Vault balance mismatch. [within oracle report]`)
       f.setDescription(
         `EL Vault Balance has decreased by ${toEthString(
           expectedBalance.minus(currentBalance.right),

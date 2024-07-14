@@ -11,9 +11,11 @@ import { BlockDto } from '../entity/events'
 import BigNumber from 'bignumber.js'
 import { Finding } from '../generated/proto/alert_pb'
 import { either as E } from 'fp-ts'
+import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 
 export class BlockHandler {
   private logger: Logger
+  private metrics: Metrics
   private StethOperationSrv: StethOperationSrv
   private WithdrawalsSrv: WithdrawalsSrv
   private GateSealSrv: GateSealSrv
@@ -24,6 +26,7 @@ export class BlockHandler {
 
   constructor(
     logger: Logger,
+    metrics: Metrics,
     StethOperationSrv: StethOperationSrv,
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
@@ -32,6 +35,7 @@ export class BlockHandler {
     onAppStartFindings: Finding[],
   ) {
     this.logger = logger
+    this.metrics = metrics
     this.StethOperationSrv = StethOperationSrv
     this.WithdrawalsSrv = WithdrawalsSrv
     this.GateSealSrv = GateSealSrv
@@ -45,6 +49,9 @@ export class BlockHandler {
       call: ServerUnaryCall<EvaluateBlockRequest, EvaluateBlockResponse>,
       callback: sendUnaryData<EvaluateBlockResponse>,
     ) => {
+      this.metrics.lastAgentTouch.labels({ method: HandleBlockLabel }).set(new Date().getTime())
+      const end = this.metrics.summaryHandlers.labels({ method: HandleBlockLabel }).startTimer()
+
       const event = <BlockEvent>call.request.getEvent()
       const block = <BlockEvent.EthBlock>event.getBlock()
 
@@ -52,6 +59,7 @@ export class BlockHandler {
         number: new BigNumber(block.getNumber(), 10).toNumber(),
         timestamp: new BigNumber(block.getTimestamp(), 10).toNumber(),
         parentHash: block.getParenthash(),
+        hash: block.getHash(),
       }
 
       this.logger.info(`#ETH block: ${blockDtoEvent.number}`)
@@ -75,7 +83,11 @@ export class BlockHandler {
 
       findings.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
-      this.healthChecker.check(findings)
+      const errCount = this.healthChecker.check(findings)
+      errCount === 0
+        ? this.metrics.processedIterations.labels({ method: HandleBlockLabel, status: StatusOK }).inc()
+        : this.metrics.processedIterations.labels({ method: HandleBlockLabel, status: StatusFail }).inc()
+
       this.logger.info(stat)
 
       const share = this.StethOperationSrv.getStorage().getShareRate()
@@ -89,6 +101,9 @@ export class BlockHandler {
       m.set('timestamp', new Date().toISOString())
 
       this.logger.info(elapsedTime('handleBlock', startTime) + '\n')
+      this.metrics.lastBlockNumber.set(blockDtoEvent.number)
+
+      end()
       callback(null, blockResponse)
     }
   }

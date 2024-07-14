@@ -2,7 +2,6 @@ import { BlockDto } from '../../entity/events'
 import { expect } from '@jest/globals'
 import { ethers } from 'ethers'
 import { Finding } from '../../generated/proto/alert_pb'
-import { Config } from '../../utils/env/env'
 import * as Winston from 'winston'
 import { Address } from '../../utils/constants'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
@@ -14,12 +13,13 @@ import {
 } from '../../generated/typechain'
 import { ETHProvider } from '../../clients/eth_provider'
 import { IVaultClient, VaultSrv } from './Vault.srv'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
+import promClient from 'prom-client'
+import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('Vaults.srv functional tests', () => {
-  const config = new Config()
+  const chainId = 1
 
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
@@ -27,16 +27,18 @@ describe('Vaults.srv functional tests', () => {
   })
   const address: Address = Address
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
 
   const vaultClient: IVaultClient = new ETHProvider(
     logger,
+    m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -64,6 +66,7 @@ describe('Vaults.srv functional tests', () => {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const result = await vaultSrv.handleBlock(blockEvent)

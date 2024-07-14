@@ -1,4 +1,3 @@
-import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
@@ -13,129 +12,122 @@ import {
   WithdrawalQueueERC721 as WithdrawalQueueRunner,
 } from '../generated/typechain'
 import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
-import { ETHDistributedEvent } from '../generated/typechain/Lido'
+import { ETHDistributedEvent, UnbufferedEvent } from '../generated/typechain/Lido'
 import { DataRW } from '../utils/mutex'
 import { WithdrawalRequest } from '../entity/withdrawal_request'
 import { TypedEvent } from '../generated/typechain/common'
 import { NetworkError } from '../utils/errors'
 import { Logger } from 'winston'
 import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
-import { BlockTag } from '@ethersproject/providers'
+import { Block } from '@ethersproject/providers'
 import { IStethClient } from '../services/steth_operation/StethOperation.srv'
 import { IVaultClient } from '../services/vault/Vault.srv'
 import { IWithdrawalsClient } from '../services/withdrawals/Withdrawals.srv'
+import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { BlockDto } from '../entity/events'
+import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
-export abstract class IEtherscanProvider {
-  abstract getHistory(
-    addressOrName: string | Promise<string>,
-    startBlock?: BlockTag,
-    endBlock?: BlockTag,
-  ): Promise<Array<TransactionResponse>>
-
-  abstract getBalance(
-    addressOrName: string | Promise<string>,
-    blockTag?: BlockTag | Promise<BlockTag>,
-  ): Promise<EtherBigNumber>
-}
-
 export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient, IWithdrawalsClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private etherscanProvider: IEtherscanProvider
-
   private readonly lidoRunner: LidoRunner
   private readonly wdQueueRunner: WithdrawalQueueRunner
   private readonly veboRunner: VeboRunner
   private gateSealRunner: GateSealRunner
   private readonly logger: Logger
+  private readonly metrics: Metrics
 
   constructor(
     logger: Logger,
+    metrcs: Metrics,
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
-    etherscanProvider: IEtherscanProvider,
     lidoRunner: LidoRunner,
     wdQueueRunner: WithdrawalQueueRunner,
     gateSealRunner: GateSealRunner,
     veboRunner: VeboRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
-    this.etherscanProvider = etherscanProvider
     this.lidoRunner = lidoRunner
     this.wdQueueRunner = wdQueueRunner
     this.gateSealRunner = gateSealRunner
     this.veboRunner = veboRunner
     this.logger = logger
+    this.metrics = metrcs
   }
 
   public async getBlockNumber(): Promise<E.Either<Error, number>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: 'getBlockNumber' }).startTimer()
     try {
       const latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
+
+      this.metrics.etherJsRequest.labels({ method: 'getBlockNumber', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(latestBlockNumber)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getBlockNumber', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not fetch latest block number`))
     }
   }
 
-  public async getHistory(
-    depositSecurityAddress: string,
-    startBlock: number,
-    endBlock: number,
-  ): Promise<E.Either<Error, TransactionResponse[]>> {
-    const fetchBatch = async (start: number, end: number): Promise<TransactionResponse[]> => {
-      try {
-        return await retryAsync<TransactionResponse[]>(
-          async (): Promise<TransactionResponse[]> => {
-            return await this.etherscanProvider.getHistory(depositSecurityAddress, start, end)
-          },
-          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-        )
-      } catch (err) {
-        throw new NetworkError(err, `Could not fetch transaction history between ${start} and ${end} blocks`)
-      }
-    }
-
-    const batchPromises: Promise<void>[] = []
-    const out = new DataRW<TransactionResponse>([])
-    const batchSize = 10_000
-
-    for (let i = startBlock; i <= endBlock; i += batchSize) {
-      const start = i
-      const end = Math.min(i + batchSize - 1, endBlock)
-
-      const promise = fetchBatch(start, end).then((chunkTrxResp) => {
-        out.write(chunkTrxResp)
-      })
-
-      batchPromises.push(promise)
-    }
+  public async getUnbufferedEvents(startBlock: number, endBlock: number): Promise<E.Either<Error, UnbufferedEvent[]>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getUnbufferedEvents.name }).startTimer()
 
     try {
-      await Promise.all(batchPromises)
-
-      return E.right(await out.read())
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch transaction history`))
-    }
-  }
-
-  public async getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>> {
-    try {
-      const out = await retryAsync<EtherBigNumber>(
-        async (): Promise<EtherBigNumber> => {
-          return await this.etherscanProvider.getBalance(lidoStethAddress, block)
+      const out = await retryAsync<UnbufferedEvent[]>(
+        async (): Promise<UnbufferedEvent[]> => {
+          return await this.lidoRunner.queryFilter(this.lidoRunner.filters.Unbuffered(), startBlock, endBlock)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      out.sort((a, b) => a.blockNumber - b.blockNumber)
+
+      this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(out)
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      throw new NetworkError(e, `Could not call StakingRouterETHDeposited`)
+    }
+  }
+
+  public async getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getStethBalance.name }).startTimer()
+
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          return await this.lidoRunner.balanceOf(lidoStethAddress, {
+            blockTag: block,
+          })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      this.metrics.etherJsRequest.labels({ method: this.getStethBalance.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(String(out)))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getStethBalance.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not fetch Steth balance`))
     }
   }
 
-  public async getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>> {
+  public async getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({
+      method: this.getEthBalance.name,
+    })
+
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
@@ -144,13 +136,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: this.getEthBalance.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(String(out)))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getEthBalance.name, status: StatusFail }).inc()
+      end({ status: StatusOK })
+
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address}`))
     }
   }
 
   public async getBalanceByBlockHash(address: string, blockHash: string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getBalanceByBlockHash' })
+
     try {
       const out = await retryAsync<string>(
         async (): Promise<string> => {
@@ -162,13 +162,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'getBalanceByBlockHash', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(out))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getBalanceByBlockHash', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not fetch balance by address ${address} and blockHash ${blockHash}`))
     }
   }
 
   public async getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: 'getStakingLimitInfo' }).startTimer()
+
     try {
       const out = await retryAsync<StakingLimitInfo>(
         async (): Promise<StakingLimitInfo> => {
@@ -185,13 +193,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'getStakeLimitFullInfo', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(out)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getStakeLimitFullInfo', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call lidoContract.getStakeLimitFullInfo`))
     }
   }
 
   public async getUnfinalizedStETH(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: 'getUnfinalizedStETH' }).startTimer()
+
     try {
       const out = await retryAsync<BigNumber>(
         async (): Promise<BigNumber> => {
@@ -204,19 +220,27 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'unfinalizedStETH', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(out)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'unfinalizedStETH', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.unfinalizedStETH`))
     }
   }
 
   public async getWithdrawalStatuses(
-    requestsRange: number[],
+    requestIds: number[],
     currentBlock: number,
   ): Promise<E.Either<Error, WithdrawalRequest[]>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getWithdrawalStatuses.name })
+
     const fetchStatusesChunk = async (requestIds: number[], blockNumber: number): Promise<WithdrawalRequest[]> => {
       try {
-        return await retryAsync<WithdrawalRequest[]>(
+        const out = await retryAsync<WithdrawalRequest[]>(
           async (): Promise<WithdrawalRequest[]> => {
             const resp = await this.wdQueueRunner.functions.getWithdrawalStatus(requestIds, {
               blockTag: blockNumber,
@@ -235,7 +259,11 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
           },
           { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
+
+        this.metrics.etherJsRequest.labels({ method: this.getWithdrawalStatuses.name, status: StatusOK }).inc()
+        return out
       } catch (e) {
+        this.metrics.etherJsRequest.labels({ method: this.getWithdrawalStatuses.name, status: StatusFail }).inc()
         throw new NetworkError(
           e,
           `Could not call wdQueueContract.getWithdrawalStatus on ${blockNumber} between ${requestIds[0]} and ${
@@ -249,8 +277,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     const MAX_REQUESTS_CHUNK_SIZE = 875
     const out = new DataRW<WithdrawalRequest>([])
 
-    for (let i = 0; i < requestsRange.length; i += MAX_REQUESTS_CHUNK_SIZE) {
-      const requestChunk = requestsRange.slice(i, i + MAX_REQUESTS_CHUNK_SIZE)
+    for (let i = 0; i < requestIds.length; i += MAX_REQUESTS_CHUNK_SIZE) {
+      const requestChunk = requestIds.slice(i, i + MAX_REQUESTS_CHUNK_SIZE)
 
       const promise = fetchStatusesChunk(requestChunk, currentBlock).then((statuses) => {
         out.write(statuses)
@@ -261,13 +289,19 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
 
     try {
       await Promise.all(chunkPromises)
+      end({ status: StatusOK })
+
       return E.right(await out.read())
     } catch (e) {
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e))
     }
   }
 
   public async getBufferedEther(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getBufferedEther' })
+
     try {
       const resp = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
@@ -278,19 +312,29 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'getBufferedEther', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(resp.toString()))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getBufferedEther', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call lidoContract.getBufferedEther`))
     }
   }
 
   public async checkGateSeal(blockNumber: number, gateSealAddress: string): Promise<E.Either<Error, GateSeal>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'checkGateSeal' })
+
     const isExpired = await this.isGateSealExpired(blockNumber, gateSealAddress)
     if (E.isLeft(isExpired)) {
+      end({ status: StatusFail })
       return E.left(isExpired.left)
     }
 
     if (isExpired.right) {
+      end({ status: StatusFail })
       return E.left(GateSealExpiredErr)
     }
 
@@ -300,10 +344,12 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     ])
 
     if (E.isLeft(isGateSealHasPauseRole)) {
+      end({ status: StatusFail })
       return E.left(isGateSealHasPauseRole.left)
     }
 
     if (E.isLeft(isGateSealHasExitBusPauseRoleMember)) {
+      end({ status: StatusFail })
       return E.left(isGateSealHasExitBusPauseRoleMember.left)
     }
 
@@ -314,10 +360,13 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
       withdrawalQueueAddress: this.wdQueueRunner.address,
     }
 
+    end({ status: StatusOK })
     return E.right(out)
   }
 
   public async getExpiryTimestamp(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'gateSealGetExpiryTimestamp' })
+
     try {
       const expiryTimestamp = await retryAsync<BigNumber>(
         async (): Promise<BigNumber> => {
@@ -330,41 +379,51 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_get_expiry_timestamp', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(expiryTimestamp)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_get_expiry_timestamp', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call gateSeal.functions.get_expiry_timestamp`))
     }
   }
 
-  public async getETHDistributedEvent(
+  public async getETHDistributedEvents(
     fromBlockNumber: number,
     toBlockNumber: number,
-  ): Promise<E.Either<Error, ETHDistributedEvent | null>> {
+  ): Promise<E.Either<Error, ETHDistributedEvent[]>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getETHDistributedEvents.name }).startTimer()
+
     try {
-      const report = await retryAsync<ETHDistributedEvent | null>(
-        async (): Promise<ETHDistributedEvent | null> => {
-          const [resp] = await this.lidoRunner.queryFilter(
+      const report = await retryAsync<ETHDistributedEvent[]>(
+        async (): Promise<ETHDistributedEvent[]> => {
+          return await this.lidoRunner.queryFilter(
             this.lidoRunner.filters.ETHDistributed(),
             fromBlockNumber,
             toBlockNumber,
           )
-
-          if (resp === undefined) {
-            return null
-          }
-
-          return resp
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: this.getETHDistributedEvents.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(report)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getETHDistributedEvents.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call this.lidoContract.filters.ETHDistributed"`))
     }
   }
 
   private async isGateSealExpired(blockNumber: number, gateSealAddress: string): Promise<E.Either<Error, boolean>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'isGateSealExpired' })
+
     this.gateSealRunner = this.gateSealRunner.attach(gateSealAddress)
 
     try {
@@ -379,8 +438,14 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_is_expired', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(isExpired)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'gate_seal_is_expired', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call gateSeal.functions.is_expired`))
     }
   }
@@ -389,6 +454,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     blockNumber: number,
     gateSealAddress: string,
   ): Promise<E.Either<Error, boolean>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: 'isGateSealHasPauseRole' }).startTimer()
     const keccakPauseRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSE_ROLE'))
 
     try {
@@ -403,8 +469,14 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'wd_queue_hasRole', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(queuePauseRoleMember)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'wd_queue_hasRole', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.functions.hasRole`))
     }
   }
@@ -413,6 +485,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     blockNumber: number,
     gateSealAddress: string,
   ): Promise<E.Either<Error, boolean>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'isGateSealHasExitBusPauseRoleMember' })
+
     const keccakPauseRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSE_ROLE'))
 
     try {
@@ -427,13 +501,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'vebo_hasRole', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(exitBusPauseRoleMember)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'vebo_hasRole', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call this.exitBusContract.functions.hasRole`))
     }
   }
 
   public async getTotalPooledEther(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getTotalPooledEther' })
+
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
@@ -444,13 +526,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'getTotalPooledEther', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getTotalPooledEther', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call this.getTotalPooledEther`))
     }
   }
 
   public async getTotalShares(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getTotalShares' })
+
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
@@ -461,30 +551,43 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'getTotalShares', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getTotalShares', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call lidoContract.getTotalShares`))
     }
   }
 
   public async getShareRate(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getShareRate' })
+
     const [totalPooledEth, totalShares] = await Promise.all([
       this.getTotalPooledEther(blockNumber),
       this.getTotalShares(blockNumber),
     ])
 
     if (E.isLeft(totalPooledEth)) {
+      end({ status: StatusFail })
       return E.left(totalPooledEth.left)
     }
 
     if (E.isLeft(totalShares)) {
+      end({ status: StatusFail })
       return E.left(totalShares.left)
     }
 
+    end({ status: StatusOK })
     return E.right(totalPooledEth.right.div(totalShares.right))
   }
 
   public async isBunkerModeActive(blockNumber: number): Promise<E.Either<Error, boolean>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'isBunkerModeActive' })
+
     try {
       const isBunkerMode = await retryAsync<boolean>(
         async (): Promise<boolean> => {
@@ -497,13 +600,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_is_bunker_mode_active', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(isBunkerMode)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_is_bunker_mode_active', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.isBunkerModeActive`))
     }
   }
 
   public async getBunkerTimestamp(blockNumber: number): Promise<E.Either<Error, number>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getBunkerTimestamp' })
+
     try {
       const bunkerModeSinceTimestamp = await retryAsync<number>(
         async (): Promise<number> => {
@@ -516,13 +627,21 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_bunker_mode_since_timestamp', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(bunkerModeSinceTimestamp)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_bunker_mode_since_timestamp', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.bunkerModeSinceTimestamp`))
     }
   }
 
   public async getWithdrawalLastRequestId(blockNumber: number): Promise<E.Either<Error, number>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getWithdrawalLastRequestId' })
+
     try {
       const lastRequestId = await retryAsync<number>(
         async (): Promise<number> => {
@@ -535,8 +654,14 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_last_request_id', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(lastRequestId)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_last_request_id', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.getLastRequestId`))
     }
   }
@@ -545,6 +670,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     requestId: number,
     blockNumber: number,
   ): Promise<E.Either<Error, WithdrawalRequest>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getWithdrawalStatus' })
+
     try {
       const out = await retryAsync<WithdrawalRequest>(
         async (): Promise<WithdrawalRequest> => {
@@ -557,29 +684,15 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_withdrawal_status', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(out)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'wq_queue_get_withdrawal_status', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.getWithdrawalStatus`))
-    }
-  }
-
-  public async getUnbufferedEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<Error, TypedEvent[]>> {
-    try {
-      const out = await retryAsync<TypedEvent[]>(
-        async (): Promise<TypedEvent[]> => {
-          const filter = this.lidoRunner.filters.Unbuffered()
-
-          return await this.lidoRunner.queryFilter(filter, fromBlockNumber, toBlockNumber)
-        },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-      )
-
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not call lidoContract.queryFilter`))
     }
   }
 
@@ -587,6 +700,8 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
     fromBlockNumber: number,
     toBlockNumber: number,
   ): Promise<E.Either<Error, TypedEvent[]>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getWithdrawalsFinalizedEvents' })
+
     try {
       const out = await retryAsync<TypedEvent[]>(
         async (): Promise<TypedEvent[]> => {
@@ -597,13 +712,25 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest
+        .labels({ method: 'wd_queue_get_withdrawals_finalized_events', status: StatusOK })
+        .inc()
+      end({ status: StatusOK })
+
       return E.right(out)
     } catch (e) {
+      this.metrics.etherJsRequest
+        .labels({ method: 'wd_queue_get_withdrawals_finalized_events', status: StatusFail })
+        .inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call wdQueueContract.queryFilter`))
     }
   }
 
   public async getDepositableEther(blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getDepositableEther' })
+
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
@@ -614,9 +741,160 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_depositable_ether', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
       return E.right(new BigNumber(out.toString()))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'lido_get_depositable_ether', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not call lidoContract.getDepositableEther"`))
+    }
+  }
+
+  public async getBlockByHash(blockHash: string): Promise<E.Either<Error, BlockDto>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getBlockByHash' })
+
+    try {
+      const out = await retryAsync<Block>(
+        async (): Promise<Block> => {
+          return await this.jsonRpcProvider.getBlock(blockHash)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        number: out.number,
+        timestamp: out.timestamp,
+        parentHash: out.parentHash,
+        hash: out.hash,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getBlock(blockHash)`))
+    }
+  }
+
+  public async getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getBlockByNumber.name })
+
+    try {
+      const out = await retryAsync<Block>(
+        async (): Promise<Block> => {
+          return await this.jsonRpcProvider.getBlock(blockNumber)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByNumber.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        number: out.number,
+        timestamp: out.timestamp,
+        parentHash: out.parentHash,
+        hash: out.hash,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByNumber.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.${this.getBlockByNumber.name}`))
+    }
+  }
+
+  public async getChainPrevBlocks(parentHash: string, depth: number): Promise<E.Either<Error, BlockDto[]>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getChainPrevBlocks' })
+    const chain = new Array<BlockDto>(depth)
+
+    while (depth > 0) {
+      try {
+        const prevBlock = await retryAsync<BlockDto>(
+          async (): Promise<BlockDto> => {
+            const parentBlock = await this.getBlockByHash(parentHash)
+
+            if (E.isLeft(parentBlock)) {
+              throw parentBlock.left
+            }
+
+            return parentBlock.right
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+
+        chain[depth - 1] = prevBlock
+        parentHash = prevBlock.parentHash
+        depth -= 1
+      } catch (e) {
+        this.metrics.etherJsRequest.labels({ method: 'getChainPrevBlocks', status: StatusFail }).inc()
+        end({ status: StatusFail })
+
+        return E.left(new NetworkError(e, `Could not call this.getBlockByHash(parentHash)`))
+      }
+    }
+
+    this.metrics.etherJsRequest.labels({ method: 'getChainPrevBlocks', status: StatusOK }).inc()
+    end({ status: StatusOK })
+
+    return E.right(chain)
+  }
+
+  /**
+   * Uses only for dev purposes for prefilling up db
+   * Returns all claimed events from Lido V2.
+   *
+   * @param currentBlock
+   */
+  public async getClaimedEvents(currentBlock: number): Promise<E.Either<Error, WithdrawalClaimedEvent[]>> {
+    const startedBlock = 17_264_250
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getClaimedEvents.name })
+
+    const fetchClaimedEvents = async (from: number, to: number): Promise<WithdrawalClaimedEvent[]> => {
+      try {
+        return await retryAsync<WithdrawalClaimedEvent[]>(
+          async (): Promise<WithdrawalClaimedEvent[]> => {
+            const claimedFilter = this.wdQueueRunner.filters.WithdrawalClaimed()
+            return await this.wdQueueRunner.queryFilter(claimedFilter, from, to)
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+      } catch (e) {
+        throw new NetworkError(e, `Could not call this.getClaimedEvents`)
+      }
+    }
+
+    const batchPromises: Promise<void>[] = []
+    const out = new DataRW<WithdrawalClaimedEvent>([])
+    const batchSize = 10_000
+
+    for (let i = startedBlock; i <= currentBlock; i += batchSize) {
+      const start = i
+      const end = Math.min(i + batchSize - 1, currentBlock)
+
+      const promise = fetchClaimedEvents(start, end).then((chunkTrxResp) => {
+        out.write(chunkTrxResp)
+      })
+
+      batchPromises.push(promise)
+    }
+
+    try {
+      await Promise.all(batchPromises)
+
+      this.metrics.etherJsRequest.labels({ method: this.getClaimedEvents.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+      return E.right(await out.read())
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getClaimedEvents.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch claimed events`))
     }
   }
 }

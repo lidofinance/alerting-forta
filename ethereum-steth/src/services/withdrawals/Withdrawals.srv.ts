@@ -21,6 +21,7 @@ import { BlockDto } from '../../entity/events'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { Finding } from '../../generated/proto/alert_pb'
 import { filterLog } from 'forta-agent'
+import { WithdrawalClaimedEvent } from '../../generated/typechain/WithdrawalQueueERC721'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -40,7 +41,7 @@ export abstract class IWithdrawalsClient {
   public abstract getUnfinalizedStETH(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getWithdrawalStatuses(
-    requestsRange: number[],
+    requestIds: number[],
     currentBlock: number,
   ): Promise<E.Either<Error, WithdrawalRequest[]>>
 
@@ -59,9 +60,11 @@ export abstract class IWithdrawalsClient {
     blockNumber: number,
   ): Promise<E.Either<Error, WithdrawalRequest>>
 
-  public abstract getBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
+
+  public abstract getClaimedEvents(currentBlock: number): Promise<E.Either<Error, WithdrawalClaimedEvent[]>>
 }
 
 export class WithdrawalsSrv {
@@ -126,13 +129,22 @@ export class WithdrawalsSrv {
   }
 
   async fillUpWithdrawalStatusesTable(currentBlock: number): Promise<Error | null> {
-    const lastRequestId = await this.ethProvider.getWithdrawalLastRequestId(currentBlock)
-    if (E.isLeft(lastRequestId)) {
-      return lastRequestId.left
+    const [cached, latest] = await Promise.all([
+      this.repo.getLastRequestId(),
+      this.ethProvider.getWithdrawalLastRequestId(currentBlock),
+    ])
+
+    if (E.isLeft(latest)) {
+      return latest.left
+    }
+
+    if (E.isLeft(cached)) {
+      return cached.left
     }
 
     const requests: number[] = []
-    for (let i = 1; i <= lastRequestId.right; i++) {
+    const firstRequestId = cached.right === 0 ? 1 : cached.right
+    for (let i = firstRequestId; i <= latest.right; i++) {
       requests.push(i)
     }
 
@@ -145,6 +157,20 @@ export class WithdrawalsSrv {
     if (insertErr !== null) {
       return insertErr
     }
+
+    /*
+    Need when we have to prefill up db (Don't remove)
+    const claimedRequests = await this.ethProvider.getClaimedEvents(currentBlock - 1000)
+    if (E.isLeft(claimedRequests)) {
+      return claimedRequests.left
+    }
+
+    const claimedRequestIds: number[] = []
+    for (const e of claimedRequests.right) {
+      claimedRequestIds.push(new BigNumber(e.args.requestId.toString()).toNumber())
+    }
+
+    await this.repo.removeByIds(claimedRequestIds)*/
 
     return null
   }
@@ -505,7 +531,7 @@ export class WithdrawalsSrv {
       }
     }
     if (currentBlockTimestamp - this.cache.getLastUnclaimedMoreThanBalanceAlertTimestamp() > ONE_DAY) {
-      const withdrawalQueueBalance = await this.ethProvider.getBalance(this.withdrawalsQueueAddress, blockDto.number)
+      const withdrawalQueueBalance = await this.ethProvider.getEthBalance(this.withdrawalsQueueAddress, blockDto.number)
       if (E.isLeft(withdrawalQueueBalance)) {
         return [
           networkAlert(
@@ -790,6 +816,22 @@ export class WithdrawalsSrv {
 
         withdrawalRequest.isClaimed = true
         withdrawalRequest.amountOfStETH = new BigNumber(String(event.args.amountOfETH))
+
+        const updateErr = await this.repo.setWithdrawalRequestClaimed(
+          withdrawalRequest.id,
+          withdrawalRequest.isClaimed,
+          withdrawalRequest.amountOfStETH.toString(),
+        )
+
+        if (updateErr !== null) {
+          out.push(
+            dbAlert(
+              updateErr,
+              `Error in ${WithdrawalsSrv.name}.${this.repo.setWithdrawalRequestClaimed.name}:823`,
+              `Could not call repo.setWithdrawalRequestClaimed`,
+            ),
+          )
+        }
       }
     }
 

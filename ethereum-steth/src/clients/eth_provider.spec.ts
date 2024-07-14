@@ -12,29 +12,38 @@ import {
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../generated/typechain'
-import { Config } from '../utils/env/env'
-import { EtherscanProviderMock } from './mocks/mock'
 import { ETHProvider } from './eth_provider'
+import { Metrics } from '../utils/metrics/metrics'
+import promClient from 'prom-client'
+import { HISTORY_BLOCK_OFFSET } from '../services/steth_operation/StethOperation.srv'
 
 describe('eth provider tests', () => {
-  const config = new Config()
-
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
   })
   const address: Address = Address
+  const chainId = 1
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, config.chainId)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
 
+  const defaultRegistry = promClient
+  const prefix = 'test_'
+  defaultRegistry.collectDefaultMetrics({
+    prefix: prefix,
+  })
+
+  const registry = new promClient.Registry()
+  const metrics = new Metrics(registry, prefix)
+
   const ethClient = new ETHProvider(
     logger,
+    metrics,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -128,5 +137,83 @@ describe('eth provider tests', () => {
     }
 
     expect('1.16583492875463847628').toEqual(shareRate.right.toString())
+  }, 120_000)
+
+  test('getBlock by hash', async () => {
+    const blockHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
+    const block = await ethClient.getBlockByHash(blockHash)
+    if (E.isLeft(block)) {
+      throw block.left.message
+    }
+
+    expect(20_160_727).toEqual(block.right.number)
+  }, 120_000)
+
+  test('getBufferedEther by blockNumber', async () => {
+    const blockNumber = 20_160_727
+    const bufferedEther = await ethClient.getBufferedEther(blockNumber)
+    if (E.isLeft(bufferedEther)) {
+      throw bufferedEther.left.message
+    }
+
+    expect(6016.430655102903).toEqual(bufferedEther.right.dividedBy(ETH_DECIMALS).toNumber())
+  }, 120_000)
+
+  test('getChainBlocks by hash', async () => {
+    const parentHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
+    const chain = await ethClient.getChainPrevBlocks(parentHash, 4)
+    if (E.isLeft(chain)) {
+      throw chain.left.message
+    }
+
+    expect(chain.right[3].hash).toEqual(parentHash)
+    expect(chain.right[0].number).toEqual(20_160_724)
+    expect(chain.right[1].number).toEqual(20_160_725)
+    expect(chain.right[2].number).toEqual(20_160_726)
+    expect(chain.right[3].number).toEqual(20_160_727)
+
+    expect(chain.right[0].hash).toEqual(chain.right[1].parentHash)
+    expect(chain.right[1].hash).toEqual(chain.right[2].parentHash)
+    expect(chain.right[2].hash).toEqual(chain.right[3].parentHash)
+  }, 120_000)
+
+  test('getETHDistributedEvent', async () => {
+    const currBlock = 20_211_671
+    const events = await ethClient.getETHDistributedEvents(currBlock, currBlock)
+    if (E.isLeft(events)) {
+      throw events.left.message
+    }
+
+    expect(events.right.length).toEqual(1)
+  }, 120_000)
+
+  test('getUnbufferedEvents', async () => {
+    const currBlock = 20_212_690
+    const events = await ethClient.getUnbufferedEvents(currBlock - HISTORY_BLOCK_OFFSET, currBlock)
+    if (E.isLeft(events)) {
+      throw events.left.message
+    }
+
+    const latestDepositBlock = await ethClient.getBlockByNumber(events.right[events.right.length - 1].blockNumber)
+    if (E.isLeft(latestDepositBlock)) {
+      throw latestDepositBlock.left
+    }
+
+    const expectedBlockNumber = 20190032
+    const expectedTimestamp = 1719575867
+
+    expect(latestDepositBlock.right.number).toEqual(expectedBlockNumber)
+    expect(latestDepositBlock.right.timestamp).toEqual(expectedTimestamp)
+  }, 120_000)
+
+  test('getStethBalance', async () => {
+    const currBlock = 20_218_548
+
+    const stBalance = await ethClient.getStethBalance(address.LIDO_STETH_ADDRESS, currBlock)
+    if (E.isLeft(stBalance)) {
+      throw stBalance.left.message
+    }
+
+    console.log(stBalance.right.div(ETH_DECIMALS).toNumber())
   }, 120_000)
 })
