@@ -115,6 +115,15 @@ describe('vault-acl-changes e2e tests', () => {
   )
 
   it(
+    'should show limit inc',
+    async () => {
+      const findings = await runTransaction('0xfb1a547bd1da10635513779fc7ecfd12d8db3f39593f7538ab77f61484592a3c')
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
     'should process tx with Changed Threshold and Execution Success',
     async () => {
       const findings = await runTransaction('0xb58e9e81ad1dac1f33b9dfc4d19f2d909a2a3ea890c31aa27a0df10f86bd4eea')

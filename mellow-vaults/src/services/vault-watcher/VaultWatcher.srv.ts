@@ -13,10 +13,14 @@ import {
   Vault,
   VAULT_LIST,
 } from 'constants/common'
-import { getACLEvents } from '../../shared/events/acl_events'
+import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
 import { handleEventsOfNotice } from '../../shared/notice'
-import { getLimitEvents } from '../../shared/events/limit_events'
-import { getProcessWithdrawalsEvents, getProcessAllEvents } from '../../shared/events/withdrawals_events'
+import { vaultLimitNotice, MELLOW_VAULT_INCREASE_LIMIT_EVENT } from '../../utils/events/limit_events'
+import {
+  processWithdrawalsAllNotices,
+  processWithdrawalsPartNotices,
+  MELLOW_VAULT_PROCESS_WITHDRAWALS_EVENT,
+} from '../../utils/events/withdrawals_events'
 import { LogDescription } from '@ethersproject/abi'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,7 +91,12 @@ export class VaultWatcherSrv {
   public handleTransaction(txEvent: TransactionEvent): Finding[] {
     const findings: Finding[] = []
 
-    const limitFindings = handleEventsOfNotice(txEvent, getLimitEvents())
+    const limitFindings = handleEventsOfNotice(
+      txEvent,
+      [MELLOW_VAULT_INCREASE_LIMIT_EVENT],
+      MELLOW_SYMBIOTIC_ADDRESS,
+      vaultLimitNotice,
+    )
     findings.push(...limitFindings)
     const aclFindings = this.handleAclChanges(txEvent)
     findings.push(...aclFindings)
@@ -99,9 +108,13 @@ export class VaultWatcherSrv {
 
   public handleAclChanges(txEvent: TransactionEvent): Finding[] {
     const out: Finding[] = []
-
     VAULT_LIST.forEach((vault) => {
-      const findings = handleEventsOfNotice(txEvent, getACLEvents(vault.defaultBondStrategy))
+      const findings = handleEventsOfNotice(
+        txEvent,
+        MELLOW_VAULT_STRATEGY_ACL_EVENTS,
+        vault.defaultBondStrategy,
+        aclNotices,
+      )
       out.push(...findings)
     })
 
@@ -119,9 +132,14 @@ export class VaultWatcherSrv {
         ([vault.defaultBondStrategy, vault.curator].includes(`${txEvent.transaction.to}`) ||
           txEvent.transaction.data.includes(vault.curator.substring(2)))
       // all can be function or function inside transaction
-      const getEvents = isProcessAll ? getProcessAllEvents : getProcessWithdrawalsEvents
+      const notices = isProcessAll ? processWithdrawalsAllNotices : processWithdrawalsPartNotices
 
-      const findings = handleEventsOfNotice(txEvent, getEvents(vault.defaultBondStrategy))
+      const findings = handleEventsOfNotice(
+        txEvent,
+        [MELLOW_VAULT_PROCESS_WITHDRAWALS_EVENT],
+        vault.defaultBondStrategy,
+        notices,
+      )
       out.push(...findings)
     })
 
