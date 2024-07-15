@@ -17,7 +17,7 @@ import { Logger } from 'winston'
 import { ETHProvider } from './clients/eth_provider_client'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
-import { Constants, MAINNET_CHAIN_ID, DRPC_URL } from './constants'
+import { Constants, MAINNET_CHAIN_ID, DRPC_URL, L1_WSTETH_ADDRESS } from './constants'
 // import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 
 
@@ -74,7 +74,7 @@ export class App {
       new ethers.providers.JsonRpcProvider(DRPC_URL, MAINNET_CHAIN_ID),
     ])
 
-    const wstethRunner = ERC20Short__factory.connect(params.L1_WSTETH_ADDRESS, ethProvider)
+    const wstethRunner = ERC20Short__factory.connect(L1_WSTETH_ADDRESS, ethProvider)
     const ethClient = new ETHProvider(logger, wstethRunner)
     const bridgeBalanceSrv = new BridgeBalanceSrv(params.L2_NAME, logger, ethClient, l2Client, params.L1_ERC20_TOKEN_GATEWAY_ADDRESS)
 

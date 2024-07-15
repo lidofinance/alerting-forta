@@ -6,10 +6,13 @@
     "start:scroll": "yarn start scroll dev",
     "push:scroll": "yarn update-version && node push-agent.js scroll",
 
+    "start:mantle": "yarn start mantle dev",
+    "push:mantle": "yarn update-version && node push-agent.js mantle",
+
     "test": "jest",
 
     "postinstall": "yarn generate-types",
-    "generate-types": "typechain --target=ethers-v5 --out-dir=./scroll/src/generated ./scroll/src/abi/* && typechain --target=ethers-v5 --out-dir=./common/generated ./common/abi/*",
+    "generate-types": "typechain --target=ethers-v5 --out-dir=./common/generated ./common/abi/*",
     "update-version": "node ./common/utils/write-version.js ",
     "start": "node start-agent.ts"
   },

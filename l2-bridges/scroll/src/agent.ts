@@ -13,7 +13,6 @@ export const scrollConstants: Constants = {
   L2_APPROX_BLOCK_TIME_SECONDS: 3,
   L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',
   GOV_BRIDGE_ADDRESS: '0x0c67d8d067e349669dfeab132a7c03a90594ee09',
-  L1_WSTETH_ADDRESS: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
   L1_ERC20_TOKEN_GATEWAY_ADDRESS: '0x6625c6332c9f91f2d27c304e729b86db87a3f504',
   L2_ERC20_TOKEN_GATEWAY: {
     name: 'L2_ERC20_TOKEN_GATEWAY',
@@ -40,6 +39,7 @@ export const scrollConstants: Constants = {
   uint256 amount,
   bytes data
 )`,
+    amountFieldName: "amount",
   },
   getBridgeEvents,
   getGovEvents,

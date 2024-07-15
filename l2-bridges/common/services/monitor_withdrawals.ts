@@ -155,7 +155,10 @@ export class MonitorWithdrawals {
      const event = this.withdrawalInfo.eventInterface.parseLog(log)
       // NB: log.blockNumber is actually a string, although its typescript type is number
       const blockNumber = (typeof log.blockNumber === 'number') ? log.blockNumber : Number(log.blockNumber)
-      withdrawalRecordsAux.push({ blockNumber: blockNumber, amount: new BigNumber(String(event.args.amount)) })
+      withdrawalRecordsAux.push({
+        blockNumber: blockNumber,
+        amount: new BigNumber(String(event.args[this.withdrawalInfo.amountFieldName]))
+      })
       blocksToRequest.add(blockNumber)
     }
     const blocks = await this.l2Client.fetchL2Blocks(blocksToRequest)
