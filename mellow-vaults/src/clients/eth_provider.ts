@@ -14,7 +14,6 @@ import {
 } from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
 import { MELLOW_SYMBIOTIC_ADDRESS, Storage, STORAGE_MEV_CAP, Vault, WSTETH_ADDRESS } from 'constants/common'
-import { Multicall, ContractCallResults, ContractCallContext } from 'ethereum-multicall'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -279,48 +278,6 @@ export class ETHProvider implements VaultWatcherClient {
           resultStr.forEach((value: string, index: number) => {
             storage[keys[index]] = value
           })
-          return storage
-        },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-      )
-      console.timeEnd(`getVaultConfigurationStorage ${vault.name}`)
-      return E.right(out)
-    } catch (e) {
-      return E.left(new NetworkError(e, `Could not fetch getVaultConfigurationStorage`))
-    }
-  }
-
-  public async getVaultConfigurationStorageM(vault: Vault, blockNumber: number): Promise<E.Either<Error, Storage>> {
-    try {
-      console.time(`getVaultConfigurationStorage ${vault.name}`)
-      const out = await retryAsync<Storage>(
-        async (): Promise<Storage> => {
-          const ethersProvider = ethers.getDefaultProvider()
-
-          const keys = Object.keys(STORAGE_MEV_CAP) as (keyof Storage)[]
-
-          const multicall = new Multicall({ ethersProvider, tryAggregate: true })
-          const contractCallContext: ContractCallContext[] = keys.map((key) => ({
-            reference: key,
-            contractAddress: vault.configurator,
-            abi: VaultConfigurator__factory.abi.slice(),
-            calls: [{ reference: key, methodName: key, methodParameters: [] }],
-          }))
-
-          const result: ContractCallResults = await multicall.call(contractCallContext, {
-            blockNumber: `${blockNumber}`,
-          })
-
-          const storage: Storage = {}
-          keys.forEach((key) => {
-            const value = result.results[key].callsReturnContext[0].returnValues[0]
-            if (value.type === 'BigNumber') {
-              storage[key] = BigNumber(value.hex).toFixed()
-            } else {
-              storage[key] = value.toString().toLowerCase()
-            }
-          })
-          console.error(JSON.stringify(storage, null, 2))
           return storage
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },

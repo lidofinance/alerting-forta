@@ -37,7 +37,6 @@ export type VaultWatcherClient = {
 
   getVaultConfiguratorMaxTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
   getVaultConfigurationStorage(vault: Vault, blockHash: number): Promise<E.Either<Error, Storage>>
-  getVaultConfigurationStorageM(vault: Vault, blockHash: number): Promise<E.Either<Error, Storage>>
 
   getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
   getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
@@ -181,7 +180,7 @@ export class VaultWatcherSrv {
     const vaultIdx = blockEvent.blockNumber % VAULT_LIST.length // distributing vault config check by block because of Forta slow RPC responses. Expected One vault check per block
     const results = await Promise.all(
       VAULT_LIST.filter((vault, idx) => idx === vaultIdx).map(async (vault) => {
-        const storage = await this.ethClient.getVaultConfigurationStorageM(vault, blockEvent.blockNumber)
+        const storage = await this.ethClient.getVaultConfigurationStorage(vault, blockEvent.blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
             storage.left as unknown as Error, // TODO
