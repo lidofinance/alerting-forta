@@ -162,13 +162,15 @@ export class BlockHandler {
           const firstL2 = blocks[0]
           const lastL2 = blocks[blocks.length - 1]
           this.logger.info(
-            `#ETH block:     ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
+            `\n` +
+              `#ETH block:     ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
               `#ARB block src: ${firstL2.number} at ${new Date(firstL2.timestamp * 1000).toUTCString()}. ${firstL2.timestamp} \n` +
               `#ARB block dst: ${lastL2.number} at ${new Date(lastL2.timestamp * 1000).toUTCString()}. ${lastL2.timestamp} Total: ${blocks.length}`,
           )
         } else {
           this.logger.info(
-            `#ETH block: ${l1Block.number} #ARB block dst: ${latestL2Block.right.number} \n` +
+            `\n` +
+              `#ETH block: ${l1Block.number} #ARB block dst: ${latestL2Block.right.number} \n` +
               `#ETH block: ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
               `#ARB block src: ${new Date((l1Block.timestamp - SECONDS_768) * 1000).toUTCString()}. ${latestL2Block.right.timestamp - SECONDS_768} \n` +
               `#ARB real: ${new Date(latestL2Block.right.timestamp * 1000).toUTCString()}. ${latestL2Block.right.timestamp} \n` +
