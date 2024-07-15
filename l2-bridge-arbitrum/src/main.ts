@@ -43,7 +43,7 @@ const main = async () => {
 
   const logger: Winston.Logger = Winston.createLogger({
     format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
-    transports: [new Winston.transports.Console()],
+    transports: [new Winston.transports.Console(), new Winston.transports.File({ filename: 'combined.log' })],
   })
 
   const defaultRegistry = promClient
