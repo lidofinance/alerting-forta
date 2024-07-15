@@ -9,7 +9,6 @@ const TEST_TIMEOUT = 60_000 // ms
 describe('vault-acl-changes e2e tests', () => {
   let ethProvider: JsonRpcProvider
   // let getRoleMembers: (address: string, hash: string, currentBlock: BlockTag) => Promise<E.Either<Error, string[]>>
-  let runTransaction: (txHash: string, initBlock?: number) => Promise<Finding[]>
   let runBlock: (blockHashOrNumber: string | number, initBlock?: number) => Promise<Finding[]>
   let logSpy: jest.SpyInstance
   let timeSpy: jest.SpyInstance

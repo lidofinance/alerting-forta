@@ -8,6 +8,14 @@ import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './servi
 import { VaultWatcherSrv } from './services/vault-watcher/VaultWatcher.srv'
 import { MultisigWatcherSrv } from './services/multisig-watcher/MultisigWatcher.srv'
 import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
+import { MELLOW_SYMBIOTIC_ADDRESS, VAULT_LIST } from "constants/common";
+import {
+  SymbioticWstETH__factory,
+  Vault,
+  Vault__factory,
+  VaultConfigurator,
+  VaultConfigurator__factory,
+} from './generated'
 
 export type Container = {
   ethClient: ETHProvider
@@ -48,7 +56,15 @@ export class App {
       const ethersProvider = getEthersProvider()
       ethersProvider.formatter = new FormatterWithEIP1898()
 
-      const ethClient = new ETHProvider(ethersProvider)
+      const VaultContracts: Vault[] = []
+      const VaultConfiguratorContracts: VaultConfigurator[] = []
+      VAULT_LIST.forEach(vault => {
+        VaultContracts.push(Vault__factory.connect(vault.vault, ethersProvider))
+        VaultConfiguratorContracts.push(VaultConfigurator__factory.connect(vault.configurator, ethersProvider))
+      })
+      const mellowSymbioticContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, ethersProvider)
+
+      const ethClient = new ETHProvider(ethersProvider, mellowSymbioticContract, VaultContracts, VaultConfiguratorContracts)
 
       const logger: Winston.Logger = Winston.createLogger({
         format: Winston.format.simple(),

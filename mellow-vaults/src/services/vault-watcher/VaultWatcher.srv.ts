@@ -10,7 +10,6 @@ import {
   MELLOW_SYMBIOTIC_ADDRESS,
   PERIODICAL_BLOCK_INTERVAL,
   Storage,
-  Vault,
   VAULT_LIST,
 } from 'constants/common'
 import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
@@ -25,18 +24,18 @@ import { LogDescription } from '@ethersproject/abi'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type VaultWatcherClient = {
-  getVaultTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultUnderlyingTvl(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultPendingWithdrawersCount(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  getVaultTotalSupply(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
+  getVaultUnderlyingTvl(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
+  getVaultPendingWithdrawersCount(vaultIndex: number, blockNumber: number): Promise<E.Either<Error, BigNumber>>
 
   getDefaultBondStrategyWithdrawalEvents(
     fromBlock: number,
     toBlock: number,
-    address: string,
+    vaultIndex: number,
   ): Promise<E.Either<Error, LogDescription[]>>
 
-  getVaultConfiguratorMaxTotalSupply(address: string, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultConfigurationStorage(vault: Vault, blockHash: number): Promise<E.Either<Error, Storage>>
+  getVaultConfiguratorMaxTotalSupply(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
+  getVaultConfigurationStorage(vaultIndex: number, blockHash: number): Promise<E.Either<Error, Storage>>
 
   getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
   getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
@@ -58,8 +57,8 @@ export class VaultWatcherSrv {
     const start = new Date().getTime()
 
     const results = await Promise.all(
-      VAULT_LIST.map(async (vault) => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(vault, blockNumber)
+      VAULT_LIST.map(async (vault, index) => {
+        const storage = await this.ethClient.getVaultConfigurationStorage(index, blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
             storage.left as unknown as Error, // TODO
@@ -180,7 +179,7 @@ export class VaultWatcherSrv {
     const vaultIdx = blockEvent.blockNumber % VAULT_LIST.length // distributing vault config check by block because of Forta slow RPC responses. Expected One vault check per block
     const results = await Promise.all(
       VAULT_LIST.filter((vault, idx) => idx === vaultIdx).map(async (vault) => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(vault, blockEvent.blockNumber)
+        const storage = await this.ethClient.getVaultConfigurationStorage(vaultIdx, blockEvent.blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
             storage.left as unknown as Error, // TODO
@@ -245,10 +244,10 @@ export class VaultWatcherSrv {
     const out: Finding[] = []
 
     const results = await Promise.all(
-      VAULT_LIST.map(async (vault) => {
+      VAULT_LIST.map(async (vault, index) => {
         const [vaultTotalSupply, vaultConfiguratorMaxTotalSupply] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(vault.vault, blockEvent.blockNumber),
-          this.ethClient.getVaultConfiguratorMaxTotalSupply(vault.configurator, blockEvent.blockNumber),
+          this.ethClient.getVaultTotalSupply(index, blockEvent.blockNumber),
+          this.ethClient.getVaultConfiguratorMaxTotalSupply(index, blockEvent.blockNumber),
         ])
         if (E.isLeft(vaultTotalSupply)) {
           return networkAlert(
@@ -321,10 +320,10 @@ export class VaultWatcherSrv {
     const out: Finding[] = []
 
     const results = await Promise.all(
-      VAULT_LIST.map(async (vault) => {
+      VAULT_LIST.map(async (vault, index) => {
         const [vaultTotalSupply, vaultUnderlyingTvl] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(vault.vault, blockEvent.blockNumber),
-          this.ethClient.getVaultUnderlyingTvl(vault.vault, blockEvent.blockNumber),
+          this.ethClient.getVaultTotalSupply(index, blockEvent.blockNumber),
+          this.ethClient.getVaultUnderlyingTvl(index, blockEvent.blockNumber),
         ])
 
         if (E.isLeft(vaultTotalSupply)) {
@@ -430,13 +429,13 @@ export class VaultWatcherSrv {
     }
 
     const results = await Promise.all(
-      VAULT_LIST.map(async (vault) => {
+      VAULT_LIST.map(async (vault, index) => {
         const [pendingCount, withdrawalEvents] = await Promise.all([
-          this.ethClient.getVaultPendingWithdrawersCount(vault.vault, blockEvent.blockNumber),
+          this.ethClient.getVaultPendingWithdrawersCount(index, blockEvent.blockNumber),
           this.ethClient.getDefaultBondStrategyWithdrawalEvents(
             blockEvent.blockNumber - HOURS_48_IN_BLOCK,
             blockEvent.blockNumber,
-            vault.defaultBondStrategy,
+            index,
           ),
         ])
 

@@ -21,22 +21,6 @@ export interface Storage {
   validator?: string
 }
 
-export interface Vault {
-  name: string
-  vault: string
-  initializer: string
-  configurator: string
-  validator: string
-  defaultBondStrategy: string
-  depositWrapper: string
-  upgradeableProxyProxyAdmin: string
-  deployer: string
-  proxyAdmin: string
-  admin: string
-  storage: Storage
-  curator: string
-}
-
 export interface SafeTX {
   safeAddress: string
   safeName: string
@@ -62,7 +46,6 @@ export const PERIODICAL_BLOCK_INTERVAL = (12 * 60 * 60) / SECONDS_PER_BLOCK
 export const HOURS_24_IN_BLOCK = (24 * 60 * 60) / SECONDS_PER_BLOCK
 export const HOURS_48_IN_BLOCK = 2 * HOURS_24_IN_BLOCK
 
-export const LIDO_STETH_ADDRESS = '0xae7ab96520de3a18e5e111b5eaab095312d7fe84'
 export const WSTETH_ADDRESS = '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0'
 
 export const MELLOW_VAULT_PROXY_ADDRESS = '0xed792a3fdeb9044c70c951260aaae974fb3db38f'

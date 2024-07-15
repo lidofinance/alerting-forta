@@ -7,13 +7,18 @@ import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import {
-  Vault__factory,
-  VaultConfigurator__factory,
-  SymbioticWstETH__factory,
   DefaultBondStrategy__factory,
+  SymbioticWstETH,
+  Vault,
+  VaultConfigurator,
 } from '../generated'
 import { VaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { MELLOW_SYMBIOTIC_ADDRESS, Storage, STORAGE_MEV_CAP, Vault, WSTETH_ADDRESS } from 'constants/common'
+import {
+  Storage,
+  STORAGE_MEV_CAP,
+  WSTETH_ADDRESS,
+  VAULT_LIST
+} from "constants/common";
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -25,9 +30,20 @@ export interface IProxyContractData {
 
 export class ETHProvider implements VaultWatcherClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
+  private readonly mellowSymbioticContract: SymbioticWstETH
+  private readonly vaultContracts: Vault[]
+  private readonly vaultConfiguratorContracts: VaultConfigurator[]
 
-  constructor(jsonRpcProvider: ethers.providers.JsonRpcProvider) {
+  constructor(
+    jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    mellowSymbioticContract: SymbioticWstETH,
+    vaultContracts: Vault[],
+    vaultConfiguratorContracts: VaultConfigurator[],
+  ) {
     this.jsonRpcProvider = jsonRpcProvider
+    this.mellowSymbioticContract = mellowSymbioticContract
+    this.vaultContracts = vaultContracts
+    this.vaultConfiguratorContracts = vaultConfiguratorContracts
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
@@ -118,13 +134,13 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
-  public async getVaultUnderlyingTvl(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getVaultUnderlyingTvl(vaultIndex: number, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const vaultContract = Vault__factory.connect(address, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const vaultContract = this.vaultContracts[vaultIndex]
           const [tokens, amounts] = await vaultContract.functions.underlyingTvl({
             blockTag: block.number,
           })
@@ -145,13 +161,13 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
-  public async getVaultTotalSupply(address: string, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+  public async getVaultTotalSupply(vaultIndex: number, blockNumber: number): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const vaultContract = Vault__factory.connect(address, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const vaultContract = this.vaultContracts[vaultIndex]
           const [totalSupply] = await vaultContract.functions.totalSupply({
             blockTag: block.number,
           })
@@ -167,15 +183,16 @@ export class ETHProvider implements VaultWatcherClient {
   }
 
   public async getVaultPendingWithdrawersCount(
-    address: string,
+    vaultIndex: number,
     blockNumber: number,
   ): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const vaultContract = Vault__factory.connect(address, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
+          const vaultContract = this.vaultContracts[vaultIndex]
+
           const [pendingWithdrawersCount] = await vaultContract.functions.pendingWithdrawersCount({
             blockTag: block.number,
           })
@@ -191,13 +208,13 @@ export class ETHProvider implements VaultWatcherClient {
   }
 
   public async getVaultConfiguratorMaxTotalSupply(
-    address: string,
+    vaultIndex: number,
     blockNumber: number,
   ): Promise<E.Either<Error, BigNumber>> {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const vaultConfiguratorContract = VaultConfigurator__factory.connect(address, this.jsonRpcProvider)
+          const vaultConfiguratorContract = this.vaultConfiguratorContracts[vaultIndex]
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
           const [maximalTotalSupply] = await vaultConfiguratorContract.functions.maximalTotalSupply({
@@ -219,10 +236,9 @@ export class ETHProvider implements VaultWatcherClient {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const symbioticWstContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
-          const [limit] = await symbioticWstContract.functions.limit({
+          const [limit] = await this.mellowSymbioticContract.functions.limit({
             blockTag: block.number,
           })
 
@@ -241,10 +257,9 @@ export class ETHProvider implements VaultWatcherClient {
     try {
       const out = await retryAsync<EthersBigNumber>(
         async (): Promise<EthersBigNumber> => {
-          const symbioticWstContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
-          const [totalSupply] = await symbioticWstContract.functions.totalSupply({
+          const [totalSupply] = await this.mellowSymbioticContract.functions.totalSupply({
             blockTag: block.number,
           })
 
@@ -259,17 +274,18 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
-  public async getVaultConfigurationStorage(vault: Vault, blockNumber: number): Promise<E.Either<Error, Storage>> {
+  public async getVaultConfigurationStorage(vaultId: number, blockNumber: number): Promise<E.Either<Error, Storage>> {
     try {
+      const vault = VAULT_LIST[vaultId]
       console.time(`getVaultConfigurationStorage ${vault.name}`)
       const out = await retryAsync<Storage>(
         async (): Promise<Storage> => {
-          const vaultConfiguratorContract = VaultConfigurator__factory.connect(vault.configurator, this.jsonRpcProvider)
 
           const block = await this.jsonRpcProvider.getBlock(blockNumber)
           const keys = Object.keys(STORAGE_MEV_CAP) as (keyof Storage)[]
           const results = await Promise.all(
             keys.map((key: keyof Storage) => {
+              const vaultConfiguratorContract = this.vaultConfiguratorContracts[vaultId]
               return vaultConfiguratorContract.functions?.[key]({ blockTag: block.number })
             }),
           )
@@ -329,18 +345,18 @@ export class ETHProvider implements VaultWatcherClient {
     }
   }
 
-  public async getDefaultBondStrategyWithdrawalEvents(fromBlock: number, toBlock: number, address: string) {
+  public async getDefaultBondStrategyWithdrawalEvents(fromBlock: number, toBlock: number, vaultIndex: number) {
     try {
       const results = await retryAsync(
         async () => {
           const keccakEvent = ethers.utils.keccak256(
             ethers.utils.toUtf8Bytes('DefaultBondStrategyProcessWithdrawals(address[],uint256)'),
           )
-
+          const address = VAULT_LIST[vaultIndex].defaultBondStrategy
           return this.jsonRpcProvider.getLogs({
             fromBlock: `0x${fromBlock.toString(16)}`,
             toBlock: `0x${toBlock.toString(16)}`,
-            address: address,
+            address,
             topics: [keccakEvent],
           })
         },
