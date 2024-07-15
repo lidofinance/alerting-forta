@@ -366,10 +366,10 @@ export class ArbitrumClient implements IMonitorWithdrawalsClient, IL2BridgeBalan
 
     const extraOffset = 20
     while (leftTimestamp <= rightTimestamp) {
-      if (direction == Direction.Right && left === right) {
-        right += extraOffset
-      } else if (direction == Direction.Left && left === right) {
-        if (left === right) {
+      if (left === right) {
+        if (direction == Direction.Right) {
+          right += extraOffset
+        } else {
           left -= extraOffset
         }
       }
@@ -393,32 +393,21 @@ export class ArbitrumClient implements IMonitorWithdrawalsClient, IL2BridgeBalan
     }
 
     let out = firstHit
-    if (direction == Direction.Right) {
-      while (out.timestamp === target) {
-        const finalBlock = await this.getL2BlockDto(out.number + 1)
-        if (E.isLeft(finalBlock)) {
-          return E.right(out)
-        }
-
-        if (finalBlock.right.timestamp > target) {
-          break
-        }
-
-        out = finalBlock.right
+    while (out.timestamp === target) {
+      const lookingBlock = direction == Direction.Right ? out.number + 1 : out.number - 1
+      const finalBlock = await this.getL2BlockDto(lookingBlock)
+      if (E.isLeft(finalBlock)) {
+        return E.right(out)
       }
-    } else if (direction == Direction.Left) {
-      while (out.timestamp === target) {
-        const finalBlock = await this.getL2BlockDto(out.number - 1)
-        if (E.isLeft(finalBlock)) {
-          return E.right(out)
-        }
 
-        if (finalBlock.right.timestamp < target) {
-          break
-        }
-
-        out = finalBlock.right
+      if (direction == Direction.Right && finalBlock.right.timestamp > target) {
+        break
       }
+      if (direction == Direction.Left && finalBlock.right.timestamp < target) {
+        break
+      }
+
+      out = finalBlock.right
     }
 
     return E.right(out)
