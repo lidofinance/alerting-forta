@@ -185,4 +185,13 @@ describe('vault-acl-changes e2e tests', () => {
     },
     TEST_TIMEOUT,
   )
+
+  it(
+    'should find slot change',
+    async () => {
+      const findings = await runBlock(20266488, 20266480) // 20266488
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
 })

@@ -192,6 +192,27 @@ exports[`vault-acl-changes e2e tests should find no withdrawals at 3 vaults 1`] 
 ]
 `;
 
+exports[`vault-acl-changes e2e tests should find slot change 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED",
+    "description": "Mellow Vault [Steakhouse Vault] Value of the storage slot \`'maximalTotalSupply'\` for contract 0xbeef69ac7870777598a04b2bd4771c71212e6abc has changed!
+Prev value: 16000000000000000000000
+New value: 36000000000000000000000",
+    "labels": [],
+    "metadata": {},
+    "name": "🚨🚨🚨 Vault critical storage slot value changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 2,
+    "uniqueKey": "",
+  },
+]
+`;
+
 exports[`vault-acl-changes e2e tests should process tx with Added Owner and Execution Success 1`] = `[]`;
 
 exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;

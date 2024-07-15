@@ -1,6 +1,5 @@
-import { Finding, FindingType, TransactionEvent } from 'forta-agent'
+import { Finding, FindingType, TransactionEvent, ethers } from 'forta-agent'
 import { EventOfNotice } from '../entity/events'
-import { ethers } from 'forta-agent'
 
 export function handleEventsOfNotice(
   txEvent: TransactionEvent,
@@ -34,7 +33,12 @@ export function handleEventsOfNotice(
         console.error(`No notices for event ${event.name} in notices list (${Object.keys(notices).join(', ')})`)
       }
     } catch (e) {
-      console.error(e)
+      const x = e as { reason: string }
+      if (x?.reason === 'no matching event') {
+        console.info(e)
+      } else {
+        console.error(e)
+      }
       // Only one from eventsOfNotice could be correct
       // Others - skipping
     }
