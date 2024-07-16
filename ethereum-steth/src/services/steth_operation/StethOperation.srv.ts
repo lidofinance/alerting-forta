@@ -391,10 +391,10 @@ export class StethOperationSrv {
           const f: Finding = new Finding()
           f.setName('⚠️ High depositable ETH amount')
           f.setDescription(
-            `There are ${bufferedEth.toFixed(2)} ` +
-              `depositable ETH in DAO and there are more than ` +
-              `${Math.floor(DAYS_3 / (60 * 60))} ` +
-              `hours since last Depositor TX`,
+            `There are: \n` +
+              `Buffered: ${bufferedEth.toFixed(2)} \n` +
+              `Depositable: ${depositableEther.toFixed(2)} \n` +
+              `ETH in DAO and there are more than ${Math.floor(DAYS_3 / (60 * 60))} hours since last Depositor TX`,
           )
           f.setAlertid('HIGH-DEPOSITABLE-ETH')
           f.setSeverity(Finding.Severity.MEDIUM)
