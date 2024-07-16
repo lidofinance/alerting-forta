@@ -58,7 +58,7 @@ describe('vault-acl-changes e2e tests', () => {
   })
 
   it(
-    'should RoleRevokedRoleRevoked',
+    'should RoleRevoked',
     async () => {
       const findings = await runTransaction('0xb8b96ee47cadb80ec41dafceba1fe5b10b1d50b75e7ad9114ee16180bda2d2b4')
       expect(findings).toMatchSnapshot()
@@ -169,7 +169,7 @@ describe('vault-acl-changes e2e tests', () => {
   )
 
   it(
-    'should find no withdrawals at 3 vaults',
+    'should find no-withdrawals at 3 vaults',
     async () => {
       const findings = await runBlock(20188800, 20188799)
       expect(findings).toMatchSnapshot()

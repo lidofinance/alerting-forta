@@ -106,7 +106,7 @@ exports[`vault-acl-changes e2e tests should RoleGranted 1`] = `
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should RoleRevokedRoleRevoked 1`] = `
+exports[`vault-acl-changes e2e tests should RoleRevoked 1`] = `
 [
   Finding {
     "addresses": [],
@@ -131,7 +131,7 @@ exports[`vault-acl-changes e2e tests should be not slot changes 1`] = `[]`;
 
 exports[`vault-acl-changes e2e tests should everything is fine 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should find no withdrawals at 3 vaults 1`] = `
+exports[`vault-acl-changes e2e tests should find no-withdrawals at 3 vaults 1`] = `
 [
   Finding {
     "addresses": [],
