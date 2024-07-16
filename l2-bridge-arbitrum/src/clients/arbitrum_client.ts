@@ -364,16 +364,7 @@ export class ArbitrumClient implements IMonitorWithdrawalsClient, IL2BridgeBalan
 
     let firstHit: BlockDto = l2BlockDto
 
-    const extraOffset = 20
     while (leftTimestamp <= rightTimestamp) {
-      if (left === right) {
-        if (direction == Direction.Right) {
-          right += extraOffset
-        } else {
-          left -= extraOffset
-        }
-      }
-
       const mid = (left + right) >> 1
       const l2Block = await this.getL2BlockDto(mid)
       if (E.isLeft(l2Block)) {
@@ -384,9 +375,17 @@ export class ArbitrumClient implements IMonitorWithdrawalsClient, IL2BridgeBalan
       if (l2Block.right.timestamp < target) {
         left = mid + 1
         leftTimestamp = l2Block.right.timestamp
+
+        if (left === right) {
+          right += 20
+        }
       } else if (l2Block.right.timestamp > target) {
         right = mid - 1
         rightTimestamp = l2Block.right.timestamp
+
+        if (left === right) {
+          left -= 20
+        }
       } else {
         break
       }
