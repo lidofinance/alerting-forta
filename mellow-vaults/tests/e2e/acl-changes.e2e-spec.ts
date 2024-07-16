@@ -3,6 +3,7 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 
 import { App } from '../../src/app'
 import { etherBlockToFortaBlockEvent } from './utils'
+import { BlockDto } from '../../src/entity/events'
 
 const TEST_TIMEOUT = 60_000 // ms
 
@@ -30,7 +31,14 @@ describe('vault-acl-changes e2e tests', () => {
         await app.AclChangesSrv.initialize(blockNumber)
       }
       const blockEvent = etherBlockToFortaBlockEvent(block)
-      return app.AclChangesSrv.handleBlock(blockEvent)
+
+      const blockDtoEvent: BlockDto = {
+        number: blockEvent?.block?.number,
+        timestamp: blockEvent?.block?.timestamp,
+        parentHash: blockEvent?.block?.parentHash,
+      }
+
+      return app.AclChangesSrv.handleBlock(blockDtoEvent)
     }
   })
 

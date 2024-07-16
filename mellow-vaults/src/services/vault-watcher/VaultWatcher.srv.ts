@@ -1,7 +1,7 @@
 import { Logger } from 'winston'
 import BigNumber from 'bignumber.js'
 import * as E from 'fp-ts/Either'
-import { BlockEvent, ethers, Finding, FindingSeverity, FindingType, TransactionEvent } from 'forta-agent'
+import { ethers, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import { NetworkError, networkAlert } from '../../shared/errors'
 import { elapsedTime } from '../../shared/time'
 import {
@@ -21,6 +21,7 @@ import {
   MELLOW_VAULT_PROCESS_WITHDRAWALS_EVENT,
 } from '../../utils/events/withdrawals_events'
 import { LogDescription } from '@ethersproject/abi'
+import { BlockDto, TransactionDto } from '../../entity/events'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type VaultWatcherClient = {
@@ -61,7 +62,7 @@ export class VaultWatcherSrv {
         const storage = await this.ethClient.getVaultConfigurationStorage(index, blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
-            storage.left as unknown as Error, // TODO
+            storage.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:a9f31f4f)`,
             `Could not call ethProvider.getVaultConfigurationStorage`,
           )
@@ -87,7 +88,7 @@ export class VaultWatcherSrv {
     return this.name
   }
 
-  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+  public handleTransaction(txEvent: TransactionDto): Finding[] {
     const findings: Finding[] = []
 
     const limitFindings = handleEventsOfNotice(
@@ -105,7 +106,35 @@ export class VaultWatcherSrv {
     return findings
   }
 
-  public handleAclChanges(txEvent: TransactionEvent): Finding[] {
+  public async handleBlock(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
+    const findings: Finding[] = []
+    const [
+      limitsIntegrityFindings,
+      handleWstETHIntegrityFindings,
+      handleVaultConfigurationChangeFindings,
+      handleSymbioticWstETHLimitFindings,
+      handleNoWithdrawalFindings,
+    ] = await Promise.all([
+      this.handleLimitsIntegrity(block),
+      this.handleWstETHIntegrity(block),
+      this.handleVaultConfigurationChange(block),
+      this.handleSymbioticWstETHLimit(block),
+      this.handleNoWithdrawal(block),
+    ])
+    findings.push(
+      ...limitsIntegrityFindings,
+      ...handleWstETHIntegrityFindings,
+      ...handleVaultConfigurationChangeFindings,
+      ...handleSymbioticWstETHLimitFindings,
+      ...handleNoWithdrawalFindings,
+    )
+
+    this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.handleBlock.name, start))
+    return findings
+  }
+
+  private handleAclChanges(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
     VAULT_LIST.forEach((vault) => {
       const findings = handleEventsOfNotice(
@@ -120,7 +149,7 @@ export class VaultWatcherSrv {
     return out
   }
 
-  public handleWithdrawals(txEvent: TransactionEvent): Finding[] {
+  private handleWithdrawals(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
     const all = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('processAll()')).substring(2, 10).toLowerCase()
@@ -128,7 +157,7 @@ export class VaultWatcherSrv {
     VAULT_LIST.forEach((vault) => {
       const isProcessAll =
         txEvent.transaction.data.includes(all) &&
-        ([vault.defaultBondStrategy, vault.curator].includes(`${txEvent.transaction.to}`) ||
+        ([vault.defaultBondStrategy, vault.curator].includes(`${txEvent.to}`.toLowerCase()) ||
           txEvent.transaction.data.includes(vault.curator.substring(2)))
       // all can be function or function inside transaction
       const notices = isProcessAll ? processWithdrawalsAllNotices : processWithdrawalsPartNotices
@@ -145,44 +174,15 @@ export class VaultWatcherSrv {
     return out
   }
 
-  async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
-    const start = new Date().getTime()
-    const findings: Finding[] = []
-
-    const [
-      limitsIntegrityFindings,
-      handleWstETHIntegrityFindings,
-      handleVaultConfigurationChangeFindings,
-      handleSymbioticWstETHLimitFindings,
-      handleNoWithdrawalFindings,
-    ] = await Promise.all([
-      this.handleLimitsIntegrity(blockEvent),
-      this.handleWstETHIntegrity(blockEvent),
-      this.handleVaultConfigurationChange(blockEvent),
-      this.handleSymbioticWstETHLimit(blockEvent),
-      this.handleNoWithdrawal(blockEvent),
-    ])
-    findings.push(
-      ...limitsIntegrityFindings,
-      ...handleWstETHIntegrityFindings,
-      ...handleVaultConfigurationChangeFindings,
-      ...handleSymbioticWstETHLimitFindings,
-      ...handleNoWithdrawalFindings,
-    )
-
-    this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.handleBlock.name, start))
-    return findings
-  }
-
-  private async handleVaultConfigurationChange(blockEvent: BlockEvent): Promise<Finding[]> {
+  private async handleVaultConfigurationChange(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
-    const vaultIdx = blockEvent.blockNumber % VAULT_LIST.length // distributing vault config check by block because of Forta slow RPC responses. Expected One vault check per block
+    const vaultIdx = block.number % VAULT_LIST.length // distributing vault config check by block because of Forta slow RPC responses. Expected One vault check per block
     const results = await Promise.all(
-      VAULT_LIST.filter((vault, idx) => idx === vaultIdx).map(async (vault) => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(vaultIdx, blockEvent.blockNumber)
+      VAULT_LIST.filter((vault, idx) => idx === vaultIdx).map(async () => {
+        const storage = await this.ethClient.getVaultConfigurationStorage(vaultIdx, block.number)
         if (E.isLeft(storage)) {
           return networkAlert(
-            storage.left as unknown as Error, // TODO
+            storage.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:4184fae3)`,
             `Could not call ethProvider.getVaultConfigurationStorage`,
           )
@@ -191,17 +191,14 @@ export class VaultWatcherSrv {
       }),
     )
 
-    results.forEach((storageOrError, index) => {
-      if (index !== vaultIdx) {
-        return
-      }
+    results.forEach((storageOrError) => {
       if (storageOrError instanceof Finding) {
         out.push(storageOrError)
         return
       }
       const currentStorage = storageOrError
-      const vault = VAULT_LIST[index]
-      const vaultStorage = vaultStorages[index]
+      const vault = VAULT_LIST[vaultIdx]
+      const vaultStorage = vaultStorages[vaultIdx]
       const keys = Object.keys(vaultStorage)
 
       if (!keys.length) {
@@ -240,18 +237,18 @@ export class VaultWatcherSrv {
     return out
   }
 
-  private async handleLimitsIntegrity(blockEvent: BlockEvent): Promise<Finding[]> {
+  private async handleLimitsIntegrity(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
     const results = await Promise.all(
       VAULT_LIST.map(async (vault, index) => {
         const [vaultTotalSupply, vaultConfiguratorMaxTotalSupply] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(index, blockEvent.blockNumber),
-          this.ethClient.getVaultConfiguratorMaxTotalSupply(index, blockEvent.blockNumber),
+          this.ethClient.getVaultTotalSupply(index, block.number),
+          this.ethClient.getVaultConfiguratorMaxTotalSupply(index, block.number),
         ])
         if (E.isLeft(vaultTotalSupply)) {
           return networkAlert(
-            vaultTotalSupply.left as unknown as Error, // TODO
+            vaultTotalSupply.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleLimitsIntegrity.name} (uid:b40215f2)`,
             `Could not call ethProvider.getVaultTotalSupply`,
           )
@@ -259,7 +256,7 @@ export class VaultWatcherSrv {
 
         if (E.isLeft(vaultConfiguratorMaxTotalSupply)) {
           return networkAlert(
-            vaultConfiguratorMaxTotalSupply.left as unknown as Error, // TODO
+            vaultConfiguratorMaxTotalSupply.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleLimitsIntegrity.name} (uid:b1de79e4)`,
             `Could not call ethProvider.getVaultConfiguratorMaxTotalSupply`,
           )
@@ -290,7 +287,7 @@ export class VaultWatcherSrv {
             type: FindingType.Suspicious,
           }),
         )
-      } else if (result.eq.gt(0) && blockEvent.blockNumber % PERIODICAL_BLOCK_INTERVAL == 0) {
+      } else if (result.eq.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault totalSupply reached maximalTotalSupply',
@@ -300,7 +297,7 @@ export class VaultWatcherSrv {
             type: FindingType.Suspicious,
           }),
         )
-      } else if (result.near.gt(0) && blockEvent.blockNumber % PERIODICAL_BLOCK_INTERVAL == 0) {
+      } else if (result.near.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
         out.push(
           Finding.fromObject({
             name: '⚠️ Vault totalSupply close to maximalTotalSupply',
@@ -316,19 +313,19 @@ export class VaultWatcherSrv {
     return out
   }
 
-  private async handleWstETHIntegrity(blockEvent: BlockEvent): Promise<Finding[]> {
+  private async handleWstETHIntegrity(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
     const results = await Promise.all(
       VAULT_LIST.map(async (vault, index) => {
         const [vaultTotalSupply, vaultUnderlyingTvl] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(index, blockEvent.blockNumber),
-          this.ethClient.getVaultUnderlyingTvl(index, blockEvent.blockNumber),
+          this.ethClient.getVaultTotalSupply(index, block.number),
+          this.ethClient.getVaultUnderlyingTvl(index, block.number),
         ])
 
         if (E.isLeft(vaultTotalSupply)) {
           return networkAlert(
-            vaultTotalSupply.left as unknown as Error, // TODO
+            vaultTotalSupply.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:9e488c8c)`,
             `Could not call ethProvider.getVaultTotalSupply`,
           )
@@ -336,9 +333,17 @@ export class VaultWatcherSrv {
 
         if (E.isLeft(vaultUnderlyingTvl)) {
           return networkAlert(
-            vaultUnderlyingTvl.left as unknown as Error, // TODO
+            vaultUnderlyingTvl.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:db70b1bb)`,
-            `Could not call ethProvider.getVaultConfiguratorMaxTotalSupply`,
+            `Could not call ethProvider.getVaultUnderlyingTvl`,
+          )
+        }
+
+        if (vaultUnderlyingTvl.right.lt(1)) {
+          return networkAlert(
+            new Error(`vault ${VaultWatcherSrv.name} underlyingTvl is too low`),
+            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:db70b1zb)`,
+            `Could not call ethProvider.getVaultUnderlyingTvl`,
           )
         }
 
@@ -372,22 +377,22 @@ export class VaultWatcherSrv {
     return out
   }
 
-  private async handleSymbioticWstETHLimit(blockEvent: BlockEvent): Promise<Finding[]> {
+  private async handleSymbioticWstETHLimit(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
-    if (blockEvent.blockNumber % PERIODICAL_BLOCK_INTERVAL != 0) {
+    if (block.number % PERIODICAL_BLOCK_INTERVAL != 0) {
       return out
     }
 
     const [symbioticWstTotalSupply, symbioticWstLimit] = await Promise.all([
-      this.ethClient.getSymbioticWstTotalSupply(blockEvent.blockNumber),
-      this.ethClient.getSymbioticWstLimit(blockEvent.blockNumber),
+      this.ethClient.getSymbioticWstTotalSupply(block.number),
+      this.ethClient.getSymbioticWstLimit(block.number),
     ])
 
     if (E.isLeft(symbioticWstTotalSupply)) {
       out.push(
         networkAlert(
-          symbioticWstTotalSupply.left as unknown as Error, // TODO
+          symbioticWstTotalSupply.left as unknown as Error,
           `Error in ${VaultWatcherSrv.name}.${this.handleSymbioticWstETHLimit.name} (uid:ba6e5954)`,
           `Could not call ethProvider.getSymbioticWstTotalSupply`,
         ),
@@ -398,7 +403,7 @@ export class VaultWatcherSrv {
     if (E.isLeft(symbioticWstLimit)) {
       out.push(
         networkAlert(
-          symbioticWstLimit.left as unknown as Error, // TODO
+          symbioticWstLimit.left as unknown as Error,
           `Error in ${VaultWatcherSrv.name}.${this.handleSymbioticWstETHLimit.name} (uid:f01c465b)`,
           `Could not call ethProvider.getSymbioticWstLimit`,
         ),
@@ -421,27 +426,23 @@ export class VaultWatcherSrv {
     return out
   }
 
-  private async handleNoWithdrawal(blockEvent: BlockEvent): Promise<Finding[]> {
+  private async handleNoWithdrawal(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
-    if (blockEvent.blockNumber % HOURS_24_IN_BLOCK != 0) {
+    if (block.number % HOURS_24_IN_BLOCK != 0) {
       return out
     }
 
     const results = await Promise.all(
       VAULT_LIST.map(async (vault, index) => {
         const [pendingCount, withdrawalEvents] = await Promise.all([
-          this.ethClient.getVaultPendingWithdrawersCount(index, blockEvent.blockNumber),
-          this.ethClient.getDefaultBondStrategyWithdrawalEvents(
-            blockEvent.blockNumber - HOURS_48_IN_BLOCK,
-            blockEvent.blockNumber,
-            index,
-          ),
+          this.ethClient.getVaultPendingWithdrawersCount(index, block.number),
+          this.ethClient.getDefaultBondStrategyWithdrawalEvents(block.number - HOURS_48_IN_BLOCK, block.number, index),
         ])
 
         if (E.isLeft(withdrawalEvents)) {
           return networkAlert(
-            withdrawalEvents.left as unknown as Error, // TODO
+            withdrawalEvents.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:94ca798e)`,
             `Could not call ethProvider.getDefaultBondStrategyWithdrawalEvents`,
           )
@@ -449,7 +450,7 @@ export class VaultWatcherSrv {
 
         if (E.isLeft(pendingCount)) {
           return networkAlert(
-            pendingCount.left as unknown as Error, // TODO
+            pendingCount.left as unknown as Error,
             `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:5fb6076f)`,
             `Could not call ethProvider.getVaultPendingWithdrawersCount`,
           )

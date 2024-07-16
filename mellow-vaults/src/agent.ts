@@ -18,6 +18,7 @@ import { elapsedTime } from './shared/time'
 import Version from './shared/version'
 import { Metadata } from './entity/metadata'
 import { TransactionEvent } from 'forta-agent'
+import { BlockDto } from './entity/events'
 
 export function initialize(): Initialize {
   const metadata: Metadata = {
@@ -92,8 +93,14 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const vaultWatcherSrvFindings = await app.VaultWatcherSrv.handleBlock(blockEvent)
-    const aclChangesSrvFindings = await app.AclChangesSrv.handleBlock(blockEvent)
+    const blockDtoEvent: BlockDto = {
+      number: blockEvent?.block?.number,
+      timestamp: blockEvent?.block?.timestamp,
+      parentHash: blockEvent?.block?.parentHash,
+    }
+
+    const vaultWatcherSrvFindings = await app.VaultWatcherSrv.handleBlock(blockDtoEvent)
+    const aclChangesSrvFindings = await app.AclChangesSrv.handleBlock(blockDtoEvent)
     findings.push(...vaultWatcherSrvFindings, ...aclChangesSrvFindings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')

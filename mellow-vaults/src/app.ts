@@ -1,4 +1,4 @@
-import { getEthersProvider, fetchJwt, Finding, verifyJwt } from 'forta-agent'
+import { getEthersProvider, fetchJwt, Finding, verifyJwt, ethers } from 'forta-agent'
 import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
 import { DataRW } from './shared/mutex'
@@ -8,7 +8,7 @@ import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './servi
 import { VaultWatcherSrv } from './services/vault-watcher/VaultWatcher.srv'
 import { MultisigWatcherSrv } from './services/multisig-watcher/MultisigWatcher.srv'
 import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
-import { MELLOW_SYMBIOTIC_ADDRESS, VAULT_LIST } from "constants/common";
+import { MELLOW_SYMBIOTIC_ADDRESS, VAULT_LIST } from 'constants/common'
 import {
   SymbioticWstETH__factory,
   Vault,
@@ -51,20 +51,25 @@ export class App {
     return E.right(token)
   }
 
+  public static prepareClient = (provider: ethers.providers.JsonRpcProvider) => {
+    const VaultContracts: Vault[] = []
+    const VaultConfiguratorContracts: VaultConfigurator[] = []
+    VAULT_LIST.forEach((vault) => {
+      VaultContracts.push(Vault__factory.connect(vault.vault, provider))
+      VaultConfiguratorContracts.push(VaultConfigurator__factory.connect(vault.configurator, provider))
+    })
+    const mellowSymbioticContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, provider)
+
+    const ethClient = new ETHProvider(provider, mellowSymbioticContract, VaultContracts, VaultConfiguratorContracts)
+    return ethClient
+  }
+
   public static async getInstance(): Promise<Container> {
     if (!App.instance) {
       const ethersProvider = getEthersProvider()
       ethersProvider.formatter = new FormatterWithEIP1898()
 
-      const VaultContracts: Vault[] = []
-      const VaultConfiguratorContracts: VaultConfigurator[] = []
-      VAULT_LIST.forEach(vault => {
-        VaultContracts.push(Vault__factory.connect(vault.vault, ethersProvider))
-        VaultConfiguratorContracts.push(VaultConfigurator__factory.connect(vault.configurator, ethersProvider))
-      })
-      const mellowSymbioticContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, ethersProvider)
-
-      const ethClient = new ETHProvider(ethersProvider, mellowSymbioticContract, VaultContracts, VaultConfiguratorContracts)
+      const ethClient = App.prepareClient(ethersProvider)
 
       const logger: Winston.Logger = Winston.createLogger({
         format: Winston.format.simple(),

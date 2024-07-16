@@ -1,4 +1,4 @@
-import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { Finding, FindingSeverity, FindingType } from 'forta-agent'
 
 import { etherscanAddress } from '../../shared/string'
 
@@ -14,6 +14,7 @@ import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
 import { networkAlert } from '../../shared/errors'
 import type { IAclChangesClient } from './contract'
+import { BlockDto } from '../../entity/events'
 
 export class AclChangesSrv {
   private readonly logger: Logger
@@ -36,11 +37,11 @@ export class AclChangesSrv {
     return this.name
   }
 
-  public async handleBlock(blockEvent: BlockEvent) {
+  public async handleBlock(block: BlockDto) {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [ownerChangeFindings] = await Promise.all([this.handleOwnerChange(blockEvent)])
+    const [ownerChangeFindings] = await Promise.all([this.handleOwnerChange(block)])
 
     findings.push(...ownerChangeFindings)
 
@@ -49,7 +50,7 @@ export class AclChangesSrv {
     return findings
   }
 
-  public async handleOwnerChange(blockEvent: BlockEvent): Promise<Finding[]> {
+  public async handleOwnerChange(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
     const findingsTimestamps = new Map<string, number>()
 
@@ -59,7 +60,7 @@ export class AclChangesSrv {
         return
       }
 
-      const curOwner = await this.ethProvider.getContractOwner(address, data.ownershipMethod, blockEvent.blockNumber)
+      const curOwner = await this.ethProvider.getContractOwner(address, data.ownershipMethod, block.number)
 
       if (E.isLeft(curOwner)) {
         out.push(
@@ -95,7 +96,7 @@ export class AclChangesSrv {
       }
 
       const key = `${address}+${curOwner}`
-      const now = blockEvent.block.timestamp
+      const now = block.timestamp
       // skip if reported recently
       const lastReportTimestamp = findingsTimestamps.get(key)
       const interval = curOwnerIsContract.right

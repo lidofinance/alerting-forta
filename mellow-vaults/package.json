@@ -42,7 +42,7 @@
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
     "stake": "forta-agent stake",
-    "test": "jest --passWithNoTests",
+    "test": "export TZ=UTC; jest --passWithNoTests",
     "test:e2e": "yarn build && jest --config ./jest.config-e2e.json --passWithNoTests",
     "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
     "eslint:lint": "eslint ./src ./tests",

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
+exports[`vaultWatchers srv functional tests should RoleAdminChanged (3+2) 1`] = `
 [
   Finding {
     "addresses": [],
@@ -14,7 +14,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
@@ -30,7 +30,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
@@ -46,7 +46,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
@@ -62,7 +62,7 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
@@ -78,14 +78,14 @@ exports[`vault-acl-changes e2e tests should RoleAdminChanged (3+2) 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should RoleGranted 1`] = `
+exports[`vaultWatchers srv functional tests should RoleGranted 1`] = `
 [
   Finding {
     "addresses": [],
@@ -99,14 +99,14 @@ exports[`vault-acl-changes e2e tests should RoleGranted 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should RoleRevoked 1`] = `
+exports[`vaultWatchers srv functional tests should RoleRevoked 1`] = `
 [
   Finding {
     "addresses": [],
@@ -120,18 +120,18 @@ exports[`vault-acl-changes e2e tests should RoleRevoked 1`] = `
     "protocol": "ethereum",
     "severity": 4,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should be not slot changes 1`] = `[]`;
+exports[`vaultWatchers srv functional tests should be not slot changes 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should everything is fine 1`] = `[]`;
+exports[`vaultWatchers srv functional tests should everything is fine 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should find no-withdrawals at 3 vaults 1`] = `
+exports[`vaultWatchers srv functional tests should find no-withdrawals at 3 vaults 1`] = `
 [
   Finding {
     "addresses": [],
@@ -143,7 +143,7 @@ exports[`vault-acl-changes e2e tests should find no-withdrawals at 3 vaults 1`] 
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
@@ -157,7 +157,7 @@ exports[`vault-acl-changes e2e tests should find no-withdrawals at 3 vaults 1`] 
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 2,
     "uniqueKey": "",
   },
@@ -171,7 +171,7 @@ exports[`vault-acl-changes e2e tests should find no-withdrawals at 3 vaults 1`] 
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 2,
     "uniqueKey": "",
   },
@@ -185,14 +185,14 @@ exports[`vault-acl-changes e2e tests should find no-withdrawals at 3 vaults 1`] 
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 2,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should find slot change 1`] = `
+exports[`vaultWatchers srv functional tests should find slot change 1`] = `
 [
   Finding {
     "addresses": [],
@@ -206,18 +206,18 @@ New value: 36000000000000000000000",
     "protocol": "ethereum",
     "severity": 5,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 2,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should process tx with Added Owner and Execution Success 1`] = `[]`;
+exports[`vaultWatchers srv functional tests should process tx with Added Owner and Execution Success 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
+exports[`vaultWatchers srv functional tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should process tx with Re7 Vault withdrawal all 1`] = `
+exports[`vaultWatchers srv functional tests should process tx with Re7 Vault withdrawal all 1`] = `
 [
   Finding {
     "addresses": [],
@@ -231,16 +231,16 @@ exports[`vault-acl-changes e2e tests should process tx with Re7 Vault withdrawal
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should should find 1 withdrawal 1`] = `[]`;
+exports[`vaultWatchers srv functional tests should should find 1 withdrawal 1`] = `[]`;
 
-exports[`vault-acl-changes e2e tests should show limit inc 1`] = `
+exports[`vaultWatchers srv functional tests should show limit inc 1`] = `
 [
   Finding {
     "addresses": [],
@@ -254,14 +254,14 @@ exports[`vault-acl-changes e2e tests should show limit inc 1`] = `
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should withdrawal from contract 1`] = `
+exports[`vaultWatchers srv functional tests should withdrawal from contract 1`] = `
 [
   Finding {
     "addresses": [],
@@ -275,14 +275,14 @@ exports[`vault-acl-changes e2e tests should withdrawal from contract 1`] = `
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should withdrawal from curator 1`] = `
+exports[`vaultWatchers srv functional tests should withdrawal from curator 1`] = `
 [
   Finding {
     "addresses": [],
@@ -296,14 +296,14 @@ exports[`vault-acl-changes e2e tests should withdrawal from curator 1`] = `
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should withdrawal from curator multicall 1`] = `
+exports[`vaultWatchers srv functional tests should withdrawal from curator multicall 1`] = `
 [
   Finding {
     "addresses": [],
@@ -317,7 +317,7 @@ exports[`vault-acl-changes e2e tests should withdrawal from curator multicall 1`
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
     "uniqueKey": "",
   },

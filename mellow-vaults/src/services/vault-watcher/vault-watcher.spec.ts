@@ -1,55 +1,66 @@
-import { ethers, Finding, getEthersProvider, Network, Transaction } from 'forta-agent'
-import { JsonRpcProvider } from '@ethersproject/providers'
+import { BlockDto, TransactionDto } from '../../entity/events'
+import * as Winston from 'winston'
+import { ethers, Finding } from 'forta-agent'
 
-import { App } from '../../src/app'
-import { createTransactionEvent, etherBlockToFortaBlockEvent } from './utils'
+import { VaultWatcherSrv } from './VaultWatcher.srv'
+import { App } from '../../app'
 
-const TEST_TIMEOUT = 60_000 // ms
+const TEST_TIMEOUT = 120_000 // ms
 
-describe('vault-acl-changes e2e tests', () => {
-  let ethProvider: JsonRpcProvider
-  // let getRoleMembers: (address: string, hash: string, currentBlock: BlockTag) => Promise<E.Either<Error, string[]>>
+describe('vaultWatchers srv functional tests', () => {
+  const drpcURL = `https://eth.drpc.org`
+  const mainnet = 1
+  const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+
+  const ethClient = App.prepareClient(ethProvider)
+
+  const logger: Winston.Logger = Winston.createLogger({
+    format: Winston.format.simple(),
+    transports: [new Winston.transports.Console()],
+  })
+
+  const vaultWatcherSrv = new VaultWatcherSrv(logger, ethClient)
+
   let runTransaction: (txHash: string, initBlock?: number) => Promise<Finding[]>
-  let runBlock: (blockHashOrNumber: string | number, initBlock?: number) => Promise<Finding[]>
-  let logSpy: jest.SpyInstance
-  let timeSpy: jest.SpyInstance
+  let runBlock: (blockHashOrNumber: string | number, initBlock: number) => Promise<Finding[]>
 
   beforeAll(() => {
-    ethProvider = getEthersProvider()
-
-    logSpy = jest.spyOn(console, 'log')
-    logSpy.mockImplementation(() => {})
-    timeSpy = jest.spyOn(Date, 'now')
-    timeSpy.mockImplementation(() => new Date('2023-12-31'))
-
-    runTransaction = async (txHash: string, initBlock?: number) => {
-      const app = await App.getInstance()
-
-      const receipt = await ethProvider.send('eth_getTransactionReceipt', [txHash])
-      const block = await ethProvider.send('eth_getBlockByNumber', [
-        ethers.utils.hexValue(parseInt(receipt.blockNumber)),
-        true,
-      ])
-      const transaction = block.transactions.find((tx: Transaction) => tx.hash.toLowerCase() === txHash)!
-      if (initBlock) {
-        await app.VaultWatcherSrv.initialize(initBlock)
+    jest.spyOn(Date, 'now').mockImplementation(() => new Date('2024-01-01').getTime())
+    runBlock = async (blockHashOrNumber, initBlock) => {
+      if (initBlock > Number(blockHashOrNumber)) {
+        throw new Error('Wrong initial block or argument order')
+      }
+      const initErr = await vaultWatcherSrv.initialize(initBlock)
+      if (initErr instanceof Error) {
+        throw initErr
+      }
+      const block = await ethProvider.getBlock(blockHashOrNumber)
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
       }
 
-      const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
-
-      return app.VaultWatcherSrv.handleTransaction(txEvent)
+      return vaultWatcherSrv.handleBlock(blockDto)
     }
 
-    runBlock = async (blockHashOrNumber, initBlock) => {
-      const app = await App.getInstance()
+    runTransaction = async (txHash: string) => {
+      const trx = await ethProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
 
-      const blockNumber = initBlock
-      const block = await ethProvider.getBlock(blockHashOrNumber)
-      if (blockNumber) {
-        await app.VaultWatcherSrv.initialize(blockNumber)
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+        transaction: {
+          data: trx.data || '',
+        },
       }
-      const blockEvent = etherBlockToFortaBlockEvent(block)
-      return app.VaultWatcherSrv.handleBlock(blockEvent)
+
+      return vaultWatcherSrv.handleTransaction(transactionDto)
     }
   })
 

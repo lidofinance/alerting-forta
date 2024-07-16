@@ -1,8 +1,8 @@
-import { Finding, FindingType, TransactionEvent, ethers } from 'forta-agent'
-import { EventOfNotice } from '../entity/events'
+import { Finding, FindingType, ethers } from 'forta-agent'
+import { EventOfNotice, TransactionDto } from '../entity/events'
 
 export function handleEventsOfNotice(
-  txEvent: TransactionEvent,
+  txEvent: TransactionDto,
   events: string[],
   address: string,
   notices: Record<string, EventOfNotice>,
