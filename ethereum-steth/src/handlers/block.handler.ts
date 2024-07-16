@@ -12,6 +12,7 @@ import BigNumber from 'bignumber.js'
 import { Finding } from '../generated/proto/alert_pb'
 import { either as E } from 'fp-ts'
 import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { ETHProvider } from '../clients/eth_provider'
 
 export class BlockHandler {
   private logger: Logger
@@ -23,6 +24,7 @@ export class BlockHandler {
   private healthChecker: HealthChecker
 
   private onAppStartFindings: Finding[] = []
+  private readonly ethProvider: ETHProvider
 
   constructor(
     logger: Logger,
@@ -33,6 +35,7 @@ export class BlockHandler {
     VaultSrv: VaultSrv,
     healthChecker: HealthChecker,
     onAppStartFindings: Finding[],
+    ethProvider: ETHProvider,
   ) {
     this.logger = logger
     this.metrics = metrics
@@ -42,6 +45,7 @@ export class BlockHandler {
     this.VaultSrv = VaultSrv
     this.healthChecker = healthChecker
     this.onAppStartFindings = onAppStartFindings
+    this.ethProvider = ethProvider
   }
 
   public handleBlock() {
@@ -62,10 +66,38 @@ export class BlockHandler {
         hash: block.getHash(),
       }
 
-      this.logger.info(`#ETH block: ${blockDtoEvent.number}`)
+      const findings: Finding[] = []
+      const latestL1Block = await this.ethProvider.getBlockByHash('latest')
+      if (E.isRight(latestL1Block)) {
+        const diff = latestL1Block.right.timestamp - blockDtoEvent.timestamp
+        this.logger.info(
+          `\n` +
+            `#ETH block infra: ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n` +
+            `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: ` +
+            `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`,
+        )
+
+        if (diff > 12) {
+          const f: Finding = new Finding()
+
+          f.setName(`⚠️ Infra block is outdated`)
+          f.setDescription(
+            `Infra block - ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n` +
+              `Latst block - ${latestL1Block.right.number} ${latestL1Block.right.timestamp}\n` +
+              `Latst block - ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: ` +
+              `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`,
+          )
+          f.setAlertid('L1-BLOCK-OUTDATED')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
+
+          findings.push(f)
+        }
+      }
+
       const startTime = new Date().getTime()
 
-      const findings: Finding[] = []
       if (this.onAppStartFindings.length > 0) {
         findings.push(...this.onAppStartFindings)
         this.onAppStartFindings = []

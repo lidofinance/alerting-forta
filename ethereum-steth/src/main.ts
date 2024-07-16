@@ -155,6 +155,7 @@ const main = async () => {
     vaultSrv,
     healthChecker,
     onAppFindings,
+    ethClient,
   )
   const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
