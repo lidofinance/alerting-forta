@@ -8,6 +8,7 @@
   },
   "rules": {
     "prettier/prettier": "error",
-    "curly": "error"
+    "curly": "error",
+    "semi": "off"
   }
 }

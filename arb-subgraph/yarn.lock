@@ -1066,6 +1066,11 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
+"@tsconfig/node20@^20.1.2":
+  version "20.1.4"
+  resolved "https://registry.yarnpkg.com/@tsconfig/node20/-/node20-20.1.4.tgz#3457d42eddf12d3bde3976186ab0cd22b85df928"
+  integrity sha512-sqgsT69YFeLWf5NtJ4Xq/xAF8p4ZQHlmGW74Nu2tD4+g5fAsposc4ZfaaPixVu4y01BEiDCWLRDCvDM5JOsRxg==
+
 "@typechain/ethers-v5@^11.1.2":
   version "11.1.2"
   resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-11.1.2.tgz#82510c1744f37a2f906b9e0532ac18c0b74ffe69"

@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^11.1.2",
+    "@tsconfig/node20": "^20.1.2",
     "@types/jest": "^29.1.2",
     "@types/nodemon": "^1.19.0",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
