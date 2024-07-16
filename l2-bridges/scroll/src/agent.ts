@@ -2,7 +2,7 @@ import { FindingSeverity, FindingType } from 'forta-agent'
 import { App } from '../../common/agent'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../common/entity/events'
-import { Constants, RoleHashToName, ContractInfo } from '../../common/constants'
+import { Constants, RoleHashToName, ContractInfo, DEFAULT_ROLES_MAP } from '../../common/constants'
 
 
 export const scrollConstants: Constants = {
@@ -12,7 +12,7 @@ export const scrollConstants: Constants = {
   L2_NETWORK_ID: 534352,
   L2_APPROX_BLOCK_TIME_SECONDS: 3,
   L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',
-  GOV_BRIDGE_ADDRESS: '0x0c67d8d067e349669dfeab132a7c03a90594ee09',
+  govExecutor: '0x0c67d8d067e349669dfeab132a7c03a90594ee09',
   L1_ERC20_TOKEN_GATEWAY_ADDRESS: '0x6625c6332c9f91f2d27c304e729b86db87a3f504',
   L2_ERC20_TOKEN_GATEWAY: {
     name: 'L2_ERC20_TOKEN_GATEWAY',
@@ -22,13 +22,7 @@ export const scrollConstants: Constants = {
     name: 'SCROLL_WSTETH_BRIDGED',
     address: '0xf610a9dfb7c89644979b4a0f27063e9e7d7cda32',
   },
-  RolesMap: new Map<string, string>([
-    ['0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a', 'DEPOSITS_ENABLER_ROLE'],
-    ['0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6', 'DEPOSITS_DISABLER_ROLE'],
-    ['0x9ab8816a3dc0b3849ec1ac00483f6ec815b07eee2fd766a353311c823ad59d0d', 'WITHDRAWALS_ENABLER_ROLE'],
-    ['0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c', 'WITHDRAWALS_DISABLER_ROLE'],
-    ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
-  ]),
+  rolesMap: DEFAULT_ROLES_MAP,
   withdrawalInfo: {
     eventName: 'WithdrawERC20',
     eventDefinition: `event WithdrawERC20(
@@ -41,13 +35,19 @@ export const scrollConstants: Constants = {
 )`,
     amountFieldName: "amount",
   },
-  getBridgeEvents,
-  getGovEvents,
-  getProxyAdminEvents,
+  bridgeEvents: [],
+  govEvents: [],
+  proxyAdminEvents: [],
 }
+scrollConstants.bridgeEvents = getBridgeEvents(scrollConstants.L2_ERC20_TOKEN_GATEWAY.address, scrollConstants.rolesMap);
+scrollConstants.govEvents = getGovEvents(scrollConstants.govExecutor as string);
+scrollConstants.proxyAdminEvents = getProxyAdminEvents(
+  scrollConstants.L2_WSTETH_BRIDGED as ContractInfo,
+  scrollConstants.L2_ERC20_TOKEN_GATEWAY
+);
 
 
-export function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: RoleHashToName): EventOfNotice[] {
+function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: RoleHashToName): EventOfNotice[] {
   return [
     {
       address: l2GatewayAddress,
@@ -141,10 +141,10 @@ export function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: Ro
 }
 
 
-export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
+function getGovEvents(govExecutorAddress: string): EventOfNotice[] {
   return [
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event:
         'event EthereumGovernanceExecutorUpdate(address oldEthereumGovernanceExecutor, address newEthereumGovernanceExecutor)',
       alertId: 'GOV-BRIDGE-EXEC-UPDATED',
@@ -157,7 +157,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '73EE62B0-E0CF-4527-8E44-566D72667F22',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event GuardianUpdate(address oldGuardian, address newGuardian)',
       alertId: 'GOV-BRIDGE-GUARDIAN-UPDATED',
       name: '🚨 Scroll Gov Bridge: Guardian Updated',
@@ -167,7 +167,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '8C586373-5040-4BDA-8EF8-16CBE582D6B0',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event DelayUpdate(uint256 oldDelay, uint256 newDelay)',
       alertId: 'GOV-BRIDGE-DELAY-UPDATED',
       name: '⚠️ Scroll Gov Bridge: Delay Updated',
@@ -177,7 +177,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '073F04A8-B232-4671-A34E-D42A3729FE34',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event GracePeriodUpdate(uint256 oldGracePeriod, uint256 newGracePeriod)',
       alertId: 'GOV-BRIDGE-GRACE-PERIOD-UPDATED',
       name: '⚠️ Scroll Gov Bridge: Grace Period Updated',
@@ -188,7 +188,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '26574C78-EBD1-42D3-A9C7-3E4A2976FCB7',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event MinimumDelayUpdate(uint256 oldMinimumDelay, uint256 newMinimumDelay)',
       alertId: 'GOV-BRIDGE-MIN-DELAY-UPDATED',
       name: '⚠️ Scroll Gov Bridge: Min Delay Updated',
@@ -199,7 +199,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '35391E05-CBB4-4013-ACA1-A75F8C5D6991',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event MaximumDelayUpdate(uint256 oldMaximumDelay, uint256 newMaximumDelay)',
       alertId: 'GOV-BRIDGE-MAX-DELAY-UPDATED',
       name: '⚠️ Scroll Gov Bridge: Max Delay Updated',
@@ -210,7 +210,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '003CCEDE-551A-4310-86A7-F8EC22135C45',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event:
         'event ActionsSetQueued(uint256 indexed id, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, bool[] withDelegatecalls, uint256 executionTime)',
       alertId: 'GOV-BRIDGE-ACTION-SET-QUEUED',
@@ -221,7 +221,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '84D309D8-AB13-4B41-A9CE-8DE4AB77E77A',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event ActionsSetExecuted(uint256 indexed id, address indexed initiatorExecution, bytes[] returnedData)',
       alertId: 'GOV-BRIDGE-ACTION-SET-EXECUTED',
       name: 'ℹ️ Scroll Gov Bridge: Action set executed',
@@ -231,7 +231,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
       uniqueKey: '31FE6EEB-4619-4579-9C0B-58EECC3D7724',
     },
     {
-      address: GOV_BRIDGE_ADDRESS,
+      address: govExecutorAddress,
       event: 'event ActionsSetCanceled(uint256 indexed id)',
       alertId: 'GOV-BRIDGE-ACTION-SET-CANCELED',
       name: 'ℹ️ Scroll Gov Bridge: Action set canceled',
@@ -243,7 +243,8 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
   ]
 }
 
-export function getProxyAdminEvents(l2WstethContract: ContractInfo, l2GatewayContract: ContractInfo): EventOfNotice[] {
+
+function getProxyAdminEvents(l2WstethContract: ContractInfo, l2GatewayContract: ContractInfo): EventOfNotice[] {
   return [
     {
       address: l2WstethContract.address,

@@ -52,17 +52,9 @@ export class App {
 
     const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, params.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
-    const bridgeEventWatcher = new EventWatcher(
-      'BridgeEventWatcher',
-      params.getBridgeEvents(params.L2_ERC20_TOKEN_GATEWAY.address, params.RolesMap),
-      logger,
-    )
-    const govEventWatcher = new EventWatcher('GovEventWatcher', params.getGovEvents(params.GOV_BRIDGE_ADDRESS), logger)
-    const proxyEventWatcher = new EventWatcher(
-      'ProxyEventWatcher',
-      params.getProxyAdminEvents(params.L2_WSTETH_BRIDGED, params.L2_ERC20_TOKEN_GATEWAY),
-      logger,
-    )
+    const bridgeEventWatcher = new EventWatcher('BridgeEventWatcher', params.bridgeEvents, logger)
+    const govEventWatcher = new EventWatcher('GovEventWatcher', params.govEvents, logger)
+    const proxyEventWatcher = new EventWatcher('ProxyEventWatcher', params.proxyAdminEvents, logger)
 
     const monitorWithdrawals = new MonitorWithdrawals(
       l2Client, params.L2_ERC20_TOKEN_GATEWAY.address, logger, params.withdrawalInfo,

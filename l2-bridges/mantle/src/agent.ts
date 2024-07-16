@@ -2,7 +2,7 @@ import { FindingSeverity, FindingType } from 'forta-agent'
 import { App } from '../../common/agent'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../common/entity/events'
-import { Constants, RoleHashToName, ContractInfo } from '../../common/constants'
+import { Constants, RoleHashToName, ContractInfo, DEFAULT_ROLES_MAP } from '../../common/constants'
 
 
 export const mantleConstants: Constants = {
@@ -12,7 +12,7 @@ export const mantleConstants: Constants = {
   L2_NETWORK_ID: 5000,
   L2_APPROX_BLOCK_TIME_SECONDS: 2,
   L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',  // TODO
-  GOV_BRIDGE_ADDRESS: '0x3a7b055bf88cdc59d20d0245809c6e6b3c5819dd',
+  govExecutor: '0x3a7b055bf88cdc59d20d0245809c6e6b3c5819dd',
   L1_ERC20_TOKEN_GATEWAY_ADDRESS: '0x2D001d79E5aF5F65a939781FE228B267a8Ed468B',
   L2_ERC20_TOKEN_GATEWAY: {
     name: 'L2_ERC20_TOKEN_GATEWAY',
@@ -22,13 +22,7 @@ export const mantleConstants: Constants = {
     name: 'MANTLE_WSTETH_BRIDGED',
     address: '0x458ed78EB972a369799fb278c0243b25e5242A83',
   },
-  RolesMap: new Map<string, string>([
-    ['0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a', 'DEPOSITS_ENABLER_ROLE'],
-    ['0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6', 'DEPOSITS_DISABLER_ROLE'],
-    ['0x9ab8816a3dc0b3849ec1ac00483f6ec815b07eee2fd766a353311c823ad59d0d', 'WITHDRAWALS_ENABLER_ROLE'],
-    ['0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c', 'WITHDRAWALS_DISABLER_ROLE'],
-    ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
-  ]),
+  rolesMap: DEFAULT_ROLES_MAP,
   withdrawalInfo: {
     eventName: 'WithdrawalInitiated',
     eventDefinition: `event WithdrawalInitiated(
@@ -41,16 +35,19 @@ export const mantleConstants: Constants = {
 )`,
     amountFieldName: "_amount",
   },
-  getBridgeEvents,
-  getGovEvents,
-  getProxyAdminEvents,
+  bridgeEvents: [],
+  govEvents: [],
+  proxyAdminEvents: [],
 }
+mantleConstants.bridgeEvents = getBridgeEvents(mantleConstants.L2_ERC20_TOKEN_GATEWAY.address, mantleConstants.rolesMap);
+mantleConstants.govEvents = getGovEvents(mantleConstants.govExecutor as string);
+mantleConstants.proxyAdminEvents = getProxyAdminEvents(
+  mantleConstants.L2_WSTETH_BRIDGED as ContractInfo,
+  mantleConstants.L2_ERC20_TOKEN_GATEWAY
+);
 
 
-export function getBridgeEvents(
-  L2_ERC20_TOKEN_GATEWAY_ADDRESS: string,
-  RolesAddrToNameMap: RoleHashToName,
-): EventOfNotice[] {
+function getBridgeEvents(l2TokenBridgeAddress: string, rolesMap: RoleHashToName): EventOfNotice[] {
   const uniqueKeys = [
     'be8452bb-c4c6-4526-9489-b04626ec4c4d',
     'e3e767b1-de01-4695-84c7-5654567cf501',
@@ -64,7 +61,7 @@ export function getBridgeEvents(
 
   return [
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event Initialized(address indexed admin)',
       alertId: 'L2-BRIDGE-IMPLEMENTATION-INITIALIZED',
       name: '🚨🚨🚨 Mantle L2 Bridge: Implementation initialized',
@@ -77,7 +74,7 @@ export function getBridgeEvents(
       uniqueKey: uniqueKeys[0],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event DepositsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-DISABLED',
       name: '🚨 Mantle L2 Bridge: Deposits Disabled',
@@ -87,20 +84,20 @@ export function getBridgeEvents(
       uniqueKey: uniqueKeys[1],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event:
         'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)',
       alertId: 'L2-BRIDGE-ROLE-ADMIN-CHANGED',
       name: '🚨 Mantle L2 Bridge: Role Admin changed',
       description: (args: Result) =>
-        `Role Admin for role ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
+        `Role Admin for role ${args.role}(${rolesMap.get(args.role) || 'unknown'}) ` +
         `was changed from ${args.previousAdminRole} to ${args.newAdminRole}`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[2],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event WithdrawalsDisabled(address indexed disabler)',
       alertId: 'L2-BRIDGE-WITHDRAWALS-DISABLED',
       name: '🚨 Mantle L2 Bridge: Withdrawals Disabled',
@@ -110,31 +107,31 @@ export function getBridgeEvents(
       uniqueKey: uniqueKeys[3],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'L2-BRIDGE-ROLE-GRANTED',
       name: '⚠️ Mantle L2 Bridge: Role granted',
       description: (args: Result) =>
-        `Role ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
+        `Role ${args.role}(${rolesMap.get(args.role) || 'unknown'}) ` +
         `was granted to ${args.account} by ${args.sender}`,
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[4],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)',
       alertId: 'L2-BRIDGE-ROLE-REVOKED',
       name: '⚠️ Mantle L2 Bridge: Role revoked',
       description: (args: Result) =>
-        `Role ${args.role}(${RolesAddrToNameMap.get(args.role) || 'unknown'}) ` +
+        `Role ${args.role}(${rolesMap.get(args.role) || 'unknown'}) ` +
         `was revoked to ${args.account} by ${args.sender}`,
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[5],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event DepositsEnabled(address indexed enabler)',
       alertId: 'L2-BRIDGE-DEPOSITS-ENABLED',
       name: 'ℹ️ Mantle L2 Bridge: Deposits Enabled',
@@ -144,7 +141,7 @@ export function getBridgeEvents(
       uniqueKey: uniqueKeys[6],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS,
+      address: l2TokenBridgeAddress,
       event: 'event WithdrawalsEnabled(address indexed enabler)',
       alertId: 'L2-BRIDGE-WITHDRAWALS-ENABLED',
       name: 'ℹ️ Mantle L2 Bridge: Withdrawals Enabled',
@@ -156,10 +153,7 @@ export function getBridgeEvents(
   ]
 }
 
-
-
-
-export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
+function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
   const uniqueKeys = [
     '0a9a066e-233d-4d00-af58-84b685a42729',
     'a2224ced-9745-45c3-90d2-d95f66f57442',
@@ -274,10 +268,7 @@ export function getGovEvents(GOV_BRIDGE_ADDRESS: string): EventOfNotice[] {
 }
 
 
-export function getProxyAdminEvents(
-  MANTLE_WST_ETH_BRIDGED_ADDRESS: ContractInfo,
-  L2_ERC20_TOKEN_GATEWAY_ADDRESS: ContractInfo,
-): EventOfNotice[] {
+function getProxyAdminEvents(l2Wsteth: ContractInfo, l2TokenBridge: ContractInfo): EventOfNotice[] {
   const uniqueKeys = [
     '82b39d98-a156-4be2-be48-81a0d237c53a',
     '44367f0e-dbe2-4cb0-b256-1af2c9a38d9f',
@@ -291,25 +282,25 @@ export function getProxyAdminEvents(
 
   return [
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
+      address: l2Wsteth.address,
       event: 'event ProxyOssified()',
       alertId: 'PROXY-OSSIFIED',
       name: '🚨 Mantle: Proxy ossified',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       description: (args: Result) =>
-        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) was ossified` +
+        `Proxy for ${l2Wsteth.name}(${l2Wsteth.address}) was ossified` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[0],
     },
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
+      address: l2Wsteth.address,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
       name: '🚨 Mantle: Proxy admin changed',
       description: (args: Result) =>
-        `Proxy admin for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) ` +
+        `Proxy admin for ${l2Wsteth.name}(${l2Wsteth.address}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -317,12 +308,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[1],
     },
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
+      address: l2Wsteth.address,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
       name: '🚨 Mantle: Proxy upgraded',
       description: (args: Result) =>
-        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) ` +
+        `Proxy for ${l2Wsteth.name}(${l2Wsteth.address}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -330,12 +321,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[2],
     },
     {
-      address: MANTLE_WST_ETH_BRIDGED_ADDRESS.address,
+      address: l2Wsteth.address,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
       name: '🚨 Mantle: Proxy beacon upgraded',
       description: (args: Result) =>
-        `Proxy for ${MANTLE_WST_ETH_BRIDGED_ADDRESS.name}(${MANTLE_WST_ETH_BRIDGED_ADDRESS.address}) ` +
+        `Proxy for ${l2Wsteth.name}(${l2Wsteth.address}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -344,25 +335,25 @@ export function getProxyAdminEvents(
     },
 
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
+      address: l2TokenBridge.address,
       event: 'event ProxyOssified()',
       alertId: 'PROXY-OSSIFIED',
       name: '🚨 Mantle: Proxy ossified',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       description: (args: Result) =>
-        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) was ossified` +
+        `Proxy for ${l2TokenBridge.name}(${l2TokenBridge.address}) was ossified` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
       type: FindingType.Info,
       uniqueKey: uniqueKeys[4],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
+      address: l2TokenBridge.address,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
       name: '🚨 Mantle: Proxy admin changed',
       description: (args: Result) =>
-        `Proxy admin for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) ` +
+        `Proxy admin for ${l2TokenBridge.name}(${l2TokenBridge.address}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -370,12 +361,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[5],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
+      address: l2TokenBridge.address,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
       name: '🚨 Mantle: Proxy upgraded',
       description: (args: Result) =>
-        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) ` +
+        `Proxy for ${l2TokenBridge.name}(${l2TokenBridge.address}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
@@ -383,12 +374,12 @@ export function getProxyAdminEvents(
       uniqueKey: uniqueKeys[6],
     },
     {
-      address: L2_ERC20_TOKEN_GATEWAY_ADDRESS.address,
+      address: l2TokenBridge.address,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
       name: '🚨 Mantle: Proxy beacon upgraded',
       description: (args: Result) =>
-        `Proxy for ${L2_ERC20_TOKEN_GATEWAY_ADDRESS.name}(${L2_ERC20_TOKEN_GATEWAY_ADDRESS.address}) ` +
+        `Proxy for ${l2TokenBridge.name}(${l2TokenBridge.address}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: FindingSeverity.High,
