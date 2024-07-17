@@ -83,7 +83,6 @@ export class BlockHandler {
           f.setName(`⚠️ Infra block is outdated`)
           f.setDescription(
             `Infra block - ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n` +
-              `Latst block - ${latestL1Block.right.number} ${latestL1Block.right.timestamp}\n` +
               `Latst block - ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: ` +
               `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`,
           )
