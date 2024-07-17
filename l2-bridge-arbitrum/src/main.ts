@@ -73,14 +73,14 @@ const main = async () => {
   const bridgedLdoRunner = ArbERC20__factory.connect(adr.ARBITRUM_LDO_BRIDGED_ADDRESS, nodeClient)
 
   const l2BlocksStore = new LRUCache<BlockHash, BlockDtoWithTransactions>({
-    max: 10_000,
+    max: 30_000,
     ttl: MINUTES_60,
     updateAgeOnGet: true,
     updateAgeOnHas: true,
   })
 
   const l2BridgeCache = new LRUCache<BlockHash, BigNumber>({
-    max: 20_000,
+    max: 30_000,
     ttl: MINUTES_60,
     updateAgeOnGet: true,
     updateAgeOnHas: true,
@@ -95,7 +95,7 @@ const main = async () => {
     l2BridgeCache,
   )
   const processedWithdrawalBlock = new LRUCache<number, boolean>({
-    max: 20_000,
+    max: 30_000,
     ttl: MINUTES_60,
     updateAgeOnGet: true,
     updateAgeOnHas: true,
@@ -140,7 +140,7 @@ const main = async () => {
   const ldoRunner = ERC20Bridged__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
 
   const l1BlockCache = new LRUCache<BlockHash, BigNumber>({
-    max: 200,
+    max: 600,
     ttl: MINUTES_60,
   })
   const l1Client = new ETHProvider(
@@ -153,7 +153,7 @@ const main = async () => {
     adr.ARBITRUM_L1_LDO_BRIDGE,
   )
   const processedKeyPairsCache = new LRUCache<string, boolean>({
-    max: 20_000,
+    max: 30_000,
     ttl: MINUTES_60,
   })
   const bridgeBalanceSrv = new BridgeBalanceSrv(logger, l1Client, arbitrumClient, processedKeyPairsCache)
