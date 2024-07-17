@@ -80,7 +80,6 @@ export class AclChangesSrv {
     ])
 
     findings.push(...rolesMembersFindings, ...ownerChangeFindings)
-
     this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleBlock.name, start))
 
     return findings

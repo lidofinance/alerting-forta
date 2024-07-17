@@ -1,5 +1,5 @@
 import { elapsedTime, formatDelay } from '../../utils/time'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { GateSeal, GateSealExpiredErr } from '../../entity/gate_seal'
 import { GateSealCache } from './GateSeal.cache'
 import { GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT, GATE_SEAL_SEALED_EVENT } from '../../utils/events/gate_seal_events'

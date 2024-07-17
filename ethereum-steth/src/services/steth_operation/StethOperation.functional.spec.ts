@@ -1,30 +1,83 @@
-import { App } from '../../app'
 import BigNumber from 'bignumber.js'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import { ethers } from 'ethers'
 import { Finding } from '../../generated/proto/alert_pb'
+import * as Winston from 'winston'
+import { Address } from '../../utils/constants'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import {
+  GateSeal__factory,
+  Lido__factory,
+  ValidatorsExitBusOracle__factory,
+  WithdrawalQueueERC721__factory,
+} from '../../generated/typechain'
+import { ETHProvider } from '../../clients/eth_provider'
+import { StethOperationCache } from './StethOperation.cache'
+import { StethOperationSrv } from './StethOperation.srv'
+import { getDepositSecurityEvents } from '../../utils/events/deposit_security_events'
+import { getLidoEvents } from '../../utils/events/lido_events'
+import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
+import { getBurnerEvents } from '../../utils/events/burner_events'
+import promClient from 'prom-client'
+import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 60_000 // ms
 
 describe('Steth.srv functional tests', () => {
-  const drpcURL = `https://eth.drpc.org`
-  const mainnet = 1
-  const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+  const chainId = 1
+
+  const logger: Winston.Logger = Winston.createLogger({
+    format: Winston.format.simple(),
+    transports: [new Winston.transports.Console()],
+  })
+  const address: Address = Address
+
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
+  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
+  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
+
+  const ethClient = new ETHProvider(
+    logger,
+    m,
+    fortaEthersProvider,
+    lidoRunner,
+    wdQueueRunner,
+    gateSealRunner,
+    veboRunner,
+  )
+
+  const stethOperationCache = new StethOperationCache()
+  const stethOperationSrv = new StethOperationSrv(
+    logger,
+    stethOperationCache,
+    ethClient,
+    address.DEPOSIT_SECURITY_ADDRESS,
+    address.LIDO_STETH_ADDRESS,
+    address.DEPOSIT_EXECUTOR_ADDRESS,
+    getDepositSecurityEvents(address.DEPOSIT_SECURITY_ADDRESS),
+    getLidoEvents(address.LIDO_STETH_ADDRESS),
+    getInsuranceFundEvents(address.INSURANCE_FUND_ADDRESS, address.KNOWN_ERC20),
+    getBurnerEvents(address.BURNER_ADDRESS),
+  )
 
   test(
     'LOW-STAKING-LIMIT',
     async () => {
-      const app = await App.getInstance()
       const blockNumber = 16_704_075
-      const block = await ethProvider.getBlock(blockNumber)
+      const block = await fortaEthersProvider.getBlock(blockNumber)
 
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
-      const result = await app.StethOperationSrv.handleBlock(blockDto)
+      const result = await stethOperationSrv.handleBlock(blockDto)
 
       const expected = {
         alertId: 'LOW-STAKING-LIMIT',
@@ -47,17 +100,17 @@ describe('Steth.srv functional tests', () => {
   test(
     'LOW-DEPOSIT-EXECUTOR-BALANCE',
     async () => {
-      const app = await App.getInstance()
       const blockNumber = 17241600
-      const block = await ethProvider.getBlock(blockNumber)
+      const block = await fortaEthersProvider.getBlock(blockNumber)
 
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
-      const result = await app.StethOperationSrv.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp)
+      const result = await stethOperationSrv.handleDepositExecutorBalance(blockDto.number, blockDto.timestamp)
 
       const expected = {
         alertId: 'LOW-DEPOSIT-EXECUTOR-BALANCE',
@@ -80,10 +133,9 @@ describe('Steth.srv functional tests', () => {
   test(
     'should process tx with EL rewards vault set and staking changes',
     async () => {
-      const app = await App.getInstance()
       const txHash = '0x11a48020ae69cf08bd063f1fbc8ecf65bd057015aaa991bf507dbc598aadb68e'
 
-      const trx = await ethProvider.getTransaction(txHash)
+      const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -95,12 +147,12 @@ describe('Steth.srv functional tests', () => {
         },
       }
 
-      const results = await app.StethOperationSrv.handleTransaction(transactionDto)
+      const results = await stethOperationSrv.handleTransaction(transactionDto)
 
       const expected = [
         {
           name: '⚠️ Lido: Staking resumed',
-          description: 'Staking was resumed!',
+          description: 'Staking was resumed!\n\nBlockNumber 14860268',
           alertId: 'LIDO-STAKING-RESUMED',
           protocol: 'ethereum',
           severity: 3,
@@ -111,7 +163,7 @@ describe('Steth.srv functional tests', () => {
           description:
             'Staking limit was set with:\n' +
             'Max staking limit: 150000000000000000000000\n' +
-            'Stake limit increase per block: 23437500000000000000',
+            'Stake limit increase per block: 23437500000000000000\n\nBlockNumber 14860268',
           alertId: 'LIDO-STAKING-LIMIT-SET',
           protocol: 'ethereum',
           severity: 3,
@@ -138,10 +190,9 @@ describe('Steth.srv functional tests', () => {
   test(
     'Insurance fund',
     async () => {
-      const app = await App.getInstance()
       const txHash = '0x91c7c2f33faf3b5fb097138c1d49c1d4e83f99e1c3b346b3cad35a5928c03b3a'
 
-      const trx = await ethProvider.getTransaction(txHash)
+      const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -152,13 +203,13 @@ describe('Steth.srv functional tests', () => {
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
       }
-      const results = await app.StethOperationSrv.handleTransaction(transactionDto)
+      const results = await stethOperationSrv.handleTransaction(transactionDto)
 
       const expected = [
         {
           name: '🚨 Insurance fund: Ownership transferred',
           description:
-            'Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)',
+            'Owner of the insurance fund was transferred from [0x0000000000000000000000000000000000000000](https://etherscan.io/address/0x0000000000000000000000000000000000000000) to [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C)\n\nBlockNumber 15639078',
           alertId: 'INS-FUND-OWNERSHIP-TRANSFERRED',
           protocol: 'ethereum',
           severity: 4,
@@ -167,7 +218,7 @@ describe('Steth.srv functional tests', () => {
         {
           name: '🚨 Insurance fund: Ownership transferred',
           description:
-            'Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)',
+            'Owner of the insurance fund was transferred from [0xbD829522d4791b9660f59f5998faE451dACA4E1C](https://etherscan.io/address/0xbD829522d4791b9660f59f5998faE451dACA4E1C) to [0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c](https://etherscan.io/address/0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c)\n\nBlockNumber 15639078',
           alertId: 'INS-FUND-OWNERSHIP-TRANSFERRED',
           protocol: 'ethereum',
           severity: 4,
@@ -194,10 +245,9 @@ describe('Steth.srv functional tests', () => {
   test(
     'Share rate',
     async () => {
-      const app = await App.getInstance()
       const txHash = '0xe71ac8b9f8f7b360f5defd3f6738f8482f8c15f1dd5f6827544bef8b7b4fbd37'
 
-      const trx = await ethProvider.getTransaction(txHash)
+      const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -209,11 +259,11 @@ describe('Steth.srv functional tests', () => {
         },
       }
 
-      const results = await app.StethOperationSrv.handleTransaction(transactionDto)
+      const results = await stethOperationSrv.handleTransaction(transactionDto)
 
       const expected = {
         name: 'ℹ️ Lido: Token rebased',
-        description: 'reportTimestamp: 1706011211',
+        description: 'reportTimestamp: 1706011211\n\nBlockNumber 19069339',
         alertId: 'LIDO-TOKEN-REBASED',
         severity: 1,
         type: 4,
@@ -225,12 +275,70 @@ describe('Steth.srv functional tests', () => {
       expect(results[0].getSeverity()).toEqual(expected.severity)
       expect(results[0].getType()).toEqual(expected.type)
 
-      expect(app.StethOperationSrv.getStorage().getShareRate().blockNumber).toEqual(19069339)
-      expect(app.StethOperationSrv.getStorage().getShareRate().amount).toEqual(new BigNumber('1.1546900318248249941'))
+      expect(stethOperationSrv.getStorage().getShareRate().blockNumber).toEqual(19069339)
+      expect(stethOperationSrv.getStorage().getShareRate().amount).toEqual(new BigNumber('1.1546900318248249941'))
 
-      const findings = await app.StethOperationSrv.handleShareRateChange(19069340)
+      const findings = await stethOperationSrv.handleShareRateChange(19069340)
       expect(findings.length).toEqual(0)
     },
     TEST_TIMEOUT,
+  )
+
+  test(
+    'handleBufferedEth',
+    async () => {
+      const blockNumber = 20_149_739 + 3
+      const block = await fortaEthersProvider.getBlock(blockNumber)
+
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
+        hash: block.hash,
+      }
+
+      const result = await stethOperationSrv.handleBufferedEth(blockDto)
+
+      expect(result.length).toEqual(0)
+    },
+    2 * TEST_TIMEOUT,
+  )
+
+  test(
+    '⚠️ High depositable ETH amount',
+    async () => {
+      const blockNumber = 20227000
+      const block = await fortaEthersProvider.getBlock(blockNumber)
+
+      const blockDto: BlockDto = {
+        number: block.number,
+        timestamp: block.timestamp,
+        parentHash: block.parentHash,
+        hash: block.hash,
+      }
+
+      await stethOperationSrv.initialize(blockNumber)
+      const results = await stethOperationSrv.handleBufferedEth(blockDto)
+
+      const expected = {
+        name: '⚠️ High depositable ETH amount',
+        description:
+          'There are: \n' +
+          'Buffered: 34250.21 \n' +
+          'Depositable: 10683.20 \n' +
+          'ETH in DAO and there are more than 72 hours since last Depositor TX',
+        alertId: 'HIGH-DEPOSITABLE-ETH',
+        severity: 3,
+        type: 2,
+      }
+
+      expect(results.length).toEqual(1)
+      expect(results[0].getAlertid()).toEqual(expected.alertId)
+      expect(results[0].getDescription()).toEqual(expected.description)
+      expect(results[0].getName()).toEqual(expected.name)
+      expect(results[0].getSeverity()).toEqual(expected.severity)
+      expect(results[0].getType()).toEqual(expected.type)
+    },
+    2 * TEST_TIMEOUT,
   )
 })

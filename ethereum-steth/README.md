@@ -6,7 +6,11 @@
 
 ## Alerts
 
-1. StETH operations
+1. Infra:
+
+   1. ⚠️ Currently processing Ethereum network block is outdated
+
+2. StETH operations
    1. HandleBlock
       1. 🚨🚨🚨 Buffered ETH drain (checks each block)
       2. 🚨 Huge depositable ETH amount (checks every 100 blocks)
@@ -45,7 +49,7 @@
       4. Burner events
          1. ℹ️ Lido Burner: ERC20 recovered
          2. ℹ️ Lido Burner: ERC721 recovered
-2. Withdrawals
+3. Withdrawals
    1. HandleBlock runs on each 100-th block or one per 20 minutes
       1. 🚨🚨🚨 Withdrawals: unclaimed requests size is more than withdrawal queue balance
       2. ⚠️ Withdrawals: <limitRate>% of stake limit is spent and unfinalized queue is on par with drained stake
@@ -62,7 +66,7 @@
       6. ⚠️ Withdrawals: the sum of received withdrawal requests since the last rebase greater than 150_000 stETH (max
          staking limit)
       7. ℹ️ Huge stETH withdrawal requests batch
-3. GateSeal
+4. GateSeal
    1. HandleBlock runs on each next block
       1. 🚨 GateSeal: actual address doesn't have PAUSE_ROLE for contracts
       2. 🚨 GateSeal: is expired!
@@ -73,7 +77,7 @@
    2. HandleTransaction
       1. 🚨🚨🚨 GateSeal: is sealed 🚨🚨🚨
       2. 🚨 GateSeal: is expired
-4. Vaults
+5. Vaults
    1. Handleblock
       1. 🚨🚨🚨 Withdrawal Vault balance mismatch. [without oracle report]
       2. 🚨🚨🚨 Withdrawal Vault balance mismatch. [within oracle report]
@@ -99,3 +103,14 @@ In separate console run
 ```
 docker-compose up -d
 ```
+
+## Testing alerts
+
+1. For testing alerts you have to install promtool on your machine.
+   ```
+   make tools
+   ```
+2. Check alerts
+   ```
+   make test_alerts
+   ```

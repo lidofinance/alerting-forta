@@ -13,7 +13,18 @@ RUN yarn install --immutable && yarn run build
 # Final stage: copy compiled Javascript from previous stage and install production dependencies
 FROM base as production
 LABEL "network.forta.settings.agent-logs.enable"="true"
+
+ENV APP_NAME=ethereum-steth
 ENV NODE_ENV=production
+ENV ETHEREUM_RPC_URL=https://eth.drpc.org
+
+ENV AGENT_GRPC_PORT=50051
+ENV HTTP_PORT=3000
+ENV LOG_FORMAT=simple
+ENV LOG_LEVEL=info
+ENV INSTANCE=forta
+ENV USE_FORTA_RPC_URL=true
+
 WORKDIR /app
 
 COPY package*.json yarn.lock ./

@@ -8,7 +8,7 @@ describe('TrpChangesSrv', () => {
   let txEvent: TransactionEvent
 
   beforeEach(() => {
-    logger = { info: jest.fn() } as unknown as Logger
+    logger = { info: jest.fn(), debug: jest.fn() } as unknown as Logger
     trpChangesSrv = new TrpChangesSrv(logger)
     txEvent = { addresses: { '0x123': true }, filterLog: jest.fn() } as unknown as TransactionEvent
   })

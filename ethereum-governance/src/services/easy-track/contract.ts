@@ -9,4 +9,5 @@ export type INodeOperatorInfo = {
 
 export abstract class IEasyTrackClient {
   public abstract getNOInfoByMotionData(callData: string): Promise<E.Either<Error, INodeOperatorInfo>>
+  public abstract getTokenSymbol(address: string): Promise<E.Either<Error, string>>
 }

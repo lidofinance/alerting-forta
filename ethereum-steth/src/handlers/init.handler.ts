@@ -1,5 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { InitializeRequest, InitializeResponse, ResponseStatus } from '../generated/proto/agent_pb'
+import { InitializeRequest, InitializeResponse, ResponseStatus, Error as pbError } from '../generated/proto/agent_pb'
 import { Logger } from 'winston'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
@@ -7,37 +7,39 @@ import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { Metadata } from '../entity/metadata'
 import Version from '../utils/version'
-import { ETHProvider } from '../clients/eth_provider'
 import { elapsedTime } from '../utils/time'
 import { ETH_DECIMALS } from '../utils/constants'
 import { Finding } from '../generated/proto/alert_pb'
 
 export class InitHandler {
-  private readonly ethClient: ETHProvider
   private readonly logger: Logger
   private readonly StethOperationSrv: StethOperationSrv
   private readonly WithdrawalsSrv: WithdrawalsSrv
   private readonly GateSealSrv: GateSealSrv
   private readonly VaultSrv: VaultSrv
+  private readonly appName: string
+  private readonly latestBlockNumber: number
 
   private onAppStartFindings: Finding[] = []
 
   constructor(
-    ethClient: ETHProvider,
+    appName: string,
     logger: Logger,
     StethOperationSrv: StethOperationSrv,
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
     onAppStartFindings: Finding[],
+    latestBlockNumber: number,
   ) {
-    this.ethClient = ethClient
+    this.appName = appName
     this.logger = logger
     this.StethOperationSrv = StethOperationSrv
     this.WithdrawalsSrv = WithdrawalsSrv
     this.GateSealSrv = GateSealSrv
     this.VaultSrv = VaultSrv
     this.onAppStartFindings = onAppStartFindings
+    this.latestBlockNumber = latestBlockNumber
   }
 
   public handleInit() {
@@ -60,8 +62,22 @@ export class InitHandler {
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
+      const withdrawalsSrvErr = await this.WithdrawalsSrv.initialize(this.latestBlockNumber)
+      if (withdrawalsSrvErr !== null) {
+        this.logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
+        const err = new pbError()
+        err.setMessage(`Could not init withdrawalsSrvErr ${withdrawalsSrvErr}`)
+
+        const resp = new InitializeResponse()
+        resp.setStatus(ResponseStatus.ERROR)
+        resp.addErrors(err)
+
+        callback(null, resp)
+        return
+      }
+
       const f: Finding = new Finding()
-      f.setName(`Agent launched`)
+      f.setName(`${this.appName} launched`)
       f.setDescription(`Version: ${Version.desc}`)
       f.setAlertid('LIDO-AGENT-LAUNCHED')
       f.setSeverity(Finding.Severity.INFO)

@@ -1,6 +1,6 @@
 import { Knex } from 'knex'
 import { WithdrawalRequest, WithdrawalRequestSql } from '../../entity/withdrawal_request'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 
 export const KnexErr = Error
 export const NotFound = new Error('Not found')
@@ -101,7 +101,7 @@ export class WithdrawalsRepo {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
         .where('isFinalized', 1)
-        .orderBy('timestamp', 'desc')
+        .orderBy('id', 'desc')
         .limit(1)
 
       if (data.length === 0) {
@@ -118,7 +118,7 @@ export class WithdrawalsRepo {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
         .where('isFinalized', 0)
-        .orderBy('timestamp', 'asc')
+        .orderBy('id', 'asc')
         .limit(1)
 
       if (data.length === 0) {
@@ -154,7 +154,7 @@ export class WithdrawalsRepo {
         .limit(1)
 
       if (data.length === 0) {
-        return E.left(NotFound)
+        return E.right(0)
       }
 
       return E.right(data[0])
@@ -176,6 +176,39 @@ export class WithdrawalsRepo {
       return E.right(out)
     } catch (e) {
       return E.left(new KnexErr(`${e}`))
+    }
+  }
+
+  public async setWithdrawalRequestClaimed(
+    withdrawalRequestId: number,
+    isClaimed: boolean,
+    amountOfStETH: string,
+  ): Promise<Error | null> {
+    try {
+      await this.knex(this.tblName)
+        .where('id', withdrawalRequestId)
+        .update({
+          isClaimed: Number(isClaimed),
+          amountOfStETH: amountOfStETH,
+        })
+
+      return null
+    } catch (e) {
+      return new KnexErr(`${e}`)
+    }
+  }
+
+  public async setFinalizedRequests(lastRequestId: number): Promise<Error | null> {
+    try {
+      await this.knex(this.tblName)
+        .where('id', '<=', lastRequestId)
+        .update({
+          isFinalized: Number(1),
+        })
+
+      return null
+    } catch (e) {
+      return new KnexErr(`${e}`)
     }
   }
 }

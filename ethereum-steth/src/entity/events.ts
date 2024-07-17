@@ -20,6 +20,7 @@ export type BlockDto = {
   number: number
   timestamp: number
   parentHash: string
+  hash: string
 }
 
 export type TransactionDto = {
@@ -80,7 +81,7 @@ export function handleEventsOfNotice(txEvent: TransactionDto, eventsOfNotice: Ev
           const f: Finding = new Finding()
 
           f.setName(eventInfo.name)
-          f.setDescription(eventInfo.description(logDesc.args))
+          f.setDescription(eventInfo.description(logDesc.args) + '\n\n' + `BlockNumber ${log.blockNumber}`)
           f.setAlertid(eventInfo.alertId)
           f.setSeverity(eventInfo.severity)
           f.setType(eventInfo.type)

@@ -1,5 +1,5 @@
 import { Address, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../../utils/constants'
-import * as E from 'fp-ts/Either'
+import { either as E } from 'fp-ts'
 import { GateSeal } from '../../entity/gate_seal'
 import { expect } from '@jest/globals'
 import { BlockDto, TransactionDto } from '../../entity/events'
@@ -9,20 +9,20 @@ import {
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../../generated/typechain'
-import { GateSealSrv } from './GateSeal.srv'
+import { GateSealSrv, IGateSealClient } from './GateSeal.srv'
 import { GateSealCache } from './GateSeal.cache'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import { ethers } from 'forta-agent'
 import { Finding } from '../../generated/proto/alert_pb'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import promClient from 'prom-client'
+import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('GateSeal srv functional tests', () => {
-  const drpcURL = `https://eth.drpc.org`
-  const mainnet = 1
-  const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+  const chainId = 1
 
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
@@ -31,15 +31,19 @@ describe('GateSeal srv functional tests', () => {
 
   const adr: Address = Address
 
-  const lidoRunner = Lido__factory.connect(adr.LIDO_STETH_ADDRESS, ethProvider)
-  const gateSealRunner = GateSeal__factory.connect(GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024, ethProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.EXIT_BUS_ORACLE_ADDRESS, ethProvider)
-  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(adr.WITHDRAWALS_QUEUE_ADDRESS, ethProvider)
+  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
+  const lidoRunner = Lido__factory.connect(adr.LIDO_STETH_ADDRESS, fortaEthersProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(adr.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
+  const gateSealRunner = GateSeal__factory.connect(adr.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
 
-  const gateSealClient = new ETHProvider(
+  const registry = new promClient.Registry()
+  const m = new Metrics(registry, 'test_')
+
+  const gateSealClient: IGateSealClient = new ETHProvider(
     logger,
-    ethProvider,
-    EtherscanProviderMock(),
+    m,
+    fortaEthersProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
@@ -58,11 +62,12 @@ describe('GateSeal srv functional tests', () => {
     'handle pause role true',
     async () => {
       const blockNumber = 19_113_580
-      const block = await ethProvider.getBlock(blockNumber)
+      const block = await fortaEthersProvider.getBlock(blockNumber)
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
 
       const initErr = await gateSealSrv.initialize(blockNumber)
@@ -101,11 +106,12 @@ describe('GateSeal srv functional tests', () => {
       }
 
       const neededBlock = 19_172_615
-      const block = await ethProvider.getBlock(neededBlock)
+      const block = await fortaEthersProvider.getBlock(neededBlock)
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
         parentHash: block.parentHash,
+        hash: block.hash,
       }
       const result = await gateSealSrv.handleExpiryGateSeal(blockDto)
 
@@ -133,7 +139,7 @@ describe('GateSeal srv functional tests', () => {
     '⚠️ GateSeal: a new instance deployed from factory',
     async () => {
       const txHash = '0x1547f17108830a92673b967aff13971fae18b4d35681b93a38a97a22083deb93'
-      const trx = await ethProvider.getTransaction(txHash)
+      const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -166,7 +172,7 @@ describe('GateSeal srv functional tests', () => {
 
       const txHashEmptyFindings = '0xb00783f3eb79bd60f63e5744bbf0cb4fdc2f98bbca54cd2d3f611f032faa6a57'
 
-      const trxWithEmptyFindings = await ethProvider.getTransaction(txHashEmptyFindings)
+      const trxWithEmptyFindings = await fortaEthersProvider.getTransaction(txHashEmptyFindings)
       const receiptWithEmptyFindings = await trxWithEmptyFindings.wait()
 
       const trxDTOWithEmptyFindings: TransactionDto = {

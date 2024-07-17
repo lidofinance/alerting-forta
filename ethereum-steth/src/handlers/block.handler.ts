@@ -10,11 +10,15 @@ import { elapsedTime } from '../utils/time'
 import { BlockDto } from '../entity/events'
 import BigNumber from 'bignumber.js'
 import { Finding } from '../generated/proto/alert_pb'
-import * as E from 'fp-ts/Either'
-import { ETH_DECIMALS } from '../utils/constants'
+import { either as E } from 'fp-ts'
+import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { ETHProvider } from '../clients/eth_provider'
+
+const MINUTES_6 = 60 * 6
 
 export class BlockHandler {
   private logger: Logger
+  private metrics: Metrics
   private StethOperationSrv: StethOperationSrv
   private WithdrawalsSrv: WithdrawalsSrv
   private GateSealSrv: GateSealSrv
@@ -22,23 +26,28 @@ export class BlockHandler {
   private healthChecker: HealthChecker
 
   private onAppStartFindings: Finding[] = []
+  private readonly ethProvider: ETHProvider
 
   constructor(
     logger: Logger,
+    metrics: Metrics,
     StethOperationSrv: StethOperationSrv,
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
     healthChecker: HealthChecker,
     onAppStartFindings: Finding[],
+    ethProvider: ETHProvider,
   ) {
     this.logger = logger
+    this.metrics = metrics
     this.StethOperationSrv = StethOperationSrv
     this.WithdrawalsSrv = WithdrawalsSrv
     this.GateSealSrv = GateSealSrv
     this.VaultSrv = VaultSrv
     this.healthChecker = healthChecker
     this.onAppStartFindings = onAppStartFindings
+    this.ethProvider = ethProvider
   }
 
   public handleBlock() {
@@ -46,6 +55,9 @@ export class BlockHandler {
       call: ServerUnaryCall<EvaluateBlockRequest, EvaluateBlockResponse>,
       callback: sendUnaryData<EvaluateBlockResponse>,
     ) => {
+      this.metrics.lastAgentTouch.labels({ method: HandleBlockLabel }).set(new Date().getTime())
+      const end = this.metrics.summaryHandlers.labels({ method: HandleBlockLabel }).startTimer()
+
       const event = <BlockEvent>call.request.getEvent()
       const block = <BlockEvent.EthBlock>event.getBlock()
 
@@ -53,12 +65,35 @@ export class BlockHandler {
         number: new BigNumber(block.getNumber(), 10).toNumber(),
         timestamp: new BigNumber(block.getTimestamp(), 10).toNumber(),
         parentHash: block.getParenthash(),
+        hash: block.getHash(),
       }
 
-      this.logger.info(`#ETH block: ${blockDtoEvent.number}`)
+      const findings: Finding[] = []
+      const latestL1Block = await this.ethProvider.getBlockByHash('latest')
+      if (E.isRight(latestL1Block)) {
+        const infraLine = `#ETH block infra: ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n`
+        const lastBlockLine = `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Delay between blocks: `
+        const diff = latestL1Block.right.timestamp - blockDtoEvent.timestamp
+        const diffLine = `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff} seconds`
+
+        this.logger.info(`\n` + infraLine + lastBlockLine + diffLine)
+
+        if (diff > MINUTES_6) {
+          const f: Finding = new Finding()
+
+          f.setName(`⚠️ Currently processing Ethereum network block is outdated`)
+          f.setDescription(infraLine + lastBlockLine + diffLine)
+          f.setAlertid('L1-BLOCK-OUTDATED')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
+
+          findings.push(f)
+        }
+      }
+
       const startTime = new Date().getTime()
 
-      const findings: Finding[] = []
       if (this.onAppStartFindings.length > 0) {
         findings.push(...this.onAppStartFindings)
         this.onAppStartFindings = []
@@ -76,7 +111,11 @@ export class BlockHandler {
 
       findings.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
 
-      this.healthChecker.check(findings)
+      const errCount = this.healthChecker.check(findings)
+      errCount === 0
+        ? this.metrics.processedIterations.labels({ method: HandleBlockLabel, status: StatusOK }).inc()
+        : this.metrics.processedIterations.labels({ method: HandleBlockLabel, status: StatusFail }).inc()
+
       this.logger.info(stat)
 
       const share = this.StethOperationSrv.getStorage().getShareRate()
@@ -90,6 +129,9 @@ export class BlockHandler {
       m.set('timestamp', new Date().toISOString())
 
       this.logger.info(elapsedTime('handleBlock', startTime) + '\n')
+      this.metrics.lastBlockNumber.set(blockDtoEvent.number)
+
+      end()
       callback(null, blockResponse)
     }
   }

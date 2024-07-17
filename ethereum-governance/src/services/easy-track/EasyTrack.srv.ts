@@ -1,16 +1,27 @@
-import { Finding, FindingSeverity, FindingType } from 'forta-agent'
+import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
 import { elapsedTime } from '../../shared/time'
-import { getMotionLink, getMotionType } from '../../shared/string'
+import { etherscanAddress, formatEth, getMotionLink, getMotionType } from '../../shared/string'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { MOTION_CREATED_EVENT } from '../../shared/events/motion_created_events'
+
 import { Logger } from 'winston'
 import { IEasyTrackClient } from './contract'
 import { EventOfNotice } from '../../entity/events'
 import { handleEventsOfNotice } from '../../shared/notice'
-import { EASY_TRACK_ADDRESS, EASY_TRACK_TYPES_BY_FACTORIES, INCREASE_STAKING_LIMIT_ADDRESS } from 'constants/easy-track'
+import {
+  EASY_TRACK_ADDRESS,
+  EASY_TRACK_STONKS_CONTRACTS,
+  EASY_TRACK_TYPES_BY_FACTORIES,
+  INCREASE_STAKING_LIMIT_ADDRESS,
+  SAFES,
+  TOP_UP_ALLOWED_RECIPIENTS_CONTRACT,
+} from 'constants/easy-track'
 import * as E from 'fp-ts/Either'
 import { networkAlert } from '../../shared/errors'
 import { EASY_TRACK_EVENTS } from '../../shared/events/easytrack_events'
+import { STONKS } from 'constants/stonks'
+import { TopUpAllowedRecipients__factory } from '../../generated'
+import { Blockchain } from '../../shared/contracts'
 
 export class EasyTrackSrv {
   private readonly logger: Logger
@@ -61,6 +72,7 @@ export class EasyTrackSrv {
         let description =
           `${getMotionType(EASY_TRACK_TYPES_BY_FACTORIES, args._evmScriptFactory)} ` +
           `motion ${getMotionLink(args._motionId)} created by ${args._creator}`
+
         if (args._evmScriptFactory.toLowerCase() == INCREASE_STAKING_LIMIT_ADDRESS) {
           const NOInfo = await this.ethProvider.getNOInfoByMotionData(args._evmScriptCallData)
           if (E.isLeft(NOInfo)) {
@@ -84,6 +96,28 @@ export class EasyTrackSrv {
           } else {
             description += `\nNo issues with keys! ✅`
           }
+        } else if (EASY_TRACK_STONKS_CONTRACTS.includes(args._evmScriptFactory.toLowerCase())) {
+          description += `\n${await buildStonksTopUpDescription(args)}`
+        } else if (args._evmScriptFactory.toLowerCase() == TOP_UP_ALLOWED_RECIPIENTS_CONTRACT) {
+          const topUpContract = TopUpAllowedRecipients__factory.connect(args._evmScriptFactory, getEthersProvider())
+          const tokenAddress = await topUpContract.token()
+          const tokenSymbol = await this.ethProvider.getTokenSymbol(tokenAddress)
+          if (E.isLeft(tokenSymbol)) {
+            return [
+              networkAlert(
+                tokenSymbol.left,
+                `Error in ${EasyTrackSrv.name}.${this.handleEasyTrackMotionCreated.name} (uid:10ed392e)`,
+                `Could not call ethProvider.getTokenName for address - ${tokenAddress}`,
+              ),
+            ]
+          }
+          const contractPayload = await topUpContract.decodeEVMScriptCallData(args._evmScriptCallData)
+          contractPayload.recipients.forEach((recipient: string, idx: number) => {
+            const safeName = getSafeNameByAddress(recipient)
+            description += `\nTop up allowed recipient ${safeName} for ${etherscanAddress(recipient)} with ${formatEth(
+              contractPayload.amounts[idx],
+            )} ${tokenSymbol.right}`
+          })
         }
         out.push(
           Finding.fromObject({
@@ -99,4 +133,34 @@ export class EasyTrackSrv {
     )
     return out
   }
+}
+
+export const buildStonksTopUpDescription = async (args: ethers.utils.Result): Promise<string> => {
+  const topUpContract = TopUpAllowedRecipients__factory.connect(args._evmScriptFactory, getEthersProvider())
+  const { recipients, amounts } = await topUpContract.decodeEVMScriptCallData(args._evmScriptCallData)
+  const descriptions = recipients.map((recipient: string, idx: number) => {
+    const stonksData = getStonksContractInfo(recipient)
+    const amount = formatEth(amounts[idx])
+    const etherScanAddress = etherscanAddress(recipient, `${stonksData?.from} -> ${stonksData?.to}`)
+    return `${etherScanAddress} pair with ${amount} stETH`
+  })
+  return `Top up STONKS:\n${descriptions.join('\n')}`
+}
+
+const getStonksContractInfo = (address: string) => {
+  return STONKS.find((c) => c.address === address)
+}
+
+export const getSafeNameByAddress = (address: string) => {
+  let safeName = address
+  Object.keys(SAFES).forEach((key) => {
+    const safe = SAFES[key as Blockchain].find(
+      (safeData: string[]) => safeData[0].toLowerCase() === address.toLowerCase(),
+    )
+    if (safe) {
+      safeName = safe[1]
+      return
+    }
+  })
+  return safeName
 }

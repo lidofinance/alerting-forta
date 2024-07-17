@@ -32,7 +32,7 @@ export class TrpChangesSrv {
     const findingsEventsOfNotice = handleEventsOfNotice(txEvent, TRP_EVENTS_OF_NOTICE)
 
     findings.push(...findingsEventsOfNotice)
-    this.logger.info(elapsedTime(TrpChangesSrv.name + '.' + this.handleTransaction.name, start))
+    this.logger.debug(elapsedTime(TrpChangesSrv.name + '.' + this.handleTransaction.name, start))
 
     return findings
   }

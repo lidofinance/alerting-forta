@@ -1,0 +1,348 @@
+syntax = "proto3";
+
+package network.forta;
+
+import public "alert.proto";
+
+option go_package = "./;protocol";
+
+
+service Agent {
+  rpc Initialize (InitializeRequest) returns (InitializeResponse) {}
+  rpc EvaluateTx (EvaluateTxRequest) returns (EvaluateTxResponse) {}
+  rpc EvaluateBlock (EvaluateBlockRequest) returns (EvaluateBlockResponse) {}
+  rpc EvaluateAlert (EvaluateAlertRequest) returns (EvaluateAlertResponse) {}
+  rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse) {}
+}
+
+message Error {
+  string message = 1;
+}
+
+enum ResponseStatus {
+  UNKNOWN = 0;
+  ERROR = 1;
+  SUCCESS = 2;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  enum ResponseStatus {
+    UNKNOWN = 0;
+    ERROR = 1;
+    SUCCESS = 2;
+  }
+
+  ResponseStatus status = 1;
+  repeated Error errors = 2;
+}
+
+message InitializeRequest {
+  string agentId = 1;
+  string proxyHost = 2;
+  int32 shardId = 3;
+}
+
+message InitializeResponse {
+  ResponseStatus status = 1;
+  repeated Error errors = 2;
+  repeated string addresses = 3;
+  AlertConfig alertConfig = 4;
+}
+
+message AlertConfig {
+  repeated CombinerBotSubscription subscriptions = 1;
+}
+
+message CombinerBotSubscription {
+  string botId = 1;
+  string alertId = 2;
+  repeated string alertIds = 3;
+  uint64 chainId = 4;
+}
+
+message EvaluateTxRequest {
+  string requestId = 1;
+  TransactionEvent event = 2;
+  int32 shardId = 3;
+}
+
+message EvaluateBlockRequest {
+  string requestId = 1;
+  BlockEvent event = 2;
+  int32 shardId = 3;
+}
+
+message EvaluateAlertRequest {
+  string requestId = 1;
+  AlertEvent event = 2;
+  string targetBotId = 3;
+  int32 shardId = 4;
+}
+
+message EvaluateTxResponse {
+  ResponseStatus status = 1;
+  repeated Error errors = 2;
+  repeated Finding findings = 3;
+  map<string, string> metadata = 4;
+  string timestamp = 5;
+  uint32 latencyMs = 6;
+  bool private = 7;
+}
+
+message EvaluateBlockResponse {
+  ResponseStatus status = 1;
+  repeated Error errors = 2;
+  repeated Finding findings = 3;
+  map<string, string> metadata = 4;
+  string timestamp = 5;
+  uint32 latencyMs = 6;
+  bool private = 7;
+}
+
+message EvaluateAlertResponse {
+  ResponseStatus status = 1;
+  repeated Error errors = 2;
+  repeated Finding findings = 3;
+  map<string, string> metadata = 4;
+  string timestamp = 5;
+  uint32 latencyMs = 6;
+  bool private = 7;
+}
+
+message BlockEvent {
+  enum EventType {
+    BLOCK = 0;
+    REORG = 1 [deprecated = true];
+  }
+  message Network {
+    string chainId = 1;
+  }
+
+  message EthBlock {
+    string difficulty = 1;
+    string extraData = 2;
+    string gasLimit = 3;
+    string gasUsed = 4;
+    string hash = 5;
+    string logsBloom = 6;
+    string miner = 7;
+    string mixHash = 8;
+    string nonce = 9;
+    string number = 10;
+    string parentHash = 11;
+    string receiptsRoot = 12;
+    string sha3Uncles = 13;
+    string size = 14;
+    string stateRoot = 15;
+    string timestamp = 16;
+    string totalDifficulty = 17;
+    repeated string transactions = 18;
+    string transactionsRoot = 19;
+    repeated string uncles = 20;
+    string baseFeePerGas = 21;
+  }
+
+  EventType type = 1;
+  string blockHash = 2;
+  string blockNumber = 3;
+  Network network = 4;
+  EthBlock block = 5;
+  TrackingTimestamps timestamps = 6;
+}
+
+message TransactionEvent {
+
+  enum EventType {
+    BLOCK = 0;
+    REORG = 1;
+  }
+
+  message Network {
+    string chainId = 1;
+  }
+
+  message EthBlock {
+    string blockHash = 1;
+    string blockNumber = 2;
+    string blockTimestamp = 3;
+    string baseFeePerGas = 4;
+  }
+
+  message EthTransaction {
+    string type = 1;
+    string nonce = 2;
+    string gasPrice = 3;
+    string gas = 4;
+    string value = 5;
+    string input = 6;
+    string v = 7;
+    string r = 8;
+    string s = 9;
+    string to = 10;
+    string hash = 11;
+    string from = 12;
+    string maxFeePerGas = 13;
+    string maxPriorityFeePerGas = 14;
+  }
+
+  message Log {
+    string address = 1;
+    repeated string topics = 2;
+    string data = 3;
+    string blockNumber = 4;
+    string transactionHash = 5;
+    string transactionIndex = 6;
+    string blockHash = 7;
+    string logIndex = 8;
+    bool removed = 9;
+  }
+
+  message EthReceipt {
+    string root = 1;
+    string status = 2;
+    string cumulativeGasUsed = 3;
+    string logsBloom = 4;
+    repeated Log logs = 5;
+    string transactionHash = 6;
+    string contractAddress = 7;
+    string gasUsed = 8;
+    string blockHash = 9;
+    string blockNumber = 10;
+    string transactionIndex = 11;
+  }
+
+  message TraceAction {
+    string callType = 1;
+    string to = 2;
+    string input = 3;
+    string from = 4;
+    string value = 5;
+    string init = 6;
+    string address = 7;
+    string balance = 8;
+    string refundAddress = 9;
+  }
+
+  message TraceResult {
+    string gasUsed = 1;
+    string address = 2;
+    string code = 3;
+    string output = 4;
+  }
+
+  message Trace {
+    TraceAction action = 1;
+    string blockHash = 2;
+    int64 blockNumber = 3;
+    TraceResult result = 4;
+    int64 subtraces = 5;
+    repeated int64 traceAddress = 6;
+    string transactionHash = 7;
+    int64 transactionPosition = 8;
+    string type = 9;
+    string error = 10;
+  }
+
+  EventType type = 1;
+  EthTransaction transaction = 2;
+  EthReceipt receipt = 3 [deprecated = true];
+  Network network = 4;
+  repeated Trace traces = 5;
+  map<string, bool> addresses = 6;
+  EthBlock block = 7;
+  repeated Log logs = 8;
+  bool isContractDeployment = 9;
+  string contractAddress = 10;
+  TrackingTimestamps timestamps = 11;
+  map<string, bool> txAddresses = 12;
+}
+
+message AlertEvent {
+  message Alert {
+    message Contract {
+      string name = 1;
+      string projectId = 2;
+    }
+
+    message Project {
+      string id = 1;
+    }
+
+    message Block {
+      uint64 number = 1;
+      string hash = 2;
+      string timestamp = 3;
+      uint64 chainId = 4;
+    }
+
+    message Bot {
+      repeated string chainIds = 1;
+      string createdAt = 2;
+      string description = 3;
+      string developer = 4;
+      string DocReference = 5;
+      bool enabled = 6;
+      string id = 7;
+      string image = 8;
+      string name = 9;
+      string reference = 10;
+      string repository = 11;
+      repeated string projects = 12;
+      repeated string scanNodes = 13;
+      string version = 14;
+    }
+
+    message SourceAlertEvent {
+      string botId = 1;
+      string hash = 2;
+      string timestamp = 3;
+      uint64 chainId = 4;
+    }
+
+    message Source {
+      string transactionHash = 1;
+      Bot bot = 2;
+      Block block = 3;
+      SourceAlertEvent sourceAlert = 4;
+    }
+
+    message Label {
+      string label = 1;
+      float confidence = 2;
+      string entity = 3;
+      string entityType = 4;
+      bool remove = 5;
+      repeated string metadata = 6;
+      string uniqueKey = 7;
+    }
+
+    // Unique string to identify this class of finding,
+    // primarily used to group similar findings for the end user
+    string alertId = 1;
+    // List of addresses involved in the alert
+    repeated string addresses = 2;
+    // List of contracts related to the alert
+    repeated Contract contracts = 3;
+    // Timestamp when the alert was published
+    string createdAt = 4;
+    string description = 5;
+    string hash = 6;
+    map<string, string> metadata = 7;
+    string name = 8;
+    repeated Project projects = 9;
+    int32 scanNodeCount = 10;
+    string severity = 11;
+    Source source = 12;
+    string findingType = 13;
+    repeated string relatedAlerts = 14;
+    uint64 chainId = 15;
+    repeated Label labels = 16;
+    bool truncated = 17;
+    BloomFilter addressBloomFilter = 18;
+  }
+
+  Alert alert = 1;
+  TrackingTimestamps timestamps = 2;
+}

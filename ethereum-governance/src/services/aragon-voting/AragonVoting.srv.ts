@@ -140,7 +140,7 @@ export class AragonVotingSrv {
     ])
 
     findings.push(...findingsAragonTransaction, ...findingsEventsOfNotice)
-    this.logger.info(elapsedTime(AragonVotingSrv.name + '.' + this.handleTransaction.name, start))
+    this.logger.debug(elapsedTime(AragonVotingSrv.name + '.' + this.handleTransaction.name, start))
 
     return findings
   }
