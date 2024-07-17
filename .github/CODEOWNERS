@@ -3,7 +3,6 @@
 /ethereum-steth/ @lidofinance/lido-eth-protocol
 /storage-watcher/ @lidofinance/lido-eth-protocol
 /l2-bridge-arbitrum/ @lidofinance/lido-eth-protocol
-/l2-bridge-balance/ @lidofinance/lido-eth-protocol
 /l2-bridge-ethereum/ @lidofinance/lido-eth-protocol
 /l2-bridge-optimism/ @lidofinance/lido-eth-protocol
 /l2-bridge-base/ @lidofinance/lido-eth-protocol
@@ -18,3 +17,4 @@
 /multisig-watcher/ @lidofinance/lido-dao-ops-team
 /voting-watcher/ @lidofinance/lido-dao-ops-team
 /ethereum-validators-set/ @lidofinance/lido-valset-tech
+/bsc-adi-governance/ @lidofinance/lido-dao-ops-team
