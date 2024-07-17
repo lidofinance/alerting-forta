@@ -69,23 +69,18 @@ export class BlockHandler {
       const findings: Finding[] = []
       const latestL1Block = await this.ethProvider.getBlockByHash('latest')
       if (E.isRight(latestL1Block)) {
+        const infraLine = `#ETH block infra: ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n`
+        const lastBlockLine = `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: `
         const diff = latestL1Block.right.timestamp - blockDtoEvent.timestamp
-        this.logger.info(
-          `\n` +
-            `#ETH block infra: ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n` +
-            `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: ` +
-            `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`,
-        )
+        const diffLine = `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`
 
-        if (diff > 12) {
+        this.logger.info(`\n` + infraLine + lastBlockLine + diffLine)
+
+        if (diff > 60) {
           const f: Finding = new Finding()
 
           f.setName(`⚠️ Infra block is outdated`)
-          f.setDescription(
-            `Infra block - ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n` +
-              `Latst block - ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: ` +
-              `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`,
-          )
+          f.setDescription(infraLine + lastBlockLine + diffLine)
           f.setAlertid('L1-BLOCK-OUTDATED')
           f.setSeverity(Finding.Severity.MEDIUM)
           f.setType(Finding.FindingType.SUSPICIOUS)
