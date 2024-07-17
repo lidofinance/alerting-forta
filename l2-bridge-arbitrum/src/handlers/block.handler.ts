@@ -234,12 +234,10 @@ export class BlockHandler {
 
         if (isWorkInterval(l1Block.timestamp, l2block.timestamp)) {
           blocks.unshift(l2block)
-          this.logger.info('\n')
           this.logger.info(
-            `#ETH block:      ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp}`,
-          )
-          this.logger.info(
-            `#ARB block src: ${l2block.number} at ${new Date(l2block.timestamp * 1000).toUTCString()}. ${l2block.timestamp} `,
+            '\n' +
+              `#ETH block:      ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
+              `#ARB block: ${l2block.number} at ${new Date(l2block.timestamp * 1000).toUTCString()}. ${l2block.timestamp} `,
           )
 
           this.bridgeBalanceSrv.handleBlock(l1Block, l2block).then((findings) => {
