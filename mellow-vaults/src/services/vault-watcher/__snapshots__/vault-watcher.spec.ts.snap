@@ -192,7 +192,7 @@ exports[`VaultWatchers srv functional tests should find no-withdrawals at 3 vaul
 ]
 `;
 
-exports[`VaultWatchers srv functional tests should find slot change 1`] = `
+exports[`VaultWatchers srv functional tests should find Steakhouse Vault slot change 1`] = `
 [
   Finding {
     "addresses": [],
@@ -216,6 +216,27 @@ New value: 36000000000000000000000",
 exports[`VaultWatchers srv functional tests should process tx with Added Owner and Execution Success 1`] = `[]`;
 
 exports[`VaultWatchers srv functional tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
+
+exports[`VaultWatchers srv functional tests should find InfStones Restaked slot change 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED",
+    "description": "Mellow Vault [InfStones Restaked ETH Vault] Value of the storage slot \`'maximalTotalSupply'\` for contract 0x49cd586dd9ba227be9654c735a659a1db08232a9 has changed!
+Prev value: 1000000000000000000
+New value: 20000000000000000000000",
+    "labels": [],
+    "metadata": {},
+    "name": "🚨🚨🚨 Vault critical storage slot value changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 2,
+    "uniqueKey": "",
+  },
+]
+`;
 
 exports[`VaultWatchers srv functional tests should process tx with Re7 Vault withdrawal all 1`] = `
 [

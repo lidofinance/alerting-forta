@@ -201,9 +201,18 @@ describe('VaultWatchers srv functional tests', () => {
   )
 
   it(
-    'should find slot change',
+    'should find Steakhouse Vault slot change',
     async () => {
-      const findings = await runBlock(20266488, 20266480) // 20266488
+      const findings = await runBlock(20266488, 20266480)
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should find InfStones Restaked slot change',
+    async () => {
+      const findings = await runBlock(20184204, 20184203)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,
