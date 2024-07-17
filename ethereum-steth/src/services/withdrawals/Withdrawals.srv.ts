@@ -130,7 +130,7 @@ export class WithdrawalsSrv {
 
   async fillUpWithdrawalStatusesTable(currentBlock: number): Promise<Error | null> {
     const [cached, latest] = await Promise.all([
-      this.repo.getLastRequestId(),
+      this.repo.getFirstUnfinalizedRequest(),
       this.ethProvider.getWithdrawalLastRequestId(currentBlock),
     ])
 
@@ -143,8 +143,7 @@ export class WithdrawalsSrv {
     }
 
     const requests: number[] = []
-    const firstRequestId = cached.right === 0 ? 1 : cached.right
-    for (let i = firstRequestId; i <= latest.right; i++) {
+    for (let i = cached.right.id; i <= latest.right; i++) {
       requests.push(i)
     }
 
