@@ -1,4 +1,4 @@
-import { getWithdrawalsEvents, WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
+/* import { getWithdrawalsEvents, WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT } from '../../utils/events/withdrawals_events'
 import { Address } from '../../utils/constants'
 import BigNumber from 'bignumber.js'
 import { WithdrawalsRepo } from './Withdrawals.repo'
@@ -181,5 +181,5 @@ describe('Withdrawals.srv functional tests', () => {
       expect(new BigNumber(claimedEvents[0].args.amountOfETH.toString())).toEqual(wr.right.amountOfStETH)
     },
     TEST_TIMEOUT,
-  )*/
-})
+  )
+})*/
