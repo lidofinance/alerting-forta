@@ -14,6 +14,8 @@ import { either as E } from 'fp-ts'
 import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { ETHProvider } from '../clients/eth_provider'
 
+const MINUTES_6 = 60 * 6
+
 export class BlockHandler {
   private logger: Logger
   private metrics: Metrics
@@ -76,7 +78,7 @@ export class BlockHandler {
 
         this.logger.info(`\n` + infraLine + lastBlockLine + diffLine)
 
-        if (diff > 60) {
+        if (diff > MINUTES_6) {
           const f: Finding = new Finding()
 
           f.setName(`⚠️ Infra block is outdated`)

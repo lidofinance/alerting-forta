@@ -197,4 +197,18 @@ export class WithdrawalsRepo {
       return new KnexErr(`${e}`)
     }
   }
+
+  public async setFinalizedRequests(lastRequestId: number): Promise<Error | null> {
+    try {
+      await this.knex(this.tblName)
+        .where('id', '<=', lastRequestId)
+        .update({
+          isFinalized: Number(1),
+        })
+
+      return null
+    } catch (e) {
+      return new KnexErr(`${e}`)
+    }
+  }
 }

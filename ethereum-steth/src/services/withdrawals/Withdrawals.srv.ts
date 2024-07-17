@@ -717,31 +717,13 @@ export class WithdrawalsSrv {
       return []
     }
 
-    const finalizedIds: number[] = []
-    for (let i = Number(withdrawalEvent.args.from); i <= Number(withdrawalEvent.args.to); i++) {
-      finalizedIds.push(i)
-    }
-
-    const finalizedStatuses = await this.ethProvider.getWithdrawalStatuses(finalizedIds, txEvent.block.number)
-    if (E.isLeft(finalizedStatuses)) {
-      return [
-        networkAlert(
-          finalizedStatuses.left,
-          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:679`,
-          `Could not call ethProvider.getWithdrawalStatuses`,
-        ),
-      ]
-    }
-
-    const updErr = await this.repo.createOrUpdate(finalizedStatuses.right)
-    if (updErr !== null) {
-      return [
-        dbAlert(
-          updErr,
-          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:690`,
-          `Could not call repo.createOrUpdate`,
-        ),
-      ]
+    const updateErr = await this.repo.setFinalizedRequests(withdrawalEvent.args.to)
+    if (updateErr !== null) {
+      dbAlert(
+        updateErr,
+        `Repo: could not update finalized requests`,
+        `Error in ${WithdrawalsSrv.name}.${this.handleWithdrawalFinalized.name}:720`,
+      )
     }
 
     return []
