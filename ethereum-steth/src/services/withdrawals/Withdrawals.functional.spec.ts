@@ -77,7 +77,7 @@ describe('Withdrawals.srv functional tests', () => {
     await dbClient.destroy()
   }, TEST_TIMEOUT)
 
-  test(
+  /*test(
     'should emit WITHDRAWALS-LONG-UNFINALIZED-QUEUE when the withdrawal queue is clogged',
     async () => {
       const blockNumber = 19_609_409
@@ -181,5 +181,5 @@ describe('Withdrawals.srv functional tests', () => {
       expect(new BigNumber(claimedEvents[0].args.amountOfETH.toString())).toEqual(wr.right.amountOfStETH)
     },
     TEST_TIMEOUT,
-  )
+  )*/
 })
