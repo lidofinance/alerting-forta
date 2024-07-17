@@ -1,5 +1,6 @@
 export const SECONDS_60 = 60
-export const SECONDS_768 = 768
+// export const SECONDS_768 = 768
+export const SECONDS_768 = 384
 
 export function formatTime(timeInMillis: number): string {
   const seconds = (timeInMillis / 1000).toFixed(3)
