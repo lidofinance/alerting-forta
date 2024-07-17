@@ -157,20 +157,6 @@ export class WithdrawalsSrv {
       return insertErr
     }
 
-    /*
-    Need when we have to prefill up db (Don't remove)
-    const claimedRequests = await this.ethProvider.getClaimedEvents(currentBlock - 1000)
-    if (E.isLeft(claimedRequests)) {
-      return claimedRequests.left
-    }
-
-    const claimedRequestIds: number[] = []
-    for (const e of claimedRequests.right) {
-      claimedRequestIds.push(new BigNumber(e.args.requestId.toString()).toNumber())
-    }
-
-    await this.repo.removeByIds(claimedRequestIds)*/
-
     return null
   }
 

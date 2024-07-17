@@ -72,16 +72,16 @@ export class BlockHandler {
       const latestL1Block = await this.ethProvider.getBlockByHash('latest')
       if (E.isRight(latestL1Block)) {
         const infraLine = `#ETH block infra: ${blockDtoEvent.number} ${blockDtoEvent.timestamp}\n`
-        const lastBlockLine = `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Diff: `
+        const lastBlockLine = `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Delay between blocks: `
         const diff = latestL1Block.right.timestamp - blockDtoEvent.timestamp
-        const diffLine = `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff}`
+        const diffLine = `${latestL1Block.right.timestamp} - ${blockDtoEvent.timestamp} = ${diff} seconds`
 
         this.logger.info(`\n` + infraLine + lastBlockLine + diffLine)
 
         if (diff > MINUTES_6) {
           const f: Finding = new Finding()
 
-          f.setName(`⚠️ Infra block is outdated`)
+          f.setName(`⚠️ Currently processing Ethereum network block is outdated`)
           f.setDescription(infraLine + lastBlockLine + diffLine)
           f.setAlertid('L1-BLOCK-OUTDATED')
           f.setSeverity(Finding.Severity.MEDIUM)

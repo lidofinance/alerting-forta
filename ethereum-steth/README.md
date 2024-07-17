@@ -8,7 +8,7 @@
 
 1. Infra:
 
-   1. ⚠️ Infra block is outdated
+   1. ⚠️ Currently processing Ethereum network block is outdated
 
 2. StETH operations
    1. HandleBlock
