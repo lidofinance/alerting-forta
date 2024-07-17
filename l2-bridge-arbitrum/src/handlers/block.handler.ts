@@ -165,7 +165,7 @@ export class BlockHandler {
             `\n` +
               `#ETH block:     ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
               `#ARB block src: ${firstL2.number} at ${new Date(firstL2.timestamp * 1000).toUTCString()}. ${firstL2.timestamp} \n` +
-              `#ARB block dst: ${lastL2.number} at ${new Date(lastL2.timestamp * 1000).toUTCString()}. ${lastL2.timestamp} Total: ${blocks.length}`,
+              `#ARB block dst: ${lastL2.number} at ${new Date(lastL2.timestamp * 1000).toUTCString()}. ${lastL2.timestamp} Total: ${blocks.length} processed l2 blocks`,
           )
         } else {
           this.logger.info(
@@ -236,8 +236,8 @@ export class BlockHandler {
           blocks.unshift(l2block)
           this.logger.info(
             '\n' +
-              `#ETH block:      ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
-              `#ARB block: ${l2block.number} at ${new Date(l2block.timestamp * 1000).toUTCString()}. ${l2block.timestamp} `,
+              `#ETH: ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
+              `#ARB: ${l2block.number} at ${new Date(l2block.timestamp * 1000).toUTCString()}. ${l2block.timestamp} `,
           )
 
           this.bridgeBalanceSrv.handleBlock(l1Block, l2block).then((findings) => {
