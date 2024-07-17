@@ -21,12 +21,12 @@ export function handleEventsOfNotice(
       if (notice) {
         const finding = Finding.fromObject({
           name: notice.name,
-          description: notice.description(event.args, address),
+          description: notice.description(event.args, address, txEvent.transaction),
           alertId: notice.alertId,
           severity: notice.severity,
-          type: FindingType.Info,
+          type: notice.type ?? FindingType.Info,
           metadata: { args: String(event.args) },
-          uniqueKey: '',
+          uniqueKey: notice.uniqueKey ?? '',
         })
         out.push(finding)
       } else {
@@ -35,7 +35,7 @@ export function handleEventsOfNotice(
     } catch (e) {
       const x = e as { reason: string }
       if (x?.reason === 'no matching event') {
-        console.info(e)
+        console.log(e)
       } else {
         console.error(e)
       }

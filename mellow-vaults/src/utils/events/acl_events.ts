@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
 import { ACL_ROLES, VAULT_LIST } from 'constants/common'
 
-const MELLOW_VAULT_STRATEGY_ADMIN_CHANGED_EVENT =
+const MELLOW_VAULT_STRATEGY_ROLE_ADMIN_CHANGED_EVENT =
   'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)'
 
 const MELLOW_VAULT_STRATEGY_ROLE_GRANTED_EVENT =
@@ -13,7 +13,7 @@ const MELLOW_VAULT_STRATEGY_ROLE_REVOKED_EVENT =
   'event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)'
 
 export const MELLOW_VAULT_STRATEGY_ACL_EVENTS = [
-  MELLOW_VAULT_STRATEGY_ADMIN_CHANGED_EVENT,
+  MELLOW_VAULT_STRATEGY_ROLE_ADMIN_CHANGED_EVENT,
   MELLOW_VAULT_STRATEGY_ROLE_GRANTED_EVENT,
   MELLOW_VAULT_STRATEGY_ROLE_REVOKED_EVENT,
 ]
@@ -24,7 +24,7 @@ const getBondStrategyNameByAddress = (address: string) =>
 export const aclNotices: Record<string, EventOfNotice> = {
   RoleAdminChanged: {
     address: '',
-    event: MELLOW_VAULT_STRATEGY_ADMIN_CHANGED_EVENT,
+    event: MELLOW_VAULT_STRATEGY_ROLE_ADMIN_CHANGED_EVENT,
     alertId: 'MELLOW-VAULT-ROLE-ADMIN-CHANGED',
     name: '🚨 Vault: Role Admin changed',
     description: (args: Result, address: string) =>

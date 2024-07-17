@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`vault-acl-changes e2e tests should process tx with Added Owner and Execution Success 1`] = `
+exports[`MultisigWatcher srv functional tests should process tx with Added Owner and Execution Success 1`] = `
 [
   Finding {
     "addresses": [],
@@ -14,9 +14,9 @@ exports[`vault-acl-changes e2e tests should process tx with Added Owner and Exec
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
   },
   Finding {
     "addresses": [],
@@ -30,9 +30,9 @@ exports[`vault-acl-changes e2e tests should process tx with Added Owner and Exec
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
   },
   Finding {
     "addresses": [],
@@ -46,9 +46,9 @@ exports[`vault-acl-changes e2e tests should process tx with Added Owner and Exec
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
   },
   Finding {
     "addresses": [],
@@ -62,9 +62,9 @@ exports[`vault-acl-changes e2e tests should process tx with Added Owner and Exec
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
   },
   Finding {
     "addresses": [],
@@ -79,14 +79,14 @@ exports[`vault-acl-changes e2e tests should process tx with Added Owner and Exec
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "8dd6c439-842b-4a2a-a7e8-b404ffbac5ce",
   },
 ]
 `;
 
-exports[`vault-acl-changes e2e tests should process tx with Changed Threshold and Execution Success 1`] = `
+exports[`MultisigWatcher srv functional tests should process tx with Changed Threshold and Execution Success 1`] = `
 [
   Finding {
     "addresses": [],
@@ -100,9 +100,9 @@ exports[`vault-acl-changes e2e tests should process tx with Changed Threshold an
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "e70d0bb5-0033-4f34-a1cc-3b9f177f215f",
   },
   Finding {
     "addresses": [],
@@ -117,9 +117,9 @@ exports[`vault-acl-changes e2e tests should process tx with Changed Threshold an
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
+    "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 4,
-    "uniqueKey": "",
+    "uniqueKey": "8dd6c439-842b-4a2a-a7e8-b404ffbac5ce",
   },
 ]
 `;

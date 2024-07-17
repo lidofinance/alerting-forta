@@ -7,7 +7,7 @@ import { App } from '../../app'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('vaultWatchers srv functional tests', () => {
+describe('VaultWatchers srv functional tests', () => {
   const drpcURL = `https://eth.drpc.org`
   const mainnet = 1
   const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
@@ -19,18 +19,20 @@ describe('vaultWatchers srv functional tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const vaultWatcherSrv = new VaultWatcherSrv(logger, ethClient)
+  const service = new VaultWatcherSrv(logger, ethClient)
 
   let runTransaction: (txHash: string, initBlock?: number) => Promise<Finding[]>
   let runBlock: (blockHashOrNumber: string | number, initBlock: number) => Promise<Finding[]>
 
   beforeAll(() => {
+    jest.spyOn(console, 'log').mockImplementation(() => {})
     jest.spyOn(Date, 'now').mockImplementation(() => new Date('2024-01-01').getTime())
+
     runBlock = async (blockHashOrNumber, initBlock) => {
       if (initBlock > Number(blockHashOrNumber)) {
         throw new Error('Wrong initial block or argument order')
       }
-      const initErr = await vaultWatcherSrv.initialize(initBlock)
+      const initErr = await service.initialize(initBlock)
       if (initErr instanceof Error) {
         throw initErr
       }
@@ -41,7 +43,7 @@ describe('vaultWatchers srv functional tests', () => {
         parentHash: block.parentHash,
       }
 
-      return vaultWatcherSrv.handleBlock(blockDto)
+      return service.handleBlock(blockDto)
     }
 
     runTransaction = async (txHash: string) => {
@@ -57,10 +59,11 @@ describe('vaultWatchers srv functional tests', () => {
         },
         transaction: {
           data: trx.data || '',
+          hash: trx.hash || '',
         },
       }
 
-      return vaultWatcherSrv.handleTransaction(transactionDto)
+      return service.handleTransaction(transactionDto)
     }
   })
 

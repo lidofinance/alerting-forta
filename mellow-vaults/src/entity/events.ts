@@ -11,6 +11,11 @@ export type EventOfNotice = {
   uniqueKey?: string
 }
 
+export type TransactionDtoTx = {
+  data: string
+  hash: string
+}
+
 export type TransactionDto = {
   logs: Log[]
   to: string | null
@@ -18,9 +23,7 @@ export type TransactionDto = {
     timestamp: number
     number: number
   }
-  transaction: {
-    data: string
-  }
+  transaction: TransactionDtoTx
 }
 
 export type BlockDto = {

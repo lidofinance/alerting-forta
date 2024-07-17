@@ -1,9 +1,11 @@
 import { Logger } from 'winston'
-import { Finding, FindingType, TransactionEvent } from 'forta-agent'
+import { Finding } from 'forta-agent'
 import { NetworkError } from '../../shared/errors'
 import { elapsedTime } from '../../shared/time'
-import { MELLOW_VAULT_ADMIN_MULTISIGS, SafeTX } from 'constants/common'
-import { GNOSIS_SAFE_EVENTS_OF_NOTICE } from '../../shared/events/safe_events'
+import { MELLOW_VAULT_ADMIN_MULTISIGS } from 'constants/common'
+import { MSIG_EVENTS, safeNotices } from '../../utils/events/safe_events'
+import { handleEventsOfNotice } from '../../shared/notice'
+import { TransactionDto } from '../../entity/events'
 const safes = MELLOW_VAULT_ADMIN_MULTISIGS
 
 export class MultisigWatcherSrv {
@@ -14,7 +16,7 @@ export class MultisigWatcherSrv {
     this.logger = logger
   }
 
-  async initialize(blockNumber: number): Promise<NetworkError | null> {
+  async initialize(): Promise<NetworkError | null> {
     const start = new Date().getTime()
 
     this.logger.info(elapsedTime(MultisigWatcherSrv.name + '.' + this.initialize.name, start))
@@ -26,7 +28,7 @@ export class MultisigWatcherSrv {
     return this.name
   }
 
-  public handleTransaction(txEvent: TransactionEvent): Finding[] {
+  public handleTransaction(txEvent: TransactionDto): Finding[] {
     const findings: Finding[] = []
 
     const handleSafeEventsFindings = this.handleSafeEvents(txEvent)
@@ -35,32 +37,11 @@ export class MultisigWatcherSrv {
     return findings
   }
 
-  private handleSafeEvents(txEvent: TransactionEvent): Finding[] {
+  private handleSafeEvents(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
-    safes.forEach(([safeAddress, safeName]) => {
-      if (safeAddress.toLowerCase() in txEvent.addresses) {
-        GNOSIS_SAFE_EVENTS_OF_NOTICE.forEach((eventInfo) => {
-          const events = txEvent.filterLog(eventInfo.event, safeAddress)
-          events.forEach((event) => {
-            const safeTx: SafeTX = {
-              tx: txEvent.transaction.hash,
-              safeAddress: safeAddress,
-              safeName: safeName,
-              safeTx: event.args.txHash || '',
-            }
-            out.push(
-              Finding.fromObject({
-                name: eventInfo.name,
-                description: eventInfo.description(safeTx, event.args),
-                alertId: eventInfo.alertId,
-                severity: eventInfo.severity,
-                type: FindingType.Info,
-                metadata: { args: String(event.args) },
-              }),
-            )
-          })
-        })
-      }
+    safes.forEach(([safeAddress]) => {
+      const findings = handleEventsOfNotice(txEvent, MSIG_EVENTS, safeAddress, safeNotices)
+      out.push(...findings)
     })
 
     return out
