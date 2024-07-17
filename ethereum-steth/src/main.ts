@@ -132,7 +132,7 @@ const main = async () => {
   try {
     await dbClient.migrate.latest()
 
-    const sql = fs.readFileSync('./src/db/withdrawal_requests_01_07_25.sql', 'utf8')
+    const sql = fs.readFileSync('./src/db/withdrawal_requests_17_07_24.sql', 'utf8')
     await dbClient.raw(sql)
 
     logger.info('Migrations have been run successfully.')
@@ -155,6 +155,7 @@ const main = async () => {
     vaultSrv,
     healthChecker,
     onAppFindings,
+    ethClient,
   )
   const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
