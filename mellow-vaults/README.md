@@ -29,14 +29,14 @@
       1. 🚨 Gnosis Safe: Owner added
       2. 🚨 Gnosis Safe: Owner removed
       3. 🚨 Gnosis Safe: Fallback handler changed
-      3. 🚨 Gnosis Safe: Guard changed
-      4. 🚨 Gnosis Safe: Threshold changed
-      5. 🚨 Gnosis Safe: Module disabled
-      6. 🚨 Gnosis Safe: Module enabled
-      7. ❌ Gnosis Safe: TX Execution faile
-      8. ✅ Gnosis Safe: TX Executed
-      9. ❌ Gnosis Safe: Execution failed from module
-      10. ✅ Gnosis Safe: Execution success from module
+      4. 🚨 Gnosis Safe: Guard changed
+      5. 🚨 Gnosis Safe: Threshold changed
+      6. 🚨 Gnosis Safe: Module disabled
+      7. 🚨 Gnosis Safe: Module enabled
+      8. ❌ Gnosis Safe: TX Execution faile
+      9. ✅ Gnosis Safe: TX Executed
+      10. ❌ Gnosis Safe: Execution failed from module
+      11. ✅ Gnosis Safe: Execution success from module
 3. ACL
    1. HandleBlock
       1. 🚨 Vault Contract owner set to address not in whitelist
