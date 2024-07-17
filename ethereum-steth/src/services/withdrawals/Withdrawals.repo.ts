@@ -101,7 +101,7 @@ export class WithdrawalsRepo {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
         .where('isFinalized', 1)
-        .orderBy('timestamp', 'desc')
+        .orderBy('id', 'desc')
         .limit(1)
 
       if (data.length === 0) {
@@ -118,7 +118,7 @@ export class WithdrawalsRepo {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
         .where('isFinalized', 0)
-        .orderBy('timestamp', 'asc')
+        .orderBy('id', 'asc')
         .limit(1)
 
       if (data.length === 0) {
