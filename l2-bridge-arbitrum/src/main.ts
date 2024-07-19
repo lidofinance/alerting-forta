@@ -32,6 +32,7 @@ import { L2BlocksRepo } from './services/l2_blocks/L2Blocks.repo'
 import { L2BlocksSrv } from './services/l2_blocks/L2Blocks.srv'
 import { WithdrawalSrv } from './services/monitor_withdrawals'
 import { WithdrawalRepo } from './services/monitor_withdrawals.repo'
+import { TxHandler } from './handlers/tx.handler'
 
 const MINUTES_30 = 1000 * 60 * 30
 
@@ -175,11 +176,12 @@ const main = async () => {
 
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
   const initH = new InitHandler(config.appName, logger, onAppFindings, withdrawalsSrv, l2Client, proxyWatchers)
+  const txH = new TxHandler(metrics, withdrawalsSrv, bridgeBalanceSrv, config.networkName)
 
   grpcServer.addService(AgentService, {
     initialize: initH.handleInit(),
     evaluateBlock: blockH.handleBlock(),
-    // evaluateTx: txH.handleTx(),
+    evaluateTx: txH.handleTx(),
     healthCheck: healthH.healthGrpc(),
     // not used, but required for grpc contract
     // evaluateAlert: alertH.handleAlert(),

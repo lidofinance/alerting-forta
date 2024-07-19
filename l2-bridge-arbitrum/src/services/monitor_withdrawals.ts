@@ -12,6 +12,7 @@ import { WithdrawalRepo } from './monitor_withdrawals.repo'
 import { L2Client } from '../clients/l2_client'
 import { elapsed } from '../utils/time'
 import { ETHProvider } from '../clients/eth_provider_client'
+import { TransactionDto } from '../entity/events'
 
 // 10k wstETH
 const MAX_WITHDRAWALS_10K_WstEth = 10_000
@@ -165,13 +166,8 @@ export class WithdrawalSrv {
     return out
   }
 
-  public async hasRebasedEvent(l1Block: BlockDto): Promise<boolean> {
-    const l1logs = await this.l1Client.fetchL1Logs(l1Block.hash, [this.lidoStethAddress])
-    if (E.isLeft(l1logs)) {
-      return false
-    }
-
-    for (const log of l1logs.right) {
+  public hasRebasedEvent(txEvent: TransactionDto): boolean {
+    for (const log of txEvent.logs) {
       if (log.address.toLowerCase() !== this.lidoStethAddress.toLowerCase()) {
         continue
       }

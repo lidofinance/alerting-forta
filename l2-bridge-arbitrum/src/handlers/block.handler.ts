@@ -166,9 +166,6 @@ export class BlockHandler {
         findings.push(...withdrawalFindings)
       }
 
-      const digest = await this.collectDigest(l1Block)
-      findings.push(...digest)
-
       const handleBlock = `Finish: handleBlock(${l1Block.number}). L2 blocks:`
       const duration = `Duration: ${elapsed(startTime.getTime())}\n`
       if (E.isRight(l2Blocks) && l2Blocks.right.length > 0) {
@@ -196,41 +193,5 @@ export class BlockHandler {
 
       callback(null, out)
     }
-  }
-
-  public async collectDigest(l1Block: BlockDto): Promise<Finding[]> {
-    const out: Finding[] = []
-    const hasRebasedEvent = await this.withdrawalsSrv.hasRebasedEvent(l1Block)
-    if (hasRebasedEvent) {
-      const stat = await this.withdrawalsSrv.getWithdrawalStat()
-      if (E.isLeft(stat)) {
-        const networkErr = dbAlert(stat.left, `Could not call repo.getWithdrawalState`, stat.left.message)
-
-        return [networkErr]
-      }
-
-      const f: Finding = new Finding()
-      f.setName(`ℹ️ ${this.networkName} digest:`)
-      f.setDescription(
-        `Bridge balances: \n` +
-          `\tLDO:\n` +
-          `\t\tL1: ${this.bridgeBalanceSrv.l1Ldo} LDO\n` +
-          `\t\tL2: ${this.bridgeBalanceSrv.l2Ldo} LDO\n` +
-          `\tStEth:\n` +
-          `\t\tL1: ${this.bridgeBalanceSrv.l1Steth} StEth\n` +
-          `\t\tL2: ${this.bridgeBalanceSrv.l2wSteth} wstETH\n\n` +
-          `Withdrawals: \n` +
-          `\tAmount: ${stat.right.amount} \n` +
-          `\tTotal: ${stat.right.total}`,
-      )
-      f.setAlertid(`${this.networkName}-digest`)
-      f.setSeverity(Finding.Severity.MEDIUM)
-      f.setType(Finding.FindingType.SUSPICIOUS)
-      f.setProtocol('ethereum')
-
-      out.push(f)
-    }
-
-    return out
   }
 }
