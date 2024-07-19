@@ -64,8 +64,11 @@ export class ProxyWatcher {
   }
 
   async handleL2Blocks(l2Blocks: BlockDto[]): Promise<Finding[]> {
-    const promises = []
+    if (l2Blocks.length === 0) {
+      return []
+    }
 
+    const promises = []
     promises.push(
       this.handleProxyImplementationChanges(l2Blocks[l2Blocks.length - 1].number),
       this.handleProxyAdminChanges(l2Blocks[l2Blocks.length - 1].number),
