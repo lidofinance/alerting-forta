@@ -3,12 +3,12 @@ import { ERC20Bridged__factory } from '../generated/typechain'
 import { ETHProvider } from './eth_provider_client'
 import { Config } from '../utils/env/env'
 import { Address, ETH_DECIMALS } from '../utils/constants'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import { Metrics } from '../utils/metrics/metrics'
 import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
-import { BlockDtoWithTransactions, BlockHash } from '../entity/blockDto'
 import { LRUCache } from 'lru-cache'
+import * as Winston from 'winston'
 
 const TEST_TIMEOUT = 120_000
 
@@ -25,9 +25,15 @@ describe('ethProvider', () => {
   const customRegister = new promClient.Registry()
   const metrics = new Metrics(customRegister, config.promPrefix)
 
-  const l1BlocksStore = new LRUCache<BlockHash, BigNumber>({
+  const l1BlocksStore = new LRUCache<string, BigNumber>({
     max: 500,
   })
+
+  const logger: Winston.Logger = Winston.createLogger({
+    format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
+    transports: [new Winston.transports.Console()],
+  })
+
   const l1Client = new ETHProvider(
     metrics,
     wSthEthRunner,
@@ -36,6 +42,7 @@ describe('ethProvider', () => {
     l1BlocksStore,
     adr.ARBITRUM_L1_TOKEN_BRIDGE,
     adr.ARBITRUM_L1_LDO_BRIDGE,
+    logger,
   )
   const l1BlockHash = '0xb98cace7cd13a459d5736755184217ec6a70f8d0c01dd051ec372832df077a2a'
 
@@ -66,14 +73,27 @@ describe('ethProvider', () => {
   )
 
   test(
-    'getBlockNumber',
+    'getBlockByTag is ok',
     async () => {
-      /*    const blockNumber = await l1Client.getBlock(new Date())
-      if (E.isLeft(blockNumber)) {
-        throw blockNumber.left
+      const latestL1Block = await l1Client.getBlockByTag('latest')
+      if (E.isLeft(latestL1Block)) {
+        throw latestL1Block.left
       }
 
-      expect(Number.isInteger(blockNumber.right.number)).toBe(true)*/
+      expect(latestL1Block.right.number > 0).toEqual(true)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    'fetchL2Logs is ok',
+    async () => {
+      const l1Logs = await l1Client.fetchL1Logs(20_340_559, 20_340_559, [adr.LIDO_STETH_ADDRESS])
+      if (E.isLeft(l1Logs)) {
+        throw l1Logs.left
+      }
+
+      expect(l1Logs.right.length).toEqual(16)
     },
     TEST_TIMEOUT,
   )

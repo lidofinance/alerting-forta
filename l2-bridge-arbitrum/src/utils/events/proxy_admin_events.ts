@@ -5,52 +5,52 @@ import { ContractInfo } from '../constants'
 import { Result } from '@ethersproject/abi/lib'
 
 export function getProxyAdminEvents(
-  ARBITRUM_WSTETH_BRIDGED: ContractInfo,
-  ARBITRUM_L2_TOKEN_GATEWAY: ContractInfo,
+  l2WstethBridged: ContractInfo,
+  l2TokenGateway: ContractInfo,
+  networkName: string,
 ): EventOfNotice[] {
   return [
     {
-      address: ARBITRUM_WSTETH_BRIDGED.address,
+      address: l2WstethBridged.address,
       event: 'event ProxyOssified()',
       alertId: 'PROXY-OSSIFIED',
-      name: '🚨 Arbitrum: Proxy ossified',
+      name: `🚨 ${networkName}: Proxy ossified`,
       description: () =>
-        `Proxy for ${ARBITRUM_WSTETH_BRIDGED.name}(${ARBITRUM_WSTETH_BRIDGED.address}) was ossified` +
-        `\n(detected by event)`,
+        `Proxy for ${l2WstethBridged.name}(${l2WstethBridged.address}) was ossified` + `\n(detected by event)`,
       severity: Finding.Severity.HIGH,
       type: FindingType.INFORMATION,
     },
     {
-      address: ARBITRUM_WSTETH_BRIDGED.address,
+      address: l2WstethBridged.address,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
-      name: '🚨 Arbitrum: Proxy admin changed',
+      name: `🚨 ${networkName}: Proxy admin changed`,
       description: (args: Result) =>
-        `Proxy admin for ${ARBITRUM_WSTETH_BRIDGED.name}(${ARBITRUM_WSTETH_BRIDGED.address}) ` +
+        `Proxy admin for ${l2WstethBridged.name}(${l2WstethBridged.address}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: Finding.Severity.CRITICAL,
       type: FindingType.INFORMATION,
     },
     {
-      address: ARBITRUM_WSTETH_BRIDGED.address,
+      address: l2WstethBridged.address,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
-      name: '🚨 Arbitrum: Proxy upgraded',
+      name: `🚨 ${networkName}: Proxy upgraded`,
       description: (args: Result) =>
-        `Proxy for ${ARBITRUM_WSTETH_BRIDGED.name}(${ARBITRUM_WSTETH_BRIDGED.address}) ` +
+        `Proxy for ${l2WstethBridged.name}(${l2WstethBridged.address}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: Finding.Severity.CRITICAL,
       type: FindingType.INFORMATION,
     },
     {
-      address: ARBITRUM_WSTETH_BRIDGED.address,
+      address: l2WstethBridged.address,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
-      name: '🚨 Arbitrum: Proxy beacon upgraded',
+      name: `🚨 ${networkName}: Proxy beacon upgraded`,
       description: (args: Result) =>
-        `Proxy for ${ARBITRUM_WSTETH_BRIDGED.name}(${ARBITRUM_WSTETH_BRIDGED.address}) ` +
+        `Proxy for ${l2WstethBridged.name}(${l2WstethBridged.address}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: Finding.Severity.HIGH,
@@ -58,47 +58,46 @@ export function getProxyAdminEvents(
     },
     //---
     {
-      address: ARBITRUM_L2_TOKEN_GATEWAY.address,
+      address: l2TokenGateway.address,
       event: 'event ProxyOssified()',
       alertId: 'PROXY-OSSIFIED',
-      name: '🚨 Arbitrum: Proxy ossified',
+      name: `🚨 ${networkName}: Proxy ossified`,
       description: () =>
-        `Proxy for ${ARBITRUM_L2_TOKEN_GATEWAY.name}(${ARBITRUM_L2_TOKEN_GATEWAY.address}) was ossified` +
-        `\n(detected by event)`,
+        `Proxy for ${l2TokenGateway.name}(${l2TokenGateway.address}) was ossified` + `\n(detected by event)`,
       severity: Finding.Severity.HIGH,
       type: FindingType.INFORMATION,
     },
     {
-      address: ARBITRUM_L2_TOKEN_GATEWAY.address,
+      address: l2TokenGateway.address,
       event: 'event AdminChanged(address previousAdmin, address newAdmin)',
       alertId: 'PROXY-ADMIN-CHANGED',
-      name: '🚨 Arbitrum: Proxy admin changed',
+      name: `🚨 ${networkName}: Proxy admin changed`,
       description: (args: Result) =>
-        `Proxy admin for ${ARBITRUM_L2_TOKEN_GATEWAY.name}(${ARBITRUM_L2_TOKEN_GATEWAY.address}) ` +
+        `Proxy admin for ${l2TokenGateway.name}(${l2TokenGateway.address}) ` +
         `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
         `\n(detected by event)`,
       severity: Finding.Severity.HIGH,
       type: FindingType.INFORMATION,
     },
     {
-      address: ARBITRUM_L2_TOKEN_GATEWAY.address,
+      address: l2TokenGateway.address,
       event: 'event Upgraded(address indexed implementation)',
       alertId: 'PROXY-UPGRADED',
-      name: '🚨 Arbitrum: Proxy upgraded',
+      name: `🚨 ${networkName}: Proxy upgraded`,
       description: (args: Result) =>
-        `Proxy for ${ARBITRUM_L2_TOKEN_GATEWAY.name}(${ARBITRUM_L2_TOKEN_GATEWAY.address}) ` +
+        `Proxy for ${l2TokenGateway.name}(${l2TokenGateway.address}) ` +
         `was updated to ${args.implementation}` +
         `\n(detected by event)`,
       severity: Finding.Severity.HIGH,
       type: FindingType.INFORMATION,
     },
     {
-      address: ARBITRUM_L2_TOKEN_GATEWAY.address,
+      address: l2TokenGateway.address,
       event: 'event BeaconUpgraded(address indexed beacon)',
       alertId: 'PROXY-BEACON-UPGRADED',
-      name: '🚨 Arbitrum: Proxy beacon upgraded',
+      name: `🚨 ${networkName}: Proxy beacon upgraded`,
       description: (args: Result) =>
-        `Proxy for ${ARBITRUM_L2_TOKEN_GATEWAY.name}(${ARBITRUM_L2_TOKEN_GATEWAY.address}) ` +
+        `Proxy for ${l2TokenGateway.name}(${l2TokenGateway.address}) ` +
         `beacon was updated to ${args.beacon}` +
         `\n(detected by event)`,
       severity: Finding.Severity.HIGH,

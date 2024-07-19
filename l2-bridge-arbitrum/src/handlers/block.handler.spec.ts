@@ -1,56 +1,71 @@
-import * as grpc from '@grpc/grpc-js'
-import { BlockHandler } from './handlers/block.handler'
-import { HealthHandler } from './handlers/health.handler'
-import { InitHandler } from './handlers/init.handler'
-import { AgentService } from './generated/proto/agent_grpc_pb'
-import express, { Express, Request, Response } from 'express'
-import Version from './utils/version'
-import { Finding } from './generated/proto/alert_pb'
-import { Config } from './utils/env/env'
-import * as Winston from 'winston'
-import { Address } from './utils/constants'
-import promClient from 'prom-client'
-import { Metrics } from './utils/metrics/metrics'
-import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
-import { L2Client } from './clients/l2_client'
-import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { ProxyWatcher } from './services/proxy_watcher'
-import { ProxyContractClient } from './clients/proxy_contract_client'
-import process from 'process'
-import { EventWatcher } from './services/event_watcher'
-import { getL2BridgeEvents } from './utils/events/bridge_events'
-import { getGovEvents } from './utils/events/gov_events'
-import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
-import { BridgeBalanceSrv } from './services/bridge_balance'
-import { ETHProvider } from './clients/eth_provider_client'
+import { ArbERC20__factory, ERC20Bridged__factory, OssifiableProxy__factory } from '../generated/typechain'
+import { Address } from '../utils/constants'
 import { ethers } from 'ethers'
-import { ArbERC20__factory, ERC20Bridged__factory, OssifiableProxy__factory } from './generated/typechain'
-import { LRUCache } from 'lru-cache'
+import { Config } from '../utils/env/env'
+import * as promClient from 'prom-client'
+import { Metrics } from '../utils/metrics/metrics'
+import { L2Client } from '../clients/l2_client'
+import * as Winston from 'winston'
+import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
 import { knex } from 'knex'
-import { L2BlocksRepo } from './services/l2_blocks/L2Blocks.repo'
-import { L2BlocksSrv } from './services/l2_blocks/L2Blocks.srv'
-import { WithdrawalSrv } from './services/monitor_withdrawals'
-import { WithdrawalRepo } from './services/monitor_withdrawals.repo'
+import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
+import * as process from 'process'
+import { ETHProvider } from '../clients/eth_provider_client'
+import { LRUCache } from 'lru-cache'
+import * as fs from 'node:fs'
+import { L2BlocksRepo } from '../services/l2_blocks/L2Blocks.repo'
+import { L2BlocksSrv } from '../services/l2_blocks/L2Blocks.srv'
+import { WithdrawalRepo } from '../services/monitor_withdrawals.repo'
+import { WithdrawalSrv } from '../services/monitor_withdrawals'
+import { ProxyWatcher } from '../services/proxy_watcher'
+import { ProxyContractClient } from '../clients/proxy_contract_client'
+import { EventWatcher } from '../services/event_watcher'
+import { getL2BridgeEvents } from '../utils/events/bridge_events'
+import { getGovEvents } from '../utils/events/gov_events'
+import { getProxyAdminEvents } from '../utils/events/proxy_admin_events'
+import { BridgeBalanceSrv } from '../services/bridge_balance'
+import { BlockHandler } from './block.handler'
+import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from '../services/health-checker/health-checker.srv'
 
-const MINUTES_30 = 1000 * 60 * 30
+const TEST_TIMEOUT = 120_000
 
-const main = async () => {
+describe(`block.handler`, () => {
   const config = new Config()
-  const dbClient = knex(config.knexConfig)
+  const dbClient = knex(Config.getTestKnexConfig(':memory'))
 
   const logger: Winston.Logger = Winston.createLogger({
     format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
     transports: [new Winston.transports.Console()],
   })
 
-  try {
-    await dbClient.migrate.latest()
-    logger.info('Migrations have been run successfully.')
-  } catch (error) {
-    logger.error('Error running migrations:', error)
-    process.exit(1)
-  }
+  beforeAll(async () => {
+    try {
+      await dbClient.migrate.rollback({}, true)
+    } catch (error) {
+      logger.error('Could not destroy db:', error)
+      process.exit(1)
+    }
+
+    try {
+      await dbClient.migrate.latest()
+
+      const sql = fs.readFileSync('./src/db/seeds/l2_withdrawals.sql', 'utf8')
+      await dbClient.raw(sql)
+    } catch (error) {
+      logger.error('Error running migrations:', error)
+      process.exit(1)
+    }
+  })
+
+  afterAll(async () => {
+    try {
+      await dbClient.migrate.rollback({}, true)
+    } catch (error) {
+      logger.error('Could not destroy db:', error)
+      process.exit(1)
+    }
+  })
 
   const defaultRegistry = promClient
   defaultRegistry.collectDefaultMetrics({
@@ -70,9 +85,6 @@ const main = async () => {
   const l2NodeClient = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.arbChainID)
 
   const adr: Address = Address
-
-  const onAppFindings: Finding[] = []
-  const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
 
   const bridgedWSthEthRunner = ERC20Bridged__factory.connect(adr.ARBITRUM_WSTETH_BRIDGED.address, l2NodeClient)
   const bridgedLdoRunner = ArbERC20__factory.connect(adr.ARBITRUM_LDO_BRIDGED_ADDRESS, l2NodeClient)
@@ -94,7 +106,7 @@ const main = async () => {
 
   const l1BlockCache = new LRUCache<string, BigNumber>({
     max: 600,
-    ttl: MINUTES_30,
+    ttl: 60 * 30,
   })
 
   const l1Client = new ETHProvider(
@@ -150,8 +162,7 @@ const main = async () => {
   )
 
   const bridgeBalanceSrv = new BridgeBalanceSrv(logger, l1Client, l2Client, config.networkName, metrics)
-
-  const grpcServer = new grpc.Server()
+  const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
 
   const blockH = new BlockHandler(
     l1Client,
@@ -167,48 +178,48 @@ const main = async () => {
     proxyEventWatcher,
 
     healthChecker,
-    onAppFindings,
+    [],
 
     l2BlocksSrv,
     config.networkName,
   )
 
-  const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
-  const initH = new InitHandler(config.appName, logger, onAppFindings, withdrawalsSrv, l2Client, proxyWatchers)
+  test(
+    'Digest is ok',
+    async () => {
+      const l1Block = await l1Client.getBlockByTag('0x0da0a0ac67d936857a41cc0dfb6c59f588ebfde119b648b5f2fc7f617db8641a')
+      if (E.isLeft(l1Block)) {
+        throw l1Block
+      }
 
-  grpcServer.addService(AgentService, {
-    initialize: initH.handleInit(),
-    evaluateBlock: blockH.handleBlock(),
-    // evaluateTx: txH.handleTx(),
-    // healthCheck: healthH.healthGrpc(),
-    // not used, but required for grpc contract
-    // evaluateAlert: alertH.handleAlert(),
-  })
+      const l2Block = await l2Client.getL2BlockByTag(
+        '0xbdb41b02c703a5cb513b4556beb84155a0930c081583aa35be220592c23b4e9c',
+      )
+      if (E.isLeft(l2Block)) {
+        throw l2Block
+      }
 
-  metrics.buildInfo.set({ commitHash: Version.commitHash }, 1)
+      await bridgeBalanceSrv.handleBlock(l1Block.right, [l2Block.right])
 
-  grpcServer.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
-    if (err != null) {
-      logger.error(err)
+      const findings = await blockH.collectDigest(l1Block.right)
 
-      process.exit(1)
-    }
-    logger.info(`${config.appName} is listening on ${port}`)
-  })
+      expect(findings.length).toBe(1)
 
-  const httpService: Express = express()
+      const expectedDesc =
+        'Bridge balances: \n' +
+        '\tLDO:\n' +
+        '\t\tL1: 994555.5638 LDO\n' +
+        '\t\tL2: 994068.5564 LDO\n' +
+        '\tStEth:\n' +
+        '\t\tL1: 74347.0319 StEth\n' +
+        '\t\tL2: 74219.0555 wstETH\n' +
+        '\n' +
+        'Withdrawals: \n' +
+        '\tAmount: 78.80651963249112 \n' +
+        '\tTotal: 2'
 
-  httpService.get('/metrics', async (_: Request, res: Response) => {
-    res.set('Content-Type', mergedRegistry.contentType)
-    res.send(await mergedRegistry.metrics())
-  })
-
-  httpService.get('/health', healthH.healthHttp())
-
-  httpService.listen(config.httpPort, () => {
-    logger.info(`Http server is running at http://localhost:${config.httpPort}`)
-  })
-}
-
-// @ts-ignore
-main()
+      expect(findings[0].getDescription()).toBe(expectedDesc)
+    },
+    TEST_TIMEOUT,
+  )
+})

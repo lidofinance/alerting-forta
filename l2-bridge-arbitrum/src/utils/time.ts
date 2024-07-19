@@ -1,6 +1,5 @@
 export const SECONDS_60 = 60
-// export const SECONDS_768 = 768
-export const SECONDS_768 = 384
+export const SECONDS_768 = 768
 
 export function formatTime(timeInMillis: number): string {
   const seconds = (timeInMillis / 1000).toFixed(3)
@@ -12,6 +11,10 @@ export function elapsedTime(methodName: string, startTime: number): string {
   return `${methodName} started at ${formatTimeToHumanReadable(new Date(startTime))}. Elapsed: ${formatTime(
     elapsedTime,
   )}`
+}
+
+export function elapsed(startTime: number): string {
+  return formatTime(new Date().getTime() - startTime)
 }
 
 function formatTimeToHumanReadable(date: Date): string {
@@ -33,12 +36,4 @@ export function formatDelay(fullDelaySec: number): string {
     (delayMin > 0 ? `${delayMin} min ` : '') +
     `${delaySec} sec`
   )
-}
-
-export function isWorkInterval(l1BlockTimesTamp: number, l2BlockTimesTamp: number): boolean {
-  return -SECONDS_768 <= l2BlockTimesTamp - l1BlockTimesTamp && l2BlockTimesTamp - l1BlockTimesTamp <= SECONDS_60
-}
-
-export function toDate(unixTimestamp: number): string {
-  return new Date(unixTimestamp * 1000).toISOString()
 }

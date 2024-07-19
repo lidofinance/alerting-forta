@@ -11,3 +11,10 @@ export type EventOfNotice = {
 }
 
 export type Metadata = { [key: string]: string }
+
+export type RpcRequest = {
+  jsonrpc: string
+  method: string
+  params: Array<any>
+  id: number
+}

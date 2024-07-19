@@ -2,33 +2,30 @@ import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
 import { BlockEvent, EvaluateBlockRequest, EvaluateBlockResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { Logger } from 'winston'
-import { elapsedTime, isWorkInterval, SECONDS_60, SECONDS_768 } from '../utils/time'
+import { elapsed } from '../utils/time'
 import BigNumber from 'bignumber.js'
 import { Finding } from '../generated/proto/alert_pb'
 import { HandleL1BlockLabel, HandleL2BlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
-import { MonitorWithdrawals } from '../services/monitor_withdrawals'
-import { BlockDto, BlockDtoWithTransactions } from '../entity/blockDto'
 import { ProxyWatcher } from '../services/proxy_watcher'
 import { BridgeBalanceSrv } from '../services/bridge_balance'
 import * as E from 'fp-ts/Either'
-import { networkAlert } from '../utils/errors'
-import { ArbitrumClient } from '../clients/arbitrum_client'
-import { ArrRW } from '../utils/mutex'
-import { retryAsync } from 'ts-retry'
+import { dbAlert, networkAlert } from '../utils/errors'
 import { EventWatcher } from '../services/event_watcher'
 import { ETHProvider } from '../clients/eth_provider_client'
+import { L2BlocksSrv } from '../services/l2_blocks/L2Blocks.srv'
+import { BlockDto } from '../entity/l2block'
+import { WithdrawalSrv } from '../services/monitor_withdrawals'
 
-const DELAY_IN_500MS = 500
-const ATTEMPTS_5 = 5
+const MINUTES_6 = 60 * 6
 
 export class BlockHandler {
-  private arbProvider: ArbitrumClient
   private ethProvider: ETHProvider
   private logger: Logger
   private metrics: Metrics
+  private readonly l2BlocksSrv: L2BlocksSrv
 
   private readonly proxyWatchers: ProxyWatcher[]
-  private WithdrawalsSrv: MonitorWithdrawals
+  private withdrawalsSrv: WithdrawalSrv
   private bridgeBalanceSrv: BridgeBalanceSrv
 
   private bridgeWatcher: EventWatcher
@@ -36,29 +33,31 @@ export class BlockHandler {
   private proxyWatcher: EventWatcher
 
   private healthChecker: HealthChecker
-  private findings: ArrRW<Finding>
-
-  private readonly launch: Date
+  private readonly onAppStartFindings: Finding[]
+  private readonly networkName: string
 
   constructor(
-    arbProvider: ArbitrumClient,
     ethProvider: ETHProvider,
     logger: Logger,
     metrics: Metrics,
     proxyWatchers: ProxyWatcher[],
-    WithdrawalsSrv: MonitorWithdrawals,
+    WithdrawalsSrv: WithdrawalSrv,
     bridgeBalanceSrv: BridgeBalanceSrv,
     bridgeWatcher: EventWatcher,
     govWatcher: EventWatcher,
     proxyWatcher: EventWatcher,
     healthChecker: HealthChecker,
-    findings: Finding[],
+    onAppStartFindings: Finding[],
+    l2BlocksSrv: L2BlocksSrv,
+    networkName: string,
   ) {
+    this.ethProvider = ethProvider
     this.logger = logger
     this.metrics = metrics
+    this.l2BlocksSrv = l2BlocksSrv
 
     this.proxyWatchers = proxyWatchers
-    this.WithdrawalsSrv = WithdrawalsSrv
+    this.withdrawalsSrv = WithdrawalsSrv
     this.bridgeBalanceSrv = bridgeBalanceSrv
 
     this.bridgeWatcher = bridgeWatcher
@@ -66,11 +65,8 @@ export class BlockHandler {
     this.proxyWatcher = proxyWatcher
 
     this.healthChecker = healthChecker
-    this.arbProvider = arbProvider
-    this.ethProvider = ethProvider
-    this.findings = new ArrRW<Finding>(findings)
-
-    this.launch = new Date()
+    this.onAppStartFindings = onAppStartFindings
+    this.networkName = networkName
   }
 
   public handleBlock() {
@@ -78,54 +74,55 @@ export class BlockHandler {
       call: ServerUnaryCall<EvaluateBlockRequest, EvaluateBlockResponse>,
       callback: sendUnaryData<EvaluateBlockResponse>,
     ) => {
-      this.metrics.lastAgentTouch.labels({ method: HandleL1BlockLabel }).set(new Date().getTime())
+      const startTime = new Date()
+      this.metrics.lastAgentTouch.labels({ method: HandleL1BlockLabel }).set(startTime.getTime())
       const end = this.metrics.summaryHandlers.labels({ method: HandleL1BlockLabel }).startTimer()
 
       const event = <BlockEvent>call.request.getEvent()
       const block = <BlockEvent.EthBlock>event.getBlock()
+      const out = new EvaluateBlockResponse()
+
+      const l1Block = new BlockDto(
+        block.getHash(),
+        block.getParenthash(),
+        new BigNumber(block.getNumber(), 10).toNumber(),
+        new BigNumber(block.getTimestamp(), 10).toNumber(),
+      )
 
       const findings: Finding[] = []
-      const fnds = await this.findings.read()
-      await this.findings.clear()
-
-      const out = new EvaluateBlockResponse()
-      if (fnds.length > 0) {
-        findings.push(...fnds)
-
-        const errCount = this.healthChecker.check(findings)
-        errCount === 0
-          ? this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusOK }).inc()
-          : this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusFail }).inc()
-
-        out.setStatus(ResponseStatus.SUCCESS)
-        out.setPrivate(false)
-        out.setFindingsList(findings)
-        const m = out.getMetadataMap()
-        m.set('timestamp', new Date().toISOString())
-      }
-
-      const l1Block: BlockDto = {
-        number: new BigNumber(block.getNumber(), 10).toNumber(),
-        timestamp: new BigNumber(block.getTimestamp(), 10).toNumber(),
-        parentHash: block.getParenthash(),
-        hash: block.getHash(),
-      }
-
       const latestL1Block = await this.ethProvider.getBlockByTag('latest')
-      this.logger.info(`\n\n`)
-      let startedMessage = `\tStarting handleBlock FromInfra(${l1Block.number}). Latest: Could not fetched`
+      let startedMessage = `Handle block(${l1Block.number}). Latest: Could not fetched`
       if (E.isRight(latestL1Block)) {
-        startedMessage = `\tStarting handleBlock FromInfra(${l1Block.number}). Latest ${latestL1Block.right.number}`
+        const infraLine = `#ETH block infra: ${l1Block.number} ${l1Block.timestamp}\n`
+        const lastBlockLine = `#ETH block latst: ${latestL1Block.right.number} ${latestL1Block.right.timestamp}. Delay between blocks: `
+        const diff = latestL1Block.right.timestamp - l1Block.timestamp
+        const diffLine = `${latestL1Block.right.timestamp} - ${l1Block.timestamp} = ${diff} seconds`
+
+        startedMessage = `\n` + infraLine + lastBlockLine + diffLine
+
+        if (diff > MINUTES_6) {
+          const f: Finding = new Finding()
+
+          f.setName(`⚠️ Currently processing Ethereum network block is outdated`)
+          f.setDescription(infraLine + lastBlockLine + diffLine)
+          f.setAlertid('L1-BLOCK-OUTDATED')
+          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setType(Finding.FindingType.SUSPICIOUS)
+          f.setProtocol('ethereum')
+
+          findings.push(f)
+        }
       }
+
       this.logger.info(startedMessage)
 
-      let latestL2Block = await this.arbProvider.getL2BlockByHash('latest')
-      if (E.isLeft(latestL2Block)) {
-        const networkErr = networkAlert(latestL2Block.left, `Could not handleBlock`, `could not fetch latest l2 block`)
+      const store = await this.l2BlocksSrv.updGetL2blocksStore(l1Block)
+      if (E.isLeft(store)) {
+        const networkErr = networkAlert(store.left, `Could not update l2 blocks store`, store.left.message)
         out.addFindings(networkErr)
         out.setStatus(ResponseStatus.ERROR)
 
-        this.logger.error(`Could not handleBlock: ${latestL2Block.left.name}: ${latestL2Block.left.message}`)
+        this.logger.error(`Could not handleBlock: ${store.left.message}`)
         this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusFail }).inc()
         end()
 
@@ -133,193 +130,107 @@ export class BlockHandler {
         return
       }
 
-      if (latestL2Block.right.timestamp - l1Block.timestamp > SECONDS_60) {
-        latestL2Block = await this.findStartingL2BlockByBinarySearch(l1Block, latestL2Block.right)
-        if (E.isLeft(latestL2Block)) {
-          const networkErr = networkAlert(
-            latestL2Block.left,
-            `Could not handleBlock`,
-            `could not findStartingL2BlockByBinarySearch l2 block`,
-          )
-          out.addFindings(networkErr)
-          out.setStatus(ResponseStatus.ERROR)
-
-          this.logger.error(`Could not get starting l2block: ${latestL2Block.left}`)
-          this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusFail }).inc()
-          end()
-
-          callback(null, out)
-          return
-        }
-      } else if (latestL2Block.right.timestamp - l1Block.timestamp < -SECONDS_768) {
-        callback(null, out)
-        return
+      if (this.onAppStartFindings.length > 0) {
+        findings.push(...this.onAppStartFindings)
       }
 
-      const startTime = new Date().getTime()
-      this.asyncProcess(l1Block, latestL2Block.right).then((blocks) => {
-        if (blocks.length > 0) {
-          const firstL2 = blocks[0]
-          const lastL2 = blocks[blocks.length - 1]
-          this.logger.info(
-            `\n` +
-              `#ETH block:     ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
-              `#ARB block src: ${firstL2.number} at ${new Date(firstL2.timestamp * 1000).toUTCString()}. ${firstL2.timestamp} \n` +
-              `#ARB block dst: ${lastL2.number} at ${new Date(lastL2.timestamp * 1000).toUTCString()}. ${lastL2.timestamp} Total: ${blocks.length} processed l2 blocks`,
-          )
-        } else {
-          this.logger.info(
-            `\n` +
-              `#ETH block: ${l1Block.number} #ARB block dst: ${latestL2Block.right.number} \n` +
-              `#ETH block: ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
-              `#ARB block src: ${new Date((l1Block.timestamp - SECONDS_768) * 1000).toUTCString()}. ${latestL2Block.right.timestamp - SECONDS_768} \n` +
-              `#ARB real: ${new Date(latestL2Block.right.timestamp * 1000).toUTCString()}. ${latestL2Block.right.timestamp} \n` +
-              `#ARB block dst: ${new Date((l1Block.timestamp + SECONDS_60) * 1000).toUTCString()}. ${latestL2Block.right.timestamp + SECONDS_60}`,
-          )
+      const bridgeFindings = this.bridgeWatcher.handleL2Logs(store.right.l2Logs)
+      const govFindings = this.govWatcher.handleL2Logs(store.right.l2Logs)
+      const proxyFindings = this.proxyWatcher.handleL2Logs(store.right.l2Logs)
+      const balancesFindings = await this.bridgeBalanceSrv.handleBlock(l1Block, store.right.l2Blocks)
+
+      findings.push(...balancesFindings, ...bridgeFindings, ...govFindings, ...proxyFindings)
+
+      const l2Blocks = await this.l2BlocksSrv.getL2BlocksFrom(store.right.prevLatestL2Block)
+      if (E.isLeft(l2Blocks)) {
+        const msg = `Could not fetch l2 blocks from store from proxyWatcher`
+        this.logger.error(`${msg}: ${l2Blocks.left.message}`)
+        const networkErr = networkAlert(l2Blocks.left, msg, l2Blocks.left.message)
+        findings.push(networkErr)
+      }
+      if (E.isRight(l2Blocks) && l2Blocks.right.length > 0) {
+        const promises = []
+        for (const proxyWatcher of this.proxyWatchers) {
+          promises.push(proxyWatcher.handleL2Blocks(store.right.l2Blocks))
         }
 
-        this.logger.info(elapsedTime(`\tFinish: handleBlock(${l1Block.number})`, startTime))
-        this.metrics.lastBlockNumber.set(l1Block.number)
-        this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusOK }).inc()
-        this.metrics.processedIterations.labels({ method: HandleL2BlockLabel, status: StatusOK }).inc(blocks.length)
+        const startProxyWatcher = new Date().getTime()
+        this.logger.info(
+          `\tProxy watcher started: ${new Date(startProxyWatcher).toUTCString()}. L2Blocks: ${l2Blocks.right.length}`,
+        )
+        const proxyWatcherFindings = (await Promise.all(promises)).flat()
+        this.logger.info(`\tProxy watcher finished. Duration: ${elapsed(startProxyWatcher)}\n`)
+        findings.push(...proxyWatcherFindings)
 
-        end()
-      })
+        const withdrawalFindings = await this.withdrawalsSrv.toMonitor(store.right.l2Logs, l2Blocks.right)
+        findings.push(...withdrawalFindings)
+      }
+
+      const digest = await this.collectDigest(l1Block)
+      findings.push(...digest)
+
+      const handleBlock = `Finish: handleBlock(${l1Block.number}). L2 blocks:`
+      const duration = `Duration: ${elapsed(startTime.getTime())}\n`
+      if (E.isRight(l2Blocks) && l2Blocks.right.length > 0) {
+        this.logger.info(
+          `${handleBlock} ${l2Blocks.right[0].number} - ${l2Blocks.right[l2Blocks.right.length - 1].number} Cnt(${l2Blocks.right.length}). ${duration}`,
+        )
+        this.metrics.processedIterations
+          .labels({ method: HandleL2BlockLabel, status: StatusOK })
+          .inc(l2Blocks.right.length)
+      } else {
+        this.logger.info(`${handleBlock} 0. ${duration}`)
+        this.metrics.processedIterations.labels({ method: HandleL2BlockLabel, status: StatusFail }).inc()
+      }
+
+      const errCount = this.healthChecker.check(findings)
+      errCount === 0
+        ? this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusOK }).inc()
+        : this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusFail }).inc()
+
+      this.metrics.lastBlockNumber.set(l1Block.number)
+
+      out.setStatus(ResponseStatus.SUCCESS)
+      out.setPrivate(false)
+      out.setFindingsList(findings)
 
       callback(null, out)
     }
   }
 
-  public async asyncProcess(
-    l1Block: BlockDto,
-    latestL2Block: BlockDtoWithTransactions,
-  ): Promise<BlockDtoWithTransactions[]> {
-    const blocks: BlockDtoWithTransactions[] = []
-    if (isWorkInterval(l1Block.timestamp, latestL2Block.timestamp)) {
-      blocks.push(latestL2Block)
-    }
+  public async collectDigest(l1Block: BlockDto): Promise<Finding[]> {
+    const out: Finding[] = []
+    const hasRebasedEvent = await this.withdrawalsSrv.hasRebasedEvent(l1Block)
+    if (hasRebasedEvent) {
+      const stat = await this.withdrawalsSrv.getWithdrawalStat()
+      if (E.isLeft(stat)) {
+        const networkErr = dbAlert(stat.left, `Could not call repo.getWithdrawalState`, stat.left.message)
 
-    let blockTag = latestL2Block.parentHash
-    let l2BlockTimestamp = latestL2Block.timestamp
-
-    while (isWorkInterval(l1Block.timestamp, l2BlockTimestamp)) {
-      try {
-        const l2block = await retryAsync<BlockDtoWithTransactions>(
-          async (): Promise<BlockDtoWithTransactions> => {
-            const l2block = await this.arbProvider.getL2BlockByHash(blockTag)
-            this.arbProvider.getL2BlockByHash('latest')
-
-            if (E.isLeft(l2block)) {
-              throw l2block.left
-            }
-
-            return l2block.right
-          },
-          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-        )
-
-        // If, after starting the application,
-        // we reach an interval where L2 is in the past relative to L1, (L2 < L1)
-        // then finish the work and collect the cache!
-        if (Math.round(+new Date() / 1000) - Math.round(+this.launch / 1000) < SECONDS_768) {
-          if (l2block.timestamp - l1Block.timestamp <= -1) {
-            break
-          }
-        }
-
-        // If the L2 block is older than the L1 block by 12.8, then finish the work
-        if (l2block.timestamp - l1Block.timestamp < -SECONDS_768) {
-          break
-        }
-
-        if (isWorkInterval(l1Block.timestamp, l2block.timestamp)) {
-          blocks.unshift(l2block)
-          this.logger.info(
-            '\n' +
-              `#ETH: ${l1Block.number} at ${new Date(l1Block.timestamp * 1000).toUTCString()}. ${l1Block.timestamp} \n` +
-              `#ARB: ${l2block.number} at ${new Date(l2block.timestamp * 1000).toUTCString()}. ${l2block.timestamp} `,
-          )
-
-          this.bridgeBalanceSrv.handleBlock(l1Block, l2block).then((findings) => {
-            if (findings.length > 0) {
-              this.findings.write(findings)
-            }
-          })
-
-          for (const proxyWatcher of this.proxyWatchers) {
-            proxyWatcher.handleL2Block(l2block).then((findings) => {
-              if (findings.length > 0) {
-                this.findings.write(findings)
-              }
-            })
-          }
-        }
-
-        l2BlockTimestamp = l2block.timestamp
-        blockTag = l2block.parentHash
-      } catch (e) {
-        this.logger.warn(`Could not call arbProvider.getL2BlockByHash ${e}`)
+        return [networkErr]
       }
+
+      const f: Finding = new Finding()
+      f.setName(`ℹ️ ${this.networkName} digest:`)
+      f.setDescription(
+        `Bridge balances: \n` +
+          `\tLDO:\n` +
+          `\t\tL1: ${this.bridgeBalanceSrv.l1Ldo} LDO\n` +
+          `\t\tL2: ${this.bridgeBalanceSrv.l2Ldo} LDO\n` +
+          `\tStEth:\n` +
+          `\t\tL1: ${this.bridgeBalanceSrv.l1Steth} StEth\n` +
+          `\t\tL2: ${this.bridgeBalanceSrv.l2wSteth} wstETH\n\n` +
+          `Withdrawals: \n` +
+          `\tAmount: ${stat.right.amount} \n` +
+          `\tTotal: ${stat.right.total}`,
+      )
+      f.setAlertid(`${this.networkName}-digest`)
+      f.setSeverity(Finding.Severity.MEDIUM)
+      f.setType(Finding.FindingType.SUSPICIOUS)
+      f.setProtocol('ethereum')
+
+      out.push(f)
     }
 
-    const transactions = []
-    const startWithdrawalsSrv = new Date().getTime()
-    for (const l2Block of blocks) {
-      for (const trx of l2Block.transactions) {
-        transactions.push(trx)
-        this.WithdrawalsSrv.handleTransaction(trx)
-
-        const bridgeFindings = this.bridgeWatcher.handleL2Logs(trx.logs)
-        const govFindings = this.govWatcher.handleL2Logs(trx.logs)
-        const proxyFindings = this.proxyWatcher.handleL2Logs(trx.logs)
-
-        const findings = [...bridgeFindings, ...govFindings, ...proxyFindings]
-        if (findings.length > 0) {
-          await this.findings.write(findings)
-        }
-      }
-      const withdrawalFindings = this.WithdrawalsSrv.handleL2Block(l2Block)
-      if (withdrawalFindings.length > 0) {
-        await this.findings.write(withdrawalFindings)
-      }
-    }
-
-    this.logger.info(
-      elapsedTime(this.WithdrawalsSrv.getName() + '.' + this.WithdrawalsSrv.handleL2Block.name, startWithdrawalsSrv),
-    )
-
-    return blocks
-  }
-
-  public async findStartingL2BlockByBinarySearch(
-    l1Block: BlockDto,
-    l2block: BlockDto,
-  ): Promise<E.Either<Error, BlockDtoWithTransactions>> {
-    let target: number = 0
-    let left: number = 0
-    let right: number = 0
-
-    if (l1Block.timestamp === l2block.timestamp) {
-      return await this.arbProvider.getL2BlockByHash(l2block.hash)
-    }
-
-    if (l2block.timestamp > l1Block.timestamp) {
-      left = l1Block.timestamp
-      right = l1Block.timestamp + SECONDS_60
-      target = right
-    }
-
-    if (l2block.timestamp < l1Block.timestamp) {
-      left = l1Block.timestamp - SECONDS_768
-      right = l1Block.timestamp
-      target = left
-    }
-
-    const resp = await this.arbProvider.search(left, right, target, l2block)
-    if (E.isLeft(resp)) {
-      return E.left(resp.left)
-    }
-
-    return await this.arbProvider.getL2BlockByHash(resp.right.hash)
+    return out
   }
 }
