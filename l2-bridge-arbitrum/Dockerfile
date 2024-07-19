@@ -17,7 +17,7 @@ ENV APP_NAME=l2-bridge-arbitrum
 ENV NETWORK_NAME=Arbitrum
 ENV NODE_ENV=production
 ENV ETHEREUM_RPC_URL=https://eth.drpc.org
-ENV ARBITRUM_RPC_URL=https://arb1.arbitrum.io/rpc
+ENV ARBITRUM_RPC_URL=https://arbitrum-one.publicnode.com
 
 ENV AGENT_GRPC_PORT=50051
 ENV HTTP_PORT=3000
