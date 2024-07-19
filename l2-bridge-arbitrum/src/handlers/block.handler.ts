@@ -33,7 +33,7 @@ export class BlockHandler {
   private proxyWatcher: EventWatcher
 
   private healthChecker: HealthChecker
-  private readonly onAppStartFindings: Finding[]
+  private onAppStartFindings: Finding[]
   private readonly networkName: string
 
   constructor(
@@ -132,6 +132,7 @@ export class BlockHandler {
 
       if (this.onAppStartFindings.length > 0) {
         findings.push(...this.onAppStartFindings)
+        this.onAppStartFindings = []
       }
 
       const bridgeFindings = this.bridgeWatcher.handleL2Logs(store.right.l2Logs)

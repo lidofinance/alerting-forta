@@ -36,7 +36,7 @@ export class Config {
     this.chainId = parseInt(process.env.FORTA_CHAIN_ID!, 10) || 1
     this.arbChainID = 42161
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://eth.drpc.org'
-    this.arbitrumRpcUrl = process.env.ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc'
+    this.arbitrumRpcUrl = process.env.ARBITRUM_RPC_URL || 'https://arbitrum-one.publicnode.com'
 
     this.promPrefix = this.appName.replaceAll('-', '_') + `_`
 
