@@ -63,6 +63,7 @@ export class InitHandler {
         return
       }
 
+      /*
       const withdrawalsFindings = await this.withdrawSrv.initialize(latestL2BlockNumber.right.number)
       if (E.isLeft(withdrawalsFindings)) {
         resp.setStatus(ResponseStatus.ERROR)
@@ -73,6 +74,9 @@ export class InitHandler {
       }
 
       this.onAppStartFindings.push(...withdrawalsFindings.right)
+      */
+
+      this.withdrawSrv.initialize(latestL2BlockNumber.right.number)
 
       const promises = []
 
