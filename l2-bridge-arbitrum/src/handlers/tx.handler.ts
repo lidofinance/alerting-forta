@@ -3,7 +3,7 @@ import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { newTransactionDto } from '../entity/events'
 import { Finding } from '../generated/proto/alert_pb'
-import { HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { HandleL1BlockLabel, HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { WithdrawalSrv } from '../services/monitor_withdrawals'
 import * as E from 'fp-ts/Either'
 import { dbAlert } from '../utils/errors'
@@ -43,8 +43,18 @@ export class TxHandler {
         const stat = await this.WithdrawalsSrv.getWithdrawalStat()
         if (E.isLeft(stat)) {
           const networkErr = dbAlert(stat.left, `Could not call repo.getWithdrawalState`, stat.left.message)
+          const txResponse = new EvaluateTxResponse()
+          txResponse.setStatus(ResponseStatus.ERROR)
+          txResponse.setPrivate(false)
+          txResponse.setFindingsList([networkErr])
+          const m = txResponse.getMetadataMap()
+          m.set('timestamp', new Date().toISOString())
 
-          return [networkErr]
+          this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusFail }).inc()
+          end()
+          callback(null, txResponse)
+
+          return
         }
 
         const f: Finding = new Finding()
@@ -76,6 +86,7 @@ export class TxHandler {
       const m = txResponse.getMetadataMap()
       m.set('timestamp', new Date().toISOString())
 
+      this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusOK }).inc()
       end()
       callback(null, txResponse)
     }
