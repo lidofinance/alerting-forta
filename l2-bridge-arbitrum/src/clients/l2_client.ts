@@ -274,7 +274,7 @@ export class L2Client implements IL2BridgeBalanceClient {
 
           return result
         },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        { delay: 750, maxTry: 10 },
       )
     }
 

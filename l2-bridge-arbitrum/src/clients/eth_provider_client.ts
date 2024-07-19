@@ -141,29 +141,22 @@ export class ETHProvider implements IL1BridgeBalanceClient {
     }
   }
 
-  public async fetchL1Logs(startBlock: number, endBlock: number, address: string[]): Promise<E.Either<Error, Log[]>> {
-    const batchSize = 2_000
-    const batchRequests: RpcRequest[] = []
-    for (let i = startBlock; i <= endBlock; i += batchSize) {
-      const from = i
-      const to = Math.min(i + batchSize - 1, endBlock)
-
-      batchRequests.push({
+  public async fetchL1Logs(blockHash: string, address: string[]): Promise<E.Either<Error, Log[]>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.fetchL1Logs.name }).startTimer()
+    try {
+      const request = {
         jsonrpc: '2.0',
         method: 'eth_getLogs',
         params: [
           {
             address: address,
-            fromBlock: `0x${new BigNumber(from).toString(16)}`,
-            toBlock: `0x${new BigNumber(to).toString(16)}`,
+            blockHash: blockHash,
           },
         ],
-        id: i, // Use a unique identifier for each request
-      })
-    }
+        id: 1,
+      }
 
-    const doRequest = (request: RpcRequest[]): Promise<Log[]> => {
-      return retryAsync<Log[]>(
+      const logs = await retryAsync<Log[]>(
         async (): Promise<Log[]> => {
           const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
             method: 'POST',
@@ -178,51 +171,33 @@ export class ETHProvider implements IL1BridgeBalanceClient {
           }
 
           const result: Log[] = []
-          const objects = (await response.json()) as unknown[]
+          const resp = (await response.json()) as unknown
 
-          for (const obj of objects) {
-            if (Object.prototype.hasOwnProperty.call(obj, 'result')) {
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-expect-error
-              const logs = obj.result as Log[]
-              result.push(...logs)
-            } else {
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-expect-error
-              throw new Error(obj.error.message)
-            }
+          if (Object.prototype.hasOwnProperty.call(resp, 'result')) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            const logs = resp.result as Log[]
+            result.push(...logs)
+          } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            throw new Error(obj.error.message)
           }
 
           return result
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
+
+      this.metrics.etherJsRequest.labels({ method: this.fetchL1Logs.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(logs)
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.fetchL1Logs.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch fetchL1Log by tag ${blockHash}`))
     }
-
-    const out: Log[] = []
-
-    const chunkSize = 4
-    let allowedExtraRequest: number = 30
-    for (let i = 0; i < batchRequests.length; i += chunkSize) {
-      const request = batchRequests.slice(i, i + chunkSize)
-      try {
-        // chunkSize x batchSize
-        if (i > 0) {
-          await new Promise((f) => setTimeout(f, 50))
-        }
-        const blocks = await doRequest(request)
-        out.push(...blocks)
-      } catch (e) {
-        batchRequests.push(...request)
-        allowedExtraRequest -= 1
-        this.logger.warn(`${allowedExtraRequest} - ${e}`)
-
-        if (allowedExtraRequest === 0) {
-          break
-        }
-      }
-    }
-
-    return E.right(out)
   }
 }

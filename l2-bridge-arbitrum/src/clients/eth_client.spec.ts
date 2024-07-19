@@ -86,9 +86,11 @@ describe('ethProvider', () => {
   )
 
   test(
-    'fetchL2Logs is ok',
+    'fetch12Logs is ok',
     async () => {
-      const l1Logs = await l1Client.fetchL1Logs(20_340_559, 20_340_559, [adr.LIDO_STETH_ADDRESS])
+      const l1Logs = await l1Client.fetchL1Logs('0x0da0a0ac67d936857a41cc0dfb6c59f588ebfde119b648b5f2fc7f617db8641a', [
+        adr.LIDO_STETH_ADDRESS,
+      ])
       if (E.isLeft(l1Logs)) {
         throw l1Logs.left
       }

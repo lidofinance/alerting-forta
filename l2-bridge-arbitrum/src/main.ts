@@ -180,7 +180,7 @@ const main = async () => {
     initialize: initH.handleInit(),
     evaluateBlock: blockH.handleBlock(),
     // evaluateTx: txH.handleTx(),
-    // healthCheck: healthH.healthGrpc(),
+    healthCheck: healthH.healthGrpc(),
     // not used, but required for grpc contract
     // evaluateAlert: alertH.handleAlert(),
   })

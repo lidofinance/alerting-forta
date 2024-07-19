@@ -166,7 +166,7 @@ export class WithdrawalSrv {
   }
 
   public async hasRebasedEvent(l1Block: BlockDto): Promise<boolean> {
-    const l1logs = await this.l1Client.fetchL1Logs(l1Block.number, l1Block.number, [this.lidoStethAddress])
+    const l1logs = await this.l1Client.fetchL1Logs(l1Block.hash, [this.lidoStethAddress])
     if (E.isLeft(l1logs)) {
       return false
     }
