@@ -68,11 +68,11 @@ export class TxHandler {
             `\t\tL1: ${this.bridgeBalanceSrv.l1Steth} StEth\n` +
             `\t\tL2: ${this.bridgeBalanceSrv.l2wSteth} wstETH\n\n` +
             `Withdrawals: \n` +
-            `\tAmount: ${stat.right.amount} \n` +
+            `\tAmount: ${stat.right.amount.toFixed(4)} \n` +
             `\tTotal: ${stat.right.total}`,
         )
         f.setAlertid(`${this.networkName}-digest`)
-        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setSeverity(Finding.Severity.INFO)
         f.setType(Finding.FindingType.SUSPICIOUS)
         f.setProtocol('ethereum')
 

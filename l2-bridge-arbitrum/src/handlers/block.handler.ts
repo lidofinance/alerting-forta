@@ -9,7 +9,7 @@ import { HandleL1BlockLabel, HandleL2BlockLabel, Metrics, StatusFail, StatusOK }
 import { ProxyWatcher } from '../services/proxy_watcher'
 import { BridgeBalanceSrv } from '../services/bridge_balance'
 import * as E from 'fp-ts/Either'
-import { dbAlert, networkAlert } from '../utils/errors'
+import { networkAlert } from '../utils/errors'
 import { EventWatcher } from '../services/event_watcher'
 import { ETHProvider } from '../clients/eth_provider_client'
 import { L2BlocksSrv } from '../services/l2_blocks/L2Blocks.srv'

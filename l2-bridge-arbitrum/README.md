@@ -2,11 +2,13 @@
 
 ## Supported chains
 
-- Arbitrum
+- Ethereum, Arbitrum
 
 ## Alerts
 
-1. Bridge events
+1. ⚠️ Currently processing Ethereum network block is outdated
+
+2. Bridge events
    1. 🚨🚨🚨 Arbitrum bridge wstETH:stEth balance mismatch
    2. 🚨🚨🚨 Arbitrum bridge LDO balance mismatch
    3. 🚨 Arbitrum L2 Bridge: Deposits Disabled
@@ -16,7 +18,7 @@
    7. ⚠️ Arbitrum L2 Bridge: Role revoked
    8. ℹ️ Arbitrum L2 Bridge: Deposits Enabled
    9. ℹ️ Arbitrum L2 Bridge: Withdrawals Enabled
-2. Gov Events
+3. Gov Events
    1. 🚨 Arbitrum Gov Bridge: Ethereum Governance Executor Updated
    2. 🚨 Arbitrum Gov Bridge: Guardian Updated
    3. ⚠️ Arbitrum Gov Bridge: Delay Updated
@@ -26,11 +28,12 @@
    7. ℹ️ Arbitrum Gov Bridge: Action set queued
    8. ℹ️ Arbitrum Gov Bridge: Action set executed
    9. ℹ️ Arbitrum Gov Bridge: Action set canceled
-3. Proxy events
+4. Proxy events
    1. 🚨 Arbitrum: Proxy ossified
    2. 🚨 Arbitrum: Proxy admin changed
    3. 🚨 Arbitrum: Proxy implementation changed
    4. 🚨 Arbitrum: Proxy upgraded
    5. 🚨 Arbitrum: Proxy beacon upgraded
-4. Monitor Withdrawals
+5. Monitor Withdrawals
    1. ⚠️ Arbitrum: Huge withdrawals during the last ...
+   2. ℹ️ Arbitrum digest
