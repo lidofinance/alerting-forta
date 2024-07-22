@@ -101,7 +101,7 @@ export class ProxyWatcher {
       f.setName(`🚨 ${this.networkName}: Proxy implementation changed`)
       f.setDescription(
         `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
-          `was changed form ${this.getImpl()} to ${newImpl}` +
+          `was changed form ${this.getImpl()} to ${newImpl.right.toLowerCase()}` +
           `\n(detected by func call)`,
       )
       f.setSeverity(Finding.Severity.HIGH)
@@ -109,7 +109,7 @@ export class ProxyWatcher {
       f.setProtocol('ethereum')
 
       const m = f.getMetadataMap()
-      m.set('newImpl', newImpl.right)
+      m.set('newImpl', newImpl.right.toLowerCase())
       m.set('lastImpl', this.getImpl())
 
       out.push(f)
@@ -139,7 +139,7 @@ export class ProxyWatcher {
       f.setName(`🚨 ${this.networkName}: Proxy admin changed`)
       f.setDescription(
         `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
-          `was changed from ${this.getAdmin()} to ${newAdmin}` +
+          `was changed from ${this.getAdmin()} to ${newAdmin.right.toLowerCase()}` +
           `\n(detected by func call)`,
       )
       f.setSeverity(Finding.Severity.HIGH)
@@ -148,7 +148,7 @@ export class ProxyWatcher {
       f.setUniquekey(l2blockNumber.toString())
 
       const m = f.getMetadataMap()
-      m.set('newAdmin', newAdmin.right)
+      m.set('newAdmin', newAdmin.right.toLowerCase())
       m.set('lastAdmin', this.getAdmin())
 
       this.setAdmin(newAdmin.right.toLowerCase())
