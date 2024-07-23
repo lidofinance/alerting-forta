@@ -11,6 +11,7 @@ import {
   PERIODICAL_BLOCK_INTERVAL,
   VaultConfig,
   VAULT_LIST,
+  VAULT_WATCH_METHOD_NAMES,
 } from 'constants/common'
 import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
 import { handleEventsOfNotice } from '../../shared/notice'
@@ -42,7 +43,10 @@ export abstract class IVaultWatcherClient {
     vaultIndex: number,
     blockHash: number,
   ): Promise<E.Either<Error, BigNumber>>
-  public abstract getVaultConfigurationStorage(vaultIndex: number, blockHash: number): Promise<E.Either<Error, VaultConfig>>
+  public abstract getVaultConfigurationStorage(
+    vaultIndex: number,
+    blockHash: number,
+  ): Promise<E.Either<Error, VaultConfig>>
 
   public abstract getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
   public abstract getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
@@ -194,38 +198,36 @@ export class VaultWatcherSrv {
 
     const vault = VAULT_LIST[vaultIdx]
     const vaultConfigPrev = vaultConfigs[vaultIdx]
-    const keys = Object.keys(vaultConfigPrev)
 
-    if (!keys.length) {
-      out.push(
-        Finding.fromObject({
-          name: `🚨 Vault critical storage not loaded`,
-          description: `Mellow Vault [${vault?.name}] can't load of the storage for contract ${vault.vault}`,
-          alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
-          severity: FindingSeverity.High,
-          type: FindingType.Suspicious,
-        }),
-      )
-    }
+    VAULT_WATCH_METHOD_NAMES.forEach((methodName) => {
+      if (!vaultConfig.right[methodName] || !vaultConfigPrev?.[methodName]) {
+        out.push(
+          Finding.fromObject({
+            name: `🚨 Vault critical storage not loaded`,
+            description: `Mellow Vault [${vault?.name}] can't load of the storage for contract ${vault.vault} ${methodName}`,
+            alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
+            severity: FindingSeverity.High,
+            type: FindingType.Suspicious,
+          }),
+        )
+      }
 
-    keys.forEach((key) => {
-      const slotName = key as keyof VaultConfig
-      if (vaultConfig.right[slotName] !== vaultConfigPrev?.[slotName]) {
+      if (vaultConfig.right[methodName] !== vaultConfigPrev?.[methodName]) {
         out.push(
           Finding.fromObject({
             name: `🚨🚨🚨 Vault critical storage slot value changed`,
             description:
               `Mellow Vault [${vault?.name}] ` +
-              `Value of the storage slot \`'${slotName}'\` ` +
+              `Value of the storage slot \`'${methodName}'\` ` +
               `for contract ${vault.vault} has changed!` +
-              `\nPrev value: ${vaultConfigPrev?.[slotName]}` +
-              `\nNew value: ${vaultConfig.right[slotName]}`,
+              `\nPrev value: ${vaultConfigPrev?.[methodName]}` +
+              `\nNew value: ${vaultConfig.right[methodName]}`,
             alertId: 'MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED',
             severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
           }),
         )
-        vaultConfigPrev[slotName] = vaultConfig.right[slotName]
+        vaultConfigPrev[methodName] = vaultConfig.right[methodName]
       }
     })
 
