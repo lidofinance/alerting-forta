@@ -1,6 +1,7 @@
 node_modules
 dist
 forta.config.json
+generated
 .yarn/*
 !.yarn/releases/
 *.log

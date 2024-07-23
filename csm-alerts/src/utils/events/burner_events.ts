@@ -7,12 +7,12 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
   return [
     {
       address: BURNER_ADDRESS,
-      abi: 'event ERC20Recovered(address indexed requestedBy, address indexed token,uint256 amount)',
-      alertId: 'LIDO-BURNER-ERC20-RECOVERED',
-      name: '🔴 Lido Burner: ERC20 recovered',
+      abi: 'event ERC20Recovered(address indexed token, address indexed recipient, uint256 amount)',
+      alertId: 'ASSET-RECOVERER-ERC20-RECOVERED',
+      name: '🔴 AssetRecoverer: ERC20 recovered',
       description: (args: Result) =>
         `ERC20 recovered:\n` +
-        `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
+        `Recipient: ${etherscanAddress(args.recipient)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
         `Amount: ${args.amount}`,
       severity: Finding.Severity.HIGH,
@@ -20,12 +20,12 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: BURNER_ADDRESS,
-      abi: 'event ERC721Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)',
-      alertId: 'LIDO-BURNER-ERC721-RECOVERED',
-      name: '🔴 Lido Burner: ERC721 recovered',
+      abi: 'event ERC721Recovered(address indexed token, uint256 tokenId, address indexed recipient)',
+      alertId: 'ASSET-RECOVERER-ERC721-RECOVERED',
+      name: '🔴 AssetRecoverer: ERC721 recovered',
       description: (args: Result) =>
         `ERC721 recovered:\n` +
-        `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
+        `Recipient: ${etherscanAddress(args.recipient)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
         `Token ID: ${args.tokenId}`,
       severity: Finding.Severity.HIGH,
@@ -33,40 +33,35 @@ export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: BURNER_ADDRESS,
-      abi: 'event ERC1155Recovered(address indexed requestedBy, address indexed token, uint256 tokenId)',
-      alertId: 'LIDO-BURNER-ERC1155-RECOVERED',
-      name: '🔴 Lido Burner: ERC1155 recovered',
+      abi: 'event ERC1155Recovered(address indexed token, uint256 tokenId, address indexed recipient, uint256 amount)',
+      alertId: 'ASSET-RECOVERER-ERC1155-RECOVERED',
+      name: '🔴 AssetRecoverer: ERC1155 recovered',
       description: (args: Result) =>
         `ERC1155 recovered:\n` +
-        `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
+        `Recipient: ${etherscanAddress(args.recipient)}\n` +
         `Token: ${etherscanAddress(args.token)}\n` +
-        `Token ID: ${args.tokenId}`,
+        `Token ID: ${args.tokenId}\n` +
+        `Amount: ${args.amount}`,
       severity: Finding.Severity.HIGH,
       type: Finding.FindingType.INFORMATION,
     },
     {
       address: BURNER_ADDRESS,
-      abi: 'event EtherRecovered(address indexed requestedBy, address indexed token, uint256 tokenId)',
-      alertId: 'LIDO-BURNER-ETHER-RECOVERED',
-      name: '🔴 Lido Burner: Ether recovered',
+      abi: 'event EtherRecovered(address indexed recipient, uint256 amount)',
+      alertId: 'ASSET-RECOVERER-ETHER-RECOVERED',
+      name: '🔴 AssetRecoverer: Ether recovered',
       description: (args: Result) =>
-        `Ether recovered:\n` +
-        `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
-        `Token: ${etherscanAddress(args.token)}\n` +
-        `Token ID: ${args.tokenId}`,
+        `Ether recovered:\n` + `Recipient: ${etherscanAddress(args.recipient)}\n` + `Amount: ${args.amount}`,
       severity: Finding.Severity.HIGH,
       type: Finding.FindingType.INFORMATION,
     },
     {
       address: BURNER_ADDRESS,
-      abi: 'event StETHSharesRecovered(address indexed requestedBy, address indexed token, uint256 tokenId)',
-      alertId: 'LIDO-BURNER-STETH-SHARES-RECOVERED',
-      name: '🔴 Lido Burner: StETH Shares recovered',
+      abi: 'event StETHSharesRecovered(address indexed recipient, uint256 shares)',
+      alertId: 'ASSET-RECOVERER-STETH-SHARES-RECOVERED',
+      name: '🔴 AssetRecoverer: StETH Shares recovered',
       description: (args: Result) =>
-        `StETH Shares recovered:\n` +
-        `Requested by: ${etherscanAddress(args.requestedBy)}\n` +
-        `Token: ${etherscanAddress(args.token)}\n` +
-        `Token ID: ${args.tokenId}`,
+        `StETH Shares recovered:\n` + `Recipient: ${etherscanAddress(args.recipient)}\n` + `Shares: ${args.shares}`,
       severity: Finding.Severity.HIGH,
       type: Finding.FindingType.INFORMATION,
     },

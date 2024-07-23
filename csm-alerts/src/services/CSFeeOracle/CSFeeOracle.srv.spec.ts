@@ -1,4 +1,4 @@
-import { Address, AddressHol } from '../../utils/constants.holesky'
+import { Address, DeploymentAddresses } from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -32,7 +32,7 @@ describe('CsFeeOracle event tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const address: AddressHol = Address
+  const address: Address = DeploymentAddresses
 
   const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)

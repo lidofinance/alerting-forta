@@ -18,7 +18,7 @@ import {
 import { Config } from './utils/env/env'
 import * as Winston from 'winston'
 import { ethers } from 'ethers'
-import { AddressHol, Address } from './utils/constants.holesky'
+import { Address, DeploymentAddresses } from './utils/constants.holesky'
 import { ETHProvider } from './clients/eth_provider'
 import { getCSFeeDistributorEvents } from './utils/events/cs_fee_distributor_events'
 import { getCSFeeOracleEvents, getHashConsensusEvents } from './utils/events/cs_fee_oracle_events'
@@ -66,9 +66,7 @@ const main = async () => {
   }
 
   const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
-  // const etherscanProvider = new ethers.providers.EtherscanProvider(holeskyNetwork, config.etherscanKey)
-
-  const address: AddressHol = Address
+  const address: Address = DeploymentAddresses
 
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
   const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS, fortaEthersProvider)
@@ -102,7 +100,7 @@ const main = async () => {
     ethClient,
     getOssifiedProxyEvents(),
     getBurnerEvents(address.BURNER_ADDRESS),
-    getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS, address.CS_ACCOUNTING_ADDRESS),
+    getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS),
   )
 
   const csAccountingSrv = new CSAccountingSrv(

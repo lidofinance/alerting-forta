@@ -1,4 +1,4 @@
-import { Address, AddressHol } from '../../utils/constants.holesky'
+import { Address, DeploymentAddresses } from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -31,7 +31,7 @@ describe('CsFeeDistributor event tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const address: AddressHol = Address
+  const address: Address = DeploymentAddresses
 
   const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
@@ -61,7 +61,7 @@ describe('CsFeeDistributor event tests', () => {
     csFeeDistributorClient,
     getOssifiedProxyEvents(),
     getBurnerEvents(address.BURNER_ADDRESS),
-    getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS, address.CS_ACCOUNTING_ADDRESS),
+    getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS),
   )
 
   test(

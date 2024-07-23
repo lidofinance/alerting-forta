@@ -34,8 +34,6 @@ export class Config {
     this.etherscanKey =
       process.env.ETHERSCAN_KEY! ||
       Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
-
-    // this.useFortaProvider = JSON.parse(process.env.USE_FORTA_RPC_URL!)
     this.useFortaProvider = process.env.USE_FORTA_RPC_URL === 'true'
 
     const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^/\n]+)/

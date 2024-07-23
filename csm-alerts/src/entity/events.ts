@@ -1,3 +1,4 @@
+import { DeploymentAddresses } from './../utils/constants.holesky'
 import { Log } from '@ethersproject/abstract-provider'
 import * as agent_pb from '../generated/proto/agent_pb'
 import { TransactionEvent } from '../generated/proto/agent_pb'
@@ -75,21 +76,33 @@ export function handleEventsOfNotice(txEvent: TransactionDto, eventsOfNotice: Ev
 
         try {
           const logDesc = parser.parseLog(log)
-          const f: Finding = new Finding()
 
-          f.setName(eventInfo.name)
-          f.setDescription(eventInfo.description(logDesc.args))
-          f.setAlertid(eventInfo.alertId)
-          f.setSeverity(eventInfo.severity)
-          f.setType(eventInfo.type)
-          f.setProtocol('ethereum')
-          const m = f.getMetadataMap()
-          m.set('args', String(logDesc.args))
+          // Extract 'from' and 'to' addresses from the log arguments
+          const from = logDesc.args.from.toLowerCase()
+          const to = logDesc.args.to.toLowerCase()
 
-          out.push(f)
+          // Apply additional checks for the specific addresses
+          if (
+            from === DeploymentAddresses.CS_FEE_DISTRIBUTOR_ADDRESS.toLowerCase() &&
+            to !== DeploymentAddresses.CS_ACCOUNTING_ADDRESS.toLowerCase()
+          ) {
+            const f: Finding = new Finding()
+
+            f.setName(eventInfo.name)
+            f.setDescription(eventInfo.description(logDesc.args))
+            f.setAlertid(eventInfo.alertId)
+            f.setSeverity(eventInfo.severity)
+            f.setType(eventInfo.type)
+            f.setProtocol('ethereum')
+
+            const m = f.getMetadataMap()
+            m.set('args', JSON.stringify(logDesc.args))
+
+            out.push(f)
+          }
         } catch (e) {
-          // Only one from eventsOfNotice could be correct
-          // Others - skipping
+          // Log parsing error, continue to the next eventInfo
+          continue
         }
       }
     }

@@ -51,7 +51,6 @@
     "knex": "^3.1.0",
     "lodash": "^4.17.21",
     "prom-client": "^15.1.2",
-    "sqlite": "3",
     "ts-retry": "^4.2.4",
     "winston": "^3.11.0"
   },

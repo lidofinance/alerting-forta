@@ -2,9 +2,9 @@ groups:
   - name: CSMGroup
     rules:
       - alert: TooMuchNetworkErrors
-        expr: increase(csm_network_errors_total[15m]) >= 25
+        expr: increase(csm_alerts_network_errors_total[15m]) >= 25
         labels:
           severity: critical
         annotations:
           summary: "CSM bot has detected {{ $value }} network errors in the last 15 minutes"
-          description: "The csm_network_errors_total {{ $value }} in the last 15 minutes."
+          description: "The csm_alerts_network_errors_total {{ $value }} in the last 15 minutes."

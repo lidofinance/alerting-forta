@@ -15,10 +15,11 @@
    1. General
       - _To be added_
    2. Events monitoring
-      1. 🟣 CRITICAL: ChargeRecipientSet(address chargeRecipient)
+      1. 🟣 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
       2. 🟣 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
       3. 🔴 HIGH: BondCurveAdded(uint256[] bondCurve)
       4. 🔴 HIGH: BondCurveSet(uint256 indexed nodeOperatorId, uint256 curveId)
+      5. 🔵 INFO: Approval(address owner, address spender, uint256 value) (stETH contract)
    3. Roles monitoring
       - _To be added_
 3. **CSFeeOracle**
