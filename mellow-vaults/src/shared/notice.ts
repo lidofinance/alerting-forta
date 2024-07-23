@@ -10,8 +10,9 @@ export function handleEventsOfNotice(
   const iface = new ethers.utils.Interface(events)
   const out: Finding[] = []
 
+  const lowerCaseAddress = address.toLowerCase()
   for (const log of txEvent.logs) {
-    if (log.address.toLowerCase() !== address.toLowerCase()) {
+    if (log.address.toLowerCase() !== lowerCaseAddress) {
       continue
     }
 
@@ -21,7 +22,7 @@ export function handleEventsOfNotice(
       if (notice) {
         const finding = Finding.fromObject({
           name: notice.name,
-          description: notice.description(event.args, address, txEvent.transaction),
+          description: notice.description(event.args, lowerCaseAddress, txEvent.transaction),
           alertId: notice.alertId,
           severity: notice.severity,
           type: notice.type ?? FindingType.Info,
