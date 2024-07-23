@@ -1,6 +1,5 @@
 import { Logger } from 'winston'
 import { Finding } from 'forta-agent'
-import { NetworkError } from '../../shared/errors'
 import { elapsedTime } from '../../shared/time'
 import { MELLOW_VAULT_ADMIN_MULTISIGS } from 'constants/common'
 import { MSIG_EVENTS, safeNotices } from '../../utils/events/safe_events'

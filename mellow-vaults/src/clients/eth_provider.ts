@@ -254,7 +254,10 @@ export class ETHProvider implements IVaultWatcherClient {
     }
   }
 
-  public async getVaultConfigurationStorage(vaultId: number, blockNumber: number): Promise<E.Either<Error, VaultConfig>> {
+  public async getVaultConfigurationStorage(
+    vaultId: number,
+    blockNumber: number,
+  ): Promise<E.Either<Error, VaultConfig>> {
     try {
       const vault = VAULT_LIST[vaultId]
       console.time(`getVaultConfigurationStorage ${vault.name}`)
