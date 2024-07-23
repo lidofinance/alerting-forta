@@ -101,8 +101,8 @@ export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
 
-    const vaultFindings = await app.VaultWatcherSrv.handleTransaction(txEvent)
-    const multisigFindings = await app.MultisigWatcherSrv.handleTransaction(txEvent)
+    const vaultFindings = app.VaultWatcherSrv.handleTransaction(txEvent)
+    const multisigFindings = app.MultisigWatcherSrv.handleTransaction(txEvent)
 
     const findings = [...vaultFindings, ...multisigFindings]
     app.healthChecker.check(findings)
