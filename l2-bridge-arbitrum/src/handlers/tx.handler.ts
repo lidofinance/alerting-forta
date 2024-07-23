@@ -65,10 +65,10 @@ export class TxHandler {
             `\t\tL1: ${this.bridgeBalanceSrv.l1Ldo} LDO\n` +
             `\t\tL2: ${this.bridgeBalanceSrv.l2Ldo} LDO\n` +
             `\tStEth:\n` +
-            `\t\tL1: ${this.bridgeBalanceSrv.l1Steth} StEth\n` +
+            `\t\tL1: ${this.bridgeBalanceSrv.l1Steth} wstETH\n` +
             `\t\tL2: ${this.bridgeBalanceSrv.l2wSteth} wstETH\n\n` +
             `Withdrawals: \n` +
-            `\tAmount: ${stat.right.amount.toFixed(4)} \n` +
+            `\tAmount: ${stat.right.amount.toFixed(4)} wstETH\n` +
             `\tTotal: ${stat.right.total}`,
         )
         f.setAlertid(`${this.networkName}-digest`)
