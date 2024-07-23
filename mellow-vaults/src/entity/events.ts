@@ -2,7 +2,7 @@ import { FindingSeverity, FindingType, Log } from 'forta-agent'
 
 export type EventOfNotice = {
   name: string
-  address: string
+  address?: string
   event: string
   alertId: string
   description: CallableFunction

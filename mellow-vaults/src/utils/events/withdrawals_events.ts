@@ -11,7 +11,6 @@ const getBondStrategyNameByAddress = (address: string) =>
 
 export const processWithdrawalsAllNotices: Record<string, EventOfNotice> = {
   DefaultBondStrategyProcessWithdrawals: {
-    address: '',
     event: MELLOW_VAULT_PROCESS_WITHDRAWALS_EVENT,
     alertId: 'MELLOW-VAULT-WITHDRAWAL-ALL',
     name: 'ℹ️ Vault: Withdrawal all',
@@ -27,7 +26,6 @@ export const processWithdrawalsAllNotices: Record<string, EventOfNotice> = {
 
 export const processWithdrawalsPartNotices: Record<string, EventOfNotice> = {
   DefaultBondStrategyProcessWithdrawals: {
-    address: '',
     event: MELLOW_VAULT_PROCESS_WITHDRAWALS_EVENT,
     alertId: 'MELLOW-VAULT-PARTIAL-WITHDRAWAL',
     name: '⚠️ Vault: Withdrawal partial',

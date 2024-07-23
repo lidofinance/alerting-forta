@@ -6,5 +6,5 @@ export abstract class IAclChangesClient {
     method: string,
     currentBlock: number,
   ): Promise<E.Either<Error, string>>
-  public abstract isDeployed(address: string, blockNumber?: number): Promise<E.Either<Error, boolean>>
+  public abstract isDeployed(address: string, blockNumber: number): Promise<E.Either<Error, boolean>>
 }

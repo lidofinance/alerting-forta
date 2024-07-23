@@ -24,32 +24,38 @@ import { LogDescription } from '@ethersproject/abi'
 import { BlockDto, TransactionDto } from '../../entity/events'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type VaultWatcherClient = {
-  getVaultTotalSupply(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultUnderlyingTvl(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultPendingWithdrawersCount(vaultIndex: number, blockNumber: number): Promise<E.Either<Error, BigNumber>>
+export abstract class IVaultWatcherClient {
+  public abstract getVaultTotalSupply(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getVaultUnderlyingTvl(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getVaultPendingWithdrawersCount(
+    vaultIndex: number,
+    blockNumber: number,
+  ): Promise<E.Either<Error, BigNumber>>
 
-  getDefaultBondStrategyWithdrawalEvents(
+  public abstract getDefaultBondStrategyWithdrawalEvents(
     fromBlock: number,
     toBlock: number,
     vaultIndex: number,
   ): Promise<E.Either<Error, LogDescription[]>>
 
-  getVaultConfiguratorMaxTotalSupply(vaultIndex: number, blockHash: number): Promise<E.Either<Error, BigNumber>>
-  getVaultConfigurationStorage(vaultIndex: number, blockHash: number): Promise<E.Either<Error, Storage>>
+  public abstract getVaultConfiguratorMaxTotalSupply(
+    vaultIndex: number,
+    blockHash: number,
+  ): Promise<E.Either<Error, BigNumber>>
+  public abstract getVaultConfigurationStorage(vaultIndex: number, blockHash: number): Promise<E.Either<Error, Storage>>
 
-  getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
-  getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
+  public abstract getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 }
 
 const vaultStorages: Storage[] = []
 
 export class VaultWatcherSrv {
   private readonly logger: Logger
-  private readonly ethClient: VaultWatcherClient
+  private readonly ethClient: IVaultWatcherClient
   private readonly name = 'VaultWatcherSrv'
 
-  constructor(logger: Logger, ethClient: VaultWatcherClient) {
+  constructor(logger: Logger, ethClient: IVaultWatcherClient) {
     this.logger = logger
     this.ethClient = ethClient
   }
@@ -62,7 +68,7 @@ export class VaultWatcherSrv {
         const storage = await this.ethClient.getVaultConfigurationStorage(index, blockNumber)
         if (E.isLeft(storage)) {
           return networkAlert(
-            storage.left as unknown as Error,
+            storage.left,
             `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:a9f31f4f)`,
             `Could not call ethProvider.getVaultConfigurationStorage`,
           )
@@ -97,11 +103,10 @@ export class VaultWatcherSrv {
       MELLOW_SYMBIOTIC_ADDRESS,
       vaultLimitNotice,
     )
-    findings.push(...limitFindings)
     const aclFindings = this.handleAclChanges(txEvent)
-    findings.push(...aclFindings)
     const withdrawalFindings = this.handleWithdrawals(txEvent)
-    findings.push(...withdrawalFindings)
+
+    findings.push(...limitFindings, ...aclFindings, ...withdrawalFindings)
 
     return findings
   }
@@ -182,7 +187,7 @@ export class VaultWatcherSrv {
         const storage = await this.ethClient.getVaultConfigurationStorage(vaultIdx, block.number)
         if (E.isLeft(storage)) {
           return networkAlert(
-            storage.left as unknown as Error,
+            storage.left,
             `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:4184fae3)`,
             `Could not call ethProvider.getVaultConfigurationStorage`,
           )

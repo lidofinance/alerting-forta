@@ -1,6 +1,5 @@
 import {
   BlockEvent,
-  decodeJwt,
   Finding,
   FindingSeverity,
   FindingType,
@@ -30,14 +29,6 @@ export function initialize(): Initialize {
     const startTime = new Date().getTime()
     const app = await App.getInstance()
 
-    const token = await App.getJwt()
-    if (E.isLeft(token)) {
-      console.error(`Error: ${token.left.message}`)
-      console.error(`Stack: ${token.left.stack}`)
-
-      process.exit(1)
-    }
-
     const latestBlock = await app.ethClient.getStartedBlockForApp(argv)
     if (E.isLeft(latestBlock)) {
       console.error(`Error: ${latestBlock.left.message}`)
@@ -46,7 +37,12 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const vaultWatcherSrvErr = await app.VaultWatcherSrv.initialize(latestBlock.right.number)
+    const lastBlockNumber = latestBlock.right.number
+    const [vaultWatcherSrvErr] = await Promise.all([
+      app.VaultWatcherSrv.initialize(lastBlockNumber),
+      app.MultisigWatcherSrv.initialize(lastBlockNumber),
+      app.AclChangesSrv.initialize(lastBlockNumber),
+    ])
 
     if (vaultWatcherSrvErr !== null) {
       console.error(`Error: ${vaultWatcherSrvErr.message}`)
@@ -55,14 +51,12 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const agents = [app.VaultWatcherSrv.getName(), app.MultisigWatcherSrv.getName()]
+    const agents = [app.VaultWatcherSrv.getName(), app.MultisigWatcherSrv.getName(), app.AclChangesSrv.getName()]
     metadata.agents = '[' + agents.toString() + ']'
-
-    const decodedJwt = decodeJwt(token.right)
 
     await app.findingsRW.write([
       Finding.fromObject({
-        name: `Agent launched, ScannerId: ${decodedJwt.payload.sub}`,
+        name: `Agent launched`,
         description: `Version: ${Version.desc}`,
         alertId: 'LIDO-AGENT-LAUNCHED',
         severity: FindingSeverity.Info,
@@ -75,16 +69,11 @@ export function initialize(): Initialize {
   }
 }
 
-let isHandleBlockRunning: boolean = false
 export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
     console.log(`#ETH block: ${blockEvent.block.number}`)
     const startTime = new Date().getTime()
-    if (isHandleBlockRunning) {
-      return []
-    }
 
-    isHandleBlockRunning = true
     const app = await App.getInstance()
 
     const findings: Finding[] = []
@@ -104,7 +93,6 @@ export const handleBlock = (): HandleBlock => {
     findings.push(...vaultWatcherSrvFindings, ...aclChangesSrvFindings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
-    isHandleBlockRunning = false
     return findings
   }
 }

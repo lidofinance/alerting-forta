@@ -23,7 +23,6 @@ const getBondStrategyNameByAddress = (address: string) =>
 
 export const aclNotices: Record<string, EventOfNotice> = {
   RoleAdminChanged: {
-    address: '',
     event: MELLOW_VAULT_STRATEGY_ROLE_ADMIN_CHANGED_EVENT,
     alertId: 'MELLOW-VAULT-ROLE-ADMIN-CHANGED',
     name: '🚨 Vault: Role Admin changed',
@@ -37,7 +36,6 @@ export const aclNotices: Record<string, EventOfNotice> = {
     uniqueKey: '12c18264-900b-48a9-bdee-b193b61a36c6',
   },
   RoleGranted: {
-    address: '',
     event: MELLOW_VAULT_STRATEGY_ROLE_GRANTED_EVENT,
     alertId: 'MELLOW-VAULT-ROLE-GRANTED',
     name: '🚨 Vault: Role granted',
@@ -51,7 +49,6 @@ export const aclNotices: Record<string, EventOfNotice> = {
     uniqueKey: 'd45a13a5-940c-439f-96e2-2cec78f9de24',
   },
   RoleRevoked: {
-    address: '',
     event: MELLOW_VAULT_STRATEGY_ROLE_REVOKED_EVENT,
     alertId: 'MELLOW-VAULT-ROLE-REVOKED',
     name: '🚨  Vault: Role revoked',

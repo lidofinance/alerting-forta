@@ -10,7 +10,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Added Owner
     "metadata": {
       "args": "0x59F8D74Fe49d5ebEAc069E3baf07eB4b614BD5A7",
     },
-    "name": "🚨 Gnosis Safe: Owner added",
+    "name": "⚠️ Gnosis Safe: Owner added",
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
@@ -26,7 +26,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Added Owner
     "metadata": {
       "args": "0xFB864C1127ff77215d0A8e652bB632F526A4A89f",
     },
-    "name": "🚨 Gnosis Safe: Owner added",
+    "name": "⚠️ Gnosis Safe: Owner added",
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
@@ -42,7 +42,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Added Owner
     "metadata": {
       "args": "0xa94e4ADceC38074967b17F6e8856AB12368686B5",
     },
-    "name": "🚨 Gnosis Safe: Owner added",
+    "name": "⚠️ Gnosis Safe: Owner added",
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
@@ -58,7 +58,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Added Owner
     "metadata": {
       "args": "0xEA685f0AF4A0BF5E7D6729b2C63eDF574D3EE27f",
     },
-    "name": "🚨 Gnosis Safe: Owner added",
+    "name": "⚠️ Gnosis Safe: Owner added",
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
@@ -75,7 +75,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Added Owner
     "metadata": {
       "args": "0x94a28231af2efbd2b1408ed0e49026adb1874fa2b91aabe5899e9123b4ce3ecb,0",
     },
-    "name": "✅ Gnosis Safe: TX Executed",
+    "name": "ℹ️ ✅ Gnosis Safe: TX Executed",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},
@@ -96,7 +96,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Changed Thr
     "metadata": {
       "args": "5",
     },
-    "name": "🚨 Gnosis Safe: Threshold changed",
+    "name": "⚠️ Gnosis Safe: Threshold changed",
     "protocol": "ethereum",
     "severity": 3,
     "source": {},
@@ -113,7 +113,7 @@ exports[`MultisigWatcher srv functional tests should process tx with Changed Thr
     "metadata": {
       "args": "0xa9dc9b05a3462baba5892e962a8d91815660346c4af348e42e5d5c348a9e81a9,0",
     },
-    "name": "✅ Gnosis Safe: TX Executed",
+    "name": "ℹ️ ✅ Gnosis Safe: TX Executed",
     "protocol": "ethereum",
     "severity": 1,
     "source": {},

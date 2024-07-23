@@ -16,10 +16,9 @@ export class MultisigWatcherSrv {
     this.logger = logger
   }
 
-  async initialize(): Promise<NetworkError | null> {
+  initialize(currentBlock: number): null {
     const start = new Date().getTime()
-
-    this.logger.info(elapsedTime(MultisigWatcherSrv.name + '.' + this.initialize.name, start))
+    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
 
     return null
   }

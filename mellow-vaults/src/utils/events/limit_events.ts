@@ -5,7 +5,6 @@ export const MELLOW_VAULT_INCREASE_LIMIT_EVENT = 'event IncreaseLimit(uint256 am
 
 export const vaultLimitNotice = {
   IncreaseLimit: {
-    address: '',
     event: MELLOW_VAULT_INCREASE_LIMIT_EVENT,
     alertId: 'MELLOW-SYMBIOTIC-INCREASE-LIMIT',
     name: '⚠️ Vault: Symbiotic limit increased',

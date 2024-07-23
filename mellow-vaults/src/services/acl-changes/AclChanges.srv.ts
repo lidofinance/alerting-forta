@@ -52,15 +52,16 @@ export class AclChangesSrv {
 
   public async handleOwnerChange(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
+
     const findingsTimestamps = new Map<string, number>()
 
     const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(async (address: string) => {
-      const data = OWNABLE_CONTRACTS.get(address)
-      if (!data) {
+      const ownableContract = OWNABLE_CONTRACTS.get(address)
+      if (!ownableContract) {
         return
       }
 
-      const curOwner = await this.ethProvider.getContractOwner(address, data.ownershipMethod, block.number)
+      const curOwner = await this.ethProvider.getContractOwner(address, ownableContract.ownershipMethod, block.number)
 
       if (E.isLeft(curOwner)) {
         out.push(
@@ -74,15 +75,15 @@ export class AclChangesSrv {
       }
 
       const curOwnerAddress = curOwner.right.toLowerCase()
-      if (data?.ownerAddress && data?.ownerAddress === curOwnerAddress) {
+      if (ownableContract?.ownerAddress && ownableContract?.ownerAddress === curOwnerAddress) {
         return
       }
 
-      if (!data?.ownerAddress && WHITELISTED_OWNERS.includes(curOwnerAddress)) {
+      if (!ownableContract?.ownerAddress && WHITELISTED_OWNERS.includes(curOwnerAddress)) {
         return
       }
 
-      const curOwnerIsContract = await this.ethProvider.isDeployed(curOwner.right)
+      const curOwnerIsContract = await this.ethProvider.isDeployed(curOwner.right, block.number)
 
       if (E.isLeft(curOwnerIsContract)) {
         out.push(
@@ -111,7 +112,7 @@ export class AclChangesSrv {
           name: curOwnerIsContract.right
             ? '🚨 Vault Contract owner set to address not in whitelist'
             : '🚨🚨🚨 Vault Contract owner set to EOA 🚨🚨🚨',
-          description: `${data.name} contract (${etherscanAddress(address)}) owner is set to ${
+          description: `${ownableContract.name} contract (${etherscanAddress(address)}) owner is set to ${
             curOwnerIsContract.right ? 'contract' : 'EOA'
           } address ${etherscanAddress(curOwner.right)}`,
           alertId: 'MELLOW-SUSPICIOUS-VAULT-CONTRACT-OWNER',
@@ -119,7 +120,7 @@ export class AclChangesSrv {
           severity: curOwnerIsContract.right ? FindingSeverity.High : FindingSeverity.Critical,
           metadata: {
             contract: address,
-            name: data.name,
+            name: ownableContract.name,
             owner: curOwner.right,
           },
         }),
