@@ -1,7 +1,8 @@
 import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
-import { ACL_ROLES, VAULT_LIST } from 'constants/common'
+import { ACL_ROLES } from 'constants/common'
+import { getVaultByAddress } from '../../shared/vault'
 
 const MELLOW_VAULT_STRATEGY_ROLE_ADMIN_CHANGED_EVENT =
   'event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)'
@@ -18,16 +19,13 @@ export const MELLOW_VAULT_STRATEGY_ACL_EVENTS = [
   MELLOW_VAULT_STRATEGY_ROLE_REVOKED_EVENT,
 ]
 
-const getBondStrategyNameByAddress = (address: string) =>
-  VAULT_LIST.find((vault) => vault.defaultBondStrategy === address)
-
 export const aclNotices: Record<string, EventOfNotice> = {
   RoleAdminChanged: {
     event: MELLOW_VAULT_STRATEGY_ROLE_ADMIN_CHANGED_EVENT,
     alertId: 'MELLOW-VAULT-ROLE-ADMIN-CHANGED',
     name: '🚨 Vault: Role Admin changed',
     description: (args: Result, address: string) =>
-      `Mellow Vault [${getBondStrategyNameByAddress(address)?.name}] bond strategy ` +
+      `Mellow Vault [${getVaultByAddress(address)?.name}] bond strategy ` +
       `Role Admin for role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
       `was changed from ${args.previousAdminRole} to ${args.newAdminRole} ` +
       `bond strategy address - ${address}`,
@@ -40,7 +38,7 @@ export const aclNotices: Record<string, EventOfNotice> = {
     alertId: 'MELLOW-VAULT-ROLE-GRANTED',
     name: '🚨 Vault: Role granted',
     description: (args: Result, address: string) =>
-      `Mellow Vault [${getBondStrategyNameByAddress(address)?.name}] bond strategy ` +
+      `Mellow Vault [${getVaultByAddress(address)?.name}] bond strategy ` +
       `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
       `was granted to ${args.account} by ${args.sender} ` +
       `bond strategy address - ${address}`,
@@ -53,7 +51,7 @@ export const aclNotices: Record<string, EventOfNotice> = {
     alertId: 'MELLOW-VAULT-ROLE-REVOKED',
     name: '🚨  Vault: Role revoked',
     description: (args: Result, address: string) =>
-      `Mellow Vault [${getBondStrategyNameByAddress(address)?.name}] bond strategy ` +
+      `Mellow Vault [${getVaultByAddress(address)?.name}] bond strategy ` +
       `Role ${args.role}(${ACL_ROLES.get(args.role) || 'unknown'}) ` +
       `was revoked to ${args.account} by ${args.sender} ` +
       `bond strategy address - ${address}`,

@@ -1,4 +1,4 @@
-export interface Storage {
+export interface VaultConfig {
   baseDelay?: string
   depositCallbackDelay?: string
   withdrawalCallbackDelay?: string
@@ -20,6 +20,28 @@ export interface Storage {
   priceOracle?: string
   validator?: string
 }
+export const VAULT_WATCH_METHOD_NAMES = [
+  'baseDelay',
+  'depositCallbackDelay',
+  'withdrawalCallbackDelay',
+  'withdrawalFeeD9Delay',
+  'maximalTotalSupplyDelay',
+  'isDepositLockedDelay',
+  'areTransfersLockedDelay',
+  'ratiosOracleDelay',
+  'priceOracleDelay',
+  'validatorDelay',
+  'emergencyWithdrawalDelay',
+  'depositCallback',
+  'withdrawalCallback',
+  'withdrawalFeeD9',
+  'maximalTotalSupply',
+  'isDepositLocked',
+  'areTransfersLocked',
+  'ratiosOracle',
+  'priceOracle',
+  'validator',
+] as const
 
 export interface SafeTX {
   safeAddress: string
@@ -53,184 +75,6 @@ export const MELLOW_VAULT_PROXY_OWNER = '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0
 
 export const MELLOW_SYMBIOTIC_ADDRESS = '0xc329400492c6ff2438472d4651ad17389fcb843a'
 
-export const STORAGE_MEV_CAP: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0xc3a149b5ca3f4a5f17f5d865c14aa9dbb570f10a',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '10322500000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0xd2635fa0635126bafdd430b9614c0280d37a76ca',
-}
-export const STORAGE_P2P: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0xa0ea6d4fe369104ed4cc18951b95c3a43573c0f6',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '10322500000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0x6ab116ac709c89d90cc1f8cd0323617a9996ba7c',
-}
-export const STORAGE_STEAKHOUSE: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0x7a14b34a9a8ea235c66528dc3bf3aefc36dfc268',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '10322500000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0xdb66693845a3f72e932631080efb1a86536d0ea7',
-}
-export const STORAGE_RE7LABS: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0xce3a8820265ad186e8c1ceaed16ae97176d020ba',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '10322500000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0x0483b89f632596b24426703e540e373083928a6a',
-}
-
-export const STORAGE_INFSTONES: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0x20ad4d9bbbbbee7d3aba91558a02c17c3387b834',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '20000000000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0xa7a4411205ae15a7038cf443d03ad3e153ff70f1',
-}
-export const STORAGE_LUGA: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0xa80575b793aabd32edb39759c975534d75a4a2a4',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '11000000000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0xdecdf29ad6424db3ffb607aa9b2d13129e2f4dd9',
-}
-export const STORAGE_CHORUS_ONE: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0xe73c97e07df948a046505f8c63c4b54d632d4972',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '11000000000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0xa34721eb65ece9318cbef85b112e427598575a0a',
-}
-export const STORAGE_RENZO: Storage = {
-  baseDelay: '2592000',
-  depositCallbackDelay: '86400',
-  withdrawalCallbackDelay: '86400',
-  withdrawalFeeD9Delay: '2592000',
-  maximalTotalSupplyDelay: '86400',
-  isDepositLockedDelay: '3600',
-  areTransfersLockedDelay: '31536000',
-  ratiosOracleDelay: '2592000',
-  priceOracleDelay: '2592000',
-  validatorDelay: '2592000',
-  emergencyWithdrawalDelay: '7776000',
-  depositCallback: '0xe8206fbf2d9f9e7fbf2f7b997e20a34f9158cc14',
-  withdrawalCallback: '0x0000000000000000000000000000000000000000',
-  withdrawalFeeD9: '0',
-  maximalTotalSupply: '25000000000000000000000',
-  isDepositLocked: 'false',
-  areTransfersLocked: 'false',
-  ratiosOracle: '0x955ff4cc738cdc009d2903196d1c94c8cfb4d55d',
-  priceOracle: '0x1dc89c28e59d142688d65bd7b22c4fd40c2cc06d',
-  validator: '0x5523f92b532b9d723c393ca2cd7098b9d618a3e6',
-}
-
 export const ACL_ROLES = new Map<string, string>([
   ['0xc171260023d22a25a00a2789664c9334017843b831138c8ef03cc8897e5873d7', 'ADMIN DELEGATE ROLE'],
   ['0xf23ec0bb4210edd5cba85afd05127efcd2fc6a781bfed49188da1081670b22d8', 'ADMIN ROLE'],
@@ -250,7 +94,6 @@ export const VAULT_STEAKHOUSE = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_STEAKHOUSE,
   curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
 }
 export const VAULT_RE7LABS = {
@@ -265,7 +108,6 @@ export const VAULT_RE7LABS = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_RE7LABS,
   curator: '0xe86399fe6d7007fdecb08a2ee1434ee677a04433',
 }
 export const VAULT_MEV_CAP = {
@@ -280,7 +122,6 @@ export const VAULT_MEV_CAP = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_MEV_CAP,
   curator: '0xa1e38210b06a05882a7e7bfe167cd67f07fa234a',
 }
 export const VAULT_P2P = {
@@ -295,7 +136,6 @@ export const VAULT_P2P = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_P2P,
   curator: '0x4a3c7f2470aa00ebe6ae7cb1faf95964b9de1ef4',
 }
 
@@ -311,7 +151,6 @@ export const VAULT_INFSTONES = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_INFSTONES,
   curator: '0xd3895c43e886778e7e1e099c280a8c5aa5b2a4d8',
 }
 export const VAULT_LUGA = {
@@ -326,7 +165,6 @@ export const VAULT_LUGA = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_LUGA,
   curator: '0x1fbbc71b60a499c09d454725acf1d6931515671a',
 }
 export const VAULT_CHORUS_ONE = {
@@ -341,7 +179,6 @@ export const VAULT_CHORUS_ONE = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_CHORUS_ONE,
   curator: '0x3ea145d6cea2e939d866ba71136dca6a1b96919f',
 }
 export const VAULT_RENZO = {
@@ -356,7 +193,6 @@ export const VAULT_RENZO = {
   deployer: '0x188858ac61a74350116d1cb6958fbc509fd6afa1',
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
-  storage: STORAGE_RENZO,
   curator: '0x6e5cad73d00bc8340f38afb61fc5e34f7193f599',
 }
 

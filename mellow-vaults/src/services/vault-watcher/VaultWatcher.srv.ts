@@ -9,7 +9,7 @@ import {
   HOURS_48_IN_BLOCK,
   MELLOW_SYMBIOTIC_ADDRESS,
   PERIODICAL_BLOCK_INTERVAL,
-  Storage,
+  VaultConfig,
   VAULT_LIST,
 } from 'constants/common'
 import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
@@ -42,13 +42,13 @@ export abstract class IVaultWatcherClient {
     vaultIndex: number,
     blockHash: number,
   ): Promise<E.Either<Error, BigNumber>>
-  public abstract getVaultConfigurationStorage(vaultIndex: number, blockHash: number): Promise<E.Either<Error, Storage>>
+  public abstract getVaultConfigurationStorage(vaultIndex: number, blockHash: number): Promise<E.Either<Error, VaultConfig>>
 
   public abstract getSymbioticWstTotalSupply(blockNumber: number): Promise<E.Either<Error, BigNumber>>
   public abstract getSymbioticWstLimit(blockNumber: number): Promise<E.Either<Error, BigNumber>>
 }
 
-const vaultStorages: Storage[] = []
+const vaultConfigs: VaultConfig[] = []
 
 export class VaultWatcherSrv {
   private readonly logger: Logger
@@ -60,32 +60,29 @@ export class VaultWatcherSrv {
     this.ethClient = ethClient
   }
 
-  async initialize(blockNumber: number): Promise<NetworkError | null> {
+  async initialize(currentBlock: number): Promise<NetworkError | null> {
     const start = new Date().getTime()
 
-    const results = await Promise.all(
-      VAULT_LIST.map(async (vault, index) => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(index, blockNumber)
-        if (E.isLeft(storage)) {
-          return networkAlert(
-            storage.left,
-            `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:a9f31f4f)`,
-            `Could not call ethProvider.getVaultConfigurationStorage`,
-          )
-        }
-        return storage.right
-      }),
-    )
-    // TODO: make better way to store state
-    results.forEach((result, index) => {
-      if (result instanceof Finding) {
-        vaultStorages[index] = {}
-      } else {
-        vaultStorages[index] = result
-      }
-    })
+    try {
+      const results = await Promise.all(
+        VAULT_LIST.map(async (vault, index) => {
+          const vaultConfig = await this.ethClient.getVaultConfigurationStorage(index, currentBlock)
+          if (E.isLeft(vaultConfig)) {
+            throw vaultConfig.left
+          }
+          return vaultConfig.right
+        }),
+      )
 
-    this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.initialize.name, start))
+      results.forEach((result, index) => {
+        vaultConfigs[index] = result
+      })
+    } catch (err) {
+      const error = err as Error
+      return new NetworkError(error, `Could not call ethProvider.getVaultConfigurationStorage`)
+    }
+
+    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
 
     return null
   }
@@ -181,64 +178,57 @@ export class VaultWatcherSrv {
 
   private async handleVaultConfigurationChange(block: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
-    const vaultIdx = block.number % VAULT_LIST.length // distributing vault config check by block because of Forta slow RPC responses. Expected One vault check per block
-    const results = await Promise.all(
-      VAULT_LIST.filter((vault, idx) => idx === vaultIdx).map(async () => {
-        const storage = await this.ethClient.getVaultConfigurationStorage(vaultIdx, block.number)
-        if (E.isLeft(storage)) {
-          return networkAlert(
-            storage.left,
-            `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:4184fae3)`,
-            `Could not call ethProvider.getVaultConfigurationStorage`,
-          )
-        }
-        return storage.right
-      }),
-    )
+    // Check one vault config every block
+    const vaultIdx = block.number % VAULT_LIST.length
+    const vaultConfig = await this.ethClient.getVaultConfigurationStorage(vaultIdx, block.number)
+    if (E.isLeft(vaultConfig)) {
+      out.push(
+        networkAlert(
+          vaultConfig.left,
+          `Error in ${VaultWatcherSrv.name}.${this.handleVaultConfigurationChange.name} (uid:4184fae3)`,
+          `Could not call ethProvider.getVaultConfigurationStorage`,
+        ),
+      )
+      return out
+    }
 
-    results.forEach((storageOrError) => {
-      if (storageOrError instanceof Finding) {
-        out.push(storageOrError)
-        return
-      }
-      const currentStorage = storageOrError
-      const vault = VAULT_LIST[vaultIdx]
-      const vaultStorage = vaultStorages[vaultIdx]
-      const keys = Object.keys(vaultStorage)
+    const vault = VAULT_LIST[vaultIdx]
+    const vaultConfigPrev = vaultConfigs[vaultIdx]
+    const keys = Object.keys(vaultConfigPrev)
 
-      if (!keys.length) {
+    if (!keys.length) {
+      out.push(
+        Finding.fromObject({
+          name: `🚨 Vault critical storage not loaded`,
+          description: `Mellow Vault [${vault?.name}] can't load of the storage for contract ${vault.vault}`,
+          alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
+          severity: FindingSeverity.High,
+          type: FindingType.Suspicious,
+        }),
+      )
+    }
+
+    keys.forEach((key) => {
+      const slotName = key as keyof VaultConfig
+      if (vaultConfig.right[slotName] !== vaultConfigPrev?.[slotName]) {
         out.push(
           Finding.fromObject({
-            name: `🚨 Vault critical storage not loaded`,
-            description: `Mellow Vault [${vault?.name}] can't load of the storage for contract ${vault.vault}`,
-            alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
-            severity: FindingSeverity.High,
+            name: `🚨🚨🚨 Vault critical storage slot value changed`,
+            description:
+              `Mellow Vault [${vault?.name}] ` +
+              `Value of the storage slot \`'${slotName}'\` ` +
+              `for contract ${vault.vault} has changed!` +
+              `\nPrev value: ${vaultConfigPrev?.[slotName]}` +
+              `\nNew value: ${vaultConfig.right[slotName]}`,
+            alertId: 'MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED',
+            severity: FindingSeverity.Critical,
             type: FindingType.Suspicious,
           }),
         )
+        vaultConfigPrev[slotName] = vaultConfig.right[slotName]
       }
-
-      keys.forEach((key) => {
-        const slotName = key as keyof Storage
-        if (currentStorage[slotName] !== vaultStorage?.[slotName]) {
-          out.push(
-            Finding.fromObject({
-              name: `🚨🚨🚨 Vault critical storage slot value changed`,
-              description:
-                `Mellow Vault [${vault?.name}] ` +
-                `Value of the storage slot \`'${slotName}'\` ` +
-                `for contract ${vault.vault} has changed!` +
-                `\nPrev value: ${vaultStorage?.[slotName]}` +
-                `\nNew value: ${currentStorage[slotName]}`,
-              alertId: 'MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED',
-              severity: FindingSeverity.Critical,
-              type: FindingType.Suspicious,
-            }),
-          )
-          vaultStorage[slotName] = currentStorage[slotName]
-        }
-      })
     })
+
     return out
   }
 

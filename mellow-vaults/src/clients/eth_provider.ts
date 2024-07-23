@@ -8,7 +8,7 @@ import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import { DefaultBondStrategy__factory, SymbioticWstETH, Vault, VaultConfigurator } from '../generated'
 import { IVaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { Storage, STORAGE_MEV_CAP, WSTETH_ADDRESS, VAULT_LIST } from 'constants/common'
+import { VaultConfig, VAULT_WATCH_METHOD_NAMES, WSTETH_ADDRESS, VAULT_LIST } from 'constants/common'
 import { LogDescription } from '@ethersproject/abi'
 
 const DELAY_IN_500MS = 500
@@ -254,21 +254,21 @@ export class ETHProvider implements IVaultWatcherClient {
     }
   }
 
-  public async getVaultConfigurationStorage(vaultId: number, blockNumber: number): Promise<E.Either<Error, Storage>> {
+  public async getVaultConfigurationStorage(vaultId: number, blockNumber: number): Promise<E.Either<Error, VaultConfig>> {
     try {
       const vault = VAULT_LIST[vaultId]
       console.time(`getVaultConfigurationStorage ${vault.name}`)
-      const out = await retryAsync<Storage>(
-        async (): Promise<Storage> => {
-          const keys = Object.keys(STORAGE_MEV_CAP) as (keyof Storage)[]
+      const out = await retryAsync<VaultConfig>(
+        async (): Promise<VaultConfig> => {
+          const keys = VAULT_WATCH_METHOD_NAMES
           const results = await Promise.all(
-            keys.map((key: keyof Storage) => {
+            keys.map((key) => {
               const vaultConfiguratorContract = this.vaultConfiguratorContracts[vaultId]
               return vaultConfiguratorContract.functions?.[key]({ blockTag: blockNumber })
             }),
           )
           const resultStr = results.map((result) => result[0].toString().toLowerCase())
-          const storage: Storage = {}
+          const storage: VaultConfig = {}
           resultStr.forEach((value: string, index: number) => {
             storage[keys[index]] = value
           })

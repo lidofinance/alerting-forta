@@ -1,13 +1,10 @@
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { Result } from '@ethersproject/abi/lib'
-import { VAULT_LIST } from 'constants/common'
 import type { EventOfNotice } from '../../entity/events'
+import { getVaultByAddress } from '../../shared/vault'
 
 export const MELLOW_VAULT_PROCESS_WITHDRAWALS_EVENT =
   'event DefaultBondStrategyProcessWithdrawals (address[] users, uint256 timestamp)'
-
-const getBondStrategyNameByAddress = (address: string) =>
-  VAULT_LIST.find((vault) => vault.defaultBondStrategy === address)
 
 export const processWithdrawalsAllNotices: Record<string, EventOfNotice> = {
   DefaultBondStrategyProcessWithdrawals: {
@@ -15,7 +12,7 @@ export const processWithdrawalsAllNotices: Record<string, EventOfNotice> = {
     alertId: 'MELLOW-VAULT-WITHDRAWAL-ALL',
     name: 'ℹ️ Vault: Withdrawal all',
     description: (_: Result, address: string) => {
-      const vault = getBondStrategyNameByAddress(address)
+      const vault = getVaultByAddress(address)
       return `Mellow Vault [${vault?.name}] (${vault?.vault}) - withdrawal, bond strategy address - ${address}`
     },
     severity: FindingSeverity.Info,
@@ -30,7 +27,7 @@ export const processWithdrawalsPartNotices: Record<string, EventOfNotice> = {
     alertId: 'MELLOW-VAULT-PARTIAL-WITHDRAWAL',
     name: '⚠️ Vault: Withdrawal partial',
     description: (_: Result, address: string) => {
-      const vault = getBondStrategyNameByAddress(address)
+      const vault = getVaultByAddress(address)
       return `Mellow Vault [${vault?.name}] (${vault?.vault}) - bond strategy address - ${address}`
     },
     severity: FindingSeverity.Medium,
