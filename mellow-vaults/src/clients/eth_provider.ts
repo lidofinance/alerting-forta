@@ -259,8 +259,6 @@ export class ETHProvider implements IVaultWatcherClient {
     blockNumber: number,
   ): Promise<E.Either<Error, VaultConfig>> {
     try {
-      const vault = VAULT_LIST[vaultId]
-      console.time(`getVaultConfigurationStorage ${vault.name}`)
       const out = await retryAsync<VaultConfig>(
         async (): Promise<VaultConfig> => {
           const keys = VAULT_WATCH_METHOD_NAMES
@@ -279,7 +277,6 @@ export class ETHProvider implements IVaultWatcherClient {
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
-      console.timeEnd(`getVaultConfigurationStorage ${vault.name}`)
       return E.right(out)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not fetch getVaultConfigurationStorage`))

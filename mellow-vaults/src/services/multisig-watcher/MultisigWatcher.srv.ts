@@ -27,11 +27,13 @@ export class MultisigWatcherSrv {
   }
 
   public handleTransaction(txEvent: TransactionDto): Finding[] {
+    const start = new Date().getTime()
     const findings: Finding[] = []
 
     const handleSafeEventsFindings = this.handleSafeEvents(txEvent)
     findings.push(...handleSafeEventsFindings)
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleTransaction.name, start))
     return findings
   }
 

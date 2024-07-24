@@ -87,7 +87,6 @@ export class VaultWatcherSrv {
     }
 
     this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
-
     return null
   }
 
@@ -96,25 +95,23 @@ export class VaultWatcherSrv {
   }
 
   public handleTransaction(txEvent: TransactionDto): Finding[] {
+    const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const limitFindings = handleEventsOfNotice(
-      txEvent,
-      [MELLOW_VAULT_INCREASE_LIMIT_EVENT],
-      MELLOW_SYMBIOTIC_ADDRESS,
-      vaultLimitNotice,
-    )
+    const limitFindings = this.handleIncreaseLimit(txEvent)
     const aclFindings = this.handleAclChanges(txEvent)
     const withdrawalFindings = this.handleWithdrawals(txEvent)
 
     findings.push(...limitFindings, ...aclFindings, ...withdrawalFindings)
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleTransaction.name, start))
     return findings
   }
 
   public async handleBlock(block: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
     const findings: Finding[] = []
+
     const [
       limitsIntegrityFindings,
       handleWstETHIntegrityFindings,
@@ -136,12 +133,27 @@ export class VaultWatcherSrv {
       ...handleNoWithdrawalFindings,
     )
 
-    this.logger.info(elapsedTime(VaultWatcherSrv.name + '.' + this.handleBlock.name, start))
+    this.logger.info(elapsedTime(this.name + '.' + this.handleBlock.name, start))
+    return findings
+  }
+
+  private handleIncreaseLimit(txEvent: TransactionDto): Finding[] {
+    const start = new Date().getTime()
+    const findings = handleEventsOfNotice(
+      txEvent,
+      [MELLOW_VAULT_INCREASE_LIMIT_EVENT],
+      MELLOW_SYMBIOTIC_ADDRESS,
+      vaultLimitNotice,
+    )
+
+    this.logger.info(elapsedTime(this.name + '.' + this.handleIncreaseLimit.name, start))
     return findings
   }
 
   private handleAclChanges(txEvent: TransactionDto): Finding[] {
+    const start = new Date().getTime()
     const out: Finding[] = []
+
     VAULT_LIST.forEach((vault) => {
       const findings = handleEventsOfNotice(
         txEvent,
@@ -152,10 +164,12 @@ export class VaultWatcherSrv {
       out.push(...findings)
     })
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleAclChanges.name, start))
     return out
   }
 
   private handleWithdrawals(txEvent: TransactionDto): Finding[] {
+    const start = new Date().getTime()
     const out: Finding[] = []
 
     const all = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('processAll()')).substring(2, 10).toLowerCase()
@@ -177,12 +191,15 @@ export class VaultWatcherSrv {
       out.push(...findings)
     })
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleWithdrawals.name, start))
     return out
   }
 
   private async handleVaultConfigurationChange(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
     const out: Finding[] = []
-    // Check one vault config every block
+
+    // Check only one vault config every block one by one
     const vaultIdx = block.number % VAULT_LIST.length
     const vaultConfig = await this.ethClient.getVaultConfigurationStorage(vaultIdx, block.number)
     if (E.isLeft(vaultConfig)) {
@@ -231,150 +248,179 @@ export class VaultWatcherSrv {
       }
     })
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleVaultConfigurationChange.name, start))
+    return out
+  }
+
+  private async handleLimitsIntegrityAtVault(block: BlockDto, index: number): Promise<Finding[]> {
+    const out: Finding[] = []
+
+    const vault = VAULT_LIST[index]
+    const [vaultTotalSupply, vaultConfiguratorMaxTotalSupply] = await Promise.all([
+      this.ethClient.getVaultTotalSupply(index, block.number),
+      this.ethClient.getVaultConfiguratorMaxTotalSupply(index, block.number),
+    ])
+    if (E.isLeft(vaultTotalSupply)) {
+      out.push(
+        networkAlert(
+          vaultTotalSupply.left as unknown as Error,
+          `Error in ${VaultWatcherSrv.name}.${this.handleLimitsIntegrity.name} (uid:b40215f2)`,
+          `Could not call ethProvider.getVaultTotalSupply`,
+        ),
+      )
+      return out
+    }
+
+    if (E.isLeft(vaultConfiguratorMaxTotalSupply)) {
+      out.push(
+        networkAlert(
+          vaultConfiguratorMaxTotalSupply.left as unknown as Error,
+          `Error in ${VaultWatcherSrv.name}.${this.handleLimitsIntegrity.name} (uid:b1de79e4)`,
+          `Could not call ethProvider.getVaultConfiguratorMaxTotalSupply`,
+        ),
+      )
+      return out
+    }
+    const result = {
+      address: vault.vault,
+      name: vault.name,
+      diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
+      near: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
+      eq: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9999999)),
+    }
+
+    if (result.diff.gt(0)) {
+      out.push(
+        Finding.fromObject({
+          name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
+          description: `Mellow Vault [${result?.name}] (${result.address}) - more than maximalTotalSupply`,
+          alertId: 'VAULT-LIMITS-INTEGRITY',
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        }),
+      )
+    } else if (result.eq.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
+      out.push(
+        Finding.fromObject({
+          name: '⚠️ Vault totalSupply reached maximalTotalSupply',
+          description: `Mellow Vault [${result?.name}] (${result.address}) - maximalTotalSupply reached`,
+          alertId: 'VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX',
+          severity: FindingSeverity.Medium,
+          type: FindingType.Suspicious,
+        }),
+      )
+    } else if (result.near.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
+      out.push(
+        Finding.fromObject({
+          name: '⚠️ Vault totalSupply close to maximalTotalSupply',
+          description: `Mellow Vault [${result?.name}] (${result.address}) - totalSupply more than 90% of maximalTotalSupply`,
+          alertId: 'VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX',
+          severity: FindingSeverity.Medium,
+          type: FindingType.Suspicious,
+        }),
+      )
+    }
+
     return out
   }
 
   private async handleLimitsIntegrity(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
     const out: Finding[] = []
 
-    const results = await Promise.all(
-      VAULT_LIST.map(async (vault, index) => {
-        const [vaultTotalSupply, vaultConfiguratorMaxTotalSupply] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(index, block.number),
-          this.ethClient.getVaultConfiguratorMaxTotalSupply(index, block.number),
-        ])
-        if (E.isLeft(vaultTotalSupply)) {
-          return networkAlert(
-            vaultTotalSupply.left as unknown as Error,
-            `Error in ${VaultWatcherSrv.name}.${this.handleLimitsIntegrity.name} (uid:b40215f2)`,
-            `Could not call ethProvider.getVaultTotalSupply`,
-          )
-        }
-
-        if (E.isLeft(vaultConfiguratorMaxTotalSupply)) {
-          return networkAlert(
-            vaultConfiguratorMaxTotalSupply.left as unknown as Error,
-            `Error in ${VaultWatcherSrv.name}.${this.handleLimitsIntegrity.name} (uid:b1de79e4)`,
-            `Could not call ethProvider.getVaultConfiguratorMaxTotalSupply`,
-          )
-        }
-        return {
-          address: vault.vault,
-          name: vault.name,
-          diff: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right),
-          near: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9)),
-          eq: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9999999)),
-        }
-      }),
+    const findingsByVault = await Promise.all(
+      VAULT_LIST.map(async (vault, index) => this.handleLimitsIntegrityAtVault(block, index)),
     )
 
-    results.forEach((result) => {
-      if (result instanceof Finding) {
-        // error case
-        out.push(result)
-        return
-      }
-      if (result.diff.gt(0)) {
-        out.push(
-          Finding.fromObject({
-            name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
-            description: `Mellow Vault [${result?.name}] (${result.address}) - more than maximalTotalSupply`,
-            alertId: 'VAULT-LIMITS-INTEGRITY',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
-        )
-      } else if (result.eq.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ Vault totalSupply reached maximalTotalSupply',
-            description: `Mellow Vault [${result?.name}] (${result.address}) - maximalTotalSupply reached`,
-            alertId: 'VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Suspicious,
-          }),
-        )
-      } else if (result.near.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ Vault totalSupply close to maximalTotalSupply',
-            description: `Mellow Vault [${result?.name}] (${result.address}) - totalSupply more than 90% of maximalTotalSupply`,
-            alertId: 'VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Suspicious,
-          }),
-        )
-      }
+    findingsByVault.forEach((findings) => {
+      out.push(...findings)
     })
+
+    this.logger.info(elapsedTime(this.name + '.' + this.handleLimitsIntegrity.name, start))
+    return out
+  }
+
+  private async handleWstETHIntegrityAtVault(block: BlockDto, index: number): Promise<Finding[]> {
+    const out: Finding[] = []
+
+    const vault = VAULT_LIST[index]
+    const [vaultTotalSupply, vaultUnderlyingTvl] = await Promise.all([
+      this.ethClient.getVaultTotalSupply(index, block.number),
+      this.ethClient.getVaultUnderlyingTvl(index, block.number),
+    ])
+
+    if (E.isLeft(vaultTotalSupply)) {
+      out.push(
+        networkAlert(
+          vaultTotalSupply.left as unknown as Error,
+          `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:9e488c8c)`,
+          `Could not call ethProvider.getVaultTotalSupply`,
+        ),
+      )
+      return out
+    }
+
+    if (E.isLeft(vaultUnderlyingTvl)) {
+      out.push(
+        networkAlert(
+          vaultUnderlyingTvl.left as unknown as Error,
+          `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:db70b1bb)`,
+          `Could not call ethProvider.getVaultUnderlyingTvl`,
+        ),
+      )
+      return out
+    }
+
+    if (vaultUnderlyingTvl.right.lt(1)) {
+      out.push(
+        networkAlert(
+          new Error(`vault ${VaultWatcherSrv.name} underlyingTvl is too low`),
+          `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:db70b1zb)`,
+          `Could not call ethProvider.getVaultUnderlyingTvl`,
+        ),
+      )
+      return out
+    }
+
+    const result = {
+      address: vault.vault,
+      name: vault.name,
+      supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
+    }
+
+    if (result.supplyToUnderlying.minus(1).abs().gte(1e-9)) {
+      out.push(
+        Finding.fromObject({
+          name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same',
+          description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
+          alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
+          severity: FindingSeverity.Critical,
+          type: FindingType.Suspicious,
+        }),
+      )
+    }
 
     return out
   }
 
   private async handleWstETHIntegrity(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
     const out: Finding[] = []
 
-    const results = await Promise.all(
-      VAULT_LIST.map(async (vault, index) => {
-        const [vaultTotalSupply, vaultUnderlyingTvl] = await Promise.all([
-          this.ethClient.getVaultTotalSupply(index, block.number),
-          this.ethClient.getVaultUnderlyingTvl(index, block.number),
-        ])
-
-        if (E.isLeft(vaultTotalSupply)) {
-          return networkAlert(
-            vaultTotalSupply.left as unknown as Error,
-            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:9e488c8c)`,
-            `Could not call ethProvider.getVaultTotalSupply`,
-          )
-        }
-
-        if (E.isLeft(vaultUnderlyingTvl)) {
-          return networkAlert(
-            vaultUnderlyingTvl.left as unknown as Error,
-            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:db70b1bb)`,
-            `Could not call ethProvider.getVaultUnderlyingTvl`,
-          )
-        }
-
-        if (vaultUnderlyingTvl.right.lt(1)) {
-          return networkAlert(
-            new Error(`vault ${VaultWatcherSrv.name} underlyingTvl is too low`),
-            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:db70b1zb)`,
-            `Could not call ethProvider.getVaultUnderlyingTvl`,
-          )
-        }
-
-        return {
-          address: vault.vault,
-          name: vault.name,
-          supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
-        }
-      }),
+    const findingsByVault = await Promise.all(
+      VAULT_LIST.map(async (vault, index) => this.handleWstETHIntegrityAtVault(block, index)),
     )
 
-    results.forEach((result) => {
-      if (result instanceof Finding) {
-        // error case
-        out.push(result)
-        return
-      }
-      if (result.supplyToUnderlying.minus(1).abs().gte(1e-9)) {
-        out.push(
-          Finding.fromObject({
-            name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same',
-            description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
-            alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-          }),
-        )
-      }
+    findingsByVault.forEach((findings) => {
+      out.push(...findings)
     })
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleWstETHIntegrity.name, start))
     return out
   }
 
   private async handleSymbioticWstETHLimit(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
     const out: Finding[] = []
 
     if (block.number % PERIODICAL_BLOCK_INTERVAL != 0) {
@@ -420,68 +466,80 @@ export class VaultWatcherSrv {
       )
     }
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleSymbioticWstETHLimit.name, start))
+    return out
+  }
+
+  private async handleNoWithdrawalAtVault(block: BlockDto, index: number): Promise<Finding[]> {
+    const out: Finding[] = []
+    const vault = VAULT_LIST[index]
+    const [pendingCount, withdrawalEvents] = await Promise.all([
+      this.ethClient.getVaultPendingWithdrawersCount(index, block.number),
+      this.ethClient.getDefaultBondStrategyWithdrawalEvents(block.number - HOURS_48_IN_BLOCK, block.number, index),
+    ])
+
+    if (E.isLeft(withdrawalEvents)) {
+      out.push(
+        networkAlert(
+          withdrawalEvents.left as unknown as Error,
+          `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:94ca798e)`,
+          `Could not call ethProvider.getDefaultBondStrategyWithdrawalEvents`,
+        ),
+      )
+      return out
+    }
+
+    if (E.isLeft(pendingCount)) {
+      out.push(
+        networkAlert(
+          pendingCount.left as unknown as Error,
+          `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:5fb6076f)`,
+          `Could not call ethProvider.getVaultPendingWithdrawersCount`,
+        ),
+      )
+      return out
+    }
+
+    const result = {
+      address: vault.vault,
+      name: vault.name,
+      events: withdrawalEvents.right,
+      count: pendingCount.right,
+    }
+
+    if (!result.events[0] && result.count.gt(0)) {
+      out.push(
+        Finding.fromObject({
+          name: '⚠️ Vault: Withdrawals haven’t been called for at least 48 hours',
+          description: `Mellow Vault [${result?.name}] (${result?.address})`,
+          alertId: 'VAULT-NO-WITHDRAWAL-48',
+          severity: FindingSeverity.Medium,
+          type: FindingType.Suspicious,
+        }),
+      )
+    }
+
     return out
   }
 
   private async handleNoWithdrawal(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
     const out: Finding[] = []
 
+    // once a day
     if (block.number % HOURS_24_IN_BLOCK != 0) {
       return out
     }
 
-    const results = await Promise.all(
-      VAULT_LIST.map(async (vault, index) => {
-        const [pendingCount, withdrawalEvents] = await Promise.all([
-          this.ethClient.getVaultPendingWithdrawersCount(index, block.number),
-          this.ethClient.getDefaultBondStrategyWithdrawalEvents(block.number - HOURS_48_IN_BLOCK, block.number, index),
-        ])
-
-        if (E.isLeft(withdrawalEvents)) {
-          return networkAlert(
-            withdrawalEvents.left as unknown as Error,
-            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:94ca798e)`,
-            `Could not call ethProvider.getDefaultBondStrategyWithdrawalEvents`,
-          )
-        }
-
-        if (E.isLeft(pendingCount)) {
-          return networkAlert(
-            pendingCount.left as unknown as Error,
-            `Error in ${VaultWatcherSrv.name}.${this.handleWstETHIntegrity.name} (uid:5fb6076f)`,
-            `Could not call ethProvider.getVaultPendingWithdrawersCount`,
-          )
-        }
-
-        return {
-          address: vault.vault,
-          name: vault.name,
-          events: withdrawalEvents.right,
-          count: pendingCount.right,
-        }
-      }),
+    const findingsByVault = await Promise.all(
+      VAULT_LIST.map(async (_, index) => this.handleNoWithdrawalAtVault(block, index)),
     )
 
-    results.forEach((result) => {
-      if (result instanceof Finding) {
-        // error case
-        out.push(result)
-        return
-      }
-
-      if (!result.events[0] && result.count.gt(0)) {
-        out.push(
-          Finding.fromObject({
-            name: '⚠️ Vault: Withdrawals haven’t been called for at least 48 hours',
-            description: `Mellow Vault [${result?.name}] (${result?.address})`,
-            alertId: 'VAULT-NO-WITHDRAWAL-48',
-            severity: FindingSeverity.Medium,
-            type: FindingType.Suspicious,
-          }),
-        )
-      }
+    findingsByVault.forEach((findings) => {
+      out.push(...findings)
     })
 
+    this.logger.info(elapsedTime(this.name + '.' + this.handleNoWithdrawal.name, start))
     return out
   }
 }

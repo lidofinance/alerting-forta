@@ -46,11 +46,11 @@ export class AclChangesSrv {
     findings.push(...ownerChangeFindings)
 
     this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleBlock.name, start))
-
     return findings
   }
 
   public async handleOwnerChange(block: BlockDto): Promise<Finding[]> {
+    const start = new Date().getTime()
     const out: Finding[] = []
 
     const findingsTimestamps = new Map<string, number>()
@@ -130,6 +130,8 @@ export class AclChangesSrv {
     })
 
     await Promise.all(promises)
+
+    this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleOwnerChange.name, start))
     return out
   }
 }
