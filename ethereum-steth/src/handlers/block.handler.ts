@@ -13,6 +13,7 @@ import { Finding } from '../generated/proto/alert_pb'
 import { either as E } from 'fp-ts'
 import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { ETHProvider } from '../clients/eth_provider'
+import { BotOutdatedAlertID } from '../utils/errors'
 
 const MINUTES_6 = 60 * 6
 
@@ -83,8 +84,8 @@ export class BlockHandler {
 
           f.setName(`⚠️ Currently processing Ethereum network block is outdated`)
           f.setDescription(infraLine + lastBlockLine + diffLine)
-          f.setAlertid('L1-BLOCK-OUTDATED')
-          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setAlertid(BotOutdatedAlertID)
+          f.setSeverity(Finding.Severity.INFO)
           f.setType(Finding.FindingType.SUSPICIOUS)
           f.setProtocol('ethereum')
 
