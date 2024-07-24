@@ -131,17 +131,19 @@ exports[`VaultWatchers srv functional tests should be not slot changes 1`] = `[]
 
 exports[`VaultWatchers srv functional tests should everything is fine 1`] = `[]`;
 
-exports[`VaultWatchers srv functional tests should find no-withdrawals at 1 vaults 1`] = `
+exports[`VaultWatchers srv functional tests should find InfStones Restaked slot change 1`] = `
 [
   Finding {
     "addresses": [],
-    "alertId": "VAULT-NO-WITHDRAWAL-48",
-    "description": "Mellow Vault [Re7 Vault] (0x84631c0d0081fde56deb72f6de77abbbf6a9f93a) pending withdrawers count - 6",
+    "alertId": "MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED",
+    "description": "Mellow Vault [InfStones Restaked ETH Vault] Value of the storage slot \`'maximalTotalSupply'\` for contract 0x49cd586dd9ba227be9654c735a659a1db08232a9 has changed!
+Prev value: 1000000000000000000
+New value: 20000000000000000000000",
     "labels": [],
     "metadata": {},
-    "name": "⚠️ Vault: Withdrawals haven’t been called for at least 48 hours",
+    "name": "🚨🚨🚨 Vault critical storage slot value changed",
     "protocol": "ethereum",
-    "severity": 3,
+    "severity": 5,
     "source": {},
     "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 2,
@@ -171,23 +173,17 @@ New value: 36000000000000000000000",
 ]
 `;
 
-exports[`VaultWatchers srv functional tests should process tx with Added Owner and Execution Success 1`] = `[]`;
-
-exports[`VaultWatchers srv functional tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
-
-exports[`VaultWatchers srv functional tests should find InfStones Restaked slot change 1`] = `
+exports[`VaultWatchers srv functional tests should find no-withdrawals at Re7 vault 1`] = `
 [
   Finding {
     "addresses": [],
-    "alertId": "MELLOW-VAULT-STORAGE-SLOT-VALUE-CHANGED",
-    "description": "Mellow Vault [InfStones Restaked ETH Vault] Value of the storage slot \`'maximalTotalSupply'\` for contract 0x49cd586dd9ba227be9654c735a659a1db08232a9 has changed!
-Prev value: 1000000000000000000
-New value: 20000000000000000000000",
+    "alertId": "VAULT-NO-WITHDRAWAL-48",
+    "description": "Mellow Vault [Re7 Vault] (0x84631c0d0081fde56deb72f6de77abbbf6a9f93a) pending withdrawers count - 6",
     "labels": [],
     "metadata": {},
-    "name": "🚨🚨🚨 Vault critical storage slot value changed",
+    "name": "⚠️ Vault: Withdrawals haven’t been called for at least 48 hours",
     "protocol": "ethereum",
-    "severity": 5,
+    "severity": 3,
     "source": {},
     "timestamp": 2024-01-01T00:00:00.000Z,
     "type": 2,
@@ -195,6 +191,29 @@ New value: 20000000000000000000000",
   },
 ]
 `;
+
+exports[`VaultWatchers srv functional tests should not find no-withdrawals at Steakhouse vault 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "VAULT-WSTETH-LIMIT-REACHED",
+    "description": "Symbiotic - 0xc329400492c6ff2438472d4651ad17389fcb843a",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ Vault: Symbiotic limit reached",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`VaultWatchers srv functional tests should process tx with Added Owner and Execution Success 1`] = `[]`;
+
+exports[`VaultWatchers srv functional tests should process tx with Changed Threshold and Execution Success 1`] = `[]`;
 
 exports[`VaultWatchers srv functional tests should process tx with Re7 Vault withdrawal all 1`] = `
 [

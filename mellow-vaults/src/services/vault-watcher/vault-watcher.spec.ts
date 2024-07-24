@@ -183,9 +183,18 @@ describe('VaultWatchers srv functional tests', () => {
   )
 
   it(
-    'should find no-withdrawals at 1 vaults',
+    'should find no-withdrawals at Re7 vault',
     async () => {
       const findings = await runBlock(20188825, 20188824)
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should not find no-withdrawals at Steakhouse vault',
+    async () => {
+      const findings = await runBlock(20188800, 20188799)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,
