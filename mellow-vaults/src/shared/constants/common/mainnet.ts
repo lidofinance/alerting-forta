@@ -64,8 +64,9 @@ export const BLOCKCHAIN_INFO: BlockchainInfo = {
   safeUrlPrefix: 'https://app.safe.global/home?safe=eth:',
 }
 const SECONDS_PER_BLOCK = 12
-export const PERIODICAL_BLOCK_INTERVAL = (12 * 60 * 60) / SECONDS_PER_BLOCK
-export const HOURS_24_IN_BLOCK = (24 * 60 * 60) / SECONDS_PER_BLOCK
+export const MINUTE_IN_BLOCK = 60 / SECONDS_PER_BLOCK
+export const PERIODICAL_BLOCK_INTERVAL = 12 * 60 * MINUTE_IN_BLOCK
+export const HOURS_24_IN_BLOCK = 24 * 60 * MINUTE_IN_BLOCK
 export const HOURS_48_IN_BLOCK = 2 * HOURS_24_IN_BLOCK
 
 export const WSTETH_ADDRESS = '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0'

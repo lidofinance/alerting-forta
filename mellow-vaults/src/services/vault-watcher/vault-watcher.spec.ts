@@ -183,9 +183,9 @@ describe('VaultWatchers srv functional tests', () => {
   )
 
   it(
-    'should find no-withdrawals at 3 vaults',
+    'should find no-withdrawals at 1 vaults',
     async () => {
-      const findings = await runBlock(20188800, 20188799)
+      const findings = await runBlock(20188825, 20188824)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,

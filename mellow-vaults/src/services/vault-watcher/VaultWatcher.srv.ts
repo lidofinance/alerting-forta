@@ -12,6 +12,7 @@ import {
   VaultConfig,
   VAULT_LIST,
   VAULT_WATCH_METHOD_NAMES,
+  MINUTE_IN_BLOCK,
 } from 'constants/common'
 import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
 import { handleEventsOfNotice } from '../../shared/notice'
@@ -329,7 +330,7 @@ export class VaultWatcherSrv {
     const out: Finding[] = []
 
     const findingsByVault = await Promise.all(
-      VAULT_LIST.map(async (vault, index) => this.handleLimitsIntegrityAtVault(block, index)),
+      VAULT_LIST.map(async (_, index) => this.handleLimitsIntegrityAtVault(block, index)),
     )
 
     findingsByVault.forEach((findings) => {
@@ -408,7 +409,7 @@ export class VaultWatcherSrv {
     const out: Finding[] = []
 
     const findingsByVault = await Promise.all(
-      VAULT_LIST.map(async (vault, index) => this.handleWstETHIntegrityAtVault(block, index)),
+      VAULT_LIST.map(async (_, index) => this.handleWstETHIntegrityAtVault(block, index)),
     )
 
     findingsByVault.forEach((findings) => {
@@ -511,7 +512,7 @@ export class VaultWatcherSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: Withdrawals haven’t been called for at least 48 hours',
-          description: `Mellow Vault [${result?.name}] (${result?.address})`,
+          description: `Mellow Vault [${result?.name}] (${result?.address}) pending withdrawers count - ${result.count}`,
           alertId: 'VAULT-NO-WITHDRAWAL-48',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
@@ -526,18 +527,21 @@ export class VaultWatcherSrv {
     const start = new Date().getTime()
     const out: Finding[] = []
 
-    // once a day
-    if (block.number % HOURS_24_IN_BLOCK != 0) {
+    // Check only one vault in 5 min one by one
+    const gap = 5 * MINUTE_IN_BLOCK
+    const mod = block.number % HOURS_24_IN_BLOCK
+    console.info(mod, gap, block.number)
+    if (mod % gap !== 0) {
+      return out
+    }
+    const vaultIdx = mod / gap
+    console.info('11111', vaultIdx)
+    if (!VAULT_LIST[vaultIdx]) {
       return out
     }
 
-    const findingsByVault = await Promise.all(
-      VAULT_LIST.map(async (_, index) => this.handleNoWithdrawalAtVault(block, index)),
-    )
-
-    findingsByVault.forEach((findings) => {
-      out.push(...findings)
-    })
+    const findings = await this.handleNoWithdrawalAtVault(block, vaultIdx)
+    out.push(...findings)
 
     this.logger.info(elapsedTime(this.name + '.' + this.handleNoWithdrawal.name, start))
     return out

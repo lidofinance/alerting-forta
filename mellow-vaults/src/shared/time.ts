@@ -1,9 +1,3 @@
-export const ONE_HOUR = 60 * 60
-export const ONE_DAY = 24 * ONE_HOUR
-export const ONE_WEEK = 7 * ONE_DAY
-export const ONE_MONTH = ONE_WEEK * 4
-export const ONE_YEAR = 365 * ONE_DAY
-
 export function formatTime(timeInMillis: number): string {
   const seconds = (timeInMillis / 1000).toFixed(3)
   return `${seconds} seconds`
