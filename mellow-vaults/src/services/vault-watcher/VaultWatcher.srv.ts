@@ -139,7 +139,6 @@ export class VaultWatcherSrv {
   }
 
   private handleIncreaseLimit(txEvent: TransactionDto): Finding[] {
-    const start = new Date().getTime()
     const findings = handleEventsOfNotice(
       txEvent,
       [MELLOW_VAULT_INCREASE_LIMIT_EVENT],
@@ -147,12 +146,10 @@ export class VaultWatcherSrv {
       vaultLimitNotice,
     )
 
-    this.logger.info(elapsedTime(this.name + '.' + this.handleIncreaseLimit.name, start))
     return findings
   }
 
   private handleAclChanges(txEvent: TransactionDto): Finding[] {
-    const start = new Date().getTime()
     const out: Finding[] = []
 
     VAULT_LIST.forEach((vault) => {
@@ -165,12 +162,10 @@ export class VaultWatcherSrv {
       out.push(...findings)
     })
 
-    this.logger.info(elapsedTime(this.name + '.' + this.handleAclChanges.name, start))
     return out
   }
 
   private handleWithdrawals(txEvent: TransactionDto): Finding[] {
-    const start = new Date().getTime()
     const out: Finding[] = []
 
     const all = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('processAll()')).substring(2, 10).toLowerCase()
@@ -192,7 +187,6 @@ export class VaultWatcherSrv {
       out.push(...findings)
     })
 
-    this.logger.info(elapsedTime(this.name + '.' + this.handleWithdrawals.name, start))
     return out
   }
 
