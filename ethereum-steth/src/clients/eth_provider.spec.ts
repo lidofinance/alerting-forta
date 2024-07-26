@@ -214,6 +214,6 @@ describe('eth provider tests', () => {
       throw stBalance.left.message
     }
 
-    console.log(stBalance.right.div(ETH_DECIMALS).toNumber())
+    logger.info(stBalance.right.div(ETH_DECIMALS).toNumber())
   }, 120_000)
 })

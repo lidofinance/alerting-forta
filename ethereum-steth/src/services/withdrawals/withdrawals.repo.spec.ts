@@ -138,4 +138,26 @@ describe('Withdrawals repo tests', () => {
     },
     timeout,
   )
+
+  test(
+    'update finalized requests',
+    async () => {
+      const lastFinalizedRequestId = 5
+
+      const r = await repo.setFinalizedRequests(lastFinalizedRequestId)
+      if (r !== null) {
+        throw r
+      }
+
+      const records = await repo.getAll()
+      if (E.isLeft(records)) {
+        throw records
+      }
+
+      for (const record of records.right) {
+        expect(record.isFinalized).toBe(true)
+      }
+    },
+    timeout,
+  )
 })
