@@ -9,6 +9,9 @@
     "start:mantle": "yarn start mantle dev",
     "push:mantle": "yarn update-version && node push-agent.js mantle",
 
+    "start:zksync": "yarn start zksync dev",
+    "push:zksync": "yarn update-version && node push-agent.js zksync",
+
     "test": "jest",
 
     "postinstall": "yarn generate-types",
