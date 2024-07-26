@@ -2,16 +2,16 @@ import { FindingSeverity, FindingType } from 'forta-agent'
 import { App } from '../../common/agent'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../common/entity/events'
-import { Constants, RoleHashToName, ContractInfo, DEFAULT_ROLES_MAP } from '../../common/constants'
+import { Constants, RoleHashToName, ContractInfo, DEFAULT_ROLES_MAP, getHugeWithdrawalsFromL2AlertFactory } from '../../common/constants'
 
-
+const L2_NAME = 'Mantle'
 export const mantleConstants: Constants = {
-  L2_NAME: 'Mantle',
+  L2_NAME: L2_NAME,
   L2_NETWORK_RPC: 'https://rpc.mantle.xyz',
   MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: 10_000,
   L2_NETWORK_ID: 5000,
   L2_APPROX_BLOCK_TIME_SECONDS: 2,
-  L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',  // TODO
+  L2_PROXY_ADMIN_CONTRACT_ADDRESS: '0x8e34d07eb348716a1f0a48a507a9de8a3a6dce45',
   govExecutor: '0x3a7b055bf88cdc59d20d0245809c6e6b3c5819dd',
   L1_ERC20_TOKEN_GATEWAY_ADDRESS: '0x2D001d79E5aF5F65a939781FE228B267a8Ed468B',
   L2_ERC20_TOKEN_GATEWAY: {
@@ -38,6 +38,9 @@ export const mantleConstants: Constants = {
   bridgeEvents: [],
   govEvents: [],
   proxyAdminEvents: [],
+  getHugeWithdrawalsFromL2Alert: getHugeWithdrawalsFromL2AlertFactory(
+    L2_NAME, `51F04709-7E86-4FB3-B53C-24C53C99DA24`
+  ),
 }
 mantleConstants.bridgeEvents = getBridgeEvents(mantleConstants.L2_ERC20_TOKEN_GATEWAY.address, mantleConstants.rolesMap);
 mantleConstants.govEvents = getGovEvents(mantleConstants.govExecutor as string);

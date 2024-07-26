@@ -56,10 +56,7 @@ export class App {
     const govEventWatcher = new EventWatcher('GovEventWatcher', params.govEvents, logger)
     const proxyEventWatcher = new EventWatcher('ProxyEventWatcher', params.proxyAdminEvents, logger)
 
-    const monitorWithdrawals = new MonitorWithdrawals(
-      l2Client, params.L2_ERC20_TOKEN_GATEWAY.address, logger, params.withdrawalInfo,
-      params.L2_APPROX_BLOCK_TIME_SECONDS
-    )
+    const monitorWithdrawals = new MonitorWithdrawals(l2Client, logger, params)
 
     const ethProvider = new ethers.providers.FallbackProvider([
       new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), MAINNET_CHAIN_ID),
@@ -90,11 +87,11 @@ export class App {
     if (!App.instance) {
       throw new Error(`App instance is not created`)
     }
-    return App.instance;
+    return App.instance
   }
 
   public static async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
-    const app = await App.getInstance();
+    const app = await App.getInstance()
 
     const startTime = new Date().getTime()
     if (App.isHandleBlockRunning) {

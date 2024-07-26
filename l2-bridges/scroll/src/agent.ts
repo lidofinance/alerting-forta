@@ -2,11 +2,12 @@ import { FindingSeverity, FindingType } from 'forta-agent'
 import { App } from '../../common/agent'
 import { Result } from '@ethersproject/abi/lib'
 import { EventOfNotice } from '../../common/entity/events'
-import { Constants, RoleHashToName, ContractInfo, DEFAULT_ROLES_MAP } from '../../common/constants'
+import { Constants, RoleHashToName, ContractInfo, DEFAULT_ROLES_MAP, getHugeWithdrawalsFromL2AlertFactory } from '../../common/constants'
 
 
+const L2_NAME = 'Scroll'
 export const scrollConstants: Constants = {
-  L2_NAME: 'Scroll',
+  L2_NAME: L2_NAME,
   L2_NETWORK_RPC: 'https://rpc.scroll.io',
   MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: 1_000,
   L2_NETWORK_ID: 534352,
@@ -38,6 +39,9 @@ export const scrollConstants: Constants = {
   bridgeEvents: [],
   govEvents: [],
   proxyAdminEvents: [],
+  getHugeWithdrawalsFromL2Alert: getHugeWithdrawalsFromL2AlertFactory(
+    L2_NAME, `E1F5563E-C44D-4ACA-825E-F5A771B9D8C0`
+  )
 }
 scrollConstants.bridgeEvents = getBridgeEvents(scrollConstants.L2_ERC20_TOKEN_GATEWAY.address, scrollConstants.rolesMap);
 scrollConstants.govEvents = getGovEvents(scrollConstants.govExecutor as string);

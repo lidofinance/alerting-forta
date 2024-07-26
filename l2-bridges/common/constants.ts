@@ -1,5 +1,6 @@
+import { FindingSeverity, FindingType, Finding } from 'forta-agent'
 import { EventOfNotice } from './entity/events'
-
+import { getUniqueKey } from './utils/finding.helpers'
 import BigNumber from 'bignumber.js'
 
 
@@ -13,7 +14,22 @@ export const DEFAULT_ROLES_MAP: RoleHashToName = new Map<string, string>([
   ['0x9ab8816a3dc0b3849ec1ac00483f6ec815b07eee2fd766a353311c823ad59d0d', 'WITHDRAWALS_ENABLER_ROLE'],
   ['0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c', 'WITHDRAWALS_DISABLER_ROLE'],
   ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
-]);
+])
+
+export const getHugeWithdrawalsFromL2AlertFactory = (l2Name: string, uniqueKey: string) => {
+  return (params: HugeWithdrawalsFromL2AlertParams) => {
+    return Finding.fromObject({
+      name: `⚠️ ${l2Name}: Huge withdrawals during the last ` + `${Math.floor(params.period / (60 * 60))} hour(s)`,
+      description:
+        `There were withdrawals requests from L2 to L1 for the ` +
+        `${params.withdrawalsSum.div(ETH_DECIMALS).toFixed(4)} wstETH in total`,
+      alertId: 'HUGE-WITHDRAWALS-FROM-L2',
+      severity: FindingSeverity.Medium,
+      type: FindingType.Suspicious,
+      uniqueKey: getUniqueKey(uniqueKey, params.l2BlockNumber),
+    })
+  }
+}
 
 export type RoleHashToName = Map<string, string>
 
@@ -34,6 +50,12 @@ export type WithdrawalInfo = {
   amountFieldName: string, // e.g. "amount", according to the name of the field in the withdrawal event
 }
 
+export type HugeWithdrawalsFromL2AlertParams = {
+  period: number,
+  l2BlockNumber: number,
+  withdrawalsSum: BigNumber,
+}
+
 export type Constants = {
   L2_NAME: string,
   L2_NETWORK_RPC: string,
@@ -50,4 +72,5 @@ export type Constants = {
   bridgeEvents: EventOfNotice[],
   govEvents: EventOfNotice[],
   proxyAdminEvents: EventOfNotice[],
+  getHugeWithdrawalsFromL2Alert: (params: HugeWithdrawalsFromL2AlertParams) => Finding,
 }
