@@ -3,8 +3,13 @@ import BigNumber from 'bignumber.js'
 // COMMON CONSTS
 export const ETH_DECIMALS = new BigNumber(10).pow(18) // 1 ETH
 export const GRAPH_BALANCE_THRESHOLD = 1000 // 1000 GRT
-export const BLOCK_INTERVAL = 1000 // 1000 blocks
+export const BLOCK_INTERVAL = 10000 // 10000 blocks
+// 24 hours
+export const REPORT_WINDOW_GRAPH_BALANCE = 60 * 60 * 24
 
 // ADDRESSES AND EVENTS
 export const BILLING_ADDRESS = '0x1B07D3344188908Fb6DEcEac381f3eE63C48477a'
 export const LIDO_VAULT_ADDRESS = '0x421eB124FCbF69CE9B26C13719D7c288e6D6A94c'
+
+// ALERTS
+export const LOW_BALANCE_FINDING = 'LOW-LIDO-GRAPH-BALANCE'
