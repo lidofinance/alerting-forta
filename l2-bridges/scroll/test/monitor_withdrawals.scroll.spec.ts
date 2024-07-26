@@ -23,10 +23,7 @@ describe('MonitorWithdrawals', () => {
 
   const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, scrollConstants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
-  const monitorWithdrawals = new MonitorWithdrawals(
-    l2Client, scrollConstants.L2_ERC20_TOKEN_GATEWAY.address, logger, scrollConstants.withdrawalInfo,
-    scrollConstants.L2_APPROX_BLOCK_TIME_SECONDS
-  )
+  const monitorWithdrawals = new MonitorWithdrawals(l2Client, logger, scrollConstants)
 
   test(`getWithdrawalRecordsInBlockRange: 3 withdrawals, 3889 blocks`, async () => {
     const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(6608787, 6612676)
@@ -52,11 +49,4 @@ describe('MonitorWithdrawals', () => {
     assert(E.isRight(withdrawalRecords))
     expect(withdrawalRecords.right).toHaveLength(25)
   }, 40 * SECOND)
-
-  xtest(`getWithdrawalRecordsInBlockRange for 1_000_000 blocks`, async () => {
-    const endBlock = 6_633_338
-    const startBlock = endBlock - 1_000_000
-    const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(startBlock, endBlock)
-    assert(E.isRight(withdrawalRecords))
-  }, 20 * SECOND)
 })

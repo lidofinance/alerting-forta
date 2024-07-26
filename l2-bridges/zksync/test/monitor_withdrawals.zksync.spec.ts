@@ -22,10 +22,7 @@ describe('MonitorWithdrawals', () => {
 
   const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, zksyncConstants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
-  const monitorWithdrawals = new MonitorWithdrawals(
-    l2Client, zksyncConstants.L2_ERC20_TOKEN_GATEWAY.address, logger, zksyncConstants.withdrawalInfo,
-    zksyncConstants.L2_APPROX_BLOCK_TIME_SECONDS
-  )
+  const monitorWithdrawals = new MonitorWithdrawals(l2Client, logger, zksyncConstants)
 
   test(`getWithdrawalRecordsInBlockRange: 2 withdrawals (225_821 blocks)`, async () => {
     const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(39424179, 39650000)

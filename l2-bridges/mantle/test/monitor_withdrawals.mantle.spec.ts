@@ -21,10 +21,7 @@ describe('MonitorWithdrawals', () => {
   const nodeClient = new ethers.providers.JsonRpcProvider(mantleConstants.L2_NETWORK_RPC, mantleConstants.L2_NETWORK_ID)
   const bridgedWstethRunner = ERC20Short__factory.connect(mantleConstants.L2_WSTETH_BRIDGED.address, nodeClient)
   const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, mantleConstants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
-  const monitorWithdrawals = new MonitorWithdrawals(
-    l2Client, mantleConstants.L2_ERC20_TOKEN_GATEWAY.address, logger, mantleConstants.withdrawalInfo,
-    mantleConstants.L2_APPROX_BLOCK_TIME_SECONDS
-  )
+  const monitorWithdrawals = new MonitorWithdrawals(l2Client, logger, mantleConstants)
 
   test(`getWithdrawalRecordsInBlockRange: 2 withdrawals, 1_023_599 blocks`, async () => {
     const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(64995881, 66019480)
