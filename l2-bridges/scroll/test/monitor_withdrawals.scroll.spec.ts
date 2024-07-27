@@ -1,29 +1,25 @@
-import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
 import * as E from 'fp-ts/Either'
-import { ethers  } from 'forta-agent'
+import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
+import assert from 'assert'
 import { expect } from '@jest/globals'
 import BigNumber from 'bignumber.js'
-import * as Winston from 'winston'
-import { ERC20Short__factory } from '../../common/generated'
+
 import { scrollConstants } from '../src/agent'
-import { L2Client } from '../../common/clients/l2_client'
-import assert from 'assert'
-
-const SECOND = 1000 // ms
+import { spawnTestNode, stopTestNode, createMonitorWithdrawals } from '../../common/utils/test.helpers'
+import { SECOND_MS } from '../../common/utils/time'
 
 
-describe('MonitorWithdrawals', () => {
-  const logger = Winston.createLogger({
-    format: Winston.format.simple(),
-    transports: [new Winston.transports.Console()],
-  })
+describe('MonitorWithdrawals on Scroll', () => {
+  let testNodeProcess: any = null
+  let monitorWithdrawals: MonitorWithdrawals = null as any
 
-  const nodeClient = new ethers.providers.JsonRpcProvider(scrollConstants.L2_NETWORK_RPC, scrollConstants.L2_NETWORK_ID)
-  const bridgedWstethRunner = ERC20Short__factory.connect(scrollConstants.L2_WSTETH_BRIDGED.address, nodeClient)
+  beforeAll(async () => {
+    const { nodeProcess, rpcUrl } = await spawnTestNode(scrollConstants.L2_NETWORK_ID, scrollConstants.L2_NETWORK_RPC)
+    testNodeProcess = nodeProcess
+    scrollConstants.L2_NETWORK_RPC = rpcUrl
 
-  const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, scrollConstants.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
-
-  const monitorWithdrawals = new MonitorWithdrawals(l2Client, logger, scrollConstants)
+    monitorWithdrawals = createMonitorWithdrawals(scrollConstants)
+  });
 
   test(`getWithdrawalRecordsInBlockRange: 3 withdrawals, 3889 blocks`, async () => {
     const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(6608787, 6612676)
@@ -42,11 +38,15 @@ describe('MonitorWithdrawals', () => {
         amount: new BigNumber('16222703281150365'),
       },
     ])
-  }, 20 * SECOND)
+  }, 20 * SECOND_MS)
 
   test(`getWithdrawalRecordsInBlockRange: 25 withdrawals (51_984 blocks)`, async () => {
     const withdrawalRecords = await monitorWithdrawals._getWithdrawalRecordsInBlockRange(6581354, 6633338)
     assert(E.isRight(withdrawalRecords))
     expect(withdrawalRecords.right).toHaveLength(25)
-  }, 40 * SECOND)
+  }, 40 * SECOND_MS)
+
+  afterAll(async () => {
+    await stopTestNode(testNodeProcess)
+  });
 })

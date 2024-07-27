@@ -1,3 +1,5 @@
+export const SECOND_MS = 1000
+
 export function formatTime(timeInMillis: number): string {
   const seconds = (timeInMillis / 1000).toFixed(3)
   return `${seconds} seconds`

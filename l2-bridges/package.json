@@ -12,7 +12,7 @@
     "start:zksync": "yarn start zksync dev",
     "push:zksync": "yarn update-version && node push-agent.js zksync",
 
-    "test": "jest",
+    "test": "jest --runInBand",
 
     "postinstall": "yarn generate-types",
     "generate-types": "typechain --target=ethers-v5 --out-dir=./common/generated ./common/abi/*",
