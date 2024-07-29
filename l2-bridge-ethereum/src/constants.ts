@@ -51,9 +51,6 @@ export const ROLES = new Map<string, string>([
 export const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
 export const STETH_ADDRESS = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84";
 
-export const ARBITRUM_L1_GATEWAY_ROUTER =
-  "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef";
-
 export const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER =
   "0x25ace71c97b33cc4729cf772ae268934f7ab5fa1";
 
@@ -63,8 +60,6 @@ export const BASE_L1_CROSS_DOMAIN_MESSENGER =
 export const ZKSYNC_L1_DIAMOND_PROXY =
   "0x32400084c286cf3e17e7b677ea9583e60a000324";
 
-export const ARBITRUM_L1ERC20_TOKEN_GATEWAY =
-  "0x0F25c1DC2a9922304f2eac71DCa9B07E310e8E5a";
 export const OPTIMISM_L1ERC20_TOKEN_BRIDGE =
   "0x76943c0d61395d8f2edf9060e1533529cae05de6";
 export const BASE_L1ERC20_TOKEN_BRIDGE =
@@ -112,10 +107,6 @@ export const BSC_L1_CROSS_CHAIN_CONTROLLER =
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
-    name: "Arbitrum",
-    address: ARBITRUM_L1ERC20_TOKEN_GATEWAY,
-  },
-  {
     name: "Optimism",
     address: OPTIMISM_L1ERC20_TOKEN_BRIDGE,
   },
@@ -142,16 +133,6 @@ export const L1_ERC20_TOKEN_GATEWAYS = [
 ];
 
 export const L1_BRIDGES: BridgeProxyInfo[] = [
-  {
-    name: "L1ERC20TokenGateway to Arbitrum",
-    address: ARBITRUM_L1ERC20_TOKEN_GATEWAY,
-    shortABI: JSON.stringify(ossifiableProxyShortABI),
-    functions: new Map<string, string>([
-      ["admin", "proxy__getAdmin"],
-      ["implementation", "proxy__getImplementation"],
-    ]),
-    proxyAdminAddress: null,
-  },
   {
     name: "L1ERC20TokenBridge to Optimism",
     address: OPTIMISM_L1ERC20_TOKEN_BRIDGE,
@@ -279,31 +260,6 @@ export const L1_BRIDGES_PROXY_EVENTS: EventOfNotice[] = L1_BRIDGES.map(
     return eventsDesc;
   },
 ).reduce((a, b) => [...a, ...b]);
-
-const ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS = [
-  {
-    address: ARBITRUM_L1_GATEWAY_ROUTER, // Arbitrum One: L1 Gateway Router
-    event: "event AdminChanged(address previousAdmin, address newAdmin)",
-    alertId: "THIRD-PARTY-PROXY-ADMIN-CHANGED",
-    name: "🚨 Arbitrum Native Bridge: L1 Gateway Router proxy admin changed",
-    description: (args: Result) =>
-      `Proxy admin for Arbitrum One: L1 Gateway Router ` +
-      `was changed\nfrom: ${args.previousAdmin}\nto: ${args.newAdmin}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-  {
-    address: ARBITRUM_L1_GATEWAY_ROUTER, // Arbitrum One: L1 Gateway Router
-    event: "event Upgraded(address indexed implementation)",
-    alertId: "THIRD-PARTY-PROXY-UPGRADED",
-    name: "🚨 Arbitrum Native Bridge: L1 Gateway Router proxy upgraded",
-    description: (args: Result) =>
-      `Proxy for Arbitrum One: L1 Gateway Router ` +
-      `was upgraded to ${args.implementation}`,
-    severity: FindingSeverity.High,
-    type: FindingType.Info,
-  },
-];
 
 const OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS = [
   {
@@ -622,10 +578,9 @@ const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
 ];
 
 export const THIRD_PARTY_PROXY_EVENTS: EventOfNotice[] =
-  ARBITRUM_L1_GATEWAY_ROUTER_PROXY_EVENTS.concat(
-    OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS,
+  OPTIMISM_L1_CROSS_DOMAIN_MESSENGER_EVENTS.concat(
+    BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS,
   )
-    .concat(BASE_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
     .concat(ZKSYNC_L1_DIAMOND_PROXY_EVENTS)
     .concat(MANTLE_L1_CROSS_DOMAIN_MESSENGER_EVENTS)
     .concat(LINEA_L1_CROSS_DOMAIN_MESSENGER_EVENTS)

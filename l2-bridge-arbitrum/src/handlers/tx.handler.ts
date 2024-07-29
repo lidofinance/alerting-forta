@@ -1,27 +1,30 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { newTransactionDto } from '../entity/events'
 import { Finding } from '../generated/proto/alert_pb'
-import { HandleL1BlockLabel, HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { WithdrawalSrv } from '../services/monitor_withdrawals'
 import * as E from 'fp-ts/Either'
 import { dbAlert } from '../utils/errors'
 import { BridgeBalanceSrv } from '../services/bridge_balance'
+import { EventWatcher } from '../services/event_watcher'
 
 export class TxHandler {
   private metrics: Metrics
+  private l1EventWatcher: EventWatcher
   private WithdrawalsSrv: WithdrawalSrv
   private bridgeBalanceSrv: BridgeBalanceSrv
   private readonly networkName: string
 
   constructor(
     metrics: Metrics,
+    l1EventWatcher: EventWatcher,
     withdrawalsSrv: WithdrawalSrv,
     bridgeBalanceSrv: BridgeBalanceSrv,
     networkName: string,
   ) {
     this.metrics = metrics
+    this.l1EventWatcher = l1EventWatcher
     this.WithdrawalsSrv = withdrawalsSrv
     this.bridgeBalanceSrv = bridgeBalanceSrv
     this.networkName = networkName
@@ -38,6 +41,9 @@ export class TxHandler {
       const txEvent = newTransactionDto(call.request)
 
       const findings: Finding[] = []
+
+      const l1EventFindings = this.l1EventWatcher.handleLogs(txEvent.logs)
+      findings.push(...l1EventFindings)
 
       if (this.WithdrawalsSrv.hasRebasedEvent(txEvent)) {
         const stat = await this.WithdrawalsSrv.getWithdrawalStat()

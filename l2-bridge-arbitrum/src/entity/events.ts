@@ -4,13 +4,14 @@ import BigNumber from 'bignumber.js'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
 import { TransactionEvent } from '../generated/proto/agent_pb'
 import * as agent_pb from '../generated/proto/agent_pb'
+import { Result } from '@ethersproject/abi'
 
 export type EventOfNotice = {
   name: string
   address: string
   event: string
   alertId: string
-  description: CallableFunction
+  description: (args: Result) => string
   severity: Finding.Severity
   type: Finding.FindingType
 }

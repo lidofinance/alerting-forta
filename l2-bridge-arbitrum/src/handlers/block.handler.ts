@@ -24,13 +24,12 @@ export class BlockHandler {
   private metrics: Metrics
   private readonly l2BlocksSrv: L2BlocksSrv
 
-  private readonly proxyWatchers: ProxyWatcher[]
+  private readonly l1ProxyWatcher: ProxyWatcher
+  private readonly l2ProxyWatchers: ProxyWatcher[]
   private withdrawalsSrv: WithdrawalSrv
   private bridgeBalanceSrv: BridgeBalanceSrv
 
-  private bridgeWatcher: EventWatcher
-  private govWatcher: EventWatcher
-  private proxyWatcher: EventWatcher
+  private l2EventWatcher: EventWatcher
 
   private healthChecker: HealthChecker
   private onAppStartFindings: Finding[]
@@ -40,12 +39,11 @@ export class BlockHandler {
     ethProvider: ETHProvider,
     logger: Logger,
     metrics: Metrics,
-    proxyWatchers: ProxyWatcher[],
+    l1ProxyWatcher: ProxyWatcher,
+    l2ProxyWatchers: ProxyWatcher[],
     WithdrawalsSrv: WithdrawalSrv,
     bridgeBalanceSrv: BridgeBalanceSrv,
-    bridgeWatcher: EventWatcher,
-    govWatcher: EventWatcher,
-    proxyWatcher: EventWatcher,
+    eventL2Watcher: EventWatcher,
     healthChecker: HealthChecker,
     onAppStartFindings: Finding[],
     l2BlocksSrv: L2BlocksSrv,
@@ -56,13 +54,12 @@ export class BlockHandler {
     this.metrics = metrics
     this.l2BlocksSrv = l2BlocksSrv
 
-    this.proxyWatchers = proxyWatchers
+    this.l1ProxyWatcher = l1ProxyWatcher
+    this.l2ProxyWatchers = l2ProxyWatchers
     this.withdrawalsSrv = WithdrawalsSrv
     this.bridgeBalanceSrv = bridgeBalanceSrv
 
-    this.bridgeWatcher = bridgeWatcher
-    this.govWatcher = govWatcher
-    this.proxyWatcher = proxyWatcher
+    this.l2EventWatcher = eventL2Watcher
 
     this.healthChecker = healthChecker
     this.onAppStartFindings = onAppStartFindings
@@ -135,12 +132,9 @@ export class BlockHandler {
         this.onAppStartFindings = []
       }
 
-      const bridgeFindings = this.bridgeWatcher.handleL2Logs(store.right.l2Logs)
-      const govFindings = this.govWatcher.handleL2Logs(store.right.l2Logs)
-      const proxyFindings = this.proxyWatcher.handleL2Logs(store.right.l2Logs)
+      const l2EventFindings = this.l2EventWatcher.handleLogs(store.right.l2Logs)
       const balancesFindings = await this.bridgeBalanceSrv.handleBlock(l1Block, store.right.l2Blocks)
-
-      findings.push(...balancesFindings, ...bridgeFindings, ...govFindings, ...proxyFindings)
+      findings.push(...balancesFindings, ...l2EventFindings)
 
       const l2Blocks = await this.l2BlocksSrv.getL2BlocksFrom(store.right.prevLatestL2Block)
       if (E.isLeft(l2Blocks)) {
@@ -151,21 +145,29 @@ export class BlockHandler {
       }
       if (E.isRight(l2Blocks) && l2Blocks.right.length > 0) {
         const promises = []
-        for (const proxyWatcher of this.proxyWatchers) {
-          promises.push(proxyWatcher.handleL2Blocks(store.right.l2Blocks))
+        for (const proxyWatcher of this.l2ProxyWatchers) {
+          promises.push(proxyWatcher.handleBlocks(store.right.l2Blocks))
         }
 
         const startProxyWatcher = new Date().getTime()
         this.logger.info(
-          `\tProxy watcher started: ${new Date(startProxyWatcher).toUTCString()}. L2Blocks: ${l2Blocks.right.length}`,
+          `\tL2 Proxy watcher started: ${new Date(startProxyWatcher).toUTCString()}. L2Blocks: ${l2Blocks.right.length}`,
         )
         const proxyWatcherFindings = (await Promise.all(promises)).flat()
-        this.logger.info(`\tProxy watcher finished. Duration: ${elapsed(startProxyWatcher)}\n`)
+        this.logger.info(`\tL2 Proxy watcher finished. Duration: ${elapsed(startProxyWatcher)}\n`)
         findings.push(...proxyWatcherFindings)
 
         const withdrawalFindings = await this.withdrawalsSrv.toMonitor(store.right.l2Logs, l2Blocks.right)
         findings.push(...withdrawalFindings)
       }
+
+      const startProxyWatcher = new Date().getTime()
+      this.logger.info(
+        `\n\tL1 Proxy watcher started: ${new Date(startProxyWatcher).toUTCString()}. L1Block: ${l1Block.number}`,
+      )
+      const l1ProxyFindings = await this.l1ProxyWatcher.handleBlocks([l1Block])
+      this.logger.info(`\tL1 Proxy watcher finished. Duration: ${elapsed(startProxyWatcher)}\n`)
+      findings.push(...l1ProxyFindings)
 
       const handleBlock = `Finish: handleBlock(${l1Block.number}). L2 blocks:`
       const duration = `Duration: ${elapsed(startTime.getTime())}\n`

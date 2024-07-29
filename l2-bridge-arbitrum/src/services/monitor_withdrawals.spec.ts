@@ -91,7 +91,7 @@ describe('monitor_withdrawals', () => {
     ldoRunner,
     ethProvider,
     l1BlockCache,
-    adr.ARBITRUM_L1_TOKEN_BRIDGE,
+    adr.ARBITRUM_L1_TOKEN_BRIDGE.address,
     adr.ARBITRUM_L1_LDO_BRIDGE,
     logger,
   )

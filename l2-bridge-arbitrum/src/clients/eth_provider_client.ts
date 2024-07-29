@@ -9,7 +9,6 @@ import { ethers } from 'ethers'
 import { LRUCache } from 'lru-cache'
 import { BlockDto } from '../entity/l2block'
 import { Log } from '@ethersproject/abstract-provider'
-import { RpcRequest } from '../entity/events'
 import { Logger } from 'winston'
 
 const DELAY_IN_500MS = 500

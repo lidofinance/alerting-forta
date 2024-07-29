@@ -18,9 +18,9 @@ import { ProxyWatcher } from './services/proxy_watcher'
 import { ProxyContractClient } from './clients/proxy_contract_client'
 import process from 'process'
 import { EventWatcher } from './services/event_watcher'
-import { getL2BridgeEvents } from './utils/events/bridge_events'
+import { getL1BridgeEvents, getL2BridgeEvents } from './utils/events/bridge_events'
 import { getGovEvents } from './utils/events/gov_events'
-import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
+import { getL1ProxyAdminEvents, getL2ProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { ETHProvider } from './clients/eth_provider_client'
 import { ethers } from 'ethers'
@@ -33,6 +33,7 @@ import { L2BlocksSrv } from './services/l2_blocks/L2Blocks.srv'
 import { WithdrawalSrv } from './services/monitor_withdrawals'
 import { WithdrawalRepo } from './services/monitor_withdrawals.repo'
 import { TxHandler } from './handlers/tx.handler'
+import { getL1RouterEvents } from './utils/events/router_events'
 
 const MINUTES_30 = 1000 * 60 * 30
 
@@ -104,7 +105,7 @@ const main = async () => {
     ldoRunner,
     ethProvider,
     l1BlockCache,
-    adr.ARBITRUM_L1_TOKEN_BRIDGE,
+    adr.ARBITRUM_L1_TOKEN_BRIDGE.address,
     adr.ARBITRUM_L1_LDO_BRIDGE,
     logger,
   )
@@ -119,7 +120,17 @@ const main = async () => {
     adr.LIDO_STETH_ADDRESS,
   )
 
-  const proxyWatchers: ProxyWatcher[] = [
+  const l1ProxyWatcher = new ProxyWatcher(
+    new ProxyContractClient(
+      adr.ARBITRUM_L1_TOKEN_BRIDGE.name,
+      OssifiableProxy__factory.connect(adr.ARBITRUM_L1_TOKEN_BRIDGE.address, ethProvider),
+      metrics,
+    ),
+    logger,
+    config.networkName,
+  )
+
+  const l2ProxyWatchers: ProxyWatcher[] = [
     new ProxyWatcher(
       new ProxyContractClient(
         adr.ARBITRUM_WSTETH_BRIDGED.name,
@@ -140,14 +151,24 @@ const main = async () => {
     ),
   ]
 
-  const bridgeEventWatcher = new EventWatcher(
-    'BridgeEventWatcher',
-    getL2BridgeEvents(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, adr.RolesMap, config.networkName),
+  const l1EventWatcher = new EventWatcher(
+    `L1EventWatcher`,
+    [
+      ...getL1BridgeEvents(adr.ARBITRUM_L1_TOKEN_BRIDGE.address, adr.RolesMap, config.networkName),
+      ...getL1ProxyAdminEvents(adr.ARBITRUM_L1_TOKEN_BRIDGE, config.networkName),
+      ...getL1RouterEvents(adr.ARBITRUM_L1_GATEWAY_ROUTER, config.networkName),
+    ],
+    adr.L1_WSTETH_ADDRESS,
   )
-  const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS, config.networkName))
-  const proxyEventWatcher = new EventWatcher(
-    'ProxyEventWatcher',
-    getProxyAdminEvents(adr.ARBITRUM_WSTETH_BRIDGED, adr.ARBITRUM_L2_TOKEN_GATEWAY, config.networkName),
+
+  const l2EventWatcher = new EventWatcher(
+    `L2EventWatcher`,
+    [
+      ...getL2BridgeEvents(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, adr.RolesMap, config.networkName),
+      ...getL2ProxyAdminEvents(adr.ARBITRUM_WSTETH_BRIDGED, adr.ARBITRUM_L2_TOKEN_GATEWAY, config.networkName),
+      ...getGovEvents(adr.GOV_BRIDGE_ADDRESS, config.networkName),
+    ],
+    adr.L1_WSTETH_ADDRESS,
   )
 
   const bridgeBalanceSrv = new BridgeBalanceSrv(logger, l1Client, l2Client, config.networkName, metrics)
@@ -159,13 +180,12 @@ const main = async () => {
     logger,
     metrics,
 
-    proxyWatchers,
+    l1ProxyWatcher,
+    l2ProxyWatchers,
     withdrawalsSrv,
     bridgeBalanceSrv,
 
-    bridgeEventWatcher,
-    govEventWatcher,
-    proxyEventWatcher,
+    l2EventWatcher,
 
     healthChecker,
     onAppFindings,
@@ -175,8 +195,17 @@ const main = async () => {
   )
 
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
-  const initH = new InitHandler(config.appName, logger, onAppFindings, withdrawalsSrv, l2Client, proxyWatchers)
-  const txH = new TxHandler(metrics, withdrawalsSrv, bridgeBalanceSrv, config.networkName)
+  const initH = new InitHandler(
+    config.appName,
+    logger,
+    onAppFindings,
+    withdrawalsSrv,
+    l1Client,
+    l2Client,
+    l1ProxyWatcher,
+    l2ProxyWatchers,
+  )
+  const txH = new TxHandler(metrics, l1EventWatcher, withdrawalsSrv, bridgeBalanceSrv, config.networkName)
 
   grpcServer.addService(AgentService, {
     initialize: initH.handleInit(),

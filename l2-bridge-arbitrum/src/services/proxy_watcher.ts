@@ -6,8 +6,6 @@ import { Finding } from '../generated/proto/alert_pb'
 import { BlockDto } from '../entity/l2block'
 
 export class ProxyWatcher {
-  private readonly name: string = 'Proxy watcher'
-
   private lastImpl: string = ''
   private lastAdmin: string = ''
 
@@ -22,7 +20,7 @@ export class ProxyWatcher {
   }
 
   public getName(): string {
-    return this.proxyContract.getName() + `(${this.proxyContract.getAddress()}).` + this.name
+    return this.proxyContract.getName() + `(${this.proxyContract.getAddress()})`
   }
 
   public getAdmin(): string {
@@ -41,10 +39,10 @@ export class ProxyWatcher {
     this.lastImpl = impl.toLowerCase()
   }
 
-  async initialize(currentL2Block: number): Promise<Error[]> {
+  async initialize(currentBlockNumber: number): Promise<Error[]> {
     const [lastImpl, lastAdmin] = await Promise.all([
-      this.proxyContract.getProxyImplementation(currentL2Block),
-      this.proxyContract.getProxyAdmin(currentL2Block),
+      this.proxyContract.getProxyImplementation(currentBlockNumber),
+      this.proxyContract.getProxyAdmin(currentBlockNumber),
     ])
 
     if (E.isLeft(lastImpl)) {
@@ -58,20 +56,20 @@ export class ProxyWatcher {
     this.setImpl(lastImpl.right)
     this.setAdmin(lastAdmin.right)
 
-    this.logger.info(`${this.getName()}. started on block ${currentL2Block}`)
+    this.logger.info(`${this.getName()}. started on block ${currentBlockNumber}`)
 
     return []
   }
 
-  async handleL2Blocks(l2Blocks: BlockDto[]): Promise<Finding[]> {
-    if (l2Blocks.length === 0) {
+  public async handleBlocks(blocks: BlockDto[]): Promise<Finding[]> {
+    if (blocks.length === 0) {
       return []
     }
 
     const promises = []
     promises.push(
-      this.handleProxyImplementationChanges(l2Blocks[l2Blocks.length - 1].number),
-      this.handleProxyAdminChanges(l2Blocks[l2Blocks.length - 1].number),
+      this.handleProxyImplementationChanges(blocks[blocks.length - 1].number),
+      this.handleProxyAdminChanges(blocks[blocks.length - 1].number),
     )
 
     const findings = (await Promise.all(promises)).flat()
@@ -81,16 +79,16 @@ export class ProxyWatcher {
     return findings
   }
 
-  private async handleProxyImplementationChanges(l2BlockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newImpl = await this.proxyContract.getProxyImplementation(l2BlockNumber)
+    const newImpl = await this.proxyContract.getProxyImplementation(blockNumber)
     if (E.isLeft(newImpl)) {
       return [
         networkAlert(
           newImpl.left,
           `Error in ${this.getName()}.${this.handleProxyImplementationChanges.name}:98`,
-          `Could not fetch proxyImplementation on ${l2BlockNumber}`,
+          `Could not fetch proxyImplementation on ${blockNumber}`,
         ),
       ]
     }
@@ -120,16 +118,16 @@ export class ProxyWatcher {
     return out
   }
 
-  private async handleProxyAdminChanges(l2blockNumber: number): Promise<Finding[]> {
+  private async handleProxyAdminChanges(blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newAdmin = await this.proxyContract.getProxyAdmin(l2blockNumber)
+    const newAdmin = await this.proxyContract.getProxyAdmin(blockNumber)
     if (E.isLeft(newAdmin)) {
       return [
         networkAlert(
           newAdmin.left,
           `Error in ${this.getName()}.${this.handleProxyAdminChanges.name}:138`,
-          `Could not fetch getProxyAdmin on ${l2blockNumber}`,
+          `Could not fetch getProxyAdmin on ${blockNumber}`,
         ),
       ]
     }
@@ -145,7 +143,7 @@ export class ProxyWatcher {
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.INFORMATION)
       f.setProtocol('ethereum')
-      f.setUniquekey(l2blockNumber.toString())
+      f.setUniquekey(blockNumber.toString())
 
       const m = f.getMetadataMap()
       m.set('newAdmin', newAdmin.right.toLowerCase())

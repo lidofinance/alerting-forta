@@ -40,7 +40,7 @@ describe('ethProvider', () => {
     ldoRunner,
     ethProvider,
     l1BlocksStore,
-    adr.ARBITRUM_L1_TOKEN_BRIDGE,
+    adr.ARBITRUM_L1_TOKEN_BRIDGE.address,
     adr.ARBITRUM_L1_LDO_BRIDGE,
     logger,
   )
