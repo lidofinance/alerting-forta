@@ -188,7 +188,7 @@ export class MonitorWithdrawals {
     }
 
     const out: WithdrawalRecord[] = []
-    if (formatAddress(this.l2Erc20TokenGatewayAddress) in addresses) {
+    if (addresses.has(formatAddress(this.l2Erc20TokenGatewayAddress))) {
       const events = filterLog(l2Logs, this.withdrawalInfo.eventDefinition, formatAddress(this.l2Erc20TokenGatewayAddress))
 
       for (const event of events) {
