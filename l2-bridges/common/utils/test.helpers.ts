@@ -25,7 +25,7 @@ export async function spawnTestNode(networkId: number, l2RpcUrl: string) {
     console.error(`stderr: ${data}`);
   });
 
-  await new Promise((r) => setTimeout(r, SECOND_MS));
+  await new Promise((r) => setTimeout(r, 2 * SECOND_MS))
 
   assert(nodeProcess);
   assert(nodeProcess.exitCode === null);
@@ -37,8 +37,8 @@ export async function spawnTestNode(networkId: number, l2RpcUrl: string) {
 export async function stopTestNode(nodeProcess: any) {
   assert(nodeProcess)
   nodeProcess.kill('SIGINT')
-  await new Promise((r) => setTimeout(r, SECOND_MS))
-  assert(nodeProcess.exitCode === 0)
+  await new Promise((r) => setTimeout(r, 1 * SECOND_MS))
+  assert(nodeProcess.exitCode === 0, `ERROR: non-zero test node process exit code: ${nodeProcess.exitCode}`)
 }
 
 export function createMonitorWithdrawals(params: Constants) {
@@ -50,5 +50,10 @@ export function createMonitorWithdrawals(params: Constants) {
   const nodeClient = new ethers.providers.JsonRpcProvider(params.L2_NETWORK_RPC, params.L2_NETWORK_ID)
   const bridgedWstethRunner = ERC20Short__factory.connect(params.L2_WSTETH_BRIDGED.address, nodeClient)
   const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, params.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
-  return new MonitorWithdrawals(l2Client, logger, params)
+
+  return {
+    monitorWithdrawals: new MonitorWithdrawals(l2Client, logger, params),
+    provider: nodeClient,
+    l2Client,
+  }
 }

@@ -4,6 +4,7 @@ import { zksyncConstants } from '../src/agent'
 import { SECOND_MS } from '../../common/utils/time'
 import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
 import { spawnTestNode, stopTestNode, createMonitorWithdrawals } from '../../common/utils/test.helpers'
+
 import assert from 'assert'
 
 
@@ -14,9 +15,9 @@ describe('MonitorWithdrawals on ZkSync', () => {
   beforeAll(async () => {
     const { nodeProcess, rpcUrl } = await spawnTestNode(zksyncConstants.L2_NETWORK_ID, zksyncConstants.L2_NETWORK_RPC)
     testNodeProcess = nodeProcess
-    zksyncConstants.L2_NETWORK_RPC = rpcUrl
+    zksyncConstants.L2_NETWORK_RPC = rpcUrl;
 
-    monitorWithdrawals = createMonitorWithdrawals(zksyncConstants)
+    ({ monitorWithdrawals } = createMonitorWithdrawals(zksyncConstants))
   });
 
   test(`getWithdrawalRecordsInBlockRange: 2 withdrawals (225_821 blocks)`, async () => {

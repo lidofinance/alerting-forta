@@ -6,6 +6,7 @@ import * as E from 'fp-ts/Either'
 import VERSION from './utils/version'
 import { elapsedTime } from './utils/time'
 import BigNumber from 'bignumber.js'
+import { JsonRpcProvider } from '@ethersproject/providers'
 
 import { L2Client } from './clients/l2_client'
 import { EventWatcher } from './services/event_watcher'
@@ -31,8 +32,10 @@ export type Container = {
   proxyEventWatcher: EventWatcher
   findingsRW: DataRW<Finding>
   logger: Logger
+  provider: JsonRpcProvider,
   // healthChecker: HealthChecker
 }
+
 
 export class App {
   private static instance: Container
@@ -47,10 +50,10 @@ export class App {
       transports: [new Winston.transports.Console()],
     })
 
-    const nodeClient = new ethers.providers.JsonRpcProvider(params.L2_NETWORK_RPC, params.L2_NETWORK_ID)
-    const bridgedWstethRunner = ERC20Short__factory.connect(params.L2_WSTETH_BRIDGED.address, nodeClient)
+    const provider = new ethers.providers.JsonRpcProvider(params.L2_NETWORK_RPC, params.L2_NETWORK_ID)
+    const bridgedWstethRunner = ERC20Short__factory.connect(params.L2_WSTETH_BRIDGED.address, provider)
 
-    const l2Client = new L2Client(nodeClient, logger, bridgedWstethRunner, params.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
+    const l2Client = new L2Client(provider, logger, bridgedWstethRunner, params.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
 
     const bridgeEventWatcher = new EventWatcher('BridgeEventWatcher', params.bridgeEvents, logger)
     const govEventWatcher = new EventWatcher('GovEventWatcher', params.govEvents, logger)
@@ -77,6 +80,7 @@ export class App {
       proxyEventWatcher,
       findingsRW: new DataRW<Finding>([]),
       logger,
+      provider,
       // healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
     }
 

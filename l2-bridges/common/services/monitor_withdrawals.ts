@@ -7,22 +7,22 @@ import { BlockDto, WithdrawalRecord } from '../entity/blockDto'
 import { L2Client } from '../clients/l2_client'
 import { NetworkError } from '../utils/error'
 import { elapsedTime } from '../utils/time'
-import { ETH_DECIMALS } from '../constants'
+import { ETH_DECIMALS, ETH_DECIMALS2 } from '../constants'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
 import { ethers } from 'ethers'
 import { WithdrawalInfo, ContractInfo, HugeWithdrawalsFromL2AlertParams } from '../constants'
 import assert from 'assert'
 
-// 10k wstETH
-const MAX_WITHDRAWALS_SUM = 10_000
-const HOURS_48 = 60 * 60 * 24 * 2 * 6
+
+
+export const MAX_WITHDRAWALS_SUM = 10_000 // 10k wstETH
+const HOURS_48 = 60 * 60 * 24 * 2
 
 export type MonitorWithdrawalsInitResp = {
   currentWithdrawals: string,
 }
 
 export type WithdrawalConstants = {
-  L2_NAME: string,
   withdrawalInfo: WithdrawalInfo,
   L2_APPROX_BLOCK_TIME_SECONDS: number,
   L2_ERC20_TOKEN_GATEWAY: ContractInfo,
@@ -34,7 +34,6 @@ export class MonitorWithdrawals {
 
   private readonly logger: Logger
   private readonly l2Erc20TokenGatewayAddress: string
-  private readonly networkName: string
   private readonly l2Client: L2Client
   private readonly withdrawalInfo: WithdrawalInfo & { eventSignature: string, eventInterface: ethers.utils.Interface }
   private readonly l2BlockAverageTime: number
@@ -55,7 +54,7 @@ export class MonitorWithdrawals {
       eventInterface: eventInterface,
     }
     this.l2BlockAverageTime = withdrawalConstants.L2_APPROX_BLOCK_TIME_SECONDS
-    this.networkName = withdrawalConstants.L2_NAME
+
   }
 
   public getName(): string {
@@ -109,13 +108,13 @@ export class MonitorWithdrawals {
 
       this.withdrawalsStore = withdrawalsCache
 
-      const withdrawalsSum = new BigNumber(0)
+      let withdrawalsSum = 0n
       for (const wc of this.withdrawalsStore) {
-        withdrawalsSum.plus(wc.amount)
+        withdrawalsSum += BigInt(wc.amount.toString())
       }
 
       // block number condition is meant to "sync" agents alerts
-      if (withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_SUM) && l2Block.number % 10 === 0) {
+      if (withdrawalsSum >= BigInt(MAX_WITHDRAWALS_SUM) * ETH_DECIMALS2 && l2Block.number % 10 === 0) {
         const period =
           l2Block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp < HOURS_48
             ? l2Block.timestamp - this.lastReportedTooManyWithdrawalsTimestamp
@@ -181,7 +180,7 @@ export class MonitorWithdrawals {
 
     for (const l2Log of l2Logs) {
       logIndexToLogs.set(l2Log.logIndex, l2Log)
-      addresses.add(l2Log.address.toLowerCase())
+      addresses.add(formatAddress(l2Log.address))
     }
 
     for (const l2BlockDto of l2BlocksDto) {
@@ -193,16 +192,17 @@ export class MonitorWithdrawals {
       const events = filterLog(l2Logs, this.withdrawalInfo.eventDefinition, formatAddress(this.l2Erc20TokenGatewayAddress))
 
       for (const event of events) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const log: Log = logIndexToLogs.get(event.logIndex)
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const blockDto: BlockDto = blockNumberToBlock.get(log.blockNumber)
+        const log = logIndexToLogs.get(event.logIndex)
+        assert(log !== undefined)
 
+        assert(typeof log.blockNumber === 'string')
+        const blockDto = blockNumberToBlock.get(parseInt(log.blockNumber as unknown as string, 16))
+        assert(blockDto) // TODO
+        const amount = event.args[this.withdrawalInfo.amountFieldName]
+        assert(amount !== null && amount !== undefined)
         out.push({
           time: blockDto.timestamp,
-          amount: new BigNumber(String(event.args.amount)),
+          amount,
         })
       }
     }

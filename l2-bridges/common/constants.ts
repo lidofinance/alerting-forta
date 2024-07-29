@@ -2,9 +2,11 @@ import { FindingSeverity, FindingType, Finding } from 'forta-agent'
 import { EventOfNotice } from './entity/events'
 import { getUniqueKey } from './utils/finding.helpers'
 import BigNumber from 'bignumber.js'
-
+import { ethers } from 'ethers'
+import { formatEther } from './utils/finding.helpers'
 
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
+export const ETH_DECIMALS2 = 10n ** 18n
 export const MAINNET_CHAIN_ID = 1
 export const DRPC_URL = 'https://eth.drpc.org/'
 export const L1_WSTETH_ADDRESS = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'
@@ -15,14 +17,16 @@ export const DEFAULT_ROLES_MAP: RoleHashToName = new Map<string, string>([
   ['0x94a954c0bc99227eddbc0715a62a7e1056ed8784cd719c2303b685683908857c', 'WITHDRAWALS_DISABLER_ROLE'],
   ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
 ])
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 export const getHugeWithdrawalsFromL2AlertFactory = (l2Name: string, uniqueKey: string) => {
   return (params: HugeWithdrawalsFromL2AlertParams) => {
+    ethers.utils.formatEther(params.withdrawalsSum)
     return Finding.fromObject({
       name: `⚠️ ${l2Name}: Huge withdrawals during the last ` + `${Math.floor(params.period / (60 * 60))} hour(s)`,
       description:
         `There were withdrawals requests from L2 to L1 for the ` +
-        `${params.withdrawalsSum.div(ETH_DECIMALS).toFixed(4)} wstETH in total`,
+        `${formatEther(params.withdrawalsSum, 4)} wstETH in total`,
       alertId: 'HUGE-WITHDRAWALS-FROM-L2',
       severity: FindingSeverity.Medium,
       type: FindingType.Suspicious,
@@ -53,7 +57,7 @@ export type WithdrawalInfo = {
 export type HugeWithdrawalsFromL2AlertParams = {
   period: number,
   l2BlockNumber: number,
-  withdrawalsSum: BigNumber,
+  withdrawalsSum: bigint,
 }
 
 export type Constants = {

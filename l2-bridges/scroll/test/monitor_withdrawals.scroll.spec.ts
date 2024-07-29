@@ -16,9 +16,9 @@ describe('MonitorWithdrawals on Scroll', () => {
   beforeAll(async () => {
     const { nodeProcess, rpcUrl } = await spawnTestNode(scrollConstants.L2_NETWORK_ID, scrollConstants.L2_NETWORK_RPC)
     testNodeProcess = nodeProcess
-    scrollConstants.L2_NETWORK_RPC = rpcUrl
+    scrollConstants.L2_NETWORK_RPC = rpcUrl;
 
-    monitorWithdrawals = createMonitorWithdrawals(scrollConstants)
+    ({ monitorWithdrawals } = createMonitorWithdrawals(scrollConstants))
   });
 
   test(`getWithdrawalRecordsInBlockRange: 3 withdrawals, 3889 blocks`, async () => {
