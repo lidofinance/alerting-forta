@@ -20,11 +20,10 @@ import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
-// import { etherscanAddress } from '../../utils/string'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('CsAccounting event tests', () => {
+describe('CSAccounting event tests', () => {
   const chainId = 17000
 
   const logger: Winston.Logger = Winston.createLogger({
@@ -88,13 +87,52 @@ describe('CsAccounting event tests', () => {
       const expected = {
         alertId: 'CS-ACCOUNTING-BOND-CURVE-ADDED',
         description:
-          'Bond curve added: 1500000000000000000,3400000000000000000,5200000000000000000,6900000000000000000,8500000000000000000,10000000000000000000',
+          'Bond curve added: 1500000000000000000,\n3400000000000000000,\n5200000000000000000,\n6900000000000000000,\n8500000000000000000,\n10000000000000000000',
         name: '🔴 CSAccounting: Bond curve added',
         severity: Finding.Severity.HIGH,
         type: Finding.FindingType.INFORMATION,
       }
 
       expect(results.length).toEqual(1)
+
+      expect(results[0].getAlertid()).toEqual(expected.alertId)
+      expect(results[0].getDescription()).toEqual(expected.description)
+      expect(results[0].getName()).toEqual(expected.name)
+      expect(results[0].getSeverity()).toEqual(expected.severity)
+      expect(results[0].getType()).toEqual(expected.type)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🔵 Lido stETH: Approval',
+    async () => {
+      const txHash = '0xcc92653babec3b1748d8e04de777796cab2d1ae40fbe926db857e9103a9b74a5'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = csAccountingSrv.handleTransaction(transactionDto)
+
+      const expected = {
+        alertId: 'STETH-APPROVAL',
+        description:
+          '0x8d09a4502Cc8Cf1547aD300E066060D043f6982D received allowance from 0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1 to 115792089237316195423570985008687907853269984665640564039457584007913129639935',
+        name: '🔵 Lido stETH: Approval',
+        severity: Finding.Severity.INFO,
+        type: Finding.FindingType.INFORMATION,
+      }
+
+      expect(results.length).toEqual(3)
 
       expect(results[0].getAlertid()).toEqual(expected.alertId)
       expect(results[0].getDescription()).toEqual(expected.description)

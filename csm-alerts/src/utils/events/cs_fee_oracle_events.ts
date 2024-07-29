@@ -3,6 +3,9 @@ import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress } from '../string'
 import { Finding } from '../../generated/proto/alert_pb'
 
+export const HASH_CONSENSUS_REPORT_RECEIVED_EVENT =
+  'event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)'
+
 export function getHashConsensusEvents(HASH_CONSENSUS_ADDRESS: string): EventOfNotice[] {
   return [
     {

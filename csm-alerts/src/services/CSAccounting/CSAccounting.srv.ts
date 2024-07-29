@@ -3,6 +3,9 @@ import { either as E } from 'fp-ts'
 import { Logger } from 'winston'
 import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
+import { filterLog } from 'forta-agent'
+import { DeploymentAddresses } from '../../utils/constants.holesky'
+import { APPROVAL_EVENT } from '../../utils/events/cs_accounting_events'
 
 export abstract class ICSAccountingClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
@@ -78,9 +81,40 @@ export class CSAccountingSrv {
     const pausableEventsFindings = handleEventsOfNotice(txEvent, this.pausableEvents)
     const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
     const csAccountingFindings = handleEventsOfNotice(txEvent, this.csAccountingEvents)
+    const stETHApprovalFindings = this.handleStETHApprovalEvents(txEvent)
 
-    out.push(...ossifiedProxyFindings, ...pausableEventsFindings, ...burnerFindings, ...csAccountingFindings)
+    out.push(
+      ...ossifiedProxyFindings,
+      ...pausableEventsFindings,
+      ...burnerFindings,
+      ...csAccountingFindings,
+      ...stETHApprovalFindings,
+    )
 
+    return out
+  }
+
+  public handleStETHApprovalEvents(txEvent: TransactionDto): Finding[] {
+    const out: Finding[] = []
+
+    const approvalEvents = filterLog(txEvent.logs, APPROVAL_EVENT, DeploymentAddresses.CS_ACCOUNTING_ADDRESS)
+    if (approvalEvents.length === 0) {
+      return []
+    }
+
+    for (const event of approvalEvents) {
+      if (event.args.owner === DeploymentAddresses.CS_ACCOUNTING_ADDRESS) {
+        const f: Finding = new Finding()
+        f.setName(`🔵 Lido stETH: Approval`)
+        f.setDescription(`${event.args.spender} received allowance from ${event.args.owner} to ${event.args.value}`)
+        f.setAlertid('STETH-APPROVAL')
+        f.setSeverity(Finding.Severity.INFO)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
+
+        out.push(f)
+      }
+    }
     return out
   }
 }

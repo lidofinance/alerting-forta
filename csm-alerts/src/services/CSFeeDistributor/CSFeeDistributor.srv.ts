@@ -3,6 +3,9 @@ import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '.
 import { Logger } from 'winston'
 import { either as E } from 'fp-ts'
 import { Finding } from '../../generated/proto/alert_pb'
+import { DeploymentAddresses, ONE_DAY } from '../../utils/constants.holesky'
+import { filterLog } from 'forta-agent'
+import { DISTRIBUTION_DATA_UPDATED_EVENT, TRANSFER_SHARES_EVENT } from '../../utils/events/cs_fee_distributor_events'
 
 export abstract class ICSFeeDistributorClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
@@ -17,6 +20,8 @@ export class CSFeeDistributorSrv {
   private readonly ossifiedProxyEvents: EventOfNotice[]
   private readonly burnerEvents: EventOfNotice[]
   private readonly csFeeDistributorEvents: EventOfNotice[]
+
+  private lastDistributionDataUpdated: number | null = null
 
   constructor(
     logger: Logger,
@@ -51,8 +56,9 @@ export class CSFeeDistributorSrv {
       this.handleRevertedTx(blockDto.number),
       this.handleRolesChanging(blockDto.number),
     ])
+    const distributionDataUpdatedFindings = this.checkDistributionDataUpdated(blockDto)
 
-    findings.push(...revertedTxFindings, ...rolesChangingFindings)
+    findings.push(...revertedTxFindings, ...rolesChangingFindings, ...distributionDataUpdatedFindings)
 
     this.logger.info(elapsedTime(CSFeeDistributorSrv.name + '.' + this.handleBlock.name, start))
 
@@ -71,15 +77,82 @@ export class CSFeeDistributorSrv {
     return Promise.resolve([out])
   }
 
+  private checkDistributionDataUpdated(blockDto: BlockDto): Finding[] {
+    const out: Finding[] = []
+    const now = blockDto.timestamp
+
+    if (this.lastDistributionDataUpdated && now - this.lastDistributionDataUpdated > ONE_DAY) {
+      const daysSinceLastUpdate = Math.floor((now - this.lastDistributionDataUpdated) / ONE_DAY)
+      const f = new Finding()
+      f.setName(`🔴 CSFeeDistributor: No DistributionDataUpdated Event`)
+      f.setDescription(`There has been no DistributionDataUpdated event for ${daysSinceLastUpdate} days.`)
+      f.setAlertid('CSFEE-NO-DISTRIBUTION-DATA-UPDATED')
+      f.setSeverity(Finding.Severity.HIGH)
+      f.setType(Finding.FindingType.DEGRADED)
+      f.setProtocol('ethereum')
+      out.push(f)
+    }
+    return out
+  }
+
+  private updateLastDistributionData(event: EventOfNotice, txEvent: TransactionDto): void {
+    if (event.abi === DISTRIBUTION_DATA_UPDATED_EVENT) {
+      this.lastDistributionDataUpdated = txEvent.block.timestamp
+    }
+  }
+
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
     const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
     const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
     const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
+    const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
 
-    out.push(...ossifiedProxyFindings, ...burnerFindings, ...csFeeDistributorFindings)
+    if (csFeeDistributorFindings.length !== 0) {
+      this.updateLastDistributionData(this.csFeeDistributorEvents[0], txEvent)
+    }
 
+    out.push(
+      ...ossifiedProxyFindings,
+      ...burnerFindings,
+      ...csFeeDistributorFindings,
+      ...transferSharesInvalidReceiverFindings,
+    )
+
+    return out
+  }
+
+  public handleTransferSharesInvalidReceiver(txEvent: TransactionDto): Finding[] {
+    const out: Finding[] = []
+
+    const transferSharesEvents = filterLog(
+      txEvent.logs,
+      TRANSFER_SHARES_EVENT,
+      DeploymentAddresses.CS_FEE_DISTRIBUTOR_ADDRESS,
+    )
+    if (transferSharesEvents.length === 0) {
+      return []
+    }
+
+    for (const event of transferSharesEvents) {
+      if (
+        event.args.from === DeploymentAddresses.CS_FEE_DISTRIBUTOR_ADDRESS.toLowerCase() &&
+        event.args.to !== DeploymentAddresses.CS_ACCOUNTING_ADDRESS.toLowerCase()
+      ) {
+        const f: Finding = new Finding()
+        f.setName(`🟣 CSFeeDistributor: Invalid TransferShares receiver`)
+        f.setDescription(
+          `TransferShares from CSFeeDistributor to an invalid address ${event.args.to} (expected CSAccounting)`,
+        )
+        f.setAlertid('CSFEE-DISTRIBUTOR-INVALID-TRANSFER')
+        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
+
+        out.push(f)
+      }
+    }
     return out
   }
 }

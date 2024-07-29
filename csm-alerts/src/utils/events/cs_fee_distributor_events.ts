@@ -2,18 +2,13 @@ import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
 import { Finding } from '../../generated/proto/alert_pb'
 
+export const TRANSFER_SHARES_EVENT =
+  'event TransferShares(address indexed from, address indexed to, uint256 sharesValue)'
+export const DISTRIBUTION_DATA_UPDATED_EVENT =
+  'event DistributionDataUpdated(uint256 totalClaimableShares, bytes32 treeRoot, string treeCid)'
+
 export function getCSFeeDistributorEvents(CS_FEE_DISTRIBUTOR_ADDRESS: string): EventOfNotice[] {
   return [
-    {
-      address: CS_FEE_DISTRIBUTOR_ADDRESS,
-      abi: 'event TransferShares(address indexed from, address indexed to, uint256 value)',
-      alertId: 'CSFEE-DISTRIBUTOR-INVALID-TRANSFER',
-      name: '🟣 CSFeeDistributor: Invalid TransferShares receiver',
-      description: (args: Result) =>
-        `TransferShares from CSFeeDistributor to an invalid address ${args.to} (expected CSAccounting)`,
-      severity: Finding.Severity.CRITICAL,
-      type: Finding.FindingType.INFORMATION,
-    },
     {
       address: CS_FEE_DISTRIBUTOR_ADDRESS,
       abi: 'event DistributionDataUpdated(uint256 totalClaimableShares, bytes32 treeRoot, string treeCid)',

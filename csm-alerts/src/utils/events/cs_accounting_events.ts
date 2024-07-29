@@ -3,6 +3,8 @@ import { Result } from '@ethersproject/abi/lib'
 import { etherscanAddress, toEthString } from '../string'
 import { Finding } from '../../generated/proto/alert_pb'
 
+export const APPROVAL_EVENT = 'event Approval(address indexed owner, address indexed spender, uint256 value)'
+
 export function getCSAccountingEvents(CS_ACCOUNTING_ADDRESS: string): EventOfNotice[] {
   return [
     {
