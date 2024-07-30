@@ -69,16 +69,6 @@ export function getHashConsensusEvents(HASH_CONSENSUS_ADDRESS: string): EventOfN
     },
     {
       address: HASH_CONSENSUS_ADDRESS,
-      abi: 'event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)',
-      alertId: 'HASH-CONSENSUS-REPORT-RECEIVED',
-      name: '🔴 HashConsensus: Another report variant appeared (alternative hash)',
-      description: (args: Result) =>
-        `Alternative report received from member ${etherscanAddress(args.member)} for slot ${args.refSlot}. Report hash: ${args.report}`,
-      severity: Finding.Severity.HIGH,
-      type: Finding.FindingType.INFORMATION,
-    },
-    {
-      address: HASH_CONSENSUS_ADDRESS,
       abi: 'event ConsensusLost(uint256 indexed refSlot)',
       alertId: 'HASH-CONSENSUS-LOST',
       name: '🔴 HashConsensus: Consensus lost',
