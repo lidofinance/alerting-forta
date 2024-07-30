@@ -66,6 +66,12 @@ export class InitHandler {
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
+      await this.csModuleSrv.initialize(this.latestBlockNumber)
+      await this.csFeeDistributorSrv.initialize()
+      await this.csAccountingSrv.initialize(this.latestBlockNumber)
+      await this.csFeeOracleSrv.initialize(this.latestBlockNumber)
+      await this.proxyWatcherSrv.initialize(this.latestBlockNumber)
+
       const f: Finding = new Finding()
       f.setName(`${this.appName} launched`)
       f.setDescription(`Version: ${Version.desc}`)
@@ -74,9 +80,10 @@ export class InitHandler {
       f.setType(Finding.FindingType.INFORMATION)
       f.setProtocol('ethereum')
 
+      this.onAppStartFindings.push(f)
+
       this.logger.info(elapsedTime('Agent.initialize', startTime) + '\n')
 
-      this.onAppStartFindings.push(f)
       const resp = new InitializeResponse()
       resp.setStatus(ResponseStatus.SUCCESS)
 
