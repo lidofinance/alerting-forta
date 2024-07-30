@@ -35,6 +35,7 @@ import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
 import express = require('express')
+import { ProxyWatcherSrv } from './services/ProxyWatcher/ProxyWatcher.srv'
 
 const main = async () => {
   const config = new Config()
@@ -87,39 +88,29 @@ const main = async () => {
     csFeeOracleRunner,
   )
 
-  const csModuleSrv = new CSModuleSrv(
-    logger,
-    ethClient,
-    getOssifiedProxyEvents(),
-    getPausableEvents(),
-    getBurnerEvents(address.BURNER_ADDRESS),
-  )
+  const csModuleSrv = new CSModuleSrv(logger, ethClient)
 
   const csFeeDistributorSrv = new CSFeeDistributorSrv(
     logger,
     ethClient,
-    getOssifiedProxyEvents(),
-    getBurnerEvents(address.BURNER_ADDRESS),
     getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS),
   )
 
-  const csAccountingSrv = new CSAccountingSrv(
-    logger,
-    ethClient,
-    getOssifiedProxyEvents(),
-    getPausableEvents(),
-    getBurnerEvents(address.BURNER_ADDRESS),
-    getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
-  )
+  const csAccountingSrv = new CSAccountingSrv(logger, ethClient, getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS))
 
   const csFeeOracleSrv = new CSFeeOracleSrv(
     logger,
     ethClient,
-    getOssifiedProxyEvents(),
-    getPausableEvents(),
-    getBurnerEvents(address.BURNER_ADDRESS),
     getHashConsensusEvents(address.HASH_CONSENSUS_ADDRESS),
     getCSFeeOracleEvents(address.CS_FEE_ORACLE_ADDRESS),
+  )
+
+  const proxyWatcherSrv = new ProxyWatcherSrv(
+    logger,
+    ethClient,
+    getOssifiedProxyEvents(),
+    getPausableEvents(),
+    getBurnerEvents(),
   )
 
   const onAppFindings: Finding[] = []
@@ -137,7 +128,15 @@ const main = async () => {
     healthChecker,
     onAppFindings,
   )
-  const txH = new TxHandler(metrics, csModuleSrv, csFeeDistributorSrv, csAccountingSrv, csFeeOracleSrv, healthChecker)
+  const txH = new TxHandler(
+    metrics,
+    csModuleSrv,
+    csFeeDistributorSrv,
+    csAccountingSrv,
+    csFeeOracleSrv,
+    proxyWatcherSrv,
+    healthChecker,
+  )
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
 
   const latestBlockNumber = await ethClient.getBlockNumber()
@@ -154,6 +153,7 @@ const main = async () => {
     csFeeDistributorSrv,
     csAccountingSrv,
     csFeeOracleSrv,
+    proxyWatcherSrv,
     onAppFindings,
     latestBlockNumber.right,
   )

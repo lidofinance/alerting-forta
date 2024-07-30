@@ -8,9 +8,6 @@ import {
   CSFeeOracle__factory,
 } from '../../generated/typechain'
 import { getCSAccountingEvents } from '../../utils/events/cs_accounting_events'
-import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
-import { getPausableEvents } from '../../utils/events/pausable_events'
-import { getBurnerEvents } from '../../utils/events/burner_events'
 import { CSAccountingSrv, ICSAccountingClient } from './CSAccounting.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
@@ -59,9 +56,6 @@ describe('CSAccounting event tests', () => {
   const csAccountingSrv = new CSAccountingSrv(
     logger,
     csAccountingClient,
-    getOssifiedProxyEvents(),
-    getPausableEvents(),
-    getBurnerEvents(address.BURNER_ADDRESS),
     getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
   )
 

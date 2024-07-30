@@ -26,9 +26,6 @@ export class CSFeeOracleSrv {
   private readonly logger: Logger
   private readonly csFeeOracleClient: ICSFeeOracleClient
 
-  private readonly ossifiedProxyEvents: EventOfNotice[]
-  private readonly pausableEvents: EventOfNotice[]
-  private readonly burnerEvents: EventOfNotice[]
   private readonly hashConsensusEvents: EventOfNotice[]
   private readonly csFeeOracleEvents: EventOfNotice[]
 
@@ -39,18 +36,12 @@ export class CSFeeOracleSrv {
   constructor(
     logger: Logger,
     ethProvider: ICSFeeOracleClient,
-    ossifiedProxyEvents: EventOfNotice[],
-    pausableEvents: EventOfNotice[],
-    burnerEvents: EventOfNotice[],
     hashConsensusEvents: EventOfNotice[],
     csFeeOracleEvents: EventOfNotice[],
   ) {
     this.logger = logger
     this.csFeeOracleClient = ethProvider
 
-    this.ossifiedProxyEvents = ossifiedProxyEvents
-    this.pausableEvents = pausableEvents
-    this.burnerEvents = burnerEvents
     this.hashConsensusEvents = hashConsensusEvents
     this.csFeeOracleEvents = csFeeOracleEvents
   }
@@ -207,21 +198,11 @@ export class CSFeeOracleSrv {
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
-    const pausableEventsFindings = handleEventsOfNotice(txEvent, this.pausableEvents)
-    const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
     const hashConsensusFindings = handleEventsOfNotice(txEvent, this.hashConsensusEvents)
     const csFeeOracleFindings = handleEventsOfNotice(txEvent, this.csFeeOracleEvents)
     const alternativeHashReceivedFindings = this.handleAlternativeHashReceived(txEvent)
 
-    out.push(
-      ...ossifiedProxyFindings,
-      ...pausableEventsFindings,
-      ...burnerFindings,
-      ...hashConsensusFindings,
-      ...csFeeOracleFindings,
-      ...alternativeHashReceivedFindings,
-    )
+    out.push(...hashConsensusFindings, ...csFeeOracleFindings, ...alternativeHashReceivedFindings)
 
     return out
   }

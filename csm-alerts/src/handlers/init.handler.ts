@@ -9,6 +9,7 @@ import { Metadata } from '../entity/metadata'
 import Version from '../utils/version'
 import { elapsedTime } from '../utils/time'
 import { Finding } from '../generated/proto/alert_pb'
+import { ProxyWatcherSrv } from '../services/ProxyWatcher/ProxyWatcher.srv'
 
 export class InitHandler {
   private readonly logger: Logger
@@ -16,6 +17,7 @@ export class InitHandler {
   private readonly csFeeDistributorSrv: CSFeeDistributorSrv
   private readonly csAccountingSrv: CSAccountingSrv
   private readonly csFeeOracleSrv: CSFeeOracleSrv
+  private readonly proxyWatcherSrv: ProxyWatcherSrv
   private readonly appName: string
   private readonly latestBlockNumber: number
 
@@ -28,6 +30,7 @@ export class InitHandler {
     csFeeDistributorSrv: CSFeeDistributorSrv,
     csAccountingSrv: CSAccountingSrv,
     csFeeOracleSrv: CSFeeOracleSrv,
+    proxyWatcherSrv: ProxyWatcherSrv,
     onAppStartFindings: Finding[],
     latestBlockNumber: number,
   ) {
@@ -37,6 +40,7 @@ export class InitHandler {
     this.csFeeDistributorSrv = csFeeDistributorSrv
     this.csAccountingSrv = csAccountingSrv
     this.csFeeOracleSrv = csFeeOracleSrv
+    this.proxyWatcherSrv = proxyWatcherSrv
     this.onAppStartFindings = onAppStartFindings
     this.latestBlockNumber = latestBlockNumber
   }
@@ -58,6 +62,7 @@ export class InitHandler {
         this.csFeeDistributorSrv.getName(),
         this.csAccountingSrv.getName(),
         this.csFeeOracleSrv.getName(),
+        this.proxyWatcherSrv.getName(),
       ]
       metadata.agents = '[' + agents.toString() + ']'
 

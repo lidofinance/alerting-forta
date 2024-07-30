@@ -16,25 +16,12 @@ export class CSAccountingSrv {
   private readonly logger: Logger
   private readonly csAccountingClient: ICSAccountingClient
 
-  private readonly ossifiedProxyEvents: EventOfNotice[]
-  private readonly pausableEvents: EventOfNotice[]
-  private readonly burnerEvents: EventOfNotice[]
   private readonly csAccountingEvents: EventOfNotice[]
 
-  constructor(
-    logger: Logger,
-    ethProvider: ICSAccountingClient,
-    ossifiedProxyEvents: EventOfNotice[],
-    pausableEvents: EventOfNotice[],
-    burnerEvents: EventOfNotice[],
-    csAccountingEvents: EventOfNotice[],
-  ) {
+  constructor(logger: Logger, ethProvider: ICSAccountingClient, csAccountingEvents: EventOfNotice[]) {
     this.logger = logger
     this.csAccountingClient = ethProvider
 
-    this.ossifiedProxyEvents = ossifiedProxyEvents
-    this.pausableEvents = pausableEvents
-    this.burnerEvents = burnerEvents
     this.csAccountingEvents = csAccountingEvents
   }
 
@@ -77,19 +64,10 @@ export class CSAccountingSrv {
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
-    const pausableEventsFindings = handleEventsOfNotice(txEvent, this.pausableEvents)
-    const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
     const csAccountingFindings = handleEventsOfNotice(txEvent, this.csAccountingEvents)
     const stETHApprovalFindings = this.handleStETHApprovalEvents(txEvent)
 
-    out.push(
-      ...ossifiedProxyFindings,
-      ...pausableEventsFindings,
-      ...burnerFindings,
-      ...csAccountingFindings,
-      ...stETHApprovalFindings,
-    )
+    out.push(...csAccountingFindings, ...stETHApprovalFindings)
 
     return out
   }

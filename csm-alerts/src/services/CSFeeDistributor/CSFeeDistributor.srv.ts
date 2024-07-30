@@ -17,23 +17,13 @@ export class CSFeeDistributorSrv {
   private readonly logger: Logger
   private readonly csFeeDistributorClient: ICSFeeDistributorClient
 
-  private readonly ossifiedProxyEvents: EventOfNotice[]
-  private readonly burnerEvents: EventOfNotice[]
   private readonly csFeeDistributorEvents: EventOfNotice[]
 
   private lastDistributionDataUpdated: number | null = null
 
-  constructor(
-    logger: Logger,
-    ethProvider: ICSFeeDistributorClient,
-    ossifiedProxyEvents: EventOfNotice[],
-    burnerEvents: EventOfNotice[],
-    csFeeDistributorEvents: EventOfNotice[],
-  ) {
+  constructor(logger: Logger, ethProvider: ICSFeeDistributorClient, csFeeDistributorEvents: EventOfNotice[]) {
     this.logger = logger
     this.csFeeDistributorClient = ethProvider
-    this.ossifiedProxyEvents = ossifiedProxyEvents
-    this.burnerEvents = burnerEvents
     this.csFeeDistributorEvents = csFeeDistributorEvents
   }
 
@@ -104,8 +94,6 @@ export class CSFeeDistributorSrv {
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
-    const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
     const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
     const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
 
@@ -113,12 +101,7 @@ export class CSFeeDistributorSrv {
       this.updateLastDistributionData(this.csFeeDistributorEvents[0], txEvent)
     }
 
-    out.push(
-      ...ossifiedProxyFindings,
-      ...burnerFindings,
-      ...csFeeDistributorFindings,
-      ...transferSharesInvalidReceiverFindings,
-    )
+    out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings)
 
     return out
   }

@@ -8,8 +8,6 @@ import {
   CSFeeOracle__factory,
 } from '../../generated/typechain'
 import { getCSFeeDistributorEvents } from '../../utils/events/cs_fee_distributor_events'
-import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
-import { getBurnerEvents } from '../../utils/events/burner_events'
 import { CSFeeDistributorSrv, ICSFeeDistributorClient } from './CSFeeDistributor.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
@@ -59,15 +57,13 @@ describe('CsFeeDistributor event tests', () => {
   const csFeeDistributorSrv = new CSFeeDistributorSrv(
     logger,
     csFeeDistributorClient,
-    getOssifiedProxyEvents(),
-    getBurnerEvents(address.BURNER_ADDRESS),
     getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS),
   )
 
   test(
-    '🟣 Admin Changed',
+    '🔵 INFO: DistributionDataUpdated',
     async () => {
-      const txHash = '0x389e2926ea5aeb793bc30f4b0e6507599549c35a03482971428b71337dd53e2d'
+      const txHash = '0x33a9fb726d09d543c417cb0985a41a7bee39e81e8536b5969784a520f4d2e0c1'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -84,19 +80,22 @@ describe('CsFeeDistributor event tests', () => {
       const results = csFeeDistributorSrv.handleTransaction(transactionDto)
 
       const expected = {
-        alertId: 'PROXY-ADMIN-CHANGED',
+        alertId: 'CSFEE-DISTRIBUTOR-DISTRIBUTION-DATA-UPDATED',
         description:
-          'The proxy admin for CSFeeDistributor(0xD7ba648C8F72669C6aE649648B516ec03D07c8ED) has been changed from [0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164](https://etherscan.io/address/0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164) to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d)',
-        name: '🟣 CSFeeDistributor: Admin Changed',
-        severity: Finding.Severity.CRITICAL,
+          `Distribution data updated:\n` +
+          `Total Claimable Shares: 2437078762437100387\n` +
+          `Tree Root: 0xcdd2290902bce8a93962c331e2d57ca30c754f366e1194de5448239763f5cf0f\n` +
+          `Tree CID: QmPi5y1gyDoALFz1ZqwFMVDDEyPtDfFoeewvknfkbdobp6`,
+        name: '🔵 CSFeeDistributor: Distribution data updated',
+        severity: Finding.Severity.INFO,
         type: Finding.FindingType.INFORMATION,
       }
 
-      expect(results[2].getAlertid()).toEqual(expected.alertId)
-      expect(results[2].getDescription()).toEqual(expected.description)
-      expect(results[2].getName()).toEqual(expected.name)
-      expect(results[2].getSeverity()).toEqual(expected.severity)
-      expect(results[2].getType()).toEqual(expected.type)
+      expect(results[0].getAlertid()).toEqual(expected.alertId)
+      expect(results[0].getDescription()).toEqual(expected.description)
+      expect(results[0].getName()).toEqual(expected.name)
+      expect(results[0].getSeverity()).toEqual(expected.severity)
+      expect(results[0].getType()).toEqual(expected.type)
     },
     TEST_TIMEOUT,
   )

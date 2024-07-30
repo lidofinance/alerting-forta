@@ -1,5 +1,5 @@
 import { either as E } from 'fp-ts'
-import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
+import { TransactionDto } from '../../entity/events'
 import { elapsedTime } from '../../utils/time'
 import { Logger } from 'winston'
 import { BlockDto } from '../../entity/events'
@@ -20,23 +20,9 @@ export class CSModuleSrv {
   private readonly logger: Logger
   private readonly csModuleClient: ICSModuleClient
 
-  private readonly ossifiedProxyEvents: EventOfNotice[]
-  private readonly pausableEvents: EventOfNotice[]
-  private readonly burnerEvents: EventOfNotice[]
-
-  constructor(
-    logger: Logger,
-    csModuleClient: ICSModuleClient,
-    ossifiedProxyEvents: EventOfNotice[],
-    pausableEvents: EventOfNotice[],
-    burnerEvents: EventOfNotice[],
-  ) {
+  constructor(logger: Logger, csModuleClient: ICSModuleClient) {
     this.logger = logger
     this.csModuleClient = csModuleClient
-
-    this.ossifiedProxyEvents = ossifiedProxyEvents
-    this.pausableEvents = pausableEvents
-    this.burnerEvents = burnerEvents
   }
 
   public async initialize(currentBlock: number): Promise<Error | null> {
@@ -78,12 +64,17 @@ export class CSModuleSrv {
   handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
-    const pausableEventsFindings = handleEventsOfNotice(txEvent, this.pausableEvents)
-    const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
+    const moduleShareIsCloseToTargetShareFindings = this.handleModuleShareIsCloseToTargetShare(txEvent)
 
-    out.push(...ossifiedProxyFindings, ...pausableEventsFindings, ...burnerFindings)
+    out.push(...moduleShareIsCloseToTargetShareFindings)
 
+    return out
+  }
+
+  // to be implemented
+  public handleModuleShareIsCloseToTargetShare(txEvent: TransactionDto): Finding[] {
+    const out: Finding[] = []
+    this.logger.info(`${txEvent.block.timestamp}`)
     return out
   }
 }

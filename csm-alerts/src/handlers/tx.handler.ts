@@ -8,6 +8,7 @@ import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../genera
 import { newTransactionDto } from '../entity/events'
 import { Finding } from '../generated/proto/alert_pb'
 import { HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+import { ProxyWatcherSrv } from '../services/ProxyWatcher/ProxyWatcher.srv'
 
 export class TxHandler {
   private metrics: Metrics
@@ -15,6 +16,7 @@ export class TxHandler {
   private csFeeDistributorSrv: CSFeeDistributorSrv
   private csAccountingSrv: CSAccountingSrv
   private csFeeOracleSrv: CSFeeOracleSrv
+  private proxyWatcherSrv: ProxyWatcherSrv
   private healthChecker: HealthChecker
 
   constructor(
@@ -23,6 +25,7 @@ export class TxHandler {
     csFeeDistributorSrv: CSFeeDistributorSrv,
     csAccountingSrv: CSAccountingSrv,
     csFeeOracleSrv: CSFeeOracleSrv,
+    proxyWatcherSrv: ProxyWatcherSrv,
     healthChecker: HealthChecker,
   ) {
     this.metrics = metrics
@@ -30,6 +33,7 @@ export class TxHandler {
     this.csFeeDistributorSrv = csFeeDistributorSrv
     this.csAccountingSrv = csAccountingSrv
     this.csFeeOracleSrv = csFeeOracleSrv
+    this.proxyWatcherSrv = proxyWatcherSrv
     this.healthChecker = healthChecker
   }
 
@@ -49,8 +53,15 @@ export class TxHandler {
       const csFeeDistributorFindings = this.csFeeDistributorSrv.handleTransaction(txEvent)
       const sAccountingFindings = this.csAccountingSrv.handleTransaction(txEvent)
       const csFeeOracleFindings = this.csFeeOracleSrv.handleTransaction(txEvent)
+      const proxyWatcherFindings = this.proxyWatcherSrv.handleTransaction(txEvent)
 
-      findings.push(...csModuleFindings, ...csFeeDistributorFindings, ...sAccountingFindings, ...csFeeOracleFindings)
+      findings.push(
+        ...csModuleFindings,
+        ...csFeeDistributorFindings,
+        ...sAccountingFindings,
+        ...csFeeOracleFindings,
+        ...proxyWatcherFindings,
+      )
 
       const errCount = this.healthChecker.check(findings)
       errCount === 0
