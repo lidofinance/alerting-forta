@@ -157,7 +157,6 @@ export const MONITORED_TOKENS = new Map<string, string>(
     ["0x82dc3260f599f4fc4307209a1122b6eaa007163b", "LugaETH"],
     ["0xd6e09a5e6d719d1c881579c9c8670a210437931b", "coETH"],
     ["0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811", "pzETH"],
-    
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
@@ -1605,7 +1604,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from} `,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1626,7 +1624,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `was deposited to Symbiotic by Mellow Protocol: Steakhouse Vault\n` +
       `Vault: ${info.to} `,
   },
-
 
   {
     transferPatterns: {
@@ -1649,7 +1646,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from}`,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1670,7 +1666,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `was deposited to Symbiotic by Mellow Protocol: Mev Capital Vault\n` +
       `Vault: ${info.to} `,
   },
-
 
   {
     transferPatterns: {
@@ -1693,7 +1688,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from}`,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1714,7 +1708,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `was deposited to Symbiotic by Mellow Protocol: P2P Vault\n` +
       `Vault: ${info.to} `,
   },
-
 
   {
     transferPatterns: {
@@ -1737,7 +1730,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from}`,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1758,7 +1750,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `was deposited to Symbiotic by Mellow Protocol: InfStones Vault\n` +
       `Vault: ${info.to} `,
   },
-
 
   {
     transferPatterns: {
@@ -1781,7 +1772,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from}`,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1802,7 +1792,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `was deposited to Symbiotic by Mellow Protocol: Luganodes Vault\n` +
       `Vault: ${info.to} `,
   },
-
 
   {
     transferPatterns: {
@@ -1825,7 +1814,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from}`,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1847,7 +1835,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.to} `,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1868,7 +1855,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `was withdrawn from Symbiotic by Mellow Protocol: Renzo Vault\n`  +
       `Vault: ${info.from}`,
   },
-
 
   {
     transferPatterns: {
