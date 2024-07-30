@@ -1,146 +1,142 @@
 import BigNumber from 'bignumber.js'
-import { BlockDto, WithdrawalRecord } from '../entity/blockDto'
 import * as E from 'fp-ts/Either'
-import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
-import { NetworkError } from '../utils/errors'
-import { WithdrawalInitiatedEvent } from '../generated/typechain/L2ERC20TokenGateway'
+import { dbAlert } from '../utils/errors'
 import { Finding } from '../generated/proto/alert_pb'
-import { TransactionDto } from '../entity/events'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { ETH_DECIMALS } from '../utils/constants'
+import { Log } from '@ethersproject/abstract-provider'
+import { WithdrawalDto, WithdrawalStat } from '../entity/withdrawal'
+import { BlockDto } from '../entity/l2block'
+import { WithdrawalRepo } from './monitor_withdrawals.repo'
+import { L2Client } from '../clients/l2_client'
+import { elapsed } from '../utils/time'
+import { ETHProvider } from '../clients/eth_provider_client'
+import { TransactionDto } from '../entity/events'
 
 // 10k wstETH
 const MAX_WITHDRAWALS_10K_WstEth = 10_000
-
-export type MonitorWithdrawalsInitResp = {
-  currentWithdrawals: string
-}
-
 export const HOURS_48 = 60 * 60 * 24 * 2
-export const AVG_BLOCK_TIME_2SECONDS: number = 2 //s
+export const HOURS_1 = 60 * 60
+export const AVG_BLOCK_TIME: number = 0.25
 
-export abstract class IMonitorWithdrawalsClient {
-  public abstract getWithdrawalEvents(
-    fromBlockNumber: number,
-    toBlockNumber: number,
-  ): Promise<E.Either<NetworkError, WithdrawalInitiatedEvent[]>>
-
-  public abstract getWithdrawalRecords(
-    withdrawalEvents: WithdrawalInitiatedEvent[],
-  ): Promise<E.Either<NetworkError, WithdrawalRecord[]>>
-}
-
-export class MonitorWithdrawals {
-  private readonly name: string = 'WithdrawalsMonitor'
+export class WithdrawalSrv {
+  private readonly name: string = 'Withdrawal service'
   private readonly withdrawalInitiatedEvent =
     'event WithdrawalInitiated(address l1Token, address indexed from, address indexed to, uint256 indexed l2ToL1Id, uint256 exitNum, uint256 amount)'
 
+  private readonly TokenRebasedEvent =
+    'event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)'
+
   private readonly logger: Logger
-  private readonly arbitrumL2TokenGateway: string
-  private readonly withdrawalsClient: IMonitorWithdrawalsClient
+  private readonly l2TokenGateway: string
+  private readonly repo: WithdrawalRepo
 
-  private withdrawalStore: WithdrawalRecord[] = []
-  private toManyWithdrawalsTimestamp = 0
+  private readonly l1Client: ETHProvider
+  private readonly l2Client: L2Client
+  private readonly lidoStethAddress: string
+  private readonly networkName: string
 
-  constructor(withdrawalsClient: IMonitorWithdrawalsClient, arbitrumL2TokenGateway: string, logger: Logger) {
-    this.withdrawalsClient = withdrawalsClient
-    this.arbitrumL2TokenGateway = arbitrumL2TokenGateway
+  private lastFindingTimestamp = new Date().getTime() - HOURS_1
+
+  constructor(
+    l1Client: ETHProvider,
+    l2Client: L2Client,
+    l2TokenGateway: string,
+    logger: Logger,
+    repo: WithdrawalRepo,
+    networkName: string,
+    lidoStethAddress: string,
+  ) {
+    this.l2TokenGateway = l2TokenGateway
     this.logger = logger
+    this.repo = repo
+    this.networkName = networkName
+    this.l2Client = l2Client
+    this.l1Client = l1Client
+    this.lidoStethAddress = lidoStethAddress
   }
 
-  public getName(): string {
-    return this.name
-  }
-
-  public async initialize(currentBlock: number): Promise<E.Either<NetworkError, MonitorWithdrawalsInitResp>> {
-    // 48 hours
-    const pastBlock = currentBlock - Math.ceil(HOURS_48 / AVG_BLOCK_TIME_2SECONDS)
-
-    const withdrawalEvents = await this.withdrawalsClient.getWithdrawalEvents(pastBlock, currentBlock - 1)
-    if (E.isLeft(withdrawalEvents)) {
-      return withdrawalEvents
-    }
-
-    const withdrawalRecords = await this.withdrawalsClient.getWithdrawalRecords(withdrawalEvents.right)
-    if (E.isLeft(withdrawalRecords)) {
-      return withdrawalRecords
-    }
-
-    const withdrawalsSum = new BigNumber(0)
-    for (const wc of withdrawalRecords.right) {
-      withdrawalsSum.plus(wc.amount)
-      this.withdrawalStore.push(wc)
-    }
-
-    this.logger.info(`${MonitorWithdrawals.name} started on block ${currentBlock}`)
-    return E.right({
-      currentWithdrawals: withdrawalsSum.div(ETH_DECIMALS).toFixed(2),
-    })
-  }
-
-  public handleL2Block(l2BlockDto: BlockDto): Finding[] {
+  public async initialize(currentBlock: number): Promise<E.Either<Error, Finding[]>> {
     const start = new Date().getTime()
+    this.logger.info(`${this.name} started: ${new Date(start).toUTCString()}`)
 
+    const from = currentBlock - Math.ceil(HOURS_48 / AVG_BLOCK_TIME)
+
+    const l2Logs = await this.l2Client.fetchL2Logs(from, currentBlock, [this.l2TokenGateway])
+    if (E.isLeft(l2Logs)) {
+      return l2Logs
+    }
+
+    const l2BlockNumberSet = new Set<number>()
+    for (const l2log of l2Logs.right) {
+      l2BlockNumberSet.add(new BigNumber(l2log.blockNumber).toNumber())
+    }
+
+    const l2Blocks = await this.l2Client.fetchL2BlocksByList(Array.from(l2BlockNumberSet))
+
+    const findings = await this.toMonitor(l2Logs.right, l2Blocks)
+
+    this.logger.info(`${this.name} finished. Duration: ${elapsed(start)}\n`)
+    return E.right(findings)
+  }
+
+  public async toMonitor(l2logs: Log[], l2Blocks: BlockDto[]): Promise<Finding[]> {
+    const startWithdrawalSrv = new Date().getTime()
+    this.logger.info(
+      `\tWithdrawal service started: ${new Date(startWithdrawalSrv).toUTCString()}. L2Blocks: ${l2Blocks.length}`,
+    )
     const out: Finding[] = []
 
-    // remove withdrawals records older than MAX_WITHDRAWALS_WINDOW
-    const withdrawalsCache: WithdrawalRecord[] = []
-    for (const wc of this.withdrawalStore) {
-      if (l2BlockDto.timestamp - HOURS_48 < wc.timestamp) {
-        withdrawalsCache.push(wc)
+    const withdrawals = this.getWithdrawals(l2logs, l2Blocks)
+    if (withdrawals.length > 0) {
+      const err = await this.repo.createOrUpdate(withdrawals)
+      if (err !== null) {
+        out.push(dbAlert(err, `Could not createOrUpdate withdrawals`, err.message))
+
+        return out
+      }
+
+      const rmvErr = await this.repo.removeLessThen(l2Blocks[l2Blocks.length - 1].timestamp - HOURS_48)
+      if (rmvErr !== null) {
+        out.push(dbAlert(rmvErr, `Could not removeLessThen withdrawals`, rmvErr.message))
+        return out
       }
     }
 
-    this.withdrawalStore = withdrawalsCache
-
-    const withdrawalsSum = new BigNumber(0)
-    for (const wc of this.withdrawalStore) {
-      withdrawalsSum.plus(wc.amount)
+    const stat = await this.repo.getWithdrawalStat()
+    if (E.isLeft(stat)) {
+      out.push(dbAlert(stat.left, `Could not getTotalWithdrawals`, stat.left.message))
+      return out
     }
 
-    // block number condition is meant to "sync" agents alerts
-    if (
-      withdrawalsSum.div(ETH_DECIMALS).isGreaterThanOrEqualTo(MAX_WITHDRAWALS_10K_WstEth) &&
-      l2BlockDto.number % 10 === 0
-    ) {
-      const period =
-        l2BlockDto.timestamp - this.toManyWithdrawalsTimestamp < HOURS_48
-          ? l2BlockDto.timestamp - this.toManyWithdrawalsTimestamp
-          : HOURS_48
+    if (stat.right.amount >= MAX_WITHDRAWALS_10K_WstEth) {
+      if (new Date().getTime() - this.lastFindingTimestamp > HOURS_1) {
+        const f: Finding = new Finding()
+        f.setName(`⚠️ ${this.networkName}: Huge withdrawals in total`)
+        f.setDescription(`There were withdrawals requests from L2 to L1 for the ${stat.right.amount} wstETH in total`)
+        f.setAlertid('HUGE-WITHDRAWALS-FROM-L2')
+        f.setSeverity(Finding.Severity.MEDIUM)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
 
-      const f: Finding = new Finding()
-      f.setName(`⚠️ arbitrum: Huge withdrawals during the last ` + `${Math.floor(period / (60 * 60))} hour(s)`)
-      f.setDescription(
-        `There were withdrawals requests from L2 to L1 for the ` +
-          `${withdrawalsSum.div(ETH_DECIMALS).toFixed(4)} wstETH in total`,
-      )
-      f.setAlertid('HUGE-WITHDRAWALS-FROM-L2')
-      f.setSeverity(Finding.Severity.MEDIUM)
-      f.setType(Finding.FindingType.SUSPICIOUS)
-      f.setProtocol('arbitrum')
-
-      out.push(f)
-
-      this.toManyWithdrawalsTimestamp = l2BlockDto.timestamp
-
-      const tmp: WithdrawalRecord[] = []
-      for (const wc of this.withdrawalStore) {
-        if (l2BlockDto.timestamp - this.toManyWithdrawalsTimestamp < wc.timestamp) {
-          tmp.push(wc)
-        }
+        out.push(f)
       }
 
-      this.withdrawalStore = tmp
+      this.lastFindingTimestamp = new Date().getTime()
     }
 
-    this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this.handleL2Block.name, start))
+    this.logger.info(`\t\tTotal withdrawals(${stat.right.total}): ${stat.right.amount} wStEth`)
+    this.logger.info(`\tWithdrawal service finished. Duration: ${elapsed(startWithdrawalSrv)}`)
+
     return out
   }
 
-  public handleTransaction(txDto: TransactionDto): WithdrawalRecord | null {
-    for (const log of txDto.logs) {
-      if (log.address.toLowerCase() !== this.arbitrumL2TokenGateway.toLowerCase()) {
+  public getWithdrawals(l2logs: Log[], l2Blocks: BlockDto[]): WithdrawalDto[] {
+    const out: WithdrawalDto[] = []
+
+    for (const log of l2logs) {
+      if (log.address.toLowerCase() !== this.l2TokenGateway.toLowerCase()) {
         continue
       }
 
@@ -148,19 +144,47 @@ export class MonitorWithdrawals {
       try {
         const logDesc = parser.parseLog(log)
 
-        const out: WithdrawalRecord = {
-          timestamp: txDto.block.timestamp,
-          amount: new BigNumber(String(logDesc.args.amount)),
+        for (const l2block of l2Blocks) {
+          if (new BigNumber(l2block.number).eq(new BigNumber(log.blockNumber))) {
+            const w = new WithdrawalDto(
+              l2block.number,
+              log.blockHash,
+              log.transactionHash,
+              l2block.timestamp,
+              new BigNumber(String(logDesc.args.amount)).div(ETH_DECIMALS).toNumber(),
+            )
+
+            out.push(w)
+            break
+          }
         }
-
-        this.withdrawalStore.push(out)
-
-        return out
       } catch (e) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       }
     }
 
-    return null
+    return out
+  }
+
+  public hasRebasedEvent(txEvent: TransactionDto): boolean {
+    for (const log of txEvent.logs) {
+      if (log.address.toLowerCase() !== this.lidoStethAddress.toLowerCase()) {
+        continue
+      }
+
+      const parser = new ethers.utils.Interface([this.TokenRebasedEvent])
+      try {
+        parser.parseLog(log)
+        return true
+      } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      }
+    }
+
+    return false
+  }
+
+  public async getWithdrawalStat(): Promise<E.Either<Error, WithdrawalStat>> {
+    return await this.repo.getWithdrawalStat()
   }
 }

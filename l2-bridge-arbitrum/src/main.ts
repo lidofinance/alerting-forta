@@ -1,5 +1,4 @@
 import * as grpc from '@grpc/grpc-js'
-import { either as E } from 'fp-ts'
 import { BlockHandler } from './handlers/block.handler'
 import { HealthHandler } from './handlers/health.handler'
 import { InitHandler } from './handlers/init.handler'
@@ -12,37 +11,48 @@ import * as Winston from 'winston'
 import { Address } from './utils/constants'
 import promClient from 'prom-client'
 import { Metrics } from './utils/metrics/metrics'
-import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
-import { MonitorWithdrawals } from './services/monitor_withdrawals'
-import { ArbitrumClient } from './clients/arbitrum_client'
+import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
+import { L2Client } from './clients/l2_client'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { TxHandler } from './handlers/tx.handler'
 import { ProxyWatcher } from './services/proxy_watcher'
 import { ProxyContractClient } from './clients/proxy_contract_client'
 import process from 'process'
 import { EventWatcher } from './services/event_watcher'
-import { getL2BridgeEvents } from './utils/events/bridge_events'
+import { getL1BridgeEvents, getL2BridgeEvents } from './utils/events/bridge_events'
 import { getGovEvents } from './utils/events/gov_events'
-import { getProxyAdminEvents } from './utils/events/proxy_admin_events'
-import { AlertHandler } from './handlers/alert.handler'
+import { getL1ProxyAdminEvents, getL2ProxyAdminEvents } from './utils/events/proxy_admin_events'
 import { BridgeBalanceSrv } from './services/bridge_balance'
 import { ETHProvider } from './clients/eth_provider_client'
-import { ethers } from 'forta-agent'
-import {
-  ArbERC20__factory,
-  ERC20Bridged__factory,
-  L2ERC20TokenGateway__factory,
-  OssifiableProxy__factory,
-} from './generated/typechain'
+import { ethers } from 'ethers'
+import { ArbERC20__factory, ERC20Bridged__factory, OssifiableProxy__factory } from './generated/typechain'
+import { LRUCache } from 'lru-cache'
+import BigNumber from 'bignumber.js'
+import { knex } from 'knex'
+import { L2BlocksRepo } from './services/l2_blocks/L2Blocks.repo'
+import { L2BlocksSrv } from './services/l2_blocks/L2Blocks.srv'
+import { WithdrawalSrv } from './services/monitor_withdrawals'
+import { WithdrawalRepo } from './services/monitor_withdrawals.repo'
+import { TxHandler } from './handlers/tx.handler'
+import { getL1RouterEvents } from './utils/events/router_events'
+
+const MINUTES_30 = 1000 * 60 * 30
 
 const main = async () => {
   const config = new Config()
-  console.log(config)
+  const dbClient = knex(config.knexConfig)
 
   const logger: Winston.Logger = Winston.createLogger({
     format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
     transports: [new Winston.transports.Console()],
   })
+
+  try {
+    await dbClient.migrate.latest()
+    logger.info('Migrations have been run successfully.')
+  } catch (error) {
+    logger.error('Error running migrations:', error)
+    process.exit(1)
+  }
 
   const defaultRegistry = promClient
   defaultRegistry.collectDefaultMetrics({
@@ -55,127 +65,160 @@ const main = async () => {
 
   const metrics = new Metrics(mergedRegistry, config.promPrefix)
 
-  const arbitrumProvider = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.chainId)
-  let nodeClient = getEthersProvider()
-  if (!config.useFortaProvider) {
-    nodeClient = arbitrumProvider
-  }
+  const ethProvider = config.useFortaProvider
+    ? new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), config.chainId)
+    : new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
+
+  const l2NodeClient = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.arbChainID)
 
   const adr: Address = Address
 
   const onAppFindings: Finding[] = []
   const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
 
-  const l2Bridge = L2ERC20TokenGateway__factory.connect(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, nodeClient)
-  const bridgedWSthEthRunner = ERC20Bridged__factory.connect(adr.ARBITRUM_WSTETH_BRIDGED.address, nodeClient)
-  const bridgedLdoRunner = ArbERC20__factory.connect(adr.ARBITRUM_LDO_BRIDGED_ADDRESS, nodeClient)
+  const bridgedWSthEthRunner = ERC20Bridged__factory.connect(adr.ARBITRUM_WSTETH_BRIDGED.address, l2NodeClient)
+  const bridgedLdoRunner = ArbERC20__factory.connect(adr.ARBITRUM_LDO_BRIDGED_ADDRESS, l2NodeClient)
 
-  const arbitrumClient = new ArbitrumClient(nodeClient, metrics, l2Bridge, bridgedWSthEthRunner, bridgedLdoRunner)
-  const withdrawalsSrv = new MonitorWithdrawals(arbitrumClient, adr.ARBITRUM_L2_TOKEN_GATEWAY.address, logger)
+  const l2Client = new L2Client(l2NodeClient, metrics, bridgedWSthEthRunner, bridgedLdoRunner, logger)
 
-  const proxyWatchers: ProxyWatcher[] = [
-    new ProxyWatcher(
-      new ProxyContractClient(
-        adr.ARBITRUM_WSTETH_BRIDGED.name,
-        OssifiableProxy__factory.connect(adr.ARBITRUM_WSTETH_BRIDGED.address, nodeClient),
-        metrics,
-      ),
-      logger,
-    ),
-    new ProxyWatcher(
-      new ProxyContractClient(
-        adr.ARBITRUM_L2_TOKEN_GATEWAY.name,
-        OssifiableProxy__factory.connect(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, nodeClient),
-        metrics,
-      ),
-      logger,
-    ),
-  ]
+  const L2BlockRepo = new L2BlocksRepo(dbClient)
 
-  const bridgeEventWatcher = new EventWatcher(
-    'BridgeEventWatcher',
-    getL2BridgeEvents(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, adr.RolesMap),
-  )
-  const govEventWatcher = new EventWatcher('GovEventWatcher', getGovEvents(adr.GOV_BRIDGE_ADDRESS))
-  const proxyEventWatcher = new EventWatcher(
-    'ProxyEventWatcher',
-    getProxyAdminEvents(adr.ARBITRUM_WSTETH_BRIDGED, adr.ARBITRUM_L2_TOKEN_GATEWAY),
-  )
+  const l2BlocksSrv = new L2BlocksSrv(l2Client, L2BlockRepo, [
+    adr.GOV_BRIDGE_ADDRESS,
+    adr.ARBITRUM_L2_TOKEN_GATEWAY.address,
+    adr.ARBITRUM_WSTETH_BRIDGED.address,
+  ])
 
-  const mainnet = 1
-  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, mainnet)
+  const withdrawalRepo = new WithdrawalRepo(dbClient)
 
   const wSthEthRunner = ERC20Bridged__factory.connect(adr.L1_WSTETH_ADDRESS, ethProvider)
   const ldoRunner = ERC20Bridged__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
 
-  const l1Client = new ETHProvider(metrics, wSthEthRunner, ldoRunner, ethProvider)
-  const bridgeBalanceSrv = new BridgeBalanceSrv(
-    logger,
-    l1Client,
-    adr.ARBITRUM_L1_TOKEN_BRIDGE,
+  const l1BlockCache = new LRUCache<string, BigNumber>({
+    max: 600,
+    ttl: MINUTES_30,
+  })
+
+  const l1Client = new ETHProvider(
+    metrics,
+    wSthEthRunner,
+    ldoRunner,
+    ethProvider,
+    l1BlockCache,
+    adr.ARBITRUM_L1_TOKEN_BRIDGE.address,
     adr.ARBITRUM_L1_LDO_BRIDGE,
-    arbitrumClient,
+    logger,
   )
 
-  const gRPCserver = new grpc.Server()
+  const withdrawalsSrv = new WithdrawalSrv(
+    l1Client,
+    l2Client,
+    adr.ARBITRUM_L2_TOKEN_GATEWAY.address,
+    logger,
+    withdrawalRepo,
+    config.networkName,
+    adr.LIDO_STETH_ADDRESS,
+  )
+
+  const l1ProxyWatcher = new ProxyWatcher(
+    new ProxyContractClient(
+      adr.ARBITRUM_L1_TOKEN_BRIDGE.name,
+      OssifiableProxy__factory.connect(adr.ARBITRUM_L1_TOKEN_BRIDGE.address, ethProvider),
+      metrics,
+    ),
+    logger,
+    config.networkName,
+  )
+
+  const l2ProxyWatchers: ProxyWatcher[] = [
+    new ProxyWatcher(
+      new ProxyContractClient(
+        adr.ARBITRUM_WSTETH_BRIDGED.name,
+        OssifiableProxy__factory.connect(adr.ARBITRUM_WSTETH_BRIDGED.address, l2NodeClient),
+        metrics,
+      ),
+      logger,
+      config.networkName,
+    ),
+    new ProxyWatcher(
+      new ProxyContractClient(
+        adr.ARBITRUM_L2_TOKEN_GATEWAY.name,
+        OssifiableProxy__factory.connect(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, l2NodeClient),
+        metrics,
+      ),
+      logger,
+      config.networkName,
+    ),
+  ]
+
+  const l1EventWatcher = new EventWatcher(
+    `L1EventWatcher`,
+    [
+      ...getL1BridgeEvents(adr.ARBITRUM_L1_TOKEN_BRIDGE.address, adr.RolesMap, config.networkName),
+      ...getL1ProxyAdminEvents(adr.ARBITRUM_L1_TOKEN_BRIDGE, config.networkName),
+      ...getL1RouterEvents(adr.ARBITRUM_L1_GATEWAY_ROUTER, config.networkName),
+    ],
+    adr.L1_WSTETH_ADDRESS,
+  )
+
+  const l2EventWatcher = new EventWatcher(
+    `L2EventWatcher`,
+    [
+      ...getL2BridgeEvents(adr.ARBITRUM_L2_TOKEN_GATEWAY.address, adr.RolesMap, config.networkName),
+      ...getL2ProxyAdminEvents(adr.ARBITRUM_WSTETH_BRIDGED, adr.ARBITRUM_L2_TOKEN_GATEWAY, config.networkName),
+      ...getGovEvents(adr.GOV_BRIDGE_ADDRESS, config.networkName),
+    ],
+    adr.L1_WSTETH_ADDRESS,
+  )
+
+  const bridgeBalanceSrv = new BridgeBalanceSrv(logger, l1Client, l2Client, config.networkName, metrics)
+
+  const grpcServer = new grpc.Server()
+
   const blockH = new BlockHandler(
+    l1Client,
     logger,
     metrics,
-    proxyWatchers,
+
+    l1ProxyWatcher,
+    l2ProxyWatchers,
     withdrawalsSrv,
     bridgeBalanceSrv,
+
+    l2EventWatcher,
+
     healthChecker,
-    l1Client,
     onAppFindings,
+
+    l2BlocksSrv,
+    config.networkName,
   )
 
-  const txH = new TxHandler(
-    metrics,
-    bridgeEventWatcher,
-    govEventWatcher,
-    proxyEventWatcher,
-    withdrawalsSrv,
-    healthChecker,
-  )
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
-  const initH = new InitHandler(config.appName, logger, onAppFindings)
-  const alertH = new AlertHandler()
+  const initH = new InitHandler(
+    config.appName,
+    logger,
+    onAppFindings,
+    withdrawalsSrv,
+    l1Client,
+    l2Client,
+    l1ProxyWatcher,
+    l2ProxyWatchers,
+  )
+  const txH = new TxHandler(metrics, l1EventWatcher, withdrawalsSrv, bridgeBalanceSrv, config.networkName)
 
-  gRPCserver.addService(AgentService, {
+  grpcServer.addService(AgentService, {
     initialize: initH.handleInit(),
     evaluateBlock: blockH.handleBlock(),
     evaluateTx: txH.handleTx(),
     healthCheck: healthH.healthGrpc(),
     // not used, but required for grpc contract
-    evaluateAlert: alertH.handleAlert(),
+    // evaluateAlert: alertH.handleAlert(),
   })
-
-  const latestL2BlockNumber = await arbitrumClient.getBlockNumber()
-  if (E.isLeft(latestL2BlockNumber)) {
-    logger.error(latestL2BlockNumber.left)
-
-    process.exit(1)
-  }
-
-  const withdrawalsSrvErr = await withdrawalsSrv.initialize(latestL2BlockNumber.right)
-  if (E.isLeft(withdrawalsSrvErr)) {
-    logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr.left)
-
-    process.exit(1)
-  }
-
-  for (const proxyWatcher of proxyWatchers) {
-    const proxyWatcherErr = await proxyWatcher.initialize(latestL2BlockNumber.right)
-    if (proxyWatcherErr !== null) {
-      logger.error('Could not init proxyWatcherSrv', proxyWatcherErr.message)
-
-      process.exit(1)
-    }
-  }
 
   metrics.buildInfo.set({ commitHash: Version.commitHash }, 1)
 
-  gRPCserver.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+  grpcServer.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err != null) {
       logger.error(err)
 
@@ -186,7 +229,7 @@ const main = async () => {
 
   const httpService: Express = express()
 
-  httpService.get('/metrics', async (req: Request, res: Response) => {
+  httpService.get('/metrics', async (_: Request, res: Response) => {
     res.set('Content-Type', mergedRegistry.contentType)
     res.send(await mergedRegistry.metrics())
   })
@@ -198,4 +241,5 @@ const main = async () => {
   })
 }
 
+// @ts-ignore
 main()

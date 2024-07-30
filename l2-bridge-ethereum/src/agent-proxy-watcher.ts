@@ -7,8 +7,6 @@ import {
   TransactionEvent,
 } from "forta-agent";
 import {
-  ARBITRUM_GATEWAY_SET_EVENT,
-  ARBITRUM_L1_GATEWAY_ROUTER,
   L1_BRIDGES,
   BridgeProxyInfo,
   LINEA_CUSTOM_CONTRACT_SET_EVENT,
@@ -100,26 +98,6 @@ function handleThirdPartyProxyAdminEvents(
       });
     }
   });
-  if (ARBITRUM_L1_GATEWAY_ROUTER in txEvent.addresses) {
-    const events = txEvent.filterLog(
-      ARBITRUM_GATEWAY_SET_EVENT,
-      ARBITRUM_L1_GATEWAY_ROUTER,
-    );
-    events.forEach((event) => {
-      if (event.args.l1Token == WSTETH_ADDRESS) {
-        findings.push(
-          Finding.fromObject({
-            name: "🚨 Arbitrum: Token Gateway changed",
-            description: `Arbitrum native bridge gateway for wstETH changed to: ${event.args.gateway}`,
-            alertId: "ARBITRUM-TOKEN-GATEWAY-CHANGED",
-            severity: FindingSeverity.Critical,
-            type: FindingType.Suspicious,
-            metadata: { args: String(event.args) },
-          }),
-        );
-      }
-    });
-  }
 
   if (LINEA_L1_CROSS_DOMAIN_MESSENGER in txEvent.addresses) {
     const events = txEvent.filterLog(
