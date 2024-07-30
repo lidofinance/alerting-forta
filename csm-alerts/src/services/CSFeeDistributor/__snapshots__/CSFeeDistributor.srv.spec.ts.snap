@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CsFeeDistributor event tests 🔵 INFO: DistributionDataUpdated 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      1,
+      [],
+      4,
+      "CSFEE-DISTRIBUTOR-DISTRIBUTION-DATA-UPDATED",
+      "🔵 CSFeeDistributor: Distribution data updated",
+      "Distribution data updated:
+Total Claimable Shares: 2437078762437100387
+Tree Root: 0xcdd2290902bce8a93962c331e2d57ca30c754f366e1194de5448239763f5cf0f
+Tree CID: QmPi5y1gyDoALFz1ZqwFMVDDEyPtDfFoeewvknfkbdobp6",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "2437078762437100387,0xcdd2290902bce8a93962c331e2d57ca30c754f366e1194de5448239763f5cf0f,QmPi5y1gyDoALFz1ZqwFMVDDEyPtDfFoeewvknfkbdobp6",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;

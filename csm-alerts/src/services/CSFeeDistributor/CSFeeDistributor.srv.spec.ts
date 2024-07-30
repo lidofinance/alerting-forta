@@ -12,12 +12,10 @@ import { CSFeeDistributorSrv, ICSFeeDistributorClient } from './CSFeeDistributor
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
-import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
-// import { etherscanAddress } from '../../utils/string'
 
 const TEST_TIMEOUT = 120_000 // ms
 
@@ -79,23 +77,8 @@ describe('CsFeeDistributor event tests', () => {
 
       const results = csFeeDistributorSrv.handleTransaction(transactionDto)
 
-      const expected = {
-        alertId: 'CSFEE-DISTRIBUTOR-DISTRIBUTION-DATA-UPDATED',
-        description:
-          `Distribution data updated:\n` +
-          `Total Claimable Shares: 2437078762437100387\n` +
-          `Tree Root: 0xcdd2290902bce8a93962c331e2d57ca30c754f366e1194de5448239763f5cf0f\n` +
-          `Tree CID: QmPi5y1gyDoALFz1ZqwFMVDDEyPtDfFoeewvknfkbdobp6`,
-        name: '🔵 CSFeeDistributor: Distribution data updated',
-        severity: Finding.Severity.INFO,
-        type: Finding.FindingType.INFORMATION,
-      }
-
-      expect(results[0].getAlertid()).toEqual(expected.alertId)
-      expect(results[0].getDescription()).toEqual(expected.description)
-      expect(results[0].getName()).toEqual(expected.name)
-      expect(results[0].getSeverity()).toEqual(expected.severity)
-      expect(results[0].getType()).toEqual(expected.type)
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(1)
     },
     TEST_TIMEOUT,
   )

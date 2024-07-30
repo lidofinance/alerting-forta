@@ -14,7 +14,6 @@ import { ProxyWatcherSrv, IProxyWatcherClient } from './ProxyWatcher.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
-import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
@@ -22,7 +21,7 @@ import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('CsFeeOracle event tests', () => {
+describe('ProxyWatcher event tests', () => {
   const chainId = 17000
 
   const logger: Winston.Logger = Winston.createLogger({
@@ -82,20 +81,8 @@ describe('CsFeeOracle event tests', () => {
 
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
-      const expected = {
-        alertId: 'PROXY-ADMIN-CHANGED',
-        description:
-          'The proxy admin for CSModule(0x4562c3e63c2e586cD1651B958C22F88135aCAd4f) has been changed from [0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164](https://etherscan.io/address/0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164) to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d)',
-        name: '🟣 CSModule: Admin Changed',
-        severity: Finding.Severity.CRITICAL,
-        type: Finding.FindingType.INFORMATION,
-      }
-
-      expect(results[0].getAlertid()).toEqual(expected.alertId)
-      expect(results[0].getDescription()).toEqual(expected.description)
-      expect(results[0].getName()).toEqual(expected.name)
-      expect(results[0].getSeverity()).toEqual(expected.severity)
-      expect(results[0].getType()).toEqual(expected.type)
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(3)
     },
     TEST_TIMEOUT,
   )
@@ -119,19 +106,8 @@ describe('CsFeeOracle event tests', () => {
 
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
-      const expected = {
-        alertId: 'PROXY-UPGRADED',
-        description: 'The proxy implementation has been upgraded to 0x4d70efa74ec0ac3a5f759cc0f714c94cbc5cc4da',
-        name: '🟣 CSModule: Implementation Upgraded',
-        severity: Finding.Severity.CRITICAL,
-        type: Finding.FindingType.INFORMATION,
-      }
-
-      expect(results[0].getAlertid()).toEqual(expected.alertId)
-      expect(results[0].getDescription()).toEqual(expected.description)
-      expect(results[0].getName()).toEqual(expected.name)
-      expect(results[0].getSeverity()).toEqual(expected.severity)
-      expect(results[0].getType()).toEqual(expected.type)
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(3)
     },
     TEST_TIMEOUT,
   )

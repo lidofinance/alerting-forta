@@ -12,7 +12,6 @@ import { CSAccountingSrv, ICSAccountingClient } from './CSAccounting.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
-import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
@@ -78,22 +77,8 @@ describe('CSAccounting event tests', () => {
 
       const results = csAccountingSrv.handleTransaction(transactionDto)
 
-      const expected = {
-        alertId: 'CS-ACCOUNTING-BOND-CURVE-ADDED',
-        description:
-          'Bond curve added: 1500000000000000000,\n3400000000000000000,\n5200000000000000000,\n6900000000000000000,\n8500000000000000000,\n10000000000000000000',
-        name: '🔴 CSAccounting: Bond curve added',
-        severity: Finding.Severity.HIGH,
-        type: Finding.FindingType.INFORMATION,
-      }
-
-      expect(results.length).toEqual(1)
-
-      expect(results[0].getAlertid()).toEqual(expected.alertId)
-      expect(results[0].getDescription()).toEqual(expected.description)
-      expect(results[0].getName()).toEqual(expected.name)
-      expect(results[0].getSeverity()).toEqual(expected.severity)
-      expect(results[0].getType()).toEqual(expected.type)
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(1)
     },
     TEST_TIMEOUT,
   )
@@ -117,22 +102,8 @@ describe('CSAccounting event tests', () => {
 
       const results = csAccountingSrv.handleTransaction(transactionDto)
 
-      const expected = {
-        alertId: 'STETH-APPROVAL',
-        description:
-          '0x8d09a4502Cc8Cf1547aD300E066060D043f6982D received allowance from 0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1 to 115792089237316195423570985008687907853269984665640564039457584007913129639935',
-        name: '🔵 Lido stETH: Approval',
-        severity: Finding.Severity.INFO,
-        type: Finding.FindingType.INFORMATION,
-      }
-
-      expect(results.length).toEqual(3)
-
-      expect(results[0].getAlertid()).toEqual(expected.alertId)
-      expect(results[0].getDescription()).toEqual(expected.description)
-      expect(results[0].getName()).toEqual(expected.name)
-      expect(results[0].getSeverity()).toEqual(expected.severity)
-      expect(results[0].getType()).toEqual(expected.type)
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(3)
     },
     TEST_TIMEOUT,
   )

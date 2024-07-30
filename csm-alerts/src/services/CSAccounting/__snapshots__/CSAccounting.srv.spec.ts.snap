@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CSAccounting event tests 🔴 Bond curve added 1`] = `[]`;
+
+exports[`CSAccounting event tests 🔵 Lido stETH: Approval 1`] = `[]`;
