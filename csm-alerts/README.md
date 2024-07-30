@@ -28,10 +28,11 @@
       2. 🔴 HIGH: PerfLeewaySet(uint256 valueBP)
       3. 🔴 HIGH: FeeDistributorContractSet(address feeDistributorContract)
       4. 🔴 HIGH: ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)
-      5. 🔴 HIGH: WarnProcessingMissed(uint256 indexed refSlot)
-      6. 🔵 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
-      7. 🔵 INFO: ProcessingStarted(uint256 indexed refSlot, bytes32 hash)
-      8. 🔵 INFO: ReportSettled(uint256 indexed refSlot, uint256 distributed, bytes32 treeRoot, string treeCid)
+      5. 🔴 HIGH: report overdue (expect consensus every 28 days)
+      6. 🔴 HIGH: WarnProcessingMissed(uint256 indexed refSlot)
+      7. 🔵 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
+      8. 🔵 INFO: ProcessingStarted(uint256 indexed refSlot, bytes32 hash)
+      9. 🔵 INFO: ReportSettled(uint256 indexed refSlot, uint256 distributed, bytes32 treeRoot, string treeCid)
    2. Roles monitoring
       - _To be added_
    3. HashConsensus (for CSFeeOracle)
@@ -52,7 +53,8 @@
       - _To be added_
    2. Events monitoring
       1. 🟣 CRITICAL: Receiver of TransferShares is NOT CSAccounting, if from is CSFeeDistributor
-      2. 🔵 INFO: DistributionDataUpdated -> Oracle settled a new report.
+      2. 🔴 HIGH: No fees distributed for X days (repeat every 1 day).
+      3. 🔵 INFO: DistributionDataUpdated -> Oracle settled a new report.
    3. Roles monitoring
       - _To be added_
 
