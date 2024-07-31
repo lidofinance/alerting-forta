@@ -58,16 +58,16 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   public async getBlockNumber(): Promise<E.Either<Error, number>> {
-    const end = this.metrics.etherJsDurationHistogram.labels({ method: 'getBlockNumber' }).startTimer()
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getBlockNumber.name }).startTimer()
     try {
       const latestBlockNumber = await this.jsonRpcProvider.getBlockNumber()
 
-      this.metrics.etherJsRequest.labels({ method: 'getBlockNumber', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: this.getBlockNumber.name, status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right(latestBlockNumber)
     } catch (e) {
-      this.metrics.etherJsRequest.labels({ method: 'getBlockNumber', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: this.getBlockNumber.name, status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch latest block number`))
@@ -754,7 +754,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
   }
 
   public async getBlockByHash(blockHash: string): Promise<E.Either<Error, BlockDto>> {
-    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: 'getBlockByHash' })
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getBlockByHash.name })
 
     try {
       const out = await retryAsync<Block>(
@@ -764,7 +764,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
 
-      this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByHash.name, status: StatusOK }).inc()
       end({ status: StatusOK })
 
       return E.right({
@@ -774,7 +774,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
         hash: out.hash,
       })
     } catch (e) {
-      this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByHash.name, status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getBlock(blockHash)`))

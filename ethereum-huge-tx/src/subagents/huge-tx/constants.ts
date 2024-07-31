@@ -148,6 +148,15 @@ export const MONITORED_TOKENS = new Map<string, string>(
       "Aave Ethereum Variable Debt wstETH",
     ],
     ["0x12b54025c112aa61face2cdb7118740875a566e9", "Spark wstETH (spwstETH)"],
+    ["0xc329400492c6ff2438472d4651ad17389fcb843a", "Symbiotic DC_wstETH"],
+    ["0xbeef69ac7870777598a04b2bd4771c71212e6abc", "steakLRT"],
+    ["0x84631c0d0081fde56deb72f6de77abbbf6a9f93a", "Re7LRT"],
+    ["0x5fd13359ba15a84b76f7f87568309040176167cd", "amphrETH"],
+    ["0x7a4effd87c2f3c55ca251080b1343b605f327e3a", "rstETH"],
+    ["0x49cd586dd9ba227be9654c735a659a1db08232a9", "ifsETH"],
+    ["0x82dc3260f599f4fc4307209a1122b6eaa007163b", "LugaETH"],
+    ["0xd6e09a5e6d719d1c881579c9c8670a210437931b", "coETH"],
+    ["0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811", "pzETH"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
@@ -1528,6 +1537,342 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were withdrawn from Spark Protocol\n` +
       `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0x84631c0d0081fde56deb72f6de77abbbf6a9f93a",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x84631c0d0081fde56deb72f6de77abbbf6a9f93a",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: Re7 Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0x84631c0d0081fde56deb72f6de77abbbf6a9f93a",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0x84631c0d0081fde56deb72f6de77abbbf6a9f93a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: Re7 Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0xbeef69ac7870777598a04b2bd4771c71212e6abc",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xbeef69ac7870777598a04b2bd4771c71212e6abc",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: Steakhouse Vault\n` +
+      `Vault: ${info.from} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0xbeef69ac7870777598a04b2bd4771c71212e6abc",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0xbeef69ac7870777598a04b2bd4771c71212e6abc",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: Steakhouse Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0x5fd13359ba15a84b76f7f87568309040176167cd",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x5fd13359ba15a84b76f7f87568309040176167cd",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: Mev Capital Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0x5fd13359ba15a84b76f7f87568309040176167cd",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0x5fd13359ba15a84b76f7f87568309040176167cd",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: Mev Capital Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0x7a4effd87c2f3c55ca251080b1343b605f327e3a",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x7a4effd87c2f3c55ca251080b1343b605f327e3a",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `wstETH was withdrawn from Symbiotic by Mellow Protocol: P2P Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0x7a4effd87c2f3c55ca251080b1343b605f327e3a",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0x7a4effd87c2f3c55ca251080b1343b605f327e3a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: P2P Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0x49cd586dd9ba227be9654c735a659a1db08232a9",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x49cd586dd9ba227be9654c735a659a1db08232a9",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: InfStones Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0x49cd586dd9ba227be9654c735a659a1db08232a9",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0x49cd586dd9ba227be9654c735a659a1db08232a9",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: InfStones Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0x82dc3260f599f4fc4307209a1122b6eaa007163b",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x82dc3260f599f4fc4307209a1122b6eaa007163b",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: Luganodes Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0x82dc3260f599f4fc4307209a1122b6eaa007163b",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0x82dc3260f599f4fc4307209a1122b6eaa007163b",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: Luganodes Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0xd6e09a5e6d719d1c881579c9c8670a210437931b",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xd6e09a5e6d719d1c881579c9c8670a210437931b",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: Chorus One Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0xd6e09a5e6d719d1c881579c9c8670a210437931b",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0xd6e09a5e6d719d1c881579c9c8670a210437931b",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: Chorus One Vault\n` +
+      `Vault: ${info.to} `,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: "0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811",
+        to: NULL_ADDRESS,
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811",
+          from: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was withdrawn from Symbiotic by Mellow Protocol: Renzo Vault\n` +
+      `Vault: ${info.from}`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+        from: NULL_ADDRESS,
+        to: "0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811",
+      },
+      additionalTransfers: [
+        {
+          contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+          to: "0xc329400492c6ff2438472d4651ad17389fcb843a",
+          from: "0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811",
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `was deposited to Symbiotic by Mellow Protocol: Renzo Vault\n` +
+      `Vault: ${info.to} `,
   },
 ];
 

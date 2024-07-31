@@ -130,7 +130,7 @@ export class WithdrawalsSrv {
 
   async fillUpWithdrawalStatusesTable(currentBlock: number): Promise<Error | null> {
     const [cached, latest] = await Promise.all([
-      this.repo.getLastRequestId(),
+      this.repo.getFirstUnfinalizedRequest(),
       this.ethProvider.getWithdrawalLastRequestId(currentBlock),
     ])
 
@@ -143,8 +143,7 @@ export class WithdrawalsSrv {
     }
 
     const requests: number[] = []
-    const firstRequestId = cached.right === 0 ? 1 : cached.right
-    for (let i = firstRequestId; i <= latest.right; i++) {
+    for (let i = cached.right.id; i <= latest.right; i++) {
       requests.push(i)
     }
 
@@ -157,20 +156,6 @@ export class WithdrawalsSrv {
     if (insertErr !== null) {
       return insertErr
     }
-
-    /*
-    Need when we have to prefill up db (Don't remove)
-    const claimedRequests = await this.ethProvider.getClaimedEvents(currentBlock - 1000)
-    if (E.isLeft(claimedRequests)) {
-      return claimedRequests.left
-    }
-
-    const claimedRequestIds: number[] = []
-    for (const e of claimedRequests.right) {
-      claimedRequestIds.push(new BigNumber(e.args.requestId.toString()).toNumber())
-    }
-
-    await this.repo.removeByIds(claimedRequestIds)*/
 
     return null
   }
@@ -717,31 +702,13 @@ export class WithdrawalsSrv {
       return []
     }
 
-    const finalizedIds: number[] = []
-    for (let i = Number(withdrawalEvent.args.from); i <= Number(withdrawalEvent.args.to); i++) {
-      finalizedIds.push(i)
-    }
-
-    const finalizedStatuses = await this.ethProvider.getWithdrawalStatuses(finalizedIds, txEvent.block.number)
-    if (E.isLeft(finalizedStatuses)) {
-      return [
-        networkAlert(
-          finalizedStatuses.left,
-          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:679`,
-          `Could not call ethProvider.getWithdrawalStatuses`,
-        ),
-      ]
-    }
-
-    const updErr = await this.repo.createOrUpdate(finalizedStatuses.right)
-    if (updErr !== null) {
-      return [
-        dbAlert(
-          updErr,
-          `Error in ${WithdrawalsSrv.name}.${this.handleUnclaimedRequests.name}:690`,
-          `Could not call repo.createOrUpdate`,
-        ),
-      ]
+    const updateErr = await this.repo.setFinalizedRequests(withdrawalEvent.args.to)
+    if (updateErr !== null) {
+      dbAlert(
+        updateErr,
+        `Repo: could not update finalized requests`,
+        `Error in ${WithdrawalsSrv.name}.${this.handleWithdrawalFinalized.name}:720`,
+      )
     }
 
     return []

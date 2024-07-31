@@ -1,8 +1,8 @@
 import { OssifiableProxy__factory } from '../generated/typechain'
 import { Address } from '../utils/constants'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { Config } from '../utils/env/env'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import * as E from 'fp-ts/Either'
 import { Metrics } from '../utils/metrics/metrics'
 import { ProxyContractClient } from './proxy_contract_client'
@@ -13,7 +13,7 @@ describe('ProxyContractClient', () => {
   const config = new Config()
   const adr: Address = Address
 
-  const arbitrumProvider = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.chainId)
+  const arbitrumProvider = new ethers.providers.JsonRpcProvider(config.arbitrumRpcUrl, config.arbChainID)
 
   const l2BlockNumber = 121_951_308
 

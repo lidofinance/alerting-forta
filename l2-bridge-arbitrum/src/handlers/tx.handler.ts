@@ -1,34 +1,33 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { newTransactionDto } from '../entity/events'
 import { Finding } from '../generated/proto/alert_pb'
 import { HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
-import { MonitorWithdrawals } from '../services/monitor_withdrawals'
+import { WithdrawalSrv } from '../services/monitor_withdrawals'
+import * as E from 'fp-ts/Either'
+import { dbAlert } from '../utils/errors'
+import { BridgeBalanceSrv } from '../services/bridge_balance'
 import { EventWatcher } from '../services/event_watcher'
 
 export class TxHandler {
   private metrics: Metrics
-  private bridgeWatcher: EventWatcher
-  private govWatcher: EventWatcher
-  private proxyWatcher: EventWatcher
-  private WithdrawalsSrv: MonitorWithdrawals
-  private healthChecker: HealthChecker
+  private l1EventWatcher: EventWatcher
+  private WithdrawalsSrv: WithdrawalSrv
+  private bridgeBalanceSrv: BridgeBalanceSrv
+  private readonly networkName: string
 
   constructor(
     metrics: Metrics,
-    bridgeWatcher: EventWatcher,
-    govWatcher: EventWatcher,
-    proxyWatcher: EventWatcher,
-    WithdrawalsSrv: MonitorWithdrawals,
-    healthChecker: HealthChecker,
+    l1EventWatcher: EventWatcher,
+    withdrawalsSrv: WithdrawalSrv,
+    bridgeBalanceSrv: BridgeBalanceSrv,
+    networkName: string,
   ) {
     this.metrics = metrics
-    this.bridgeWatcher = bridgeWatcher
-    this.WithdrawalsSrv = WithdrawalsSrv
-    this.govWatcher = govWatcher
-    this.proxyWatcher = proxyWatcher
-    this.healthChecker = healthChecker
+    this.l1EventWatcher = l1EventWatcher
+    this.WithdrawalsSrv = withdrawalsSrv
+    this.bridgeBalanceSrv = bridgeBalanceSrv
+    this.networkName = networkName
   }
 
   public handleTx() {
@@ -43,17 +42,48 @@ export class TxHandler {
 
       const findings: Finding[] = []
 
-      const bridgeFindings = this.bridgeWatcher.handleL2Logs(txEvent.logs)
-      const govFindings = this.govWatcher.handleL2Logs(txEvent.logs)
-      const proxyFindings = this.proxyWatcher.handleL2Logs(txEvent.logs)
-      this.WithdrawalsSrv.handleTransaction(txEvent)
+      const l1EventFindings = this.l1EventWatcher.handleLogs(txEvent.logs)
+      findings.push(...l1EventFindings)
 
-      findings.push(...bridgeFindings, ...govFindings, ...proxyFindings)
+      if (this.WithdrawalsSrv.hasRebasedEvent(txEvent)) {
+        const stat = await this.WithdrawalsSrv.getWithdrawalStat()
+        if (E.isLeft(stat)) {
+          const networkErr = dbAlert(stat.left, `Could not call repo.getWithdrawalState`, stat.left.message)
+          const txResponse = new EvaluateTxResponse()
+          txResponse.setStatus(ResponseStatus.ERROR)
+          txResponse.setPrivate(false)
+          txResponse.setFindingsList([networkErr])
+          const m = txResponse.getMetadataMap()
+          m.set('timestamp', new Date().toISOString())
 
-      const errCount = this.healthChecker.check(findings)
-      errCount === 0
-        ? this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusOK }).inc()
-        : this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusFail }).inc()
+          this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusFail }).inc()
+          end()
+          callback(null, txResponse)
+
+          return
+        }
+
+        const f: Finding = new Finding()
+        f.setName(`ℹ️ ${this.networkName} digest:`)
+        f.setDescription(
+          `Bridge balances: \n` +
+            `\tLDO:\n` +
+            `\t\tL1: ${this.bridgeBalanceSrv.l1Ldo} LDO\n` +
+            `\t\tL2: ${this.bridgeBalanceSrv.l2Ldo} LDO\n` +
+            `\twstETH:\n` +
+            `\t\tL1: ${this.bridgeBalanceSrv.l1Steth} wstETH\n` +
+            `\t\tL2: ${this.bridgeBalanceSrv.l2wSteth} wstETH\n\n` +
+            `Withdrawals: \n` +
+            `\tAmount: ${stat.right.amount.toFixed(4)} wstETH\n` +
+            `\tTotal: ${stat.right.total}`,
+        )
+        f.setAlertid(`${this.networkName}-digest`)
+        f.setSeverity(Finding.Severity.INFO)
+        f.setType(Finding.FindingType.SUSPICIOUS)
+        f.setProtocol('ethereum')
+
+        findings.push(f)
+      }
 
       const txResponse = new EvaluateTxResponse()
       txResponse.setStatus(ResponseStatus.SUCCESS)
@@ -62,6 +92,7 @@ export class TxHandler {
       const m = txResponse.getMetadataMap()
       m.set('timestamp', new Date().toISOString())
 
+      this.metrics.processedIterations.labels({ method: HandleTxLabel, status: StatusOK }).inc()
       end()
       callback(null, txResponse)
     }

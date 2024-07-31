@@ -3,3 +3,4 @@ node_modules/
 !.yarn/releases/
 dist/
 forta.config.json
+.env
