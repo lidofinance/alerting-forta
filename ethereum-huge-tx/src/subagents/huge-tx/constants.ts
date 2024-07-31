@@ -1560,7 +1560,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.from}`,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1582,7 +1581,6 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `Vault: ${info.to} `,
   },
 
-
   {
     transferPatterns: {
       mainTransfer: {
@@ -1600,7 +1598,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was withdrawn from Symbiotic by Mellow Protocol: Steakhouse Vault\n`  +
+      `was withdrawn from Symbiotic by Mellow Protocol: Steakhouse Vault\n` +
       `Vault: ${info.from} `,
   },
 
@@ -1642,7 +1640,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was withdrawn from Symbiotic by Mellow Protocol: Mev Capital Vault\n`  +
+      `was withdrawn from Symbiotic by Mellow Protocol: Mev Capital Vault\n` +
       `Vault: ${info.from}`,
   },
 
@@ -1684,7 +1682,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `wstETH was withdrawn from Symbiotic by Mellow Protocol: P2P Vault\n`  +
+      `wstETH was withdrawn from Symbiotic by Mellow Protocol: P2P Vault\n` +
       `Vault: ${info.from}`,
   },
 
@@ -1726,7 +1724,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was withdrawn from Symbiotic by Mellow Protocol: InfStones Vault\n`  +
+      `was withdrawn from Symbiotic by Mellow Protocol: InfStones Vault\n` +
       `Vault: ${info.from}`,
   },
 
@@ -1768,7 +1766,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was withdrawn from Symbiotic by Mellow Protocol: Luganodes Vault\n`  +
+      `was withdrawn from Symbiotic by Mellow Protocol: Luganodes Vault\n` +
       `Vault: ${info.from}`,
   },
 
@@ -1810,7 +1808,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was withdrawn from Symbiotic by Mellow Protocol: Chorus One Vault\n`  +
+      `was withdrawn from Symbiotic by Mellow Protocol: Chorus One Vault\n` +
       `Vault: ${info.from}`,
   },
 
@@ -1852,7 +1850,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     },
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
-      `was withdrawn from Symbiotic by Mellow Protocol: Renzo Vault\n`  +
+      `was withdrawn from Symbiotic by Mellow Protocol: Renzo Vault\n` +
       `Vault: ${info.from}`,
   },
 
