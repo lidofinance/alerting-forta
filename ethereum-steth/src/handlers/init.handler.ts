@@ -1,15 +1,15 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { InitializeRequest, InitializeResponse, ResponseStatus, Error as pbError } from '../generated/proto/agent_pb'
 import { Logger } from 'winston'
-import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
-import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
-import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
-import { VaultSrv } from '../services/vault/Vault.srv'
 import { Metadata } from '../entity/metadata'
-import Version from '../utils/version'
-import { elapsedTime } from '../utils/time'
-import { ETH_DECIMALS } from '../utils/constants'
+import { InitializeRequest, InitializeResponse, Error as pbError, ResponseStatus } from '../generated/proto/agent_pb'
 import { Finding } from '../generated/proto/alert_pb'
+import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
+import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
+import { VaultSrv } from '../services/vault/Vault.srv'
+import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
+import { ETH_DECIMALS } from '../utils/constants'
+import { elapsedTime } from '../utils/time'
+import Version from '../utils/version'
 
 export class InitHandler {
   private readonly logger: Logger

@@ -1,31 +1,31 @@
+import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
+import { Block } from '@ethersproject/providers'
+import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
-import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import BigNumber from 'bignumber.js'
-import { ETH_DECIMALS } from '../utils/constants'
+import { Logger } from 'winston'
+import { BlockDto } from '../entity/events'
+import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
 import { StakingLimitInfo } from '../entity/staking_limit_info'
+import { WithdrawalRequest } from '../entity/withdrawal_request'
 import {
   GateSeal as GateSealRunner,
   Lido as LidoRunner,
   ValidatorsExitBusOracle as VeboRunner,
   WithdrawalQueueERC721 as WithdrawalQueueRunner,
 } from '../generated/typechain'
-import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
-import { ETHDistributedEvent, UnbufferedEvent } from '../generated/typechain/Lido'
-import { DataRW } from '../utils/mutex'
-import { WithdrawalRequest } from '../entity/withdrawal_request'
 import { TypedEvent } from '../generated/typechain/common'
-import { NetworkError } from '../utils/errors'
-import { Logger } from 'winston'
+import { ETHDistributedEvent, UnbufferedEvent } from '../generated/typechain/Lido'
+import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
 import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
-import { Block } from '@ethersproject/providers'
 import { IStethClient } from '../services/steth_operation/StethOperation.srv'
 import { IVaultClient } from '../services/vault/Vault.srv'
 import { IWithdrawalsClient } from '../services/withdrawals/Withdrawals.srv'
+import { ETH_DECIMALS } from '../utils/constants'
+import { NetworkError } from '../utils/errors'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
-import { BlockDto } from '../entity/events'
-import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
+import { DataRW } from '../utils/mutex'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -139,7 +139,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
       this.metrics.etherJsRequest.labels({ method: this.getEthBalance.name, status: StatusOK }).inc()
       end({ status: StatusOK })
 
-      return E.right(new BigNumber(String(out)))
+      return E.right(new BigNumber(out.toString()))
     } catch (e) {
       this.metrics.etherJsRequest.labels({ method: this.getEthBalance.name, status: StatusFail }).inc()
       end({ status: StatusOK })

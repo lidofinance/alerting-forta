@@ -1,6 +1,6 @@
-import { NetworkErrorFinding } from '../../utils/errors'
-import { Finding } from '../../generated/proto/alert_pb'
 import { Logger } from 'winston'
+import { Finding } from '../../generated/proto/alert_pb'
+import { NetworkErrorFinding } from '../../utils/errors'
 import { Metrics } from '../../utils/metrics/metrics'
 
 export const BorderTime = 15 * 60 * 1000 // 15 minutes

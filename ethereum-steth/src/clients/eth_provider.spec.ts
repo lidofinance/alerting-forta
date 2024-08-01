@@ -1,21 +1,21 @@
-import { either as E } from 'fp-ts'
-import { Address, ETH_DECIMALS, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../utils/constants'
-import { GateSeal } from '../entity/gate_seal'
-import { ethers } from 'ethers'
-import BigNumber from 'bignumber.js'
 import { expect } from '@jest/globals'
-import * as Winston from 'winston'
+import BigNumber from 'bignumber.js'
+import { ethers } from 'ethers'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import { either as E } from 'fp-ts'
+import * as promClient from 'prom-client'
+import * as Winston from 'winston'
+import { GateSeal } from '../entity/gate_seal'
 import {
   GateSeal__factory,
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../generated/typechain'
-import { ETHProvider } from './eth_provider'
-import { Metrics } from '../utils/metrics/metrics'
-import * as promClient from 'prom-client'
 import { HISTORY_BLOCK_OFFSET } from '../services/steth_operation/StethOperation.srv'
+import { Address, ETH_DECIMALS, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../utils/constants'
+import { Metrics } from '../utils/metrics/metrics'
+import { ETHProvider } from './eth_provider'
 
 describe('eth provider tests', () => {
   const logger: Winston.Logger = Winston.createLogger({

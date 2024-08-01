@@ -1,15 +1,15 @@
 import BigNumber from 'bignumber.js'
-import { ETH_DECIMALS } from '../../utils/constants'
+import { ethers } from 'ethers'
 import { either as E } from 'fp-ts'
-import { elapsedTime } from '../../utils/time'
-import { toEthString } from '../../utils/string'
-import { ETHDistributedEvent } from '../../generated/typechain/Lido'
-import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
 import { Logger } from 'winston'
-import { networkAlert } from '../../utils/errors'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
-import { ethers } from 'ethers'
+import { ETHDistributedEvent } from '../../generated/typechain/Lido'
+import { ETH_DECIMALS } from '../../utils/constants'
+import { networkAlert } from '../../utils/errors'
+import { TRANSFER_SHARES_EVENT } from '../../utils/events/vault_events'
+import { toEthString } from '../../utils/string'
+import { elapsedTime } from '../../utils/time'
 
 const ONCE_PER_100_BLOCKS = 100
 const ETH_1K = ETH_DECIMALS.times(1000)

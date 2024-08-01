@@ -1,25 +1,25 @@
 import BigNumber from 'bignumber.js'
-import { BlockDto, TransactionDto } from '../../entity/events'
 import { ethers } from 'ethers'
-import { Finding } from '../../generated/proto/alert_pb'
-import * as Winston from 'winston'
-import { Address } from '../../utils/constants'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import * as promClient from 'prom-client'
+import * as Winston from 'winston'
+import { ETHProvider } from '../../clients/eth_provider'
+import { BlockDto, TransactionDto } from '../../entity/events'
+import { Finding } from '../../generated/proto/alert_pb'
 import {
   GateSeal__factory,
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../../generated/typechain'
-import { ETHProvider } from '../../clients/eth_provider'
+import { Address } from '../../utils/constants'
+import { getBurnerEvents } from '../../utils/events/burner_events'
+import { getDepositSecurityEvents } from '../../utils/events/deposit_security_events'
+import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
+import { getLidoEvents } from '../../utils/events/lido_events'
+import { Metrics } from '../../utils/metrics/metrics'
 import { StethOperationCache } from './StethOperation.cache'
 import { StethOperationSrv } from './StethOperation.srv'
-import { getDepositSecurityEvents } from '../../utils/events/deposit_security_events'
-import { getLidoEvents } from '../../utils/events/lido_events'
-import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
-import { getBurnerEvents } from '../../utils/events/burner_events'
-import * as promClient from 'prom-client'
-import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 60_000 // ms
 

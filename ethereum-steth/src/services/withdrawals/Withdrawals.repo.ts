@@ -1,6 +1,6 @@
+import { either as E } from 'fp-ts'
 import { Knex } from 'knex'
 import { WithdrawalRequest, WithdrawalRequestSql, WithdrawalStat } from '../../entity/withdrawal_request'
-import { either as E } from 'fp-ts'
 
 export const KnexErr = Error
 export const NotFound = new Error('Not found')

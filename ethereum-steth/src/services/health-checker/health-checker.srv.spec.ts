@@ -1,8 +1,8 @@
-import { networkAlert } from '../../utils/errors'
-import { HealthChecker } from './health-checker.srv'
 import * as promClient from 'prom-client'
 import * as Winston from 'winston'
+import { networkAlert } from '../../utils/errors'
 import { Metrics } from '../../utils/metrics/metrics'
+import { HealthChecker } from './health-checker.srv'
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))

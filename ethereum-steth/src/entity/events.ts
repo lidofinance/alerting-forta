@@ -1,10 +1,10 @@
 import { Log } from '@ethersproject/abstract-provider'
+import BigNumber from 'bignumber.js'
+import { ethers } from 'ethers'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 import * as agent_pb from '../generated/proto/agent_pb'
 import { TransactionEvent } from '../generated/proto/agent_pb'
-import BigNumber from 'bignumber.js'
-import { formatAddress } from 'forta-agent/dist/cli/utils'
 import { Finding } from '../generated/proto/alert_pb'
-import { ethers } from 'ethers'
 
 export type EventOfNotice = {
   name: string

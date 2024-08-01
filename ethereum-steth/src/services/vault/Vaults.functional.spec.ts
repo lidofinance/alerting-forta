@@ -1,20 +1,20 @@
-import { BlockDto } from '../../entity/events'
 import { expect } from '@jest/globals'
 import { ethers } from 'ethers'
-import { Finding } from '../../generated/proto/alert_pb'
-import * as Winston from 'winston'
-import { Address } from '../../utils/constants'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import * as promClient from 'prom-client'
+import * as Winston from 'winston'
+import { ETHProvider } from '../../clients/eth_provider'
+import { BlockDto } from '../../entity/events'
+import { Finding } from '../../generated/proto/alert_pb'
 import {
   GateSeal__factory,
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../../generated/typechain'
-import { ETHProvider } from '../../clients/eth_provider'
-import { IVaultClient, VaultSrv } from './Vault.srv'
-import * as promClient from 'prom-client'
+import { Address } from '../../utils/constants'
 import { Metrics } from '../../utils/metrics/metrics'
+import { IVaultClient, VaultSrv } from './Vault.srv'
 
 const TEST_TIMEOUT = 120_000 // ms
 

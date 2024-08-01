@@ -1,15 +1,15 @@
-import { elapsedTime, formatDelay } from '../../utils/time'
+import BigNumber from 'bignumber.js'
+import { ethers } from 'ethers'
 import { either as E } from 'fp-ts'
+import { Logger } from 'winston'
+import { BlockDto, TransactionDto } from '../../entity/events'
 import { GateSeal, GateSealExpiredErr } from '../../entity/gate_seal'
-import { GateSealCache } from './GateSeal.cache'
+import { Finding } from '../../generated/proto/alert_pb'
+import { networkAlert } from '../../utils/errors'
 import { GATE_SEAL_FACTORY_GATE_SEAL_CREATED_EVENT, GATE_SEAL_SEALED_EVENT } from '../../utils/events/gate_seal_events'
 import { etherscanAddress } from '../../utils/string'
-import { Logger } from 'winston'
-import { networkAlert } from '../../utils/errors'
-import { BlockDto, TransactionDto } from '../../entity/events'
-import BigNumber from 'bignumber.js'
-import { Finding } from '../../generated/proto/alert_pb'
-import { ethers } from 'ethers'
+import { elapsedTime, formatDelay } from '../../utils/time'
+import { GateSealCache } from './GateSeal.cache'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR

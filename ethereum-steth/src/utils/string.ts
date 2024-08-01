@@ -1,5 +1,5 @@
-import { ETH_DECIMALS } from './constants'
 import BigNumber from 'bignumber.js'
+import { ETH_DECIMALS } from './constants'
 
 export function etherscanNft(address: string, id: number | string): string {
   const subpath = process.env.FORTA_AGENT_RUN_TEAR == 'testnet' ? 'goerli.' : ''
