@@ -1,12 +1,12 @@
 function up(knex) {
   return knex.schema.createTable('withdrawal_requests', (tbl) => {
     tbl.integer('id').primary().notNullable()
-    tbl.string('amountOfStETH').notNullable()
-    tbl.string('amountOfShares').notNullable()
+    tbl.integer('amount_steth').notNullable()
+    tbl.integer('amount_shares').notNullable()
     tbl.string('owner').notNullable()
     tbl.timestamp('timestamp').notNullable()
-    tbl.boolean('isFinalized').notNullable()
-    tbl.boolean('isClaimed').notNullable()
+    tbl.boolean('finalized').notNullable()
+    tbl.boolean('claimed').notNullable()
   })
 }
 

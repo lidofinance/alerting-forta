@@ -1,14 +1,15 @@
 import BigNumber from 'bignumber.js'
 import { WithdrawalQueueBase } from '../generated/typechain/WithdrawalQueueERC721'
+import { ETH_DECIMALS } from '../utils/constants'
 
 export type WithdrawalRequestSql = {
   id: number
-  amountOfStETH: string
-  amountOfShares: string
+  amount_steth: number
+  amount_shares: number
   owner: string
   timestamp: number
-  isFinalized: number
-  isClaimed: number
+  finalized: number
+  claimed: number
 }
 
 export class WithdrawalRequest {
@@ -56,24 +57,24 @@ export class WithdrawalRequest {
   public toSqlObject(): WithdrawalRequestSql {
     return {
       id: this.id,
-      amountOfStETH: this.amountOfStETH.toString(),
-      amountOfShares: this.amountOfShares.toString(),
+      amount_steth: this.amountOfStETH.toNumber(),
+      amount_shares: this.amountOfShares.toNumber(),
       owner: this.owner,
       timestamp: this.timestamp,
-      isFinalized: Number(this.isFinalized),
-      isClaimed: Number(this.isClaimed),
+      finalized: Number(this.isFinalized),
+      claimed: Number(this.isClaimed),
     }
   }
 
   public static sqlToWithdrawalRequest(o: WithdrawalRequestSql): WithdrawalRequest {
     return new WithdrawalRequest(
       o.id,
-      new BigNumber(o.amountOfStETH.toString()),
-      new BigNumber(o.amountOfShares.toString()),
+      new BigNumber(o.amount_steth.toString()),
+      new BigNumber(o.amount_shares.toString()),
       o.owner,
       o.timestamp,
-      Boolean(o.isFinalized),
-      Boolean(o.isClaimed),
+      Boolean(o.finalized),
+      Boolean(o.claimed),
     )
   }
 }

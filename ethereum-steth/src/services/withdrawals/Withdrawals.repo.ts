@@ -56,7 +56,7 @@ export class WithdrawalsRepo {
 
   public async getUnclaimedReqIds(): Promise<E.Either<Error, number[]>> {
     try {
-      const data: number[] = await this.knex<number>(this.tblName).where('isClaimed', 0).pluck('id')
+      const data: number[] = await this.knex<number>(this.tblName).where('claimed', 0).pluck('id')
       return E.right(data)
     } catch (e) {
       return E.left(new KnexErr(`${e}`))
@@ -100,7 +100,7 @@ export class WithdrawalsRepo {
   public async getLastFinalizedRequest(): Promise<E.Either<Error, WithdrawalRequest>> {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
-        .where('isFinalized', 1)
+        .where('finalized', 1)
         .orderBy('id', 'desc')
         .limit(1)
 
@@ -117,7 +117,7 @@ export class WithdrawalsRepo {
   public async getFirstUnfinalizedRequest(): Promise<E.Either<Error, WithdrawalRequest>> {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
-        .where('isFinalized', 0)
+        .where('finalized', 0)
         .orderBy('id', 'asc')
         .limit(1)
 

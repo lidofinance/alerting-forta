@@ -20,6 +20,7 @@ ENV LOG_FORMAT=simple
 ENV LOG_LEVEL=info
 ENV INSTANCE=forta
 ENV USE_FORTA_RPC_URL=true
+ENV DB_FILEPATH=':memory:'
 
 WORKDIR /app
 
