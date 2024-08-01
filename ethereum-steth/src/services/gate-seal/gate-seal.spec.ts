@@ -13,10 +13,10 @@ import { GateSealSrv, IGateSealClient } from './GateSeal.srv'
 import { GateSealCache } from './GateSeal.cache'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { Finding } from '../../generated/proto/alert_pb'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms

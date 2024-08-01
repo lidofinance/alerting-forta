@@ -9,7 +9,7 @@ import { networkAlert } from '../../utils/errors'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import BigNumber from 'bignumber.js'
 import { Finding } from '../../generated/proto/alert_pb'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = 24 * ONE_HOUR

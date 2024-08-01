@@ -1,4 +1,4 @@
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
 import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'

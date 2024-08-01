@@ -1,7 +1,7 @@
 import { either as E } from 'fp-ts'
 import { Address, ETH_DECIMALS, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../utils/constants'
 import { GateSeal } from '../entity/gate_seal'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import { expect } from '@jest/globals'
 import * as Winston from 'winston'
@@ -14,7 +14,7 @@ import {
 } from '../generated/typechain'
 import { ETHProvider } from './eth_provider'
 import { Metrics } from '../utils/metrics/metrics'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import { HISTORY_BLOCK_OFFSET } from '../services/steth_operation/StethOperation.srv'
 
 describe('eth provider tests', () => {

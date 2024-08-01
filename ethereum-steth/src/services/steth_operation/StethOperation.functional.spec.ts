@@ -18,7 +18,7 @@ import { getDepositSecurityEvents } from '../../utils/events/deposit_security_ev
 import { getLidoEvents } from '../../utils/events/lido_events'
 import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
 import { getBurnerEvents } from '../../utils/events/burner_events'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 60_000 // ms

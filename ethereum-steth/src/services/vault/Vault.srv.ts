@@ -9,7 +9,7 @@ import { Logger } from 'winston'
 import { networkAlert } from '../../utils/errors'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
-import { ethers } from 'forta-agent'
+import { ethers } from 'ethers'
 
 const ONCE_PER_100_BLOCKS = 100
 const ETH_1K = ETH_DECIMALS.times(1000)

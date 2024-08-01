@@ -13,7 +13,7 @@ import {
 } from '../../generated/typechain'
 import { ETHProvider } from '../../clients/eth_provider'
 import { IVaultClient, VaultSrv } from './Vault.srv'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
