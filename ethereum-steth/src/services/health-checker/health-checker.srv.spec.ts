@@ -1,6 +1,6 @@
 import { networkAlert } from '../../utils/errors'
 import { HealthChecker } from './health-checker.srv'
-import promClient from 'prom-client'
+import * as promClient from 'prom-client'
 import * as Winston from 'winston'
 import { Metrics } from '../../utils/metrics/metrics'
 

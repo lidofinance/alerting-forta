@@ -9,7 +9,7 @@ import { knex } from 'knex'
 const timeout = 120_000
 
 describe('Withdrawals repo tests', () => {
-  const dbClient = knex(Config.getKnexConfig())
+  const dbClient = knex(Config.getKnexConfig(':memory:'))
   const repo = new WithdrawalsRepo(dbClient)
 
   const requests: WithdrawalRequest[] = [
@@ -157,6 +157,19 @@ describe('Withdrawals repo tests', () => {
       for (const record of records.right) {
         expect(record.isFinalized).toBe(true)
       }
+    },
+    timeout,
+  )
+
+  test(
+    'get statistic',
+    async () => {
+      const r = await repo.getStat()
+      if (E.isLeft(r)) {
+        throw r.left
+      }
+
+      expect(r.right.total).toBe(4)
     },
     timeout,
   )

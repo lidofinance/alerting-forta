@@ -106,7 +106,7 @@ export class BlockHandler {
         this.VaultSrv.handleBlock(blockDtoEvent),
       ])
 
-      const WithdrawalStat = await this.WithdrawalsSrv.getStatistic()
+      const WithdrawalStat = await this.WithdrawalsSrv.getStatisticString()
       const stat: string = E.isLeft(WithdrawalStat) ? WithdrawalStat.left.message : WithdrawalStat.right
 
       findings.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)

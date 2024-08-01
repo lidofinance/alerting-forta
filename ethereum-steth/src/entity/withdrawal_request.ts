@@ -1,15 +1,27 @@
 import BigNumber from 'bignumber.js'
 import { WithdrawalQueueBase } from '../generated/typechain/WithdrawalQueueERC721'
-import { ETH_DECIMALS } from '../utils/constants'
 
 export type WithdrawalRequestSql = {
   id: number
-  amount_steth: number
-  amount_shares: number
+  amount_steth: string
+  amount_shares: string
   owner: string
   timestamp: number
   finalized: number
   claimed: number
+}
+
+export type WithdrawalStat = {
+  finalizedSteth: number
+  notFinalizedSteth: number
+  claimedSteth: number
+  notClaimedSteth: number
+  steth: number
+  total: number
+  finalizedRequests: number
+  notfinalizedRequests: number
+  claimedRequests: number
+  notClaimedRequests: number
 }
 
 export class WithdrawalRequest {
@@ -57,8 +69,8 @@ export class WithdrawalRequest {
   public toSqlObject(): WithdrawalRequestSql {
     return {
       id: this.id,
-      amount_steth: this.amountOfStETH.toNumber(),
-      amount_shares: this.amountOfShares.toNumber(),
+      amount_steth: this.amountOfStETH.toString(),
+      amount_shares: this.amountOfShares.toString(),
       owner: this.owner,
       timestamp: this.timestamp,
       finalized: Number(this.isFinalized),
