@@ -4,14 +4,7 @@ import { Logger } from 'winston'
 import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 import { ethers, filterLog, getEthersProvider } from 'forta-agent'
-import {
-  DeploymentAddresses,
-  MemberReport,
-  ONE_DAY,
-  ONE_MONTH,
-  ONE_WEEK,
-  SECONDS_PER_SLOT,
-} from '../../utils/constants.holesky'
+import { ONE_DAY, ONE_MONTH, ONE_WEEK, SECONDS_PER_SLOT } from '../../utils/constants'
 import CS_FEE_ORACLE_ABI from '../../brief/abi/CSFeeOracle.json'
 import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
 import { getLogsByChunks } from '../../utils/utils'
@@ -19,6 +12,12 @@ import { HASH_CONSENSUS_REPORT_RECEIVED_EVENT } from '../../utils/events/cs_fee_
 import BigNumber from 'bignumber.js'
 export abstract class ICSFeeOracleClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
+}
+
+interface MemberReport {
+  refSlot: BigNumber
+  report: string
+  blockNumber: number
 }
 
 export class CSFeeOracleSrv {
@@ -29,6 +28,9 @@ export class CSFeeOracleSrv {
   private readonly hashConsensusEvents: EventOfNotice[]
   private readonly csFeeOracleEvents: EventOfNotice[]
 
+  private readonly hashConsensusAddress: string
+  private readonly csFeeOracleAddress: string
+
   private slotReports: { [slot: number]: Set<string> } = {}
   private membersAddresses: string[] = []
   private membersLastReport: Map<string, MemberReport> = new Map()
@@ -38,20 +40,21 @@ export class CSFeeOracleSrv {
     ethProvider: ICSFeeOracleClient,
     hashConsensusEvents: EventOfNotice[],
     csFeeOracleEvents: EventOfNotice[],
+    hashConsensusAddress: string,
+    csFeeOracleAddress: string,
   ) {
     this.logger = logger
     this.csFeeOracleClient = ethProvider
+
+    this.hashConsensusAddress = hashConsensusAddress
+    this.csFeeOracleAddress = csFeeOracleAddress
 
     this.hashConsensusEvents = hashConsensusEvents
     this.csFeeOracleEvents = csFeeOracleEvents
   }
 
   async getOracleMembers(blockNumber: number): Promise<string[]> {
-    const hashConsensus = new ethers.Contract(
-      DeploymentAddresses.HASH_CONSENSUS_ADDRESS,
-      HASH_CONSENSUS_ABI,
-      getEthersProvider(),
-    )
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
 
     const members = await hashConsensus.functions.getMembers({
       blockTag: blockNumber,
@@ -68,11 +71,7 @@ export class CSFeeOracleSrv {
       return currBlock.left
     }
 
-    const hashConsensus = new ethers.Contract(
-      DeploymentAddresses.HASH_CONSENSUS_ADDRESS,
-      HASH_CONSENSUS_ABI,
-      getEthersProvider(),
-    )
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
 
     this.membersAddresses = await this.getOracleMembers(currentBlock)
     const memberReportReceivedFilter = hashConsensus.filters.ReportReceived()
@@ -118,11 +117,7 @@ export class CSFeeOracleSrv {
   }
 
   async getReportSubmits(blockFrom: number, blockTo: number) {
-    const csFeeOracle = new ethers.Contract(
-      DeploymentAddresses.CS_FEE_ORACLE_ADDRESS,
-      CS_FEE_ORACLE_ABI,
-      getEthersProvider(),
-    )
+    const csFeeOracle = new ethers.Contract(this.csFeeOracleAddress, CS_FEE_ORACLE_ABI, getEthersProvider())
 
     const oracleReportFilter = csFeeOracle.filters.ReportSubmitted()
 
@@ -173,17 +168,13 @@ export class CSFeeOracleSrv {
   public handleAlternativeHashReceived(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const [event] = filterLog(
-      txEvent.logs,
-      HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
-      DeploymentAddresses.HASH_CONSENSUS_ADDRESS,
-    )
+    const [event] = filterLog(txEvent.logs, HASH_CONSENSUS_REPORT_RECEIVED_EVENT, this.hashConsensusAddress)
 
     const currentReportHashes = [...this.membersLastReport.values()]
       .filter((r) => r.refSlot.eq(event.args.refSlot))
       .map((r) => r.report)
 
-    if (currentReportHashes.length > 1 && !currentReportHashes.includes(event.args.report)) {
+    if (currentReportHashes.length > 0 && !currentReportHashes.includes(event.args.report)) {
       const f = new Finding()
       f.setName('🔴 HashConsensus: Another report variant appeared (alternative hash)')
       f.setDescription(`More than one distinct report hash received for slot ${event.args.refSlot}`)

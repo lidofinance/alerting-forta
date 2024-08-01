@@ -1,4 +1,4 @@
-import { Address, DeploymentAddresses } from '../../utils/constants.holesky'
+import { DeploymentAddress, DeploymentAddresses } from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -27,7 +27,7 @@ describe('CSAccounting event tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const address: Address = DeploymentAddresses
+  const address: DeploymentAddress = DeploymentAddresses
 
   const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
@@ -56,6 +56,8 @@ describe('CSAccounting event tests', () => {
     logger,
     csAccountingClient,
     getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
+    address.CS_ACCOUNTING_ADDRESS,
+    address.LIDO_STETH_ADDRESS,
   )
 
   test(

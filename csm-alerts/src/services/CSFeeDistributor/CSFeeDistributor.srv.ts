@@ -3,7 +3,7 @@ import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '.
 import { Logger } from 'winston'
 import { either as E } from 'fp-ts'
 import { Finding } from '../../generated/proto/alert_pb'
-import { DeploymentAddresses, ONE_DAY } from '../../utils/constants.holesky'
+import { ONE_DAY } from '../../utils/constants'
 import { filterLog } from 'forta-agent'
 import { DISTRIBUTION_DATA_UPDATED_EVENT, TRANSFER_SHARES_EVENT } from '../../utils/events/cs_fee_distributor_events'
 
@@ -18,17 +18,36 @@ export class CSFeeDistributorSrv {
   private readonly csFeeDistributorClient: ICSFeeDistributorClient
 
   private readonly csFeeDistributorEvents: EventOfNotice[]
+  private readonly csAccountingAddress: string
+  private readonly csFeeDistributorAddress: string
+  private readonly stETHAddress: string
 
-  private lastDistributionDataUpdated: number | null = null
+  private lastDistributionDataUpdated: number | null = 0
 
-  constructor(logger: Logger, ethProvider: ICSFeeDistributorClient, csFeeDistributorEvents: EventOfNotice[]) {
+  constructor(
+    logger: Logger,
+    ethProvider: ICSFeeDistributorClient,
+    csFeeDistributorEvents: EventOfNotice[],
+    csAccountingAddress: string,
+    csFeeDistributorAddress: string,
+    stETHAddress: string,
+  ) {
     this.logger = logger
     this.csFeeDistributorClient = ethProvider
     this.csFeeDistributorEvents = csFeeDistributorEvents
+    this.csAccountingAddress = csAccountingAddress
+    this.csFeeDistributorAddress = csFeeDistributorAddress
+    this.stETHAddress = stETHAddress
   }
 
-  async initialize(): Promise<Error | null> {
+  async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
+
+    const currBlock = await this.csFeeDistributorClient.getBlockByNumber(currentBlock)
+    if (E.isLeft(currBlock)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return currBlock.left
+    }
 
     this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return null
@@ -85,8 +104,14 @@ export class CSFeeDistributorSrv {
     return out
   }
 
-  private updateLastDistributionData(event: EventOfNotice, txEvent: TransactionDto): void {
-    if (event.abi === DISTRIBUTION_DATA_UPDATED_EVENT) {
+  private updateLastDistributionData(txEvent: TransactionDto): void {
+    const distributionDataUpdatedEvents = filterLog(
+      txEvent.logs,
+      DISTRIBUTION_DATA_UPDATED_EVENT,
+      this.csFeeDistributorAddress,
+    )
+
+    if (distributionDataUpdatedEvents.length !== 0) {
       this.lastDistributionDataUpdated = txEvent.block.timestamp
     }
   }
@@ -98,7 +123,7 @@ export class CSFeeDistributorSrv {
     const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
 
     if (csFeeDistributorFindings.length !== 0) {
-      this.updateLastDistributionData(this.csFeeDistributorEvents[0], txEvent)
+      this.updateLastDistributionData(txEvent)
     }
 
     out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings)
@@ -109,22 +134,18 @@ export class CSFeeDistributorSrv {
   public handleTransferSharesInvalidReceiver(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const transferSharesEvents = filterLog(
-      txEvent.logs,
-      TRANSFER_SHARES_EVENT,
-      DeploymentAddresses.CS_FEE_DISTRIBUTOR_ADDRESS,
-    )
+    const transferSharesEvents = filterLog(txEvent.logs, TRANSFER_SHARES_EVENT, this.stETHAddress)
     if (transferSharesEvents.length === 0) {
       return []
     }
 
     for (const event of transferSharesEvents) {
       if (
-        event.args.from === DeploymentAddresses.CS_FEE_DISTRIBUTOR_ADDRESS.toLowerCase() &&
-        event.args.to !== DeploymentAddresses.CS_ACCOUNTING_ADDRESS.toLowerCase()
+        event.args.from === this.csFeeDistributorAddress.toLowerCase() &&
+        event.args.to !== this.csAccountingAddress.toLowerCase()
       ) {
         const f: Finding = new Finding()
-        f.setName(`🟣 CSFeeDistributor: Invalid TransferShares receiver`)
+        f.setName(`🚨 CSFeeDistributor: Invalid TransferShares receiver`)
         f.setDescription(
           `TransferShares from CSFeeDistributor to an invalid address ${event.args.to} (expected CSAccounting)`,
         )

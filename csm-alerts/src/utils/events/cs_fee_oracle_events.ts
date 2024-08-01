@@ -95,7 +95,7 @@ export function getCSFeeOracleEvents(CS_FEE_ORACLE_ADDRESS: string): EventOfNoti
       address: CS_FEE_ORACLE_ADDRESS,
       abi: 'event ConsensusHashContractSet(address indexed addr, address indexed prevAddr)',
       alertId: 'CSFEE-ORACLE-CONSENSUS-HASH-CONTRACT-SET',
-      name: '🟣 CSFeeOracle: Consensus hash contract set',
+      name: '🚨 CSFeeOracle: Consensus hash contract set',
       description: (args: Result) =>
         `Consensus hash contract set to ${etherscanAddress(args.addr)}, previous contract was ${etherscanAddress(args.prevAddr)}`,
       severity: Finding.Severity.CRITICAL,

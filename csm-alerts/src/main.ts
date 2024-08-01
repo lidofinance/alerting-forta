@@ -18,14 +18,13 @@ import {
 import { Config } from './utils/env/env'
 import * as Winston from 'winston'
 import { ethers } from 'ethers'
-import { Address, DeploymentAddresses } from './utils/constants.holesky'
 import { ETHProvider } from './clients/eth_provider'
 import { getCSFeeDistributorEvents } from './utils/events/cs_fee_distributor_events'
 import { getCSFeeOracleEvents, getHashConsensusEvents } from './utils/events/cs_fee_oracle_events'
 import { getOssifiedProxyEvents } from './utils/events/ossified_proxy_events'
 import { getPausableEvents } from './utils/events/pausable_events'
 import { getCSAccountingEvents } from './utils/events/cs_accounting_events'
-import { getBurnerEvents } from './utils/events/burner_events'
+import { getAssetRecovererEvents } from './utils/events/asset_recoverer_events'
 import * as promClient from 'prom-client'
 import { Metrics } from './utils/metrics/metrics'
 import { CSModuleSrv } from './services/CSModule/CSModule.srv'
@@ -36,6 +35,39 @@ import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './servi
 import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
 import express = require('express')
 import { ProxyWatcherSrv } from './services/ProxyWatcher/ProxyWatcher.srv'
+import {
+  CONTRACTS_WITH_ASSET_RECOVERER,
+  CSM_PROXY_CONTRACTS,
+  PAUSABLE_CONTRACTS,
+  DeploymentAddresses,
+} from './utils/constants.mainnet'
+import {
+  CONTRACTS_WITH_ASSET_RECOVERER as HOLESKY_CONTRACTS_WITH_ASSET_RECOVERER,
+  CSM_PROXY_CONTRACTS as HOLESKY_CSM_PROXY_CONTRACTS,
+  PAUSABLE_CONTRACTS as HOLESKY_PAUSABLE_CONTRACTS,
+  DeploymentAddresses as HoleskyDeploymentAddresses,
+} from './utils/constants.holesky'
+
+const loadDeploymentData = (chainId: number) => {
+  switch (chainId) {
+    case 1:
+      return {
+        deploymentAddresses: DeploymentAddresses,
+        contractsWithAssetRecoverer: CONTRACTS_WITH_ASSET_RECOVERER,
+        csmProxyContracts: CSM_PROXY_CONTRACTS,
+        pausableContracts: PAUSABLE_CONTRACTS,
+      }
+    case 17000:
+      return {
+        deploymentAddresses: HoleskyDeploymentAddresses,
+        contractsWithAssetRecoverer: HOLESKY_CONTRACTS_WITH_ASSET_RECOVERER,
+        csmProxyContracts: HOLESKY_CSM_PROXY_CONTRACTS,
+        pausableContracts: HOLESKY_PAUSABLE_CONTRACTS,
+      }
+    default:
+      throw new Error(`Unsupported chain ID: ${chainId}`)
+  }
+}
 
 const main = async () => {
   const config = new Config()
@@ -66,8 +98,13 @@ const main = async () => {
     fortaEthersProvider = ethProvider
   }
 
+  const { deploymentAddresses, contractsWithAssetRecoverer, csmProxyContracts, pausableContracts } = loadDeploymentData(
+    config.chainId,
+  )
+
+  const address = deploymentAddresses
+
   const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
-  const address: Address = DeploymentAddresses
 
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
   const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS, fortaEthersProvider)
@@ -94,23 +131,34 @@ const main = async () => {
     logger,
     ethClient,
     getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS),
+    address.CS_ACCOUNTING_ADDRESS,
+    address.CS_FEE_DISTRIBUTOR_ADDRESS,
+    address.LIDO_STETH_ADDRESS,
   )
 
-  const csAccountingSrv = new CSAccountingSrv(logger, ethClient, getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS))
+  const csAccountingSrv = new CSAccountingSrv(
+    logger,
+    ethClient,
+    getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
+    address.CS_ACCOUNTING_ADDRESS,
+    address.LIDO_STETH_ADDRESS,
+  )
 
   const csFeeOracleSrv = new CSFeeOracleSrv(
     logger,
     ethClient,
     getHashConsensusEvents(address.HASH_CONSENSUS_ADDRESS),
     getCSFeeOracleEvents(address.CS_FEE_ORACLE_ADDRESS),
+    address.HASH_CONSENSUS_ADDRESS,
+    address.CS_FEE_ORACLE_ADDRESS,
   )
 
   const proxyWatcherSrv = new ProxyWatcherSrv(
     logger,
     ethClient,
-    getOssifiedProxyEvents(),
-    getPausableEvents(),
-    getBurnerEvents(),
+    getOssifiedProxyEvents(csmProxyContracts),
+    getPausableEvents(pausableContracts),
+    getAssetRecovererEvents(contractsWithAssetRecoverer),
   )
 
   const onAppFindings: Finding[] = []

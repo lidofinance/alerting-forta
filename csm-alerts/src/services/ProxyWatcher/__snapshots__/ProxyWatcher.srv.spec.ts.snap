@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ProxyWatcher event tests 🟣 Admin Changed 1`] = `
+exports[`ProxyWatcher event tests 🚨 Admin Changed 1`] = `
 [
   {
     "array": [
@@ -9,7 +9,7 @@ exports[`ProxyWatcher event tests 🟣 Admin Changed 1`] = `
       [],
       4,
       "PROXY-ADMIN-CHANGED",
-      "🟣 CSModule: Admin Changed",
+      "🚨 CSModule: Admin Changed",
       "The proxy admin for CSModule(0x4562c3e63c2e586cD1651B958C22F88135aCAd4f) has been changed from [0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164](https://etherscan.io/address/0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164) to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d)",
       ,
       ,
@@ -44,7 +44,7 @@ exports[`ProxyWatcher event tests 🟣 Admin Changed 1`] = `
       [],
       4,
       "PROXY-ADMIN-CHANGED",
-      "🟣 CSAccounting: Admin Changed",
+      "🚨 CSAccounting: Admin Changed",
       "The proxy admin for CSAccounting(0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1) has been changed from [0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164](https://etherscan.io/address/0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164) to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d)",
       ,
       ,
@@ -79,7 +79,42 @@ exports[`ProxyWatcher event tests 🟣 Admin Changed 1`] = `
       [],
       4,
       "PROXY-ADMIN-CHANGED",
-      "🟣 CSFeeOracle: Admin Changed",
+      "🚨 CSFeeDistributor: Admin Changed",
+      "The proxy admin for CSFeeDistributor(0xD7ba648C8F72669C6aE649648B516ec03D07c8ED) has been changed from [0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164](https://etherscan.io/address/0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164) to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d)",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164,0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "PROXY-ADMIN-CHANGED",
+      "🚨 CSFeeOracle: Admin Changed",
       "The proxy admin for CSFeeOracle(0xaF57326C7d513085051b50912D51809ECC5d98Ee) has been changed from [0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164](https://etherscan.io/address/0xc4DAB3a3ef68C6DFd8614a870D64D475bA44F164) to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d)",
       ,
       ,
@@ -110,7 +145,7 @@ exports[`ProxyWatcher event tests 🟣 Admin Changed 1`] = `
 ]
 `;
 
-exports[`ProxyWatcher event tests 🟣 Implementation Upgraded 1`] = `
+exports[`ProxyWatcher event tests 🚨 Implementation Upgraded 1`] = `
 [
   {
     "array": [
@@ -119,7 +154,7 @@ exports[`ProxyWatcher event tests 🟣 Implementation Upgraded 1`] = `
       [],
       4,
       "PROXY-UPGRADED",
-      "🟣 CSModule: Implementation Upgraded",
+      "🚨 CSModule: Implementation Upgraded",
       "The proxy implementation has been upgraded to 0x4d70efa74ec0ac3a5f759cc0f714c94cbc5cc4da",
       ,
       ,
@@ -154,7 +189,7 @@ exports[`ProxyWatcher event tests 🟣 Implementation Upgraded 1`] = `
       [],
       4,
       "PROXY-UPGRADED",
-      "🟣 CSAccounting: Implementation Upgraded",
+      "🚨 CSAccounting: Implementation Upgraded",
       "The proxy implementation has been upgraded to 0x4d70efa74ec0ac3a5f759cc0f714c94cbc5cc4da",
       ,
       ,
@@ -189,7 +224,42 @@ exports[`ProxyWatcher event tests 🟣 Implementation Upgraded 1`] = `
       [],
       4,
       "PROXY-UPGRADED",
-      "🟣 CSFeeOracle: Implementation Upgraded",
+      "🚨 CSFeeDistributor: Implementation Upgraded",
+      "The proxy implementation has been upgraded to 0x4d70efa74ec0ac3a5f759cc0f714c94cbc5cc4da",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "0x4D70efa74ec0Ac3a5f759cC0F714c94CBc5cc4da",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "PROXY-UPGRADED",
+      "🚨 CSFeeOracle: Implementation Upgraded",
       "The proxy implementation has been upgraded to 0x4d70efa74ec0ac3a5f759cc0f714c94cbc5cc4da",
       ,
       ,

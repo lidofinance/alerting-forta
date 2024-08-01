@@ -1,4 +1,9 @@
-import { Address, DeploymentAddresses } from '../../utils/constants.holesky'
+import {
+  CSM_PROXY_CONTRACTS,
+  DeploymentAddress,
+  DeploymentAddresses,
+  PAUSABLE_CONTRACTS,
+} from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -28,7 +33,7 @@ describe('CsFeeOracle event tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const address: Address = DeploymentAddresses
+  const address: DeploymentAddress = DeploymentAddresses
 
   const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
@@ -53,7 +58,14 @@ describe('CsFeeOracle event tests', () => {
     csFeeOracleRunner,
   )
 
-  const csFeeOracleSrv = new CSFeeOracleSrv(logger, csFeeOracleClient, getOssifiedProxyEvents(), getPausableEvents())
+  const csFeeOracleSrv = new CSFeeOracleSrv(
+    logger,
+    csFeeOracleClient,
+    getOssifiedProxyEvents(CSM_PROXY_CONTRACTS),
+    getPausableEvents(PAUSABLE_CONTRACTS),
+    address.HASH_CONSENSUS_ADDRESS,
+    address.CS_FEE_ORACLE_ADDRESS,
+  )
 
   test(
     '🔵 2 events: ProcessingStarted(), ReportSettled()',

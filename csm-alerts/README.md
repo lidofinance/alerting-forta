@@ -15,8 +15,8 @@
    1. General
       - _To be added_
    2. Events monitoring
-      1. 🟣 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
-      2. 🟣 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
+      1. 🚨 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
+      2. 🚨 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
       3. 🔴 HIGH: BondCurveAdded(uint256[] bondCurve)
       4. 🔴 HIGH: BondCurveSet(uint256 indexed nodeOperatorId, uint256 curveId)
       5. 🔵 INFO: Approval(address owner, address spender, uint256 value) (stETH contract)
@@ -24,7 +24,7 @@
       - _To be added_
 3. **CSFeeOracle**
    1. General
-      1. 🟣 CRITICAL: ConsensusHashContractSet(address indexed addr, address indexed prevAddr)
+      1. 🚨 CRITICAL: ConsensusHashContractSet(address indexed addr, address indexed prevAddr)
       2. 🔴 HIGH: PerfLeewaySet(uint256 valueBP)
       3. 🔴 HIGH: FeeDistributorContractSet(address feeDistributorContract)
       4. 🔴 HIGH: ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)
@@ -52,7 +52,7 @@
    1. Alerting for failed transactions
       - _To be added_
    2. Events monitoring
-      1. 🟣 CRITICAL: Receiver of TransferShares is NOT CSAccounting, if from is CSFeeDistributor
+      1. 🚨 CRITICAL: Receiver of TransferShares is NOT CSAccounting, if from is CSFeeDistributor
       2. 🔴 HIGH: No fees distributed for X days (repeat every 1 day).
       3. 🔵 INFO: DistributionDataUpdated -> Oracle settled a new report.
    3. Roles monitoring
@@ -69,10 +69,10 @@
    - CSFeeOracle
    - CSFeeDistributor
 
-1.  🟣 CRITICAL: event ProxyOssified()
-2.  🟣 CRITICAL: event Upgraded(address indexed implementation)
-3.  🟣 CRITICAL: event AdminChanged(address previousAdmin, address newAdmin)
-4.  🟣 CRITICAL: event BeaconUpgraded(address indexed beacon)
+1.  🚨 CRITICAL: event ProxyOssified()
+2.  🚨 CRITICAL: event Upgraded(address indexed implementation)
+3.  🚨 CRITICAL: event AdminChanged(address previousAdmin, address newAdmin)
+4.  🚨 CRITICAL: event BeaconUpgraded(address indexed beacon)
 
 7.  **PausableUntil**
     For the following contracts:
@@ -81,8 +81,8 @@
     - CSAccounting
     - CSFeeOracle
 
-    1.  🟣 CRITICAL: Paused(uint256 duration);
-    2.  🟣 CRITICAL: Resumed();
+    1.  🚨 CRITICAL: Paused(uint256 duration);
+    2.  🚨 CRITICAL: Resumed();
 
 8.  **AssetRecoverer**
     For the following contracts:

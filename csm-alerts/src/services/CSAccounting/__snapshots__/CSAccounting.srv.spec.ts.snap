@@ -2,4 +2,73 @@
 
 exports[`CSAccounting event tests 🔴 Bond curve added 1`] = `[]`;
 
-exports[`CSAccounting event tests 🔵 Lido stETH: Approval 1`] = `[]`;
+exports[`CSAccounting event tests 🔵 Lido stETH: Approval 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      1,
+      ,
+      4,
+      "STETH-APPROVAL",
+      "🔵 Lido stETH: Approval",
+      "0x8d09a4502Cc8Cf1547aD300E066060D043f6982D received allowance from 0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1 to 115792089237316195423570985008687907853269984665640564039457584007913129639935",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": null,
+  },
+  {
+    "array": [
+      "ethereum",
+      1,
+      ,
+      4,
+      "STETH-APPROVAL",
+      "🔵 Lido stETH: Approval",
+      "0xc7cc160b58F8Bb0baC94b80847E2CF2800565C50 received allowance from 0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1 to 115792089237316195423570985008687907853269984665640564039457584007913129639935",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": null,
+  },
+  {
+    "array": [
+      "ethereum",
+      1,
+      ,
+      4,
+      "STETH-APPROVAL",
+      "🔵 Lido stETH: Approval",
+      "0x4E46BD7147ccf666E1d73A3A456fC7a68de82eCA received allowance from 0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1 to 115792089237316195423570985008687907853269984665640564039457584007913129639935",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": null,
+  },
+]
+`;

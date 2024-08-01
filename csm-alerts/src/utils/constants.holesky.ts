@@ -1,14 +1,6 @@
-import BigNumber from 'bignumber.js'
-
 // HOLESKY COMMON ADDRESSES
-export const ETH_DECIMALS = new BigNumber(10).pow(18)
-export const SECONDS_PER_SLOT = 12
-export const ONE_HOUR = 60 * 60
-export const ONE_DAY = 24 * ONE_HOUR
-export const ONE_WEEK = 7 * ONE_DAY
-export const ONE_MONTH = ONE_WEEK * 4
 
-export type Address = {
+export type DeploymentAddress = {
   CS_MODULE_ADDRESS: string
   CS_ACCOUNTING_ADDRESS: string
   CS_FEE_DISTRIBUTOR_ADDRESS: string
@@ -22,7 +14,7 @@ export type Address = {
   HASH_CONSENSUS_ADDRESS: string
 }
 
-export const DeploymentAddresses: Address = {
+export const DeploymentAddresses: DeploymentAddress = {
   CS_MODULE_ADDRESS: '0x4562c3e63c2e586cD1651B958C22F88135aCAd4f',
   CS_ACCOUNTING_ADDRESS: '0xc093e53e8F4b55A223c18A2Da6fA00e60DD5EFE1',
   CS_FEE_DISTRIBUTOR_ADDRESS: '0xD7ba648C8F72669C6aE649648B516ec03D07c8ED',
@@ -36,6 +28,18 @@ export const DeploymentAddresses: Address = {
   HASH_CONSENSUS_ADDRESS: '0xbF38618Ea09B503c1dED867156A0ea276Ca1AE37',
 }
 export interface Proxy {
+  name: string
+  address: string
+  functions: Map<string, string>
+}
+
+export interface ContractWithAssetRecoverer {
+  name: string
+  address: string
+  functions: Map<string, string>
+}
+
+export interface PausableContract {
   name: string
   address: string
   functions: Map<string, string>
@@ -75,8 +79,65 @@ export const CSM_PROXY_CONTRACTS: Proxy[] = [
     ]),
   },
 ]
-export interface MemberReport {
-  refSlot: BigNumber
-  report: string
-  blockNumber: number
-}
+
+export const CONTRACTS_WITH_ASSET_RECOVERER: ContractWithAssetRecoverer[] = [
+  {
+    name: 'CSModule',
+    address: DeploymentAddresses.CS_MODULE_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+  {
+    name: 'CSAccounting',
+    address: DeploymentAddresses.CS_ACCOUNTING_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+  {
+    name: 'CSFeeDistributor',
+    address: DeploymentAddresses.CS_FEE_DISTRIBUTOR_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+  {
+    name: 'CSFeeOracle',
+    address: DeploymentAddresses.CS_FEE_ORACLE_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+]
+
+export const PAUSABLE_CONTRACTS: PausableContract[] = [
+  {
+    name: 'CSModule',
+    address: DeploymentAddresses.CS_MODULE_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+  {
+    name: 'CSAccounting',
+    address: DeploymentAddresses.CS_ACCOUNTING_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+  {
+    name: 'CSFeeOracle',
+    address: DeploymentAddresses.CS_FEE_ORACLE_ADDRESS,
+    functions: new Map<string, string>([
+      ['admin', 'proxy__getAdmin'],
+      ['implementation', 'proxy__getImplementation'],
+    ]),
+  },
+]

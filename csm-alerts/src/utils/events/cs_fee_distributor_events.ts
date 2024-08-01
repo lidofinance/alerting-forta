@@ -11,7 +11,7 @@ export function getCSFeeDistributorEvents(CS_FEE_DISTRIBUTOR_ADDRESS: string): E
   return [
     {
       address: CS_FEE_DISTRIBUTOR_ADDRESS,
-      abi: 'event DistributionDataUpdated(uint256 totalClaimableShares, bytes32 treeRoot, string treeCid)',
+      abi: DISTRIBUTION_DATA_UPDATED_EVENT,
       alertId: 'CSFEE-DISTRIBUTOR-DISTRIBUTION-DATA-UPDATED',
       name: '🔵 CSFeeDistributor: Distribution data updated',
       description: (args: Result) =>

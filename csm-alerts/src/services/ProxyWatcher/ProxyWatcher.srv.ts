@@ -15,21 +15,21 @@ export class ProxyWatcherSrv {
 
   private readonly ossifiedProxyEvents: EventOfNotice[]
   private readonly pausableEvents: EventOfNotice[]
-  private readonly burnerEvents: EventOfNotice[]
+  private readonly assetRecovererEvents: EventOfNotice[]
 
   constructor(
     logger: Logger,
     ethProvider: IProxyWatcherClient,
     ossifiedProxyEvents: EventOfNotice[],
     pausableEvents: EventOfNotice[],
-    burnerEvents: EventOfNotice[],
+    assetRecovererEvents: EventOfNotice[],
   ) {
     this.logger = logger
     this.proxyWatcherClient = ethProvider
 
     this.ossifiedProxyEvents = ossifiedProxyEvents
     this.pausableEvents = pausableEvents
-    this.burnerEvents = burnerEvents
+    this.assetRecovererEvents = assetRecovererEvents
   }
 
   public async initialize(currentBlock: number): Promise<Finding[] | null | Error> {
@@ -63,9 +63,9 @@ export class ProxyWatcherSrv {
 
     const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
     const pausableEventsFindings = handleEventsOfNotice(txEvent, this.pausableEvents)
-    const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
+    const assetRecovererFindings = handleEventsOfNotice(txEvent, this.assetRecovererEvents)
 
-    out.push(...ossifiedProxyFindings, ...pausableEventsFindings, ...burnerFindings)
+    out.push(...ossifiedProxyFindings, ...pausableEventsFindings, ...assetRecovererFindings)
 
     return out
   }

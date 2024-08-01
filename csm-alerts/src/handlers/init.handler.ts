@@ -67,7 +67,7 @@ export class InitHandler {
       metadata.agents = '[' + agents.toString() + ']'
 
       await this.csModuleSrv.initialize(this.latestBlockNumber)
-      await this.csFeeDistributorSrv.initialize()
+      await this.csFeeDistributorSrv.initialize(this.latestBlockNumber)
       await this.csAccountingSrv.initialize(this.latestBlockNumber)
       await this.csFeeOracleSrv.initialize(this.latestBlockNumber)
       await this.proxyWatcherSrv.initialize(this.latestBlockNumber)

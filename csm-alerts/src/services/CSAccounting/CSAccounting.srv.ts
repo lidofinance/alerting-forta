@@ -4,7 +4,6 @@ import { Logger } from 'winston'
 import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 import { filterLog } from 'forta-agent'
-import { DeploymentAddresses } from '../../utils/constants.holesky'
 import { APPROVAL_EVENT } from '../../utils/events/cs_accounting_events'
 
 export abstract class ICSAccountingClient {
@@ -17,12 +16,22 @@ export class CSAccountingSrv {
   private readonly csAccountingClient: ICSAccountingClient
 
   private readonly csAccountingEvents: EventOfNotice[]
+  private readonly csAccountingAddress: string
+  private readonly stETHAddress: string
 
-  constructor(logger: Logger, ethProvider: ICSAccountingClient, csAccountingEvents: EventOfNotice[]) {
+  constructor(
+    logger: Logger,
+    ethProvider: ICSAccountingClient,
+    csAccountingEvents: EventOfNotice[],
+    csAccountingAddress: string,
+    stETHAddress: string,
+  ) {
     this.logger = logger
     this.csAccountingClient = ethProvider
 
     this.csAccountingEvents = csAccountingEvents
+    this.csAccountingAddress = csAccountingAddress
+    this.stETHAddress = stETHAddress
   }
 
   public async initialize(currentBlock: number): Promise<Finding[] | Error | null> {
@@ -75,13 +84,13 @@ export class CSAccountingSrv {
   public handleStETHApprovalEvents(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const approvalEvents = filterLog(txEvent.logs, APPROVAL_EVENT, DeploymentAddresses.CS_ACCOUNTING_ADDRESS)
+    const approvalEvents = filterLog(txEvent.logs, APPROVAL_EVENT, this.stETHAddress)
     if (approvalEvents.length === 0) {
       return []
     }
 
     for (const event of approvalEvents) {
-      if (event.args.owner === DeploymentAddresses.CS_ACCOUNTING_ADDRESS) {
+      if (event.args.owner === this.csAccountingAddress) {
         const f: Finding = new Finding()
         f.setName(`🔵 Lido stETH: Approval`)
         f.setDescription(`${event.args.spender} received allowance from ${event.args.owner} to ${event.args.value}`)

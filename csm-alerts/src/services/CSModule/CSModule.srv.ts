@@ -5,12 +5,6 @@ import { Logger } from 'winston'
 import { BlockDto } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 
-export const ETH_10K = 10_000 // 10000 ETH
-export const ETH_20K: number = 20_000 // 20000 ETH
-export const HOUR_1 = 60 * 60 // 1 hour
-export const DAYS_3 = 60 * 60 * 72 // 72 Hours
-export const ETH_2 = 2 // 2 ETH
-
 export abstract class ICSModuleClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
 }

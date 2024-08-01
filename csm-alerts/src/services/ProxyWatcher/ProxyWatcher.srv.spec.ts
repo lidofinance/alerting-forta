@@ -1,4 +1,10 @@
-import { Address, DeploymentAddresses } from '../../utils/constants.holesky'
+import {
+  CONTRACTS_WITH_ASSET_RECOVERER,
+  CSM_PROXY_CONTRACTS,
+  DeploymentAddress,
+  DeploymentAddresses,
+  PAUSABLE_CONTRACTS,
+} from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -9,7 +15,7 @@ import {
 } from '../../generated/typechain'
 import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
 import { getPausableEvents } from '../../utils/events/pausable_events'
-import { getBurnerEvents } from '../../utils/events/burner_events'
+import { getAssetRecovererEvents } from '../../utils/events/asset_recoverer_events'
 import { ProxyWatcherSrv, IProxyWatcherClient } from './ProxyWatcher.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
@@ -29,7 +35,7 @@ describe('ProxyWatcher event tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const address: Address = DeploymentAddresses
+  const address: DeploymentAddress = DeploymentAddresses
 
   const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
@@ -57,13 +63,13 @@ describe('ProxyWatcher event tests', () => {
   const proxyWatcherSrv = new ProxyWatcherSrv(
     logger,
     proxyWatcherClient,
-    getOssifiedProxyEvents(),
-    getPausableEvents(),
-    getBurnerEvents(),
+    getOssifiedProxyEvents(CSM_PROXY_CONTRACTS),
+    getPausableEvents(PAUSABLE_CONTRACTS),
+    getAssetRecovererEvents(CONTRACTS_WITH_ASSET_RECOVERER),
   )
 
   test(
-    '🟣 Admin Changed',
+    '🚨 Admin Changed',
     async () => {
       const txHash = '0x92410350f567757d8f73b2f4b3670454af3899d095103ea0e745c92714673277'
 
@@ -82,13 +88,13 @@ describe('ProxyWatcher event tests', () => {
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(3)
+      expect(results.length).toBe(4)
     },
     TEST_TIMEOUT,
   )
 
   test(
-    '🟣 Implementation Upgraded',
+    '🚨 Implementation Upgraded',
     async () => {
       const txHash = '0x262faac95560f7fc0c831580d17e48daa69b17831b798e0b00bc43168a310c52'
 
@@ -107,7 +113,7 @@ describe('ProxyWatcher event tests', () => {
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(3)
+      expect(results.length).toBe(4)
     },
     TEST_TIMEOUT,
   )
