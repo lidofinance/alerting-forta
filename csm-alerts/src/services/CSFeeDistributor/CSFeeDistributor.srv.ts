@@ -22,7 +22,7 @@ export class CSFeeDistributorSrv {
   private readonly csFeeDistributorAddress: string
   private readonly stETHAddress: string
 
-  private lastDistributionDataUpdated: number | null = 0
+  private lastDistributionDataUpdated: number = 0
 
   constructor(
     logger: Logger,
@@ -48,6 +48,8 @@ export class CSFeeDistributorSrv {
       this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
       return currBlock.left
     }
+
+    this.lastDistributionDataUpdated = currBlock.right.timestamp
 
     this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return null
@@ -97,23 +99,13 @@ export class CSFeeDistributorSrv {
       f.setDescription(`There has been no DistributionDataUpdated event for ${daysSinceLastUpdate} days.`)
       f.setAlertid('CSFEE-NO-DISTRIBUTION-DATA-UPDATED')
       f.setSeverity(Finding.Severity.HIGH)
-      f.setType(Finding.FindingType.DEGRADED)
+      f.setType(Finding.FindingType.INFORMATION)
       f.setProtocol('ethereum')
       out.push(f)
+
+      this.lastDistributionDataUpdated = now
     }
     return out
-  }
-
-  private updateLastDistributionData(txEvent: TransactionDto): void {
-    const distributionDataUpdatedEvents = filterLog(
-      txEvent.logs,
-      DISTRIBUTION_DATA_UPDATED_EVENT,
-      this.csFeeDistributorAddress,
-    )
-
-    if (distributionDataUpdatedEvents.length !== 0) {
-      this.lastDistributionDataUpdated = txEvent.block.timestamp
-    }
   }
 
   public handleTransaction(txEvent: TransactionDto): Finding[] {
@@ -122,8 +114,14 @@ export class CSFeeDistributorSrv {
     const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
     const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
 
-    if (csFeeDistributorFindings.length !== 0) {
-      this.updateLastDistributionData(txEvent)
+    const distributionDataUpdatedEvents = filterLog(
+      txEvent.logs,
+      DISTRIBUTION_DATA_UPDATED_EVENT,
+      this.csFeeDistributorAddress,
+    )
+
+    if (csFeeDistributorFindings.length !== 0 && distributionDataUpdatedEvents.length !== 0) {
+      this.lastDistributionDataUpdated = txEvent.block.timestamp
     }
 
     out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings)
