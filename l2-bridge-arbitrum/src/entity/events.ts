@@ -1,20 +1,29 @@
+import { Finding } from '../generated/proto/alert_pb'
 import { Log } from '@ethersproject/abstract-provider'
 import BigNumber from 'bignumber.js'
-import * as agent_pb from '../generated/proto/agent_pb'
+import { formatAddress } from 'forta-agent/dist/cli/utils'
 import { TransactionEvent } from '../generated/proto/agent_pb'
-import { Finding } from '../generated/proto/alert_pb'
+import * as agent_pb from '../generated/proto/agent_pb'
+import { Result } from '@ethersproject/abi'
 
 export type EventOfNotice = {
   name: string
   address: string
   event: string
   alertId: string
-  description: CallableFunction
+  description: (args: Result) => string
   severity: Finding.Severity
   type: Finding.FindingType
 }
 
 export type Metadata = { [key: string]: string }
+
+export type RpcRequest = {
+  jsonrpc: string
+  method: string
+  params: Array<any>
+  id: number
+}
 
 export type TransactionDto = {
   logs: Log[]
@@ -48,7 +57,7 @@ export function newTransactionDto(request: agent_pb.EvaluateTxRequest): Transact
 
   return {
     logs: logs,
-    to: transaction.getTo() ? transaction.getTo().toLowerCase() : null,
+    to: transaction.getTo() ? formatAddress(transaction.getTo()) : null,
     block: {
       number: new BigNumber(block.getBlocknumber(), 10).toNumber(),
       timestamp: new BigNumber(block.getBlocktimestamp(), 10).toNumber(),

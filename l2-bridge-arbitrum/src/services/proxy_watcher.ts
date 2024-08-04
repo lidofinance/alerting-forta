@@ -1,26 +1,26 @@
 import { IProxyContractClient } from '../clients/proxy_contract_client'
 import * as E from 'fp-ts/Either'
-import { elapsedTime } from '../utils/time'
 import { Logger } from 'winston'
 import { networkAlert } from '../utils/errors'
 import { Finding } from '../generated/proto/alert_pb'
+import { BlockDto } from '../entity/l2block'
 
 export class ProxyWatcher {
-  private readonly name: string = 'ProxyWatcher'
-
   private lastImpl: string = ''
   private lastAdmin: string = ''
 
   private readonly proxyContract: IProxyContractClient
   private readonly logger: Logger
+  private readonly networkName: string
 
-  constructor(proxyContract: IProxyContractClient, logger: Logger) {
+  constructor(proxyContract: IProxyContractClient, logger: Logger, networkName: string) {
     this.proxyContract = proxyContract
     this.logger = logger
+    this.networkName = networkName
   }
 
   public getName(): string {
-    return this.proxyContract.getName() + `(${this.proxyContract.getAddress()}).` + this.name
+    return this.proxyContract.getName() + `(${this.proxyContract.getAddress()})`
   }
 
   public getAdmin(): string {
@@ -39,59 +39,56 @@ export class ProxyWatcher {
     this.lastImpl = impl.toLowerCase()
   }
 
-  async initialize(currentL2Block: number): Promise<Error | null> {
+  async initialize(currentBlockNumber: number): Promise<Error[]> {
     const [lastImpl, lastAdmin] = await Promise.all([
-      this.proxyContract.getProxyImplementation(currentL2Block),
-      this.proxyContract.getProxyAdmin(currentL2Block),
+      this.proxyContract.getProxyImplementation(currentBlockNumber),
+      this.proxyContract.getProxyAdmin(currentBlockNumber),
     ])
 
     if (E.isLeft(lastImpl)) {
-      return lastImpl.left
+      return [lastImpl.left]
     }
 
     if (E.isLeft(lastAdmin)) {
-      return lastAdmin.left
+      return [lastAdmin.left]
     }
 
     this.setImpl(lastImpl.right)
     this.setAdmin(lastAdmin.right)
 
-    this.logger.info(`${this.getName()}. started on block ${currentL2Block}`)
+    this.logger.info(`${this.getName()}. started on block ${currentBlockNumber}`)
 
-    return null
+    return []
   }
 
-  async handleL2Block(l2blockNumber: number): Promise<Finding[]> {
-    const start = new Date().getTime()
-
-    const BLOCK_INTERVAL = 25
-    const out: Finding[] = []
-
-    if (l2blockNumber % BLOCK_INTERVAL === 0) {
-      const [impl, admin] = await Promise.all([
-        this.handleProxyImplementationChanges(l2blockNumber),
-        this.handleProxyAdminChanges(l2blockNumber),
-      ])
-
-      out.push(...impl, ...admin)
+  public async handleBlocks(blocks: BlockDto[]): Promise<Finding[]> {
+    if (blocks.length === 0) {
+      return []
     }
 
-    this.logger.info(this.getName() + '.impl = ' + this.getImpl())
-    this.logger.info(this.getName() + '.adm = ' + this.getAdmin())
-    this.logger.info(elapsedTime(this.proxyContract.getName() + `.` + this.handleL2Block.name, start))
-    return out
+    const promises = []
+    promises.push(
+      this.handleProxyImplementationChanges(blocks[blocks.length - 1].number),
+      this.handleProxyAdminChanges(blocks[blocks.length - 1].number),
+    )
+
+    const findings = (await Promise.all(promises)).flat()
+    this.logger.info(`\t\t` + this.getName() + '.impl = ' + this.getImpl())
+    this.logger.info(`\t\t` + this.getName() + '.adm = ' + this.getAdmin())
+
+    return findings
   }
 
-  private async handleProxyImplementationChanges(l2BlockNumber: number): Promise<Finding[]> {
+  private async handleProxyImplementationChanges(blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newImpl = await this.proxyContract.getProxyImplementation(l2BlockNumber)
+    const newImpl = await this.proxyContract.getProxyImplementation(blockNumber)
     if (E.isLeft(newImpl)) {
       return [
         networkAlert(
           newImpl.left,
           `Error in ${this.getName()}.${this.handleProxyImplementationChanges.name}:98`,
-          `Could not fetch proxyImplementation on ${l2BlockNumber}`,
+          `Could not fetch proxyImplementation on ${blockNumber}`,
         ),
       ]
     }
@@ -99,18 +96,18 @@ export class ProxyWatcher {
     if (newImpl.right.toLowerCase() != this.getImpl().toLowerCase()) {
       const f: Finding = new Finding()
 
-      f.setName('🚨 arbitrum: Proxy implementation changed')
+      f.setName(`🚨 ${this.networkName}: Proxy implementation changed`)
       f.setDescription(
         `Proxy implementation for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
-          `was changed form ${this.getImpl()} to ${newImpl}` +
+          `was changed form ${this.getImpl()} to ${newImpl.right.toLowerCase()}` +
           `\n(detected by func call)`,
       )
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('arbitrum')
+      f.setProtocol('ethereum')
 
       const m = f.getMetadataMap()
-      m.set('newImpl', newImpl.right)
+      m.set('newImpl', newImpl.right.toLowerCase())
       m.set('lastImpl', this.getImpl())
 
       out.push(f)
@@ -121,34 +118,35 @@ export class ProxyWatcher {
     return out
   }
 
-  private async handleProxyAdminChanges(l2blockNumber: number): Promise<Finding[]> {
+  private async handleProxyAdminChanges(blockNumber: number): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const newAdmin = await this.proxyContract.getProxyAdmin(l2blockNumber)
+    const newAdmin = await this.proxyContract.getProxyAdmin(blockNumber)
     if (E.isLeft(newAdmin)) {
       return [
         networkAlert(
           newAdmin.left,
           `Error in ${this.getName()}.${this.handleProxyAdminChanges.name}:138`,
-          `Could not fetch getProxyAdmin on ${l2blockNumber}`,
+          `Could not fetch getProxyAdmin on ${blockNumber}`,
         ),
       ]
     }
 
     if (newAdmin.right.toLowerCase() != this.getAdmin().toLowerCase()) {
       const f: Finding = new Finding()
-      f.setName('🚨 arbitrum: Proxy admin changed')
+      f.setName(`🚨 ${this.networkName}: Proxy admin changed`)
       f.setDescription(
         `Proxy admin for ${this.proxyContract.getName()}(${this.proxyContract.getAddress()}) ` +
-          `was changed from ${this.getAdmin()} to ${newAdmin}` +
+          `was changed from ${this.getAdmin()} to ${newAdmin.right.toLowerCase()}` +
           `\n(detected by func call)`,
       )
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('arbitrum')
+      f.setProtocol('ethereum')
+      f.setUniquekey(blockNumber.toString())
 
       const m = f.getMetadataMap()
-      m.set('newAdmin', newAdmin.right)
+      m.set('newAdmin', newAdmin.right.toLowerCase())
       m.set('lastAdmin', this.getAdmin())
 
       this.setAdmin(newAdmin.right.toLowerCase())
