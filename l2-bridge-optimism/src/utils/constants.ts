@@ -19,6 +19,7 @@ export type Address = {
 
 export type RoleHashToNameMap = Map<string, string>
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
+export const ETH_BLOCK_TIME_12Sec = 12
 
 const L1_LDO_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'
 const L1_WSTETH_ADDRESS = '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0'

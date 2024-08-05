@@ -65,7 +65,9 @@ export class BlockHandler {
 
       const findings: Finding[] = []
 
-      this.logger.info(`#Optimism block: ${l2blockDtoEvent.number}`)
+      this.logger.info(
+        `#Optimism block: ${l2blockDtoEvent.number} at ${new Date(l2blockDtoEvent.timestamp * 1000).toUTCString()}`,
+      )
       const startTime = new Date().getTime()
 
       if (this.onAppStartFindings.length > 0) {
@@ -73,25 +75,34 @@ export class BlockHandler {
         this.onAppStartFindings = []
       }
 
-      const l1BlockNumber = await this.ethProvider.getBlockNumber()
+      const l1BlockNumber = await this.ethProvider.getBlock(new Date())
       if (E.isLeft(l1BlockNumber)) {
         this.logger.warn(`#ETH block skipped`)
         findings.push(
           networkAlert(
             l1BlockNumber.left,
-            `Error in ${BlockHandler.name}.${this.ethProvider.getBlockNumber.name}:80`,
+            `Error in ${BlockHandler.name}.${this.ethProvider.getBlock.name}:80`,
             `Could not call clientL1.getBlockNumber`,
           ),
         )
       }
 
       if (E.isRight(l1BlockNumber)) {
-        this.logger.info(`#ETH block: ${l1BlockNumber.right}`)
-        const bridgeBalanceFindings = await this.bridgeBalanceSrv.handleBlock(
-          l1BlockNumber.right,
-          l2blockDtoEvent.number,
+        this.logger.info(
+          `#ETH      block:  ${l1BlockNumber.right.number} at ${new Date(l1BlockNumber.right.timestamp * 1000).toUTCString()}`,
         )
-        findings.push(...bridgeBalanceFindings)
+
+        if (l1BlockNumber.right.timestamp > l2blockDtoEvent.timestamp) {
+          this.logger.info(`Skipping checking bridge balances because of l1.block in the future from l2.block`)
+        }
+
+        if (l1BlockNumber.right.timestamp <= l2blockDtoEvent.timestamp) {
+          const bridgeBalanceFindings = await this.bridgeBalanceSrv.handleBlock(
+            l1BlockNumber.right.number,
+            l2blockDtoEvent.number,
+          )
+          findings.push(...bridgeBalanceFindings)
+        }
       }
 
       for (const proxyWatcher of this.proxyWatchers) {

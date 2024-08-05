@@ -56,12 +56,12 @@ describe('ethProvider', () => {
   test(
     'getBlockNumber',
     async () => {
-      const blockNumber = await l1Client.getBlockNumber()
+      const blockNumber = await l1Client.getBlock(new Date())
       if (E.isLeft(blockNumber)) {
         throw blockNumber.left
       }
 
-      expect(Number.isInteger(blockNumber.right)).toBe(true)
+      expect(Number.isInteger(blockNumber.right.number)).toBe(true)
     },
     TEST_TIMEOUT,
   )

@@ -6,6 +6,8 @@ import { ERC20Bridged } from '../generated/typechain'
 import { NetworkError } from '../utils/errors'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { ethers } from 'ethers'
+import { ETH_BLOCK_TIME_12Sec } from '../utils/constants'
+import { BlockDto } from '../entity/blockDto'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -15,6 +17,8 @@ export class ETHProvider implements IL1BridgeBalanceClient {
   private readonly wStEthRunner: ERC20Bridged
   private readonly ldoRunner: ERC20Bridged
   private readonly metrics: Metrics
+
+  private latestL1Block: BlockDto | null
 
   constructor(
     metric: Metrics,
@@ -26,6 +30,7 @@ export class ETHProvider implements IL1BridgeBalanceClient {
     this.wStEthRunner = wStEthRunner
     this.ldoRunner = ldoRunner
     this.jsonRpcProvider = jsonRpcProvider
+    this.latestL1Block = null
   }
 
   public async getWstEthBalance(
@@ -83,22 +88,39 @@ export class ETHProvider implements IL1BridgeBalanceClient {
     }
   }
 
-  public async getBlockNumber(): Promise<E.Either<Error, number>> {
-    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getBlockNumber.name }).startTimer()
+  public async getBlock(latestTime: Date): Promise<E.Either<Error, BlockDto>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getBlock.name }).startTimer()
     try {
-      const latestBlockNumber = await retryAsync<number>(
-        async (): Promise<number> => {
-          return await this.jsonRpcProvider.getBlockNumber()
+      if (
+        this.latestL1Block !== null &&
+        new Date(this.latestL1Block.timestamp * 1000).getTime() + ETH_BLOCK_TIME_12Sec * 1000 >= latestTime.getTime()
+      ) {
+        this.metrics.etherJsRequest.labels({ method: this.getBlock.name, status: StatusOK }).inc()
+        end({ status: StatusOK })
+        return E.right(this.latestL1Block)
+      }
+
+      const latestBlockNumber = await retryAsync<BlockDto>(
+        async (): Promise<BlockDto> => {
+          const ethBlock = await this.jsonRpcProvider.getBlock('latest')
+
+          return {
+            number: ethBlock.number,
+            timestamp: ethBlock.timestamp,
+            parentHash: ethBlock.parentHash,
+            hash: ethBlock.hash,
+          }
         },
         { delay: DELAY_IN_500MS, maxTry: 10 },
       )
 
-      this.metrics.etherJsRequest.labels({ method: this.getBlockNumber.name, status: StatusOK }).inc()
+      this.metrics.etherJsRequest.labels({ method: this.getBlock.name, status: StatusOK }).inc()
       end({ status: StatusOK })
 
+      this.latestL1Block = latestBlockNumber
       return E.right(latestBlockNumber)
     } catch (e) {
-      this.metrics.etherJsRequest.labels({ method: this.getBlockNumber.name, status: StatusFail }).inc()
+      this.metrics.etherJsRequest.labels({ method: this.getBlock.name, status: StatusFail }).inc()
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch latest block number`))
