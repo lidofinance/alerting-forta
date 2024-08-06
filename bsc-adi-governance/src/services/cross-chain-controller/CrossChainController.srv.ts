@@ -16,7 +16,7 @@ export class CrossChainControllerSrv {
   private readonly bscClient: ICRossChainControllerClient
   private readonly crossChainControllerAddress: string
   private readonly transactionReceivedEvent =
-    'event TransactionReceived(bytes32 transactionId, bytes32 indexed envelopeId, uint256 indexed originChainId, Transaction transaction, address indexed bridgeAdapter, uint8 confirmations)'
+    'event TransactionReceived(bytes32 transactionId, bytes32 indexed envelopeId, uint256 indexed originChainId, (uint256,bytes), address indexed bridgeAdapter, uint8 confirmations)'
   private adaptersNamesMap: Map<string, string>
 
   constructor(logger: Logger, bscClient: ICRossChainControllerClient, crossChainControllerAddress: string) {
