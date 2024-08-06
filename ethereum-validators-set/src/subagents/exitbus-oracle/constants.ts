@@ -59,22 +59,9 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
 ]);
 
-export const STAKING_MODULES: {
-  moduleAddress: string;
-  moduleName: string;
-  moduleId: number;
-}[] = [
-  {
-    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "Curated",
-    moduleId: 1,
-  },
-  {
-    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "SimpleDVT",
-    moduleId: 2,
-  },
-];
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const CSM_NODE_OPERATOR_REGISTRY_MODULE_ID = 3;
 
 export const FETCH_BALANCES_BLOCK_INTERVAL = 1000;
 

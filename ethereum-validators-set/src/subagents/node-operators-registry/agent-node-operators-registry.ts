@@ -29,8 +29,9 @@ const {
   MOTION_ENACTED_EVENT,
   SIGNING_KEY_REMOVED_EVENT,
   NODE_OPERATOR_VETTED_KEYS_COUNT_EVENT,
-  STAKING_MODULES,
+  SET_VETTED_VALIDATORS_LIMITS_ADDRESS,
   SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
+  CSM_NODE_OPERATOR_REGISTRY_MODULE_ID,
   NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
   NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
   NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD,
@@ -95,7 +96,7 @@ class NodeOperatorsRegistryModuleContext {
   public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
-  public targetShare: number = 0;
+  public stakeShareLimit: number = 0;
   public readonly contract: ethers.Contract;
 
   constructor(
@@ -169,7 +170,7 @@ class NodeOperatorsRegistryModuleContext {
       this.params.moduleId,
       { blockTag: block },
     );
-    this.targetShare = srModule.targetShare;
+    this.stakeShareLimit = srModule.stakeShareLimit;
 
     await Promise.all(
       operators.map(async (operator: any) => {
@@ -203,10 +204,9 @@ export async function initialize(
 
   stakingModulesOperatorRegistry.length = 0;
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
 
   for (const {
     clusterName,
@@ -217,43 +217,38 @@ export async function initialize(
     );
   }
 
-  for (const {
-    moduleId,
-    moduleAddress,
-    moduleName,
-    alertPrefix,
-    setVettedValidatorsLimitsAddress,
-  } of STAKING_MODULES) {
-    if (!moduleId) {
-      console.log(`${moduleName} is not supported on this network for ${name}`);
+  for (const { id, stakingModuleAddress, name } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
+    const moduleAddress = (stakingModuleAddress as string).toLowerCase();
+    const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
+
+    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
       continue;
     }
 
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
-      continue;
-    }
-
-    stakingModulesOperatorRegistry.push(
-      new NodeOperatorsRegistryModuleContext(
-        {
+    const setVettedValidatorsLimitsAddress =
+      moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
+        ? SET_VETTED_VALIDATORS_LIMITS_ADDRESS
+        : undefined;
+    const skakingModule = new NodeOperatorsRegistryModuleContext(
+      {
+        moduleId,
+        moduleAddress,
+        moduleName,
+        alertPrefix,
+        setVettedValidatorsLimitsAddress,
+        eventsOfNotice: getEventsOfNoticeForStakingModule({
           moduleId,
           moduleAddress,
           moduleName,
           alertPrefix,
-          setVettedValidatorsLimitsAddress,
-          eventsOfNotice: getEventsOfNoticeForStakingModule({
-            moduleId,
-            moduleAddress,
-            moduleName,
-            alertPrefix,
-          }),
-        },
-        stakingRouter,
-      ),
+        }),
+      },
+      stakingRouter,
     );
+
+    stakingModulesOperatorRegistry.push(skakingModule);
   }
 
   await Promise.all(
@@ -403,7 +398,7 @@ function handleExitedCountChanged(
     if (newExited > NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD) {
       findings.push(
         Finding.fromObject({
-          name: `⚠️ ${norContext.params.moduleName} NO Registry: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
+          name: `⚠️ ${norContext.params.moduleName}: operator exited more than ${NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD} validators`,
           description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
             nodeOperatorId,
           )}\nNew exited: ${newExited}`,
@@ -424,7 +419,7 @@ function handleExitedCountChanged(
       if (lastDigest.stuck > 0 && actualStuckCount == 0) {
         findings.push(
           Finding.fromObject({
-            name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited all stuck keys 🎉`,
+            name: `ℹ️ ${norContext.params.moduleName} : operator exited all stuck keys 🎉`,
             description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck}`,
@@ -436,7 +431,7 @@ function handleExitedCountChanged(
       } else if (lastDigest.stuck - actualStuckCount > 0) {
         findings.push(
           Finding.fromObject({
-            name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator exited some stuck keys`,
+            name: `ℹ️ ${norContext.params.moduleName} : operator exited some stuck keys`,
             description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nStuck exited: ${lastDigest.stuck - actualStuckCount} of ${
@@ -473,7 +468,7 @@ function handleStuckStateChanged(
       if (newStuck > NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD) {
         findings.push(
           Finding.fromObject({
-            name: `⚠️ ${norContext.params.moduleName} NO Registry: operator have new stuck keys`,
+            name: `⚠️ ${norContext.params.moduleName} : operator have new stuck keys`,
             description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nNew stuck: ${stuckValidatorsCount}`,
@@ -492,7 +487,7 @@ function handleStuckStateChanged(
       ) {
         findings.push(
           Finding.fromObject({
-            name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator refunded all stuck keys 🎉`,
+            name: `ℹ️ ${norContext.params.moduleName} : operator refunded all stuck keys 🎉`,
             description: `Operator: #${nodeOperatorId} ${norContext.getOperatorName(
               nodeOperatorId,
             )}\nRefunded: ${refundedValidatorsCount}`,
@@ -523,6 +518,7 @@ async function handleSigningKeysRemoved(
   if (moduleAddress in txEvent.addresses) {
     let digest = new Map<string, number>();
     const events = txEvent.filterLog(SIGNING_KEY_REMOVED_EVENT, moduleAddress);
+
     if (events.length > 0) {
       events.forEach((event) => {
         const noName = norContext.getOperatorName(event.args.operatorId);
@@ -531,7 +527,7 @@ async function handleSigningKeysRemoved(
       });
       findings.push(
         Finding.fromObject({
-          name: `🚨 ${norContext.params.moduleName} NO Registry: Signing keys removed`,
+          name: `🚨 ${norContext.params.moduleName}: Signing keys removed`,
           description:
             `Signing keys has been removed for:` +
             `\n ${Array.from(digest.entries())
@@ -579,7 +575,7 @@ async function handleActiveMotionsWhenSigningKeysRemoved(
     const motionId = (motion?.id as BigNumber).toNumber();
     findings.push(
       Finding.fromObject({
-        name: `🚨 ${norContext.params.moduleName} NO Registry: SetVettedValidatorsLimits motion active 🚨`,
+        name: `🚨 ${norContext.params.moduleName} : SetVettedValidatorsLimits motion active 🚨`,
         description:
           `SigningKeyRemoved event and ongoing SetVettedValidatorsLimits motion may indicate ` +
           `circumventing of DAO validator keys approval.` +
@@ -636,7 +632,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
         handleStuckPenaltyEnd(blockEvent, findings, nodeOperatorRegistry),
     );
     const currentTargetShareHandlers = stakingModulesOperatorRegistry
-      .filter((nor) => nor.targetShare < BASIS_POINTS_MULTIPLIER)
+      .filter((nor) => nor.stakeShareLimit < BASIS_POINTS_MULTIPLIER)
       .map(async (nodeOperatorRegistry) => {
         const totalActiveValidators =
           await getTotalActiveValidators(blockEvent);
@@ -703,7 +699,7 @@ async function handleStakingModuleTargetShare(
   const currentTargetShare = Math.ceil(
     (moduleActiveValidators / totalActiveValidators) * BASIS_POINTS_MULTIPLIER,
   );
-  const diffTargetShare = currentTargetShare - norContext.targetShare;
+  const diffTargetShare = currentTargetShare - norContext.stakeShareLimit;
   if (diffTargetShare <= 0) {
     return;
   }
@@ -713,11 +709,11 @@ async function handleStakingModuleTargetShare(
   }%%`;
   const description =
     `The module has ${moduleActiveValidators} active validators against ${totalActiveValidators}\n` +
-    `Current targetShare: ${currentTargetShare}, the module targetShare: ${norContext.targetShare}`;
+    `Current stakeShareLimit: ${currentTargetShare}, the module stakeShareLimit: ${norContext.stakeShareLimit}`;
   if (diffTargetShare > TARGET_SHARE_THRESHOLD_PANIC) {
     findings.push(
       Finding.fromObject({
-        name: `🚨 ${norContext.params.moduleName} NO Registry: ${title}`,
+        name: `🚨 ${norContext.params.moduleName} : ${title}`,
         description,
         alertId: `${norContext.params.alertPrefix}TARGET-SHARE-PANIC`,
         severity: FindingSeverity.High,
@@ -730,7 +726,7 @@ async function handleStakingModuleTargetShare(
   if (diffTargetShare > TARGET_SHARE_THRESHOLD_NOTICE) {
     findings.push(
       Finding.fromObject({
-        name: `⚠️ ${norContext.params.moduleName} NO Registry: ${title}`,
+        name: `⚠️ ${norContext.params.moduleName} : ${title}`,
         description,
         alertId: `${norContext.params.alertPrefix}TARGET-SHARE-NOTICE`,
         severity: FindingSeverity.Info,
@@ -773,7 +769,7 @@ async function handleStuckPenaltyEnd(
     description += "\nNote: don't forget to call `clearNodeOperatorPenalty`";
     findings.push(
       Finding.fromObject({
-        name: `ℹ️ ${norContext.params.moduleName} NO Registry: operator stuck penalty ended`,
+        name: `ℹ️ ${norContext.params.moduleName} : operator stuck penalty ended`,
         description: description,
         alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-STUCK-PENALTY-ENDED`,
         severity: FindingSeverity.Info,

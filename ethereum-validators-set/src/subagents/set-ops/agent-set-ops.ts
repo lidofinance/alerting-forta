@@ -29,7 +29,6 @@ const {
   MEV_RELAY_COUNT_THRESHOLD_INFO,
   MEV_RELAY_COUNT_REPORT_WINDOW,
   MEV_ALLOWED_LIST_ADDRESS,
-  STAKING_MODULES,
   MIN_AVAILABLE_KEYS_COUNT,
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   BLOCK_CHECK_INTERVAL,
@@ -67,29 +66,19 @@ export async function initialize(
     STAKING_ROUTER_ABI,
     ethersProvider,
   );
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
+
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
 
   stakingModulesOperatorRegistry.length = 0;
   for (const {
-    moduleId,
-    moduleAddress,
-    moduleName,
-    alertPrefix,
-  } of STAKING_MODULES) {
-    if (!moduleAddress) {
-      console.log(`${moduleName} is not supported on this network for ${name}`);
-      continue;
-    }
-
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
-      continue;
-    }
+    id: moduleId,
+    stakingModuleAddress,
+    name: moduleName,
+  } of modules) {
+    const moduleAddress = (stakingModuleAddress as string).toLowerCase();
+    const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
 
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({

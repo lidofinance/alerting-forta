@@ -38,7 +38,7 @@ const {
   EL_REWARDS_VAULT_ADDRESS,
   WITHDRAWALS_VAULT_ADDRESS,
   BURNER_ADDRESS,
-  STAKING_MODULES,
+  CSM_NODE_OPERATOR_REGISTRY_MODULE_ID,
   ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
   LIDO_ETHDESTRIBUTED_EVENT,
   LIDO_ELREWARDSRECEIVED_EVENT,
@@ -148,21 +148,16 @@ export async function initialize(
 
   stakingModulesOperatorRegistry.length = 0;
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
 
-  for (const { moduleId, moduleName, alertPrefix } of STAKING_MODULES) {
-    if (!moduleId) {
-      console.log(`${moduleName} is not supported on this network for ${name}`);
-      continue;
-    }
+  for (const { id, name } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
+    const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
 
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
+    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
       continue;
     }
 

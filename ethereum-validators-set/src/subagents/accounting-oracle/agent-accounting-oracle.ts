@@ -38,6 +38,7 @@ const {
   ACCOUNTING_ORACLE_ADDRESS,
   MAX_ORACLE_REPORT_MAIN_DATA_SUBMIT_DELAY,
   MAX_ORACLE_REPORT_EXTRA_DATA_SUBMIT_AFTER_MAIN_DATA_DELAY,
+  MAX_ORACLE_REPORT_EXTRA_DATA_DELAY_BETWEEN_SUBMITING,
   ACCOUNTING_ORACLE_EVENTS_OF_NOTICE,
 } = requireWithTier<typeof Constants>(
   module,
@@ -114,8 +115,47 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await handleMainDataReportSubmitted(blockEvent, findings);
+  await handleExtraDataReportSubmitted(blockEvent, findings);
 
   return findings;
+}
+
+async function handleExtraDataReportSubmitted(
+  blockEvent: BlockEvent,
+  findings: Finding[],
+) {
+  const now = blockEvent.block.timestamp;
+  const extraDataSubmits = await getReportExtraDataSubmits(
+    blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
+    blockEvent.blockNumber,
+  );
+
+  const lastExtraDataSubmit = extraDataSubmits[extraDataSubmits.length - 1];
+  const lastExtraDataSubmitBlock = await lastExtraDataSubmit.getBlock();
+  const lastExtraDataSubmitBlockTime = lastExtraDataSubmitBlock.timestamp ?? 0;
+  const reportExtraDataSubmitBetween3PhasesDelay =
+    now - lastExtraDataSubmitBlockTime;
+  if (
+    lastExtraDataSubmit.args?.itemsCount >
+      lastExtraDataSubmit.args?.itemsProcessed &&
+    MAX_ORACLE_REPORT_EXTRA_DATA_DELAY_BETWEEN_SUBMITING >
+      reportExtraDataSubmitBetween3PhasesDelay
+  ) {
+    findings.push(
+      Finding.fromObject({
+        name: "🚨 Accounting Oracle: previous report EXTRA data submit overdue",
+        description: `Time since previous extra data submit: ${formatDelay(
+          lastExtraDataSubmitBlockTime,
+        )}`,
+        alertId: "ACCOUNTING-ORACLE-PREVIOUS-EXTRA-DATA-OVERDUE",
+        severity: FindingSeverity.High,
+        type: FindingType.Degraded,
+        metadata: {
+          delay: `${reportExtraDataSubmitBetween3PhasesDelay}`,
+        },
+      }),
+    );
+  }
 }
 
 async function handleMainDataReportSubmitted(

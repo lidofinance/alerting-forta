@@ -62,7 +62,7 @@ const {
   EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD,
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
   EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
-  STAKING_MODULES,
+  CSM_NODE_OPERATOR_REGISTRY_MODULE_ID,
   BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
@@ -121,22 +121,18 @@ export async function initialize(
     ethersProvider,
   );
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
 
   stakingModulesOperatorRegistry.clear();
-  for (const { moduleId, moduleAddress, moduleName } of STAKING_MODULES) {
-    if (!moduleAddress) {
-      console.log(`${moduleName} is not supported on this network for ${name}`);
-      continue;
-    }
 
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
+  for (const { id, stakingModuleAddress, name } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
+    const moduleAddress = (stakingModuleAddress as string).toLowerCase();
+
+    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
       continue;
     }
 

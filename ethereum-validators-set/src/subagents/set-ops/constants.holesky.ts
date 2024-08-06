@@ -32,6 +32,8 @@ export const ENS_BASE_REGISTRAR_ADDRESS = ensRegistrarAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
 export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
 
 export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
   (event) => ({
@@ -41,16 +43,19 @@ export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
 );
 
 export const STAKING_MODULES: {
+  moduleId: number;
   moduleAddress: string;
   moduleName: string;
   alertPrefix: string;
 }[] = [
   {
+    moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
     moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "Curated",
     alertPrefix: "",
   },
   {
+    moduleId: SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
     moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
     moduleName: "SimpleDVT",
     alertPrefix: "SDVT-",
