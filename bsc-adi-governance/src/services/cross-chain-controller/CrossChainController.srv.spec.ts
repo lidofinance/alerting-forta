@@ -1,6 +1,6 @@
 import { TransactionDto } from '../../utils/types'
 import * as Winston from 'winston'
-import { ethers, Finding, getEthersProvider } from 'forta-agent'
+import { BlockEvent, ethers, Finding, getEthersProvider } from 'forta-agent'
 
 import { CrossChainControllerSrv } from './CrossChainController.srv'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
@@ -32,6 +32,7 @@ describe('CrossChainController Srv functional tests', () => {
   const service = new CrossChainControllerSrv(logger, bscClient, CROSS_CHAIN_CONTROLLER_ADDRESS)
 
   let runTransaction: (txHash: string, initBlock: number) => Promise<Finding[]>
+  let runBlock: (blockNumber: number, initBlock: number) => Promise<Finding[]>
 
   beforeAll(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {})
@@ -50,6 +51,18 @@ describe('CrossChainController Srv functional tests', () => {
       }
       await service.initialize(initBlock)
       return service.handleTransaction(transactionDto as TransactionEvent)
+    }
+
+    runBlock = async (blockNumber, initBlock) => {
+      if (initBlock > Number(blockNumber)) {
+        throw new Error('Wrong initial block or argument order')
+      }
+      const initErr = await service.initialize(initBlock)
+      if (initErr instanceof Error) {
+        throw initErr
+      }
+      const BlockEventHack = { blockNumber } as BlockEvent
+      return service.handleBlock(BlockEventHack)
     }
   })
 
@@ -100,6 +113,15 @@ describe('CrossChainController Srv functional tests', () => {
         '0xda1572eb6360116ea0fbd9f898b1413823ba2ab4bb1cbb5e150cce42c68a687c',
         39775722,
       )
+      expect(findings).toMatchSnapshot()
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'should find 2 receive event but message is delivered',
+    async () => {
+      const findings = await runBlock(39921800, 39921799)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,

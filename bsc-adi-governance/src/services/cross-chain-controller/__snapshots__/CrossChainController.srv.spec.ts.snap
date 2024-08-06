@@ -131,3 +131,5 @@ exports[`CrossChainController Srv functional tests should find TransactionReceiv
   },
 ]
 `;
+
+exports[`CrossChainController Srv functional tests should find 2 receive event but message is delivered 1`] = `[]`;
