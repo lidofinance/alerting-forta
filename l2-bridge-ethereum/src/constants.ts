@@ -23,6 +23,13 @@ export interface BridgeProxyInfo {
   proxyAdminAddress: string | null;
 }
 
+export const LINK_TOKEN_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
+export const CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS =
+  "0x93559892D3C7F66DE4570132d68b69BD3c369A7C";
+
+export const BRIDGE_ETH_MIN_BALANCE = 0.5;
+export const BRIDGE_LINK_MIN_BALANCE = 5;
+
 export const ROLES = new Map<string, string>([
   [
     "0x63f736f21cb2943826cd50b191eb054ebbea670e4e962d0527611f830cd399d6",

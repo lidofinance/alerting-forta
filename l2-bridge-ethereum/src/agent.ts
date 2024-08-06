@@ -13,7 +13,7 @@ import { ethersProvider } from "./ethers";
 import { argv } from "process";
 
 import * as agentProxy from "./agent-proxy-watcher";
-import * as agentBridge from "./agent-bridge-watcher";
+import * as agentBridge from "./watchers/bridge-watcher";
 
 import VERSION from "./version";
 
