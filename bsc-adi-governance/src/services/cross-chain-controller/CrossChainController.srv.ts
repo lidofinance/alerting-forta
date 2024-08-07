@@ -50,10 +50,7 @@ export class CrossChainControllerSrv {
 
   public async handleBlock(block: BlockEvent): Promise<Finding[]> {
     const start = new Date().getTime()
-    const findings: Finding[] = []
-
-    const [envelopeDelayFindings] = await Promise.all([this.handleEnvelopeDelay(block)])
-    findings.push(...envelopeDelayFindings)
+    const findings = await this.handleEnvelopeDelay(block)
 
     this.logger.info(elapsedTime(this.name + '.' + this.handleBlock.name, start))
     return findings
