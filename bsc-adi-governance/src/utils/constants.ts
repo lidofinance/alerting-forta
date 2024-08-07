@@ -1,2 +1,10 @@
 export const CROSS_CHAIN_EXECUTOR_ADDRESS = '0x8e5175d17f74d1d512de59b2f5d5a5d8177a123d'
 export const CROSS_CHAIN_CONTROLLER_ADDRESS = '0x40c4464fca8cacd550c33b39d674fc257966022f'
+export const PERIODICAL_BLOCK_INTERVAL = 20 * 5 // 5 min in blocks
+export const HOUR_IN_BLOCKS = 20 * 60 // 60 min in blocks
+
+export enum ENVELOPE_STATE {
+  NONE,
+  CONFIRMED,
+  DELIVERED,
+}

@@ -5,6 +5,7 @@ import { retryAsync } from 'ts-retry'
 import { ICRossChainControllerClient } from '../services/cross-chain-controller/CrossChainController.srv'
 import { NetworkError } from '../utils/errors'
 import { BaseAdapter__factory, CrossChainController } from '../generated'
+import { CROSS_CHAIN_CONTROLLER_ADDRESS } from '../utils/constants'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -83,6 +84,49 @@ export class BSCProvider implements ICRossChainControllerClient {
       return E.right(result)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not get bridge adapters list from CrossChainController contract`))
+    }
+  }
+
+  public async getEnvelopeStateByIds(envelopeIds: string[]): Promise<E.Either<Error, Map<string, number>>> {
+    try {
+      const out = new Map<string, number>()
+      await Promise.all(
+        envelopeIds.map(async (envelopeId) => {
+          const status = await this.crossChainControllerRunner['getEnvelopeState(bytes32)'](envelopeId)
+          out.set(envelopeId, status)
+        }),
+      )
+      return E.right(out)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get bridge adapters list from CrossChainController contract`))
+    }
+  }
+
+  public async getReceivedEnvelopeIds(fromBlock: number, toBlock: number): Promise<E.Either<Error, string[]>> {
+    try {
+      const results = await retryAsync(
+        async () => {
+          const keccakEvent = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes('TransactionReceived(bytes32,bytes32,uint256,(uint256,bytes),address,uint8)'),
+          )
+          const address = CROSS_CHAIN_CONTROLLER_ADDRESS
+          return this.jsonRpcProvider.getLogs({
+            fromBlock: `0x${fromBlock.toString(16)}`,
+            toBlock: `0x${toBlock.toString(16)}`,
+            address,
+            topics: [keccakEvent, null, '0x0000000000000000000000000000000000000000000000000000000000000001', null],
+          })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      const iface = new ethers.utils.Interface([
+        'event TransactionReceived(bytes32 transactionId, bytes32 indexed envelopeId, uint256 indexed originChainId, (uint256,bytes), address indexed bridgeAdapter, uint8 confirmations)',
+      ])
+      const out = results.map((result) => iface.parseLog(result))
+      const res: string[] = out.map((out) => out.args.envelopeId)
+      return E.right(res)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
     }
   }
 }
