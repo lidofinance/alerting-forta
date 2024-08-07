@@ -903,11 +903,6 @@ export class ETHProvider
     }
   }
 
-  /**
-   * @address — the address of the smart contract to query
-   * @slotName — the index of the storage position to retrieve the data from
-   * @blockTag or tag — the integer of a block encoded as hexadecimal or the string with:
-   */
   public async getStorageBySlotName(
     address: string,
     slotId: number,
@@ -920,7 +915,6 @@ export class ETHProvider
       jsonrpc: string
       method: string
       params: Array<any>
-      // id: number
     }
 
     type RpcResponse = {
@@ -939,7 +933,6 @@ export class ETHProvider
       jsonrpc: '2.0',
       method: `eth_getStorageAt`,
       params: [address, slot, blockTag],
-      // id: slotId,
     }
 
     try {
@@ -966,7 +959,7 @@ export class ETHProvider
             throw new Error(obj.error.message)
           }
         },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        { delay: 750, maxTry: 10 },
       )
 
       this.metrics.etherJsRequest.labels({ method: this.getStorageBySlotName.name, status: StatusOK }).inc()
@@ -984,11 +977,6 @@ export class ETHProvider
     }
   }
 
-  /**
-   * @address — the address of the smart contract to query
-   * @slotAddr — the index of the storage position to retrieve the data from
-   * @blockTag or tag — the integer of a block encoded as hexadecimal or the string with:
-   */
   public async getStorageAtSlotAddr(
     address: string,
     slotId: number,
@@ -1001,7 +989,6 @@ export class ETHProvider
       jsonrpc: string
       method: string
       params: Array<any>
-      //id: number
     }
 
     type RpcResponse = {
@@ -1018,7 +1005,6 @@ export class ETHProvider
       jsonrpc: '2.0',
       method: `eth_getStorageAt`,
       params: [address, slotAddr, blockTag],
-      // id: slotId,
     }
 
     try {
@@ -1045,7 +1031,7 @@ export class ETHProvider
             throw new Error(obj.error.message)
           }
         },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        { delay: 750, maxTry: 10 },
       )
 
       this.metrics.etherJsRequest.labels({ method: this.getStorageAtSlotAddr.name, status: StatusOK }).inc()
