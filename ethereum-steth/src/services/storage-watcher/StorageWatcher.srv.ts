@@ -76,7 +76,7 @@ export class StorageWatcherSrv {
         // @ts-ignore
         const len = await this.client.getStorageAtSlotAddr(slot.contractAddress, slot.id, slot.slotAddress, blockHash)
         if (E.isLeft(len)) {
-          return new Error(`Could not init StorageWatcher: ${len.left}`)
+          return new Error(`Could not init StorageWatcher. Could not fetch array size: ${len.left}`)
         }
 
         promisesArray.push(
@@ -96,12 +96,12 @@ export class StorageWatcherSrv {
     try {
       responsesRaw = await Promise.all(promises)
     } catch (e) {
-      return new Error(`Could not init StorageWatcher: ${e}`)
+      return new Error(`Could not init StorageWatcher. Could not fetch items: ${e}`)
     }
 
     for (const resp of responsesRaw) {
       if (E.isLeft(resp)) {
-        return new Error(`Could not init StorageWatcher: ${resp.left}`)
+        return new Error(`Could not init StorageWatcher. Could not fetch item: ${resp.left}`)
       }
 
       this.cacheItemValue.set(resp.right.slotId, resp.right.value)
@@ -111,12 +111,12 @@ export class StorageWatcherSrv {
     try {
       responsesArraysRaw = await Promise.all(promisesArray)
     } catch (e) {
-      return new Error(`Could not init StorageWatcher: ${e}`)
+      return new Error(`Could not init StorageWatcher. Could not fetch arrays: ${e}`)
     }
 
     for (const resp of responsesArraysRaw) {
       if (E.isLeft(resp)) {
-        return new Error(`Could not init StorageWatcher: ${resp.left}`)
+        return new Error(`Could not init StorageWatcher. Could not fetch data of array ${resp.left}`)
       }
 
       this.cacheItemValues.set(resp.right.slotId, resp.right.values)
