@@ -1,6 +1,6 @@
-import { NetworkErrorFinding } from '../../utils/errors'
-import { Finding } from '../../generated/proto/alert_pb'
 import { Logger } from 'winston'
+import { Finding } from '../../generated/proto/alert_pb'
+import { NetworkErrorFinding } from '../../utils/errors'
 import { Metrics } from '../../utils/metrics/metrics'
 
 export const BorderTime = 15 * 60 * 1000 // 15 minutes
@@ -74,5 +74,9 @@ export class HealthChecker {
 
   public isHealth(): boolean {
     return this.isAppOk
+  }
+
+  public signalAppIsBroken() {
+    this.isAppOk = false
   }
 }

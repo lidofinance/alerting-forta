@@ -81,7 +81,7 @@ export class BlockHandler {
         if (diff > MINUTES_6) {
           const f: Finding = new Finding()
 
-          f.setName(`⚠️ Currently processing Ethereum network block is outdated`)
+          f.setName(`⚠️ Eth-steth. Currently processing Ethereum network block is outdated`)
           f.setDescription(infraLine + lastBlockLine + diffLine)
           f.setAlertid('L1-BLOCK-OUTDATED')
           f.setSeverity(Finding.Severity.MEDIUM)
@@ -89,6 +89,7 @@ export class BlockHandler {
           f.setProtocol('ethereum')
 
           findings.push(f)
+          this.healthChecker.signalAppIsBroken()
         }
       }
 
