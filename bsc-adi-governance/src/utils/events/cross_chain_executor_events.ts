@@ -6,7 +6,7 @@ export function getCrossChainExecutorEvents(crossChainExecutorAddress: string): 
   return [
     {
       address: crossChainExecutorAddress,
-      event: 'event GuardianUpdate(address oldGuardian, address newGuardian)',
+      event: 'event GuardianUpdated(address oldGuardian, address newGuardian)',
       alertId: 'BSC-ADI-GUARDIAN-UPDATED',
       name: '🚨🚨🚨 BSC a.DI: Guardians updated',
       description: (args: Result) => `Guardian was updated from ` + `${args.oldGuardian} to ${args.newGuardian}`,
