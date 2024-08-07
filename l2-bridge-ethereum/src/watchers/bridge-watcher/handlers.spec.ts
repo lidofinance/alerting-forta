@@ -10,6 +10,7 @@ import {
   L1_BRIDGE_EVENTS,
 } from "../../constants";
 import {
+  BlockEvent,
   Finding,
   FindingSeverity,
   FindingType,
@@ -109,20 +110,22 @@ describe("handleL1BridgeTransactionEvents", () => {
 });
 
 describe("handleBridgeBalance", () => {
+  let event: BlockEvent;
+
   beforeEach(() => {
+    event = { block: { number: 7200 } } as BlockEvent;
     jest
       .spyOn(agent, "getEthersProvider")
       .mockReturnValue(mockProvider as never);
   });
 
   it("returns an empty array if block number is not a multiple of 7200", async () => {
-    const event = { block: { number: 7199 } };
+    event = { block: { number: 7199 } } as BlockEvent;
     const findings = await handleBridgeBalance(event as never);
     expect(findings).toEqual([]);
   });
 
   it("returns a finding if ETH balance is below the minimum threshold", async () => {
-    const event = { block: { number: 7200 } };
     mockProvider.getBalance.mockResolvedValue(
       BigNumber(1e18 * (BRIDGE_ETH_MIN_BALANCE - 0.1)),
     );
@@ -142,7 +145,6 @@ describe("handleBridgeBalance", () => {
   });
 
   it("returns a finding if LINK balance is below the minimum threshold", async () => {
-    const event = { block: { number: 7200 } };
     mockProvider.getBalance.mockResolvedValue(
       BigNumber(1e18 * BRIDGE_ETH_MIN_BALANCE),
     );
@@ -161,7 +163,6 @@ describe("handleBridgeBalance", () => {
   });
 
   it("returns findings for both ETH and LINK balances below the minimum threshold", async () => {
-    const event = { block: { number: 7200 } };
     mockProvider.getBalance.mockResolvedValue(
       BigNumber(1e18 * (BRIDGE_ETH_MIN_BALANCE - 0.1)),
     );
@@ -175,7 +176,6 @@ describe("handleBridgeBalance", () => {
   });
 
   it("returns an empty array if both ETH and LINK balances are above the minimum threshold", async () => {
-    const event = { block: { number: 7200 } };
     mockProvider.getBalance.mockResolvedValue(
       BigNumber(1e18 * BRIDGE_ETH_MIN_BALANCE),
     );
@@ -186,5 +186,30 @@ describe("handleBridgeBalance", () => {
     const findings = await handleBridgeBalance(event as never);
 
     expect(findings).toEqual([]);
+  });
+
+  it("returns an array of network errors if there are errors", async () => {
+    mockProvider.getBalance.mockRejectedValue(new Error("Network ETH error"));
+    mockContract.balanceOf.mockRejectedValue(new Error("Network LINK error"));
+
+    const findings = await handleBridgeBalance(event as never);
+
+    expect(findings).toHaveLength(2);
+    expect(findings[0].alertId).toEqual("NETWORK-ERROR");
+    expect(findings[1].alertId).toEqual("NETWORK-ERROR");
+    expect(findings[0].name).toEqual("handleBridgeBalance");
+    expect(findings[1].name).toEqual("handleBridgeBalance");
+    expect(findings[0].description).toEqual(
+      "Error fetching bridge ETH balance",
+    );
+    expect(findings[1].description).toEqual(
+      "Error fetching bridge LINK balance",
+    );
+    expect(findings[0].metadata).toMatchObject({
+      message: "Network ETH error",
+    });
+    expect(findings[1].metadata).toMatchObject({
+      message: "Network LINK error",
+    });
   });
 });

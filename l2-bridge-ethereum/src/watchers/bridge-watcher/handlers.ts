@@ -15,6 +15,7 @@ import {
   LINK_TOKEN_ADDRESS,
 } from "../../constants";
 import { formatEther } from "ethers";
+import { networkAlert } from "../../helpers/finding";
 
 export function handleL1BridgeTransactionEvents(
   txEvent: TransactionEvent,
@@ -45,47 +46,70 @@ export async function handleBridgeBalance(event: BlockEvent) {
   }
   const findings: Finding[] = [];
 
-  // Check ETH balance of the bridge
   const provider = getEthersProvider();
-  const ethBalance = await provider.getBalance(
-    CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
-  );
-  if (ethBalance.lt(BigInt(1e18 * BRIDGE_ETH_MIN_BALANCE))) {
+
+  try {
+    const ethBalance = await provider.getBalance(
+      CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
+    );
+    if (ethBalance.lt(BigInt(1e18 * BRIDGE_ETH_MIN_BALANCE))) {
+      findings.push(
+        Finding.fromObject({
+          name: "Bridge ETH balance is low (0.5 ETH min)",
+          description: `Bridge balance is low: ${formatEther(
+            ethBalance.toString(),
+          )} ETH`,
+          alertId: "BRIDGE-ETH-BALANCE-LOW",
+          severity: FindingSeverity.Medium,
+          type: FindingType.Info,
+          metadata: { ethBalance: ethBalance.toString() },
+        }),
+      );
+    }
+  } catch (err: unknown) {
     findings.push(
-      Finding.fromObject({
-        name: "Bridge ETH balance is low (0.5 ETH min)",
-        description: `Bridge balance is low: ${formatEther(
-          ethBalance.toString(),
-        )} ETH`,
-        alertId: "BRIDGE-ETH-BALANCE-LOW",
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-        metadata: { ethBalance: ethBalance.toString() },
-      }),
+      networkAlert(
+        err as Error,
+        "handleBridgeBalance",
+        "Error fetching bridge ETH balance",
+        event.block.number,
+      ),
     );
   }
 
-  // Check LINK balance of the bridge
   const linkContract = new ethers.Contract(
     LINK_TOKEN_ADDRESS,
     ["function balanceOf(address) returns (uint256)"],
     provider,
   );
-  const linkBalance = await linkContract.balanceOf(
-    CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
-  );
-  if (linkBalance.lt(BigInt(1e18 * BRIDGE_LINK_MIN_BALANCE))) {
+
+  try {
+    const linkBalance = (await linkContract.balanceOf(
+      CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
+    )) as ethers.BigNumber;
+
+    if (linkBalance.lt(BigInt(1e18 * BRIDGE_LINK_MIN_BALANCE))) {
+      findings.push(
+        Finding.fromObject({
+          name: "Bridge LINK balance is low (5 LINK min)",
+          description: `Bridge balance is low: ${formatEther(
+            linkBalance.toString(),
+          )} LINK`,
+          alertId: "BRIDGE-LINK-BALANCE-LOW",
+          severity: FindingSeverity.Medium,
+          type: FindingType.Info,
+          metadata: { linkBalance: linkBalance.toString() },
+        }),
+      );
+    }
+  } catch (err: unknown) {
     findings.push(
-      Finding.fromObject({
-        name: "Bridge LINK balance is low (5 LINK min)",
-        description: `Bridge balance is low: ${formatEther(
-          linkBalance.toString(),
-        )} LINK`,
-        alertId: "BRIDGE-LINK-BALANCE-LOW",
-        severity: FindingSeverity.Medium,
-        type: FindingType.Info,
-        metadata: { linkBalance: linkBalance.toString() },
-      }),
+      networkAlert(
+        err as Error,
+        "handleBridgeBalance",
+        "Error fetching bridge LINK balance",
+        event.block.number,
+      ),
     );
   }
 
