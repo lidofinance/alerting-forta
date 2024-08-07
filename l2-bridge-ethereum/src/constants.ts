@@ -23,6 +23,7 @@ export interface BridgeProxyInfo {
   proxyAdminAddress: string | null;
 }
 
+// https://docs.chain.link/resources/link-token-contracts#ethereum-mainnet
 export const LINK_TOKEN_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 export const CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS =
   "0x93559892D3C7F66DE4570132d68b69BD3c369A7C";
