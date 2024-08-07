@@ -1,10 +1,12 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
 import { Logger } from 'winston'
+import { BlockDto } from '../entity/events'
 import { Metadata } from '../entity/metadata'
 import { InitializeRequest, InitializeResponse, Error as pbError, ResponseStatus } from '../generated/proto/agent_pb'
 import { Finding } from '../generated/proto/alert_pb'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
+import { StorageWatcherSrv } from '../services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { ETH_DECIMALS } from '../utils/constants'
@@ -17,8 +19,9 @@ export class InitHandler {
   private readonly WithdrawalsSrv: WithdrawalsSrv
   private readonly GateSealSrv: GateSealSrv
   private readonly VaultSrv: VaultSrv
+  private readonly storageWatcher: StorageWatcherSrv
   private readonly appName: string
-  private readonly latestBlockNumber: number
+  private readonly latestBlock: BlockDto
 
   private onAppStartFindings: Finding[] = []
 
@@ -29,8 +32,9 @@ export class InitHandler {
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
+    storageWatcher: StorageWatcherSrv,
     onAppStartFindings: Finding[],
-    latestBlockNumber: number,
+    latestBlock: BlockDto,
   ) {
     this.appName = appName
     this.logger = logger
@@ -38,8 +42,9 @@ export class InitHandler {
     this.WithdrawalsSrv = WithdrawalsSrv
     this.GateSealSrv = GateSealSrv
     this.VaultSrv = VaultSrv
+    this.storageWatcher = storageWatcher
     this.onAppStartFindings = onAppStartFindings
-    this.latestBlockNumber = latestBlockNumber
+    this.latestBlock = latestBlock
   }
 
   public handleInit() {
@@ -62,11 +67,27 @@ export class InitHandler {
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
-      const withdrawalsSrvErr = await this.WithdrawalsSrv.initialize(this.latestBlockNumber)
+      const [withdrawalsSrvErr, storageWatcherErr] = await Promise.all([
+        this.WithdrawalsSrv.initialize(this.latestBlock.number),
+        this.storageWatcher.initialize(this.latestBlock.hash),
+      ])
       if (withdrawalsSrvErr !== null) {
-        this.logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
+        this.logger.error('Could not init withdrawalsSrv', withdrawalsSrvErr)
         const err = new pbError()
         err.setMessage(`Could not init withdrawalsSrvErr ${withdrawalsSrvErr}`)
+
+        const resp = new InitializeResponse()
+        resp.setStatus(ResponseStatus.ERROR)
+        resp.addErrors(err)
+
+        callback(null, resp)
+        return
+      }
+
+      if (storageWatcherErr !== null) {
+        this.logger.error('Could not init storageWatcher', storageWatcherErr)
+        const err = new pbError()
+        err.setMessage(`Could not init storageWatcher ${storageWatcherErr}`)
 
         const resp = new InitializeResponse()
         resp.setStatus(ResponseStatus.ERROR)

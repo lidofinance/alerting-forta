@@ -9,6 +9,7 @@ import { Finding } from '../generated/proto/alert_pb'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
+import { StorageWatcherSrv } from '../services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
@@ -23,6 +24,7 @@ export class BlockHandler {
   private WithdrawalsSrv: WithdrawalsSrv
   private GateSealSrv: GateSealSrv
   private VaultSrv: VaultSrv
+  private storageWatcher: StorageWatcherSrv
   private healthChecker: HealthChecker
 
   private onAppStartFindings: Finding[] = []
@@ -35,6 +37,7 @@ export class BlockHandler {
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
+    storageWatcher: StorageWatcherSrv,
     healthChecker: HealthChecker,
     onAppStartFindings: Finding[],
     ethProvider: ETHProvider,
@@ -45,6 +48,7 @@ export class BlockHandler {
     this.WithdrawalsSrv = WithdrawalsSrv
     this.GateSealSrv = GateSealSrv
     this.VaultSrv = VaultSrv
+    this.storageWatcher = storageWatcher
     this.healthChecker = healthChecker
     this.onAppStartFindings = onAppStartFindings
     this.ethProvider = ethProvider
@@ -99,17 +103,25 @@ export class BlockHandler {
         this.onAppStartFindings = []
       }
 
-      const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings] = await Promise.all([
-        this.StethOperationSrv.handleBlock(blockDtoEvent),
-        this.WithdrawalsSrv.handleBlock(blockDtoEvent),
-        this.GateSealSrv.handleBlock(blockDtoEvent),
-        this.VaultSrv.handleBlock(blockDtoEvent),
-      ])
+      const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings, storageWatcherFindings] =
+        await Promise.all([
+          this.StethOperationSrv.handleBlock(blockDtoEvent),
+          this.WithdrawalsSrv.handleBlock(blockDtoEvent),
+          this.GateSealSrv.handleBlock(blockDtoEvent),
+          this.VaultSrv.handleBlock(blockDtoEvent),
+          this.storageWatcher.handleBlock(block.getHash()),
+        ])
 
       const WithdrawalStat = await this.WithdrawalsSrv.getStatisticString()
       const stat: string = E.isLeft(WithdrawalStat) ? WithdrawalStat.left.message : WithdrawalStat.right
 
-      findings.push(...bufferedEthFindings, ...withdrawalsFindings, ...gateSealFindings, ...vaultFindings)
+      findings.push(
+        ...bufferedEthFindings,
+        ...withdrawalsFindings,
+        ...gateSealFindings,
+        ...vaultFindings,
+        ...storageWatcherFindings,
+      )
 
       const errCount = this.healthChecker.check(findings)
       errCount === 0

@@ -45,6 +45,7 @@ export class TxHandler {
 
       const findings: Finding[] = []
 
+      // TODO to group logs by needed contract addresses.
       const stethOperationFindings = await this.StethOperationSrv.handleTransaction(txEvent)
       const withdrawalsFindings = await this.WithdrawalsSrv.handleTransaction(txEvent)
       const gateSealFindings = this.GateSealSrv.handleTransaction(txEvent)

@@ -687,7 +687,7 @@ export class WithdrawalsSrv {
       return
     }
 
-    this.cache.setLastTokenRebaseTimestamp(txEvent.block.timestamp)
+    this.cache.setLastTokenRebaseTimestamp(rebaseEvent.args.reportTimestamp)
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
   }
 

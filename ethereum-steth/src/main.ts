@@ -26,11 +26,12 @@ import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
+import { StorageWatcherSrv } from './services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from './services/vault/Vault.srv'
 import { WithdrawalsCache } from './services/withdrawals/Withdrawals.cache'
 import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
 import { WithdrawalsSrv } from './services/withdrawals/Withdrawals.srv'
-import { Address } from './utils/constants'
+import { Address, STORAGE_SLOTS } from './utils/constants'
 import { Config } from './utils/env/env'
 import { getBurnerEvents } from './utils/events/burner_events'
 import { getDepositSecurityEvents } from './utils/events/deposit_security_events'
@@ -76,7 +77,7 @@ const main = async () => {
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethProvider)
 
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, fortaEthersProvider)
 
   const ethClient = new ETHProvider(
     logger,
@@ -129,6 +130,8 @@ const main = async () => {
     address.LIDO_STETH_ADDRESS,
   )
 
+  const storageWatcherSrv = new StorageWatcherSrv(logger, STORAGE_SLOTS, ethClient)
+
   try {
     await dbClient.migrate.latest()
 
@@ -153,6 +156,7 @@ const main = async () => {
     withdrawalsSrv,
     gateSealSrv,
     vaultSrv,
+    storageWatcherSrv,
     healthChecker,
     onAppFindings,
     ethClient,
@@ -160,9 +164,9 @@ const main = async () => {
   const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
 
-  const latestBlockNumber = await ethClient.getBlockNumber()
-  if (E.isLeft(latestBlockNumber)) {
-    logger.error(latestBlockNumber.left)
+  const latestBlock = await ethClient.getBlockByHash('latest')
+  if (E.isLeft(latestBlock)) {
+    logger.error(latestBlock.left)
 
     process.exit(1)
   }
@@ -174,8 +178,9 @@ const main = async () => {
     withdrawalsSrv,
     gateSealSrv,
     vaultSrv,
+    storageWatcherSrv,
     onAppFindings,
-    latestBlockNumber.right,
+    latestBlock.right,
   )
   const alertH = new AlertHandler()
 
@@ -188,14 +193,14 @@ const main = async () => {
     evaluateAlert: alertH.handleAlert(),
   })
 
-  const stethOperationSrvErr = await stethOperationSrv.initialize(latestBlockNumber.right)
+  const stethOperationSrvErr = await stethOperationSrv.initialize(latestBlock.right.number)
   if (stethOperationSrvErr !== null) {
     logger.error('Could not init stethSrv', stethOperationSrvErr)
 
     process.exit(1)
   }
 
-  const gateSealSrvErr = await gateSealSrv.initialize(latestBlockNumber.right)
+  const gateSealSrvErr = await gateSealSrv.initialize(latestBlock.right.number)
   if (gateSealSrvErr instanceof Error) {
     logger.error('Could not init gateSealSrvErr', gateSealSrvErr)
 
