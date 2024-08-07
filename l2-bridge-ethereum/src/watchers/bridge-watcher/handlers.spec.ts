@@ -138,7 +138,7 @@ describe("handleBridgeBalance", () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({
-      name: "Bridge ETH balance is low (0.5 ETH min)",
+      name: "⚠️ Cross-chain bridge ETH balance is low (0.5 ETH min)",
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
     });
@@ -156,7 +156,7 @@ describe("handleBridgeBalance", () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({
-      name: "Bridge LINK balance is low (5 LINK min)",
+      name: "⚠️ Cross-chain bridge LINK balance is low (5 LINK min)",
       severity: FindingSeverity.Medium,
       type: FindingType.Info,
     });

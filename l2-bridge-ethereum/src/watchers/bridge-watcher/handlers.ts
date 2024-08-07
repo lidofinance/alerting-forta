@@ -55,7 +55,7 @@ export async function handleBridgeBalance(event: BlockEvent) {
     if (ethBalance.lt(BigInt(1e18 * BRIDGE_ETH_MIN_BALANCE))) {
       findings.push(
         Finding.fromObject({
-          name: "Bridge ETH balance is low (0.5 ETH min)",
+          name: "⚠️ Cross-chain bridge ETH balance is low (0.5 ETH min)",
           description: `Bridge balance is low: ${formatEther(
             ethBalance.toString(),
           )} ETH`,
@@ -91,7 +91,7 @@ export async function handleBridgeBalance(event: BlockEvent) {
     if (linkBalance.lt(BigInt(1e18 * BRIDGE_LINK_MIN_BALANCE))) {
       findings.push(
         Finding.fromObject({
-          name: "Bridge LINK balance is low (5 LINK min)",
+          name: "⚠️ Cross-chain bridge LINK balance is low (5 LINK min)",
           description: `Bridge balance is low: ${formatEther(
             linkBalance.toString(),
           )} LINK`,
