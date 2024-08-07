@@ -6,6 +6,30 @@ export function getCrossChainControllerEvents(crossChainControllerAddress: strin
   return [
     {
       address: crossChainControllerAddress,
+      event: 'event AdminChanged(address previousAdmin, address newAdmin)',
+      alertId: 'PROXY-ADMIN-CHANGED',
+      name: `🚨🚨🚨 BSC a.DI: Proxy admin changed`,
+      description: (args: Result) =>
+        `Proxy admin for bnbCrossChainControllerAddress (${crossChainControllerAddress}) ` +
+        `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.Critical,
+      type: FindingType.Info,
+    },
+    {
+      address: crossChainControllerAddress,
+      event: 'event Upgraded(address indexed implementation)',
+      alertId: 'PROXY-UPGRADED',
+      name: `🚨🚨🚨 BSC a.DI: Proxy upgraded`,
+      description: (args: Result) =>
+        `Proxy for bnbCrossChainControllerAddress (${crossChainControllerAddress}) ` +
+        `was updated to ${args.implementation}` +
+        `\n(detected by event)`,
+      severity: FindingSeverity.Critical,
+      type: FindingType.Info,
+    },
+    {
+      address: crossChainControllerAddress,
       event: 'event GuardianUpdated(address oldGuardian, address newGuardian)',
       alertId: 'BSC-ADI-GUARDIAN-UPDATED',
       name: '🚨🚨🚨 BSC a.DI: Guardians updated',

@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CrossChainController Srv functional tests should find 2 receive event but message is delivered 1`] = `[]`;
+
 exports[`CrossChainController Srv functional tests should find 4 ReceiverBridgeAdaptersUpdated 1`] = `
 [
   Finding {
@@ -90,8 +92,42 @@ exports[`CrossChainController Srv functional tests should find ConfirmationsUpda
 ]
 `;
 
-exports[`CrossChainController Srv functional tests should find GuardianUpdated 1`] = `
+exports[`CrossChainController Srv functional tests should find GuardianUpdated and AdminChanged and Upgraded(proxy) 1`] = `
 [
+  Finding {
+    "addresses": [],
+    "alertId": "PROXY-ADMIN-CHANGED",
+    "description": "Proxy admin for bnbCrossChainControllerAddress (0x40c4464fca8cacd550c33b39d674fc257966022f) was changed from 0x0000000000000000000000000000000000000000 to 0x29E6817db339795766244B96aEf5Dc534a98518d
+(detected by event)",
+    "labels": [],
+    "metadata": {
+      "args": "0x0000000000000000000000000000000000000000,0x29E6817db339795766244B96aEf5Dc534a98518d",
+    },
+    "name": "🚨🚨🚨 BSC a.DI: Proxy admin changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "PROXY-UPGRADED",
+    "description": "Proxy for bnbCrossChainControllerAddress (0x40c4464fca8cacd550c33b39d674fc257966022f) was updated to 0xB7Ba81dd07885ae7BFD18452B36D3404d7EDD8Ee
+(detected by event)",
+    "labels": [],
+    "metadata": {
+      "args": "0xB7Ba81dd07885ae7BFD18452B36D3404d7EDD8Ee",
+    },
+    "name": "🚨🚨🚨 BSC a.DI: Proxy upgraded",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
   Finding {
     "addresses": [],
     "alertId": "BSC-ADI-GUARDIAN-UPDATED",
@@ -131,5 +167,3 @@ exports[`CrossChainController Srv functional tests should find TransactionReceiv
   },
 ]
 `;
-
-exports[`CrossChainController Srv functional tests should find 2 receive event but message is delivered 1`] = `[]`;

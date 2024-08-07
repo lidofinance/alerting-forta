@@ -107,7 +107,7 @@ describe('CrossChainController Srv functional tests', () => {
   )
 
   it(
-    'should find GuardianUpdated',
+    'should find GuardianUpdated and AdminChanged and Upgraded(proxy)',
     async () => {
       const findings = await runTransaction(
         '0xda1572eb6360116ea0fbd9f898b1413823ba2ab4bb1cbb5e150cce42c68a687c',
