@@ -584,6 +584,41 @@ const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
     severity: FindingSeverity.Critical,
     type: FindingType.Info,
   },
+  {
+    address: BSC_L1_CROSS_CHAIN_CONTROLLER,
+    event: "event AdminChanged(address previousAdmin, address newAdmin)",
+    alertId: "L1-BRIDGE-PROXY-ADMIN-CHANGED",
+    name: `🚨🚨🚨 L1 Cross-chain controller: Proxy admin changed`,
+    description: (args: Result) =>
+      `Proxy admin for L1 CrossChainControllerAddress (${BSC_L1_CROSS_CHAIN_CONTROLLER}) ` +
+      `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
+      `\n(detected by event)`,
+    severity: FindingSeverity.Critical,
+    type: FindingType.Info,
+  },
+  {
+    address: BSC_L1_CROSS_CHAIN_CONTROLLER,
+    event: "event Upgraded(address indexed implementation)",
+    alertId: "L1-BRIDGE-PROXY-UPGRADED",
+    name: `🚨🚨🚨 L1 Cross-chain controller: Proxy upgraded`,
+    description: (args: Result) =>
+      `Proxy for L1 CrossChainControllerAddress (${BSC_L1_CROSS_CHAIN_CONTROLLER}) ` +
+      `was updated to ${args.implementation}` +
+      `\n(detected by event)`,
+    severity: FindingSeverity.Critical,
+    type: FindingType.Info,
+  },
+  {
+    address: BSC_L1_CROSS_CHAIN_CONTROLLER,
+    event: "event GuardianUpdated(address oldGuardian, address newGuardian)",
+    alertId: "L1-BRIDGE-GUARDIAN-UPDATED",
+    name: "🚨🚨🚨 L1 Cross-chain controller: Guardians updated",
+    description: (args: Result) =>
+      `Guardian was updated from ` +
+      `${args.oldGuardian} to ${args.newGuardian}`,
+    severity: FindingSeverity.Critical,
+    type: FindingType.Info,
+  },
 ];
 
 export const THIRD_PARTY_PROXY_EVENTS: EventOfNotice[] =
@@ -689,42 +724,6 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
           `Implementation of the ${gw.name} L1 Bridge was initialized by ${args.admin}\n` +
           `NOTE: This is not the thing that should be left unacted! ` +
           `Make sure that this call was made by Lido!`,
-        severity: FindingSeverity.Critical,
-        type: FindingType.Info,
-      },
-      {
-        address: gw.address,
-        event: "event AdminChanged(address previousAdmin, address newAdmin)",
-        alertId: "L1-BRIDGE-PROXY-ADMIN-CHANGED",
-        name: `🚨🚨🚨 L1 Cross-chain controller: Proxy admin changed`,
-        description: (args: Result) =>
-          `Proxy admin for L1 CrossChainControllerAddress (${gw.address}) ` +
-          `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
-          `\n(detected by event)`,
-        severity: FindingSeverity.Critical,
-        type: FindingType.Info,
-      },
-      {
-        address: gw.address,
-        event: "event Upgraded(address indexed implementation)",
-        alertId: "L1-BRIDGE-PROXY-UPGRADED",
-        name: `🚨🚨🚨 L1 Cross-chain controller: Proxy upgraded`,
-        description: (args: Result) =>
-          `Proxy for L1 CrossChainControllerAddress (${gw.address}) ` +
-          `was updated to ${args.implementation}` +
-          `\n(detected by event)`,
-        severity: FindingSeverity.Critical,
-        type: FindingType.Info,
-      },
-      {
-        address: gw.address,
-        event:
-          "event GuardianUpdated(address oldGuardian, address newGuardian)",
-        alertId: "L1-BRIDGE-GUARDIAN-UPDATED",
-        name: "🚨🚨🚨 L1 Cross-chain controller: Guardians updated",
-        description: (args: Result) =>
-          `Guardian was updated from ` +
-          `${args.oldGuardian} to ${args.newGuardian}`,
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
       },
