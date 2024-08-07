@@ -113,14 +113,15 @@ describe("handleBridgeBalance", () => {
   let event: BlockEvent;
 
   beforeEach(() => {
-    event = { block: { number: 7200 } } as BlockEvent;
+    const random = Math.floor(Math.random() * 1000);
+    event = { block: { number: 300 * random } } as BlockEvent;
     jest
       .spyOn(agent, "getEthersProvider")
       .mockReturnValue(mockProvider as never);
   });
 
   it("returns an empty array if block number is not a multiple of 7200", async () => {
-    event = { block: { number: 7199 } } as BlockEvent;
+    event = { block: { number: 123 } } as BlockEvent;
     const findings = await handleBridgeBalance(event as never);
     expect(findings).toEqual([]);
   });

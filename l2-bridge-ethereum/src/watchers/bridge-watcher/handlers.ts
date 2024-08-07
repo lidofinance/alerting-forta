@@ -40,8 +40,10 @@ export function handleL1BridgeTransactionEvents(
   });
 }
 
+const BALANCE_CHECK_INTERVAL = 300; // 1 hour ≈ 300 blocks
+
 export async function handleBridgeBalance(event: BlockEvent) {
-  if (event.block.number % 7200 !== 0) {
+  if (event.block.number % BALANCE_CHECK_INTERVAL !== 0) {
     return [];
   }
   const findings: Finding[] = [];
