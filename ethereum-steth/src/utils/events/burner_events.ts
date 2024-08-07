@@ -1,7 +1,7 @@
-import { EventOfNotice } from '../../entity/events'
 import { Result } from '@ethersproject/abi/lib'
-import { etherscanAddress } from '../string'
+import { EventOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
+import { etherscanAddress } from '../string'
 
 export function getBurnerEvents(BURNER_ADDRESS: string): EventOfNotice[] {
   return [

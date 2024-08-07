@@ -1,12 +1,12 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
-import { HealthChecker } from '../services/health-checker/health-checker.srv'
+import { newTransactionDto } from '../entity/events'
+import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
+import { Finding } from '../generated/proto/alert_pb'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
+import { HealthChecker } from '../services/health-checker/health-checker.srv'
+import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
-import { EvaluateTxRequest, EvaluateTxResponse, ResponseStatus } from '../generated/proto/agent_pb'
-import { newTransactionDto } from '../entity/events'
-import { Finding } from '../generated/proto/alert_pb'
 import { HandleTxLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 
 export class TxHandler {
@@ -45,6 +45,7 @@ export class TxHandler {
 
       const findings: Finding[] = []
 
+      // TODO to group logs by needed contract addresses.
       const stethOperationFindings = await this.StethOperationSrv.handleTransaction(txEvent)
       const withdrawalsFindings = await this.WithdrawalsSrv.handleTransaction(txEvent)
       const gateSealFindings = this.GateSealSrv.handleTransaction(txEvent)

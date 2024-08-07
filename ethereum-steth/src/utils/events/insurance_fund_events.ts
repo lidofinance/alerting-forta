@@ -1,9 +1,9 @@
-import { EventOfNotice } from '../../entity/events'
-import { ERC20, ETH_DECIMALS } from '../constants'
-import BigNumber from 'bignumber.js'
 import { Result } from '@ethersproject/abi/lib'
-import { etherscanAddress } from '../string'
+import BigNumber from 'bignumber.js'
+import { EventOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
+import { ERC20, ETH_DECIMALS } from '../constants'
+import { etherscanAddress } from '../string'
 
 export function getInsuranceFundEvents(
   INSURANCE_FUND_ADDRESS: string,

@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
-import { ShareRate } from '../../entity/share_rate'
 import { BlockDto } from '../../entity/events'
+import { ShareRate } from '../../entity/share_rate'
 
 export class StethOperationCache {
   private _lastDepositorTxTime = 0

@@ -1,17 +1,16 @@
-import { StethOperationCache } from './StethOperation.cache'
-import { ETH_DECIMALS } from '../../utils/constants'
-import { either as E } from 'fp-ts'
-import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
-import { elapsedTime } from '../../utils/time'
-import { Logger } from 'winston'
-import { alertId_token_rebased } from '../../utils/events/lido_events'
-import { networkAlert } from '../../utils/errors'
-import { BlockDto } from '../../entity/events'
 import type { BigNumber } from 'bignumber.js'
-import type { TypedEvent } from '../../generated/typechain/common'
+import { either as E } from 'fp-ts'
+import { Logger } from 'winston'
+import { BlockDto, EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { Finding } from '../../generated/proto/alert_pb'
+import type { TypedEvent } from '../../generated/typechain/common'
 import { UnbufferedEvent } from '../../generated/typechain/Lido'
+import { ETH_DECIMALS } from '../../utils/constants'
+import { networkAlert } from '../../utils/errors'
+import { alertId_token_rebased } from '../../utils/events/lido_events'
+import { elapsedTime } from '../../utils/time'
+import { StethOperationCache } from './StethOperation.cache'
 
 // Formula: (60 * 60 * 24 * 7) / 12 = 50_400
 export const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 24 * 7) / 12)
@@ -128,6 +127,17 @@ export class StethOperationSrv {
       this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
       return prev4Blocks.left
     }
+
+    const shareRate = await this.stethClient.getShareRate(currentBlock)
+    if (E.isLeft(shareRate)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return shareRate.left
+    }
+
+    this.cache.setShareRate({
+      amount: shareRate.right,
+      blockNumber: currentBlock,
+    })
 
     this.cache.setPrev4Blocks(prev4Blocks.right)
 

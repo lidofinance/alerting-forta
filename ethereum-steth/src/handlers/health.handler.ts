@@ -1,11 +1,11 @@
-import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
+import BigNumber from 'bignumber.js'
+import express, { Request, Response } from 'express'
+import { Logger } from 'winston'
 import * as agent_pb from '../generated/proto/agent_pb'
 import { HealthCheckRequest, HealthCheckResponse, ResponseStatus } from '../generated/proto/agent_pb'
+import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { Metrics } from '../utils/metrics/metrics'
-import express, { Request, Response } from 'express'
-import BigNumber from 'bignumber.js'
-import { Logger } from 'winston'
 
 export class HealthHandler {
   private healthChecker: HealthChecker

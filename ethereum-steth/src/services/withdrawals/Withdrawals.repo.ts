@@ -1,6 +1,6 @@
-import { Knex } from 'knex'
-import { WithdrawalRequest, WithdrawalRequestSql } from '../../entity/withdrawal_request'
 import { either as E } from 'fp-ts'
+import { Knex } from 'knex'
+import { WithdrawalRequest, WithdrawalRequestSql, WithdrawalStat } from '../../entity/withdrawal_request'
 
 export const KnexErr = Error
 export const NotFound = new Error('Not found')
@@ -56,7 +56,7 @@ export class WithdrawalsRepo {
 
   public async getUnclaimedReqIds(): Promise<E.Either<Error, number[]>> {
     try {
-      const data: number[] = await this.knex<number>(this.tblName).where('isClaimed', 0).pluck('id')
+      const data: number[] = await this.knex<number>(this.tblName).where('claimed', 0).pluck('id')
       return E.right(data)
     } catch (e) {
       return E.left(new KnexErr(`${e}`))
@@ -65,7 +65,7 @@ export class WithdrawalsRepo {
 
   public async getFinalizedRequests(): Promise<E.Either<Error, WithdrawalRequest[]>> {
     try {
-      const data = await this.knex<WithdrawalRequestSql>(this.tblName).select('*').where('isFinalized', 1)
+      const data = await this.knex<WithdrawalRequestSql>(this.tblName).select('*').where('finalized', 1)
 
       const out: WithdrawalRequest[] = []
       for (const wr of data) {
@@ -100,7 +100,7 @@ export class WithdrawalsRepo {
   public async getLastFinalizedRequest(): Promise<E.Either<Error, WithdrawalRequest>> {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
-        .where('isFinalized', 1)
+        .where('finalized', 1)
         .orderBy('id', 'desc')
         .limit(1)
 
@@ -117,7 +117,7 @@ export class WithdrawalsRepo {
   public async getFirstUnfinalizedRequest(): Promise<E.Either<Error, WithdrawalRequest>> {
     try {
       const data = await this.knex<WithdrawalRequestSql>(this.tblName)
-        .where('isFinalized', 0)
+        .where('finalized', 0)
         .orderBy('id', 'asc')
         .limit(1)
 
@@ -188,8 +188,8 @@ export class WithdrawalsRepo {
       await this.knex(this.tblName)
         .where('id', withdrawalRequestId)
         .update({
-          isClaimed: Number(isClaimed),
-          amountOfStETH: amountOfStETH,
+          claimed: Number(isClaimed),
+          amount_steth: amountOfStETH,
         })
 
       return null
@@ -203,12 +203,50 @@ export class WithdrawalsRepo {
       await this.knex(this.tblName)
         .where('id', '<=', lastRequestId)
         .update({
-          isFinalized: Number(1),
+          finalized: Number(1),
         })
 
       return null
     } catch (e) {
       return new KnexErr(`${e}`)
+    }
+  }
+
+  public async getStat(): Promise<E.Either<Error, WithdrawalStat>> {
+    try {
+      const data = await this.knex.raw(`
+select IFNULL(SUM(amount_steth) filter (where finalized = 1) / pow(10, 18), 0) as finalizedSteth
+     , IFNULL(SUM(amount_steth) filter (where finalized = 0) / pow(10, 18), 0) as notFinalizedSteth
+     , IFNULL(SUM(amount_steth) filter (where claimed = 1) / pow(10, 18), 0)   as claimedSteth
+     , IFNULL(SUM(amount_steth) filter (where claimed = 0) / pow(10, 18), 0)   as notClaimedSteth
+     , IFNULL(SUM(amount_steth) / pow(10, 18), 0)                              as steth
+     , COUNT(id)                                                    as total
+     , COUNT(id) filter (where finalized = 1)                       as finalizedRequests
+     , COUNT(id) filter (where finalized = 0)                       as notfinalizedRequests
+     , COUNT(id) filter (where claimed = 1)                         as claimedRequests
+     , COUNT(id) filter (where claimed = 0)                         as notClaimedRequests
+from withdrawal_requests;`)
+
+      let out: WithdrawalStat = {
+        finalizedSteth: 0,
+        notFinalizedSteth: 0,
+        claimedSteth: 0,
+        notClaimedSteth: 0,
+        steth: 0,
+        total: 0,
+        finalizedRequests: 0,
+        notfinalizedRequests: 0,
+        claimedRequests: 0,
+        notClaimedRequests: 0,
+      }
+
+      if (data.length === 0) {
+        return E.right(out)
+      }
+
+      return E.right(data[0] as WithdrawalStat)
+    } catch (e) {
+      return E.left(new KnexErr(`${e}`))
     }
   }
 }
