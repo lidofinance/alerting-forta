@@ -692,6 +692,42 @@ export const L1_BRIDGE_EVENTS: EventOfNotice[] = L1_ERC20_TOKEN_GATEWAYS.map(
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
       },
+      {
+        address: gw.address,
+        event: "event AdminChanged(address previousAdmin, address newAdmin)",
+        alertId: "L1-BRIDGE-PROXY-ADMIN-CHANGED",
+        name: `🚨🚨🚨 L1 Cross-chain controller: Proxy admin changed`,
+        description: (args: Result) =>
+          `Proxy admin for L1 CrossChainControllerAddress (${gw.address}) ` +
+          `was changed from ${args.previousAdmin} to ${args.newAdmin}` +
+          `\n(detected by event)`,
+        severity: FindingSeverity.Critical,
+        type: FindingType.Info,
+      },
+      {
+        address: gw.address,
+        event: "event Upgraded(address indexed implementation)",
+        alertId: "L1-BRIDGE-PROXY-UPGRADED",
+        name: `🚨🚨🚨 L1 Cross-chain controller: Proxy upgraded`,
+        description: (args: Result) =>
+          `Proxy for L1 CrossChainControllerAddress (${gw.address}) ` +
+          `was updated to ${args.implementation}` +
+          `\n(detected by event)`,
+        severity: FindingSeverity.Critical,
+        type: FindingType.Info,
+      },
+      {
+        address: gw.address,
+        event:
+          "event GuardianUpdated(address oldGuardian, address newGuardian)",
+        alertId: "L1-BRIDGE-GUARDIAN-UPDATED",
+        name: "🚨🚨🚨 L1 Cross-chain controller: Guardians updated",
+        description: (args: Result) =>
+          `Guardian was updated from ` +
+          `${args.oldGuardian} to ${args.newGuardian}`,
+        severity: FindingSeverity.Critical,
+        type: FindingType.Info,
+      },
     ];
   },
 ).reduce((a, b) => [...a, ...b]);
