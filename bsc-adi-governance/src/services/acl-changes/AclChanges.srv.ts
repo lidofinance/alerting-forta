@@ -29,17 +29,10 @@ export class AclChangesSrv {
   private readonly bscClient: IAclChangesClient
   private readonly findingsTimestamps: Map<string, number>
 
-  constructor(logger: Logger, ethProvider: IAclChangesClient) {
+  constructor(logger: Logger, bscClient: IAclChangesClient) {
     this.logger = logger
-    this.bscClient = ethProvider
+    this.bscClient = bscClient
     this.findingsTimestamps = new Map<string, number>()
-  }
-
-  public initialize(currentBlock: number): null {
-    const start = new Date().getTime()
-    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
-
-    return null
   }
 
   public getName(): string {
