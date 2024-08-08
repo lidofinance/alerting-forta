@@ -628,7 +628,7 @@ const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
     description: (args: Result) =>
       `Message was sent from L1 to BSC using ${
         bscAdapters.get(args.bridgeAdapter) || args.bridgeAdapter + " adapter"
-      }`,
+      } (envelopeId: ${args.envelopeId})`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
   },
