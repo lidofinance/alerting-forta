@@ -624,7 +624,7 @@ const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
     event:
       "event TransactionForwardingAttempted(bytes32 transactionId, bytes32 indexed envelopeId, bytes encodedTransaction, uint256 destinationChainId, address indexed bridgeAdapter, address destinationBridgeAdapter, bool indexed adapterSuccessful, bytes returnData)",
     alertId: "L1-BRIDGE-MESSAGE-SENT",
-    name: "L1 Cross-chain controller: Message sent",
+    name: "ℹ️ L1 Cross-chain controller: Message sent",
     description: (args: Result) =>
       `Message was sent from L1 to BSC using ${
         bscAdapters.get(args.bridgeAdapter) || args.bridgeAdapter + " adapter"
