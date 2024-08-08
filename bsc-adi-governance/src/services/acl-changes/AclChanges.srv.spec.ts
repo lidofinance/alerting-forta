@@ -35,7 +35,6 @@ describe('AclChanges srv functional tests', () => {
       if (initBlock > Number(blockNumber)) {
         throw new Error('Wrong initial block or argument order')
       }
-      await service.initialize(initBlock)
       const BlockEventHack = { blockNumber } as BlockEvent
       return service.handleBlock(BlockEventHack)
     }

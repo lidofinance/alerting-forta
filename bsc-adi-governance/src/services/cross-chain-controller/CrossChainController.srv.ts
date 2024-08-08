@@ -5,8 +5,14 @@ import { either as E } from 'fp-ts'
 import { filterLogs } from '../../utils/filter_logs'
 import { handleEventsOfNotice } from '../../utils/handle_events_of_notice'
 import { getCrossChainControllerEvents } from '../../utils/events/cross_chain_controller_events'
-import { ENVELOPE_STATE, HOUR_IN_BLOCKS, PERIODICAL_BLOCK_INTERVAL } from '../../utils/constants'
+import {
+  CROSS_CHAIN_CONTROLLER_ADDRESS,
+  ENVELOPE_STATE,
+  HOUR_IN_BLOCKS,
+  PERIODICAL_BLOCK_INTERVAL,
+} from '../../utils/constants'
 import { networkAlert } from '../../utils/errors'
+import { bscscanAddress } from '../../utils/string'
 
 export abstract class ICRossChainControllerClient {
   public abstract getBridgeAdaptersNamesMap(): Promise<E.Either<Error, Map<string, string>>>
@@ -98,7 +104,7 @@ export class CrossChainControllerSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ BSC a.DI: Message hasn’t achieved a quorum after 1 hour passed',
-          description: `Message envelope id - '${id}'`,
+          description: `Message envelope id - '${id} at ${bscscanAddress(CROSS_CHAIN_CONTROLLER_ADDRESS)}'`,
           alertId: 'BSC-ADI-MESSAGE-NO-QUORUM-HOUR',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,

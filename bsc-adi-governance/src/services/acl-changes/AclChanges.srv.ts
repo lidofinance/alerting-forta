@@ -1,6 +1,6 @@
 import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 
-import { etherscanAddress } from '../../utils/string'
+import { bscscanAddress } from '../../utils/string'
 
 import {
   WHITELISTED_OWNERS,
@@ -114,9 +114,9 @@ export class AclChangesSrv {
           name: curOwnerIsContract.right
             ? '🚨 BSC a.DI: Contract owner set to address not in whitelist'
             : '🚨🚨🚨 BSC a.DI: Contract owner set to EOA 🚨🚨🚨',
-          description: `${ownableContract.name} contract (${etherscanAddress(address)}) owner is set to ${
+          description: `${ownableContract.name} contract (${bscscanAddress(address)}) owner is set to ${
             curOwnerIsContract.right ? 'contract' : 'EOA'
-          } address ${etherscanAddress(curOwner.right)}`,
+          } address ${bscscanAddress(curOwner.right)}`,
           alertId: 'BSC-ADI-VAULT-CONTRACT-OWNER',
           type: FindingType.Suspicious,
           severity: curOwnerIsContract.right ? FindingSeverity.High : FindingSeverity.Critical,
