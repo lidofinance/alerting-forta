@@ -1,5 +1,5 @@
 export const BSC_CHAIN_ID = 56
-export const BRIDGE_ETH_MIN_BALANCE = 0.5
+export const BRIDGE_ETH_MIN_BALANCE = 0.45
 export const BRIDGE_LINK_MIN_BALANCE = 5
 
 // https://docs.lido.fi/deployed-contracts/#adi-governance-forwarding
