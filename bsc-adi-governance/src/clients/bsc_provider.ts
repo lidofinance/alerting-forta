@@ -6,12 +6,13 @@ import { ICRossChainControllerClient } from '../services/cross-chain-controller/
 import { NetworkError } from '../utils/errors'
 import { BaseAdapter__factory, CrossChainController } from '../generated'
 import { CROSS_CHAIN_CONTROLLER_ADDRESS } from '../utils/constants'
+import { IAclChangesClient } from '../services/acl-changes/AclChanges.srv'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 const MAINNET_CHAIN_ID = 1
 
-export class BSCProvider implements ICRossChainControllerClient {
+export class BSCProvider implements ICRossChainControllerClient, IAclChangesClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private crossChainControllerRunner: CrossChainController
 
@@ -127,6 +128,45 @@ export class BSCProvider implements ICRossChainControllerClient {
       return E.right(res)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getStonksOrderParams`))
+    }
+  }
+  public async getContractOwner(
+    address: string,
+    method: string,
+    currentBlock: number,
+  ): Promise<E.Either<Error, string>> {
+    /*
+    getContractOwner calls the method written in the ownershipMethod field in contract description
+    and returns the owner of the contract address.
+    */
+    try {
+      const members = await retryAsync(
+        async (): Promise<string> => {
+          const abi = [`function ${method}() view returns (address)`]
+          const contract = new ethers.Contract(address, abi, this.jsonRpcProvider)
+          return contract.functions[method]({ blockTag: currentBlock })
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(String(members))
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.Contract for address ${address}`))
+    }
+  }
+
+  public async isDeployed(address: string, blockNumber?: number): Promise<E.Either<Error, boolean>> {
+    try {
+      const result = await retryAsync(
+        async (): Promise<boolean> => {
+          const code = await this.jsonRpcProvider.getCode(address, blockNumber)
+          return code !== '0x'
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getCode for address ${address}`))
     }
   }
 }

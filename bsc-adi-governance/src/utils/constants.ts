@@ -8,3 +8,27 @@ export enum ENVELOPE_STATE {
   CONFIRMED,
   DELIVERED,
 }
+
+// ACL
+export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60 // 24h
+export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60 // 1h
+
+// Rewards contracts allowed owners
+export const WHITELISTED_OWNERS = [CROSS_CHAIN_EXECUTOR_ADDRESS]
+
+export interface IOwnable {
+  name: string
+  ownershipMethod: string
+  ownerAddress?: string
+}
+
+// List of contracts to monitor for owner
+export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
+  [
+    CROSS_CHAIN_CONTROLLER_ADDRESS,
+    {
+      name: 'BSC ADI upgradeable Proxy Admin',
+      ownershipMethod: 'owner',
+    },
+  ],
+])
