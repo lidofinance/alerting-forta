@@ -5,6 +5,8 @@ import { ICrossChainClient } from './contract'
 import { BlockEvent, Finding } from 'forta-agent'
 import { handleBridgeBalance, handleTransactionForwardingAttempt } from './handlers'
 import * as E from 'fp-ts/Either'
+import { handleEventsOfNotice } from '../../shared/notice'
+import { BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS } from '../../shared/events/cross_chain_events'
 
 export class CrossChainWatcherSrv {
   private readonly logger: Logger
@@ -41,6 +43,11 @@ export class CrossChainWatcherSrv {
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
-    return await handleTransactionForwardingAttempt(txEvent, this.bscAdapters)
+    const out: Finding[] = []
+
+    out.push(...(await handleTransactionForwardingAttempt(txEvent, this.bscAdapters)))
+    out.push(...handleEventsOfNotice(txEvent, BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS))
+
+    return out
   }
 }

@@ -4,6 +4,8 @@ import { BlockEvent, TransactionEvent } from 'forta-agent'
 import { ICrossChainClient } from './contract'
 import { CrossChainWatcherSrv } from './CrossChainWatcher.srv'
 import * as handlers from './handlers'
+import * as notice from '../../shared/notice'
+import { BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS } from '../../shared/events/cross_chain_events'
 
 describe('CrossChainWatcherSrv', () => {
   let logger: Logger
@@ -66,12 +68,22 @@ describe('CrossChainWatcherSrv', () => {
   it('calls handleTransactionForwardingAttempt on handleTransaction', async () => {
     const bscAdapters = new Map([['adapter1', '0x123']])
     crossChainSrv['bscAdapters'] = bscAdapters
-    txEvent = { transaction: { hash: '0x123' } } as unknown as TransactionEvent
+    txEvent = { transaction: { hash: '0x123' }, addresses: {} } as unknown as TransactionEvent
     jest.spyOn(handlers, 'handleTransactionForwardingAttempt').mockResolvedValue([])
 
     const findings = await crossChainSrv.handleTransaction(txEvent)
 
     expect(findings).toEqual([])
     expect(handlers.handleTransactionForwardingAttempt).toHaveBeenCalledWith(txEvent, bscAdapters)
+  })
+
+  it('calls handleEventsOfNotice on handleTransaction', async () => {
+    txEvent = { transaction: { hash: '0x123' }, addresses: {} } as unknown as TransactionEvent
+    jest.spyOn(notice, 'handleEventsOfNotice').mockReturnValue([])
+
+    const findings = await crossChainSrv.handleTransaction(txEvent)
+
+    expect(findings).toEqual([])
+    expect(notice.handleEventsOfNotice).toHaveBeenCalledWith(txEvent, BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS)
   })
 })
