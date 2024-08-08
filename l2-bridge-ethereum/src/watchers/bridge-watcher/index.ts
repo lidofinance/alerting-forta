@@ -1,8 +1,5 @@
-import { BlockEvent, Finding, TransactionEvent } from "forta-agent";
-import {
-  handleBridgeBalance,
-  handleL1BridgeTransactionEvents,
-} from "./handlers";
+import { Finding, TransactionEvent } from "forta-agent";
+import { handleL1BridgeTransactionEvents } from "./handlers";
 
 export const name = "BridgeWatcher";
 
@@ -11,10 +8,6 @@ export async function initialize(
 ): Promise<{ [key: string]: string }> {
   console.log(`[${name}] started on ${currentBlock}`);
   return {};
-}
-
-export async function handleBlock(blockEvent: BlockEvent) {
-  return handleBridgeBalance(blockEvent);
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {

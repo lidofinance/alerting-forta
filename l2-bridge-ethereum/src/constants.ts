@@ -3,7 +3,6 @@ import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 import proxyAdminABI from "./abi/ProxyAdminABI.json";
 import { Result } from "@ethersproject/abi/lib";
 import { formatAddress } from "forta-agent/dist/cli/utils";
-import { bscAdapters } from "./watchers/agent-proxy-watcher";
 
 type EventOfNotice = {
   address: string;
@@ -23,10 +22,6 @@ export interface BridgeProxyInfo {
   functions: Map<string, string>;
   proxyAdminAddress: string | null;
 }
-
-export const BSC_CHAIN_ID = 56;
-export const BRIDGE_ETH_MIN_BALANCE = 0.5;
-export const BRIDGE_LINK_MIN_BALANCE = 5;
 
 export const ROLES = new Map<string, string>([
   [
@@ -110,9 +105,6 @@ export const LINEA_CUSTOM_CONTRACT_SET_EVENT =
 // https://docs.lido.fi/deployed-contracts/#adi-governance-forwarding
 export const BSC_L1_CROSS_CHAIN_CONTROLLER =
   "0x93559892d3c7f66de4570132d68b69bd3c369a7c";
-
-// https://docs.chain.link/resources/link-token-contracts#ethereum-mainnet
-export const LINK_TOKEN_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA";
 
 export const L1_ERC20_TOKEN_GATEWAYS = [
   {
@@ -617,19 +609,6 @@ const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
       `Guardian was updated from ` +
       `${args.oldGuardian} to ${args.newGuardian}`,
     severity: FindingSeverity.Critical,
-    type: FindingType.Info,
-  },
-  {
-    address: BSC_L1_CROSS_CHAIN_CONTROLLER,
-    event:
-      "event TransactionForwardingAttempted(bytes32 transactionId, bytes32 indexed envelopeId, bytes encodedTransaction, uint256 destinationChainId, address indexed bridgeAdapter, address destinationBridgeAdapter, bool indexed adapterSuccessful, bytes returnData)",
-    alertId: "L1-BRIDGE-MESSAGE-SENT",
-    name: "ℹ️ L1 Cross-chain controller: Message sent",
-    description: (args: Result) =>
-      `Message was sent from L1 to BSC using ${
-        bscAdapters.get(args.bridgeAdapter) || args.bridgeAdapter + " adapter"
-      } (envelopeId: ${args.envelopeId})`,
-    severity: FindingSeverity.Info,
     type: FindingType.Info,
   },
 ];
