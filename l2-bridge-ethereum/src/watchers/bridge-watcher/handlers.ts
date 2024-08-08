@@ -7,14 +7,14 @@ import {
   getEthersProvider,
   TransactionEvent,
 } from "forta-agent";
+import { formatEther } from "ethers/lib/utils";
 import {
   BRIDGE_ETH_MIN_BALANCE,
   BRIDGE_LINK_MIN_BALANCE,
-  CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
+  BSC_L1_CROSS_CHAIN_CONTROLLER,
   L1_BRIDGE_EVENTS,
   LINK_TOKEN_ADDRESS,
 } from "../../constants";
-import { formatEther } from "ethers";
 import { networkAlert } from "../../helpers/finding";
 
 export function handleL1BridgeTransactionEvents(
@@ -51,9 +51,7 @@ export async function handleBridgeBalance(event: BlockEvent) {
   const provider = getEthersProvider();
 
   try {
-    const ethBalance = await provider.getBalance(
-      CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
-    );
+    const ethBalance = await provider.getBalance(BSC_L1_CROSS_CHAIN_CONTROLLER);
     if (ethBalance.lt(BigInt(1e18 * BRIDGE_ETH_MIN_BALANCE))) {
       findings.push(
         Finding.fromObject({
@@ -87,7 +85,7 @@ export async function handleBridgeBalance(event: BlockEvent) {
 
   try {
     const linkBalance = (await linkContract.balanceOf(
-      CROSS_CHAIN_CONTROLLER_PROXY_ADDRESS,
+      BSC_L1_CROSS_CHAIN_CONTROLLER,
     )) as ethers.BigNumber;
 
     if (linkBalance.lt(BigInt(1e18 * BRIDGE_LINK_MIN_BALANCE))) {
