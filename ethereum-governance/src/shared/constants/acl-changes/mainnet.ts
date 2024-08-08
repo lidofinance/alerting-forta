@@ -249,6 +249,13 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
       ownershipMethod: 'proxy__getAdmin',
     },
   ],
+  [
+    '0x93559892d3c7f66de4570132d68b69bd3c369a7c',
+    {
+      name: 'EHT -> BSC cross chain controller',
+      ownershipMethod: 'owner',
+    },
+  ],
 ])
 
 export interface IHasRoles {
