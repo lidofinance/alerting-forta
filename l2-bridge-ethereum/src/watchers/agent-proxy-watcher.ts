@@ -15,11 +15,18 @@ import {
   STETH_ADDRESS,
   THIRD_PARTY_PROXY_EVENTS,
   WSTETH_ADDRESS,
-} from "./constants";
-import { ethersProvider } from "./ethers";
+  BSC_L1_CROSS_CHAIN_CONTROLLER,
+  BSC_CHAIN_ID,
+} from "../constants";
+import { ethersProvider } from "../ethers";
+import {
+  BaseAdapter__factory,
+  CrossChainController__factory,
+} from "../generated";
 
 const lastImpls = new Map<string, string>();
 const lastAdmins = new Map<string, string>();
+export const bscAdapters = new Map<string, string>();
 
 export const name = "ProxyWatcher";
 
@@ -35,10 +42,31 @@ export async function initialize(
       lastAdmins.set(proxyInfo.address, lastAdmin);
     }),
   );
+
+  await setBridgeAdaptersNamesMap();
+
   return {
     lastImpls: JSON.stringify(Object.fromEntries(lastImpls)),
     lastAdmins: JSON.stringify(Object.fromEntries(lastAdmins)),
   };
+}
+
+async function setBridgeAdaptersNamesMap() {
+  const cccContract = CrossChainController__factory.connect(
+    BSC_L1_CROSS_CHAIN_CONTROLLER,
+    ethersProvider,
+  );
+  const adapters =
+    await cccContract.getForwarderBridgeAdaptersByChain(BSC_CHAIN_ID);
+
+  for (const adapterAddress of adapters) {
+    const bridgeAdapterContract = BaseAdapter__factory.connect(
+      adapterAddress.currentChainBridgeAdapter,
+      ethersProvider,
+    );
+    const adapterName = await bridgeAdapterContract.adapterName();
+    bscAdapters.set(adapterAddress.currentChainBridgeAdapter, adapterName);
+  }
 }
 
 export async function handleTransaction(txEvent: TransactionEvent) {

@@ -3,6 +3,7 @@ import ossifiableProxyShortABI from "./abi/OssifiableProxyShortABI.json";
 import proxyAdminABI from "./abi/ProxyAdminABI.json";
 import { Result } from "@ethersproject/abi/lib";
 import { formatAddress } from "forta-agent/dist/cli/utils";
+import { bscAdapters } from "./watchers/agent-proxy-watcher";
 
 type EventOfNotice = {
   address: string;
@@ -23,6 +24,7 @@ export interface BridgeProxyInfo {
   proxyAdminAddress: string | null;
 }
 
+export const BSC_CHAIN_ID = 56;
 export const BRIDGE_ETH_MIN_BALANCE = 0.5;
 export const BRIDGE_LINK_MIN_BALANCE = 5;
 
@@ -624,7 +626,9 @@ const BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS = [
     alertId: "L1-BRIDGE-MESSAGE-SENT",
     name: "L1 Cross-chain controller: Message sent",
     description: (args: Result) =>
-      `Message was sent from L1 to ChainID ${args.destinationChainId} adapter ${args.destinationBridgeAdapter}`,
+      `Message was sent from L1 to BSC using ${
+        bscAdapters.get(args.bridgeAdapter) || args.bridgeAdapter + " adapter"
+      }`,
     severity: FindingSeverity.Info,
     type: FindingType.Info,
   },

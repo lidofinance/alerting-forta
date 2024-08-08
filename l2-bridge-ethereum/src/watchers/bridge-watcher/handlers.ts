@@ -7,6 +7,7 @@ import {
   getEthersProvider,
   TransactionEvent,
 } from "forta-agent";
+import { formatEther } from "ethers/lib/utils";
 import {
   BRIDGE_ETH_MIN_BALANCE,
   BRIDGE_LINK_MIN_BALANCE,
@@ -14,7 +15,6 @@ import {
   L1_BRIDGE_EVENTS,
   LINK_TOKEN_ADDRESS,
 } from "../../constants";
-import { formatEther } from "ethers";
 import { networkAlert } from "../../helpers/finding";
 
 export function handleL1BridgeTransactionEvents(
