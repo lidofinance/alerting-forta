@@ -3,6 +3,7 @@ import { elapsedTime } from '../../shared/time'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 import { CrossChainClient } from './contract'
 import { BlockEvent, Finding } from 'forta-agent'
+import { handleBridgeBalance } from './handlers'
 
 export class CrossChainWatcherSrv {
   private readonly logger: Logger
@@ -26,7 +27,7 @@ export class CrossChainWatcherSrv {
   }
 
   public async handleBlock(block: BlockEvent): Promise<Finding[]> {
-    return []
+    return await handleBridgeBalance(block)
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
