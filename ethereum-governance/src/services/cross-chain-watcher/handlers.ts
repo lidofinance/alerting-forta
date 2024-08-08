@@ -7,6 +7,7 @@ import {
 } from '../../shared/constants/cross-chain/mainnet'
 import { formatEther } from 'ethers/lib/utils'
 import { networkAlert } from '../../shared/errors'
+import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
 
 const BALANCE_CHECK_INTERVAL = 300 // 1 hour ≈ 300 blocks
 
@@ -74,4 +75,27 @@ export async function handleBridgeBalance(event: BlockEvent) {
   }
 
   return findings
+}
+
+export async function handleTransactionForwardingAttempt(txEvent: TransactionEvent, bscAdapters: Map<string, string>) {
+  if (!(BSC_L1_CROSS_CHAIN_CONTROLLER in txEvent.addresses)) {
+    return []
+  }
+  const eventSignature =
+    'event TransactionForwardingAttempted(bytes32 transactionId, bytes32 indexed envelopeId, bytes encodedTransaction, uint256 destinationChainId, address indexed bridgeAdapter, address destinationBridgeAdapter, bool indexed adapterSuccessful, bytes returnData)'
+  const events = txEvent.filterLog(eventSignature, BSC_L1_CROSS_CHAIN_CONTROLLER)
+
+  return events.map((event) => {
+    const adapterName = bscAdapters.get(event.args.bridgeAdapter) || event.args.bridgeAdapter + ' adapter'
+    const description = `Message was sent from L1 to BSC using ${adapterName} (envelopeId: ${event.args.envelopeId})`
+
+    return Finding.fromObject({
+      name: `ℹ️ BNB a.DI: Message sent by the ${adapterName}`,
+      description: description,
+      alertId: 'L1-BRIDGE-MESSAGE-SENT',
+      severity: FindingSeverity.Low,
+      type: FindingType.Info,
+      metadata: { args: String(event.args) },
+    })
+  })
 }

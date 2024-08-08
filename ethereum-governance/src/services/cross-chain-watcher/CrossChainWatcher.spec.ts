@@ -1,29 +1,52 @@
 import { Logger } from 'winston'
-import { IEasyTrackClient } from '../easy-track/contract'
+import * as E from 'fp-ts/Either'
 import { BlockEvent, TransactionEvent } from 'forta-agent'
-import { CrossChainClient } from './contract'
+import { ICrossChainClient } from './contract'
 import { CrossChainWatcherSrv } from './CrossChainWatcher.srv'
 import * as handlers from './handlers'
 
 describe('CrossChainWatcherSrv', () => {
   let logger: Logger
-  let ethProvider: CrossChainClient
+  let ethProvider: jest.Mocked<ICrossChainClient>
   let crossChainSrv: CrossChainWatcherSrv
   let txEvent: TransactionEvent
 
   beforeEach(() => {
     logger = { info: jest.fn() } as unknown as Logger
-    ethProvider = { getNOInfoByMotionData: jest.fn() } as unknown as IEasyTrackClient
+    ethProvider = { getBSCForwarderBridgeAdapterNames: jest.fn() } as unknown as jest.Mocked<ICrossChainClient>
     crossChainSrv = new CrossChainWatcherSrv(logger, ethProvider)
-    txEvent = { addresses: { '0x123': true }, filterLog: jest.fn() } as unknown as TransactionEvent
   })
 
   afterAll(() => {
     jest.restoreAllMocks()
   })
 
-  it('initializes without error', () => {
-    expect(() => crossChainSrv.initialize(100)).not.toThrow()
+  it('initializes with BSC adapters successfully', async () => {
+    const bscAdapters = E.right(new Map([['adapter1', '0x123']]))
+    ethProvider.getBSCForwarderBridgeAdapterNames.mockResolvedValue(bscAdapters)
+
+    await crossChainSrv.initialize(100)
+
+    expect(E.isRight(bscAdapters)).toBe(true)
+    if (bscAdapters._tag !== 'Left') {
+      expect(crossChainSrv['bscAdapters']).toEqual(bscAdapters.right)
+    }
+    expect(ethProvider.getBSCForwarderBridgeAdapterNames).toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalled()
+  })
+
+  it('initializes with error fetching BSC adapters', async () => {
+    const error = E.left(new Error('Failed to fetch'))
+    ethProvider.getBSCForwarderBridgeAdapterNames.mockResolvedValue(error)
+    console.warn = jest.fn()
+
+    await crossChainSrv.initialize(100)
+
+    expect(crossChainSrv['bscAdapters']).toEqual(new Map())
+    expect(console.warn).toHaveBeenCalledWith(
+      'Error fetching BSC forwarder bridge adapter names: Failed to fetch. Adapter names substitutions will not be available.',
+    )
+    expect(logger.info).toHaveBeenCalled()
   })
 
   it('returns the correct name', () => {
@@ -38,5 +61,17 @@ describe('CrossChainWatcherSrv', () => {
 
     expect(findings).toEqual([])
     expect(handlers.handleBridgeBalance).toHaveBeenCalledWith(block)
+  })
+
+  it('calls handleTransactionForwardingAttempt on handleTransaction', async () => {
+    const bscAdapters = new Map([['adapter1', '0x123']])
+    crossChainSrv['bscAdapters'] = bscAdapters
+    txEvent = { transaction: { hash: '0x123' } } as unknown as TransactionEvent
+    jest.spyOn(handlers, 'handleTransactionForwardingAttempt').mockResolvedValue([])
+
+    const findings = await crossChainSrv.handleTransaction(txEvent)
+
+    expect(findings).toEqual([])
+    expect(handlers.handleTransactionForwardingAttempt).toHaveBeenCalledWith(txEvent, bscAdapters)
   })
 })

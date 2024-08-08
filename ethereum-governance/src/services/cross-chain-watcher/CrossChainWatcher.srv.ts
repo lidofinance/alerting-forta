@@ -1,25 +1,35 @@
 import { Logger } from 'winston'
 import { elapsedTime } from '../../shared/time'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import { CrossChainClient } from './contract'
+import { ICrossChainClient } from './contract'
 import { BlockEvent, Finding } from 'forta-agent'
-import { handleBridgeBalance } from './handlers'
+import { handleBridgeBalance, handleTransactionForwardingAttempt } from './handlers'
+import * as E from 'fp-ts/Either'
 
 export class CrossChainWatcherSrv {
   private readonly logger: Logger
   private readonly name = 'CrossChainWatcher'
   private readonly ethProvider
+  private bscAdapters: Map<string, string> = new Map()
 
-  constructor(logger: Logger, ethProvider: CrossChainClient) {
+  constructor(logger: Logger, ethProvider: ICrossChainClient) {
     this.logger = logger
     this.ethProvider = ethProvider
   }
 
-  public initialize(currentBlock: number): null {
+  public async initialize(currentBlock: number) {
     const start = new Date().getTime()
-    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
 
-    return null
+    const bscAdapters = await this.ethProvider.getBSCForwarderBridgeAdapterNames()
+    if (E.isRight(bscAdapters)) {
+      this.bscAdapters = bscAdapters.right
+    } else {
+      console.warn(
+        `Error fetching BSC forwarder bridge adapter names: ${bscAdapters.left.message}. Adapter names substitutions will not be available.`,
+      )
+    }
+
+    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
   }
 
   public getName(): string {
@@ -31,6 +41,6 @@ export class CrossChainWatcherSrv {
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
-    return []
+    return await handleTransactionForwardingAttempt(txEvent, this.bscAdapters)
   }
 }
