@@ -62,7 +62,7 @@ describe('CrossChainWatcherSrv', () => {
     const findings = await crossChainSrv.handleBlock(block)
 
     expect(findings).toEqual([])
-    expect(handlers.handleBridgeBalance).toHaveBeenCalledWith(block)
+    expect(handlers.handleBridgeBalance).toHaveBeenCalledWith(crossChainSrv['ethProvider'], block)
   })
 
   it('calls handleTransactionForwardingAttempt on handleTransaction', async () => {
