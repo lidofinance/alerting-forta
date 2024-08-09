@@ -24,7 +24,8 @@ export const getEventsOfNoticeForStakingModule = (
       description: (args: any) =>
         `${moduleName} module ` +
         `Node operator ${args.nodeOperatorId} ` +
-        `target validators count changed to ${args.targetValidatorsCount}`,
+        `target validators count changed to ${args.targetValidatorsCount} ` +
+        `with targetLimitMode = ${args.targetLimitMode}`,
       severity: FindingSeverity.Medium,
     },
     {
