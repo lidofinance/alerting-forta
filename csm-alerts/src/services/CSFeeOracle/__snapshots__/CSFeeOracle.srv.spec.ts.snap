@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CsFeeOracle event tests 🔴 4 events: ConsensusHashContractSet(), ConsensusVersionSet(), FeeDistributorContractSet(), PerfLeewaySet() 1`] = `[]`;
+
+exports[`CsFeeOracle event tests 🔴 HashConsensus: Member added 1`] = `[]`;
+
+exports[`CsFeeOracle event tests 🔵 2 events: ProcessingStarted(), ReportSettled() 1`] = `[]`;

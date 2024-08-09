@@ -1,0 +1,15 @@
+node_modules
+dist
+forta.config.json
+generated
+.yarn/*
+!.yarn/releases/
+*.log
+version.json
+.DS_Store
+/coverage/
+
+tools/vendor
+bin
+
+.env
