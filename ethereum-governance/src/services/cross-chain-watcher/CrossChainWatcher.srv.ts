@@ -39,7 +39,7 @@ export class CrossChainWatcherSrv {
   }
 
   public async handleBlock(block: BlockEvent): Promise<Finding[]> {
-    return await handleBridgeBalance(block)
+    return await handleBridgeBalance(this.ethProvider, block)
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {

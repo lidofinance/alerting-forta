@@ -448,6 +448,39 @@ export class ETHProvider
     }
   }
 
+  public async getBalance(address: string, tokenAddress?: string): Promise<E.Either<Error, ethers.BigNumber>> {
+    if (!tokenAddress) {
+      try {
+        const result = await retryAsync(
+          async () => {
+            return await this.jsonRpcProvider.getBalance(address)
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+        return E.right(result)
+      } catch (e) {
+        return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getBalance`))
+      }
+    }
+
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ['function balanceOf(address) view returns (uint256)'],
+      this.jsonRpcProvider,
+    )
+    try {
+      const result = await retryAsync(
+        async () => {
+          return await tokenContract.balanceOf(address)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getLinkBalance`))
+    }
+  }
+
   public async getTokenSymbol(tokenAddress: string) {
     const abi = [
       {

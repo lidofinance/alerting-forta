@@ -1,4 +1,5 @@
-import { BlockEvent, ethers, Finding, FindingSeverity, FindingType, getEthersProvider } from 'forta-agent'
+import * as E from 'fp-ts/Either'
+import { BlockEvent, Finding, FindingSeverity, FindingType } from 'forta-agent'
 import {
   BRIDGE_ETH_MIN_BALANCE,
   BRIDGE_LINK_MIN_BALANCE,
@@ -8,72 +9,60 @@ import {
 import { formatEther } from 'ethers/lib/utils'
 import { networkAlert } from '../../shared/errors'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
+import { ICrossChainClient } from './contract'
 
 const BALANCE_CHECK_INTERVAL = 300 // 1 hour ≈ 300 blocks
 
-export async function handleBridgeBalance(event: BlockEvent) {
+export async function handleBridgeBalance(ethProvider: ICrossChainClient, event: BlockEvent) {
   if (event.block.number % BALANCE_CHECK_INTERVAL !== 0) {
     return []
   }
   const findings: Finding[] = []
-
-  const provider = getEthersProvider()
-
-  try {
-    const ethBalance = await provider.getBalance(BSC_L1_CROSS_CHAIN_CONTROLLER)
-    if (ethBalance.lt(BigInt(1e18 * BRIDGE_ETH_MIN_BALANCE))) {
-      findings.push(
-        Finding.fromObject({
-          name: '⚠️ Cross-chain bridge ETH balance is low (0.5 ETH min)',
-          description: `Bridge balance is low: ${formatEther(ethBalance.toString())} ETH`,
-          alertId: 'BRIDGE-ETH-BALANCE-LOW',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-          metadata: { ethBalance: ethBalance.toString() },
-        }),
-      )
-    }
-  } catch (err: unknown) {
+  const ethBalance = await ethProvider.getBalance(BSC_L1_CROSS_CHAIN_CONTROLLER)
+  if (E.isLeft(ethBalance)) {
     findings.push(
       networkAlert(
-        err as Error,
+        ethBalance.left,
         'handleBridgeBalance',
         `Error fetching bridge ETH balance on block ${event.block.number}`,
       ),
     )
   }
+  if (E.isRight(ethBalance) && ethBalance.right.lt(BigInt(1e18 * BRIDGE_ETH_MIN_BALANCE))) {
+    findings.push(
+      Finding.fromObject({
+        name: '⚠️ Cross-chain bridge ETH balance is low (0.5 ETH min)',
+        description: `Bridge balance is low: ${formatEther(ethBalance.right.toString())} ETH`,
+        alertId: 'BRIDGE-ETH-BALANCE-LOW',
+        severity: FindingSeverity.Medium,
+        type: FindingType.Info,
+        metadata: { ethBalance: ethBalance.right.toString() },
+      }),
+    )
+  }
 
-  const linkContract = new ethers.Contract(
-    LINK_TOKEN_ADDRESS,
-    ['function balanceOf(address) returns (uint256)'],
-    provider,
-  )
-
-  try {
-    const linkBalance = (await linkContract.balanceOf(BSC_L1_CROSS_CHAIN_CONTROLLER)) as ethers.BigNumber
-
-    if (linkBalance.lt(BigInt(1e18 * BRIDGE_LINK_MIN_BALANCE))) {
-      findings.push(
-        Finding.fromObject({
-          name: '⚠️ Cross-chain bridge LINK balance is low (5 LINK min)',
-          description: `Bridge balance is low: ${formatEther(linkBalance.toString())} LINK`,
-          alertId: 'BRIDGE-LINK-BALANCE-LOW',
-          severity: FindingSeverity.Medium,
-          type: FindingType.Info,
-          metadata: { linkBalance: linkBalance.toString() },
-        }),
-      )
-    }
-  } catch (err: unknown) {
+  const linkBalance = await ethProvider.getBalance(BSC_L1_CROSS_CHAIN_CONTROLLER, LINK_TOKEN_ADDRESS)
+  if (E.isLeft(linkBalance)) {
     findings.push(
       networkAlert(
-        err as Error,
+        linkBalance.left,
         'handleBridgeBalance',
         `Error fetching bridge LINK balance on block ${event.block.number}`,
       ),
     )
   }
-
+  if (E.isRight(linkBalance) && linkBalance.right.lt(BigInt(1e18 * BRIDGE_LINK_MIN_BALANCE))) {
+    findings.push(
+      Finding.fromObject({
+        name: '⚠️ Cross-chain bridge LINK balance is low (5 LINK min)',
+        description: `Bridge balance is low: ${formatEther(linkBalance.right.toString())} LINK`,
+        alertId: 'BRIDGE-LINK-BALANCE-LOW',
+        severity: FindingSeverity.Medium,
+        type: FindingType.Info,
+        metadata: { linkBalance: linkBalance.right.toString() },
+      }),
+    )
+  }
   return findings
 }
 
