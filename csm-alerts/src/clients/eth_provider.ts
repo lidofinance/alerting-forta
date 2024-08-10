@@ -1,4 +1,3 @@
-import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { ethers } from 'forta-agent'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
@@ -18,18 +17,11 @@ import { ICSFeeOracleClient } from '../services/CSFeeOracle/CSFeeOracle.srv'
 import { ICSFeeDistributorClient } from '../services/CSFeeDistributor/CSFeeDistributor.srv'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { BlockDto } from '../entity/events'
-import { DataRW } from '../utils/mutex'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
 export abstract class IEtherscanProvider {
-  abstract getHistory(
-    addressOrName: string | Promise<string>,
-    startBlock?: BlockTag,
-    endBlock?: BlockTag,
-  ): Promise<Array<TransactionResponse>>
-
   abstract getBalance(
     addressOrName: string | Promise<string>,
     blockTag?: BlockTag | Promise<BlockTag>,
@@ -82,55 +74,6 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch latest block number`))
-    }
-  }
-
-  public async getHistory(
-    depositSecurityAddress: string,
-    startBlock: number,
-    endBlock: number,
-  ): Promise<E.Either<Error, TransactionResponse[]>> {
-    const end = this.metrics.etherJsDurationHistogram.labels({ method: 'getHistory' }).startTimer()
-    const fetchBatch = async (start: number, end: number): Promise<TransactionResponse[]> => {
-      try {
-        const out = await retryAsync<TransactionResponse[]>(
-          async (): Promise<TransactionResponse[]> => {
-            return await this.etherscanProvider.getHistory(depositSecurityAddress, start, end)
-          },
-          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-        )
-
-        this.metrics.etherJsRequest.labels({ method: 'getHistory', status: StatusOK }).inc()
-        return out
-      } catch (err) {
-        this.metrics.etherJsRequest.labels({ method: 'getHistory', status: StatusFail }).inc()
-        throw new NetworkError(err, `Could not fetch transaction history between ${start} and ${end} blocks`)
-      }
-    }
-
-    const batchPromises: Promise<void>[] = []
-    const out = new DataRW<TransactionResponse>([])
-    const batchSize = 10_000
-
-    for (let i = startBlock; i <= endBlock; i += batchSize) {
-      const start = i
-      const end = Math.min(i + batchSize - 1, endBlock)
-
-      const promise = fetchBatch(start, end).then((chunkTrxResp) => {
-        out.write(chunkTrxResp)
-      })
-
-      batchPromises.push(promise)
-    }
-
-    try {
-      await Promise.all(batchPromises)
-
-      end({ status: StatusOK })
-      return E.right(await out.read())
-    } catch (e) {
-      end({ status: StatusFail })
-      return E.left(new NetworkError(e, `Could not fetch transaction history`))
     }
   }
 
