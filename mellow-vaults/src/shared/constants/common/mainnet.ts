@@ -92,6 +92,7 @@ export const VAULT_STEAKHOUSE = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
+  customIntegrityLimits: false,
 }
 export const VAULT_RE7LABS = {
   name: 'Re7 Vault',
@@ -102,6 +103,7 @@ export const VAULT_RE7LABS = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0xe86399fe6d7007fdecb08a2ee1434ee677a04433',
+  customIntegrityLimits: false,
 }
 export const VAULT_MEV_CAP = {
   name: 'Mev Capital Vault',
@@ -112,6 +114,7 @@ export const VAULT_MEV_CAP = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0xa1e38210b06a05882a7e7bfe167cd67f07fa234a',
+  customIntegrityLimits: false,
 }
 export const VAULT_P2P = {
   name: 'P2P Vault',
@@ -122,6 +125,7 @@ export const VAULT_P2P = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x4a3c7f2470aa00ebe6ae7cb1faf95964b9de1ef4',
+  customIntegrityLimits: false,
 }
 
 export const VAULT_INFSTONES = {
@@ -133,6 +137,7 @@ export const VAULT_INFSTONES = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0xd3895c43e886778e7e1e099c280a8c5aa5b2a4d8',
+  customIntegrityLimits: false,
 }
 export const VAULT_LUGA = {
   name: 'LugaETH Vault',
@@ -143,6 +148,7 @@ export const VAULT_LUGA = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x1fbbc71b60a499c09d454725acf1d6931515671a',
+  customIntegrityLimits: false,
 }
 export const VAULT_CHORUS_ONE = {
   name: 'Chorus One Restaking ETH Vault',
@@ -153,6 +159,7 @@ export const VAULT_CHORUS_ONE = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x3ea145d6cea2e939d866ba71136dca6a1b96919f',
+  customIntegrityLimits: false,
 }
 export const VAULT_RENZO = {
   name: 'Renzo Restaked Vault',
@@ -163,6 +170,7 @@ export const VAULT_RENZO = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x6e5cad73d00bc8340f38afb61fc5e34f7193f599',
+  customIntegrityLimits: false,
 }
 export const VAULT_DVSTETH = {
   name: 'Decentralized Validator Token',
@@ -173,6 +181,7 @@ export const VAULT_DVSTETH = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
+  customIntegrityLimits: true,
 }
 
 export const MELLOW_VAULT_ADMIN_MULTISIGS = [
@@ -188,4 +197,5 @@ export const VAULT_LIST = [
   VAULT_LUGA,
   VAULT_CHORUS_ONE,
   VAULT_RENZO,
+  VAULT_DVSTETH,
 ]

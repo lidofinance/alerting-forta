@@ -383,7 +383,7 @@ export class VaultWatcherSrv {
       supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
     }
 
-    if (result.supplyToUnderlying.minus(1).abs().gte(1e-9)) {
+    if (result.supplyToUnderlying.minus(1).abs().gte(1e-9) && !vault.customIntegrityLimits) {
       out.push(
         Finding.fromObject({
           name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same',
