@@ -166,7 +166,7 @@ export const VAULT_RENZO = {
 }
 export const VAULT_DVSTETH = {
   name: 'Decentralized Validator Token',
-  vault: '0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811',
+  vault: '0x5e362eb2c0706bd1d134689ec75176018385430b',
   configurator: '0xdee41701310f48744e6bb4a5df6b5e714ce49133',
   defaultBondStrategy: '0x078b1c03d14652bfeedfadf7985fdf2d8a2e8108',
   upgradeableProxyProxyAdmin: '0x8e6c80c41450d3fa7b1fd0196676b99bfb34bf48',
