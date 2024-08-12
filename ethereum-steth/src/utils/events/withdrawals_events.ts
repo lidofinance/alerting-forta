@@ -1,5 +1,5 @@
-import BigNumber from 'bignumber.js'
 import { Result } from '@ethersproject/abi/lib'
+import BigNumber from 'bignumber.js'
 import { EventOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 

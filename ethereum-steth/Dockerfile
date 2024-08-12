@@ -1,17 +1,13 @@
-# Build stage: compile Typescript to Javascript
-FROM node:20.10.0-alpine3.18 AS base
+FROM node:20.16.0-alpine3.20 AS builder
 
-RUN apk add --no-cache python3=3.11.8-r0 g++=12.2.1_git20220924-r10 make=4.4.1-r1 sqlite=3.41.2-r3
-
-FROM base as builder
+RUN apk add --no-cache make=4.4.1-r2 sqlite=3.45.3-r1
 
 WORKDIR /app
 
 COPY . .
 RUN yarn install --immutable && yarn run build
 
-# Final stage: copy compiled Javascript from previous stage and install production dependencies
-FROM base as production
+FROM node:20.16.0-alpine3.20 as production
 LABEL "network.forta.settings.agent-logs.enable"="true"
 
 ENV APP_NAME=ethereum-steth
@@ -24,6 +20,7 @@ ENV LOG_FORMAT=simple
 ENV LOG_LEVEL=info
 ENV INSTANCE=forta
 ENV USE_FORTA_RPC_URL=true
+ENV DB_FILEPATH=':memory:'
 
 WORKDIR /app
 
