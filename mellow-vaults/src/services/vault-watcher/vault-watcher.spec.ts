@@ -4,6 +4,7 @@ import { ethers, Finding } from 'forta-agent'
 
 import { VaultWatcherSrv } from './VaultWatcher.srv'
 import { App } from '../../app'
+import { VAULT_LIST } from '../../shared/constants/common/mainnet'
 
 const TEST_TIMEOUT = 120_000 // ms
 
@@ -23,8 +24,21 @@ describe('VaultWatchers srv functional tests', () => {
 
   let runTransaction: (txHash: string, initBlock?: number) => Promise<Finding[]>
   let runBlock: (blockHashOrNumber: string | number, initBlock: number) => Promise<Finding[]>
+  let newVaults: {
+    name: string
+    vault: string
+    configurator: string
+    defaultBondStrategy: string
+    upgradeableProxyProxyAdmin: string
+    proxyAdmin: string
+    admin: string
+    curator: string
+  }[] = []
 
   beforeAll(() => {
+    //remove new vault to not fix all tests
+    newVaults = VAULT_LIST.splice(8)
+    console.info(`removed vaults for test: ${newVaults.map((vault) => vault.name).join(', ')}`)
     jest.spyOn(console, 'log').mockImplementation(() => {})
     jest.spyOn(Date, 'now').mockImplementation(() => new Date('2024-01-01').getTime())
 
@@ -68,6 +82,7 @@ describe('VaultWatchers srv functional tests', () => {
   })
 
   afterAll(() => {
+    VAULT_LIST.push(...newVaults)
     jest.resetAllMocks()
   })
 

@@ -31,7 +31,6 @@ describe('AclChanges srv functional tests', () => {
       if (initBlock > Number(blockHashOrNumber)) {
         throw new Error('Wrong initial block or argument order')
       }
-      await service.initialize(initBlock)
 
       const block = await ethProvider.getBlock(blockHashOrNumber)
       const blockDto: BlockDto = {

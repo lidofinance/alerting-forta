@@ -524,12 +524,10 @@ export class VaultWatcherSrv {
     // Check only one vault in 5 min one by one
     const gap = 5 * MINUTE_IN_BLOCK
     const mod = block.number % HOURS_24_IN_BLOCK
-    console.info(mod, gap, block.number)
     if (mod % gap !== 0) {
       return out
     }
     const vaultIdx = mod / gap
-    console.info('11111', vaultIdx)
     if (!VAULT_LIST[vaultIdx]) {
       return out
     }

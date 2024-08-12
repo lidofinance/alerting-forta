@@ -15,13 +15,6 @@ export class MultisigWatcherSrv {
     this.logger = logger
   }
 
-  initialize(currentBlock: number): null {
-    const start = new Date().getTime()
-    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
-
-    return null
-  }
-
   public getName(): string {
     return this.name
   }

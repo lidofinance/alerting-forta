@@ -38,11 +38,7 @@ export function initialize(): Initialize {
     }
 
     const lastBlockNumber = latestBlock.right.number
-    const [vaultWatcherSrvErr] = await Promise.all([
-      app.VaultWatcherSrv.initialize(lastBlockNumber),
-      app.MultisigWatcherSrv.initialize(lastBlockNumber),
-      app.AclChangesSrv.initialize(lastBlockNumber),
-    ])
+    const vaultWatcherSrvErr = await app.VaultWatcherSrv.initialize(lastBlockNumber)
 
     if (vaultWatcherSrvErr !== null) {
       console.error(`Error: ${vaultWatcherSrvErr.message}`)
