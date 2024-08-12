@@ -167,12 +167,12 @@ export const VAULT_RENZO = {
 export const VAULT_DVSTETH = {
   name: 'Decentralized Validator Token',
   vault: '0x8c9532a60e0e7c6bbd2b2c1303f63ace1c3e9811',
-  configurator: '0xDee41701310f48744e6Bb4A5df6B5e714cE49133',
-  defaultBondStrategy: '0x078b1C03d14652bfeeDFadf7985fdf2D8a2e8108',
-  upgradeableProxyProxyAdmin: '0x8E6C80c41450D3fA7B1Fd0196676b99Bfb34bF48',
-  proxyAdmin: '0x81698f87C6482bF1ce9bFcfC0F103C4A0Adf0Af0',
-  admin: '0x9437B2a8cF3b69D782a61f9814baAbc172f72003',
-  curator: '0x2afc096981c2CFe3501bE4054160048718F6C0C8',
+  configurator: '0xdee41701310f48744e6bb4a5df6b5e714ce49133',
+  defaultBondStrategy: '0x078b1c03d14652bfeedfadf7985fdf2d8a2e8108',
+  upgradeableProxyProxyAdmin: '0x8e6c80c41450d3fa7b1fd0196676b99bfb34bf48',
+  proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
+  admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
+  curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
 }
 
 export const MELLOW_VAULT_ADMIN_MULTISIGS = [
