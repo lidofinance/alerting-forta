@@ -216,15 +216,15 @@ export class WithdrawalsRepo {
     try {
       const data = await this.knex.raw(`
 select IFNULL(SUM(amount_steth) filter (where finalized = 1) / pow(10, 18), 0) as finalizedSteth
-     , IFNULL(SUM(amount_steth) filter (where finalized = 0) / pow(10, 18), 0) as notFinalizedSteth
+     , IFNULL(SUM(amount_steth) filter (where finalized = 0) / pow(10, 18), 0) as unFinalizedSteth
      , IFNULL(SUM(amount_steth) filter (where claimed = 1) / pow(10, 18), 0)   as claimedSteth
-     , IFNULL(SUM(amount_steth) filter (where claimed = 0) / pow(10, 18), 0)   as notClaimedSteth
-     , IFNULL(SUM(amount_steth) / pow(10, 18), 0)                              as steth
-     , COUNT(id)                                                    as total
+     , IFNULL(SUM(amount_steth) filter (where claimed = 0) / pow(10, 18), 0)   as unClaimedSteth
+     , IFNULL(SUM(amount_steth) / pow(10, 18), 0)                              as stethAmount
+     , COUNT(id)                                                    as totalRequests
      , COUNT(id) filter (where finalized = 1)                       as finalizedRequests
-     , COUNT(id) filter (where finalized = 0)                       as notfinalizedRequests
+     , COUNT(id) filter (where finalized = 0)                       as unFinalizedRequests
      , COUNT(id) filter (where claimed = 1)                         as claimedRequests
-     , COUNT(id) filter (where claimed = 0)                         as notClaimedRequests
+     , COUNT(id) filter (where claimed = 0)                         as unClaimedRequests
 from withdrawal_requests;`)
 
       let out: WithdrawalStat = {

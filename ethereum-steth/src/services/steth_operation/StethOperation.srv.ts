@@ -13,12 +13,12 @@ import { elapsedTime } from '../../utils/time'
 import { StethOperationCache } from './StethOperation.cache'
 
 // Formula: (60 * 60 * 24 * 7) / 12 = 50_400
-export const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 24 * 7) / 12)
+const HOURS_24 = 60 * 60 * 24 // 24 hours
+export const DAYS_7_IN_BLOCKS: number = Math.floor((HOURS_24 * 7) / 12)
 const ONCE_PER_100_BLOCKS: number = 100
 const ONCE_PER_25_BLOCKS: number = 25
 export const ETH_10K = 10_000 // 10000 ETH
 export const ETH_20K: number = 20_000 // 20000 ETH
-const HOURS_24 = 60 * 60 * 24 // 24 hours
 export const HOUR_1 = 60 * 60 // 1 hour
 const HOURS_4 = 60 * 60 * 4 // 4 Hours
 const HOURS_12 = 60 * 60 * 12 // 12 Hours
@@ -91,22 +91,24 @@ export class StethOperationSrv {
 
   public async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
-    const events = await this.stethClient.getUnbufferedEvents(currentBlock - HISTORY_BLOCK_OFFSET, currentBlock - 1)
+    const events = await this.stethClient.getUnbufferedEvents(currentBlock - DAYS_7_IN_BLOCKS, currentBlock - 1)
 
     if (E.isLeft(events)) {
       this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
       return events.left
     }
 
-    const latestDepositBlock = await this.stethClient.getBlockByNumber(
-      events.right[events.right.length - 1].blockNumber,
-    )
-    if (E.isLeft(latestDepositBlock)) {
-      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
-      return latestDepositBlock.left
-    }
+    if (events.right.length > 0) {
+      const latestDepositBlock = await this.stethClient.getBlockByNumber(
+        events.right[events.right.length - 1].blockNumber,
+      )
+      if (E.isLeft(latestDepositBlock)) {
+        this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+        return latestDepositBlock.left
+      }
 
-    this.cache.setLastDepositorTxTime(latestDepositBlock.right.timestamp)
+      this.cache.setLastDepositorTxTime(latestDepositBlock.right.timestamp)
+    }
 
     const bufferedEthRaw = await this.stethClient.getStethBalance(this.lidoStethAddress, currentBlock)
     if (E.isLeft(bufferedEthRaw)) {

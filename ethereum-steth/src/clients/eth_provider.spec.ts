@@ -11,7 +11,7 @@ import {
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../generated/typechain'
-import { HISTORY_BLOCK_OFFSET } from '../services/steth_operation/StethOperation.srv'
+import { DAYS_7_IN_BLOCKS } from '../services/steth_operation/StethOperation.srv'
 import {
   Address,
   ETH_DECIMALS,
@@ -227,7 +227,7 @@ describe('eth provider tests', () => {
 
   test('getUnbufferedEvents', async () => {
     const currBlock = 20_212_690
-    const events = await ethClient.getUnbufferedEvents(currBlock - HISTORY_BLOCK_OFFSET, currBlock)
+    const events = await ethClient.getUnbufferedEvents(currBlock - DAYS_7_IN_BLOCKS, currBlock)
     if (E.isLeft(events)) {
       throw events.left.message
     }
