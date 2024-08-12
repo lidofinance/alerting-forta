@@ -15,10 +15,10 @@ import Version from '../utils/version'
 
 export class InitHandler {
   private readonly logger: Logger
-  private readonly StethOperationSrv: StethOperationSrv
-  private readonly WithdrawalsSrv: WithdrawalsSrv
-  private readonly GateSealSrv: GateSealSrv
-  private readonly VaultSrv: VaultSrv
+  private readonly stethOperationSrv: StethOperationSrv
+  private readonly withdrawalsSrv: WithdrawalsSrv
+  private readonly gateSealSrv: GateSealSrv
+  private readonly vaultSrv: VaultSrv
   private readonly storageWatcher: StorageWatcherSrv
   private readonly appName: string
   private readonly latestBlock: BlockDto
@@ -38,10 +38,10 @@ export class InitHandler {
   ) {
     this.appName = appName
     this.logger = logger
-    this.StethOperationSrv = StethOperationSrv
-    this.WithdrawalsSrv = WithdrawalsSrv
-    this.GateSealSrv = GateSealSrv
-    this.VaultSrv = VaultSrv
+    this.stethOperationSrv = StethOperationSrv
+    this.withdrawalsSrv = WithdrawalsSrv
+    this.gateSealSrv = GateSealSrv
+    this.vaultSrv = VaultSrv
     this.storageWatcher = storageWatcher
     this.onAppStartFindings = onAppStartFindings
     this.latestBlock = latestBlock
@@ -60,15 +60,15 @@ export class InitHandler {
       }
 
       const agents: string[] = [
-        this.StethOperationSrv.getName(),
-        this.WithdrawalsSrv.getName(),
-        this.GateSealSrv.getName(),
-        this.VaultSrv.getName(),
+        this.stethOperationSrv.getName(),
+        this.withdrawalsSrv.getName(),
+        this.gateSealSrv.getName(),
+        this.vaultSrv.getName(),
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
       const [withdrawalsSrvErr, storageWatcherErr] = await Promise.all([
-        this.WithdrawalsSrv.initialize(this.latestBlock.number),
+        this.withdrawalsSrv.initialize(this.latestBlock.number),
         this.storageWatcher.initialize(this.latestBlock.hash),
       ])
       if (withdrawalsSrvErr !== null) {
@@ -106,12 +106,13 @@ export class InitHandler {
       f.setProtocol('ethereum')
 
       this.logger.info(
-        `[${this.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
-          this.StethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,
+        `[${this.stethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
+          this.stethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,
         ).toUTCString()}`,
       )
       this.logger.info(
-        `[${this.StethOperationSrv.getName()}] Buffered Eth: ${this.StethOperationSrv.getStorage()
+        `[${this.stethOperationSrv.getName()}] Buffered Eth: ${this.stethOperationSrv
+          .getStorage()
           .getLastBufferedEth()
           .div(ETH_DECIMALS)
           .toFixed(2)}`,

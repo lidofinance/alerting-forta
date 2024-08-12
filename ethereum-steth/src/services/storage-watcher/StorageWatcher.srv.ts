@@ -202,9 +202,9 @@ export class StorageWatcherSrv {
       const slot: StorageSlot = this.storageSlots.get(resp.right.slotId)
       if (prevValue !== resp.right.value) {
         const f: Finding = new Finding()
-        f.setName(`🚨 Critical storage slot value changed`)
+        f.setName(`🚨 Storage slot value changed`)
         f.setAlertid(`STORAGE-SLOT-VALUE-CHANGED`)
-        f.setSeverity(Finding.Severity.CRITICAL)
+        f.setSeverity(Finding.Severity.HIGH)
         f.setType(Finding.FindingType.SUSPICIOUS)
         f.setProtocol('ethereum')
         f.setName(

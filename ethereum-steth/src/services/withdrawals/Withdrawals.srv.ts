@@ -394,7 +394,7 @@ export class WithdrawalsSrv {
           // if we are in turbo mode and unfinalized queue is not finalized for 5 days
           // and alert hasn't been sent for 1 day
           const f: Finding = new Finding()
-          f.setName(`⚠️ Withdrawals: unfinalized queue wait time is more than ${FIVE_DAYS} days`)
+          f.setName(`⚠️ Withdrawals: unfinalized queue wait time is more than ${FIVE_DAYS / ONE_DAY} days`)
           f.setDescription(
             `Withdrawal request #${firstUnfinalizedRequest.right.id} has been waiting for ${formatDelay(
               currentBlockTimestamp - firstUnfinalizedRequest.right.timestamp,
@@ -812,12 +812,12 @@ export class WithdrawalsSrv {
 
     return E.right(
       `\n` +
-        `\tStEth:         ${stat.right.steth.toFixed(4)} \n` +
-        `\tfinalized:     ${stat.right.finalizedSteth.toFixed(4)} ${stat.right.finalizedRequests} \n` +
-        `\tnot finalized: ${stat.right.notFinalizedSteth.toFixed(4)}  ${stat.right.notfinalizedRequests}  \n` +
-        `\tclaimed:       ${stat.right.claimedSteth.toFixed(4)} ${stat.right.claimedRequests} \n` +
-        `\tnot claimed:   ${stat.right.notClaimedSteth.toFixed(4)}  ${stat.right.notClaimedRequests}\n` +
-        `\ttotal:         ${stat.right.total} wr`,
+        `\tStEth:       ${stat.right.stethAmount.toFixed(4)} \n` +
+        `\tfinalized:   ${stat.right.finalizedSteth.toFixed(4)} ${stat.right.finalizedRequests} \n` +
+        `\tunfinalized: ${stat.right.unFinalizedSteth.toFixed(4)}  ${stat.right.unFinalizedRequests}  \n` +
+        `\tclaimed:     ${stat.right.claimedSteth.toFixed(4)} ${stat.right.claimedRequests} \n` +
+        `\tunclaimed:   ${stat.right.unClaimedSteth.toFixed(4)}  ${stat.right.unClaimedRequests}\n` +
+        `\ttotal:       ${stat.right.totalRequests} withdrawal requests`,
     )
   }
 }

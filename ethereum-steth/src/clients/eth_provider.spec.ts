@@ -5,7 +5,6 @@ import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { either as E } from 'fp-ts'
 import * as promClient from 'prom-client'
 import * as Winston from 'winston'
-import { GateSeal } from '../entity/gate_seal'
 import {
   GateSeal__factory,
   Lido__factory,
@@ -16,7 +15,6 @@ import { HISTORY_BLOCK_OFFSET } from '../services/steth_operation/StethOperation
 import {
   Address,
   ETH_DECIMALS,
-  GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024,
   SLOT_ACCOUNTING_HASH_CONSENSUS_FRAME_CONFIG,
   SLOT_ACCOUNTING_HASH_CONSENSUS_MEMBER_ADDRESSES,
   SLOT_ACCOUNTING_HASH_CONSENSUS_QUORUM,
@@ -36,6 +34,9 @@ import {
   SLOT_DSM_HASH_PAUSE_INTENT_VALIDITY_PERIOD_BLOCKS,
   SLOT_DSM_OWNER,
   SLOT_DSM_QUORUM,
+  SLOT_DVT_LOCATOR,
+  SLOT_DVT_STUCK_PENALTY_DELAY,
+  SLOT_DVT_TYPE,
   SLOT_LEGACY_ORACLE_ACCOUNTING_ORACLE,
   SLOT_LEGACY_ORACLE_BEACON_SPEC,
   SLOT_LEGACY_ORACLE_CONTRACT_VERSION,
@@ -118,24 +119,6 @@ describe('eth provider tests', () => {
     }
 
     expect(statuses.right.length).toEqual(1750)
-  }, 120_000)
-
-  test('checkGateSeal should be success', async () => {
-    const blockNumber = 19140476
-
-    const resp = await ethClient.checkGateSeal(blockNumber, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024)
-    if (E.isLeft(resp)) {
-      throw resp.left.message
-    }
-
-    const expected: GateSeal = {
-      roleForWithdrawalQueue: true,
-      roleForExitBus: true,
-      exitBusOracleAddress: '0x0de4ea0184c2ad0baca7183356aea5b8d5bf5c6e',
-      withdrawalQueueAddress: '0x889edc2edab5f40e902b864ad4d7ade8e412f9b1',
-    }
-
-    expect(resp.right).toEqual(expected)
   }, 120_000)
 
   test('getBalanceByBlockHash is 16619.29059680177', async () => {
@@ -273,13 +256,14 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   // Test storage watcher network methods
-  const blockHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
-  const sloId = 777 // for test purposes id does not matter
+  // https://etherscan.io/block/20511417
+  const blockHash = `0x1288eb76fb9f6123cf893484011fe6cceb7770de19a3aa4fc63d84210dbf602f`
+  const slotId = 777 // for test purposes id does not matter
 
   test('getStorageByName lido locator', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LIDO_STETH_ADDRESS,
-      sloId,
+      slotId,
       'lido.Lido.lidoLocator',
       blockHash,
     )
@@ -293,7 +277,7 @@ describe('eth provider tests', () => {
   test('getStorageByName lido locator', async () => {
     const blockHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
 
-    const data = await ethClient.getStorageBySlotName(address.LIDO_STETH_ADDRESS, sloId, SLOT_LIDO_LOCATOR, blockHash)
+    const data = await ethClient.getStorageBySlotName(address.LIDO_STETH_ADDRESS, slotId, SLOT_LIDO_LOCATOR, blockHash)
     if (E.isLeft(data)) {
       throw data.left.message
     }
@@ -304,7 +288,7 @@ describe('eth provider tests', () => {
   test('getStorageByName lido contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LIDO_STETH_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LIDO_VERSIONED_CONTRACT,
       blockHash,
     )
@@ -316,7 +300,7 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getStorageByName NOR lidoLocator', async () => {
-    const data = await ethClient.getStorageBySlotName(address.NOR_ADDRESS, sloId, SLOT_NOR_LOCATOR, blockHash)
+    const data = await ethClient.getStorageBySlotName(address.NOR_ADDRESS, slotId, SLOT_NOR_LOCATOR, blockHash)
     if (E.isLeft(data)) {
       throw data.left.message
     }
@@ -327,7 +311,7 @@ describe('eth provider tests', () => {
   test('getStorageByName NOR penalty delay', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.NOR_ADDRESS,
-      sloId,
+      slotId,
       SLOT_NOR_STUCK_PENALTY_DELAY,
       blockHash,
     )
@@ -341,7 +325,7 @@ describe('eth provider tests', () => {
   test('getStorageByName NOR penalty delay', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.NOR_ADDRESS,
-      sloId,
+      slotId,
       SLOT_NOR_STUCK_PENALTY_DELAY,
       blockHash,
     )
@@ -349,11 +333,12 @@ describe('eth provider tests', () => {
       throw data.left.message
     }
 
+    // 19h 23mins
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000069780')
   }, 120_000)
 
   test('getStorageByName NOR type', async () => {
-    const data = await ethClient.getStorageBySlotName(address.NOR_ADDRESS, sloId, SLOT_NOR_TYPE, blockHash)
+    const data = await ethClient.getStorageBySlotName(address.NOR_ADDRESS, slotId, SLOT_NOR_TYPE, blockHash)
     if (E.isLeft(data)) {
       throw data.left.message
     }
@@ -364,7 +349,7 @@ describe('eth provider tests', () => {
   test('getStorageByName LEGACY_ORACLE Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LEGACY_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LEGACY_ORACLE_VERSIONED_CONTRACT_VERSION,
       blockHash,
     )
@@ -378,7 +363,7 @@ describe('eth provider tests', () => {
   test('getStorageByName LEGACY_ORACLE LidoOracle.accountingOracle', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LEGACY_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LEGACY_ORACLE_ACCOUNTING_ORACLE,
       blockHash,
     )
@@ -392,7 +377,7 @@ describe('eth provider tests', () => {
   test('getStorageByName LEGACY_ORACLE LidoOracle.beaconSpec', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LEGACY_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LEGACY_ORACLE_BEACON_SPEC,
       blockHash,
     )
@@ -406,7 +391,7 @@ describe('eth provider tests', () => {
   test('getStorageByName LEGACY_ORACLE LidoOracle.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LEGACY_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LEGACY_ORACLE_CONTRACT_VERSION,
       blockHash,
     )
@@ -420,7 +405,7 @@ describe('eth provider tests', () => {
   test('getStorageByName LEGACY_ORACLE LidoOracle.lido', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LEGACY_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LEGACY_ORACLE_LIDO,
       blockHash,
     )
@@ -434,7 +419,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_ORACLE Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.ACCOUNTING_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_ORACLE_VERSIONED_CONTRACT_VERSION,
       blockHash,
     )
@@ -448,7 +433,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_ORACLE consensusContract', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.ACCOUNTING_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_ORACLE_CONSENSUS_CONTRACT,
       blockHash,
     )
@@ -462,7 +447,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_ORACLE consensusVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.ACCOUNTING_ORACLE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_ORACLE_CONSENSUS_VERSION,
       blockHash,
     )
@@ -476,7 +461,7 @@ describe('eth provider tests', () => {
   test('getStorageByName STAKING_ROUTER Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.STAKING_ROUTER_ADDRESS,
-      sloId,
+      slotId,
       SLOT_STAKING_ROUTER_VERSIONED_CONTRACT_VERSION,
       blockHash,
     )
@@ -490,7 +475,7 @@ describe('eth provider tests', () => {
   test('getStorageByName STAKING_ROUTER StakingRouter.lido', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.STAKING_ROUTER_ADDRESS,
-      sloId,
+      slotId,
       SLOTS_STAKING_ROUTER_LIDO,
       blockHash,
     )
@@ -504,7 +489,7 @@ describe('eth provider tests', () => {
   test('getStorageByName STAKING_ROUTER StakingRouter.lastStakingModuleId', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.STAKING_ROUTER_ADDRESS,
-      sloId,
+      slotId,
       SLOTS_STAKING_ROUTER_LAST_STAKING_MODULE_ID,
       blockHash,
     )
@@ -518,7 +503,7 @@ describe('eth provider tests', () => {
   test('getStorageByName STAKING_ROUTER StakingRouter.stakingModulesCount', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.STAKING_ROUTER_ADDRESS,
-      sloId,
+      slotId,
       SLOTS_STAKING_ROUTER_STAKING_MODULES_COUNT,
       blockHash,
     )
@@ -532,7 +517,7 @@ describe('eth provider tests', () => {
   test('getStorageByName STAKING_ROUTER StakingRouter.withdrawalCredentials', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.STAKING_ROUTER_ADDRESS,
-      sloId,
+      slotId,
       SLOTS_STAKING_ROUTER_WITHDRAWAL_CREDENTIALS,
       blockHash,
     )
@@ -546,7 +531,7 @@ describe('eth provider tests', () => {
   test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.WITHDRAWALS_QUEUE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_WITHDRAWALS_QUEUE_VERSIONED_CONTRACT_VERSION,
       blockHash,
     )
@@ -560,7 +545,7 @@ describe('eth provider tests', () => {
   test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.bunkerModeSinceTimestamp', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.WITHDRAWALS_QUEUE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_WITHDRAWALS_QUEUE_BUNKER_MODE_SINCE_TIMESTAMP,
       blockHash,
     )
@@ -574,7 +559,7 @@ describe('eth provider tests', () => {
   test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.baseUri', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.WITHDRAWALS_QUEUE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_WITHDRAWALS_QUEUE_BASE_URI,
       blockHash,
     )
@@ -588,7 +573,7 @@ describe('eth provider tests', () => {
   test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.nftDescriptorAddress', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.WITHDRAWALS_QUEUE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_WITHDRAWALS_QUEUE_NFT_DESCRIPTOR_ADDRESS,
       blockHash,
     )
@@ -602,7 +587,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.VEBO_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_VERSIONED_CONTRACT_VERSION,
       blockHash,
     )
@@ -616,7 +601,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO consensusContract', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.VEBO_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_CONSENSUS_CONTRACT,
       blockHash,
     )
@@ -630,7 +615,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO consensusVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.VEBO_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_ORACLE_CONSENSUS_VERSION,
       blockHash,
     )
@@ -644,7 +629,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS frameConfig', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_HASH_CONSENSUS_FRAME_CONFIG,
       blockHash,
     )
@@ -658,7 +643,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS memberAddress', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_HASH_CONSENSUS_MEMBER_ADDRESSES,
       blockHash,
     )
@@ -672,7 +657,7 @@ describe('eth provider tests', () => {
 
     const members = await ethClient.getStorageArrayAtSlotAddr(
       address.ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_HASH_CONSENSUS_MEMBER_ADDRESSES,
       blockHash,
       len,
@@ -695,7 +680,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS consensus_quorum', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_HASH_CONSENSUS_QUORUM,
       blockHash,
     )
@@ -709,7 +694,7 @@ describe('eth provider tests', () => {
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS report_processor', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ACCOUNTING_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ACCOUNTING_HASH_CONSENSUS_REPORT_PROCESSOR,
       blockHash,
     )
@@ -723,7 +708,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO_HASH_CONSENSUS frameConfig', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.VEBO_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_HASH_CONSENSUS_FRAME_CONFIG,
       blockHash,
     )
@@ -737,7 +722,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO_HASH_CONSENSUS quorum', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.VEBO_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_HASH_CONSENSUS_QUORUM,
       blockHash,
     )
@@ -751,7 +736,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO_HASH_CONSENSUS reportProcessor', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.VEBO_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_HASH_CONSENSUS_REPORT_PROCESSOR,
       blockHash,
     )
@@ -765,7 +750,7 @@ describe('eth provider tests', () => {
   test('getStorageByName VEBO_HASH_CONSENSUS memberAddress', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.VEBO_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_HASH_CONSENSUS_MEMBER_ADDRESSES,
       blockHash,
     )
@@ -779,7 +764,7 @@ describe('eth provider tests', () => {
 
     const members = await ethClient.getStorageArrayAtSlotAddr(
       address.VEBO_HASH_CONSENSUS_ADDRESS,
-      sloId,
+      slotId,
       SLOT_VEBO_HASH_CONSENSUS_MEMBER_ADDRESSES,
       blockHash,
       len,
@@ -802,7 +787,7 @@ describe('eth provider tests', () => {
   test('getStorageByName DSM maxDepositsPerBlock', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_HASH_MAX_DEPOSITS_PER_BLOCK,
       blockHash,
     )
@@ -816,7 +801,7 @@ describe('eth provider tests', () => {
   test('getStorageByName DSM minDepositBlockDistance', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_HASH_MIN_DEPOSIT_BLOCK_DISTANCE,
       blockHash,
     )
@@ -830,7 +815,7 @@ describe('eth provider tests', () => {
   test('getStorageByName DSM pauseIntentValidityPeriodBlocks', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_HASH_PAUSE_INTENT_VALIDITY_PERIOD_BLOCKS,
       blockHash,
     )
@@ -844,7 +829,7 @@ describe('eth provider tests', () => {
   test('getStorageByName DSM owner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_OWNER,
       blockHash,
     )
@@ -852,13 +837,14 @@ describe('eth provider tests', () => {
       throw data.left.message
     }
 
+    // Aragon Agent: 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c (proxy)
     expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
   }, 120_000)
 
   test('getStorageByName DSM quorum', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_QUORUM,
       blockHash,
     )
@@ -872,7 +858,7 @@ describe('eth provider tests', () => {
   test('getStorageByName DSM guardians', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_GUARDIANS,
       blockHash,
     )
@@ -886,7 +872,7 @@ describe('eth provider tests', () => {
 
     const members = await ethClient.getStorageArrayAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_DSM_GUARDIANS,
       blockHash,
       len,
@@ -904,7 +890,7 @@ describe('eth provider tests', () => {
   }, 120_000)
 
   test('getStorageByName wstETH stETH', async () => {
-    const data = await ethClient.getStorageAtSlotAddr(address.WSTETH_ADDRESS, sloId, SLOT_WSTETH, blockHash)
+    const data = await ethClient.getStorageAtSlotAddr(address.WSTETH_ADDRESS, slotId, SLOT_WSTETH, blockHash)
     if (E.isLeft(data)) {
       throw data.left.message
     }
@@ -915,7 +901,7 @@ describe('eth provider tests', () => {
   test('getStorageByName MevBoost owner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
-      sloId,
+      slotId,
       SLOT_MEV_BOOST_OWNER,
       blockHash,
     )
@@ -929,7 +915,7 @@ describe('eth provider tests', () => {
   test('getStorageByName MevBoost manager', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
-      sloId,
+      slotId,
       SLOT_MEV_BOOST_MANAGER,
       blockHash,
     )
@@ -943,7 +929,7 @@ describe('eth provider tests', () => {
   test('getStorageByName MevBoost allowed_list_version', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
-      sloId,
+      slotId,
       SLOT_MEV_BOOST_ALLOWED_LIST,
       blockHash,
     )
@@ -957,7 +943,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Aragon token', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ARAGON_TOKEN,
       blockHash,
     )
@@ -971,7 +957,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Aragon supportRequiredPct', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ARAGON_SUPPORT_REQUIRED_PCT,
       blockHash,
     )
@@ -985,7 +971,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Aragon objectionPhaseTime', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ARAGON_OBJECTION_PHASE_TIME,
       blockHash,
     )
@@ -999,7 +985,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Aragon Manager token', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ARAGON_MANAGER_TOKEN,
       blockHash,
     )
@@ -1013,7 +999,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Aragon Manager maxAccountTokens', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ARAGON_MANAGER_MAX_ACCOUNT_TOKENS,
       blockHash,
     )
@@ -1027,7 +1013,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Aragon Finance vault', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_FINANCE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_ARAGON_FINANCE_VAULT,
       blockHash,
     )
@@ -1041,7 +1027,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Lido Treasury designatedSigner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.LIDO_TREASURY_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LIDO_TREASURY_DESIGNATED_SIGNER,
       blockHash,
     )
@@ -1055,7 +1041,7 @@ describe('eth provider tests', () => {
   test('getStorageByName Lido Insurance owner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.LIDO_INSURANCE_ADDRESS,
-      sloId,
+      slotId,
       SLOT_LIDO_INSURANCE_OWNER,
       blockHash,
     )
@@ -1064,5 +1050,37 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
+  }, 120_000)
+
+  test('getStorageByName SIMPLE_DVT lidoLocator', async () => {
+    const data = await ethClient.getStorageBySlotName(address.SIMPLEDVT_ADDRESS, slotId, SLOT_DVT_LOCATOR, blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb')
+  }, 120_000)
+
+  test('getStorageByName SIMPLE_DVT penalty delay', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.SIMPLEDVT_ADDRESS,
+      slotId,
+      SLOT_DVT_STUCK_PENALTY_DELAY,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000069780')
+  }, 120_000)
+
+  test('getStorageByName SIMPLE_DVT type', async () => {
+    const data = await ethClient.getStorageBySlotName(address.SIMPLEDVT_ADDRESS, slotId, SLOT_DVT_TYPE, blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x637572617465642d6f6e636861696e2d76310000000000000000000000000000')
   }, 120_000)
 })

@@ -86,7 +86,7 @@ describe('Withdrawals repo tests', () => {
         throw r.left
       }
 
-      expect(r.right.total).toBe(4)
+      expect(r.right.totalRequests).toBe(4)
     },
     timeout,
   )

@@ -13,15 +13,15 @@ export type WithdrawalRequestSql = {
 
 export type WithdrawalStat = {
   finalizedSteth: number
-  notFinalizedSteth: number
+  unFinalizedSteth: number
   claimedSteth: number
-  notClaimedSteth: number
-  steth: number
-  total: number
+  unClaimedSteth: number
+  stethAmount: number
+  totalRequests: number
   finalizedRequests: number
-  notfinalizedRequests: number
+  unFinalizedRequests: number
   claimedRequests: number
-  notClaimedRequests: number
+  unClaimedRequests: number
 }
 
 export class WithdrawalRequest {

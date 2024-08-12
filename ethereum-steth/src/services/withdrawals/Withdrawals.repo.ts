@@ -229,15 +229,15 @@ from withdrawal_requests;`)
 
       let out: WithdrawalStat = {
         finalizedSteth: 0,
-        notFinalizedSteth: 0,
+        unFinalizedSteth: 0,
         claimedSteth: 0,
-        notClaimedSteth: 0,
-        steth: 0,
-        total: 0,
+        unClaimedSteth: 0,
+        stethAmount: 0,
+        totalRequests: 0,
         finalizedRequests: 0,
-        notfinalizedRequests: 0,
+        unFinalizedRequests: 0,
         claimedRequests: 0,
-        notClaimedRequests: 0,
+        unClaimedRequests: 0,
       }
 
       if (data.length === 0) {

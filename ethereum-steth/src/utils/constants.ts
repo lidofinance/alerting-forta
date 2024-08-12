@@ -8,6 +8,7 @@ export type ERC20 = {
 
 export type Address = {
   NOR_ADDRESS: string
+  SIMPLEDVT_ADDRESS: string
   LEGACY_ORACLE_ADDRESS: string
   ACCOUNTING_ORACLE_ADDRESS: string
   ACCOUNTING_HASH_CONSENSUS_ADDRESS: string
@@ -41,6 +42,7 @@ export type Address = {
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
 
 const NOR_ADDRESS: string = '0x55032650b14df07b85bf18a3a3ec8e0af2e028d5'
+const SIMPLEDVT_ADDRESS: string = '0xae7b191a31f627b4eb1d4dac64eab9976995b433'
 const LEGACY_ORACLE_ADDRESS: string = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 const ACCOUNTING_ORACLE_ADDRESS: string = '0x852ded011285fe67063a08005c71a85690503cee'
 const ACCOUNTING_HASH_CONSENSUS_ADDRESS: string = '0xd624b08c83baecf0807dd2c6880c3154a5f0b288'
@@ -83,6 +85,7 @@ const KNOWN_ERC20 = new Map<string, ERC20>([
 
 export const Address: Address = {
   NOR_ADDRESS: NOR_ADDRESS,
+  SIMPLEDVT_ADDRESS: SIMPLEDVT_ADDRESS,
   LEGACY_ORACLE_ADDRESS: LEGACY_ORACLE_ADDRESS,
   ACCOUNTING_ORACLE_ADDRESS: ACCOUNTING_ORACLE_ADDRESS,
   ACCOUNTING_HASH_CONSENSUS_ADDRESS: ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -119,6 +122,10 @@ export const SLOT_LIDO_LOCATOR: string = 'lido.Lido.lidoLocator'
 export const SLOT_NOR_LOCATOR: string = 'lido.NodeOperatorsRegistry.lidoLocator'
 export const SLOT_NOR_STUCK_PENALTY_DELAY: string = 'lido.NodeOperatorsRegistry.stuckPenaltyDelay'
 export const SLOT_NOR_TYPE: string = 'lido.NodeOperatorsRegistry.type'
+
+export const SLOT_DVT_LOCATOR: string = 'lido.NodeOperatorsRegistry.lidoLocator'
+export const SLOT_DVT_STUCK_PENALTY_DELAY: string = 'lido.NodeOperatorsRegistry.stuckPenaltyDelay'
+export const SLOT_DVT_TYPE: string = 'lido.NodeOperatorsRegistry.type'
 
 export const SLOT_LEGACY_ORACLE_VERSIONED_CONTRACT_VERSION: string = 'lido.Versioned.contractVersion'
 export const SLOT_LEGACY_ORACLE_ACCOUNTING_ORACLE: string = 'lido.LidoOracle.accountingOracle'
@@ -184,6 +191,7 @@ export const SLOT_LIDO_INSURANCE_OWNER: string = '0x0'
 // Define constants for contact names
 export const CONTACT_NAME_LIDO_STETH_TOKEN = 'Lido and stETH token'
 export const CONTACT_NAME_NODE_OPERATORS_REGISTRY = 'Node Operators Registry'
+export const CONTACT_NAME_SIMPLE_DVT = 'Simple DVT'
 export const CONTACT_NAME_LEGACY_ORACLE = 'Legacy Oracle'
 export const CONTACT_NAME_ACCOUNTING_ORACLE = 'Accounting Oracle'
 export const CONTACT_NAME_ACCOUNTING_HASH_CONSENSUS = 'Accounting Hash Consensus'
@@ -663,6 +671,32 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     contractAddress: WITHDRAWALS_QUEUE_ADDRESS,
     contactName: CONTACT_NAME_WITHDRAWALS_QUEUE,
     slotName: SLOT_WITHDRAWALS_QUEUE_NFT_DESCRIPTOR_ADDRESS,
+    isAddress: false,
+    isArray: false,
+  },
+
+  // SimpleDVT
+  {
+    id: 52,
+    contractAddress: SIMPLEDVT_ADDRESS,
+    contactName: CONTACT_NAME_SIMPLE_DVT,
+    slotName: SLOT_DVT_LOCATOR,
+    isAddress: false,
+    isArray: false,
+  },
+  {
+    id: 53,
+    contractAddress: SIMPLEDVT_ADDRESS,
+    contactName: CONTACT_NAME_SIMPLE_DVT,
+    slotName: SLOT_DVT_STUCK_PENALTY_DELAY,
+    isAddress: false,
+    isArray: false,
+  },
+  {
+    id: 54,
+    contractAddress: SIMPLEDVT_ADDRESS,
+    contactName: CONTACT_NAME_SIMPLE_DVT,
+    slotName: SLOT_DVT_TYPE,
     isAddress: false,
     isArray: false,
   },
