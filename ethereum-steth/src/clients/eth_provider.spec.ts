@@ -319,6 +319,7 @@ describe('eth provider tests', () => {
       throw data.left.message
     }
 
+    // 19h 23mins
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000069780')
   }, 120_000)
 
