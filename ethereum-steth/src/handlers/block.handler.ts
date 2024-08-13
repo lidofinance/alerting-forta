@@ -12,6 +12,7 @@ import { StethOperationSrv } from '../services/steth_operation/StethOperation.sr
 import { StorageWatcherSrv } from '../services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
+import { BotOutdatedAlertID } from '../utils/errors'
 import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { elapsedTime } from '../utils/time'
 
@@ -85,10 +86,10 @@ export class BlockHandler {
         if (diff > MINUTES_6) {
           const f: Finding = new Finding()
 
-          f.setName(`⚠️ Currently processing Ethereum network block is outdated`)
+          f.setName(`ℹ️ Steth: Currently processing Ethereum network block is outdated`)
           f.setDescription(infraLine + lastBlockLine + diffLine)
-          f.setAlertid('L1-BLOCK-OUTDATED')
-          f.setSeverity(Finding.Severity.MEDIUM)
+          f.setAlertid(BotOutdatedAlertID)
+          f.setSeverity(Finding.Severity.INFO)
           f.setType(Finding.FindingType.SUSPICIOUS)
           f.setProtocol('ethereum')
 
