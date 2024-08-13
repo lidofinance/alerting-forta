@@ -12,9 +12,9 @@ import { StethOperationSrv } from '../services/steth_operation/StethOperation.sr
 import { StorageWatcherSrv } from '../services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
+import { BotOutdatedAlertID } from '../utils/errors'
 import { HandleBlockLabel, Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
 import { elapsedTime } from '../utils/time'
-import { BotOutdatedAlertID } from '../utils/errors'
 
 const MINUTES_6 = 60 * 6
 
