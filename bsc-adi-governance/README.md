@@ -13,6 +13,13 @@ Alerts about events on the CrossChainExecutor
 **Alerts:**
 
 - 🚨🚨🚨 BSC a.DI: Guardians updated
+- 🚨🚨🚨 BSC a.DI: Proxy admin changed
+- 🚨🚨🚨 BSC a.DI: Proxy upgraded
+- 🚨🚨🚨 BSC a.DI: Contract owner set to EOA 🚨🚨🚨
+- 🚨 BSC a.DI: Contract owner set to address not in whitelist
+- 🚨 BSC a.DI: Allowed Bridges quorum updated
+- 🚨 BSC a.DI: Allowed bridges set updated
+- ⚠️ BSC a.DI: Message hasn’t achieved a quorum after 1 hour
 - ⚠️ BSC a.DI: Cross-chain executor delay updated
 - ⚠️ BSC a.DI: Cross-chain executor Grace Period updated
 - ⚠️ BSC a.DI: Cross-chain executor Min Delay updated

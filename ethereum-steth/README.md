@@ -87,6 +87,26 @@
       6. ℹ️ EL Vault Balance significant change
    2. HandleTransaction
       1. 🚨 Burner shares transfer
+6. Storage Watcher
+   1. 🚨 Storage slot value changed
+      1. in LIDO_STETH
+      2. in NOR
+      3. in LEGACY_ORACLE
+      4. in ACCOUNTING_ORACLE
+      5. in ACCOUNTING_HASH_CONSENSUS
+      6. in VEBO
+      7. in VEBO_HASH_CONSENSUS
+      8. in DSM
+      9. in WSTETH
+      10. in MEV_BOOST_RELAY_ALLOWED_LIST
+      11. in ARAGON_VOTING
+      12. in ARAGON_TOKEN_MANAGER
+      13. in ARAGON_FINANCE
+      14. in LIDO_TREASURY
+      15. in LIDO_INSURANCE
+      16. in STAKING_ROUTER
+      17. in WITHDRAWALS_QUEUE
+      18. in SIMPLE_DVT
 
 ## Development (Forta specific)
 

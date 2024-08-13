@@ -1,3 +1,6 @@
+export const SECONDS_60 = 60
+export const SECONDS_768 = 768
+
 export function formatTime(timeInMillis: number): string {
   const seconds = (timeInMillis / 1000).toFixed(3)
   return `${seconds} seconds`
@@ -10,6 +13,10 @@ export function elapsedTime(methodName: string, startTime: number): string {
   )}`
 }
 
+export function elapsed(startTime: number): string {
+  return formatTime(new Date().getTime() - startTime)
+}
+
 function formatTimeToHumanReadable(date: Date): string {
   return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
 }
@@ -17,11 +24,11 @@ function formatTimeToHumanReadable(date: Date): string {
 export function formatDelay(fullDelaySec: number): string {
   const sign = fullDelaySec >= 0 ? 1 : -1
   let delayHours = 0
-  let delayMin = Math.floor((sign * fullDelaySec) / 60)
-  const delaySec = sign * fullDelaySec - delayMin * 60
-  if (delayMin >= 60) {
-    delayHours = Math.floor(delayMin / 60)
-    delayMin -= delayHours * 60
+  let delayMin = Math.floor((sign * fullDelaySec) / SECONDS_60)
+  const delaySec = sign * fullDelaySec - delayMin * SECONDS_60
+  if (delayMin >= SECONDS_60) {
+    delayHours = Math.floor(delayMin / SECONDS_60)
+    delayMin -= delayHours * SECONDS_60
   }
   return (
     (sign == 1 ? '' : '-') +

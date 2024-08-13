@@ -37,7 +37,12 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const agents: string[] = [app.crossChainControllerSrv.getName(), app.crossChainExecutorWatcherSrv.getName()]
+    const agents: string[] = [
+      app.crossChainControllerSrv.getName(),
+      app.crossChainExecutorWatcherSrv.getName(),
+      app.bscAclChangesSrv.getName(),
+    ]
+
     metadata.agents = '[' + agents.toString() + ']'
 
     await app.findingsRW.write([
@@ -55,16 +60,11 @@ export function initialize(): Initialize {
   }
 }
 
-let isHandleBlockRunning: boolean = false
 export const handleBlock = (): HandleBlock => {
   return async function (blockEvent: BlockEvent): Promise<Finding[]> {
     console.log(`#BSC block: ${blockEvent.block.number}`)
     const startTime = new Date().getTime()
-    if (isHandleBlockRunning) {
-      return []
-    }
 
-    isHandleBlockRunning = true
     const app = await App.getInstance()
 
     const findings: Finding[] = []
@@ -72,11 +72,15 @@ export const handleBlock = (): HandleBlock => {
     if (findingsAsync.length > 0) {
       findings.push(...findingsAsync)
     }
+    const [crossChainControllerFindings, bscAclChangesFindings] = await Promise.all([
+      app.crossChainControllerSrv.handleBlock(blockEvent),
+      app.bscAclChangesSrv.handleBlock(blockEvent),
+    ])
+    findings.push(...crossChainControllerFindings, ...bscAclChangesFindings)
 
     app.healthChecker.check(findings)
 
     console.log(elapsedTime('handleBlock', startTime) + '\n')
-    isHandleBlockRunning = false
     return findings
   }
 }

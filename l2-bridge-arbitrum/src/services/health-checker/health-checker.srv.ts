@@ -4,7 +4,7 @@ import { Logger } from 'winston'
 import { Metrics } from '../../utils/metrics/metrics'
 
 export const BorderTime = 15 * 60 * 1000 // 15 minutes
-export const MaxNumberErrorsPerBorderTime = 25
+export const MaxNumberErrorsPerBorderTime = 5_000
 
 export class HealthChecker {
   private errorCount: number
@@ -35,11 +35,9 @@ export class HealthChecker {
       if (f.getAlertid() === NetworkErrorFinding) {
         this.logger.warn(f.getName(), {
           desc: f.getDescription(),
-          err: {
-            stack: f.getMetadataMap()['stack'],
-            msg: f.getMetadataMap()['message'],
-            err: f.getMetadataMap()['name'],
-          },
+          stack: f.getMetadataMap()['stack'],
+          msg: f.getMetadataMap()['message'],
+          err: f.getMetadataMap()['name'],
         })
         errCount += 1
 

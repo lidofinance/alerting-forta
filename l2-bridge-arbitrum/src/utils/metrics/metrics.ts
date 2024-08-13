@@ -2,8 +2,15 @@ import { Counter, Gauge, Histogram, Registry, Summary } from 'prom-client'
 
 export const StatusOK = 'ok'
 export const StatusFail = 'fail'
-export const HandleBlockLabel = 'handleBlock'
+export const HandleL1BlockLabel = 'handleL1Block'
+export const HandleL2BlockLabel = 'handleL2Block'
 export const HandleTxLabel = 'handleTx'
+
+export const chainL2 = `l2`
+export const chainL1 = `l1`
+export const ldo = `ldo`
+export const stETH = `stETH`
+export const wStETH = `wStETH`
 
 export class Metrics {
   private readonly registry: Registry
@@ -19,6 +26,7 @@ export class Metrics {
   public readonly lastAgentTouch: Gauge
   public readonly processedIterations: Counter
   public readonly summaryHandlers: Summary
+  public readonly bridgeBalance: Gauge
 
   constructor(registry: Registry, prefix: string) {
     this.registry = registry
@@ -82,6 +90,14 @@ export class Metrics {
       name: this.prefix + 'request_processing_seconds',
       help: 'Time spent processing request (block or transaction)',
       labelNames: ['method'],
+      registers: [this.registry],
+    })
+
+    // Only for L2 bots
+    this.bridgeBalance = new Gauge({
+      name: this.prefix + 'bridge_balance',
+      help: 'Bridge balance',
+      labelNames: ['token', 'chain'] as const,
       registers: [this.registry],
     })
   }

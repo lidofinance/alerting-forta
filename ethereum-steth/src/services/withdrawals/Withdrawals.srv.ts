@@ -1,8 +1,14 @@
 import BigNumber from 'bignumber.js'
-import { WithdrawalsCache } from './Withdrawals.cache'
+import { filterLog } from 'forta-agent'
 import { either as E } from 'fp-ts'
+import { Logger } from 'winston'
+import { BlockDto, EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
+import { StakingLimitInfo } from '../../entity/staking_limit_info'
+import { WithdrawalRequest } from '../../entity/withdrawal_request'
+import { Finding } from '../../generated/proto/alert_pb'
+import { WithdrawalClaimedEvent } from '../../generated/typechain/WithdrawalQueueERC721'
 import { ETH_DECIMALS } from '../../utils/constants'
-import { elapsedTime, formatDelay } from '../../utils/time'
+import { dbAlert, networkAlert } from '../../utils/errors'
 import {
   LIDO_TOKEN_REBASED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
@@ -12,16 +18,9 @@ import {
   WITHDRAWALS_BUNKER_MODE_ENABLED_EVENT,
 } from '../../utils/events/withdrawals_events'
 import { etherscanAddress, etherscanNft } from '../../utils/string'
-import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
-import { Logger } from 'winston'
-import { WithdrawalRequest } from '../../entity/withdrawal_request'
+import { elapsedTime, formatDelay } from '../../utils/time'
+import { WithdrawalsCache } from './Withdrawals.cache'
 import { WithdrawalsRepo } from './Withdrawals.repo'
-import { dbAlert, networkAlert } from '../../utils/errors'
-import { BlockDto } from '../../entity/events'
-import { StakingLimitInfo } from '../../entity/staking_limit_info'
-import { Finding } from '../../generated/proto/alert_pb'
-import { filterLog } from 'forta-agent'
-import { WithdrawalClaimedEvent } from '../../generated/typechain/WithdrawalQueueERC721'
 
 const ONE_HOUR = 60 * 60
 const ONE_DAY = ONE_HOUR * 24
@@ -688,7 +687,7 @@ export class WithdrawalsSrv {
       return
     }
 
-    this.cache.setLastTokenRebaseTimestamp(txEvent.block.timestamp)
+    this.cache.setLastTokenRebaseTimestamp(rebaseEvent.args.reportTimestamp)
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
   }
 
@@ -805,53 +804,20 @@ export class WithdrawalsSrv {
     return out
   }
 
-  async getStatistic(): Promise<E.Either<Error, string>> {
-    const data = await this.repo.getAll()
-    if (E.isLeft(data)) {
-      return data
-    }
-
-    let stETH = new BigNumber(0)
-
-    let finalizedStETH = new BigNumber(0)
-    let nonFinalizedStETH = new BigNumber(0)
-
-    let claimedStEth = new BigNumber(0)
-    let nonClaimedStEth = new BigNumber(0)
-
-    let finalized: number = 0
-    let claimed: number = 0
-    let notFinalized: number = 0
-    let notClaimed: number = 0
-
-    for (const wr of data.right) {
-      stETH = stETH.plus(wr.amountOfStETH)
-
-      if (wr.isFinalized) {
-        finalized += 1
-        finalizedStETH = finalizedStETH.plus(wr.amountOfStETH)
-      } else {
-        notFinalized += 1
-        nonFinalizedStETH = nonFinalizedStETH.plus(wr.amountOfStETH)
-      }
-
-      if (wr.isClaimed) {
-        claimed += 1
-        claimedStEth = claimedStEth.plus(wr.amountOfStETH)
-      } else {
-        notClaimed += 1
-        nonClaimedStEth = nonClaimedStEth.plus(wr.amountOfStETH)
-      }
+  async getStatisticString(): Promise<E.Either<Error, string>> {
+    const stat = await this.repo.getStat()
+    if (E.isLeft(stat)) {
+      return stat
     }
 
     return E.right(
       `\n` +
-        `\tStEth:         ${stETH.dividedBy(ETH_DECIMALS).toFixed(4)} \n` +
-        `\tfinalized:     ${finalizedStETH.dividedBy(ETH_DECIMALS).toFixed(4)} ${finalized} \n` +
-        `\tnot finalized: ${nonFinalizedStETH.dividedBy(ETH_DECIMALS).toFixed(4)}  ${notFinalized}  \n` +
-        `\tclaimed:       ${claimedStEth.dividedBy(ETH_DECIMALS).toFixed(4)} ${claimed} \n` +
-        `\tnot claimed:   ${nonClaimedStEth.dividedBy(ETH_DECIMALS).toFixed(4)}  ${notClaimed}\n` +
-        `\ttotal:         ${data.right.length} wr`,
+        `\tStEth:       ${stat.right.stethAmount.toFixed(4)} \n` +
+        `\tfinalized:   ${stat.right.finalizedSteth.toFixed(4)} ${stat.right.finalizedRequests} \n` +
+        `\tunfinalized: ${stat.right.unFinalizedSteth.toFixed(4)}  ${stat.right.unFinalizedRequests}  \n` +
+        `\tclaimed:     ${stat.right.claimedSteth.toFixed(4)} ${stat.right.claimedRequests} \n` +
+        `\tunclaimed:   ${stat.right.unClaimedSteth.toFixed(4)}  ${stat.right.unClaimedRequests}\n` +
+        `\ttotal:       ${stat.right.totalRequests} withdrawal requests`,
     )
   }
 }

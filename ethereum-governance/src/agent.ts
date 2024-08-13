@@ -53,6 +53,7 @@ export function initialize(): Initialize {
       app.ProxyWatcherSrv.initialize(latestBlockNumber.right),
       app.TrpChangesSrv.initialize(latestBlockNumber.right),
       app.StonksSrv.initialize(latestBlockNumber.right),
+      app.CrossChainWatcherSrv.initialize(latestBlockNumber.right),
     ])
 
     if (aragonVotingSrvErr !== null) {
@@ -107,6 +108,7 @@ export const handleBlock = (): HandleBlock => {
         app.EnsNamesSrv.handleBlock(blockEvent),
         app.ProxyWatcherSrv.handleBlock(blockEvent),
         app.StonksSrv.handleBlock(blockEvent),
+        app.CrossChainWatcherSrv.handleBlock(blockEvent),
       ])
     ).flat()
     findings.push(...servicesFindings)
@@ -130,6 +132,7 @@ export const handleTransaction = (): HandleTransaction => {
         await app.EasyTrackSrv.handleTransaction(txEvent),
         await app.TrpChangesSrv.handleTransaction(txEvent),
         await app.StonksSrv.handleTransaction(txEvent),
+        await app.CrossChainWatcherSrv.handleTransaction(txEvent),
       ])
     ).flat()
 
