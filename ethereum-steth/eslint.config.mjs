@@ -1,8 +1,8 @@
 import eslint from '@eslint/js'
-import prettier from 'eslint-plugin-prettier'
-import tseslint from 'typescript-eslint'
 import tsParser from '@typescript-eslint/parser'
+import prettier from 'eslint-plugin-prettier'
 import globals from 'globals'
+import tseslint from 'typescript-eslint'
 
 export default tseslint.config({
   ...eslint.configs.recommended,
