@@ -6,6 +6,7 @@ export type StorageSlot = {
   slotAddress?: string
   isAddress: boolean
   isArray: boolean
+  expected: string
 }
 
 export type StorageItemResponse = {

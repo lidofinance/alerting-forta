@@ -214,17 +214,19 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     id: 1,
     contractAddress: LIDO_STETH_ADDRESS,
     contactName: CONTACT_NAME_LIDO_STETH_TOKEN,
-    slotName: SLOT_LIDO_VERSIONED_CONTRACT,
+    slotName: SLOT_LIDO_LOCATOR,
     isAddress: false,
     isArray: false,
+    expected: '0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb',
   },
   {
     id: 2,
     contractAddress: LIDO_STETH_ADDRESS,
     contactName: CONTACT_NAME_LIDO_STETH_TOKEN,
-    slotName: SLOT_LIDO_LOCATOR,
+    slotName: SLOT_LIDO_VERSIONED_CONTRACT,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000002',
   },
 
   // Node Operators Registry
@@ -235,6 +237,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_NOR_LOCATOR,
     isAddress: false,
     isArray: false,
+    expected: '0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb',
   },
   {
     id: 4,
@@ -243,6 +246,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_NOR_STUCK_PENALTY_DELAY,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000069780',
   },
   {
     id: 5,
@@ -251,6 +255,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_NOR_TYPE,
     isAddress: false,
     isArray: false,
+    expected: '0x637572617465642d6f6e636861696e2d76310000000000000000000000000000',
   },
 
   // Legacy Oracle
@@ -261,6 +266,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_LEGACY_ORACLE_VERSIONED_CONTRACT_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000004',
   },
   {
     id: 7,
@@ -269,6 +275,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_LEGACY_ORACLE_ACCOUNTING_ORACLE,
     isAddress: false,
     isArray: false,
+    expected: '0x000000000000000000000000852ded011285fe67063a08005c71a85690503cee',
   },
   {
     id: 8,
@@ -277,6 +284,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_LEGACY_ORACLE_BEACON_SPEC,
     isAddress: false,
     isArray: false,
+    expected: '0x00000000000000e10000000000000020000000000000000c000000005fc63057',
   },
   {
     id: 9,
@@ -285,6 +293,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_LEGACY_ORACLE_CONTRACT_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000000',
   },
   {
     id: 10,
@@ -293,6 +302,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_LEGACY_ORACLE_LIDO,
     isAddress: false,
     isArray: false,
+    expected: '0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84',
   },
 
   // Accounting Oracle
@@ -303,6 +313,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_ACCOUNTING_ORACLE_VERSIONED_CONTRACT_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000001',
   },
   {
     id: 12,
@@ -311,6 +322,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_ACCOUNTING_ORACLE_CONSENSUS_CONTRACT,
     isAddress: false,
     isArray: false,
+    expected: '0x000000000000000000000000d624b08c83baecf0807dd2c6880c3154a5f0b288',
   },
   {
     id: 13,
@@ -319,6 +331,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_ACCOUNTING_ORACLE_CONSENSUS_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000001',
   },
 
   // Accounting Hash Consensus
@@ -330,6 +343,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: '0x0000000000000000000000000000006400000000000000e10000000000031380',
   },
   {
     id: 15,
@@ -339,6 +353,8 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x2',
     isAddress: true,
     isArray: true,
+    expected:
+      '["0x000000000000000000000000140bd8fbdc884f48da7cb1c09be8a2fadfea776e","0x000000000000000000000000a7410857abbf75043d61ea54e07d57a6eb6ef186","0x000000000000000000000000404335bce530400a5814375e7ec1fb55faff3ea2","0x000000000000000000000000946d3b081ed19173dc83cd974fc69e1e760b7d78","0x000000000000000000000000007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5","0x000000000000000000000000ec4bfbaf681eb505b94e4a7849877dc6c600ca3a","0x00000000000000000000000061c91ecd902eb56e314bb2d5c5c07785444ea1c8","0x0000000000000000000000001ca0fec59b86f549e1f1184d97cb47794c8af58d","0x000000000000000000000000c79f702202e3a6b0b6310b537e786b9acaa19baf"]',
   },
   {
     id: 16,
@@ -348,6 +364,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x5',
     isAddress: true,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000005',
   },
   {
     id: 17,
@@ -357,6 +374,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x8',
     isAddress: true,
     isArray: false,
+    expected: '0x000000000000000000000000852ded011285fe67063a08005c71a85690503cee',
   },
 
   // Validators Exit Bus Oracle
@@ -367,6 +385,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_VEBO_VERSIONED_CONTRACT_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000001',
   },
   {
     id: 19,
@@ -375,6 +394,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_VEBO_CONSENSUS_CONTRACT,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000007fadb6358950c5faa66cb5eb8ee5147de3df355a',
   },
   {
     id: 20,
@@ -383,6 +403,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_VEBO_ORACLE_CONSENSUS_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000001',
   },
 
   // Validators Exit Bus Hash Consensus
@@ -394,6 +415,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x00000000000000000000000000000064000000000000004b0000000000031380`,
   },
   {
     id: 22,
@@ -403,6 +425,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x2',
     isAddress: true,
     isArray: true,
+    expected: `["0x000000000000000000000000140bd8fbdc884f48da7cb1c09be8a2fadfea776e","0x000000000000000000000000a7410857abbf75043d61ea54e07d57a6eb6ef186","0x000000000000000000000000404335bce530400a5814375e7ec1fb55faff3ea2","0x000000000000000000000000946d3b081ed19173dc83cd974fc69e1e760b7d78","0x000000000000000000000000007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5","0x000000000000000000000000ec4bfbaf681eb505b94e4a7849877dc6c600ca3a","0x00000000000000000000000061c91ecd902eb56e314bb2d5c5c07785444ea1c8","0x0000000000000000000000001ca0fec59b86f549e1f1184d97cb47794c8af58d","0x000000000000000000000000c79f702202e3a6b0b6310b537e786b9acaa19baf"]`,
   },
   {
     id: 23,
@@ -412,6 +435,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x5',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000000005`,
   },
   {
     id: 24,
@@ -421,6 +445,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x8',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000de4ea0184c2ad0baca7183356aea5b8d5bf5c6e`,
   },
 
   // Deposit Security Module
@@ -432,6 +457,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000000096`,
   },
   {
     id: 26,
@@ -441,6 +467,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x1',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000000019`,
   },
   {
     id: 27,
@@ -450,6 +477,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x2',
     isAddress: true,
     isArray: false,
+    expected: `0x00000000000000000000000000000000000000000000000000000000000019f6`,
   },
   {
     id: 28,
@@ -459,6 +487,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x3',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c`,
   },
   {
     id: 29,
@@ -468,6 +497,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x4',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000000004`,
   },
   {
     id: 30,
@@ -477,6 +507,8 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x5',
     isAddress: true,
     isArray: true,
+    expected:
+      '["0x0000000000000000000000005fd0ddbc3351d009eb3f88de7cd081a614c519f1","0x0000000000000000000000007912fa976bcde9c2cf728e213e892ad7588e6aaf","0x00000000000000000000000014d5d5b71e048d2d75a39ffc5b407e3a3ab6f314","0x000000000000000000000000f82d88217c249297c6037ba77ce34b3d8a90ab43","0x000000000000000000000000a56b128ea2ea237052b0fa2a96a387c0e43157d8","0x000000000000000000000000d4ef84b638b334699bcf5af4b0410b8ccd71943f"]',
   },
 
   // wstETH
@@ -488,6 +520,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x7',
     isAddress: true,
     isArray: false,
+    expected: `0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84`,
   },
 
   // MEV Boost Relay Allowed List
@@ -495,10 +528,11 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     id: 32,
     contractAddress: MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
     contactName: CONTACT_NAME_MEV_BOOST_RELAY_ALLOWED_LIST,
-    slotName: SLOT_MEV_BOOST_OWNER,
+    slotName: SLOT_MEV_BOOST_ALLOWED_LIST,
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000000012`,
   },
   {
     id: 33,
@@ -508,16 +542,20 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x1',
     isAddress: true,
     isArray: false,
+    expected: `0x00000000000000000000000098be4a407bff0c125e25fbe9eb1165504349c37d`,
   },
   {
     id: 34,
     contractAddress: MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
     contactName: CONTACT_NAME_MEV_BOOST_RELAY_ALLOWED_LIST,
-    slotName: SLOT_MEV_BOOST_ALLOWED_LIST,
+    slotName: SLOT_MEV_BOOST_OWNER,
     slotAddress: '0xfa3',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c`,
   },
+
+  // ARAGON_VOTING
   {
     id: 35,
     contractAddress: ARAGON_VOTING_ADDRESS,
@@ -526,6 +564,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000006f05b59d3b200005a98fcbea516cf06857215779fd812ca3bef1b32`,
   },
   {
     id: 36,
@@ -535,6 +574,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x1',
     isAddress: true,
     isArray: false,
+    expected: `0x00000000000000000000000000000000000000000003f48000b1a2bc2ec50000`,
   },
   {
     id: 37,
@@ -544,9 +584,8 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x4',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000015180`,
   },
-
-  // Aragon Token Manager
   {
     id: 38,
     contractAddress: ARAGON_TOKEN_MANAGER_ADDRESS,
@@ -555,6 +594,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000006f05b59d3b200005a98fcbea516cf06857215779fd812ca3bef1b32`,
   },
   {
     id: 39,
@@ -564,6 +604,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x1',
     isAddress: true,
     isArray: false,
+    expected: `0x00000000000000000000000000000000000000000003f48000b1a2bc2ec50000`,
   },
 
   // Aragon Finance
@@ -575,6 +616,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c`,
   },
 
   // Lido Treasury
@@ -586,6 +628,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x1',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000000000`,
   },
 
   // Lido Insurance
@@ -597,6 +640,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotAddress: '0x0',
     isAddress: true,
     isArray: false,
+    expected: `0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c`,
   },
 
   // Staking Router
@@ -607,6 +651,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_STAKING_ROUTER_VERSIONED_CONTRACT_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000001',
   },
   {
     id: 44,
@@ -615,6 +660,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOTS_STAKING_ROUTER_LIDO,
     isAddress: false,
     isArray: false,
+    expected: '0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84',
   },
   {
     id: 45,
@@ -623,6 +669,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOTS_STAKING_ROUTER_LAST_STAKING_MODULE_ID,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000002',
   },
   {
     id: 46,
@@ -631,6 +678,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOTS_STAKING_ROUTER_STAKING_MODULES_COUNT,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000002',
   },
   {
     id: 47,
@@ -639,6 +687,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOTS_STAKING_ROUTER_WITHDRAWAL_CREDENTIALS,
     isAddress: false,
     isArray: false,
+    expected: '0x010000000000000000000000b9d7934878b5fb9610b3fe8a5e441e8fad7e293f',
   },
 
   // Withdrawals Queue
@@ -649,6 +698,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_WITHDRAWALS_QUEUE_VERSIONED_CONTRACT_VERSION,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000001',
   },
   {
     id: 49,
@@ -657,6 +707,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_WITHDRAWALS_QUEUE_BUNKER_MODE_SINCE_TIMESTAMP,
     isAddress: false,
     isArray: false,
+    expected: '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
   },
   {
     id: 50,
@@ -665,6 +716,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_WITHDRAWALS_QUEUE_BASE_URI,
     isAddress: false,
     isArray: false,
+    expected: '0x68747470733a2f2f77712d6170692e6c69646f2e66692f76312f6e667400003a',
   },
   {
     id: 51,
@@ -673,6 +725,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_WITHDRAWALS_QUEUE_NFT_DESCRIPTOR_ADDRESS,
     isAddress: false,
     isArray: false,
+    expected: '0x0000000000000000000000000000000000000000000000000000000000000000',
   },
 
   // SimpleDVT
@@ -683,6 +736,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_DVT_LOCATOR,
     isAddress: false,
     isArray: false,
+    expected: `0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb`,
   },
   {
     id: 53,
@@ -691,6 +745,7 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_DVT_STUCK_PENALTY_DELAY,
     isAddress: false,
     isArray: false,
+    expected: `0x0000000000000000000000000000000000000000000000000000000000069780`,
   },
   {
     id: 54,
@@ -699,5 +754,6 @@ export const STORAGE_SLOTS: StorageSlot[] = [
     slotName: SLOT_DVT_TYPE,
     isAddress: false,
     isArray: false,
+    expected: `0x637572617465642d6f6e636861696e2d76310000000000000000000000000000`,
   },
 ]
