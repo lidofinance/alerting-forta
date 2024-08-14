@@ -24,7 +24,7 @@ export function getCSAccountingEvents(CS_ACCOUNTING_ADDRESS: string): EventOfNot
       alertId: 'CS-ACCOUNTING-BOND-CURVE-UPDATED',
       name: '🚨 CSAccounting: Bond curve updated',
       description: (args: Result) => {
-        const bondCurveString = args.bondCurve.map((value: BigNumber) => toEthString(value)).join(', ')
+        const bondCurveString = args.bondCurve.map((value: string) => toEthString(BigNumber(Number(value)))).join(', ')
         return `Bond curve updated with curve ID ${args.curveId}. Bond curve: [${bondCurveString}]`
       },
       severity: Finding.Severity.CRITICAL,
@@ -36,7 +36,7 @@ export function getCSAccountingEvents(CS_ACCOUNTING_ADDRESS: string): EventOfNot
       alertId: 'CS-ACCOUNTING-BOND-CURVE-ADDED',
       name: '🔴 CSAccounting: Bond curve added',
       description: (args: Result) => {
-        const bondCurveString = args.bondCurve.map((value: BigNumber) => toEthString(value)).join(', ')
+        const bondCurveString = args.bondCurve.map((value: string) => toEthString(BigNumber(Number(value)))).join(', ')
         return `Bond curve added: [${bondCurveString}]`
       },
       severity: Finding.Severity.HIGH,

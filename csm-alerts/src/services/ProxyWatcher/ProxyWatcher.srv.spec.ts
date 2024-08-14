@@ -69,7 +69,7 @@ describe('ProxyWatcher event tests', () => {
   )
 
   test(
-    '🚨 Admin Changed',
+    '🚨 Proxy Watcher: Admin Changed',
     async () => {
       const txHash = '0x92410350f567757d8f73b2f4b3670454af3899d095103ea0e745c92714673277'
 
@@ -94,7 +94,7 @@ describe('ProxyWatcher event tests', () => {
   )
 
   test(
-    '🚨 Implementation Upgraded',
+    '🚨 Proxy Watcher: Implementation Upgraded',
     async () => {
       const txHash = '0x262faac95560f7fc0c831580d17e48daa69b17831b798e0b00bc43168a310c52'
 
@@ -114,6 +114,56 @@ describe('ProxyWatcher event tests', () => {
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(4)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🚨 Proxy Watcher: Paused',
+    async () => {
+      const txHash = '0x56a49219b4e40d146c0dc11d795b6d43696947f0ceb63fad7e9b820eab2b3e14'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = proxyWatcherSrv.handleTransaction(transactionDto)
+
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(3)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🚨 Proxy Watcher: Resumed',
+    async () => {
+      const txHash = '0xa44ac96956f254fe1b9d6ff0a60ad2b5b4a7eaff951eb98150c0f7bbe90dc5df'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = proxyWatcherSrv.handleTransaction(transactionDto)
+
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(3)
     },
     TEST_TIMEOUT,
   )

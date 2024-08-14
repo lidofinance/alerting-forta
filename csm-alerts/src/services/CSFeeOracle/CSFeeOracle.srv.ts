@@ -4,7 +4,7 @@ import { Logger } from 'winston'
 import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 import { ethers, filterLog, getEthersProvider } from 'forta-agent'
-import { ONE_DAY, ONE_MONTH, ONE_WEEK, SECONDS_PER_SLOT } from '../../utils/constants'
+import { ONE_MONTH, SECONDS_PER_SLOT } from '../../utils/constants'
 import CS_FEE_ORACLE_ABI from '../../brief/abi/CSFeeOracle.json'
 import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
 import { getLogsByChunks } from '../../utils/utils'
@@ -31,7 +31,7 @@ export class CSFeeOracleSrv {
   private readonly hashConsensusAddress: string
   private readonly csFeeOracleAddress: string
 
-  private slotReports: { [slot: number]: Set<string> } = {}
+  private lastReportSubmitTimestamp: number = 0
   private membersAddresses: string[] = []
   private membersLastReport: Map<string, MemberReport> = new Map()
 
@@ -53,9 +53,7 @@ export class CSFeeOracleSrv {
     this.csFeeOracleEvents = csFeeOracleEvents
   }
 
-  async getOracleMembers(blockNumber: number): Promise<string[]> {
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
-
+  async getOracleMembers(blockNumber: number, hashConsensus: ethers.Contract): Promise<string[]> {
     const members = await hashConsensus.functions.getMembers({
       blockTag: blockNumber,
     })
@@ -72,17 +70,16 @@ export class CSFeeOracleSrv {
     }
 
     const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
-
-    this.membersAddresses = await this.getOracleMembers(currentBlock)
-    const memberReportReceivedFilter = hashConsensus.filters.ReportReceived()
-    // ~14 days ago
-    const reportReceivedStartBlock = currentBlock - Math.ceil((2 * ONE_WEEK) / SECONDS_PER_SLOT)
+    this.membersAddresses = await this.getOracleMembers(currentBlock, hashConsensus)
+    const hashConsensusReportReceivedFilter = hashConsensus.filters.ReportReceived()
+    const reportReceivedStartBlock = currentBlock - Math.ceil(ONE_MONTH / SECONDS_PER_SLOT)
     const reportReceivedEvents = await getLogsByChunks(
       hashConsensus,
-      memberReportReceivedFilter,
+      hashConsensusReportReceivedFilter,
       reportReceivedStartBlock,
-      currentBlock - 1,
+      currentBlock,
     )
+    reportReceivedEvents.sort((a, b) => a.blockNumber - b.blockNumber)
 
     this.membersAddresses.forEach((member: string) => {
       const memberReports = reportReceivedEvents.filter((event) => {
@@ -108,6 +105,15 @@ export class CSFeeOracleSrv {
       }
     })
 
+    const reportSubmits = await this.getReportSubmits(
+      currentBlock - Math.ceil(ONE_MONTH / SECONDS_PER_SLOT),
+      currentBlock,
+    )
+
+    if (reportSubmits.length > 0) {
+      this.lastReportSubmitTimestamp = (await reportSubmits[reportSubmits.length - 1].getBlock()).timestamp
+    }
+
     this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return null
   }
@@ -118,9 +124,7 @@ export class CSFeeOracleSrv {
 
   async getReportSubmits(blockFrom: number, blockTo: number) {
     const csFeeOracle = new ethers.Contract(this.csFeeOracleAddress, CS_FEE_ORACLE_ABI, getEthersProvider())
-
     const oracleReportFilter = csFeeOracle.filters.ReportSubmitted()
-
     return await getLogsByChunks(csFeeOracle, oracleReportFilter, blockFrom, blockTo)
   }
 
@@ -140,18 +144,14 @@ export class CSFeeOracleSrv {
   public async handleReportOverdue(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const reportSubmits = await this.getReportSubmits(
-      blockDto.number - Math.ceil(ONE_DAY / SECONDS_PER_SLOT),
-      blockDto.number - 1,
-    )
     const now = blockDto.timestamp
-    let lastReportSubmitTimestamp = 0
 
-    if (reportSubmits.length > 0) {
-      lastReportSubmitTimestamp = (await reportSubmits[reportSubmits.length - 1].getBlock()).timestamp
-    }
-    const reportDelayUpdated = now - (lastReportSubmitTimestamp ? lastReportSubmitTimestamp : 0)
-    if (reportDelayUpdated > ONE_MONTH) {
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
+    const frameConfig = await hashConsensus.functions.getFrameConfig()
+    const MAX_REPORT_DELAY = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
+
+    const reportDelayUpdated = now - (this.lastReportSubmitTimestamp ? this.lastReportSubmitTimestamp : 0)
+    if (reportDelayUpdated > MAX_REPORT_DELAY) {
       const f: Finding = new Finding()
       f.setName(`🔴 CSFeeOracle: Report overdue`)
       f.setDescription(`Report is overdue by ${reportDelayUpdated} seconds`)
@@ -161,6 +161,11 @@ export class CSFeeOracleSrv {
       f.setProtocol('ethereum')
 
       out.push(f)
+
+      if (out.length > 0) {
+        this.lastReportSubmitTimestamp = now
+        return out
+      }
     }
     return out
   }
@@ -177,18 +182,26 @@ export class CSFeeOracleSrv {
     if (currentReportHashes.length > 0 && !currentReportHashes.includes(event.args.report)) {
       const f = new Finding()
       f.setName('🔴 HashConsensus: Another report variant appeared (alternative hash)')
-      f.setDescription(`More than one distinct report hash received for slot ${event.args.refSlot}`)
+      f.setDescription(
+        'More than one distinct report hash received for slot ${event.args.refSlot}. Member: ${event.args.member}. Report: ${event.args.report}',
+      )
       f.setAlertid('HASH-CONSENSUS-REPORT-RECEIVED')
       f.setSeverity(Finding.Severity.HIGH)
       f.setType(Finding.FindingType.INFORMATION)
+      f.setProtocol('ethereum')
       out.push(f)
+
+      this.membersLastReport.set(event.args.member, {
+        refSlot: event.args.refSlot,
+        report: event.args.report,
+        blockNumber: txEvent.block.number,
+      })
     }
     return out
   }
 
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
-
     const hashConsensusFindings = handleEventsOfNotice(txEvent, this.hashConsensusEvents)
     const csFeeOracleFindings = handleEventsOfNotice(txEvent, this.csFeeOracleEvents)
     const alternativeHashReceivedFindings = this.handleAlternativeHashReceived(txEvent)

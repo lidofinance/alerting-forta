@@ -70,17 +70,6 @@ export class CSAccountingSrv {
     return Promise.resolve([out])
   }
 
-  public handleTransaction(txEvent: TransactionDto): Finding[] {
-    const out: Finding[] = []
-
-    const csAccountingFindings = handleEventsOfNotice(txEvent, this.csAccountingEvents)
-    const stETHApprovalFindings = this.handleStETHApprovalEvents(txEvent)
-
-    out.push(...csAccountingFindings, ...stETHApprovalFindings)
-
-    return out
-  }
-
   public handleStETHApprovalEvents(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
@@ -102,6 +91,17 @@ export class CSAccountingSrv {
         out.push(f)
       }
     }
+    return out
+  }
+
+  public handleTransaction(txEvent: TransactionDto): Finding[] {
+    const out: Finding[] = []
+
+    const csAccountingFindings = handleEventsOfNotice(txEvent, this.csAccountingEvents)
+    const stETHApprovalFindings = this.handleStETHApprovalEvents(txEvent)
+
+    out.push(...csAccountingFindings, ...stETHApprovalFindings)
+
     return out
   }
 }

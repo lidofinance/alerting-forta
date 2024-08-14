@@ -61,9 +61,9 @@ describe('CSAccounting event tests', () => {
   )
 
   test(
-    '🔴 Bond curve added',
+    '🚨 CSAccounting: Bond Curve Updated',
     async () => {
-      const txHash = '0x58aa619917da4128967d7264bef4117660a52bbdfb6cb353a2a769d8b45b6d8f'
+      const txHash = '0x8b904da83d58e520c778cc562b10fa4e0943a9f991b9050d93481fdabf2da9c2'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -86,7 +86,7 @@ describe('CSAccounting event tests', () => {
   )
 
   test(
-    '🔵 Lido stETH: Approval',
+    '🔴 CSAccounting: Bond Curve added, stETH Approval',
     async () => {
       const txHash = '0xcc92653babec3b1748d8e04de777796cab2d1ae40fbe926db857e9103a9b74a5'
 
@@ -105,7 +105,57 @@ describe('CSAccounting event tests', () => {
       const results = csAccountingSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(3)
+      expect(results.length).toBe(4)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🚨 CSAccounting: Charge Penalty Recipient Set',
+    async () => {
+      const txHash = '0xf62269919009e1cb9c6ea8c29cb6c83f9c1d113d97d401ed5ff2b696cee6d82f'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = csAccountingSrv.handleTransaction(transactionDto)
+
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(1)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🔴 CSAccounting: Bond Curve Set',
+    async () => {
+      const txHash = '0xcea4d214c8f6e4f3415fc941fdb6802f4243a7b3e12ba5288cf7e7df39d457a0'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = csAccountingSrv.handleTransaction(transactionDto)
+
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(1)
     },
     TEST_TIMEOUT,
   )

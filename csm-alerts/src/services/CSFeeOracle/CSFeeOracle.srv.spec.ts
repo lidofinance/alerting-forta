@@ -1,9 +1,4 @@
-import {
-  CSM_PROXY_CONTRACTS,
-  DeploymentAddress,
-  DeploymentAddresses,
-  PAUSABLE_CONTRACTS,
-} from '../../utils/constants.holesky'
+import { DeploymentAddress, DeploymentAddresses } from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -12,8 +7,6 @@ import {
   CSFeeDistributor__factory,
   CSFeeOracle__factory,
 } from '../../generated/typechain'
-import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
-import { getPausableEvents } from '../../utils/events/pausable_events'
 import { CSFeeOracleSrv, ICSFeeOracleClient } from './CSFeeOracle.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
@@ -22,10 +15,11 @@ import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
+import { getCSFeeOracleEvents, getHashConsensusEvents } from '../../utils/events/cs_fee_oracle_events'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('CsFeeOracle event tests', () => {
+describe('CSFeeOracle and HashConsensus events tests', () => {
   const chainId = 17000
 
   const logger: Winston.Logger = Winston.createLogger({
@@ -61,14 +55,14 @@ describe('CsFeeOracle event tests', () => {
   const csFeeOracleSrv = new CSFeeOracleSrv(
     logger,
     csFeeOracleClient,
-    getOssifiedProxyEvents(CSM_PROXY_CONTRACTS),
-    getPausableEvents(PAUSABLE_CONTRACTS),
+    getHashConsensusEvents(address.HASH_CONSENSUS_ADDRESS),
+    getCSFeeOracleEvents(address.CS_FEE_ORACLE_ADDRESS),
     address.HASH_CONSENSUS_ADDRESS,
     address.CS_FEE_ORACLE_ADDRESS,
   )
 
   test(
-    '🔵 2 events: ProcessingStarted(), ReportSettled()',
+    '🔵 CSFeeOracle: Processing Started, Report Settled',
     async () => {
       const txHash = '0xf53cfcc9e576393b481a1c8ff4d28235703b6b5b62f9edb623d913b5d059f9c5'
       const trx = await fortaEthersProvider.getTransaction(txHash)
@@ -92,7 +86,103 @@ describe('CsFeeOracle event tests', () => {
   )
 
   test(
-    '🔴 4 events: ConsensusHashContractSet(), ConsensusVersionSet(), FeeDistributorContractSet(), PerfLeewaySet()',
+    '🔴 HashConsensus: FrameConfig Set',
+    async () => {
+      const txHash = '0xa6f4206ce30d66b378ab6e4ddef442ac4f29c95c5175fbb4a8944e6bec663724'
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const result = csFeeOracleSrv.handleTransaction(transactionDto)
+
+      expect(result).toMatchSnapshot()
+      expect(result.length).toBe(1)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🔴 HashConsensus: Member added, Quorum Set',
+    async () => {
+      const txHash = '0xdfcdbe0b9e795b2b83ad405c17b0c7326b00748cb3b11282a460c50b1f4588b0'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const results = csFeeOracleSrv.handleTransaction(transactionDto)
+
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(2)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🔴 HashConsensus: Member Removed, Quorum Set, Consensus Reached, Report Submitted',
+    async () => {
+      const txHash = '0xd22f8208b4bb2013a1113d68f9f19e3be13147c1f77ce811baa32ef082deed42'
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const result = csFeeOracleSrv.handleTransaction(transactionDto)
+
+      expect(result).toMatchSnapshot()
+      expect(result.length).toBe(4)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    'Empty findings',
+    async () => {
+      const txHash = '0x74ff368ba6ea748e19a7f0fefd9d0f708078176e56799dbe97d46ae59782ff9d'
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+      }
+
+      const result = csFeeOracleSrv.handleTransaction(transactionDto)
+
+      expect(result.length).toBe(0)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🔴 CSFeeOracle: Consensus Hash Contract Set, Consensus Version Set, FeeDistributor Contract Set, Perf Leeway Set',
     async () => {
       const txHash = '0xdc5ed949e5b30a5ff6f325cd718ba5a52a32dc7719d3fe7aaf9661cc3da7e9a6'
       const trx = await fortaEthersProvider.getTransaction(txHash)
@@ -107,35 +197,10 @@ describe('CsFeeOracle event tests', () => {
         },
       }
 
-      const results = csFeeOracleSrv.handleTransaction(transactionDto)
+      const result = csFeeOracleSrv.handleTransaction(transactionDto)
 
-      expect(results).toMatchSnapshot()
-      expect(results.length).toBe(4)
-    },
-    TEST_TIMEOUT,
-  )
-
-  test(
-    '🔴 HashConsensus: Member added',
-    async () => {
-      const txHash = '0x17caac93fd9bb42d12755743eb999dd50eff92a5e49aadbf83061861cdfbf997'
-
-      const trx = await fortaEthersProvider.getTransaction(txHash)
-      const receipt = await trx.wait()
-
-      const transactionDto: TransactionDto = {
-        logs: receipt.logs,
-        to: trx.to ? trx.to : null,
-        block: {
-          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
-          number: trx.blockNumber ? trx.blockNumber : 1,
-        },
-      }
-
-      const results = csFeeOracleSrv.handleTransaction(transactionDto)
-
-      expect(results).toMatchSnapshot()
-      expect(results.length).toBe(1)
+      expect(result).toMatchSnapshot()
+      expect(result.length).toBe(4)
     },
     TEST_TIMEOUT,
   )

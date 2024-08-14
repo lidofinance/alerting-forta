@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ProxyWatcher event tests 🚨 Admin Changed 1`] = `
+exports[`ProxyWatcher event tests 🚨 Proxy Watcher: Admin Changed 1`] = `
 [
   {
     "array": [
@@ -145,7 +145,7 @@ exports[`ProxyWatcher event tests 🚨 Admin Changed 1`] = `
 ]
 `;
 
-exports[`ProxyWatcher event tests 🚨 Implementation Upgraded 1`] = `
+exports[`ProxyWatcher event tests 🚨 Proxy Watcher: Implementation Upgraded 1`] = `
 [
   {
     "array": [
@@ -280,6 +280,226 @@ exports[`ProxyWatcher event tests 🚨 Implementation Upgraded 1`] = `
           "args": {
             "key": "args",
             "value": "0x4D70efa74ec0Ac3a5f759cC0F714c94CBc5cc4da",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;
+
+exports[`ProxyWatcher event tests 🚨 Proxy Watcher: Paused 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CSModule-PAUSED",
+      "🚨 CSModule: contract was paused",
+      "For 336 hours",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "1209600",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CSAccounting-PAUSED",
+      "🚨 CSAccounting: contract was paused",
+      "For 336 hours",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "1209600",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CSFeeOracle-PAUSED",
+      "🚨 CSFeeOracle: contract was paused",
+      "For 336 hours",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "1209600",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;
+
+exports[`ProxyWatcher event tests 🚨 Proxy Watcher: Resumed 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CSModule-UNPAUSED",
+      "🚨 CSModule: contract was resumed",
+      "Contract was resumed",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CSAccounting-UNPAUSED",
+      "🚨 CSAccounting: contract was resumed",
+      "Contract was resumed",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CSFeeOracle-UNPAUSED",
+      "🚨 CSFeeOracle: contract was resumed",
+      "Contract was resumed",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "",
             "valueWrapper": undefined,
           },
         },

@@ -51,14 +51,14 @@ export class TxHandler {
 
       const csModuleFindings = this.csModuleSrv.handleTransaction(txEvent)
       const csFeeDistributorFindings = this.csFeeDistributorSrv.handleTransaction(txEvent)
-      const sAccountingFindings = this.csAccountingSrv.handleTransaction(txEvent)
+      const csAccountingFindings = this.csAccountingSrv.handleTransaction(txEvent)
       const csFeeOracleFindings = this.csFeeOracleSrv.handleTransaction(txEvent)
       const proxyWatcherFindings = this.proxyWatcherSrv.handleTransaction(txEvent)
 
       findings.push(
         ...csModuleFindings,
         ...csFeeDistributorFindings,
-        ...sAccountingFindings,
+        ...csAccountingFindings,
         ...csFeeOracleFindings,
         ...proxyWatcherFindings,
       )

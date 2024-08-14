@@ -1,9 +1,82 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CSAccounting event tests 🔴 Bond curve added 1`] = `[]`;
-
-exports[`CSAccounting event tests 🔵 Lido stETH: Approval 1`] = `
+exports[`CSAccounting event tests 🔴 CSAccounting: Bond Curve Set 1`] = `
 [
+  {
+    "array": [
+      "ethereum",
+      4,
+      [],
+      4,
+      "CS-ACCOUNTING-BOND-CURVE-SET",
+      "🔴 CSAccounting: Bond curve set",
+      "Bond curve set for node operator ID 204 with curve ID 3",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "204,3",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;
+
+exports[`CSAccounting event tests 🔴 CSAccounting: Bond Curve added, stETH Approval 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      4,
+      [],
+      4,
+      "CS-ACCOUNTING-BOND-CURVE-ADDED",
+      "🔴 CSAccounting: Bond curve added",
+      "Bond curve added: [2.000 ETH, 3.900 ETH, 5.700 ETH, 7.400 ETH, 9.000 ETH, 10.500 ETH]",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "2000000000000000000,3900000000000000000,5700000000000000000,7400000000000000000,9000000000000000000,10500000000000000000",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
   {
     "array": [
       "ethereum",
@@ -69,6 +142,86 @@ exports[`CSAccounting event tests 🔵 Lido stETH: Approval 1`] = `
     "messageId_": undefined,
     "pivot_": 1.7976931348623157e+308,
     "wrappers_": null,
+  },
+]
+`;
+
+exports[`CSAccounting event tests 🚨 CSAccounting: Bond Curve Updated 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CS-ACCOUNTING-BOND-CURVE-UPDATED",
+      "🚨 CSAccounting: Bond curve updated",
+      "Bond curve updated with curve ID 3. Bond curve: [4.000 ETH, 5.000 ETH, 6.000 ETH, 7.000 ETH]",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "3,4000000000000000000,5000000000000000000,6000000000000000000,7000000000000000000",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;
+
+exports[`CSAccounting event tests 🚨 CSAccounting: Charge Penalty Recipient Set 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      5,
+      [],
+      4,
+      "CS-ACCOUNTING-CHARGE-PENALTY-RECIPIENT-SET",
+      "🚨 CSAccounting: Charge penalty recipient set",
+      "Charge penalty recipient set to [0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d](https://etherscan.io/address/0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d) (expecting the treasury)",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "0xE92329EC7ddB11D25e25b3c21eeBf11f15eB325d",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
   },
 ]
 `;
