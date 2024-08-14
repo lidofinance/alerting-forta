@@ -36,7 +36,7 @@ describe('agent-acl-changes e2e tests', () => {
 
       const txEvent = createTransactionEvent(transaction, block, Network.MAINNET, [], receipt.logs)
 
-      return app.EasyTrackSrv.handleTransaction(txEvent)
+      return app.AclChangesSrv.handleTransaction(txEvent)
     }
 
     getRoleMembers = async (address: string, hash: string, currentBlock: BlockTag) => {
