@@ -9,8 +9,8 @@ import { Finding } from '../../generated/proto/alert_pb'
 import { WithdrawalClaimedEvent } from '../../generated/typechain/WithdrawalQueueERC721'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { dbAlert, networkAlert } from '../../utils/errors'
+import { alertId_token_rebased, LIDO_TOKEN_REBASED_EVENT } from '../../utils/events/lido_events'
 import {
-  LIDO_TOKEN_REBASED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT,
@@ -245,7 +245,7 @@ export class WithdrawalsSrv {
 
     const withdrawalsEventsFindings = handleEventsOfNotice(txEvent, this.withdrawalsEvents)
     const bunkerStatusFindings = this.handleBunkerStatus(txEvent)
-    this.handleLastTokenRebase(txEvent)
+    const rebasedFinding = await this.handleLastTokenRebase(txEvent)
 
     const [finalizedFindings, withdrawalRequestFindings, withdrawalClaimedFindings] = await Promise.all([
       this.handleWithdrawalFinalized(txEvent),
@@ -259,6 +259,7 @@ export class WithdrawalsSrv {
       ...withdrawalRequestFindings,
       ...withdrawalClaimedFindings,
       ...withdrawalsEventsFindings,
+      ...rebasedFinding,
     )
 
     return out
@@ -557,7 +558,7 @@ export class WithdrawalsSrv {
       this.cache.setBunkerModeEnabledSinceTimestamp(bunkerEnabled.args._sinceTimestamp)
 
       const f: Finding = new Finding()
-      f.setName('🚨 Withdrawals: BUNKER MODE ON! 🚨')
+      f.setName('🚨🚨🚨 Withdrawals: BUNKER MODE ON! 🚨🚨🚨')
       f.setDescription(
         `Started from ${new Date(String(this.cache.getBunkerModeEnabledSinceTimestamp())).toUTCString()}`,
       )
@@ -681,14 +682,29 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public handleLastTokenRebase(txEvent: TransactionDto): void {
+  public async handleLastTokenRebase(txEvent: TransactionDto): Promise<Finding[]> {
     const [rebaseEvent] = filterLog(txEvent.logs, LIDO_TOKEN_REBASED_EVENT, this.lidoStethAddress)
     if (!rebaseEvent) {
-      return
+      return []
     }
 
     this.cache.setLastTokenRebaseTimestamp(rebaseEvent.args.reportTimestamp)
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
+
+    const f = new Finding()
+    f.setName(`ℹ️ Lido: Token rebased`)
+    f.setAlertid(alertId_token_rebased)
+    f.setSeverity(Finding.Severity.INFO)
+    f.setType(Finding.FindingType.INFORMATION)
+    f.setDescription(`reportTimestamp: ${rebaseEvent.args.reportTimestamp}`)
+    f.setProtocol('ethereum')
+
+    const state = await this.getStatisticString()
+    if (E.isRight(state)) {
+      f.setDescription(state.right)
+    }
+
+    return [f]
   }
 
   public async handleWithdrawalFinalized(txEvent: TransactionDto): Promise<Finding[]> {
@@ -811,13 +827,13 @@ export class WithdrawalsSrv {
     }
 
     return E.right(
-      `\n` +
-        `\tStEth:       ${stat.right.stethAmount.toFixed(4)} \n` +
-        `\tfinalized:   ${stat.right.finalizedSteth.toFixed(4)} ${stat.right.finalizedRequests} \n` +
-        `\tunfinalized: ${stat.right.unFinalizedSteth.toFixed(4)}  ${stat.right.unFinalizedRequests}  \n` +
-        `\tclaimed:     ${stat.right.claimedSteth.toFixed(4)} ${stat.right.claimedRequests} \n` +
-        `\tunclaimed:   ${stat.right.unClaimedSteth.toFixed(4)}  ${stat.right.unClaimedRequests}\n` +
-        `\ttotal:       ${stat.right.totalRequests} withdrawal requests`,
+      `\nWithdrawals info:` +
+        `\trequests count:    ${stat.right.totalRequests} \n` +
+        `\twithdrawn stETH:   ${stat.right.stethAmount.toFixed(4)} \n` +
+        `\tfinalized stETH:   ${stat.right.finalizedSteth.toFixed(4)} ${stat.right.finalizedRequests} \n` +
+        `\tunfinalized stETH: ${stat.right.unFinalizedSteth.toFixed(4)}  ${stat.right.unFinalizedRequests}  \n` +
+        `\tclaimed ether:     ${stat.right.claimedSteth.toFixed(4)} ${stat.right.claimedRequests} \n` +
+        `\tunclaimed ether:   ${stat.right.unClaimedSteth.toFixed(4)}  ${stat.right.unClaimedRequests}\n`,
     )
   }
 }

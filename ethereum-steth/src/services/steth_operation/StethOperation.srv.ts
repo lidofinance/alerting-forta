@@ -225,27 +225,31 @@ export class StethOperationSrv {
     const depositSecFindings = handleEventsOfNotice(txEvent, this.depositSecurityEvents)
     const insuranceFundFindings = handleEventsOfNotice(txEvent, this.insuranceFundEvents)
     const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
-    out.push(...lidoFindings, ...depositSecFindings, ...insuranceFundFindings, ...burnerFindings)
 
     for (const f of lidoFindings) {
-      if (f.getAlertid() === alertId_token_rebased) {
-        const shareRate = await this.stethClient.getShareRate(txEvent.block.number)
-        if (E.isLeft(shareRate)) {
-          const f: Finding = networkAlert(
-            shareRate.left,
-            `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:192`,
-            `Could not call stethClient.getShareRate`,
-          )
+      if (f.getAlertid() !== alertId_token_rebased) {
+        out.push(f)
+        continue
+      }
 
-          out.push(f)
-        } else {
-          this.cache.setShareRate({
-            amount: shareRate.right,
-            blockNumber: txEvent.block.number,
-          })
-        }
+      const shareRate = await this.stethClient.getShareRate(txEvent.block.number)
+      if (E.isLeft(shareRate)) {
+        const f: Finding = networkAlert(
+          shareRate.left,
+          `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:192`,
+          `Could not call stethClient.getShareRate`,
+        )
+
+        out.push(f)
+      } else {
+        this.cache.setShareRate({
+          amount: shareRate.right,
+          blockNumber: txEvent.block.number,
+        })
       }
     }
+
+    out.push(...depositSecFindings, ...insuranceFundFindings, ...burnerFindings)
 
     return out
   }
