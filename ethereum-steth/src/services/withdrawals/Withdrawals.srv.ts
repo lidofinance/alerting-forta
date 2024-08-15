@@ -827,13 +827,13 @@ export class WithdrawalsSrv {
     }
 
     return E.right(
-      `\nWithdrawals info:` +
+      `\nWithdrawals info:\n` +
         `\trequests count:    ${stat.right.totalRequests} \n` +
         `\twithdrawn stETH:   ${stat.right.stethAmount.toFixed(4)} \n` +
         `\tfinalized stETH:   ${stat.right.finalizedSteth.toFixed(4)} ${stat.right.finalizedRequests} \n` +
-        `\tunfinalized stETH: ${stat.right.unFinalizedSteth.toFixed(4)}  ${stat.right.unFinalizedRequests}  \n` +
+        `\tunfinalized stETH: ${stat.right.unFinalizedSteth.toFixed(4)}   ${stat.right.unFinalizedRequests}  \n` +
         `\tclaimed ether:     ${stat.right.claimedSteth.toFixed(4)} ${stat.right.claimedRequests} \n` +
-        `\tunclaimed ether:   ${stat.right.unClaimedSteth.toFixed(4)}  ${stat.right.unClaimedRequests}\n`,
+        `\tunclaimed ether:   ${stat.right.unClaimedSteth.toFixed(4)}   ${stat.right.unClaimedRequests}\n`,
     )
   }
 }
