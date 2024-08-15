@@ -69,6 +69,7 @@ import {
   SLOTS_STAKING_ROUTER_LIDO,
   SLOTS_STAKING_ROUTER_STAKING_MODULES_COUNT,
   SLOTS_STAKING_ROUTER_WITHDRAWAL_CREDENTIALS,
+  STORAGE_SLOTS,
 } from '../utils/constants'
 import { Metrics } from '../utils/metrics/metrics'
 import { ETHProvider } from './eth_provider'
@@ -259,30 +260,16 @@ describe('eth provider tests', () => {
   // https://etherscan.io/block/20511417
   const blockHash = `0x1288eb76fb9f6123cf893484011fe6cceb7770de19a3aa4fc63d84210dbf602f`
   const slotId = 777 // for test purposes id does not matter
+  const storageSlots = STORAGE_SLOTS
 
   test('getStorageByName lido locator', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.LIDO_STETH_ADDRESS,
-      slotId,
-      'lido.Lido.lidoLocator',
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb')
-  }, 120_000)
-
-  test('getStorageByName lido locator', async () => {
-    const blockHash = `0x0b99aebc4925ff127f1368b4aafff11dacc051a24247c0ee4159b735ca300d49`
-
     const data = await ethClient.getStorageBySlotName(address.LIDO_STETH_ADDRESS, slotId, SLOT_LIDO_LOCATOR, blockHash)
     if (E.isLeft(data)) {
       throw data.left.message
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb')
+    expect(data.right.value).toEqual(storageSlots[0].expected)
   }, 120_000)
 
   test('getStorageByName lido contractVersion', async () => {
@@ -297,8 +284,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000002')
+    expect(data.right.value).toEqual(storageSlots[1].expected)
   }, 120_000)
 
+  // Node Operators Registry
   test('getStorageByName NOR lidoLocator', async () => {
     const data = await ethClient.getStorageBySlotName(address.NOR_ADDRESS, slotId, SLOT_NOR_LOCATOR, blockHash)
     if (E.isLeft(data)) {
@@ -306,6 +295,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb')
+    expect(data.right.value).toEqual(storageSlots[2].expected)
   }, 120_000)
 
   test('getStorageByName NOR penalty delay', async () => {
@@ -321,21 +311,7 @@ describe('eth provider tests', () => {
 
     // 19h 23mins
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000069780')
-  }, 120_000)
-
-  test('getStorageByName NOR penalty delay', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.NOR_ADDRESS,
-      slotId,
-      SLOT_NOR_STUCK_PENALTY_DELAY,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    // 19h 23mins
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000069780')
+    expect(data.right.value).toEqual(storageSlots[3].expected)
   }, 120_000)
 
   test('getStorageByName NOR type', async () => {
@@ -345,8 +321,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x637572617465642d6f6e636861696e2d76310000000000000000000000000000')
+    expect(data.right.value).toEqual(storageSlots[4].expected)
   }, 120_000)
 
+  // Legacy Oracle
   test('getStorageByName LEGACY_ORACLE Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.LEGACY_ORACLE_ADDRESS,
@@ -359,6 +337,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000004')
+    expect(data.right.value).toEqual(storageSlots[5].expected)
   }, 120_000)
 
   test('getStorageByName LEGACY_ORACLE LidoOracle.accountingOracle', async () => {
@@ -373,6 +352,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000852ded011285fe67063a08005c71a85690503cee')
+    expect(data.right.value).toEqual(storageSlots[6].expected)
   }, 120_000)
 
   test('getStorageByName LEGACY_ORACLE LidoOracle.beaconSpec', async () => {
@@ -387,6 +367,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x00000000000000e10000000000000020000000000000000c000000005fc63057')
+    expect(data.right.value).toEqual(storageSlots[7].expected)
   }, 120_000)
 
   test('getStorageByName LEGACY_ORACLE LidoOracle.contractVersion', async () => {
@@ -401,6 +382,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000000')
+    expect(data.right.value).toEqual(storageSlots[8].expected)
   }, 120_000)
 
   test('getStorageByName LEGACY_ORACLE LidoOracle.lido', async () => {
@@ -415,8 +397,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84')
+    expect(data.right.value).toEqual(storageSlots[9].expected)
   }, 120_000)
 
+  // Accounting Oracle
   test('getStorageByName ACCOUNTING_ORACLE Versioned.contractVersion', async () => {
     const data = await ethClient.getStorageBySlotName(
       address.ACCOUNTING_ORACLE_ADDRESS,
@@ -429,6 +413,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
+    expect(data.right.value).toEqual(storageSlots[10].expected)
   }, 120_000)
 
   test('getStorageByName ACCOUNTING_ORACLE consensusContract', async () => {
@@ -443,6 +428,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000d624b08c83baecf0807dd2c6880c3154a5f0b288')
+    expect(data.right.value).toEqual(storageSlots[11].expected)
   }, 120_000)
 
   test('getStorageByName ACCOUNTING_ORACLE consensusVersion', async () => {
@@ -457,176 +443,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
+    expect(data.right.value).toEqual(storageSlots[12].expected)
   }, 120_000)
 
-  test('getStorageByName STAKING_ROUTER Versioned.contractVersion', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.STAKING_ROUTER_ADDRESS,
-      slotId,
-      SLOT_STAKING_ROUTER_VERSIONED_CONTRACT_VERSION,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
-  }, 120_000)
-
-  test('getStorageByName STAKING_ROUTER StakingRouter.lido', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.STAKING_ROUTER_ADDRESS,
-      slotId,
-      SLOTS_STAKING_ROUTER_LIDO,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84')
-  }, 120_000)
-
-  test('getStorageByName STAKING_ROUTER StakingRouter.lastStakingModuleId', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.STAKING_ROUTER_ADDRESS,
-      slotId,
-      SLOTS_STAKING_ROUTER_LAST_STAKING_MODULE_ID,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000002')
-  }, 120_000)
-
-  test('getStorageByName STAKING_ROUTER StakingRouter.stakingModulesCount', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.STAKING_ROUTER_ADDRESS,
-      slotId,
-      SLOTS_STAKING_ROUTER_STAKING_MODULES_COUNT,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000002')
-  }, 120_000)
-
-  test('getStorageByName STAKING_ROUTER StakingRouter.withdrawalCredentials', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.STAKING_ROUTER_ADDRESS,
-      slotId,
-      SLOTS_STAKING_ROUTER_WITHDRAWAL_CREDENTIALS,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x010000000000000000000000b9d7934878b5fb9610b3fe8a5e441e8fad7e293f')
-  }, 120_000)
-
-  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.Versioned.contractVersion', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.WITHDRAWALS_QUEUE_ADDRESS,
-      slotId,
-      SLOT_WITHDRAWALS_QUEUE_VERSIONED_CONTRACT_VERSION,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
-  }, 120_000)
-
-  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.bunkerModeSinceTimestamp', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.WITHDRAWALS_QUEUE_ADDRESS,
-      slotId,
-      SLOT_WITHDRAWALS_QUEUE_BUNKER_MODE_SINCE_TIMESTAMP,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-  }, 120_000)
-
-  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.baseUri', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.WITHDRAWALS_QUEUE_ADDRESS,
-      slotId,
-      SLOT_WITHDRAWALS_QUEUE_BASE_URI,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x68747470733a2f2f77712d6170692e6c69646f2e66692f76312f6e667400003a')
-  }, 120_000)
-
-  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.nftDescriptorAddress', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.WITHDRAWALS_QUEUE_ADDRESS,
-      slotId,
-      SLOT_WITHDRAWALS_QUEUE_NFT_DESCRIPTOR_ADDRESS,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000000')
-  }, 120_000)
-
-  test('getStorageByName VEBO Versioned.contractVersion', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.VEBO_ADDRESS,
-      slotId,
-      SLOT_VEBO_VERSIONED_CONTRACT_VERSION,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
-  }, 120_000)
-
-  test('getStorageByName VEBO consensusContract', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.VEBO_ADDRESS,
-      slotId,
-      SLOT_VEBO_CONSENSUS_CONTRACT,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000007fadb6358950c5faa66cb5eb8ee5147de3df355a')
-  }, 120_000)
-
-  test('getStorageByName VEBO consensusVersion', async () => {
-    const data = await ethClient.getStorageBySlotName(
-      address.VEBO_ADDRESS,
-      slotId,
-      SLOT_VEBO_ORACLE_CONSENSUS_VERSION,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
-  }, 120_000)
-
+  // ACCOUNTING_HASH_CONSENSUS
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS frameConfig', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ACCOUNTING_HASH_CONSENSUS_ADDRESS,
@@ -639,6 +459,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000006400000000000000e10000000000031380')
+    expect(data.right.value).toEqual(storageSlots[13].expected)
   }, 120_000)
 
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS memberAddress', async () => {
@@ -667,6 +488,12 @@ describe('eth provider tests', () => {
       throw members.left.message
     }
 
+    expect(JSON.stringify(members.right.values)).toEqual(
+      '["0x000000000000000000000000140bd8fbdc884f48da7cb1c09be8a2fadfea776e","0x000000000000000000000000a7410857abbf75043d61ea54e07d57a6eb6ef186","0x000000000000000000000000404335bce530400a5814375e7ec1fb55faff3ea2","0x000000000000000000000000946d3b081ed19173dc83cd974fc69e1e760b7d78","0x000000000000000000000000007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5","0x000000000000000000000000ec4bfbaf681eb505b94e4a7849877dc6c600ca3a","0x00000000000000000000000061c91ecd902eb56e314bb2d5c5c07785444ea1c8","0x0000000000000000000000001ca0fec59b86f549e1f1184d97cb47794c8af58d","0x000000000000000000000000c79f702202e3a6b0b6310b537e786b9acaa19baf"]',
+    )
+
+    expect(JSON.stringify(members.right.values)).toEqual(storageSlots[14].expected)
+
     expect(members.right.values[0]).toEqual('0x000000000000000000000000140bd8fbdc884f48da7cb1c09be8a2fadfea776e')
     expect(members.right.values[1]).toEqual('0x000000000000000000000000a7410857abbf75043d61ea54e07d57a6eb6ef186')
     expect(members.right.values[2]).toEqual('0x000000000000000000000000404335bce530400a5814375e7ec1fb55faff3ea2')
@@ -690,6 +517,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000005')
+    expect(data.right.value).toEqual(storageSlots[15].expected)
   }, 120_000)
 
   test('getStorageByName ACCOUNTING_HASH_CONSENSUS report_processor', async () => {
@@ -704,8 +532,56 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000852ded011285fe67063a08005c71a85690503cee')
+    expect(data.right.value).toEqual(storageSlots[16].expected)
   }, 120_000)
 
+  // Validators Exit Bus Oracle
+  test('getStorageByName VEBO Versioned.contractVersion', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.VEBO_ADDRESS,
+      slotId,
+      SLOT_VEBO_VERSIONED_CONTRACT_VERSION,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
+    expect(data.right.value).toEqual(storageSlots[17].expected)
+  }, 120_000)
+
+  test('getStorageByName VEBO consensusContract', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.VEBO_ADDRESS,
+      slotId,
+      SLOT_VEBO_CONSENSUS_CONTRACT,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000007fadb6358950c5faa66cb5eb8ee5147de3df355a')
+    expect(data.right.value).toEqual(storageSlots[18].expected)
+  }, 120_000)
+
+  test('getStorageByName VEBO consensusVersion', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.VEBO_ADDRESS,
+      slotId,
+      SLOT_VEBO_ORACLE_CONSENSUS_VERSION,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
+    expect(data.right.value).toEqual(storageSlots[19].expected)
+  }, 120_000)
+
+  // Validators Exit Bus Hash Consensus
   test('getStorageByName VEBO_HASH_CONSENSUS frameConfig', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.VEBO_HASH_CONSENSUS_ADDRESS,
@@ -718,34 +594,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x00000000000000000000000000000064000000000000004b0000000000031380')
-  }, 120_000)
-
-  test('getStorageByName VEBO_HASH_CONSENSUS quorum', async () => {
-    const data = await ethClient.getStorageAtSlotAddr(
-      address.VEBO_HASH_CONSENSUS_ADDRESS,
-      slotId,
-      SLOT_VEBO_HASH_CONSENSUS_QUORUM,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000005')
-  }, 120_000)
-
-  test('getStorageByName VEBO_HASH_CONSENSUS reportProcessor', async () => {
-    const data = await ethClient.getStorageAtSlotAddr(
-      address.VEBO_HASH_CONSENSUS_ADDRESS,
-      slotId,
-      SLOT_VEBO_HASH_CONSENSUS_REPORT_PROCESSOR,
-      blockHash,
-    )
-    if (E.isLeft(data)) {
-      throw data.left.message
-    }
-
-    expect(data.right.value).toEqual('0x0000000000000000000000000de4ea0184c2ad0baca7183356aea5b8d5bf5c6e')
+    expect(data.right.value).toEqual(storageSlots[20].expected)
   }, 120_000)
 
   test('getStorageByName VEBO_HASH_CONSENSUS memberAddress', async () => {
@@ -774,6 +623,11 @@ describe('eth provider tests', () => {
       throw members.left.message
     }
 
+    expect(JSON.stringify(members.right.values)).toEqual(
+      '["0x000000000000000000000000140bd8fbdc884f48da7cb1c09be8a2fadfea776e","0x000000000000000000000000a7410857abbf75043d61ea54e07d57a6eb6ef186","0x000000000000000000000000404335bce530400a5814375e7ec1fb55faff3ea2","0x000000000000000000000000946d3b081ed19173dc83cd974fc69e1e760b7d78","0x000000000000000000000000007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5","0x000000000000000000000000ec4bfbaf681eb505b94e4a7849877dc6c600ca3a","0x00000000000000000000000061c91ecd902eb56e314bb2d5c5c07785444ea1c8","0x0000000000000000000000001ca0fec59b86f549e1f1184d97cb47794c8af58d","0x000000000000000000000000c79f702202e3a6b0b6310b537e786b9acaa19baf"]',
+    )
+    expect(JSON.stringify(members.right.values)).toEqual(storageSlots[21].expected)
+
     expect(members.right.values[0]).toEqual('0x000000000000000000000000140bd8fbdc884f48da7cb1c09be8a2fadfea776e')
     expect(members.right.values[1]).toEqual('0x000000000000000000000000a7410857abbf75043d61ea54e07d57a6eb6ef186')
     expect(members.right.values[2]).toEqual('0x000000000000000000000000404335bce530400a5814375e7ec1fb55faff3ea2')
@@ -785,6 +639,37 @@ describe('eth provider tests', () => {
     expect(members.right.values[8]).toEqual('0x000000000000000000000000c79f702202e3a6b0b6310b537e786b9acaa19baf')
   }, 120_000)
 
+  test('getStorageByName VEBO_HASH_CONSENSUS quorum', async () => {
+    const data = await ethClient.getStorageAtSlotAddr(
+      address.VEBO_HASH_CONSENSUS_ADDRESS,
+      slotId,
+      SLOT_VEBO_HASH_CONSENSUS_QUORUM,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000005')
+    expect(data.right.value).toEqual(storageSlots[22].expected)
+  }, 120_000)
+
+  test('getStorageByName VEBO_HASH_CONSENSUS reportProcessor', async () => {
+    const data = await ethClient.getStorageAtSlotAddr(
+      address.VEBO_HASH_CONSENSUS_ADDRESS,
+      slotId,
+      SLOT_VEBO_HASH_CONSENSUS_REPORT_PROCESSOR,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000de4ea0184c2ad0baca7183356aea5b8d5bf5c6e')
+    expect(data.right.value).toEqual(storageSlots[23].expected)
+  }, 120_000)
+
+  // Deposit Security Module
   test('getStorageByName DSM maxDepositsPerBlock', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.DEPOSIT_SECURITY_ADDRESS,
@@ -797,6 +682,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000096')
+    expect(data.right.value).toEqual(storageSlots[24].expected)
   }, 120_000)
 
   test('getStorageByName DSM minDepositBlockDistance', async () => {
@@ -811,6 +697,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000019')
+    expect(data.right.value).toEqual(storageSlots[25].expected)
   }, 120_000)
 
   test('getStorageByName DSM pauseIntentValidityPeriodBlocks', async () => {
@@ -825,6 +712,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x00000000000000000000000000000000000000000000000000000000000019f6')
+    expect(data.right.value).toEqual(storageSlots[26].expected)
   }, 120_000)
 
   test('getStorageByName DSM owner', async () => {
@@ -840,6 +728,7 @@ describe('eth provider tests', () => {
 
     // Aragon Agent: 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c (proxy)
     expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
+    expect(data.right.value).toEqual(storageSlots[27].expected)
   }, 120_000)
 
   test('getStorageByName DSM quorum', async () => {
@@ -854,6 +743,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000004')
+    expect(data.right.value).toEqual(storageSlots[28].expected)
   }, 120_000)
 
   test('getStorageByName DSM guardians', async () => {
@@ -882,6 +772,11 @@ describe('eth provider tests', () => {
       throw members.left.message
     }
 
+    expect(JSON.stringify(members.right.values)).toEqual(
+      '["0x0000000000000000000000005fd0ddbc3351d009eb3f88de7cd081a614c519f1","0x0000000000000000000000007912fa976bcde9c2cf728e213e892ad7588e6aaf","0x00000000000000000000000014d5d5b71e048d2d75a39ffc5b407e3a3ab6f314","0x000000000000000000000000f82d88217c249297c6037ba77ce34b3d8a90ab43","0x000000000000000000000000a56b128ea2ea237052b0fa2a96a387c0e43157d8","0x000000000000000000000000d4ef84b638b334699bcf5af4b0410b8ccd71943f"]',
+    )
+    expect(JSON.stringify(members.right.values)).toEqual(storageSlots[29].expected)
+
     expect(members.right.values[0]).toEqual('0x0000000000000000000000005fd0ddbc3351d009eb3f88de7cd081a614c519f1')
     expect(members.right.values[1]).toEqual('0x0000000000000000000000007912fa976bcde9c2cf728e213e892ad7588e6aaf')
     expect(members.right.values[2]).toEqual('0x00000000000000000000000014d5d5b71e048d2d75a39ffc5b407e3a3ab6f314')
@@ -890,6 +785,7 @@ describe('eth provider tests', () => {
     expect(members.right.values[5]).toEqual('0x000000000000000000000000d4ef84b638b334699bcf5af4b0410b8ccd71943f')
   }, 120_000)
 
+  // wstETH
   test('getStorageByName wstETH stETH', async () => {
     const data = await ethClient.getStorageAtSlotAddr(address.WSTETH_ADDRESS, slotId, SLOT_WSTETH, blockHash)
     if (E.isLeft(data)) {
@@ -897,20 +793,23 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84')
+    expect(data.right.value).toEqual(storageSlots[30].expected)
   }, 120_000)
 
-  test('getStorageByName MevBoost owner', async () => {
+  // MEV Boost Relay Allowed List
+  test('getStorageByName MevBoost allowed_list_version', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
       slotId,
-      SLOT_MEV_BOOST_OWNER,
+      SLOT_MEV_BOOST_ALLOWED_LIST,
       blockHash,
     )
     if (E.isLeft(data)) {
       throw data.left.message
     }
 
-    expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000012')
+    expect(data.right.value).toEqual(storageSlots[31].expected)
   }, 120_000)
 
   test('getStorageByName MevBoost manager', async () => {
@@ -925,22 +824,25 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x00000000000000000000000098be4a407bff0c125e25fbe9eb1165504349c37d')
+    expect(data.right.value).toEqual(storageSlots[32].expected)
   }, 120_000)
 
-  test('getStorageByName MevBoost allowed_list_version', async () => {
+  test('getStorageByName MevBoost owner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.MEV_BOOST_RELAY_ALLOWED_LIST_ADDRESS,
       slotId,
-      SLOT_MEV_BOOST_ALLOWED_LIST,
+      SLOT_MEV_BOOST_OWNER,
       blockHash,
     )
     if (E.isLeft(data)) {
       throw data.left.message
     }
 
-    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000012')
+    expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
+    expect(data.right.value).toEqual(storageSlots[33].expected)
   }, 120_000)
 
+  // ARAGON_VOTING
   test('getStorageByName Aragon token', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
@@ -953,6 +855,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000006f05b59d3b200005a98fcbea516cf06857215779fd812ca3bef1b32')
+    expect(data.right.value).toEqual(storageSlots[34].expected)
   }, 120_000)
 
   test('getStorageByName Aragon supportRequiredPct', async () => {
@@ -967,6 +870,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x00000000000000000000000000000000000000000003f48000b1a2bc2ec50000')
+    expect(data.right.value).toEqual(storageSlots[35].expected)
   }, 120_000)
 
   test('getStorageByName Aragon objectionPhaseTime', async () => {
@@ -981,8 +885,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000015180')
+    expect(data.right.value).toEqual(storageSlots[36].expected)
   }, 120_000)
 
+  // Aragon Token Manager
   test('getStorageByName Aragon Manager token', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_VOTING_ADDRESS,
@@ -995,6 +901,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000006f05b59d3b200005a98fcbea516cf06857215779fd812ca3bef1b32')
+    expect(data.right.value).toEqual(storageSlots[37].expected)
   }, 120_000)
 
   test('getStorageByName Aragon Manager maxAccountTokens', async () => {
@@ -1009,8 +916,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x00000000000000000000000000000000000000000003f48000b1a2bc2ec50000')
+    expect(data.right.value).toEqual(storageSlots[38].expected)
   }, 120_000)
 
+  // Aragon Finance
   test('getStorageByName Aragon Finance vault', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.ARAGON_FINANCE_ADDRESS,
@@ -1023,8 +932,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
+    expect(data.right.value).toEqual(storageSlots[39].expected)
   }, 120_000)
 
+  // Lido Treasury
   test('getStorageByName Lido Treasury designatedSigner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.LIDO_TREASURY_ADDRESS,
@@ -1037,8 +948,10 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000000')
+    expect(data.right.value).toEqual(storageSlots[40].expected)
   }, 120_000)
 
+  // Lido Insurance
   test('getStorageByName Lido Insurance owner', async () => {
     const data = await ethClient.getStorageAtSlotAddr(
       address.LIDO_INSURANCE_ADDRESS,
@@ -1051,8 +964,147 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x0000000000000000000000003e40d73eb977dc6a537af587d48316fee66e9c8c')
+    expect(data.right.value).toEqual(storageSlots[41].expected)
   }, 120_000)
 
+  // Staking Router
+  test('getStorageByName STAKING_ROUTER Versioned.contractVersion', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.STAKING_ROUTER_ADDRESS,
+      slotId,
+      SLOT_STAKING_ROUTER_VERSIONED_CONTRACT_VERSION,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
+    expect(data.right.value).toEqual(storageSlots[42].expected)
+  }, 120_000)
+
+  test('getStorageByName STAKING_ROUTER StakingRouter.lido', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.STAKING_ROUTER_ADDRESS,
+      slotId,
+      SLOTS_STAKING_ROUTER_LIDO,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x000000000000000000000000ae7ab96520de3a18e5e111b5eaab095312d7fe84')
+    expect(data.right.value).toEqual(storageSlots[43].expected)
+  }, 120_000)
+
+  test('getStorageByName STAKING_ROUTER StakingRouter.lastStakingModuleId', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.STAKING_ROUTER_ADDRESS,
+      slotId,
+      SLOTS_STAKING_ROUTER_LAST_STAKING_MODULE_ID,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000002')
+    expect(data.right.value).toEqual(storageSlots[44].expected)
+  }, 120_000)
+
+  test('getStorageByName STAKING_ROUTER StakingRouter.stakingModulesCount', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.STAKING_ROUTER_ADDRESS,
+      slotId,
+      SLOTS_STAKING_ROUTER_STAKING_MODULES_COUNT,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000002')
+    expect(data.right.value).toEqual(storageSlots[45].expected)
+  }, 120_000)
+
+  test('getStorageByName STAKING_ROUTER StakingRouter.withdrawalCredentials', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.STAKING_ROUTER_ADDRESS,
+      slotId,
+      SLOTS_STAKING_ROUTER_WITHDRAWAL_CREDENTIALS,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x010000000000000000000000b9d7934878b5fb9610b3fe8a5e441e8fad7e293f')
+    expect(data.right.value).toEqual(storageSlots[46].expected)
+  }, 120_000)
+
+  // Withdrawals Queue
+  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.Versioned.contractVersion', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.WITHDRAWALS_QUEUE_ADDRESS,
+      slotId,
+      SLOT_WITHDRAWALS_QUEUE_VERSIONED_CONTRACT_VERSION,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000001')
+    expect(data.right.value).toEqual(storageSlots[47].expected)
+  }, 120_000)
+
+  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.bunkerModeSinceTimestamp', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.WITHDRAWALS_QUEUE_ADDRESS,
+      slotId,
+      SLOT_WITHDRAWALS_QUEUE_BUNKER_MODE_SINCE_TIMESTAMP,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+    expect(data.right.value).toEqual(storageSlots[48].expected)
+  }, 120_000)
+
+  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.baseUri', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.WITHDRAWALS_QUEUE_ADDRESS,
+      slotId,
+      SLOT_WITHDRAWALS_QUEUE_BASE_URI,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x68747470733a2f2f77712d6170692e6c69646f2e66692f76312f6e667400003a')
+    expect(data.right.value).toEqual(storageSlots[49].expected)
+  }, 120_000)
+
+  test('getStorageByName WITHDRAWALS_QUEUE WithdrawalsQueue.nftDescriptorAddress', async () => {
+    const data = await ethClient.getStorageBySlotName(
+      address.WITHDRAWALS_QUEUE_ADDRESS,
+      slotId,
+      SLOT_WITHDRAWALS_QUEUE_NFT_DESCRIPTOR_ADDRESS,
+      blockHash,
+    )
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000000000')
+    expect(data.right.value).toEqual(storageSlots[50].expected)
+  }, 120_000)
+
+  // SimpleDVT
   test('getStorageByName SIMPLE_DVT lidoLocator', async () => {
     const data = await ethClient.getStorageBySlotName(address.SIMPLEDVT_ADDRESS, slotId, SLOT_DVT_LOCATOR, blockHash)
     if (E.isLeft(data)) {
@@ -1060,6 +1112,7 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x000000000000000000000000c1d0b3de6792bf6b4b37eccdcc24e45978cfd2eb')
+    expect(data.right.value).toEqual(storageSlots[51].expected)
   }, 120_000)
 
   test('getStorageByName SIMPLE_DVT penalty delay', async () => {
@@ -1075,6 +1128,7 @@ describe('eth provider tests', () => {
 
     // 19h 23mins
     expect(data.right.value).toEqual('0x0000000000000000000000000000000000000000000000000000000000069780')
+    expect(data.right.value).toEqual(storageSlots[52].expected)
   }, 120_000)
 
   test('getStorageByName SIMPLE_DVT type', async () => {
@@ -1084,5 +1138,6 @@ describe('eth provider tests', () => {
     }
 
     expect(data.right.value).toEqual('0x637572617465642d6f6e636861696e2d76310000000000000000000000000000')
+    expect(data.right.value).toEqual(storageSlots[53].expected)
   }, 120_000)
 })

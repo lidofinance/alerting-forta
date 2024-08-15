@@ -178,7 +178,6 @@ const main = async () => {
     withdrawalsSrv,
     gateSealSrv,
     vaultSrv,
-    storageWatcherSrv,
     onAppFindings,
     latestBlock.right,
   )

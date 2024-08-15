@@ -6,7 +6,6 @@ import { InitializeRequest, InitializeResponse, Error as pbError, ResponseStatus
 import { Finding } from '../generated/proto/alert_pb'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
-import { StorageWatcherSrv } from '../services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
 import { ETH_DECIMALS } from '../utils/constants'
@@ -19,7 +18,6 @@ export class InitHandler {
   private readonly withdrawalsSrv: WithdrawalsSrv
   private readonly gateSealSrv: GateSealSrv
   private readonly vaultSrv: VaultSrv
-  private readonly storageWatcher: StorageWatcherSrv
   private readonly appName: string
   private readonly latestBlock: BlockDto
 
@@ -32,7 +30,6 @@ export class InitHandler {
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
-    storageWatcher: StorageWatcherSrv,
     onAppStartFindings: Finding[],
     latestBlock: BlockDto,
   ) {
@@ -42,7 +39,6 @@ export class InitHandler {
     this.withdrawalsSrv = WithdrawalsSrv
     this.gateSealSrv = GateSealSrv
     this.vaultSrv = VaultSrv
-    this.storageWatcher = storageWatcher
     this.onAppStartFindings = onAppStartFindings
     this.latestBlock = latestBlock
   }
@@ -67,27 +63,11 @@ export class InitHandler {
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
-      const [withdrawalsSrvErr, storageWatcherErr] = await Promise.all([
-        this.withdrawalsSrv.initialize(this.latestBlock.number),
-        this.storageWatcher.initialize(this.latestBlock.hash),
-      ])
+      const withdrawalsSrvErr = await this.withdrawalsSrv.initialize(this.latestBlock.number)
       if (withdrawalsSrvErr !== null) {
         this.logger.error('Could not init withdrawalsSrv', withdrawalsSrvErr)
         const err = new pbError()
         err.setMessage(`Could not init withdrawalsSrvErr ${withdrawalsSrvErr}`)
-
-        const resp = new InitializeResponse()
-        resp.setStatus(ResponseStatus.ERROR)
-        resp.addErrors(err)
-
-        callback(null, resp)
-        return
-      }
-
-      if (storageWatcherErr !== null) {
-        this.logger.error('Could not init storageWatcher', storageWatcherErr)
-        const err = new pbError()
-        err.setMessage(`Could not init storageWatcher ${storageWatcherErr}`)
 
         const resp = new InitializeResponse()
         resp.setStatus(ResponseStatus.ERROR)
