@@ -33,6 +33,7 @@ const {
   MEV_ALLOWED_LIST_EVENTS_OF_NOTICE,
   BLOCK_CHECK_INTERVAL,
   STAKING_ROUTER_ADDRESS,
+  CSM_NODE_OPERATOR_REGISTRY_MODULE_ID,
 } = requireWithTier<typeof Constants>(
   module,
   "./constants",
@@ -72,13 +73,15 @@ export async function initialize(
   });
 
   stakingModulesOperatorRegistry.length = 0;
-  for (const {
-    id: moduleId,
-    stakingModuleAddress,
-    name: moduleName,
-  } of modules) {
+  for (const { id, stakingModuleAddress, name } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
     const moduleAddress = (stakingModuleAddress as string).toLowerCase();
     const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
+
+    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+      continue;
+    }
 
     stakingModulesOperatorRegistry.push(
       new NodeOperatorsRegistryModuleContext({

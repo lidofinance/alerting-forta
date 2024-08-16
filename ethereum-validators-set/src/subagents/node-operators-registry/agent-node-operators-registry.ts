@@ -231,7 +231,7 @@ export async function initialize(
       moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
         ? SET_VETTED_VALIDATORS_LIMITS_ADDRESS
         : undefined;
-    const skakingModule = new NodeOperatorsRegistryModuleContext(
+    const stakingModule = new NodeOperatorsRegistryModuleContext(
       {
         moduleId,
         moduleAddress,
@@ -248,7 +248,7 @@ export async function initialize(
       stakingRouter,
     );
 
-    stakingModulesOperatorRegistry.push(skakingModule);
+    stakingModulesOperatorRegistry.push(stakingModule);
   }
 
   await Promise.all(

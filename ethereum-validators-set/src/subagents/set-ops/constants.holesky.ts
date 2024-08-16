@@ -34,6 +34,7 @@ export const SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS = simpleDvtNorAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 export const SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const CSM_NODE_OPERATOR_REGISTRY_MODULE_ID = 4;
 
 export const MEV_ALLOWED_LIST_EVENTS_OF_NOTICE = mevAllowedListEvents.map(
   (event) => ({
