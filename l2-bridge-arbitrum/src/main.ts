@@ -55,9 +55,7 @@ const main = async () => {
   }
 
   const defaultRegistry = promClient
-  defaultRegistry.collectDefaultMetrics({
-    prefix: config.promPrefix,
-  })
+  defaultRegistry.collectDefaultMetrics()
 
   const customRegister = new promClient.Registry()
   const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
