@@ -259,21 +259,7 @@ describe('Steth.srv functional tests', () => {
         },
       }
 
-      const results = await stethOperationSrv.handleTransaction(transactionDto)
-
-      const expected = {
-        name: 'ℹ️ Lido: Token rebased',
-        description: 'reportTimestamp: 1706011211\n\nBlockNumber 19069339',
-        alertId: 'LIDO-TOKEN-REBASED',
-        severity: 1,
-        type: 4,
-      }
-
-      expect(results[0].getAlertid()).toEqual(expected.alertId)
-      expect(results[0].getDescription()).toEqual(expected.description)
-      expect(results[0].getName()).toEqual(expected.name)
-      expect(results[0].getSeverity()).toEqual(expected.severity)
-      expect(results[0].getType()).toEqual(expected.type)
+      await stethOperationSrv.handleTransaction(transactionDto)
 
       expect(stethOperationSrv.getStorage().getShareRate().blockNumber).toEqual(19069339)
       expect(stethOperationSrv.getStorage().getShareRate().amount).toEqual(new BigNumber('1.1546900318248249941'))

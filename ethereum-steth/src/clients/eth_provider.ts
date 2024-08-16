@@ -938,7 +938,7 @@ export class ETHProvider
     try {
       const data = await retryAsync<string>(
         async (): Promise<string> => {
-          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
+          const response: Response = await fetch(`https://eth.drpc.org`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1010,7 +1010,7 @@ export class ETHProvider
     try {
       const data = await retryAsync<string>(
         async (): Promise<string> => {
-          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
+          const response: Response = await fetch(`https://eth.drpc.org`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
