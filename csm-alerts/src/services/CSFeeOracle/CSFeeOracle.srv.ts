@@ -4,7 +4,7 @@ import { Logger } from 'winston'
 import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 import { ethers, filterLog, getEthersProvider } from 'forta-agent'
-import { ONE_MONTH, SECONDS_PER_SLOT } from '../../utils/constants'
+import { ONE_DAY, ONE_MONTH, SECONDS_PER_SLOT } from '../../utils/constants'
 import CS_FEE_ORACLE_ABI from '../../brief/abi/CSFeeOracle.json'
 import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
 import { getLogsByChunks } from '../../utils/utils'
@@ -32,6 +32,7 @@ export class CSFeeOracleSrv {
   private readonly csFeeOracleAddress: string
 
   private lastReportSubmitTimestamp: number = 0
+  private lastReportOverdueAlertTimestamp: number = 0
   private membersAddresses: string[] = []
   private membersLastReport: Map<string, MemberReport> = new Map()
 
@@ -150,21 +151,23 @@ export class CSFeeOracleSrv {
     const frameConfig = await hashConsensus.functions.getFrameConfig()
     const MAX_REPORT_DELAY = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
 
-    const reportDelayUpdated = now - (this.lastReportSubmitTimestamp ? this.lastReportSubmitTimestamp : 0)
-    if (reportDelayUpdated > MAX_REPORT_DELAY) {
-      const f: Finding = new Finding()
-      f.setName(`🔴 CSFeeOracle: Report overdue`)
-      f.setDescription(`Report is overdue by ${reportDelayUpdated} seconds`)
-      f.setAlertid('CS-FEE-ORACLE-REPORT-OVERDUE')
-      f.setSeverity(Finding.Severity.HIGH)
-      f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('ethereum')
+    const reportDelay = now - (this.lastReportSubmitTimestamp ? this.lastReportSubmitTimestamp : 0)
 
-      out.push(f)
+    const timeSinceLastAlert = now - this.lastReportOverdueAlertTimestamp
 
-      if (out.length > 0) {
-        this.lastReportSubmitTimestamp = now
-        return out
+    if (timeSinceLastAlert > ONE_DAY) {
+      if (reportDelay > MAX_REPORT_DELAY) {
+        const f: Finding = new Finding()
+        f.setName(`🔴 CSFeeOracle: Report overdue`)
+        f.setDescription(`Report is overdue by ${Math.floor(reportDelay / ONE_DAY)} days`)
+        f.setAlertid('CS-FEE-ORACLE-REPORT-OVERDUE')
+        f.setSeverity(Finding.Severity.HIGH)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
+
+        out.push(f)
+
+        this.lastReportOverdueAlertTimestamp = now
       }
     }
     return out
@@ -183,7 +186,7 @@ export class CSFeeOracleSrv {
       const f = new Finding()
       f.setName('🔴 HashConsensus: Another report variant appeared (alternative hash)')
       f.setDescription(
-        'More than one distinct report hash received for slot ${event.args.refSlot}. Member: ${event.args.member}. Report: ${event.args.report}',
+        `More than one distinct report hash received for slot ${event.args.refSlot}. Member: ${event.args.member}. Report: ${event.args.report}`,
       )
       f.setAlertid('HASH-CONSENSUS-REPORT-RECEIVED')
       f.setSeverity(Finding.Severity.HIGH)
@@ -202,6 +205,12 @@ export class CSFeeOracleSrv {
 
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
+
+    const reportEvent = filterLog(txEvent.logs, HASH_CONSENSUS_REPORT_RECEIVED_EVENT, this.hashConsensusAddress)
+    if (reportEvent) {
+      this.lastReportSubmitTimestamp = txEvent.block.timestamp
+    }
+
     const hashConsensusFindings = handleEventsOfNotice(txEvent, this.hashConsensusEvents)
     const csFeeOracleFindings = handleEventsOfNotice(txEvent, this.csFeeOracleEvents)
     const alternativeHashReceivedFindings = this.handleAlternativeHashReceived(txEvent)

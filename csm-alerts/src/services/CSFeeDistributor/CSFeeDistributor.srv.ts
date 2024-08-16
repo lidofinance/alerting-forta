@@ -22,7 +22,8 @@ export class CSFeeDistributorSrv {
   private readonly csFeeDistributorAddress: string
   private readonly stETHAddress: string
 
-  private lastDistributionDataUpdated: number = 0
+  private lastDistributionDataUpdatedTimestamp: number = 0
+  private lastNoDistributionDataUpdatedAlertTimestamp: number = 0
 
   constructor(
     logger: Logger,
@@ -49,7 +50,7 @@ export class CSFeeDistributorSrv {
       return currBlock.left
     }
 
-    this.lastDistributionDataUpdated = currBlock.right.timestamp
+    this.lastDistributionDataUpdatedTimestamp = currBlock.right.timestamp
 
     this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
     return null
@@ -67,9 +68,8 @@ export class CSFeeDistributorSrv {
       this.handleRevertedTx(blockDto.number),
       this.handleRolesChanging(blockDto.number),
     ])
-    const distributionDataUpdatedFindings = this.checkDistributionDataUpdated(blockDto)
 
-    findings.push(...revertedTxFindings, ...rolesChangingFindings, ...distributionDataUpdatedFindings)
+    findings.push(...revertedTxFindings, ...rolesChangingFindings)
 
     this.logger.info(elapsedTime(CSFeeDistributorSrv.name + '.' + this.handleBlock.name, start))
 
@@ -88,22 +88,29 @@ export class CSFeeDistributorSrv {
     return Promise.resolve([out])
   }
 
-  private checkDistributionDataUpdated(blockDto: BlockDto): Finding[] {
+  private handleDistributionDataUpdated(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
-    const now = blockDto.timestamp
 
-    if (this.lastDistributionDataUpdated && now - this.lastDistributionDataUpdated > ONE_DAY) {
-      const daysSinceLastUpdate = Math.floor((now - this.lastDistributionDataUpdated) / ONE_DAY)
-      const f = new Finding()
-      f.setName(`🔴 CSFeeDistributor: No DistributionDataUpdated Event`)
-      f.setDescription(`There has been no DistributionDataUpdated event for ${daysSinceLastUpdate} days.`)
-      f.setAlertid('CSFEE-NO-DISTRIBUTION-DATA-UPDATED')
-      f.setSeverity(Finding.Severity.HIGH)
-      f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('ethereum')
-      out.push(f)
+    const now = txEvent.block.timestamp
 
-      this.lastDistributionDataUpdated = now
+    const timeSinceLastAlert = now - this.lastNoDistributionDataUpdatedAlertTimestamp
+
+    if (timeSinceLastAlert > ONE_DAY) {
+      if (now - this.lastDistributionDataUpdatedTimestamp > ONE_DAY) {
+        const daysSinceLastUpdate = Math.floor((now - this.lastDistributionDataUpdatedTimestamp) / ONE_DAY)
+
+        const f = new Finding()
+        f.setName(`🔴 CSFeeDistributor: No DistributionDataUpdated Event`)
+        f.setDescription(`There has been no DistributionDataUpdated event for ${daysSinceLastUpdate} days.`)
+        f.setAlertid('CSFEE-NO-DISTRIBUTION-DATA-UPDATED')
+        f.setSeverity(Finding.Severity.HIGH)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
+
+        out.push(f)
+
+        this.lastNoDistributionDataUpdatedAlertTimestamp = now
+      }
     }
     return out
   }
@@ -111,20 +118,21 @@ export class CSFeeDistributorSrv {
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
-    const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
-
     const distributionDataUpdatedEvents = filterLog(
       txEvent.logs,
       DISTRIBUTION_DATA_UPDATED_EVENT,
       this.csFeeDistributorAddress,
     )
 
-    if (csFeeDistributorFindings.length !== 0 && distributionDataUpdatedEvents.length !== 0) {
-      this.lastDistributionDataUpdated = txEvent.block.timestamp
+    if (distributionDataUpdatedEvents) {
+      this.lastDistributionDataUpdatedTimestamp = txEvent.block.timestamp
     }
 
-    out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings)
+    const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
+    const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
+    const distributionDataUpdatedFindings = this.handleDistributionDataUpdated(txEvent)
+
+    out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings, ...distributionDataUpdatedFindings)
 
     return out
   }
