@@ -33,7 +33,7 @@ describe('Vaults.srv functional tests', () => {
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, fortaEthersProvider)
   const registry = new promClient.Registry()
-  const m = new Metrics(registry, 'test_')
+  const m = new Metrics(registry)
 
   const vaultClient: IVaultClient = new ETHProvider(
     logger,

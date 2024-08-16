@@ -14,7 +14,7 @@ describe('HealthChecker', () => {
   const timeForNextCheck = 250
 
   const registry = new promClient.Registry()
-  const m = new Metrics(registry, 'test_')
+  const m = new Metrics(registry)
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],

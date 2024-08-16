@@ -31,7 +31,7 @@ describe('L2BlocksSrv', () => {
   const bridgedLdoRunner = ArbERC20__factory.connect(adr.ARBITRUM_LDO_BRIDGED_ADDRESS, arbitrumProvider)
 
   const customRegister = new promClient.Registry()
-  const metrics = new Metrics(customRegister, config.promPrefix)
+  const metrics = new Metrics(customRegister)
 
   const l2Client = new L2Client(arbitrumProvider, metrics, bridgedWSthEthRunner, bridgedLdoRunner, logger)
 

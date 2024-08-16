@@ -23,7 +23,7 @@ describe('ethProvider', () => {
   const ldoRunner = ERC20Bridged__factory.connect(adr.L1_LDO_ADDRESS, ethProvider)
 
   const customRegister = new promClient.Registry()
-  const metrics = new Metrics(customRegister, config.promPrefix)
+  const metrics = new Metrics(customRegister)
 
   const l1BlocksStore = new LRUCache<string, BigNumber>({
     max: 500,
