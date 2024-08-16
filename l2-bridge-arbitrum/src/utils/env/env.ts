@@ -38,7 +38,7 @@ export class Config {
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://eth.drpc.org'
     this.arbitrumRpcUrl = process.env.ARBITRUM_RPC_URL || 'https://arbitrum-one.publicnode.com'
 
-    this.promPrefix = this.appName.replaceAll('-', '_') + `_`
+    this.promPrefix = this.appName.replaceAll('-', '_')
 
     if (process.env.USE_FORTA_RPC_URL === undefined) {
       this.useFortaProvider = false

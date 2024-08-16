@@ -61,9 +61,13 @@ const main = async () => {
 
   const customRegister = new promClient.Registry()
   const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
-  mergedRegistry.setDefaultLabels({ instance: config.instance, dataProvider: config.dataProvider })
+  mergedRegistry.setDefaultLabels({
+    instance: config.instance,
+    dataProvider: config.dataProvider,
+    botName: config.promPrefix,
+  })
 
-  const metrics = new Metrics(mergedRegistry, config.promPrefix)
+  const metrics = new Metrics(mergedRegistry)
 
   const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
   let fortaEthersProvider = getEthersProvider()
