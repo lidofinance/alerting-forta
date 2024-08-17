@@ -77,7 +77,10 @@ export async function initialize(
   return {};
 }
 
-async function getReportMainDataSubmits(blockFrom: number, blockTo: number) {
+export async function getReportMainDataSubmits(
+  blockFrom: number,
+  blockTo: number,
+) {
   const accountingOracle = new ethers.Contract(
     ACCOUNTING_ORACLE_ADDRESS,
     ACCOUNTING_ORACLE_ABI,
@@ -94,7 +97,10 @@ async function getReportMainDataSubmits(blockFrom: number, blockTo: number) {
   );
 }
 
-async function getReportExtraDataSubmits(blockFrom: number, blockTo: number) {
+export async function getReportExtraDataSubmits(
+  blockFrom: number,
+  blockTo: number,
+) {
   const accountingOracle = new ethers.Contract(
     ACCOUNTING_ORACLE_ADDRESS,
     ACCOUNTING_ORACLE_ABI,
@@ -115,56 +121,17 @@ export async function handleBlock(blockEvent: BlockEvent) {
   const findings: Finding[] = [];
 
   await handleMainDataReportSubmitted(blockEvent, findings);
-  await handleExtraDataReportSubmitted(blockEvent, findings);
 
   return findings;
 }
 
-async function handleExtraDataReportSubmitted(
-  blockEvent: BlockEvent,
-  findings: Finding[],
-) {
-  const now = blockEvent.block.timestamp;
-  const extraDataSubmits = await getReportExtraDataSubmits(
-    blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
-    blockEvent.blockNumber,
-  );
-
-  const lastExtraDataSubmit = extraDataSubmits[extraDataSubmits.length - 1];
-  const lastExtraDataSubmitBlock = await lastExtraDataSubmit.getBlock();
-  const lastExtraDataSubmitBlockTime = lastExtraDataSubmitBlock.timestamp ?? 0;
-  const reportExtraDataSubmitBetween3PhasesDelay =
-    now - lastExtraDataSubmitBlockTime;
-  if (
-    lastExtraDataSubmit.args?.itemsCount >
-      lastExtraDataSubmit.args?.itemsProcessed &&
-    MAX_ORACLE_REPORT_EXTRA_DATA_DELAY_BETWEEN_SUBMITING >
-      reportExtraDataSubmitBetween3PhasesDelay
-  ) {
-    findings.push(
-      Finding.fromObject({
-        name: "🚨 Accounting Oracle: previous report EXTRA data submit overdue",
-        description: `Time since previous extra data submit: ${formatDelay(
-          lastExtraDataSubmitBlockTime,
-        )}`,
-        alertId: "ACCOUNTING-ORACLE-PREVIOUS-EXTRA-DATA-OVERDUE",
-        severity: FindingSeverity.High,
-        type: FindingType.Degraded,
-        metadata: {
-          delay: `${reportExtraDataSubmitBetween3PhasesDelay}`,
-        },
-      }),
-    );
-  }
-}
-
-async function handleMainDataReportSubmitted(
+export async function handleMainDataReportSubmitted(
   blockEvent: BlockEvent,
   findings: Finding[],
 ) {
   const now = blockEvent.block.timestamp;
   const reportMainDataSubmitDelay =
-    now - lastReportMainDataSubmitTimestamp ?? 0;
+    now - (lastReportMainDataSubmitTimestamp ?? 0);
 
   if (
     (reportMainDataSubmitDelay > MAX_ORACLE_REPORT_MAIN_DATA_SUBMIT_DELAY &&
@@ -173,8 +140,7 @@ async function handleMainDataReportSubmitted(
       MAX_ORACLE_REPORT_EXTRA_DATA_SUBMIT_AFTER_MAIN_DATA_DELAY &&
       now - lastReportExtraDataSubmitOverdueTimestamp >= TRIGGER_PERIOD)
   ) {
-    // fetch events history 1 more time to be sure that there were actually no reports during last 25 hours
-    // needed to handle situation with the missed TX with prev report
+
     const mainDataSubmits = await getReportMainDataSubmits(
       blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
       blockEvent.blockNumber - 1,
@@ -188,9 +154,39 @@ async function handleMainDataReportSubmitted(
         blockEvent.blockNumber - 1,
       );
       if (extraDataSubmits.length > 0) {
-        lastReportExtraDataSubmitTimestamp = (
-          await extraDataSubmits[extraDataSubmits.length - 1].getBlock()
-        ).timestamp;
+        const lastExtraDataSubmit =
+          extraDataSubmits[extraDataSubmits.length - 1];
+        const lastExtraDataSubmitBlock = await lastExtraDataSubmit.getBlock();
+        lastReportExtraDataSubmitTimestamp = lastExtraDataSubmitBlock.timestamp;
+
+        const timeSinceLastExtraSubmit =
+          now - lastReportExtraDataSubmitTimestamp;
+        const itemsProcessed = parseInt(lastExtraDataSubmit.args?.itemsProcessed) ?? 0;
+        const itemsCount = parseInt(lastExtraDataSubmit.args?.itemsCount) ?? 0;
+
+        if (
+          timeSinceLastExtraSubmit >
+            MAX_ORACLE_REPORT_EXTRA_DATA_DELAY_BETWEEN_SUBMITING &&
+          itemsProcessed !== itemsCount
+        ) {
+          findings.push(
+            Finding.fromObject({
+              name: "🚨 Accounting Oracle: report EXTRA data submit incomplete",
+              description: `Time since last extra data submit: ${formatDelay(
+                timeSinceLastExtraSubmit,
+              )}. Items processed: ${itemsProcessed}/${itemsCount}.`,
+              alertId: "ACCOUNTING-ORACLE-EXTRA-DATA-INCOMPLETE",
+              severity: FindingSeverity.High,
+              type: FindingType.Degraded,
+              metadata: {
+                timeSinceLastExtraSubmit: `${timeSinceLastExtraSubmit}`,
+                itemProcessed: `${itemsProcessed}`,
+                itemCount: `${itemsCount}`,
+              },
+            }),
+          );
+          lastReportExtraDataSubmitOverdueTimestamp = now;
+        }
       }
     }
 
