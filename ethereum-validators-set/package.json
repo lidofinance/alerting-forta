@@ -28,6 +28,7 @@
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
     "test": "jest --passWithNoTests",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:e2e": "yarn build && jest --config ./e2e/jest.config-e2e.json --passWithNoTests"
   },
   "dependencies": {
