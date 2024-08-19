@@ -6,9 +6,16 @@ import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../shared/errors'
 import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import { DefaultBondStrategy__factory, SymbioticWstETH, Vault, VaultConfigurator } from '../generated'
+import { DefaultBondStrategy__factory, SymbioticWstETH, Vault, VaultConfigurator, WStETH } from '../generated'
 import { IVaultWatcherClient } from '../services/vault-watcher/VaultWatcher.srv'
-import { VaultConfig, VAULT_WATCH_METHOD_NAMES, WSTETH_ADDRESS, VAULT_LIST } from 'constants/common'
+import {
+  VaultConfig,
+  VAULT_WATCH_METHOD_NAMES,
+  WSTETH_ADDRESS,
+  VAULT_LIST,
+  WETH_ADDRESS,
+  ETH_DECIMALS,
+} from 'constants/common'
 import { LogDescription } from '@ethersproject/abi'
 
 const DELAY_IN_500MS = 500
@@ -22,6 +29,7 @@ export interface IProxyContractData {
 export class ETHProvider implements IVaultWatcherClient {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly mellowSymbioticContract: SymbioticWstETH
+  private readonly wStETHContract: WStETH
   private readonly vaultContracts: Vault[]
   private readonly vaultConfiguratorContracts: VaultConfigurator[]
 
@@ -30,11 +38,13 @@ export class ETHProvider implements IVaultWatcherClient {
     mellowSymbioticContract: SymbioticWstETH,
     vaultContracts: Vault[],
     vaultConfiguratorContracts: VaultConfigurator[],
+    wStETHContract: WStETH,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.mellowSymbioticContract = mellowSymbioticContract
     this.vaultContracts = vaultContracts
     this.vaultConfiguratorContracts = vaultConfiguratorContracts
+    this.wStETHContract = wStETHContract
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
@@ -139,7 +149,23 @@ export class ETHProvider implements IVaultWatcherClient {
             throw new Error('Could not find wstETH token in underlyingTvl')
           }
 
-          return amounts[idWstETH]
+          const amountWstETH = amounts[idWstETH]
+          const { hasWETH } = VAULT_LIST[vaultIndex]
+
+          if (!hasWETH) {
+            return amountWstETH
+          }
+
+          const [stEthPerWst] = await this.wStETHContract.functions.stEthPerToken()
+
+          const amountStETH = amountWstETH.div(ETH_DECIMALS.toString()).mul(stEthPerWst)
+
+          const idWETH = tokens.findIndex((token) => token.toLowerCase() === WETH_ADDRESS.toLowerCase())
+          if (idWstETH === -1) {
+            throw new Error('Could not find wETH token in underlyingTvl')
+          }
+
+          return amountStETH.add(amounts[idWETH])
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )

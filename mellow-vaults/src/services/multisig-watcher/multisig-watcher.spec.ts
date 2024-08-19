@@ -3,13 +3,13 @@ import * as Winston from 'winston'
 import { ethers, Finding } from 'forta-agent'
 
 import { MultisigWatcherSrv } from './MultisigWatcher.srv'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('MultisigWatcher srv functional tests', () => {
-  const drpcURL = `https://eth.drpc.org`
   const mainnet = 1
-  const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+  const ethProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, mainnet)
 
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),

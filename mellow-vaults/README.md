@@ -8,13 +8,14 @@
 
 1. Vault operations
    1. HandleBlock
-      1. 🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same
-      2. 🚨🚨🚨 Vault totalSupply more than maximalTotalSupply
-      3. 🚨🚨🚨 Vault critical storage slot value changed
-      4. 🚨 Vault critical storage not loaded
-      5. ⚠️ Vault withdrawals haven’t been called for at least 48 hours
-      6. ⚠️ Vault totalSupply close to maximalTotalSupply (every 1800 blocks)
-      7. ⚠️ Vault totalSupply reached maximalTotalSupply (every 1800 blocks)
+      1. 🚨🚨🚨 Vault: vaultTotalSupply and vaultUnderlyingTvl has sensitive difference
+      2. 🚨🚨🚨 Vault: totalSupply more than maximalTotalSupply
+      3. 🚨🚨🚨 Vault: critical storage slot value changed
+      4. 🚨 Vault: critical storage not loaded
+      5. ⚠️ Vault: vaultTotalSupply and vaultUnderlyingTvl is not the same
+      6. ⚠️ Vault: withdrawals haven’t been called for at least 48 hours
+      7. ⚠️ Vault: totalSupply close to maximalTotalSupply (every 1800 blocks)
+      8. ⚠️ Vault: totalSupply reached maximalTotalSupply (every 1800 blocks)
    2. HandleTransaction
       1. 🚨 Vault: Role Admin changed
       2. 🚨 Vault: Role revoked
@@ -39,8 +40,8 @@
       11. ℹ️ ✅ Gnosis Safe: Execution success from module
 3. ACL
    1. HandleBlock
-      1. 🚨🚨🚨 Vault Contract owner set to EOA 🚨🚨🚨
-      2. 🚨 Vault Contract owner set to address not in whitelist
+      1. 🚨🚨🚨 Vault: Contract owner set to EOA 🚨🚨🚨
+      2. 🚨 Vault: Contract owner set to address not in whitelist
 
 ## Development
 

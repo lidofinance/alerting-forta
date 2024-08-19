@@ -2,13 +2,13 @@ import { BlockDto } from '../../entity/events'
 import * as Winston from 'winston'
 import { ethers, Finding } from 'forta-agent'
 
-import { AclChangesSrv } from './AclChanges.srv'
+import { VaultWatcherSrv } from './VaultWatcher.srv'
 import { App } from '../../app'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('AclChanges srv functional tests', () => {
+describe('VaultWatchers srv functional tests', () => {
   const mainnet = 1
   const ethProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, mainnet)
 
@@ -19,7 +19,7 @@ describe('AclChanges srv functional tests', () => {
     transports: [new Winston.transports.Console()],
   })
 
-  const service = new AclChangesSrv(logger, ethClient)
+  const service = new VaultWatcherSrv(logger, ethClient)
 
   let runBlock: (blockHashOrNumber: string | number, initBlock: number) => Promise<Finding[]>
 
@@ -31,7 +31,10 @@ describe('AclChanges srv functional tests', () => {
       if (initBlock > Number(blockHashOrNumber)) {
         throw new Error('Wrong initial block or argument order')
       }
-
+      const initErr = await service.initialize(initBlock)
+      if (initErr instanceof Error) {
+        throw initErr
+      }
       const block = await ethProvider.getBlock(blockHashOrNumber)
       const blockDto: BlockDto = {
         number: block.number,
@@ -48,9 +51,9 @@ describe('AclChanges srv functional tests', () => {
   })
 
   it(
-    'should everything is fine',
+    'should find limits integrity medium',
     async () => {
-      const findings = await runBlock(20061165, 20061164)
+      const findings = await runBlock(20527718, 20527717)
       expect(findings).toMatchSnapshot()
     },
     TEST_TIMEOUT,

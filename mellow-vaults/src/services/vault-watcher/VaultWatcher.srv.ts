@@ -13,6 +13,7 @@ import {
   VAULT_LIST,
   VAULT_WATCH_METHOD_NAMES,
   MINUTE_IN_BLOCK,
+  DELAY_BEFORE_REPETITION_INTERVAL,
 } from 'constants/common'
 import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
 import { handleEventsOfNotice } from '../../shared/notice'
@@ -59,10 +60,12 @@ export class VaultWatcherSrv {
   private readonly logger: Logger
   private readonly ethClient: IVaultWatcherClient
   private readonly name = 'VaultWatcherSrv'
+  private readonly skipMap: Map<string, boolean>
 
   constructor(logger: Logger, ethClient: IVaultWatcherClient) {
     this.logger = logger
     this.ethClient = ethClient
+    this.skipMap = new Map<string, boolean>()
   }
 
   async initialize(currentBlock: number): Promise<NetworkError | null> {
@@ -70,7 +73,7 @@ export class VaultWatcherSrv {
 
     try {
       const results = await Promise.all(
-        VAULT_LIST.map(async (vault, index) => {
+        VAULT_LIST.map(async (_, index) => {
           const vaultConfig = await this.ethClient.getVaultConfigurationStorage(index, currentBlock)
           if (E.isLeft(vaultConfig)) {
             throw vaultConfig.left
@@ -215,7 +218,7 @@ export class VaultWatcherSrv {
       if (!vaultConfig.right[methodName] || !vaultConfigPrev?.[methodName]) {
         out.push(
           Finding.fromObject({
-            name: `🚨 Vault critical storage not loaded`,
+            name: `🚨 Vault: critical storage not loaded`,
             description: `Mellow Vault [${vault?.name}] can't load of the storage for contract ${vault.vault} ${methodName}`,
             alertId: 'MELLOW-VAULT-STORAGE-NOT-LOADED',
             severity: FindingSeverity.High,
@@ -227,7 +230,7 @@ export class VaultWatcherSrv {
       if (vaultConfig.right[methodName] !== vaultConfigPrev?.[methodName]) {
         out.push(
           Finding.fromObject({
-            name: `🚨🚨🚨 Vault critical storage slot value changed`,
+            name: `🚨🚨🚨 Vault: critical storage slot value changed`,
             description:
               `Mellow Vault [${vault?.name}] ` +
               `Value of the storage slot \`'${methodName}'\` ` +
@@ -287,7 +290,7 @@ export class VaultWatcherSrv {
     if (result.diff.gt(0)) {
       out.push(
         Finding.fromObject({
-          name: '🚨🚨🚨 Vault totalSupply more than maximalTotalSupply',
+          name: '🚨🚨🚨 Vault: totalSupply more than maximalTotalSupply',
           description: `Mellow Vault [${result?.name}] (${result.address}) - more than maximalTotalSupply`,
           alertId: 'VAULT-LIMITS-INTEGRITY',
           severity: FindingSeverity.Critical,
@@ -297,7 +300,7 @@ export class VaultWatcherSrv {
     } else if (result.eq.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
       out.push(
         Finding.fromObject({
-          name: '⚠️ Vault totalSupply reached maximalTotalSupply',
+          name: '⚠️ Vault: totalSupply reached maximalTotalSupply',
           description: `Mellow Vault [${result?.name}] (${result.address}) - maximalTotalSupply reached`,
           alertId: 'VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX',
           severity: FindingSeverity.Medium,
@@ -307,7 +310,7 @@ export class VaultWatcherSrv {
     } else if (result.near.gt(0) && block.number % PERIODICAL_BLOCK_INTERVAL == 0) {
       out.push(
         Finding.fromObject({
-          name: '⚠️ Vault totalSupply close to maximalTotalSupply',
+          name: '⚠️ Vault: totalSupply close to maximalTotalSupply',
           description: `Mellow Vault [${result?.name}] (${result.address}) - totalSupply more than 90% of maximalTotalSupply`,
           alertId: 'VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX',
           severity: FindingSeverity.Medium,
@@ -337,6 +340,16 @@ export class VaultWatcherSrv {
 
   private async handleWstETHIntegrityAtVault(block: BlockDto, index: number): Promise<Finding[]> {
     const out: Finding[] = []
+    const key = `LIMITS-INTEGRITY-VAULT-${index}`
+
+    if (block.number % DELAY_BEFORE_REPETITION_INTERVAL == 0) {
+      // renew sending time every interval to make sure all nodes will be at same block
+      this.skipMap.set(key, false)
+    }
+
+    if (this.skipMap.get(key)) {
+      return out
+    }
 
     const vault = VAULT_LIST[index]
     const [vaultTotalSupply, vaultUnderlyingTvl] = await Promise.all([
@@ -367,6 +380,7 @@ export class VaultWatcherSrv {
     }
 
     if (vaultUnderlyingTvl.right.lt(1)) {
+      // should be positive for division
       out.push(
         networkAlert(
           new Error(`vault ${VaultWatcherSrv.name} underlyingTvl is too low`),
@@ -380,19 +394,33 @@ export class VaultWatcherSrv {
     const result = {
       address: vault.vault,
       name: vault.name,
+      warningLimit: vault.integrityWarningLimit,
+      criticalLimit: vault.integrityCriticalLimit,
       supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
     }
 
-    if (result.supplyToUnderlying.minus(1).abs().gte(1e-9) && !vault.customIntegrityLimits) {
+    if (result.supplyToUnderlying.minus(1).abs().gte(result.criticalLimit)) {
       out.push(
         Finding.fromObject({
-          name: '🚨🚨🚨 Vault vaultTotalSupply and vaultUnderlyingTvl is not the same',
+          name: '🚨🚨🚨 Vault: vaultTotalSupply and vaultUnderlyingTvl has sensitive difference',
           description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
-          alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY',
+          alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-CRITICAL',
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
         }),
       )
+      this.skipMap.set(key, true)
+    } else if (result.warningLimit && result.supplyToUnderlying.minus(1).abs().gte(result.warningLimit)) {
+      out.push(
+        Finding.fromObject({
+          name: '⚠️ Vault: vaultTotalSupply and vaultUnderlyingTvl is not the same',
+          description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
+          alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-MEDIUM',
+          severity: FindingSeverity.Medium,
+          type: FindingType.Info,
+        }),
+      )
+      this.skipMap.set(key, true)
     }
 
     return out

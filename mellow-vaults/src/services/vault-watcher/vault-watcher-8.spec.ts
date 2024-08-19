@@ -1,17 +1,19 @@
 import { BlockDto, TransactionDto } from '../../entity/events'
 import * as Winston from 'winston'
 import { ethers, Finding } from 'forta-agent'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 
 import { VaultWatcherSrv } from './VaultWatcher.srv'
 import { App } from '../../app'
-import { VAULT_LIST } from '../../shared/constants/common/mainnet'
+import { Vault, VAULT_LIST } from '../../shared/constants/common/mainnet'
 
 const TEST_TIMEOUT = 120_000 // ms
+// tests with filtering by vault length breaks after adding new one
+const VAULT_COUNT = 8
 
 describe('VaultWatchers srv functional tests', () => {
-  const drpcURL = `https://eth.drpc.org`
   const mainnet = 1
-  const ethProvider = new ethers.providers.JsonRpcProvider(drpcURL, mainnet)
+  const ethProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, mainnet)
 
   const ethClient = App.prepareClient(ethProvider)
 
@@ -24,20 +26,11 @@ describe('VaultWatchers srv functional tests', () => {
 
   let runTransaction: (txHash: string, initBlock?: number) => Promise<Finding[]>
   let runBlock: (blockHashOrNumber: string | number, initBlock: number) => Promise<Finding[]>
-  let newVaults: {
-    name: string
-    vault: string
-    configurator: string
-    defaultBondStrategy: string
-    upgradeableProxyProxyAdmin: string
-    proxyAdmin: string
-    admin: string
-    curator: string
-  }[] = []
+  let newVaults: Vault[] = []
 
   beforeAll(() => {
     //remove new vault to not fix all tests
-    newVaults = VAULT_LIST.splice(8)
+    newVaults = VAULT_LIST.splice(VAULT_COUNT)
     console.info(`removed vaults for test: ${newVaults.map((vault) => vault.name).join(', ')}`)
     jest.spyOn(console, 'log').mockImplementation(() => {})
     jest.spyOn(Date, 'now').mockImplementation(() => new Date('2024-01-01').getTime())

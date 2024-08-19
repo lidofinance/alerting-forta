@@ -7,13 +7,14 @@ import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './servi
 import { VaultWatcherSrv } from './services/vault-watcher/VaultWatcher.srv'
 import { MultisigWatcherSrv } from './services/multisig-watcher/MultisigWatcher.srv'
 import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
-import { MELLOW_SYMBIOTIC_ADDRESS, VAULT_LIST } from 'constants/common'
+import { MELLOW_SYMBIOTIC_ADDRESS, VAULT_LIST, WSTETH_ADDRESS } from 'constants/common'
 import {
   SymbioticWstETH__factory,
   Vault,
   Vault__factory,
   VaultConfigurator,
   VaultConfigurator__factory,
+  WStETH__factory,
 } from './generated'
 
 export type Container = {
@@ -36,8 +37,14 @@ export class App {
       VaultConfiguratorContracts.push(VaultConfigurator__factory.connect(vault.configurator, provider))
     })
     const mellowSymbioticContract = SymbioticWstETH__factory.connect(MELLOW_SYMBIOTIC_ADDRESS, provider)
-
-    const ethClient = new ETHProvider(provider, mellowSymbioticContract, VaultContracts, VaultConfiguratorContracts)
+    const wStETHContract = WStETH__factory.connect(WSTETH_ADDRESS, provider)
+    const ethClient = new ETHProvider(
+      provider,
+      mellowSymbioticContract,
+      VaultContracts,
+      VaultConfiguratorContracts,
+      wStETHContract,
+    )
     return ethClient
   }
 

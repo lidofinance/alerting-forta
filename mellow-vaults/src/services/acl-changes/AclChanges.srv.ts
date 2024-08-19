@@ -103,8 +103,8 @@ export class AclChangesSrv {
       out.push(
         Finding.fromObject({
           name: curOwnerIsContract.right
-            ? '🚨 Vault Contract owner set to address not in whitelist'
-            : '🚨🚨🚨 Vault Contract owner set to EOA 🚨🚨🚨',
+            ? '🚨 Vault: Contract owner set to address not in whitelist'
+            : '🚨🚨🚨 Vault: Contract owner set to EOA 🚨🚨🚨',
           description: `${ownableContract.name} contract (${etherscanAddress(address)}) owner is set to ${
             curOwnerIsContract.right ? 'contract' : 'EOA'
           } address ${etherscanAddress(curOwner.right)}`,
