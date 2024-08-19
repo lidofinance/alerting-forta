@@ -110,7 +110,7 @@ export class BlockHandler {
           this.WithdrawalsSrv.handleBlock(blockDtoEvent),
           this.GateSealSrv.handleBlock(blockDtoEvent),
           this.VaultSrv.handleBlock(blockDtoEvent),
-          this.storageWatcher.handleBlock(block.getHash()),
+          this.storageWatcher.handleBlock(blockDtoEvent),
         ])
 
       const WithdrawalStat = await this.WithdrawalsSrv.getStatisticString()

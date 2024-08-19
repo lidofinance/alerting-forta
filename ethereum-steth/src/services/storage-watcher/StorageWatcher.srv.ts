@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { either as E } from 'fp-ts'
 import { Logger } from 'winston'
+import { BlockDto } from '../../entity/events'
 import { StorageArrayResponse, StorageItemResponse, StorageSlot } from '../../entity/storage_slot'
 import { Finding } from '../../generated/proto/alert_pb'
 import { networkAlert } from '../../utils/errors'
@@ -32,39 +33,58 @@ export abstract class IStorageWatcherClient {
 
 export class StorageWatcherSrv {
   private readonly logger: Logger
-  private readonly storageSlots: Map<number, StorageSlot>
+  private readonly storageSlots: StorageSlot[]
+  private readonly storageSlotMap: Map<number, StorageSlot>
   private readonly client: IStorageWatcherClient
 
   constructor(logger: Logger, storageSlots: StorageSlot[], client: IStorageWatcherClient) {
     this.logger = logger
-    this.storageSlots = new Map<number, StorageSlot>()
+    this.storageSlotMap = new Map<number, StorageSlot>()
+    this.storageSlots = storageSlots
     this.client = client
 
     for (const slot of storageSlots) {
-      this.storageSlots.set(slot.id, slot)
+      this.storageSlotMap.set(slot.id, slot)
     }
   }
 
-  public async handleBlock(blockHash: string): Promise<Finding[]> {
-    const start = new Date().getTime()
+  public async handleBlock(blockDtoEvent: BlockDto): Promise<Finding[]> {
+    const lotteryNum = (blockDtoEvent.number % 10) + 1
 
+    const step = Math.floor(this.storageSlots.length / 9)
+    const finish = lotteryNum * step
+    const begin = finish - step
+
+    if (finish > this.storageSlots.length || begin > this.storageSlots.length) {
+      return []
+    }
+
+    const start = new Date().getTime()
+    const part = this.storageSlots.slice(begin, finish)
     const promises = []
     const promisesArray = []
-
     const out: Finding[] = []
-    for (const [slotId, slot] of this.storageSlots) {
+
+    for (const slot of part) {
       if (!slot.isAddress) {
-        promises.push(this.client.getStorageBySlotName(slot.contractAddress, slotId, slot.slotName, blockHash))
+        promises.push(
+          this.client.getStorageBySlotName(slot.contractAddress, slot.id, slot.slotName, blockDtoEvent.hash),
+        )
       }
 
       if (slot.isAddress && !slot.isArray) {
-        // @ts-ignore
-        promises.push(this.client.getStorageAtSlotAddr(slot.contractAddress, slotId, slot.slotAddress, blockHash))
+        promises.push(
+          this.client.getStorageAtSlotAddr(slot.contractAddress, slot.id, <string>slot.slotAddress, blockDtoEvent.hash),
+        )
       }
 
       if (slot.isAddress && slot.isArray) {
-        // @ts-ignore
-        const len = await this.client.getStorageAtSlotAddr(slot.contractAddress, slotId, slot.slotAddress, blockHash)
+        const len = await this.client.getStorageAtSlotAddr(
+          slot.contractAddress,
+          slot.id,
+          <string>slot.slotAddress,
+          blockDtoEvent.hash,
+        )
         if (E.isLeft(len)) {
           out.push(
             networkAlert(
@@ -79,10 +99,9 @@ export class StorageWatcherSrv {
         promisesArray.push(
           this.client.getStorageArrayAtSlotAddr(
             slot.contractAddress,
-            slotId,
-            // @ts-ignore
-            slot.slotAddress,
-            blockHash,
+            slot.id,
+            <string>slot.slotAddress,
+            blockDtoEvent.hash,
             new BigNumber(len.right.value).toNumber(),
           ),
         )
@@ -114,11 +133,8 @@ export class StorageWatcherSrv {
         continue
       }
 
-      // @ts-ignore
-      const prevValue: StorageSlot = this.storageSlots.get(resp.right.slotId)
-      // @ts-ignore
-      const slot: StorageSlot = this.storageSlots.get(resp.right.slotId)
-      if (prevValue.expected !== resp.right.value) {
+      const slot: StorageSlot = <StorageSlot>this.storageSlotMap.get(resp.right.slotId)
+      if (slot.expected !== resp.right.value) {
         const f: Finding = new Finding()
         f.setName(`🚨 Storage slot value changed`)
         f.setAlertid(`STORAGE-SLOT-VALUE-CHANGED`)
@@ -128,7 +144,7 @@ export class StorageWatcherSrv {
         f.setName(
           `Value of the storage slot ${slot.id}:${slot.slotName}\n` +
             `for contract ${slot.contractAddress} (${slot.contactName}) has changed!\n` +
-            `Prev value: ${prevValue}\n` +
+            `Prev value: ${slot.expected}\n` +
             `\nNew value: ${resp.right.value}`,
         )
       }
@@ -159,7 +175,7 @@ export class StorageWatcherSrv {
         continue
       }
 
-      const slot: StorageSlot = <StorageSlot>this.storageSlots.get(resp.right.slotId)
+      const slot: StorageSlot = <StorageSlot>this.storageSlotMap.get(resp.right.slotId)
       // TODO we need to compare arrays
       // There are several strategies:
       // Sets: we could not use this approach -
