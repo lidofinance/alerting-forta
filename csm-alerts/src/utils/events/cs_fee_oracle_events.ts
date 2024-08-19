@@ -6,6 +6,9 @@ import { Finding } from '../../generated/proto/alert_pb'
 export const HASH_CONSENSUS_REPORT_RECEIVED_EVENT =
   'event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)'
 
+export const CS_FEE_ORACLE_REPORT_SUBMITTED_EVENT =
+  'event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)'
+
 export function getHashConsensusEvents(HASH_CONSENSUS_ADDRESS: string): EventOfNotice[] {
   return [
     {
@@ -141,7 +144,7 @@ export function getCSFeeOracleEvents(CS_FEE_ORACLE_ADDRESS: string): EventOfNoti
     },
     {
       address: CS_FEE_ORACLE_ADDRESS,
-      abi: 'event ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)',
+      abi: CS_FEE_ORACLE_REPORT_SUBMITTED_EVENT,
       alertId: 'CSFEE-ORACLE-REPORT-SUBMITTED',
       name: '🔵 CSFeeOracle: Report submitted',
       description: (args: Result) =>

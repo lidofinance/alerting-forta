@@ -50,7 +50,7 @@ export class TxHandler {
       const findings: Finding[] = []
 
       const csModuleFindings = this.csModuleSrv.handleTransaction(txEvent)
-      const csFeeDistributorFindings = this.csFeeDistributorSrv.handleTransaction(txEvent)
+      const csFeeDistributorFindings = await this.csFeeDistributorSrv.handleTransaction(txEvent)
       const csAccountingFindings = this.csAccountingSrv.handleTransaction(txEvent)
       const csFeeOracleFindings = this.csFeeOracleSrv.handleTransaction(txEvent)
       const proxyWatcherFindings = this.proxyWatcherSrv.handleTransaction(txEvent)

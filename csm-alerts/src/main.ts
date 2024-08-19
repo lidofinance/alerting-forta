@@ -134,6 +134,7 @@ const main = async () => {
     address.CS_ACCOUNTING_ADDRESS,
     address.CS_FEE_DISTRIBUTOR_ADDRESS,
     address.LIDO_STETH_ADDRESS,
+    address.HASH_CONSENSUS_ADDRESS,
   )
 
   const csAccountingSrv = new CSAccountingSrv(

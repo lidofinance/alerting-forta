@@ -8,7 +8,10 @@ import { ONE_DAY, ONE_MONTH, SECONDS_PER_SLOT } from '../../utils/constants'
 import CS_FEE_ORACLE_ABI from '../../brief/abi/CSFeeOracle.json'
 import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
 import { getLogsByChunks } from '../../utils/utils'
-import { HASH_CONSENSUS_REPORT_RECEIVED_EVENT } from '../../utils/events/cs_fee_oracle_events'
+import {
+  CS_FEE_ORACLE_REPORT_SUBMITTED_EVENT,
+  HASH_CONSENSUS_REPORT_RECEIVED_EVENT,
+} from '../../utils/events/cs_fee_oracle_events'
 import BigNumber from 'bignumber.js'
 export abstract class ICSFeeOracleClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
@@ -73,7 +76,8 @@ export class CSFeeOracleSrv {
     const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
     this.membersAddresses = await this.getOracleMembers(currentBlock, hashConsensus)
     const hashConsensusReportReceivedFilter = hashConsensus.filters.ReportReceived()
-    const reportReceivedStartBlock = currentBlock - Math.ceil(ONE_MONTH / SECONDS_PER_SLOT)
+    const frameConfig = await hashConsensus.functions.getFrameConfig()
+    const reportReceivedStartBlock = currentBlock - Math.ceil(frameConfig.epochsPerFrame * 32)
     const reportReceivedEvents = await getLogsByChunks(
       hashConsensus,
       hashConsensusReportReceivedFilter,
@@ -153,6 +157,12 @@ export class CSFeeOracleSrv {
 
     const reportDelay = now - (this.lastReportSubmitTimestamp ? this.lastReportSubmitTimestamp : 0)
 
+    const currentEpoch = Math.floor(now / (frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT))
+    if (currentEpoch < frameConfig.initialEpoch + frameConfig.epochsPerFrame) {
+      // If we are still within the initial epochs, skip the overdue check
+      return out
+    }
+
     const timeSinceLastAlert = now - this.lastReportOverdueAlertTimestamp
 
     if (timeSinceLastAlert > ONE_DAY) {
@@ -177,22 +187,23 @@ export class CSFeeOracleSrv {
     const out: Finding[] = []
 
     const [event] = filterLog(txEvent.logs, HASH_CONSENSUS_REPORT_RECEIVED_EVENT, this.hashConsensusAddress)
+    if (event && event.args) {
+      const currentReportHashes = [...this.membersLastReport.values()]
+        .filter((r) => r.refSlot.eq(event.args.refSlot))
+        .map((r) => r.report)
 
-    const currentReportHashes = [...this.membersLastReport.values()]
-      .filter((r) => r.refSlot.eq(event.args.refSlot))
-      .map((r) => r.report)
-
-    if (currentReportHashes.length > 0 && !currentReportHashes.includes(event.args.report)) {
-      const f = new Finding()
-      f.setName('🔴 HashConsensus: Another report variant appeared (alternative hash)')
-      f.setDescription(
-        `More than one distinct report hash received for slot ${event.args.refSlot}. Member: ${event.args.member}. Report: ${event.args.report}`,
-      )
-      f.setAlertid('HASH-CONSENSUS-REPORT-RECEIVED')
-      f.setSeverity(Finding.Severity.HIGH)
-      f.setType(Finding.FindingType.INFORMATION)
-      f.setProtocol('ethereum')
-      out.push(f)
+      if (currentReportHashes.length > 0 && !currentReportHashes.includes(event.args.report)) {
+        const f = new Finding()
+        f.setName('🔴 HashConsensus: Another report variant appeared (alternative hash)')
+        f.setDescription(
+          `More than one distinct report hash received for slot ${event.args.refSlot}. Member: ${event.args.member}. Report: ${event.args.report}`,
+        )
+        f.setAlertid('HASH-CONSENSUS-REPORT-RECEIVED')
+        f.setSeverity(Finding.Severity.HIGH)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
+        out.push(f)
+      }
 
       this.membersLastReport.set(event.args.member, {
         refSlot: event.args.refSlot,
@@ -200,14 +211,15 @@ export class CSFeeOracleSrv {
         blockNumber: txEvent.block.number,
       })
     }
+
     return out
   }
 
   public handleTransaction(txEvent: TransactionDto): Finding[] {
     const out: Finding[] = []
 
-    const reportEvent = filterLog(txEvent.logs, HASH_CONSENSUS_REPORT_RECEIVED_EVENT, this.hashConsensusAddress)
-    if (reportEvent) {
+    const reportEvent = filterLog(txEvent.logs, CS_FEE_ORACLE_REPORT_SUBMITTED_EVENT, this.csFeeOracleAddress)
+    if (reportEvent.length > 0) {
       this.lastReportSubmitTimestamp = txEvent.block.timestamp
     }
 

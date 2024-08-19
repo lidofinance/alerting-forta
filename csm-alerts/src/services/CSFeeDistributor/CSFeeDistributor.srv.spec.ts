@@ -59,6 +59,7 @@ describe('CsFeeDistributor event tests', () => {
     address.CS_ACCOUNTING_ADDRESS,
     address.CS_FEE_DISTRIBUTOR_ADDRESS,
     address.LIDO_STETH_ADDRESS,
+    address.HASH_CONSENSUS_ADDRESS,
   )
 
   test(
@@ -78,7 +79,7 @@ describe('CsFeeDistributor event tests', () => {
         },
       }
 
-      const results = csFeeDistributorSrv.handleTransaction(transactionDto)
+      const results = await csFeeDistributorSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(1)
