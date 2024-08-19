@@ -33,7 +33,7 @@ export class Config {
     this.chainId = parseInt(process.env.FORTA_CHAIN_ID!, 10) || 1
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://eth.drpc.org'
 
-    this.promPrefix = this.appName.replace('-', '_') + '_'
+    this.promPrefix = this.appName.replace('-', '_')
 
     this.useFortaProvider = JSON.parse(process.env.USE_FORTA_RPC_URL!)
 

@@ -52,7 +52,7 @@ describe('monitor_withdrawals', () => {
   const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
   mergedRegistry.setDefaultLabels({ instance: config.instance, dataProvider: config.dataProvider })
 
-  const metrics = new Metrics(mergedRegistry, config.promPrefix)
+  const metrics = new Metrics(mergedRegistry)
 
   const ethProvider = config.useFortaProvider
     ? new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), config.chainId)
