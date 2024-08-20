@@ -11,9 +11,14 @@ import { ETHProvider } from './clients/eth_provider'
 import { AgentService } from './generated/proto/agent_grpc_pb'
 import { Finding } from './generated/proto/alert_pb'
 import {
+  AstETH__factory,
+  ChainlinkAggregator__factory,
+  CurvePool__factory,
   GateSeal__factory,
   Lido__factory,
+  StableDebtStETH__factory,
   ValidatorsExitBusOracle__factory,
+  VariableDebtStETH__factory,
   WithdrawalQueueERC721__factory,
 } from './generated/typechain'
 import { AlertHandler } from './handlers/alert.handler'
@@ -21,9 +26,12 @@ import { BlockHandler } from './handlers/block.handler'
 import { HealthHandler } from './handlers/health.handler'
 import { InitHandler } from './handlers/init.handler'
 import { TxHandler } from './handlers/tx.handler'
+import { AaveSrv } from './services/aave/Aave.srv'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
 import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
+import { PoolBalanceCache } from './services/pools-balances/pool-balance.cache'
+import { PoolBalanceSrv } from './services/pools-balances/pool-balance.srv'
 import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
 import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
 import { StorageWatcherSrv } from './services/storage-watcher/StorageWatcher.srv'
@@ -79,15 +87,39 @@ const main = async () => {
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, fortaEthersProvider)
 
+  const astRunner = AstETH__factory.connect(address.AAVE_ASTETH_ADDRESS, ethProvider)
+
+  const stableDebtStEthRunner = StableDebtStETH__factory.connect(address.AAVE_STABLE_DEBT_STETH_ADDRESS, ethProvider)
+  const variableDebtStEthRunner = VariableDebtStETH__factory.connect(
+    address.AAVE_VARIABLE_DEBT_STETH_ADDRESS,
+    ethProvider,
+  )
+
+  const curvePoolRunner = CurvePool__factory.connect(address.CURVE_POOL_ADDRESS, ethProvider)
+  const chainlinkAggregatorRunner = ChainlinkAggregator__factory.connect(
+    address.CHAINLINK_STETH_PRICE_FEED,
+    ethProvider,
+  )
+
   const ethClient = new ETHProvider(
     logger,
     metrics,
-    fortaEthersProvider,
+    ethProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
+    astRunner,
+    stableDebtStEthRunner,
+    variableDebtStEthRunner,
+    curvePoolRunner,
+    chainlinkAggregatorRunner,
     veboRunner,
   )
+
+  const aaveSrv = new AaveSrv(logger, ethClient, address.AAVE_ASTETH_ADDRESS)
+
+  const cache = new PoolBalanceCache()
+  const poolBalanceSrv = new PoolBalanceSrv(logger, ethClient, cache)
 
   const stethOperationCache = new StethOperationCache()
   const stethOperationSrv = new StethOperationSrv(
@@ -157,11 +189,21 @@ const main = async () => {
     gateSealSrv,
     vaultSrv,
     storageWatcherSrv,
+    aaveSrv,
+    poolBalanceSrv,
     healthChecker,
     onAppFindings,
     ethClient,
   )
-  const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
+  const txH = new TxHandler(
+    metrics,
+    stethOperationSrv,
+    withdrawalsSrv,
+    gateSealSrv,
+    vaultSrv,
+    poolBalanceSrv,
+    healthChecker,
+  )
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
 
   const latestBlock = await ethClient.getBlockByHash('latest')
@@ -178,6 +220,7 @@ const main = async () => {
     withdrawalsSrv,
     gateSealSrv,
     vaultSrv,
+    poolBalanceSrv,
     onAppFindings,
     latestBlock.right,
   )

@@ -1,14 +1,18 @@
 import { expect } from '@jest/globals'
 import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
-import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import { either as E } from 'fp-ts'
 import * as promClient from 'prom-client'
 import * as Winston from 'winston'
 import {
+  AstETH__factory,
+  ChainlinkAggregator__factory,
+  CurvePool__factory,
   GateSeal__factory,
   Lido__factory,
+  StableDebtStETH__factory,
   ValidatorsExitBusOracle__factory,
+  VariableDebtStETH__factory,
   WithdrawalQueueERC721__factory,
 } from '../generated/typechain'
 import { DAYS_7_IN_BLOCKS } from '../services/steth_operation/StethOperation.srv'
@@ -71,10 +75,12 @@ import {
   SLOTS_STAKING_ROUTER_WITHDRAWAL_CREDENTIALS,
   STORAGE_SLOTS,
 } from '../utils/constants'
+import { Config } from '../utils/env/env'
 import { Metrics } from '../utils/metrics/metrics'
 import { ETHProvider } from './eth_provider'
 
 describe('eth provider tests', () => {
+  const config = new Config()
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
@@ -82,11 +88,24 @@ describe('eth provider tests', () => {
   const address: Address = Address
   const chainId = 1
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
-  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
-  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
-  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, fortaEthersProvider)
+  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, chainId)
+  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethProvider)
+  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, ethProvider)
+  const astRunner = AstETH__factory.connect(address.AAVE_ASTETH_ADDRESS, ethProvider)
+
+  const stableDebtStEthRunner = StableDebtStETH__factory.connect(address.AAVE_STABLE_DEBT_STETH_ADDRESS, ethProvider)
+  const variableDebtStEthRunner = VariableDebtStETH__factory.connect(
+    address.AAVE_VARIABLE_DEBT_STETH_ADDRESS,
+    ethProvider,
+  )
+
+  const curvePoolRunner = CurvePool__factory.connect(address.CURVE_POOL_ADDRESS, ethProvider)
+  const chainlinkAggregatorRunner = ChainlinkAggregator__factory.connect(
+    address.CHAINLINK_STETH_PRICE_FEED,
+    ethProvider,
+  )
 
   const defaultRegistry = promClient
   const prefix = 'test_'
@@ -100,10 +119,15 @@ describe('eth provider tests', () => {
   const ethClient = new ETHProvider(
     logger,
     metrics,
-    fortaEthersProvider,
+    ethProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
+    astRunner,
+    stableDebtStEthRunner,
+    variableDebtStEthRunner,
+    curvePoolRunner,
+    chainlinkAggregatorRunner,
     veboRunner,
   )
 
@@ -124,11 +148,11 @@ describe('eth provider tests', () => {
 
   test('getBalanceByBlockHash is 16619.29059680177', async () => {
     const blockNumber = 19_140_476
-    const block = await fortaEthersProvider.getBlock(blockNumber)
+    const block = await ethProvider.getBlock(blockNumber)
     const parentBlockHash = '0x55fdadee696dd3b08c0752c2fa5feba7abd19992fd3d2f18f9a87baa62fa34ae'
     expect(block.parentHash).toEqual(parentBlockHash)
 
-    const parentBlock = await fortaEthersProvider.getBlock(parentBlockHash)
+    const parentBlock = await ethProvider.getBlock(parentBlockHash)
     expect(parentBlock.number).toEqual(blockNumber - 1)
     const resp = await ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
 
@@ -137,7 +161,7 @@ describe('eth provider tests', () => {
     }
 
     const resp2 = new BigNumber(
-      (await fortaEthersProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
+      (await ethProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
     )
 
     const expectedBalance = 16619.29059680177
@@ -147,11 +171,11 @@ describe('eth provider tests', () => {
 
   test('getBalanceByBlockHash is 38186.88677324665', async () => {
     const blockNumber = 19_619_102
-    const block = await fortaEthersProvider.getBlock(blockNumber)
+    const block = await ethProvider.getBlock(blockNumber)
     const parentBlockHash = '0x0667f8c4447dfcac0f667cd1c6dbb2b5a6dfed35a051a44d8f512710191938a9'
     expect(block.parentHash).toEqual(parentBlockHash)
 
-    const parentBlock = await fortaEthersProvider.getBlock(parentBlockHash)
+    const parentBlock = await ethProvider.getBlock(parentBlockHash)
     expect(parentBlock.number).toEqual(blockNumber - 1)
     const resp = await ethClient.getBalanceByBlockHash(Address.WITHDRAWALS_QUEUE_ADDRESS, block.parentHash)
 
@@ -160,7 +184,7 @@ describe('eth provider tests', () => {
     }
 
     const resp2 = new BigNumber(
-      (await fortaEthersProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
+      (await ethProvider.getBalance(Address.WITHDRAWALS_QUEUE_ADDRESS, blockNumber - 1)).toString(),
     )
 
     const expectedBalance = 38186.88677324665
@@ -1139,5 +1163,68 @@ describe('eth provider tests', () => {
 
     expect(data.right.value).toEqual('0x637572617465642d6f6e636861696e2d76310000000000000000000000000000')
     expect(data.right.value).toEqual(storageSlots[53].expected)
+  }, 120_000)
+
+  test('getTotalSupply is ok', async () => {
+    const data = await ethClient.getTotalSupply(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('1.71564020396547284608653e+23'))
+  }, 120_000)
+
+  test('getStableDebtStEthTotalSupply is ok', async () => {
+    const data = await ethClient.getStableDebtStEthTotalSupply(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('0'))
+  }, 120_000)
+
+  test('getVariableDebtStEthTotalSupply is ok', async () => {
+    const data = await ethClient.getVariableDebtStEthTotalSupply(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('0'))
+  }, 120_000)
+
+  test('getCurveEthBalance is ok', async () => {
+    const data = await ethClient.getCurveEthBalance(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('3.316616011875343840079e+22'))
+  }, 120_000)
+
+  test('getCurveStEthBalance is ok', async () => {
+    const data = await ethClient.getCurveStEthBalance(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('3.4961250485373510654955e+22'))
+  }, 120_000)
+
+  test('getCurveStEthToEthPrice is ok', async () => {
+    const data = await ethClient.getCurveStEthToEthPrice(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('0.99949038194129812313'))
+  }, 120_000)
+
+  test('getChainlinkStEthToEthPrice is ok', async () => {
+    const data = await ethClient.getChainlinkStEthToEthPrice(blockHash)
+    if (E.isLeft(data)) {
+      throw data.left.message
+    }
+
+    expect(data.right).toEqual(new BigNumber('0.99976347773378'))
   }, 120_000)
 })

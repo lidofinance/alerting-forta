@@ -9,7 +9,7 @@ import { Finding } from '../../generated/proto/alert_pb'
 import { WithdrawalClaimedEvent } from '../../generated/typechain/WithdrawalQueueERC721'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { dbAlert, networkAlert } from '../../utils/errors'
-import { alertId_token_rebased, LIDO_TOKEN_REBASED_EVENT } from '../../utils/events/lido_events'
+import { LIDO_TOKEN_REBASED_EVENT } from '../../utils/events/lido_events'
 import {
   WITHDRAWAL_QUEUE_WITHDRAWAL_CLAIMED_EVENT,
   WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED_EVENT,
@@ -245,7 +245,7 @@ export class WithdrawalsSrv {
 
     const withdrawalsEventsFindings = handleEventsOfNotice(txEvent, this.withdrawalsEvents)
     const bunkerStatusFindings = this.handleBunkerStatus(txEvent)
-    const rebasedFinding = await this.handleLastTokenRebase(txEvent)
+    this.handleLastTokenRebase(txEvent)
 
     const [finalizedFindings, withdrawalRequestFindings, withdrawalClaimedFindings] = await Promise.all([
       this.handleWithdrawalFinalized(txEvent),
@@ -259,7 +259,6 @@ export class WithdrawalsSrv {
       ...withdrawalRequestFindings,
       ...withdrawalClaimedFindings,
       ...withdrawalsEventsFindings,
-      ...rebasedFinding,
     )
 
     return out
@@ -682,29 +681,14 @@ export class WithdrawalsSrv {
     return out
   }
 
-  public async handleLastTokenRebase(txEvent: TransactionDto): Promise<Finding[]> {
+  public handleLastTokenRebase(txEvent: TransactionDto): void {
     const [rebaseEvent] = filterLog(txEvent.logs, LIDO_TOKEN_REBASED_EVENT, this.lidoStethAddress)
     if (!rebaseEvent) {
-      return []
+      return
     }
 
     this.cache.setLastTokenRebaseTimestamp(rebaseEvent.args.reportTimestamp)
     this.cache.setAmountOfRequestedStETHSinceLastTokenRebase(new BigNumber(0))
-
-    const f = new Finding()
-    f.setName(`ℹ️ Lido: Token rebased`)
-    f.setAlertid(alertId_token_rebased)
-    f.setSeverity(Finding.Severity.INFO)
-    f.setType(Finding.FindingType.INFORMATION)
-    f.setDescription(`reportTimestamp: ${rebaseEvent.args.reportTimestamp}`)
-    f.setProtocol('ethereum')
-
-    const state = await this.getStatisticString()
-    if (E.isRight(state)) {
-      f.setDescription(state.right)
-    }
-
-    return [f]
   }
 
   public async handleWithdrawalFinalized(txEvent: TransactionDto): Promise<Finding[]> {
