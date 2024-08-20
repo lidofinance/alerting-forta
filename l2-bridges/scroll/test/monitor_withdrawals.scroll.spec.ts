@@ -1,7 +1,6 @@
 import * as E from 'fp-ts/Either'
 import assert from 'assert'
 import { expect } from '@jest/globals'
-import BigNumber from 'bignumber.js'
 
 import { MonitorWithdrawals } from '../../common/services/monitor_withdrawals'
 import { scrollConstants } from '../src/agent'
@@ -26,15 +25,15 @@ describe('MonitorWithdrawals on Scroll', () => {
     expect(withdrawalRecords.right).toEqual([
       {
         time: 1718529531,
-        amount: new BigNumber('2557056545136494'),
+        amount: 2557056545136494n,
       },
       {
         time: 1718531871,
-        amount: new BigNumber('55285277863366'),
+        amount: 55285277863366n,
       },
       {
         time: 1718541199,
-        amount: new BigNumber('16222703281150365'),
+        amount: 16222703281150365n,
       },
     ])
   }, 20 * SECOND_MS)

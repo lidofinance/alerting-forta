@@ -60,11 +60,11 @@ describe('MonitorWithdrawals on Mantle', () => {
     expect(withdrawalRecords.right).toEqual([
       {
         time: 1718122074,
-        amount: new BigNumber('337496585884301715'),
+        amount: 337496585884301715n,
       },
       {
         time: 1720169272,
-        amount: new BigNumber('2107828861318592904'),
+        amount: 2107828861318592904n,
       },
     ])
   }, 20 * SECOND_MS)

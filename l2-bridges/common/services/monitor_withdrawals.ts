@@ -148,14 +148,14 @@ export class MonitorWithdrawals {
     }
     const blocksToRequest = new Set<number>()
     const blockNumberToTime = new Map<number, number>()
-    const withdrawalRecordsAux: { amount: BigNumber, blockNumber: number }[] = []
+    const withdrawalRecordsAux: { amount: bigint, blockNumber: number }[] = []
     for (const log of withdrawalLogsE.right) {
      const event = this.withdrawalInfo.eventInterface.parseLog(log)
       // NB: log.blockNumber is actually a string, although its typescript type is number
       const blockNumber = (typeof log.blockNumber === 'number') ? log.blockNumber : Number(log.blockNumber)
       withdrawalRecordsAux.push({
         blockNumber: blockNumber,
-        amount: new BigNumber(String(event.args[this.withdrawalInfo.amountFieldName]))
+        amount: BigInt(String(event.args[this.withdrawalInfo.amountFieldName]))
       })
       blocksToRequest.add(blockNumber)
     }
