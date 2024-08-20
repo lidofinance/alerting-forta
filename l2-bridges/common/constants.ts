@@ -73,8 +73,8 @@ export type Constants = {
   L2_WSTETH_BRIDGED: ContractInfo | TransparentProxyInfo,
   rolesMap: RoleHashToName,
   withdrawalInfo: WithdrawalInfo,
-  bridgeEvents: EventOfNotice[],
-  govEvents: EventOfNotice[],
-  proxyAdminEvents: EventOfNotice[],
+  // bridgeEvents: EventOfNotice[],
+  // govEvents: EventOfNotice[],
+  // proxyAdminEvents: EventOfNotice[],
   getHugeWithdrawalsFromL2Alert: (params: HugeWithdrawalsFromL2AlertParams) => Finding,
 }

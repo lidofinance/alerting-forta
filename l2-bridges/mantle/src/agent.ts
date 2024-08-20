@@ -35,19 +35,19 @@ export const mantleConstants: Constants = {
 )`,
     amountFieldName: "_amount",
   },
-  bridgeEvents: [],
-  govEvents: [],
-  proxyAdminEvents: [],
+  // bridgeEvents: [],
+  // govEvents: [],
+  // proxyAdminEvents: [],
   getHugeWithdrawalsFromL2Alert: getHugeWithdrawalsFromL2AlertFactory(
     L2_NAME, `51F04709-7E86-4FB3-B53C-24C53C99DA24`
   ),
 }
-mantleConstants.bridgeEvents = getBridgeEvents(mantleConstants.L2_ERC20_TOKEN_GATEWAY.address, mantleConstants.rolesMap)
-mantleConstants.govEvents = getGovEvents(mantleConstants.govExecutor as string)
-mantleConstants.proxyAdminEvents = getProxyAdminEvents(
-  mantleConstants.L2_WSTETH_BRIDGED as ContractInfo,
-  mantleConstants.L2_ERC20_TOKEN_GATEWAY
-)
+// mantleConstants.bridgeEvents = getBridgeEvents(mantleConstants.L2_ERC20_TOKEN_GATEWAY.address, mantleConstants.rolesMap)
+// mantleConstants.govEvents = getGovEvents(mantleConstants.govExecutor as string)
+// mantleConstants.proxyAdminEvents = getProxyAdminEvents(
+  // mantleConstants.L2_WSTETH_BRIDGED as ContractInfo,
+  // mantleConstants.L2_ERC20_TOKEN_GATEWAY
+// )
 
 
 function getBridgeEvents(l2TokenBridgeAddress: string, rolesMap: RoleHashToName): EventOfNotice[] {

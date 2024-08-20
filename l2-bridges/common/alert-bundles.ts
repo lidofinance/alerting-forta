@@ -8,19 +8,25 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 
 
 const MIN_PROXY_ABI = [
-  "function proxy__getAdmin() external view returns (address)",
-  "function proxy__getImplementation() view returns (address)",
-  "function proxy__changeAdmin(address owner)",
-  "function proxy__upgradeTo(address _newImplementation)",
-  "function proxy__ossify()",
-  "function proxy__getIsOssified() view returns (bool)",
+  'function proxy__getAdmin() external view returns (address)',
+  'function proxy__getImplementation() view returns (address)',
+  'function proxy__changeAdmin(address owner)',
+  'function proxy__upgradeTo(address _newImplementation)',
+  'function proxy__ossify()',
+  'function proxy__getIsOssified() view returns (bool)',
+]
+
+const MIN_GOV_EXECUTOR_ABI = [
+  'function updateEthereumGovernanceExecutor(address ethereumGovernanceExecutor)',
+  'function getEthereumGovernanceExecutor() view returns (address)',
 ]
 
 
 export function skipNetwork(network: L2Network) {
   if (network === L2Network.Default
    || network === L2Network.ZkSync
-   || network === L2Network.Scroll
+  //  || network === L2Network.Scroll
+  //  || network === L2Network.Optimism
   //  || network === L2Network.Mantle
   ) {
     return true
@@ -32,6 +38,7 @@ export function skipNetwork(network: L2Network) {
 
 export enum L2Network {
   Default = 'Default',
+  Optimism = 'Optimism',
   Mantle = 'Mantle',
   ZkSync = 'ZkSync',
   Scroll = 'Scroll',
@@ -47,12 +54,17 @@ enum ContractType {
 
 
 export type ContractsSheet = {
-  [key: string]: {
+  [key: string]: { // one of enum L2Network
     [key: string]: string,
   }
 }
 
 export const contractsSheet: ContractsSheet = {
+  [L2Network.Optimism]: {
+    [ContractType.L2TokensBridge]: '0x8e01013243a96601a86eb3153f0d9fa4fbfb6957',
+    [ContractType.L2GovExecutor]: '0xefa0db536d2c8089685630fafe88cf7805966fc3',
+    [ContractType.L2Wsteth]: '0x1f32b1c2345538c0c6f582fcb022739c4a194ebb',
+  },
   [L2Network.Mantle]: {
     [ContractType.L2TokensBridge]: '0x9c46560D6209743968cC24150893631A39AfDe4d',
     [ContractType.L2GovExecutor]: '0x3a7b055bf88cdc59d20d0245809c6e6b3c5819dd',
@@ -105,24 +117,10 @@ export const eventBasedAlertBundleSheet: EventBundlesSheet = {
     event: 'event Upgraded(address indexed implementation)',
     contracts: {
       [L2Network.Default]: [ContractType.L2TokensBridge, ContractType.L2Wsteth],
-      // [L2Network.ZkSync]: [ContractType.L2TokensBridge, ContractType.L2Wsteth, ContractType.L2GovExecutor],
-      [L2Network.ZkSync]: [ContractType.L2TokensBridge],
-    },
-    simulate: async (provider: JsonRpcProvider, address: string) => {
-      const newImplementation = address // just reusing an address at hand for simplicity
-      const contract = new Contract(address, MIN_PROXY_ABI, provider)
-      const adminAddress = await contract.proxy__getAdmin()
-      // console.debug({ adminAddress })
-      await provider.send('hardhat_setBalance', [adminAddress, ethers.utils.parseEther('10').toHexString()])
-      const signer = await provider.getSigner(adminAddress)
-
-      const tx = await contract.connect(signer)["proxy__upgradeTo"](newImplementation)
-      const receipt = await tx.wait()
-      assert(receipt.logs.length > 0)
-      // TODO: fix assert
-      // assert(await contract['proxy__getImplementation']() === newImplementation)
+      [L2Network.Scroll]: [],
     },
   },
+
   'PROXY-ADMIN-CHANGED': {
     name: (_: NameArgs) => `🚨 ${_.network}: Proxy admin changed`,
     severity: FindingSeverity.High,
@@ -136,20 +134,10 @@ export const eventBasedAlertBundleSheet: EventBundlesSheet = {
     event: 'event AdminChanged(address previousAdmin, address newAdmin)',
     contracts: {
       [L2Network.Default]: [ContractType.L2TokensBridge, ContractType.L2Wsteth],
-      [L2Network.ZkSync]: [ContractType.L2TokensBridge, ContractType.L2Wsteth, ContractType.L2GovExecutor],
-    },
-    simulate: async (provider: JsonRpcProvider, address: string) => {
-      const arbitraryAddress = '0xb4ef9590f724565caf344cc6AFB86Df266529CeE'
-      const contract = new Contract(address, MIN_PROXY_ABI, provider)
-      const adminAddress = await contract['proxy__getAdmin']()
-      await provider.send('hardhat_setBalance', [adminAddress, ethers.utils.parseEther('10').toHexString()])
-      const signer = await provider.getSigner(adminAddress)
-      const tx = await contract.connect(signer)["proxy__changeAdmin"](arbitraryAddress)
-      const receipt = await tx.wait()
-      assert(receipt.logs.length > 0)
-      assert(await contract['proxy__getAdmin']() === arbitraryAddress)
+      [L2Network.Scroll]: [],
     },
   },
+
   'PROXY-OSSIFIED': {
     name: (_: NameArgs) => `🚨 ${_.network}: Proxy ossified`,
     severity: FindingSeverity.High,
@@ -162,20 +150,73 @@ export const eventBasedAlertBundleSheet: EventBundlesSheet = {
     event: 'event ProxyOssified()',
     contracts: {
       [L2Network.Default]: [ContractType.L2TokensBridge, ContractType.L2Wsteth],
-      // [L2Network.ZkSync]: [ContractType.L2TokensBridge, ContractType.L2Wsteth, ContractType.L2GovExecutor],
-      [L2Network.ZkSync]: [ContractType.L2TokensBridge],
-    },
-    simulate: async (provider: JsonRpcProvider, address: string) => {
-      const contract = new Contract(address, MIN_PROXY_ABI, provider)
-      const adminAddress = await contract['proxy__getAdmin']()
-      await provider.send('hardhat_setBalance', [adminAddress, ethers.utils.parseEther('10').toHexString()])
-      const signer = await provider.getSigner(adminAddress)
-      const tx = await contract.connect(signer)["proxy__ossify"]()
-      const receipt = await tx.wait()
-      assert(receipt.logs.length > 0)
-      assert(await contract['proxy__getIsOssified']())
+      [L2Network.Scroll]: [],
     },
   },
+
+  'GOV-BRIDGE-EXEC-UPDATED': {
+    name: (_: NameArgs) => `🚨 ${_.network} Gov Bridge: Ethereum Governance Executor Updated`,
+    severity: FindingSeverity.High,
+    description: (contractAlias: string, address: string) => {
+      return (_: EventArgs) => {
+        return `Ethereum Governance Executor was updated from ` +
+        `${_.oldEthereumGovernanceExecutor} to ${_.newEthereumGovernanceExecutor}`
+      }
+    },
+    event: 'event EthereumGovernanceExecutorUpdate(address oldEthereumGovernanceExecutor, address newEthereumGovernanceExecutor)',
+    contracts: {
+      [L2Network.Default]: [ContractType.L2GovExecutor],
+    },
+  },
+}
+
+eventBasedAlertBundleSheet['PROXY-UPGRADED'].simulate = async (provider: JsonRpcProvider, address: string) => {
+  const newImplementation = address // just reusing an address at hand for simplicity
+  const contract = new Contract(address, MIN_PROXY_ABI, provider)
+  const adminAddress = await contract.proxy__getAdmin()
+  // console.debug({ adminAddress })
+  await provider.send('hardhat_setBalance', [adminAddress, ethers.utils.parseEther('10').toHexString()])
+  const signer = await provider.getSigner(adminAddress)
+
+  const tx = await contract.connect(signer)["proxy__upgradeTo"](newImplementation)
+  const receipt = await tx.wait()
+  assert(receipt.logs.length > 0)
+  // TODO: fix assert
+  // assert(await contract['proxy__getImplementation']() === newImplementation)
+}
+
+eventBasedAlertBundleSheet['PROXY-ADMIN-CHANGED'].simulate = async (provider: JsonRpcProvider, address: string) => {
+  const arbitraryAddress = '0xb4ef9590f724565caf344cc6AFB86Df266529CeE'
+  const contract = new Contract(address, MIN_PROXY_ABI, provider)
+  const adminAddress = await contract['proxy__getAdmin']()
+  await provider.send('hardhat_setBalance', [adminAddress, ethers.utils.parseEther('10').toHexString()])
+  const signer = await provider.getSigner(adminAddress)
+  const tx = await contract.connect(signer)["proxy__changeAdmin"](arbitraryAddress)
+  const receipt = await tx.wait()
+  assert(receipt.logs.length > 0)
+  assert(await contract['proxy__getAdmin']() === arbitraryAddress)
+}
+
+eventBasedAlertBundleSheet['PROXY-OSSIFIED'].simulate = async (provider: JsonRpcProvider, address: string) => {
+  const contract = new Contract(address, MIN_PROXY_ABI, provider)
+  const adminAddress = await contract['proxy__getAdmin']()
+  await provider.send('hardhat_setBalance', [adminAddress, ethers.utils.parseEther('10').toHexString()])
+  const signer = await provider.getSigner(adminAddress)
+  const tx = await contract.connect(signer)["proxy__ossify"]()
+  const receipt = await tx.wait()
+  assert(receipt.logs.length > 0)
+  assert(await contract['proxy__getIsOssified']())
+}
+
+eventBasedAlertBundleSheet['GOV-BRIDGE-EXEC-UPDATED'].simulate = async (provider: JsonRpcProvider, address: string) => {
+  const arbitraryAddress = '0xb4ef9590f724565caf344cc6AFB86Df266529CeE'
+  const contract = new Contract(address, MIN_GOV_EXECUTOR_ABI, provider)
+  await provider.send('hardhat_setBalance', [address, ethers.utils.parseEther('10').toHexString()])
+  const signer = await provider.getSigner(address)
+  const tx = await contract.connect(signer)["updateEthereumGovernanceExecutor"](arbitraryAddress)
+  const receipt = await tx.wait()
+  assert(receipt.logs.length > 0)
+  assert(await contract['getEthereumGovernanceExecutor']() === arbitraryAddress)
 }
 
 
@@ -190,8 +231,10 @@ export function getEventBasedAlerts(networkName: string) {
     for (const contractAlias of contractsAliases) {
       assert(contractsSheet[networkName])
       assert(contractsSheet[networkName][contractAlias])
+
       const contractAddress = formatAddress(contractsSheet[networkName][contractAlias])
       assert(contractAddress === contractAddress.toLowerCase())
+
       result.push({
         name: params.name({network: networkName}),
         address: contractAddress,

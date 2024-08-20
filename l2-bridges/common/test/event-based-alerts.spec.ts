@@ -24,6 +24,8 @@ describe('Bundle tests', () => {
 
       const networkAlerts = getEventBasedAlerts(network)
       for (const alert of networkAlerts) {
+        // if (alert.alertId !== 'GOV-BRIDGE-EXEC-UPDATED') { continue }
+
         if (!alert.simulate) {
           app.logger.info(`SKIP: ${alert.alertId} for ${network} at ${alert.address} (no simulate function)`)
           continue

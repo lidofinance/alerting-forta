@@ -39,19 +39,19 @@ export const zksyncConstants: Constants = {
 );`,
     amountFieldName: "amount",
   },
-  bridgeEvents: [],
-  govEvents: [],
-  proxyAdminEvents: [],
+  // bridgeEvents: [],
+  // govEvents: [],
+  // proxyAdminEvents: [],
   getHugeWithdrawalsFromL2Alert: getHugeWithdrawalsFromL2AlertFactory(
     L2_NAME, `C167F276-D519-4906-90CB-C4455E9ABBD4`
   )
 }
-zksyncConstants.bridgeEvents = getBridgeEvents(zksyncConstants.L2_ERC20_TOKEN_GATEWAY.address, zksyncConstants.rolesMap)
-zksyncConstants.govEvents = getGovEvents((zksyncConstants.govExecutor as TransparentProxyInfo).address)
-zksyncConstants.proxyAdminEvents = getProxyAdminEvents(
-  zksyncConstants.L2_WSTETH_BRIDGED as TransparentProxyInfo,
-  zksyncConstants.govExecutor as  TransparentProxyInfo,
-)
+// zksyncConstants.bridgeEvents = getBridgeEvents(zksyncConstants.L2_ERC20_TOKEN_GATEWAY.address, zksyncConstants.rolesMap)
+// zksyncConstants.govEvents = getGovEvents((zksyncConstants.govExecutor as TransparentProxyInfo).address)
+// zksyncConstants.proxyAdminEvents = getProxyAdminEvents(
+  // zksyncConstants.L2_WSTETH_BRIDGED as TransparentProxyInfo,
+  // zksyncConstants.govExecutor as  TransparentProxyInfo,
+// )
 
 
 function getBridgeEvents(

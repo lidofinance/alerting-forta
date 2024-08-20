@@ -9,6 +9,7 @@ import { ERC20Short__factory } from '../generated'
 import { L2Client } from '../clients/l2_client'
 import { MonitorWithdrawals } from '../services/monitor_withdrawals'
 import { L2Network } from '../../common/alert-bundles'
+import { optimismConstants } from '../../optimism/src/agent'
 import { scrollConstants } from '../../scroll/src/agent'
 import { mantleConstants } from '../../mantle/src/agent'
 import { zksyncConstants } from '../../zksync/src/agent'
@@ -30,9 +31,11 @@ export const portsByNetwork = {
   [L2Network.Mantle]: 8651,
   [L2Network.ZkSync]: 8652,
   [L2Network.Scroll]: 8653,
+  [L2Network.Optimism]: 8654,
 }
 
 export const paramsByNetwork = {
+  [L2Network.Optimism]: optimismConstants,
   [L2Network.Mantle]: mantleConstants,
   [L2Network.ZkSync]: zksyncConstants,
   [L2Network.Scroll]: scrollConstants,
