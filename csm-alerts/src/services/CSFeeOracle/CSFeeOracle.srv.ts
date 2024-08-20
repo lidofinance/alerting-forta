@@ -157,7 +157,9 @@ export class CSFeeOracleSrv {
 
     const reportDelay = now - (this.lastReportSubmitTimestamp ? this.lastReportSubmitTimestamp : 0)
 
-    const currentEpoch = Math.floor(now / (frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT))
+    const chainConfig = hashConsensus.getChainConfig()
+    const genesisTimestamp = chainConfig.genesisTime
+    const currentEpoch = Math.floor((now - genesisTimestamp) / 32 / SECONDS_PER_SLOT)
     if (currentEpoch < frameConfig.initialEpoch + frameConfig.epochsPerFrame) {
       // If we are still within the initial epochs, skip the overdue check
       return out

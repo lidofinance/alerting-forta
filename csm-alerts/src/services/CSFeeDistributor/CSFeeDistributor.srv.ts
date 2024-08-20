@@ -61,11 +61,15 @@ export class CSFeeDistributorSrv {
       CS_FEE_DISTRIBUTOR_ABI,
       getEthersProvider(),
     )
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
+    const frameConfig = await hashConsensus.functions.getFrameConfig()
+    const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
+    const startBlock = currentBlock - Math.ceil(frameInSeconds / SECONDS_PER_SLOT)
     const csFeeDistributorDistributionDataUpdatedFilter = csFeeDistributor.filters.DistributionDataUpdated()
     const distributionDataUpdatedEvents = await getLogsByChunks(
       csFeeDistributor,
       csFeeDistributorDistributionDataUpdatedFilter,
-      currentBlock - 1,
+      startBlock,
       currentBlock,
     )
 
@@ -83,18 +87,23 @@ export class CSFeeDistributorSrv {
 
   async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
-    const findings: Finding[] = []
+    const out: Finding[] = []
 
     const [revertedTxFindings, rolesChangingFindings] = await Promise.all([
       this.handleRevertedTx(blockDto.number),
       this.handleRolesChanging(blockDto.number),
     ])
 
-    findings.push(...revertedTxFindings, ...rolesChangingFindings)
+    if (blockDto.number % 10 === 0) {
+      const distributionDataUpdatedFindings = await this.handleDistributionDataUpdated(blockDto)
+      out.push(...distributionDataUpdatedFindings)
+    }
+
+    out.push(...revertedTxFindings, ...rolesChangingFindings)
 
     this.logger.info(elapsedTime(CSFeeDistributorSrv.name + '.' + this.handleBlock.name, start))
 
-    return findings
+    return out
   }
   // to be implemented
   handleRolesChanging(blockNumber: number): Promise<Finding[]> {
@@ -109,14 +118,21 @@ export class CSFeeDistributorSrv {
     return Promise.resolve([out])
   }
 
-  private async handleDistributionDataUpdated(txEvent: TransactionDto): Promise<Finding[]> {
+  private async handleDistributionDataUpdated(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
     const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
     const frameConfig = await hashConsensus.functions.getFrameConfig()
     const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
 
-    const now = txEvent.block.timestamp
+    const now = blockDto.timestamp
+
+    const chainConfig = hashConsensus.getChainConfig()
+    const genesisTimestamp = chainConfig.genesisTime
+    const currentEpoch = Math.floor((now - genesisTimestamp) / 32 / SECONDS_PER_SLOT)
+    if (currentEpoch < frameConfig.initialEpoch + frameConfig.epochsPerFrame) {
+      return out
+    }
 
     const timeSinceLastAlert = now - this.lastNoDistributionDataUpdatedAlertTimestamp
 
@@ -155,10 +171,6 @@ export class CSFeeDistributorSrv {
 
     const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
     const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
-    if (txEvent.block.number % 10 === 0) {
-      const distributionDataUpdatedFindings = await this.handleDistributionDataUpdated(txEvent)
-      out.push(...distributionDataUpdatedFindings)
-    }
 
     out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings)
 
