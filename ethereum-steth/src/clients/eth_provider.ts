@@ -1,36 +1,41 @@
-import { ethers } from 'forta-agent'
+import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
+import { Block } from '@ethersproject/providers'
+import BigNumber from 'bignumber.js'
+import { ethers } from 'ethers'
+import { keccak256, toUtf8Bytes } from 'ethers/lib/utils'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
-import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
-import BigNumber from 'bignumber.js'
-import { ETH_DECIMALS } from '../utils/constants'
+import { Logger } from 'winston'
+import { BlockDto } from '../entity/events'
+import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
 import { StakingLimitInfo } from '../entity/staking_limit_info'
+import { StorageArrayResponse, StorageItemResponse } from '../entity/storage_slot'
+import { WithdrawalRequest } from '../entity/withdrawal_request'
 import {
   GateSeal as GateSealRunner,
   Lido as LidoRunner,
   ValidatorsExitBusOracle as VeboRunner,
   WithdrawalQueueERC721 as WithdrawalQueueRunner,
 } from '../generated/typechain'
-import { GateSeal, GateSealExpiredErr } from '../entity/gate_seal'
-import { ETHDistributedEvent, UnbufferedEvent } from '../generated/typechain/Lido'
-import { DataRW } from '../utils/mutex'
-import { WithdrawalRequest } from '../entity/withdrawal_request'
 import { TypedEvent } from '../generated/typechain/common'
-import { NetworkError } from '../utils/errors'
-import { Logger } from 'winston'
+import { ETHDistributedEvent, UnbufferedEvent } from '../generated/typechain/Lido'
+import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
 import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
-import { Block } from '@ethersproject/providers'
 import { IStethClient } from '../services/steth_operation/StethOperation.srv'
+import { IStorageWatcherClient } from '../services/storage-watcher/StorageWatcher.srv'
 import { IVaultClient } from '../services/vault/Vault.srv'
 import { IWithdrawalsClient } from '../services/withdrawals/Withdrawals.srv'
+import { ETH_DECIMALS } from '../utils/constants'
+import { NetworkError } from '../utils/errors'
 import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
-import { BlockDto } from '../entity/events'
-import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
+import { DataRW } from '../utils/mutex'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
-export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient, IWithdrawalsClient {
+export class ETHProvider
+  implements IGateSealClient, IStethClient, IVaultClient, IWithdrawalsClient, IStorageWatcherClient
+{
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly lidoRunner: LidoRunner
   private readonly wdQueueRunner: WithdrawalQueueRunner
@@ -139,7 +144,7 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
       this.metrics.etherJsRequest.labels({ method: this.getEthBalance.name, status: StatusOK }).inc()
       end({ status: StatusOK })
 
-      return E.right(new BigNumber(String(out)))
+      return E.right(new BigNumber(out.toString()))
     } catch (e) {
       this.metrics.etherJsRequest.labels({ method: this.getEthBalance.name, status: StatusFail }).inc()
       end({ status: StatusOK })
@@ -895,6 +900,193 @@ export class ETHProvider implements IGateSealClient, IStethClient, IVaultClient,
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch claimed events`))
+    }
+  }
+
+  public async getStorageBySlotName(
+    address: string,
+    slotId: number,
+    slotName: string,
+    blockTag: string,
+  ): Promise<E.Either<Error, StorageItemResponse>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getStorageBySlotName.name })
+
+    type RpcRequest = {
+      jsonrpc: string
+      method: string
+      params: Array<any>
+    }
+
+    type RpcResponse = {
+      jsonrpc: string
+      method: string
+      result?: any
+      error?: {
+        code: number
+        message: string
+      }
+    }
+
+    const slot = keccak256(toUtf8Bytes(slotName))
+
+    const request: RpcRequest = {
+      jsonrpc: '2.0',
+      method: `eth_getStorageAt`,
+      params: [address, slot, blockTag],
+    }
+
+    try {
+      const data = await retryAsync<string>(
+        async (): Promise<string> => {
+          const response: Response = await fetch(`https://eth.drpc.org`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request),
+          })
+
+          if (!response.ok) {
+            throw new NetworkError(`Status: ${response.status}, request: ${JSON.stringify(request)}`, 'StorageFetchErr')
+          }
+
+          const object = (await response.json()) as RpcResponse
+          if (object.result !== null) {
+            return object.result
+          } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            throw new Error(obj.error.message)
+          }
+        },
+        { delay: 750, maxTry: 10 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getStorageBySlotName.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        slotId: slotId,
+        value: data,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getStorageBySlotName.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call eth_getStorageAt`))
+    }
+  }
+
+  public async getStorageAtSlotAddr(
+    address: string,
+    slotId: number,
+    slotAddr: string,
+    blockTag: string,
+  ): Promise<E.Either<Error, StorageItemResponse>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getStorageAtSlotAddr.name })
+
+    type RpcRequest = {
+      jsonrpc: string
+      method: string
+      params: Array<any>
+    }
+
+    type RpcResponse = {
+      jsonrpc: string
+      method: string
+      result?: any
+      error?: {
+        code: number
+        message: string
+      }
+    }
+
+    const request: RpcRequest = {
+      jsonrpc: '2.0',
+      method: `eth_getStorageAt`,
+      params: [address, slotAddr, blockTag],
+    }
+
+    try {
+      const data = await retryAsync<string>(
+        async (): Promise<string> => {
+          const response: Response = await fetch(`https://eth.drpc.org`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request),
+          })
+
+          if (!response.ok) {
+            throw new NetworkError(`Status: ${response.status}, request: ${JSON.stringify(request)}`, 'StorageFetchErr')
+          }
+
+          const object = (await response.json()) as RpcResponse
+          if (object.result !== null) {
+            return object.result
+          } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            throw new Error(obj.error.message)
+          }
+        },
+        { delay: 750, maxTry: 10 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getStorageAtSlotAddr.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        slotId: slotId,
+        value: data,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getStorageAtSlotAddr.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call eth_getStorageAt`))
+    }
+  }
+
+  public async getStorageArrayAtSlotAddr(
+    address: string,
+    slotId: number,
+    slotAddr: string,
+    blockTag: string,
+    len: number,
+  ): Promise<E.Either<Error, StorageArrayResponse>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getStorageArrayAtSlotAddr.name })
+
+    const arrayStart = '0x' + new BigNumber(slotAddr, 16).toString(16).padStart(64, '0')
+    const requests: Promise<E.Either<Error, StorageItemResponse>>[] = []
+    for (let i = 0; i < len; i++) {
+      const objAddress = '0x' + new BigNumber(keccak256(arrayStart)).plus(i).toString(16)
+      requests.push(this.getStorageAtSlotAddr(address, slotId, objAddress, blockTag))
+    }
+
+    try {
+      const responses = await Promise.all(requests)
+
+      const values: string[] = []
+      for (const item of responses) {
+        if (E.isRight(item)) {
+          values.push(item.right.value)
+        }
+      }
+
+      this.metrics.etherJsRequest.labels({ method: this.getStorageArrayAtSlotAddr.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right({
+        slotId: slotId,
+        values: values,
+      })
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getStorageArrayAtSlotAddr.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not call eth_getStorageAt`))
     }
   }
 }

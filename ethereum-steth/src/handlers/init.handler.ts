@@ -1,24 +1,25 @@
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
-import { InitializeRequest, InitializeResponse, ResponseStatus, Error as pbError } from '../generated/proto/agent_pb'
 import { Logger } from 'winston'
-import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
-import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
-import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
-import { VaultSrv } from '../services/vault/Vault.srv'
+import { BlockDto } from '../entity/events'
 import { Metadata } from '../entity/metadata'
-import Version from '../utils/version'
-import { elapsedTime } from '../utils/time'
-import { ETH_DECIMALS } from '../utils/constants'
+import { InitializeRequest, InitializeResponse, Error as pbError, ResponseStatus } from '../generated/proto/agent_pb'
 import { Finding } from '../generated/proto/alert_pb'
+import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
+import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
+import { VaultSrv } from '../services/vault/Vault.srv'
+import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
+import { ETH_DECIMALS } from '../utils/constants'
+import { elapsedTime } from '../utils/time'
+import Version from '../utils/version'
 
 export class InitHandler {
   private readonly logger: Logger
-  private readonly StethOperationSrv: StethOperationSrv
-  private readonly WithdrawalsSrv: WithdrawalsSrv
-  private readonly GateSealSrv: GateSealSrv
-  private readonly VaultSrv: VaultSrv
+  private readonly stethOperationSrv: StethOperationSrv
+  private readonly withdrawalsSrv: WithdrawalsSrv
+  private readonly gateSealSrv: GateSealSrv
+  private readonly vaultSrv: VaultSrv
   private readonly appName: string
-  private readonly latestBlockNumber: number
+  private readonly latestBlock: BlockDto
 
   private onAppStartFindings: Finding[] = []
 
@@ -30,16 +31,16 @@ export class InitHandler {
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
     onAppStartFindings: Finding[],
-    latestBlockNumber: number,
+    latestBlock: BlockDto,
   ) {
     this.appName = appName
     this.logger = logger
-    this.StethOperationSrv = StethOperationSrv
-    this.WithdrawalsSrv = WithdrawalsSrv
-    this.GateSealSrv = GateSealSrv
-    this.VaultSrv = VaultSrv
+    this.stethOperationSrv = StethOperationSrv
+    this.withdrawalsSrv = WithdrawalsSrv
+    this.gateSealSrv = GateSealSrv
+    this.vaultSrv = VaultSrv
     this.onAppStartFindings = onAppStartFindings
-    this.latestBlockNumber = latestBlockNumber
+    this.latestBlock = latestBlock
   }
 
   public handleInit() {
@@ -55,16 +56,16 @@ export class InitHandler {
       }
 
       const agents: string[] = [
-        this.StethOperationSrv.getName(),
-        this.WithdrawalsSrv.getName(),
-        this.GateSealSrv.getName(),
-        this.VaultSrv.getName(),
+        this.stethOperationSrv.getName(),
+        this.withdrawalsSrv.getName(),
+        this.gateSealSrv.getName(),
+        this.vaultSrv.getName(),
       ]
       metadata.agents = '[' + agents.toString() + ']'
 
-      const withdrawalsSrvErr = await this.WithdrawalsSrv.initialize(this.latestBlockNumber)
+      const withdrawalsSrvErr = await this.withdrawalsSrv.initialize(this.latestBlock.number)
       if (withdrawalsSrvErr !== null) {
-        this.logger.error('Could not init withdrawalsSrvErr', withdrawalsSrvErr)
+        this.logger.error('Could not init withdrawalsSrv', withdrawalsSrvErr)
         const err = new pbError()
         err.setMessage(`Could not init withdrawalsSrvErr ${withdrawalsSrvErr}`)
 
@@ -85,12 +86,13 @@ export class InitHandler {
       f.setProtocol('ethereum')
 
       this.logger.info(
-        `[${this.StethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
-          this.StethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,
+        `[${this.stethOperationSrv.getName()}] Last Depositor TxTime: ${new Date(
+          this.stethOperationSrv.getStorage().getLastDepositorTxTime() * 1000,
         ).toUTCString()}`,
       )
       this.logger.info(
-        `[${this.StethOperationSrv.getName()}] Buffered Eth: ${this.StethOperationSrv.getStorage()
+        `[${this.stethOperationSrv.getName()}] Buffered Eth: ${this.stethOperationSrv
+          .getStorage()
           .getLastBufferedEth()
           .div(ETH_DECIMALS)
           .toFixed(2)}`,

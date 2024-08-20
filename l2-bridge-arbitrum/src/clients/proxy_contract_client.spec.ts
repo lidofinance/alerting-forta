@@ -18,7 +18,7 @@ describe('ProxyContractClient', () => {
   const l2BlockNumber = 121_951_308
 
   const customRegister = new promClient.Registry()
-  const metrics = new Metrics(customRegister, config.promPrefix)
+  const metrics = new Metrics(customRegister)
 
   const wstProxy = new ProxyContractClient(
     adr.ARBITRUM_WSTETH_BRIDGED.name,

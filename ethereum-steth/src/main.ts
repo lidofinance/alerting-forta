@@ -1,44 +1,45 @@
 import * as grpc from '@grpc/grpc-js'
-import { either as E } from 'fp-ts'
-import { BlockHandler } from './handlers/block.handler'
-import { HealthHandler } from './handlers/health.handler'
-import { TxHandler } from './handlers/tx.handler'
-import { InitHandler } from './handlers/init.handler'
-import { AlertHandler } from './handlers/alert.handler'
-import { AgentService } from './generated/proto/agent_grpc_pb'
-import express, { Express, Request, Response } from 'express'
-import Version from './utils/version'
-import { Finding } from './generated/proto/alert_pb'
-import { Config } from './utils/env/env'
-import { knex } from 'knex'
-import * as Winston from 'winston'
 import { ethers } from 'ethers'
-import { Address } from './utils/constants'
+import express, { Express, Request, Response } from 'express'
+import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
+import { either as E } from 'fp-ts'
+import { knex } from 'knex'
+import * as fs from 'node:fs'
+import promClient from 'prom-client'
+import * as Winston from 'winston'
+import { ETHProvider } from './clients/eth_provider'
+import { AgentService } from './generated/proto/agent_grpc_pb'
+import { Finding } from './generated/proto/alert_pb'
 import {
   GateSeal__factory,
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from './generated/typechain'
-import { ETHProvider } from './clients/eth_provider'
-import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
-import { getDepositSecurityEvents } from './utils/events/deposit_security_events'
-import { getLidoEvents } from './utils/events/lido_events'
-import { getInsuranceFundEvents } from './utils/events/insurance_fund_events'
-import { getBurnerEvents } from './utils/events/burner_events'
-import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
-import { WithdrawalsCache } from './services/withdrawals/Withdrawals.cache'
-import { getWithdrawalsEvents } from './utils/events/withdrawals_events'
+import { AlertHandler } from './handlers/alert.handler'
+import { BlockHandler } from './handlers/block.handler'
+import { HealthHandler } from './handlers/health.handler'
+import { InitHandler } from './handlers/init.handler'
+import { TxHandler } from './handlers/tx.handler'
 import { GateSealCache } from './services/gate-seal/GateSeal.cache'
-import promClient from 'prom-client'
-import { Metrics } from './utils/metrics/metrics'
-import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
-import { WithdrawalsSrv } from './services/withdrawals/Withdrawals.srv'
 import { GateSealSrv } from './services/gate-seal/GateSeal.srv'
-import { VaultSrv } from './services/vault/Vault.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
-import * as fs from 'node:fs'
+import { StethOperationCache } from './services/steth_operation/StethOperation.cache'
+import { StethOperationSrv } from './services/steth_operation/StethOperation.srv'
+import { StorageWatcherSrv } from './services/storage-watcher/StorageWatcher.srv'
+import { VaultSrv } from './services/vault/Vault.srv'
+import { WithdrawalsCache } from './services/withdrawals/Withdrawals.cache'
+import { WithdrawalsRepo } from './services/withdrawals/Withdrawals.repo'
+import { WithdrawalsSrv } from './services/withdrawals/Withdrawals.srv'
+import { Address, STORAGE_SLOTS } from './utils/constants'
+import { Config } from './utils/env/env'
+import { getBurnerEvents } from './utils/events/burner_events'
+import { getDepositSecurityEvents } from './utils/events/deposit_security_events'
+import { getInsuranceFundEvents } from './utils/events/insurance_fund_events'
+import { getLidoEvents } from './utils/events/lido_events'
+import { getWithdrawalsEvents } from './utils/events/withdrawals_events'
+import { Metrics } from './utils/metrics/metrics'
+import Version from './utils/version'
 
 const main = async () => {
   const config = new Config()
@@ -54,15 +55,17 @@ const main = async () => {
   })
 
   const defaultRegistry = promClient
-  defaultRegistry.collectDefaultMetrics({
-    prefix: config.promPrefix,
-  })
+  defaultRegistry.collectDefaultMetrics()
 
   const customRegister = new promClient.Registry()
   const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
-  mergedRegistry.setDefaultLabels({ instance: config.instance, dataProvider: config.dataProvider })
+  mergedRegistry.setDefaultLabels({
+    instance: config.instance,
+    dataProvider: config.dataProvider,
+    botName: config.promPrefix,
+  })
 
-  const metrics = new Metrics(mergedRegistry, config.promPrefix)
+  const metrics = new Metrics(mergedRegistry)
 
   const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
   let fortaEthersProvider = getEthersProvider()
@@ -76,7 +79,7 @@ const main = async () => {
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethProvider)
 
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, fortaEthersProvider)
 
   const ethClient = new ETHProvider(
     logger,
@@ -129,10 +132,12 @@ const main = async () => {
     address.LIDO_STETH_ADDRESS,
   )
 
+  const storageWatcherSrv = new StorageWatcherSrv(logger, STORAGE_SLOTS, ethClient)
+
   try {
     await dbClient.migrate.latest()
 
-    const sql = fs.readFileSync('./src/db/withdrawal_requests_17_07_24.sql', 'utf8')
+    const sql = fs.readFileSync('./src/db/withdrawal_requests_01_08_24.sql', 'utf8')
     await dbClient.raw(sql)
 
     logger.info('Migrations have been run successfully.')
@@ -153,6 +158,7 @@ const main = async () => {
     withdrawalsSrv,
     gateSealSrv,
     vaultSrv,
+    storageWatcherSrv,
     healthChecker,
     onAppFindings,
     ethClient,
@@ -160,9 +166,9 @@ const main = async () => {
   const txH = new TxHandler(metrics, stethOperationSrv, withdrawalsSrv, gateSealSrv, vaultSrv, healthChecker)
   const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
 
-  const latestBlockNumber = await ethClient.getBlockNumber()
-  if (E.isLeft(latestBlockNumber)) {
-    logger.error(latestBlockNumber.left)
+  const latestBlock = await ethClient.getBlockByHash('latest')
+  if (E.isLeft(latestBlock)) {
+    logger.error(latestBlock.left)
 
     process.exit(1)
   }
@@ -175,7 +181,7 @@ const main = async () => {
     gateSealSrv,
     vaultSrv,
     onAppFindings,
-    latestBlockNumber.right,
+    latestBlock.right,
   )
   const alertH = new AlertHandler()
 
@@ -188,14 +194,14 @@ const main = async () => {
     evaluateAlert: alertH.handleAlert(),
   })
 
-  const stethOperationSrvErr = await stethOperationSrv.initialize(latestBlockNumber.right)
+  const stethOperationSrvErr = await stethOperationSrv.initialize(latestBlock.right.number)
   if (stethOperationSrvErr !== null) {
     logger.error('Could not init stethSrv', stethOperationSrvErr)
 
     process.exit(1)
   }
 
-  const gateSealSrvErr = await gateSealSrv.initialize(latestBlockNumber.right)
+  const gateSealSrvErr = await gateSealSrv.initialize(latestBlock.right.number)
   if (gateSealSrvErr instanceof Error) {
     logger.error('Could not init gateSealSrvErr', gateSealSrvErr)
 

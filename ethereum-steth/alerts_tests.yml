@@ -13,12 +13,12 @@ tests:
           - exp_labels:
               severity: critical
             exp_annotations:
-              summary: "Eth-steth has detected 25 network errors in the last 15 minutes"
-              description: "The ethereum_steth_network_errors_total 25 in the last 15 minutes."
+              summary: 'Eth-steth has detected 25 network errors in the last 15 minutes'
+              description: 'The ethereum_steth_network_errors_total 25 in the last 15 minutes.'
 
       - alertname: TooMuchNetworkErrors
         eval_time: 20m
-        exp_alerts: [ ]
+        exp_alerts: []
 
       - alertname: TooMuchNetworkErrors
         eval_time: 25m
@@ -26,5 +26,5 @@ tests:
           - exp_labels:
               severity: critical
             exp_annotations:
-              summary: "Eth-steth has detected 45 network errors in the last 15 minutes"
-              description: "The ethereum_steth_network_errors_total 45 in the last 15 minutes."
+              summary: 'Eth-steth has detected 45 network errors in the last 15 minutes'
+              description: 'The ethereum_steth_network_errors_total 45 in the last 15 minutes.'

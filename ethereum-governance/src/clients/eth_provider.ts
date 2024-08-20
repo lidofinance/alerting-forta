@@ -4,10 +4,13 @@ import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import {
-  ENS as EnsContract,
   AragonVoting as AragonVotingContract,
+  BaseAdapter__factory,
+  CrossChainController__factory,
+  ENS as EnsContract,
   IncreaseStakingLimit as IncreaseStakingLimitContract,
   NodeOperatorsRegistry as NodeOperatorsRegistryContract,
+  Stonks__factory,
   Swap__factory,
 } from '../generated'
 import { IEtherscanProvider } from './contracts'
@@ -21,8 +24,10 @@ import { IAclChangesClient } from '../services/acl-changes/contract'
 import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contract'
 import { BLOCK_TO_WATCH, COW_PROTOCOL_ADDRESS } from 'constants/stonks'
 import { TypedEvent } from '../generated/common'
-import { Stonks__factory } from '../generated'
 import { formatEther } from 'ethers/lib/utils'
+import { BSC_CHAIN_ID, BSC_L1_CROSS_CHAIN_CONTROLLER } from '../shared/constants/cross-chain/mainnet'
+import { ICrossChainForwarder } from '../generated/CrossChainController'
+import { ICrossChainClient } from '../services/cross-chain-watcher/contract'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -33,7 +38,13 @@ export interface IProxyContractData {
 }
 
 export class ETHProvider
-  implements IEnsNamesClient, IEasyTrackClient, IProxyWatcherClient, IAclChangesClient, IAragonVotingClient
+  implements
+    IEnsNamesClient,
+    IEasyTrackClient,
+    IProxyWatcherClient,
+    IAclChangesClient,
+    IAragonVotingClient,
+    ICrossChainClient
 {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private etherscanProvider: IEtherscanProvider
@@ -437,6 +448,39 @@ export class ETHProvider
     }
   }
 
+  public async getBalance(address: string, tokenAddress?: string): Promise<E.Either<Error, ethers.BigNumber>> {
+    if (!tokenAddress) {
+      try {
+        const result = await retryAsync(
+          async () => {
+            return await this.jsonRpcProvider.getBalance(address)
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+        return E.right(result)
+      } catch (e) {
+        return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getBalance`))
+      }
+    }
+
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ['function balanceOf(address) view returns (uint256)'],
+      this.jsonRpcProvider,
+    )
+    try {
+      const result = await retryAsync(
+        async () => {
+          return await tokenContract.balanceOf(address)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getLinkBalance`))
+    }
+  }
+
   public async getTokenSymbol(tokenAddress: string) {
     const abi = [
       {
@@ -459,5 +503,43 @@ export class ETHProvider
     } catch (e) {
       return E.left(new NetworkError(e, `Could not get symbol for token ${tokenAddress}`))
     }
+  }
+
+  public async getBSCForwarderBridgeAdapterNames() {
+    const cccContract = CrossChainController__factory.connect(BSC_L1_CROSS_CHAIN_CONTROLLER, this.jsonRpcProvider)
+    let adapters: ICrossChainForwarder.ChainIdBridgeConfigStructOutput[] = []
+    const bscAdapters = new Map<string, string>()
+
+    try {
+      adapters = await retryAsync(
+        async () => {
+          return await cccContract.getForwarderBridgeAdaptersByChain(BSC_CHAIN_ID)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get forwarder bridge adapters for BSC chain`))
+    }
+
+    for (const adapterAddress of adapters) {
+      const bridgeAdapterContract = BaseAdapter__factory.connect(
+        adapterAddress.currentChainBridgeAdapter,
+        this.jsonRpcProvider,
+      )
+
+      try {
+        const adapterName = await retryAsync(
+          async () => {
+            return await bridgeAdapterContract.adapterName()
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+        bscAdapters.set(adapterAddress.currentChainBridgeAdapter, adapterName)
+      } catch (e) {
+        return E.left(new NetworkError(e, `Could not get forwarder bridge adapters for BSC chain`))
+      }
+    }
+
+    return E.right(bscAdapters)
   }
 }

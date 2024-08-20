@@ -18,6 +18,8 @@ export class Config {
   public readonly promPrefix: string
   public readonly useFortaProvider: boolean
 
+  private readonly dbFileName: string
+
   constructor() {
     this.appName = process.env.APP_NAME || 'ethereum-steth'
     this.nodeEnv = process.env.NODE_ENV || 'production'
@@ -31,11 +33,13 @@ export class Config {
     this.chainId = parseInt(process.env.FORTA_CHAIN_ID!, 10) || 1
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://eth.drpc.org'
 
-    this.promPrefix = this.appName.replace('-', '_') + '_'
+    this.promPrefix = this.appName.replace('-', '_')
 
     this.useFortaProvider = JSON.parse(process.env.USE_FORTA_RPC_URL!)
 
-    this.knexConfig = Config.getKnexConfig()
+    this.dbFileName = process.env.DB_FILEPATH || ':memory:'
+
+    this.knexConfig = Config.getKnexConfig(this.dbFileName)
 
     const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^/\n]+)/
 
@@ -46,12 +50,11 @@ export class Config {
     }
   }
 
-  public static getKnexConfig(): knex.Knex.Config {
+  public static getKnexConfig(filename: string): knex.Knex.Config {
     return {
       client: 'sqlite3',
       connection: {
-        filename: ':memory:',
-        // filename: '/tmp/dbdatabase.db',
+        filename: filename,
       },
       migrations: {
         tableName: 'knex_migrations',

@@ -41,10 +41,12 @@ export class AclChangesSrv {
   private readonly logger: Logger
   private readonly name = 'AclChangesSrv'
   private readonly ethProvider: IAclChangesClient
+  private readonly findingsTimestamps: Map<string, number>
 
   constructor(logger: Logger, ethProvider: IAclChangesClient) {
     this.logger = logger
     this.ethProvider = ethProvider
+    this.findingsTimestamps = new Map<string, number>()
   }
 
   public initialize(currentBlock: number): null {
@@ -162,7 +164,6 @@ export class AclChangesSrv {
 
   public async handleOwnerChange(blockEvent: BlockEvent): Promise<Finding[]> {
     const out: Finding[] = []
-    const findingsTimestamps = new Map<string, number>()
 
     const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(async (address: string) => {
       const data = OWNABLE_CONTRACTS.get(address)
@@ -203,7 +204,7 @@ export class AclChangesSrv {
       const key = `${address}+${curOwner}`
       const now = blockEvent.block.timestamp
       // skip if reported recently
-      const lastReportTimestamp = findingsTimestamps.get(key)
+      const lastReportTimestamp = this.findingsTimestamps.get(key)
       const interval = curOwnerIsContract.right
         ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
         : NEW_OWNER_IS_EOA_REPORT_INTERVAL
@@ -230,7 +231,7 @@ export class AclChangesSrv {
         }),
       )
 
-      findingsTimestamps.set(key, now)
+      this.findingsTimestamps.set(key, now)
     })
 
     await Promise.all(promises)

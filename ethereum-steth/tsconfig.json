@@ -3,11 +3,5 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "exclude": [
-    "node_modules",
-    "tests",
-    "dist",
-    "**/*spec.ts",
-    "**/*mock.ts"
-  ]
+  "exclude": ["node_modules", "tests", "dist", "**/*spec.ts", "**/*mock.ts"]
 }

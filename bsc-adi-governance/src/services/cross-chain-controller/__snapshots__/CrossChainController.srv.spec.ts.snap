@@ -1,0 +1,169 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CrossChainController Srv functional tests should find 2 receive event but message is delivered 1`] = `[]`;
+
+exports[`CrossChainController Srv functional tests should find 4 ReceiverBridgeAdaptersUpdated 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-BRIDGE-SET-UPDATED",
+    "description": "Allowed bridges set updated - added 0x15AD245133568c2498c7dA0cf2204A03b0e9b98A",
+    "labels": [],
+    "metadata": {
+      "args": "0x15AD245133568c2498c7dA0cf2204A03b0e9b98A,true,1",
+    },
+    "name": "🚨 BSC a.DI: Allowed bridges set updated",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-BRIDGE-SET-UPDATED",
+    "description": "Allowed bridges set updated - added 0xc934433f4c433Cf80DE6fB65fd70C7a650D8a408",
+    "labels": [],
+    "metadata": {
+      "args": "0xc934433f4c433Cf80DE6fB65fd70C7a650D8a408,true,1",
+    },
+    "name": "🚨 BSC a.DI: Allowed bridges set updated",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-BRIDGE-SET-UPDATED",
+    "description": "Allowed bridges set updated - added 0xCd867B440c726461e5fAbe8d3a050b2f8701C230",
+    "labels": [],
+    "metadata": {
+      "args": "0xCd867B440c726461e5fAbe8d3a050b2f8701C230,true,1",
+    },
+    "name": "🚨 BSC a.DI: Allowed bridges set updated",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-BRIDGE-SET-UPDATED",
+    "description": "Allowed bridges set updated - added 0xBb1E43408BbF2C767Ff3Bd5bBC34E183CC1Ef119",
+    "labels": [],
+    "metadata": {
+      "args": "0xBb1E43408BbF2C767Ff3Bd5bBC34E183CC1Ef119,true,1",
+    },
+    "name": "🚨 BSC a.DI: Allowed bridges set updated",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`CrossChainController Srv functional tests should find ConfirmationsUpdated 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-CONFIRMATIONS-UPDATED",
+    "description": "Allowed bridges quorum updated to 3",
+    "labels": [],
+    "metadata": {
+      "args": "3,1",
+    },
+    "name": "🚨 BSC a.DI: Allowed Bridges quorum updated",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`CrossChainController Srv functional tests should find GuardianUpdated and AdminChanged and Upgraded(proxy) 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "PROXY-ADMIN-CHANGED",
+    "description": "Proxy admin for bnbCrossChainControllerAddress (0x40c4464fca8cacd550c33b39d674fc257966022f) was changed from 0x0000000000000000000000000000000000000000 to 0x29E6817db339795766244B96aEf5Dc534a98518d
+(detected by event)",
+    "labels": [],
+    "metadata": {
+      "args": "0x0000000000000000000000000000000000000000,0x29E6817db339795766244B96aEf5Dc534a98518d",
+    },
+    "name": "🚨🚨🚨 BSC a.DI: Proxy admin changed",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "PROXY-UPGRADED",
+    "description": "Proxy for bnbCrossChainControllerAddress (0x40c4464fca8cacd550c33b39d674fc257966022f) was updated to 0xB7Ba81dd07885ae7BFD18452B36D3404d7EDD8Ee
+(detected by event)",
+    "labels": [],
+    "metadata": {
+      "args": "0xB7Ba81dd07885ae7BFD18452B36D3404d7EDD8Ee",
+    },
+    "name": "🚨🚨🚨 BSC a.DI: Proxy upgraded",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-GUARDIAN-UPDATED",
+    "description": "Guardian was updated from 0x0000000000000000000000000000000000000000 to 0x0000000000000000000000000000000000000000",
+    "labels": [],
+    "metadata": {
+      "args": "0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000",
+    },
+    "name": "🚨🚨🚨 BSC a.DI: Guardians updated",
+    "protocol": "ethereum",
+    "severity": 5,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`CrossChainController Srv functional tests should find TransactionReceived 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-MESSAGE-RECEIVED",
+    "description": "CrossChainController received a message from 0xCd867B440c726461e5fAbe8d3a050b2f8701C230 (Hyperlane adapter)",
+    "labels": [],
+    "metadata": {
+      "args": "0x9a3408ef1a0ec12a5081af3a1ea3b669dd0b2caecf617ec81647c71a5ccced13,0x0c39ef7274a750de961d1ee0e2083ecccacef2c4c5bd3499317f3f2177e43470,1,0,0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000184d39300f2fa4419d04998e9c58cb5de586d879000000000000000000000000250227c30e3b26525f292f63756e5eb3c425427e0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000003800000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000038000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000320000000000000000000000000000000000000000000000000000000000000000200000000000000000000000040c4464fca8cacd550c33b39d674fc257966022f00000000000000000000000029e6817db339795766244b96aef5dc534a98518d000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000001a7472616e736665724f776e657273686970286164647265737329000000000000000000000000000000000000000000000000000000000000000000000000001a7472616e736665724f776e65727368697028616464726573732900000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000008e5175d17f74d1d512de59b2f5d5a5d8177a123d00000000000000000000000000000000000000000000000000000000000000200000000000000000000000008e5175d17f74d1d512de59b2f5d5a5d8177a123d000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,0xCd867B440c726461e5fAbe8d3a050b2f8701C230,1",
+    },
+    "name": "ℹ️ BSC a.DI: Message received by the Hyperlane adapter",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;

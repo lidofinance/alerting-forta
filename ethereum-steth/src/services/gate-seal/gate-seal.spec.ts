@@ -1,23 +1,23 @@
-import { Address, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../../utils/constants'
-import { either as E } from 'fp-ts'
-import { GateSeal } from '../../entity/gate_seal'
 import { expect } from '@jest/globals'
+import { ethers } from 'ethers'
+import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
+import { either as E } from 'fp-ts'
+import * as promClient from 'prom-client'
+import * as Winston from 'winston'
+import { ETHProvider } from '../../clients/eth_provider'
 import { BlockDto, TransactionDto } from '../../entity/events'
+import { GateSeal } from '../../entity/gate_seal'
+import { Finding } from '../../generated/proto/alert_pb'
 import {
   GateSeal__factory,
   Lido__factory,
   ValidatorsExitBusOracle__factory,
   WithdrawalQueueERC721__factory,
 } from '../../generated/typechain'
-import { GateSealSrv, IGateSealClient } from './GateSeal.srv'
-import { GateSealCache } from './GateSeal.cache'
-import * as Winston from 'winston'
-import { ETHProvider } from '../../clients/eth_provider'
-import { ethers } from 'forta-agent'
-import { Finding } from '../../generated/proto/alert_pb'
-import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
-import promClient from 'prom-client'
+import { Address, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../../utils/constants'
 import { Metrics } from '../../utils/metrics/metrics'
+import { GateSealCache } from './GateSeal.cache'
+import { GateSealSrv, IGateSealClient } from './GateSeal.srv'
 
 const TEST_TIMEOUT = 120_000 // ms
 
@@ -35,10 +35,10 @@ describe('GateSeal srv functional tests', () => {
   const lidoRunner = Lido__factory.connect(adr.LIDO_STETH_ADDRESS, fortaEthersProvider)
   const wdQueueRunner = WithdrawalQueueERC721__factory.connect(adr.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
   const gateSealRunner = GateSeal__factory.connect(adr.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.VEBO_ADDRESS, fortaEthersProvider)
 
   const registry = new promClient.Registry()
-  const m = new Metrics(registry, 'test_')
+  const m = new Metrics(registry)
 
   const gateSealClient: IGateSealClient = new ETHProvider(
     logger,
