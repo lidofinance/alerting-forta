@@ -114,7 +114,7 @@ describe('eth provider tests', () => {
   })
 
   const registry = new promClient.Registry()
-  const metrics = new Metrics(registry, prefix)
+  const metrics = new Metrics(registry)
 
   const ethClient = new ETHProvider(
     logger,

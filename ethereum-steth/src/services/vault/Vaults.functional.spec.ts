@@ -38,7 +38,7 @@ describe('Vaults.srv functional tests', () => {
   const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethProvider)
   const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, ethProvider)
   const registry = new promClient.Registry()
-  const m = new Metrics(registry, 'test_')
+  const m = new Metrics(registry)
 
   const astRunner = AstETH__factory.connect(address.AAVE_ASTETH_ADDRESS, ethProvider)
 

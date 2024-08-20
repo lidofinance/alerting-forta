@@ -118,7 +118,7 @@ export class BlockHandler {
           this.withdrawalsSrv.handleBlock(blockDtoEvent),
           this.gateSealSrv.handleBlock(blockDtoEvent),
           this.VaultSrv.handleBlock(blockDtoEvent),
-          this.storageWatcher.handleBlock(block.getHash()),
+          this.storageWatcher.handleBlock(blockDtoEvent),
           this.aaveSrv.handleBlock(blockDtoEvent),
           this.poolBalanceSrv.handleBlock(blockDtoEvent),
         ])

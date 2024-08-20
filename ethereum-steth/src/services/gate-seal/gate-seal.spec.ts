@@ -57,7 +57,7 @@ describe('GateSeal srv functional tests', () => {
   )
 
   const registry = new promClient.Registry()
-  const m = new Metrics(registry, 'test_')
+  const m = new Metrics(registry)
 
   const gateSealClient: IGateSealClient = new ETHProvider(
     logger,
