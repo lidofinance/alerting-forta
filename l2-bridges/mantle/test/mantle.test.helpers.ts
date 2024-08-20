@@ -7,8 +7,8 @@ import { BigNumberish } from 'ethers'
 export async function withdrawWsteth(amount: BigNumberish, params: Constants, provider: JsonRpcProvider, sender: string) {
   const l2BridgeAddress = params.L2_ERC20_TOKEN_GATEWAY.address
 
-  provider.send('hardhat_setBalance', [l2BridgeAddress, ethers.utils.parseEther('10').toHexString()])
-  provider.send('hardhat_setBalance', [sender, ethers.utils.parseEther('10').toHexString()])
+  await provider.send('hardhat_setBalance', [l2BridgeAddress, ethers.utils.parseEther('10').toHexString()])
+  await provider.send('hardhat_setBalance', [sender, ethers.utils.parseEther('10').toHexString()])
 
   const l2Wsteth = new Contract(params.L2_WSTETH_BRIDGED.address, MANTLE_WSTETH_MINT_ABI, provider)
   const bridgeSigner = await provider.getSigner(l2BridgeAddress)

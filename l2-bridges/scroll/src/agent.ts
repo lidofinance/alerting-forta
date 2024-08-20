@@ -43,12 +43,12 @@ export const scrollConstants: Constants = {
     L2_NAME, `E1F5563E-C44D-4ACA-825E-F5A771B9D8C0`
   )
 }
-scrollConstants.bridgeEvents = getBridgeEvents(scrollConstants.L2_ERC20_TOKEN_GATEWAY.address, scrollConstants.rolesMap);
-scrollConstants.govEvents = getGovEvents(scrollConstants.govExecutor as string);
+scrollConstants.bridgeEvents = getBridgeEvents(scrollConstants.L2_ERC20_TOKEN_GATEWAY.address, scrollConstants.rolesMap)
+scrollConstants.govEvents = getGovEvents(scrollConstants.govExecutor as string)
 scrollConstants.proxyAdminEvents = getProxyAdminEvents(
   scrollConstants.L2_WSTETH_BRIDGED as ContractInfo,
   scrollConstants.L2_ERC20_TOKEN_GATEWAY
-);
+)
 
 
 function getBridgeEvents(l2GatewayAddress: string, RolesAddrToNameMap: RoleHashToName): EventOfNotice[] {
@@ -332,6 +332,6 @@ function getProxyAdminEvents(l2WstethContract: ContractInfo, l2GatewayContract: 
 }
 
 export default {
-  initialize: App.initialize(scrollConstants),
-  handleBlock: App.handleBlock,
+  initialize: App.initializeStatic(scrollConstants),
+  handleBlock: App.handleBlockStatic,
 }

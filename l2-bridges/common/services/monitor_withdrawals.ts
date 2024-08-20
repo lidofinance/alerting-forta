@@ -11,8 +11,7 @@ import { ETH_DECIMALS, ETH_DECIMALS2 } from '../constants'
 import { formatAddress } from 'forta-agent/dist/cli/utils'
 import { ethers } from 'ethers'
 import { WithdrawalInfo, ContractInfo, HugeWithdrawalsFromL2AlertParams } from '../constants'
-import assert from 'assert'
-
+import { strict as assert } from 'node:assert'
 
 
 export const MAX_WITHDRAWALS_SUM = 10_000 // 10k wstETH
@@ -81,6 +80,7 @@ export class MonitorWithdrawals {
       + ` Fetched past withdrawal events in blocks range [${startBlock}, ${endBlock}]`)
     this.logger.info(elapsedTime(MonitorWithdrawals.name + '.' + this._getWithdrawalRecordsInBlockRange.name, start))
     return E.right({
+      // TODO: use formatEther
       currentWithdrawals: (new BigNumber(withdrawalsSum.toString())).div(ETH_DECIMALS).toFixed(4),
     })
   }

@@ -34,7 +34,7 @@
     "@ethersproject/abi": "^5.0.0",
     "@ethersproject/providers": "^5.0.0",
     "@jest/globals": "^29.7.0",
-    "@tsconfig/node20": "^20.1.2",
+    "@tsconfig/node20": "^20.1.4",
     "@typechain/ethers-v5": "^11.1.2",
     "@types/jest": "^29.5.10",
     "@types/nodemon": "^1.19.0",

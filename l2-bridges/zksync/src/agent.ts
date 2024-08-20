@@ -8,7 +8,7 @@ const L2_NAME = 'ZkSync'
 const L2_PROXY_ADMIN_CONTRACT_ADDRESS = '0xbd80e505ecc49bae2cc86094a78fa0e2db28b52a';
 export const zksyncConstants: Constants = {
   L2_NAME: L2_NAME,
-  L2_NETWORK_RPC: 'https://mainnet.era.zksync.io',
+  L2_NETWORK_RPC: 'https://mainnet.era.zksync.io', // 'https://zksync.drpc.org'
   MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: 50_000,
   L2_NETWORK_ID: 324,
   L2_APPROX_BLOCK_TIME_SECONDS: 1, // see info at https://zksync.blockscout.com/
@@ -46,12 +46,12 @@ export const zksyncConstants: Constants = {
     L2_NAME, `C167F276-D519-4906-90CB-C4455E9ABBD4`
   )
 }
-zksyncConstants.bridgeEvents = getBridgeEvents(zksyncConstants.L2_ERC20_TOKEN_GATEWAY.address, zksyncConstants.rolesMap);
-zksyncConstants.govEvents = getGovEvents((zksyncConstants.govExecutor as TransparentProxyInfo).address);
+zksyncConstants.bridgeEvents = getBridgeEvents(zksyncConstants.L2_ERC20_TOKEN_GATEWAY.address, zksyncConstants.rolesMap)
+zksyncConstants.govEvents = getGovEvents((zksyncConstants.govExecutor as TransparentProxyInfo).address)
 zksyncConstants.proxyAdminEvents = getProxyAdminEvents(
   zksyncConstants.L2_WSTETH_BRIDGED as TransparentProxyInfo,
   zksyncConstants.govExecutor as  TransparentProxyInfo,
-);
+)
 
 
 function getBridgeEvents(
@@ -402,6 +402,6 @@ function getProxyAdminEvents(
 }
 
 export default {
-  initialize: App.initialize(zksyncConstants),
-  handleBlock: App.handleBlock,
+  initialize: App.initializeStatic(zksyncConstants),
+  handleBlock: App.handleBlockStatic,
 }

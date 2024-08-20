@@ -3,4 +3,6 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testPathIgnorePatterns: ['dist'],
+  globalSetup: "./jest.setup.ts",
+  globalTeardown: "./jest.teardown.ts",
 }
