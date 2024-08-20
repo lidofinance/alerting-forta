@@ -52,7 +52,6 @@ describe('agent-pools-balances functional tests', () => {
   )
 
   const defaultRegistry = promClient
-  const prefix = 'test_'
   defaultRegistry.collectDefaultMetrics()
 
   const registry = new promClient.Registry()
