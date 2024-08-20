@@ -53,12 +53,10 @@ describe('agent-pools-balances functional tests', () => {
 
   const defaultRegistry = promClient
   const prefix = 'test_'
-  defaultRegistry.collectDefaultMetrics({
-    prefix: prefix,
-  })
+  defaultRegistry.collectDefaultMetrics()
 
   const registry = new promClient.Registry()
-  const metrics = new Metrics(registry, prefix)
+  const metrics = new Metrics(registry)
 
   const ethClient = new ETHProvider(
     logger,
