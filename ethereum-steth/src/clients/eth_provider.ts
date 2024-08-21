@@ -12,15 +12,22 @@ import { StakingLimitInfo } from '../entity/staking_limit_info'
 import { StorageArrayResponse, StorageItemResponse } from '../entity/storage_slot'
 import { WithdrawalRequest } from '../entity/withdrawal_request'
 import {
+  AstETH as AstEthRunner,
+  ChainlinkAggregator,
+  CurvePool,
   GateSeal as GateSealRunner,
   Lido as LidoRunner,
+  StableDebtStETH as StableDebtStEthRunner,
+  VariableDebtStETH as VariableDebtStEthRunner,
   ValidatorsExitBusOracle as VeboRunner,
   WithdrawalQueueERC721 as WithdrawalQueueRunner,
 } from '../generated/typechain'
 import { TypedEvent } from '../generated/typechain/common'
 import { ETHDistributedEvent, UnbufferedEvent } from '../generated/typechain/Lido'
 import { WithdrawalClaimedEvent } from '../generated/typechain/WithdrawalQueueERC721'
+import { IAaveClient } from '../services/aave/Aave.srv'
 import { IGateSealClient } from '../services/gate-seal/GateSeal.srv'
+import { IPoolBalanceClient } from '../services/pools-balances/pool-balance.srv'
 import { IStethClient } from '../services/steth_operation/StethOperation.srv'
 import { IStorageWatcherClient } from '../services/storage-watcher/StorageWatcher.srv'
 import { IVaultClient } from '../services/vault/Vault.srv'
@@ -34,13 +41,28 @@ const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
 export class ETHProvider
-  implements IGateSealClient, IStethClient, IVaultClient, IWithdrawalsClient, IStorageWatcherClient
+  implements
+    IGateSealClient,
+    IStethClient,
+    IVaultClient,
+    IWithdrawalsClient,
+    IStorageWatcherClient,
+    IAaveClient,
+    IPoolBalanceClient
 {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly lidoRunner: LidoRunner
   private readonly wdQueueRunner: WithdrawalQueueRunner
   private readonly veboRunner: VeboRunner
   private gateSealRunner: GateSealRunner
+
+  private readonly astEthRunner: AstEthRunner
+  private readonly stableDebtStEthRunner: StableDebtStEthRunner
+  private readonly variableDebtStEthRunner: VariableDebtStEthRunner
+
+  private readonly curvePoolRunner: CurvePool
+  private readonly chainlinkAggregatorRunner: ChainlinkAggregator
+
   private readonly logger: Logger
   private readonly metrics: Metrics
 
@@ -51,6 +73,11 @@ export class ETHProvider
     lidoRunner: LidoRunner,
     wdQueueRunner: WithdrawalQueueRunner,
     gateSealRunner: GateSealRunner,
+    astEthRunner: AstEthRunner,
+    stableDebtStEthRunner: StableDebtStEthRunner,
+    variableDebtStEthRunner: VariableDebtStEthRunner,
+    curvePoolRunner: CurvePool,
+    chainlinkAggregatorRunner: ChainlinkAggregator,
     veboRunner: VeboRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
@@ -58,6 +85,11 @@ export class ETHProvider
     this.wdQueueRunner = wdQueueRunner
     this.gateSealRunner = gateSealRunner
     this.veboRunner = veboRunner
+    this.astEthRunner = astEthRunner
+    this.stableDebtStEthRunner = stableDebtStEthRunner
+    this.variableDebtStEthRunner = variableDebtStEthRunner
+    this.curvePoolRunner = curvePoolRunner
+    this.chainlinkAggregatorRunner = chainlinkAggregatorRunner
     this.logger = logger
     this.metrics = metrcs
   }
@@ -104,14 +136,17 @@ export class ETHProvider
     }
   }
 
-  public async getStethBalance(lidoStethAddress: string, block: number): Promise<E.Either<Error, BigNumber>> {
+  public async getStethBalance(
+    lidoStethAddress: string,
+    blockTag: number | string,
+  ): Promise<E.Either<Error, BigNumber>> {
     const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getStethBalance.name }).startTimer()
 
     try {
       const out = await retryAsync<EtherBigNumber>(
         async (): Promise<EtherBigNumber> => {
           return await this.lidoRunner.balanceOf(lidoStethAddress, {
-            blockTag: block,
+            blockTag: blockTag,
           })
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
@@ -1087,6 +1122,200 @@ export class ETHProvider
       end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not call eth_getStorageAt`))
+    }
+  }
+
+  public async getTotalSupply(blockHash: string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getTotalSupply.name })
+
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          const block = await this.jsonRpcProvider.getBlock(blockHash)
+          const [totalSupply] = await this.astEthRunner.functions.totalSupply({
+            blockTag: block.number,
+          })
+
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getTotalSupply.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getTotalSupply.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch aave totalSupply`))
+    }
+  }
+
+  public async getStableDebtStEthTotalSupply(blockTag: number | string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getStableDebtStEthTotalSupply.name })
+
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          const [totalSupply] = await this.stableDebtStEthRunner.functions.totalSupply({
+            blockTag: blockTag,
+          })
+
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getStableDebtStEthTotalSupply.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getStableDebtStEthTotalSupply.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch stableDebtStETHContract.totalSupply`))
+    }
+  }
+
+  public async getVariableDebtStEthTotalSupply(blockTag: number | string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getVariableDebtStEthTotalSupply.name })
+
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          const [totalSupply] = await this.variableDebtStEthRunner.functions.totalSupply({
+            blockTag: blockTag,
+          })
+
+          return totalSupply
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getVariableDebtStEthTotalSupply.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      this.metrics.etherJsRequest
+        .labels({ method: this.getVariableDebtStEthTotalSupply.name, status: StatusFail })
+        .inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch variableDebtStETHContract.totalSupply`))
+    }
+  }
+
+  public async getCurveEthBalance(blockTag: number | string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getCurveEthBalance.name })
+
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          const [ethBalance] = await this.curvePoolRunner.functions.balances(0, {
+            blockTag: blockTag,
+          })
+
+          return ethBalance
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getCurveEthBalance.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getCurveEthBalance.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch curvePool eth balance`))
+    }
+  }
+
+  public async getCurveStEthBalance(blockTag: number | string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getCurveStEthBalance.name })
+
+    try {
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          const [stethBalance] = await this.curvePoolRunner.functions.balances(1, {
+            blockTag: blockTag,
+          })
+
+          return stethBalance
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getCurveStEthBalance.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(String(out)))
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getCurveStEthBalance.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch curvePool steth balance`))
+    }
+  }
+
+  public async getCurveStEthToEthPrice(blockTag: number | string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getCurveStEthToEthPrice.name })
+
+    try {
+      const amountStEth = new BigNumber(1000).times(ETH_DECIMALS)
+
+      const out = await retryAsync<EtherBigNumber>(
+        async (): Promise<EtherBigNumber> => {
+          const [amountEth] = await this.curvePoolRunner.functions.get_dy(1, 0, amountStEth.toFixed(), {
+            blockTag: blockTag,
+          })
+
+          return amountEth
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getCurveStEthToEthPrice.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(out.toString()).div(amountStEth))
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getCurveStEthToEthPrice.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch curvePoolContract.get_dy`))
+    }
+  }
+
+  public async getChainlinkStEthToEthPrice(blockTag: number | string): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.startTimer({ method: this.getChainlinkStEthToEthPrice.name })
+
+    try {
+      const hexValue = await retryAsync<string>(
+        async (): Promise<string> => {
+          const [peg] = await this.chainlinkAggregatorRunner.functions.latestAnswer({
+            blockTag: blockTag,
+          })
+
+          return peg.toHexString()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      this.metrics.etherJsRequest.labels({ method: this.getChainlinkStEthToEthPrice.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
+
+      return E.right(new BigNumber(hexValue).dividedBy(ETH_DECIMALS))
+    } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getChainlinkStEthToEthPrice.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
+      return E.left(new NetworkError(e, `Could not fetch chainlinkAggregatorContract.latestAnswer`))
     }
   }
 }

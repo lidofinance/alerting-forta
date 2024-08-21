@@ -35,7 +35,10 @@ export class Config {
 
     this.promPrefix = this.appName.replace('-', '_')
 
-    this.useFortaProvider = JSON.parse(process.env.USE_FORTA_RPC_URL!)
+    this.useFortaProvider = false
+    if (process.env.USE_FORTA_RPC_URL !== undefined) {
+      this.useFortaProvider = JSON.parse(process.env.USE_FORTA_RPC_URL)
+    }
 
     this.dbFileName = process.env.DB_FILEPATH || ':memory:'
 

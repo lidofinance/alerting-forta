@@ -7,9 +7,7 @@
 ## Alerts
 
 1. Infra:
-
    1. ℹ️ Steth: Currently processing Ethereum network block is outdated
-
 2. StETH operations
    1. HandleBlock
       1. 🚨🚨🚨 Buffered ETH drain (checks each block)
@@ -107,21 +105,25 @@
       16. in STAKING_ROUTER
       17. in WITHDRAWALS_QUEUE
       18. in SIMPLE_DVT
-
-## Development (Forta specific)
-
-Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
+7. Aave operations
+   1. HandleBlock
+      1. 🚨🚨🚨 astETH balance - astETH totalSupply >= 1ETH
+      2. 🚨🚨🚨 stableDebtStETH totalSupply is not 0
+      3. 🚨🚨🚨 variableDebtStETH totalSupply is not 0
+8. Pool balances
+   1. HandleBlock
+      1. 🚨 Super low stETH:ETH price on Curve
+      2. 🚨 Super low stETH:ETH price on Chainlink
+      3. 🚨 Curve Pool rapid imbalance change
+      4. 🚨️ Significant Curve Pool size change
+      5. ⚠️ Significant Curve Pool size change
+      6. ⚠️ Curve Pool is imbalanced
+      7. ⚠️ stETH:ETH price on Curve decreased
+      8. ⚠️ stETH:ETH price on Chainlink decreased
 
 ```
 yarn install
-yarn build
 yarn start
-```
-
-In separate console run
-
-```
-docker-compose up -d
 ```
 
 ## Testing alerts

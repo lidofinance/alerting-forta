@@ -1,18 +1,23 @@
 import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
-import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import * as promClient from 'prom-client'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { BlockDto, TransactionDto } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 import {
+  AstETH__factory,
+  ChainlinkAggregator__factory,
+  CurvePool__factory,
   GateSeal__factory,
   Lido__factory,
+  StableDebtStETH__factory,
   ValidatorsExitBusOracle__factory,
+  VariableDebtStETH__factory,
   WithdrawalQueueERC721__factory,
 } from '../../generated/typechain'
 import { Address } from '../../utils/constants'
+import { Config } from '../../utils/env/env'
 import { getBurnerEvents } from '../../utils/events/burner_events'
 import { getDepositSecurityEvents } from '../../utils/events/deposit_security_events'
 import { getInsuranceFundEvents } from '../../utils/events/insurance_fund_events'
@@ -24,29 +29,48 @@ import { StethOperationSrv } from './StethOperation.srv'
 const TEST_TIMEOUT = 60_000 // ms
 
 describe('Steth.srv functional tests', () => {
-  const chainId = 1
-
+  const config = new Config()
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
   })
   const address: Address = Address
+  const chainId = 1
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
-  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, fortaEthersProvider)
-  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
-  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, fortaEthersProvider)
+  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, chainId)
+  const lidoRunner = Lido__factory.connect(address.LIDO_STETH_ADDRESS, ethProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(address.WITHDRAWALS_QUEUE_ADDRESS, ethProvider)
+  const gateSealRunner = GateSeal__factory.connect(address.GATE_SEAL_DEFAULT_ADDRESS, ethProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(address.VEBO_ADDRESS, ethProvider)
   const registry = new promClient.Registry()
   const m = new Metrics(registry)
+
+  const astRunner = AstETH__factory.connect(address.AAVE_ASTETH_ADDRESS, ethProvider)
+
+  const stableDebtStEthRunner = StableDebtStETH__factory.connect(address.AAVE_STABLE_DEBT_STETH_ADDRESS, ethProvider)
+  const variableDebtStEthRunner = VariableDebtStETH__factory.connect(
+    address.AAVE_VARIABLE_DEBT_STETH_ADDRESS,
+    ethProvider,
+  )
+
+  const curvePoolRunner = CurvePool__factory.connect(address.CURVE_POOL_ADDRESS, ethProvider)
+  const chainlinkAggregatorRunner = ChainlinkAggregator__factory.connect(
+    address.CHAINLINK_STETH_PRICE_FEED,
+    ethProvider,
+  )
 
   const ethClient = new ETHProvider(
     logger,
     m,
-    fortaEthersProvider,
+    ethProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
+    astRunner,
+    stableDebtStEthRunner,
+    variableDebtStEthRunner,
+    curvePoolRunner,
+    chainlinkAggregatorRunner,
     veboRunner,
   )
 
@@ -68,7 +92,7 @@ describe('Steth.srv functional tests', () => {
     'LOW-STAKING-LIMIT',
     async () => {
       const blockNumber = 16_704_075
-      const block = await fortaEthersProvider.getBlock(blockNumber)
+      const block = await ethProvider.getBlock(blockNumber)
 
       const blockDto: BlockDto = {
         number: block.number,
@@ -101,7 +125,7 @@ describe('Steth.srv functional tests', () => {
     'LOW-DEPOSIT-EXECUTOR-BALANCE',
     async () => {
       const blockNumber = 17241600
-      const block = await fortaEthersProvider.getBlock(blockNumber)
+      const block = await ethProvider.getBlock(blockNumber)
 
       const blockDto: BlockDto = {
         number: block.number,
@@ -135,7 +159,7 @@ describe('Steth.srv functional tests', () => {
     async () => {
       const txHash = '0x11a48020ae69cf08bd063f1fbc8ecf65bd057015aaa991bf507dbc598aadb68e'
 
-      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const trx = await ethProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -192,7 +216,7 @@ describe('Steth.srv functional tests', () => {
     async () => {
       const txHash = '0x91c7c2f33faf3b5fb097138c1d49c1d4e83f99e1c3b346b3cad35a5928c03b3a'
 
-      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const trx = await ethProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -247,7 +271,7 @@ describe('Steth.srv functional tests', () => {
     async () => {
       const txHash = '0xe71ac8b9f8f7b360f5defd3f6738f8482f8c15f1dd5f6827544bef8b7b4fbd37'
 
-      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const trx = await ethProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -274,7 +298,7 @@ describe('Steth.srv functional tests', () => {
     'handleBufferedEth',
     async () => {
       const blockNumber = 20_149_739 + 3
-      const block = await fortaEthersProvider.getBlock(blockNumber)
+      const block = await ethProvider.getBlock(blockNumber)
 
       const blockDto: BlockDto = {
         number: block.number,
@@ -294,7 +318,7 @@ describe('Steth.srv functional tests', () => {
     '⚠️ High depositable ETH amount',
     async () => {
       const blockNumber = 20227000
-      const block = await fortaEthersProvider.getBlock(blockNumber)
+      const block = await ethProvider.getBlock(blockNumber)
 
       const blockDto: BlockDto = {
         number: block.number,

@@ -99,7 +99,7 @@ export function getLidoEvents(LIDO_STETH_ADDRESS: string): EventOfNotice[] {
     },
     {
       address: LIDO_STETH_ADDRESS,
-      abi: 'event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)',
+      abi: LIDO_TOKEN_REBASED_EVENT,
       alertId: alertId_token_rebased,
       name: 'ℹ️ Lido: Token rebased',
       description: (args: Result) => `reportTimestamp: ${args.reportTimestamp}`,
