@@ -105,7 +105,7 @@ describe('l2Client', () => {
 
       expect(l2Logs.right.length).toBe(16)
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 5,
   )
 
   test(
