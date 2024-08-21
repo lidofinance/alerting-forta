@@ -4,6 +4,7 @@ import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
 import { keccak256, toUtf8Bytes } from 'ethers/lib/utils'
 import { either as E } from 'fp-ts'
+import { randomUUID } from 'node:crypto'
 import { retryAsync } from 'ts-retry'
 import { Logger } from 'winston'
 import { BlockDto } from '../entity/events'
@@ -972,6 +973,7 @@ export class ETHProvider
       jsonrpc: string
       method: string
       params: Array<any>
+      id: string
     }
 
     type RpcResponse = {
@@ -990,6 +992,7 @@ export class ETHProvider
       jsonrpc: '2.0',
       method: `eth_getStorageAt`,
       params: [address, slot, blockTag],
+      id: randomUUID().toLowerCase(),
     }
 
     try {
@@ -1046,6 +1049,7 @@ export class ETHProvider
       jsonrpc: string
       method: string
       params: Array<any>
+      id: string
     }
 
     type RpcResponse = {
@@ -1062,6 +1066,7 @@ export class ETHProvider
       jsonrpc: '2.0',
       method: `eth_getStorageAt`,
       params: [address, slotAddr, blockTag],
+      id: randomUUID().toLowerCase(),
     }
 
     try {
