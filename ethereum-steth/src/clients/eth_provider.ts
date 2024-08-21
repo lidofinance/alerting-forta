@@ -131,11 +131,11 @@ export class ETHProvider
         this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusFail }).inc()
         end({ status: StatusFail })
 
-        throw new NetworkError(e, `Could not call StakingRouterETHDeposited`)
+        throw new NetworkError(e, `Could not call UnbufferedEvents`)
       }
     }
 
-    const unbufferedBatchSize = 1_000
+    const unbufferedBatchSize = 500
     const promises = []
     for (let i = startBlock; i <= endBlock; i += unbufferedBatchSize) {
       const start = i
@@ -336,7 +336,7 @@ export class ETHProvider
     }
 
     const chunkPromises: Promise<void>[] = []
-    const MAX_REQUESTS_CHUNK_SIZE = 875
+    const MAX_REQUESTS_CHUNK_SIZE = 500
     const out = new DataRW<WithdrawalRequest>([])
 
     for (let i = 0; i < requestIds.length; i += MAX_REQUESTS_CHUNK_SIZE) {
@@ -995,7 +995,7 @@ export class ETHProvider
     try {
       const data = await retryAsync<string>(
         async (): Promise<string> => {
-          const response: Response = await fetch(`https://eth.drpc.org`, {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1067,7 +1067,7 @@ export class ETHProvider
     try {
       const data = await retryAsync<string>(
         async (): Promise<string> => {
-          const response: Response = await fetch(`https://eth.drpc.org`, {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
