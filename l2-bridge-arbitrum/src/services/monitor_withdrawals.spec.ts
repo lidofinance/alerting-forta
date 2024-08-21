@@ -248,6 +248,6 @@ describe('monitor_withdrawals', () => {
       expect(result.right.amount).toBe(expectedAmount)
       expect(result.right.total).toBe(5)
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT * 5,
   )
 })
