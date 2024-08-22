@@ -9,8 +9,27 @@ import { getFindingOfBadSplitWalletParams, SplitWalletParams } from "./utils";
 
 export const name = "SplitterWrapper";
 
-const { OBOL_LIDO_SPLIT_FACTORY_CLUSTERS, SPLIT_MAIN_0XSPLIT_ADDRESS } =
-  requireWithTier<typeof Constants>(module, `./constants`, RedefineMode.Merge);
+const {
+  OBOL_LIDO_SPLIT_FACTORY_CLUSTERS,
+  SPLIT_MAIN_0XSPLIT_ADDRESS,
+  ARAGON_AGENT_ADDRESS,
+} = requireWithTier<typeof Constants>(
+  module,
+  `./constants`,
+  RedefineMode.Merge,
+);
+
+const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
+
+const createSplitWalletIface = new ethers.utils.Interface([
+  "function createSplit(address[] accounts,uint32[] percentAllocations,uint32 distributorFee,address controller)",
+]);
+
+const splitWalletContract = new ethers.Contract(
+  SPLIT_MAIN_0XSPLIT_ADDRESS,
+  SPLIT_MAIN_ABI,
+  ethersProvider,
+);
 
 class ObolLidoSplitFactoryCluster {
   public readonly contract: ethers.Contract;
@@ -44,8 +63,11 @@ class ObolLidoSplitFactoryCluster {
         continue;
       }
 
-      const malformedSplitWalletParams =
-        await handleCreateObolLidoSplitEvent(splitWalletAddress);
+      const malformedSplitWalletParams = await handleCreateObolLidoSplitEvent(
+        splitWalletAddress,
+        splitWalletContract,
+        createSplitWalletIface,
+      );
       if (malformedSplitWalletParams) {
         findings.push(
           getFindingOfBadSplitWalletParams(
@@ -60,18 +82,6 @@ class ObolLidoSplitFactoryCluster {
     return findings;
   }
 }
-
-const clusterSplitWalletFactories: ObolLidoSplitFactoryCluster[] = [];
-
-const createSplitWalletIface = new ethers.utils.Interface([
-  "function createSplit(address[] accounts,uint32[] percentAllocations,uint32 distributorFee,address controller)",
-]);
-
-const splitWalletContract = new ethers.Contract(
-  SPLIT_MAIN_0XSPLIT_ADDRESS,
-  SPLIT_MAIN_ABI,
-  ethersProvider,
-);
 
 export async function initialize(
   currentBlock: number,
@@ -100,8 +110,10 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   return findings.flat();
 }
 
-async function handleCreateObolLidoSplitEvent(
+export async function handleCreateObolLidoSplitEvent(
   splitWalletAddress: string,
+  splitWalletContract: ethers.Contract,
+  createSplitWalletIface: ethers.utils.Interface,
 ): Promise<SplitWalletParams | null> {
   const filterCreateSplit =
     splitWalletContract.filters.CreateSplit(splitWalletAddress);
@@ -132,9 +144,24 @@ async function handleCreateObolLidoSplitEvent(
     return splitWalletParams;
   }
 
-  if (totalPercent % accounts.length === 0) {
-    const is100percent = percentAllocations.some(
-      (percent) => percentAllocations[0] !== percent,
+  const hasException = accounts.includes(ARAGON_AGENT_ADDRESS);
+
+  if (hasException) {
+    const nonAgentAllocations = accounts
+      .map((account, index) =>
+        account === ARAGON_AGENT_ADDRESS ? 0 : percentAllocations[index],
+      )
+      .reduce((acc, percent) => acc + percent, 0);
+
+    if (
+      nonAgentAllocations !==
+      1e6 - percentAllocations[accounts.indexOf(ARAGON_AGENT_ADDRESS)]
+    ) {
+      return splitWalletParams;
+    }
+  } else if (totalPercent % accounts.length === 0) {
+    const is100percent = percentAllocations.every(
+      (percent) => percentAllocations[0] === percent,
     );
     if (!is100percent) {
       return splitWalletParams;
