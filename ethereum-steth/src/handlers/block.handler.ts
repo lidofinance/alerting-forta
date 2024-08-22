@@ -6,8 +6,10 @@ import { ETHProvider } from '../clients/eth_provider'
 import { BlockDto } from '../entity/events'
 import { BlockEvent, EvaluateBlockRequest, EvaluateBlockResponse, ResponseStatus } from '../generated/proto/agent_pb'
 import { Finding } from '../generated/proto/alert_pb'
+import { AaveSrv } from '../services/aave/Aave.srv'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
 import { HealthChecker } from '../services/health-checker/health-checker.srv'
+import { PoolBalanceSrv } from '../services/pools-balances/pool-balance.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
 import { StorageWatcherSrv } from '../services/storage-watcher/StorageWatcher.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
@@ -21,11 +23,13 @@ const MINUTES_6 = 60 * 6
 export class BlockHandler {
   private logger: Logger
   private metrics: Metrics
-  private StethOperationSrv: StethOperationSrv
-  private WithdrawalsSrv: WithdrawalsSrv
-  private GateSealSrv: GateSealSrv
+  private stethOperationSrv: StethOperationSrv
+  private withdrawalsSrv: WithdrawalsSrv
+  private gateSealSrv: GateSealSrv
   private VaultSrv: VaultSrv
   private storageWatcher: StorageWatcherSrv
+  private aaveSrv: AaveSrv
+  private poolBalanceSrv: PoolBalanceSrv
   private healthChecker: HealthChecker
 
   private onAppStartFindings: Finding[] = []
@@ -39,17 +43,21 @@ export class BlockHandler {
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
     storageWatcher: StorageWatcherSrv,
+    aaveSrv: AaveSrv,
+    poolBalanceSrv: PoolBalanceSrv,
     healthChecker: HealthChecker,
     onAppStartFindings: Finding[],
     ethProvider: ETHProvider,
   ) {
     this.logger = logger
     this.metrics = metrics
-    this.StethOperationSrv = StethOperationSrv
-    this.WithdrawalsSrv = WithdrawalsSrv
-    this.GateSealSrv = GateSealSrv
+    this.stethOperationSrv = StethOperationSrv
+    this.withdrawalsSrv = WithdrawalsSrv
+    this.gateSealSrv = GateSealSrv
     this.VaultSrv = VaultSrv
     this.storageWatcher = storageWatcher
+    this.aaveSrv = aaveSrv
+    this.poolBalanceSrv = poolBalanceSrv
     this.healthChecker = healthChecker
     this.onAppStartFindings = onAppStartFindings
     this.ethProvider = ethProvider
@@ -106,14 +114,16 @@ export class BlockHandler {
 
       const [bufferedEthFindings, withdrawalsFindings, gateSealFindings, vaultFindings, storageWatcherFindings] =
         await Promise.all([
-          this.StethOperationSrv.handleBlock(blockDtoEvent),
-          this.WithdrawalsSrv.handleBlock(blockDtoEvent),
-          this.GateSealSrv.handleBlock(blockDtoEvent),
+          this.stethOperationSrv.handleBlock(blockDtoEvent),
+          this.withdrawalsSrv.handleBlock(blockDtoEvent),
+          this.gateSealSrv.handleBlock(blockDtoEvent),
           this.VaultSrv.handleBlock(blockDtoEvent),
-          this.storageWatcher.handleBlock(block.getHash()),
+          this.storageWatcher.handleBlock(blockDtoEvent),
+          this.aaveSrv.handleBlock(blockDtoEvent),
+          this.poolBalanceSrv.handleBlock(blockDtoEvent),
         ])
 
-      const WithdrawalStat = await this.WithdrawalsSrv.getStatisticString()
+      const WithdrawalStat = await this.withdrawalsSrv.getStatisticString()
       const stat: string = E.isLeft(WithdrawalStat) ? WithdrawalStat.left.message : WithdrawalStat.right
 
       findings.push(
@@ -131,7 +141,7 @@ export class BlockHandler {
 
       this.logger.info(stat)
 
-      const share = this.StethOperationSrv.getStorage().getShareRate()
+      const share = this.stethOperationSrv.getStorage().getShareRate()
       this.logger.info(`\tShare rate: ${share.amount.toFixed(4)} on block: ${share.blockNumber}`)
 
       const blockResponse = new EvaluateBlockResponse()

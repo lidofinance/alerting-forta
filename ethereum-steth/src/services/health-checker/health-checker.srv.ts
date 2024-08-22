@@ -35,11 +35,15 @@ export class HealthChecker {
     let errCount: number = 0
     for (const f of findings) {
       if (f.getAlertid() === NetworkErrorFinding) {
-        this.logger.warn(f.getName() + `: ` + f.getMetadataMap()['name'], {
-          desc: f.getDescription(),
-          msg: f.getMetadataMap()['message'],
-          stack: f.getMetadataMap()['stack'],
-        })
+        const m = f.getMetadataMap()
+        const errName = m.get('name')
+        const errMessage = m.get('message')
+        const errStack = m.get('stack')
+
+        const warnLine =
+          `Finding: ${f.getName()}: ${f.getDescription()}\n` + `NetworkErr: ${errName}, ${errMessage}, ${errStack}`
+
+        this.logger.warn(warnLine, errStack)
         errCount += 1
 
         this.metrics.networkErrors.inc()

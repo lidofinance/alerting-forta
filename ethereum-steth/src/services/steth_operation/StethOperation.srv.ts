@@ -522,4 +522,8 @@ export class StethOperationSrv {
   public getStorage(): StethOperationCache {
     return this.cache
   }
+
+  public getLidoStethAddress(): string {
+    return this.lidoStethAddress.toLowerCase()
+  }
 }
