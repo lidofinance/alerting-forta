@@ -88,10 +88,7 @@ export class PoolBalanceSrv {
     this.cache.curvePoolSize = this.cache.curveEthBalance.plus(this.cache.curveStEthBalance)
 
     this.cache.lastReportedCurveImbalance = this.calcImbalance(ethBalancePrev.right, stEthBalancePrev.right)
-
-    if (Math.abs(this.cache.lastReportedCurveImbalance) > PERCENT_10) {
-      this.cache.lastReportedCurveImbalanceTimestamp = blockDto.timestamp
-    }
+    this.cache.lastReportedCurveImbalanceTimestamp = blockDto.timestamp
 
     this.cache.lastReportedCurveStEthToEthPrice = curveStEthToEthPrice.right.toNumber()
     this.cache.lastReportedCurvePriceChangeLevel =
@@ -366,7 +363,7 @@ export class PoolBalanceSrv {
     return out
   }
 
-  private calcImbalance(balance1: BigNumber, balance2: BigNumber): number {
+  public calcImbalance(balance1: BigNumber, balance2: BigNumber): number {
     const totalSize = balance1.plus(balance2)
     const percent1 = balance1.div(totalSize).times(100)
     const percent2 = balance2.div(totalSize).times(100)
@@ -410,11 +407,16 @@ export class PoolBalanceSrv {
   }
 
   public getPoolInfo(): string {
-    let line: string = 'Pool balance info\n'
-
-    for (const [key, value] of this.cache.getState()) {
-      line += '\t' + key + ' ' + value + '\n'
-    }
+    let line: string = '\nPool balance info:\n'
+    line +=
+      `\tCurve:\n` +
+      `\t\tEthBalance: ${this.cache.curveEthBalance.div(ETH_DECIMALS).toFixed(4)}\n` +
+      `\t\tStEthBalance: ${this.cache.curveStEthBalance.div(ETH_DECIMALS).toFixed(4)}\n` +
+      `\t\tPoolSize: ${this.cache.curvePoolSize.div(ETH_DECIMALS).toFixed(4)}\n` +
+      `\t\tStEth:Eth: ${this.cache.lastReportedCurveStEthToEthPrice.toFixed(4)}}\n` +
+      `\t\tImbalance: ${this.calcImbalance(this.cache.curveEthBalance, this.cache.curveStEthBalance).toFixed(4)}}%\n\n` +
+      `\tChainlink\n` +
+      `\t\tStEth:Eth: ${this.cache.lastReportedChainlinkPriceChangeLevel.toString()}`
 
     return line
   }
