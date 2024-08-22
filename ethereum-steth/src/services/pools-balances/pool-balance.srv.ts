@@ -18,7 +18,7 @@ const PRICE_CHANGE_STEP = 0.005
 const PRICE_CHANGE_0_995 = 0.995
 const PRICE_CHANGE_0_98 = 0.98
 
-const WEEK_1 = 60 * 60 * 24 * 7 // 1 week
+export const WEEK_1 = 60 * 60 * 24 * 7 // 1 week
 const MINUTES_10 = 60 * 10
 
 const CHAINLINK_STETH_ETH_PAGE = 'https://data.chain.link/ethereum/mainnet/crypto-eth/steth-eth'
