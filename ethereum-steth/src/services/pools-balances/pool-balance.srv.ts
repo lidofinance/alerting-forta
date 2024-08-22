@@ -413,8 +413,8 @@ export class PoolBalanceSrv {
       `\t\tEthBalance: ${this.cache.curveEthBalance.div(ETH_DECIMALS).toFixed(4)}\n` +
       `\t\tStEthBalance: ${this.cache.curveStEthBalance.div(ETH_DECIMALS).toFixed(4)}\n` +
       `\t\tPoolSize: ${this.cache.curvePoolSize.div(ETH_DECIMALS).toFixed(4)}\n` +
-      `\t\tStEth:Eth: ${this.cache.lastReportedCurveStEthToEthPrice.toFixed(4)}}\n` +
-      `\t\tImbalance: ${this.calcImbalance(this.cache.curveEthBalance, this.cache.curveStEthBalance).toFixed(4)}}%\n\n` +
+      `\t\tStEth:Eth: ${this.cache.lastReportedCurveStEthToEthPrice.toFixed(4)}\n` +
+      `\t\tImbalance: ${this.calcImbalance(this.cache.curveEthBalance, this.cache.curveStEthBalance).toFixed(4)}%\n\n` +
       `\tChainlink\n` +
       `\t\tStEth:Eth: ${this.cache.lastReportedChainlinkPriceChangeLevel.toString()}`
 
