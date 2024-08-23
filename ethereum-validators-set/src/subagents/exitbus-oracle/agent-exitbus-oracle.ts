@@ -33,8 +33,8 @@ import {
 } from "../../common/constants";
 import BigNumber from "bignumber.js";
 import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
-import { CuratedRegistry } from "../../common/curated-registry";
-import { CommunityRegistry } from "../../common/csm-registry";
+import { CommunityRegistryModule } from "../../common/staking-modules/csm-registry";
+import { CuratedRegistryModule } from "../../common/staking-modules/curated-registry";
 
 // re-fetched from history on startup
 let lastReportSubmitTimestamp = 0;
@@ -76,7 +76,7 @@ const log = (text: string) => console.log(`[${name}] ${text}`);
 
 const stakingModulesOperatorRegistry = new Map<
   number,
-  CuratedRegistry | CommunityRegistry
+  CuratedRegistryModule | CommunityRegistryModule
 >();
 
 export async function initialize(
@@ -101,24 +101,17 @@ export async function initialize(
     const moduleName = name as string;
     const moduleAddress = (stakingModuleAddress as string).toLowerCase();
     const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
-    const registryContract = new ethers.Contract(
-      moduleAddress,
-      NODE_OPERATORS_REGISTRY_ABI,
-      ethersProvider,
-    );
 
-    let registry: CommunityRegistry | CuratedRegistry;
+    let registry: CommunityRegistryModule | CommunityRegistryModule;
     if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
-      registry = new CommunityRegistry(
+      registry = new CommunityRegistryModule(
         { moduleAddress, moduleId, moduleName, alertPrefix },
         stakingRouter,
-        registryContract,
       );
     } else {
-      registry = new CuratedRegistry(
+      registry = new CuratedRegistryModule(
         { moduleAddress, moduleId, moduleName, alertPrefix },
         stakingRouter,
-        registryContract,
       );
     }
 
@@ -182,8 +175,8 @@ export async function initialize(
     ).toUTCString()}`,
   );
 
-  for (const nor of stakingModulesOperatorRegistry.values()) {
-    nor.resetOperators();
+  for await (const nor of stakingModulesOperatorRegistry.values()) {
+    await nor.initialize(currentBlock);
   }
 
   return {
@@ -233,8 +226,8 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   // Update NO names each 100 blocks
   if (blockEvent.blockNumber % BLOCK_INTERVAL) {
-    for (const nor of stakingModulesOperatorRegistry.values()) {
-      nor.resetOperators();
+    for await (const nor of stakingModulesOperatorRegistry.values()) {
+      await nor.updateNodeOperatorsInfo(blockEvent.blockNumber);
     }
   }
 
@@ -475,11 +468,7 @@ async function prepareExitsDigest(
     );
     if (stakingModule) {
       stakingModuleName = stakingModule.params.moduleName;
-      const operatorInfo = await stakingModule.getOperatorById(
-        name,
-        blockNumber,
-      );
-      name = operatorInfo.name ?? name;
+      name = stakingModule.getOperatorName(name);
     }
     let moduleDigest =
       digest.get(stakingModuleName) || new Map<string, number>();

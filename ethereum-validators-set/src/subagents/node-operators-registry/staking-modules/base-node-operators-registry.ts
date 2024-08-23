@@ -1,37 +1,29 @@
 import { ethers } from "forta-agent";
-import { NodeOperatorFullInfo } from "../../../common/interfaces";
+import { NodeOperatorFullInfo } from "../../../common/staking-modules/interfaces";
 import {
   EventsOfNotice,
   NodeOperatorModuleParams,
   NodeOperatorShortDigest,
 } from "./interfaces";
-import NODE_OPERATORS_REGISTRY_ABI from "../../../abi/NodeOperatorsRegistry.json";
-import { ethersProvider } from "../../../ethers";
-import BigNumber from "bignumber.js";
+import { BaseRegistryModule } from "../../../common/staking-modules/base-node-operators-registry";
 
-export abstract class BaseRegistryModuleContext {
+export abstract class BaseRegistryModuleContext extends BaseRegistryModule<NodeOperatorModuleParams> {
   public nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
   public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
   public closestPenaltyEndTimestamp = 0;
   public penaltyEndAlertTriggeredAt = 0;
   public stakeShareLimit: number = 0;
-  public readonly contract: ethers.Contract;
-  protected readonly batchSize = 20;
 
   constructor(
     public readonly params: NodeOperatorModuleParams,
     public readonly eventsOfNotice: EventsOfNotice[],
     protected readonly stakingRouter: ethers.Contract,
   ) {
-    this.contract = new ethers.Contract(
-      this.params.moduleAddress,
-      NODE_OPERATORS_REGISTRY_ABI,
-      ethersProvider,
-    );
+    super(params, stakingRouter);
   }
 
   async initialize(currentBlock: number) {
-    const operatorsMap = await this.fetchAllNodeOperatorSummaries(currentBlock);
+    const operatorsMap = await super.initialize(currentBlock);
 
     for (const [operatorId, summary] of operatorsMap.entries()) {
       this.nodeOperatorDigests.set(String(operatorId), {
@@ -45,13 +37,7 @@ export abstract class BaseRegistryModuleContext {
       });
     }
 
-    await this.updateNodeOperatorsInfo(currentBlock);
-  }
-
-  getOperatorName(nodeOperatorId: string): string {
-    return (
-      this.nodeOperatorNames.get(Number(nodeOperatorId))?.name ?? "undefined"
-    );
+    return operatorsMap;
   }
 
   abstract fetchOperatorName(
@@ -60,52 +46,12 @@ export abstract class BaseRegistryModuleContext {
   ): Promise<string>;
 
   async updateNodeOperatorsInfo(block: number) {
-    const operatorsMap = await this.fetchAllNodeOperatorSummaries(block);
-
     const [srModule] = await this.stakingRouter.functions.getStakingModule(
       this.params.moduleId,
       { blockTag: block },
     );
     this.stakeShareLimit = srModule.stakeShareLimit;
 
-    await Promise.all(
-      Array.from(operatorsMap.keys()).map(async (operatorId: string) => {
-        const name = await this.fetchOperatorName(operatorId, block);
-        const rewardAddress =
-          this.nodeOperatorNames.get(Number(operatorId))?.rewardAddress || "";
-        this.nodeOperatorNames.set(Number(operatorId), {
-          name,
-          rewardAddress,
-        });
-      }),
-    );
-  }
-
-  protected async fetchAllNodeOperatorSummaries(
-    currentBlock: number,
-  ): Promise<Map<string, any>> {
-    const operatorsMap = new Map<string, any>();
-    const [operatorsCountBN] =
-      await this.contract.functions.getNodeOperatorsCount({
-        blockTag: currentBlock,
-      });
-    const operatorsCount = operatorsCountBN.toNumber();
-
-    for (let offset = 0; offset < operatorsCount; offset += this.batchSize) {
-      const batchSize = Math.min(this.batchSize, operatorsCount - offset);
-      const summaries = await Promise.all(
-        Array.from({ length: batchSize }, (_, i) =>
-          this.contract.functions.getNodeOperatorSummary(offset + i, {
-            blockTag: currentBlock,
-          }),
-        ),
-      );
-
-      summaries.forEach((summary, index) => {
-        operatorsMap.set(String(offset + index), summary);
-      });
-    }
-
-    return operatorsMap;
+    return super.updateNodeOperatorsInfo(block);
   }
 }

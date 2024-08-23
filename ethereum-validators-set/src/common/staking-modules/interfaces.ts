@@ -1,3 +1,10 @@
+export interface NodeOperatorModuleParams {
+  moduleId: number;
+  moduleAddress: string;
+  moduleName: string;
+  alertPrefix: string;
+}
+
 export interface NodeOperatorFullInfo {
   name: string;
   rewardAddress: string;
@@ -12,9 +19,4 @@ export interface NodeOperatorSummary {
   totalExitedValidators: number;
   totalDepositedValidators: number;
   depositableValidatorsCount: number;
-}
-
-export interface NodeOperatorRegistryModule<OperatorDataType> {
-  getOperatorById(operatorId: string, block: number): Promise<OperatorDataType>;
-  resetOperators(): void;
 }
