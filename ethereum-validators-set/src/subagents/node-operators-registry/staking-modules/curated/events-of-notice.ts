@@ -1,14 +1,8 @@
 import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
-import { etherscanAddress } from "../../common/utils";
-import { ETH_DECIMALS } from "../../common/constants";
-
-interface StakingModule {
-  moduleId: number;
-  moduleAddress: string;
-  alertPrefix: string;
-  moduleName: string;
-}
+import { etherscanAddress } from "../../../../common/utils";
+import { ETH_DECIMALS } from "../../../../common/constants";
+import { StakingModule } from "../interfaces";
 
 export const getEventsOfNoticeForStakingModule = (
   stakingModule: StakingModule,

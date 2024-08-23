@@ -17,12 +17,13 @@ import {
 import type * as Constants from "./constants";
 import STAKING_ROUTER_ABI from "../../abi/StakingRouter.json";
 import OBOL_LIDO_SPLIT_FACTORY_ABI from "../../abi/obol-splits/ObolLidoSplitFactory.json";
-import NODE_OPERATORS_REGISTRY_ABI from "../../abi/NodeOperatorsRegistry.json";
 import EASY_TRACK_ABI from "../../abi/EasyTrack.json";
 import { ethersProvider } from "../../ethers";
-import { getEventsOfNoticeForStakingModule } from "./utils";
 import BigNumber from "bignumber.js";
-import { NodeOperatorFullInfo } from "../../common/interfaces";
+import { BaseRegistryModuleContext } from "./staking-modules/base-node-operators-registry";
+import { CuratedRegistryModuleContext } from "./staking-modules/curated/curated-registry";
+import { CommunityRegistryModuleContext } from "./staking-modules/csm/csm-registry";
+import { NodeOperatorShortDigest } from "./staking-modules/interfaces";
 const {
   EASY_TRACK_ADDRESS,
   STAKING_ROUTER_ADDRESS,
@@ -51,31 +52,6 @@ const {
 
 export const name = "NodeOperatorsRegistry";
 
-interface NodeOperatorShortDigest {
-  stuck: number;
-  refunded: number;
-  exited: number;
-  isStuckRefunded: boolean;
-  stuckPenaltyEndTimestamp: number;
-}
-
-interface EventsOfNotice {
-  address: string;
-  event: string;
-  alertId: string;
-  description: (args: any, names: Map<number, string>) => string;
-  severity: FindingSeverity;
-}
-
-interface NodeOperatorModuleParams {
-  moduleId: number;
-  moduleAddress: string;
-  alertPrefix: string;
-  moduleName: string;
-  setVettedValidatorsLimitsAddress?: string;
-  eventsOfNotice: EventsOfNotice[];
-}
-
 class ObolLidoSplitFactoryCluster {
   public readonly contract: ethers.Contract;
 
@@ -91,105 +67,7 @@ class ObolLidoSplitFactoryCluster {
   }
 }
 
-class NodeOperatorsRegistryModuleContext {
-  public nodeOperatorDigests = new Map<string, NodeOperatorShortDigest>();
-  public nodeOperatorNames = new Map<number, NodeOperatorFullInfo>();
-  public closestPenaltyEndTimestamp = 0;
-  public penaltyEndAlertTriggeredAt = 0;
-  public stakeShareLimit: number = 0;
-  public readonly contract: ethers.Contract;
-
-  constructor(
-    public readonly params: NodeOperatorModuleParams,
-    private readonly stakingRouter: ethers.Contract,
-  ) {
-    this.contract = new ethers.Contract(
-      this.params.moduleAddress,
-      NODE_OPERATORS_REGISTRY_ABI,
-      ethersProvider,
-    );
-  }
-
-  async initialize(currentBlock: number) {
-    const [operators] =
-      await this.stakingRouter.functions.getAllNodeOperatorDigests(
-        this.params.moduleId,
-        { blockTag: currentBlock },
-      );
-
-    const operatorsSummaries = await Promise.all(
-      operators.map((digest: any) =>
-        this.contract.functions.getNodeOperatorSummary(digest.id, {
-          blockTag: currentBlock,
-        }),
-      ),
-    );
-
-    const stuckOperatorsEndTimestampMap = new Map<String, number>(
-      operators.map((digest: any, index: number) => [
-        String(digest.id),
-        Number(operatorsSummaries[index].stuckPenaltyEndTimestamp),
-      ]),
-    );
-
-    for (const digest of operators) {
-      this.nodeOperatorDigests.set(String(digest.id), {
-        stuck: Number(digest.summary.stuckValidatorsCount),
-        refunded: Number(digest.summary.refundedValidatorsCount),
-        exited: Number(digest.summary.totalExitedValidators),
-        isStuckRefunded:
-          Number(digest.summary.refundedValidatorsCount) >=
-          Number(digest.summary.stuckValidatorsCount),
-        stuckPenaltyEndTimestamp:
-          stuckOperatorsEndTimestampMap.get(String(digest.id)) ?? 0,
-      });
-    }
-
-    await this.updateNodeOperatorsInfo(currentBlock);
-  }
-
-  getOperatorName(nodeOperatorId: string): string {
-    return (
-      this.nodeOperatorNames.get(Number(nodeOperatorId))?.name ?? "undefined"
-    );
-  }
-
-  async updateNodeOperatorsInfo(block: number) {
-    const nodeOperatorsRegistry = new ethers.Contract(
-      this.params.moduleAddress,
-      NODE_OPERATORS_REGISTRY_ABI,
-      ethersProvider,
-    );
-
-    const [operators] =
-      await this.stakingRouter.functions.getAllNodeOperatorDigests(
-        this.params.moduleId,
-        { blockTag: block },
-      );
-    const [srModule] = await this.stakingRouter.functions.getStakingModule(
-      this.params.moduleId,
-      { blockTag: block },
-    );
-    this.stakeShareLimit = srModule.stakeShareLimit;
-
-    await Promise.all(
-      operators.map(async (operator: any) => {
-        const { name, rewardAddress } =
-          await nodeOperatorsRegistry.getNodeOperator(
-            String(operator.id),
-            true,
-            { blockTag: block },
-          );
-        this.nodeOperatorNames.set(Number(operator.id), {
-          name,
-          rewardAddress,
-        });
-      }),
-    );
-  }
-}
-
-const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const stakingModulesOperatorRegistry: BaseRegistryModuleContext[] = [];
 const stakingRouter = new ethers.Contract(
   STAKING_ROUTER_ADDRESS,
   STAKING_ROUTER_ABI,
@@ -223,30 +101,40 @@ export async function initialize(
     const moduleAddress = (stakingModuleAddress as string).toLowerCase();
     const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
 
-    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
-      continue;
-    }
-
-    const setVettedValidatorsLimitsAddress =
-      moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
-        ? SET_VETTED_VALIDATORS_LIMITS_ADDRESS
-        : undefined;
-    const stakingModule = new NodeOperatorsRegistryModuleContext(
-      {
-        moduleId,
-        moduleAddress,
-        moduleName,
-        alertPrefix,
-        setVettedValidatorsLimitsAddress,
-        eventsOfNotice: getEventsOfNoticeForStakingModule({
+    let stakingModule: BaseRegistryModuleContext;
+    if (moduleId === SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+      stakingModule = new CuratedRegistryModuleContext(
+        {
           moduleId,
           moduleAddress,
           moduleName,
           alertPrefix,
-        }),
-      },
-      stakingRouter,
-    );
+          setVettedValidatorsLimitsAddress:
+            SET_VETTED_VALIDATORS_LIMITS_ADDRESS,
+        },
+        stakingRouter,
+      );
+    } else if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+      stakingModule = new CommunityRegistryModuleContext(
+        {
+          moduleId,
+          moduleAddress,
+          moduleName,
+          alertPrefix,
+        },
+        stakingRouter,
+      );
+    } else {
+      stakingModule = new CuratedRegistryModuleContext(
+        {
+          moduleId,
+          moduleAddress,
+          moduleName,
+          alertPrefix,
+        },
+        stakingRouter,
+      );
+    }
 
     stakingModulesOperatorRegistry.push(stakingModule);
   }
@@ -264,7 +152,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   for (const norContext of stakingModulesOperatorRegistry) {
-    handleEventsOfNotice(txEvent, findings, norContext.params.eventsOfNotice);
+    handleEventsOfNotice(txEvent, findings, norContext.eventsOfNotice);
 
     const stuckEvents = txEvent.filterLog(
       NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
@@ -285,7 +173,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 async function handleSetRewardAddress(
   txEvent: TransactionEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   if (
     norContext.params.moduleId !== SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID
@@ -382,7 +270,7 @@ function handleExitedCountChanged(
   txEvent: TransactionEvent,
   stuckEvents: LogDescription[],
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   const exitEvents = txEvent.filterLog(
     NODE_OPERATORS_REGISTRY_EXITED_CHANGED_EVENT,
@@ -454,7 +342,7 @@ function handleExitedCountChanged(
 function handleStuckStateChanged(
   events: LogDescription[],
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   if (!events) return;
   for (const event of events) {
@@ -512,7 +400,7 @@ function handleStuckStateChanged(
 async function handleSigningKeysRemoved(
   txEvent: TransactionEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   const moduleAddress = norContext.params.moduleAddress;
   if (moduleAddress in txEvent.addresses) {
@@ -550,7 +438,7 @@ async function handleSigningKeysRemoved(
 async function handleActiveMotionsWhenSigningKeysRemoved(
   txEvent: TransactionEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   const { setVettedValidatorsLimitsAddress } = norContext.params;
   if (!setVettedValidatorsLimitsAddress) {
@@ -591,7 +479,7 @@ async function handleActiveMotionsWhenSigningKeysRemoved(
 function handleStakeLimitSet(
   txEvent: TransactionEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   const moduleAddress = norContext.params.moduleAddress;
   if (moduleAddress in txEvent.addresses) {
@@ -677,7 +565,7 @@ async function getTotalActiveValidators(blockEvent: BlockEvent) {
 async function handleStakingModuleTargetShare(
   blockEvent: BlockEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
   totalActiveValidators: number,
 ) {
   const summary = await norContext.contract.getStakingModuleSummary({
@@ -739,7 +627,7 @@ async function handleStakingModuleTargetShare(
 async function handleStuckPenaltyEnd(
   blockEvent: BlockEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   let description = "";
   let currentClosestPenaltyEndTimestamp = 0;

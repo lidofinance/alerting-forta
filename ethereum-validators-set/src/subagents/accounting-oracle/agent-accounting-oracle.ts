@@ -140,7 +140,6 @@ export async function handleMainDataReportSubmitted(
       MAX_ORACLE_REPORT_EXTRA_DATA_SUBMIT_AFTER_MAIN_DATA_DELAY &&
       now - lastReportExtraDataSubmitOverdueTimestamp >= TRIGGER_PERIOD)
   ) {
-
     const mainDataSubmits = await getReportMainDataSubmits(
       blockEvent.blockNumber - Math.ceil((24 * ONE_HOUR) / SECONDS_PER_SLOT),
       blockEvent.blockNumber - 1,
@@ -161,7 +160,8 @@ export async function handleMainDataReportSubmitted(
 
         const timeSinceLastExtraSubmit =
           now - lastReportExtraDataSubmitTimestamp;
-        const itemsProcessed = parseInt(lastExtraDataSubmit.args?.itemsProcessed) ?? 0;
+        const itemsProcessed =
+          parseInt(lastExtraDataSubmit.args?.itemsProcessed) ?? 0;
         const itemsCount = parseInt(lastExtraDataSubmit.args?.itemsCount) ?? 0;
 
         if (
