@@ -6,7 +6,6 @@ import { BlockDto, EventOfNotice, handleEventsOfNotice, TransactionDto } from '.
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { WithdrawalRequest } from '../../entity/withdrawal_request'
 import { Finding } from '../../generated/proto/alert_pb'
-import { WithdrawalClaimedEvent } from '../../generated/typechain/WithdrawalQueueERC721'
 import { ETH_DECIMALS } from '../../utils/constants'
 import { dbAlert, networkAlert } from '../../utils/errors'
 import { LIDO_TOKEN_REBASED_EVENT } from '../../utils/events/lido_events'
@@ -62,8 +61,6 @@ export abstract class IWithdrawalsClient {
   public abstract getEthBalance(address: string, block: number): Promise<E.Either<Error, BigNumber>>
 
   public abstract getStakingLimitInfo(blockNumber: number): Promise<E.Either<Error, StakingLimitInfo>>
-
-  public abstract getClaimedEvents(currentBlock: number): Promise<E.Either<Error, WithdrawalClaimedEvent[]>>
 }
 
 export class WithdrawalsSrv {

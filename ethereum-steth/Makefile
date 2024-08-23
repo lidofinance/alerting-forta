@@ -1,4 +1,7 @@
 # Makefile
+.PHONY: steth
+steth:
+	docker build -t monitoring/steth -f Dockerfile .
 
 .PHONY: gen_proto_prod
 gen_proto_prod:

@@ -19,7 +19,7 @@ import { Address } from '../../utils/constants'
 import { Config } from '../../utils/env/env'
 import { Metrics } from '../../utils/metrics/metrics'
 import { PoolBalanceCache } from './pool-balance.cache'
-import { PoolBalanceSrv } from './pool-balance.srv'
+import { PoolBalanceSrv, WEEK_1 } from './pool-balance.srv'
 
 const TEST_TIMEOUT = 180_000
 
@@ -75,7 +75,7 @@ describe('agent-pools-balances functional tests', () => {
   test(
     'should process block with imbalanced Curve pool',
     async () => {
-      const blockNumber = 16804419
+      const blockNumber = 16_804_419
 
       const block = await ethProvider.getBlock(blockNumber)
       const initBlock = await ethProvider.getBlock(blockNumber - 10)
@@ -98,6 +98,8 @@ describe('agent-pools-balances functional tests', () => {
       const poolBalanceSrv = new PoolBalanceSrv(logger, ethClient, cache)
 
       await poolBalanceSrv.init(initBlockDto)
+      cache.lastReportedCurveImbalanceTimestamp -= WEEK_1
+
       const result = await poolBalanceSrv.handleBlock(blockDto)
 
       const expected = new Finding()
