@@ -52,7 +52,7 @@ export const getEventsOfNoticeForStakingModule = (
         `${moduleName} module ` +
         `Node operator [${args.nodeOperatorId} ${names.get(
           Number(args.nodeOperatorId),
-        )}] active status set to ${args.active}`,
+        )?.name}] active status set to ${args.active}`,
       severity: FindingSeverity.Info,
     },
     {
