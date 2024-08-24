@@ -62,7 +62,7 @@ interface EventsOfNotice {
   address: string;
   event: string;
   alertId: string;
-  description: (args: any, names: Map<number, any>) => string;
+  description: (args: any, names: Map<number, NodeOperatorFullInfo>) => string;
   severity: FindingSeverity;
 }
 
