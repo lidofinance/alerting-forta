@@ -1,6 +1,6 @@
 import type { Config } from '@jest/types'
-import { L2Network, skipNetwork } from '../src/common/alert-bundles'
-import { globalExtended, portsByNetwork, paramsByNetwork, spawnTestNode } from './test.helpers'
+import { L2Network } from '../src/common/alert-bundles'
+import { globalExtended, portsByNetwork, paramsByNetwork, spawnTestNode, skipNetwork } from './test.helpers'
 
 
 module.exports = async function (globalConfig: Config.GlobalConfig, projectConfig: Config.ProjectConfig) {

@@ -31,7 +31,6 @@ export class L2BlocksSrv {
     }
 
     const cachedL2Block = await this.repo.getLastL2Block()
-    console.debug({ cachedL2Block })
     if (E.isLeft(cachedL2Block)) {
       return cachedL2Block
     }

@@ -1,8 +1,8 @@
 import { strict as assert } from 'node:assert'
 import { expect } from '@jest/globals'
-import { L2Network, getEventBasedAlerts, skipNetwork } from '../src/common/alert-bundles'
+import { L2Network, getEventBasedAlerts } from '../src/common/alert-bundles'
 
-import { globalExtended, paramsByNetwork, getBlockEvent, consoleDebugFinding, getAlertsString } from './test.helpers'
+import { globalExtended, paramsByNetwork, getBlockEvent, consoleDebugFinding, getAlertsString, skipNetwork } from './test.helpers'
 import { SECOND_MS } from '../src/common/utils/time'
 
 import { Agent } from '../src/common/agent'
@@ -42,7 +42,7 @@ describe('Bundle tests', () => {
         // expect(findings.length).toBe(1)
         expect(findings.length).toBeGreaterThanOrEqual(1)
 
-        app.logger.info(`DONE. ${alert.alertId} for ${network} at ${alert.address}: ${getAlertsString(findings)}`)
+        app.logger.info(`🟢 ${alert.alertId} for ${network} at ${alert.address}: ${getAlertsString(findings)}`)
 
         // await app.l2Provider.send('evm_revert', [snapshotId])
       }

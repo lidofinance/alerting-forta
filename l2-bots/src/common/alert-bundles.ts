@@ -22,21 +22,6 @@ const MIN_GOV_EXECUTOR_ABI = [
   'function getEthereumGovernanceExecutor() view returns (address)',
 ]
 
-
-export function skipNetwork(network: L2Network) {
-  if (network === L2Network.Default
-   || network === L2Network.ZkSync
-   || network === L2Network.Scroll
-   || network === L2Network.Optimism
-  //  || network === L2Network.Mantle
-  ) {
-    return true
-  } else {
-    return false
-  }
-}
-
-
 export enum L2Network {
   Default = 'Default',
   Optimism = 'Optimism',

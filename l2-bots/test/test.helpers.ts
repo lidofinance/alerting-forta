@@ -11,7 +11,7 @@ import { ERC20Short__factory } from '../src/common/generated'
 // import { MonitorWithdrawals } from '../src/common/services/monitor_withdrawals'
 import { L2Network } from '../src/common/alert-bundles'
 import { mantleConstants } from '../src/mantle/config'
-// import { optimismConstants } from '../src/optimism/config'
+import { optimismConstants } from '../src/optimism/config'
 // import { scrollConstants } from '../../scroll/src/agent'
 // import { mantleConstants } from '../../mantle/src/agent'
 // import { zksyncConstants } from '../../zksync/src/agent'
@@ -37,15 +37,30 @@ export type GlobalThisExtended = (typeof globalThis) & {
   testNodes: { [key: string]: { process: ChildProcess, rpcUrl: string } }
 }
 
+
+export function skipNetwork(network: L2Network) {
+  if (network === L2Network.Default
+   || network === L2Network.ZkSync
+   || network === L2Network.Scroll
+  //  || network === L2Network.Optimism
+  //  || network === L2Network.Mantle
+  ) {
+    return true
+  } else {
+    return false
+  }
+}
+
+
 export const portsByNetwork: { [key: string]: number } = {
   [L2Network.Mantle]: 8651,
   // [L2Network.ZkSync]: 8652,
   // [L2Network.Scroll]: 8653,
-  // [L2Network.Optimism]: 8654,
+  [L2Network.Optimism]: 8654,
 }
 
 export const paramsByNetwork: { [key: string]: Constants } = {
-  // [L2Network.Optimism]: undefined, // optimismConstants,
+  [L2Network.Optimism]: optimismConstants, // optimismConstants,
   [L2Network.Mantle]: mantleConstants,
   // [L2Network.ZkSync]: undefined, // zksyncConstants,
   // [L2Network.Scroll]: undefined, // scrollConstants,
