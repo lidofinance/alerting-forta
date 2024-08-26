@@ -2,6 +2,7 @@ import { FindingSeverity } from "forta-agent";
 import BigNumber from "bignumber.js";
 import { etherscanAddress } from "../../common/utils";
 import { ETH_DECIMALS } from "../../common/constants";
+import { NodeOperatorFullInfo } from "../../common/interfaces";
 
 interface StakingModule {
   moduleId: number;
@@ -47,11 +48,11 @@ export const getEventsOfNoticeForStakingModule = (
         "event NodeOperatorActiveSet(uint256 indexed nodeOperatorId, bool active)",
       alertId: `${alertPrefix}NODE-OPERATOR-ACTIVE-SET`,
       name: `ℹ️ ${moduleName} NO Registry: Node operator active set`,
-      description: (args: any, names: Map<number, string>) =>
+      description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} module ` +
-        `Node operator [${args.nodeOperatorId} ${names.get(
-          Number(args.nodeOperatorId),
-        )}] active status set to ${args.active}`,
+        `Node operator [${args.nodeOperatorId} ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] active status set to ${args.active}`,
       severity: FindingSeverity.Info,
     },
     {
@@ -60,11 +61,11 @@ export const getEventsOfNoticeForStakingModule = (
         "event NodeOperatorNameSet(uint256 indexed nodeOperatorId, string name)",
       alertId: `${alertPrefix}NODE-OPERATOR-NAME-SET`,
       name: `ℹ️ ${moduleName} NO Registry: Node operator name set`,
-      description: (args: any, names: Map<number, string>) =>
+      description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} module ` +
-        `Node operator [${args.nodeOperatorId} ${names.get(
-          Number(args.nodeOperatorId),
-        )}] name set to ${args.name}`,
+        `Node operator [${args.nodeOperatorId} ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] name set to ${args.name}`,
       severity: FindingSeverity.Info,
     },
     {
@@ -73,11 +74,11 @@ export const getEventsOfNoticeForStakingModule = (
         "event NodeOperatorRewardAddressSet(uint256 indexed nodeOperatorId, address rewardAddress)",
       alertId: `${alertPrefix}NODE-OPERATOR-REWARD-ADDRESS-SET`,
       name: `ℹ️ ${moduleName} NO Registry: Node operator reward address set`,
-      description: (args: any, names: Map<number, string>) =>
+      description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} module ` +
-        `Node operator [${args.nodeOperatorId} ${names.get(
-          Number(args.nodeOperatorId),
-        )}] reward address set to ${etherscanAddress(args.rewardAddress)}`,
+        `Node operator [${args.nodeOperatorId} ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] reward address set to ${etherscanAddress(args.rewardAddress)}`,
       severity: FindingSeverity.Info,
     },
     {
@@ -86,11 +87,11 @@ export const getEventsOfNoticeForStakingModule = (
         "event NodeOperatorTotalKeysTrimmed(uint256 indexed nodeOperatorId, uint64 totalKeysTrimmed)",
       alertId: `${alertPrefix}NODE-OPERATOR-KEYS-TRIMMED`,
       name: `⚠️ ${moduleName} NO Registry: Node operator total keys trimmed`,
-      description: (args: any, names: Map<number, string>) =>
+      description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} module ` +
-        `Node operator [${args.nodeOperatorId}: ${names.get(
-          Number(args.nodeOperatorId),
-        )}] total keys trimmed ${args.totalKeysTrimmed}`,
+        `Node operator [${args.nodeOperatorId}: ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] total keys trimmed ${args.totalKeysTrimmed}`,
       severity: FindingSeverity.Info,
     },
     {

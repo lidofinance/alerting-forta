@@ -356,3 +356,72 @@ StakingLimit: 0",
   },
 ]
 `;
+
+exports[`agent-node-operators-registry e2e tests should process tx with setting node operator name 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "NODE-OPERATOR-NAME-SET",
+    "description": "Curated module Node operator [23 Galaxy] name set to Galaxy",
+    "labels": [],
+    "metadata": {
+      "args": "23,Galaxy",
+    },
+    "name": "ℹ️ Curated NO Registry: Node operator name set",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "NODE-OPERATOR-NAME-SET",
+    "description": "Curated module Node operator [36 Pier Two] name set to Pier Two",
+    "labels": [],
+    "metadata": {
+      "args": "36,Pier Two",
+    },
+    "name": "ℹ️ Curated NO Registry: Node operator name set",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "NODE-OPERATOR-REWARD-ADDRESS-SET",
+    "description": "Curated module Node operator [23 Galaxy] reward address set to [0x3C3F243263d3106Fdb31eCf2248f9bC82F723c4B](https://etherscan.io/address/0x3C3F243263d3106Fdb31eCf2248f9bC82F723c4B)",
+    "labels": [],
+    "metadata": {
+      "args": "23,0x3C3F243263d3106Fdb31eCf2248f9bC82F723c4B",
+    },
+    "name": "ℹ️ Curated NO Registry: Node operator reward address set",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "NODE-OPERATOR-REWARD-ADDRESS-SET",
+    "description": "Curated module Node operator [36 Pier Two] reward address set to [0x35921FB43cB92F5Bfef7cBA1e97Eb5A21Fc2d353](https://etherscan.io/address/0x35921FB43cB92F5Bfef7cBA1e97Eb5A21Fc2d353)",
+    "labels": [],
+    "metadata": {
+      "args": "36,0x35921FB43cB92F5Bfef7cBA1e97Eb5A21Fc2d353",
+    },
+    "name": "ℹ️ Curated NO Registry: Node operator reward address set",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;

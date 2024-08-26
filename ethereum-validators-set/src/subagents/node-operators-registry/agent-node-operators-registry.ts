@@ -62,7 +62,7 @@ interface EventsOfNotice {
   address: string;
   event: string;
   alertId: string;
-  description: (args: any, names: Map<number, string>) => string;
+  description: (args: any, names: Map<number, NodeOperatorFullInfo>) => string;
   severity: FindingSeverity;
 }
 
@@ -269,7 +269,12 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   for (const norContext of stakingModulesOperatorRegistry) {
-    handleEventsOfNotice(txEvent, findings, norContext.params.eventsOfNotice);
+    handleEventsOfNotice(
+      txEvent,
+      findings,
+      norContext.params.eventsOfNotice,
+      norContext.nodeOperatorNames,
+    );
 
     const stuckEvents = txEvent.filterLog(
       NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,
