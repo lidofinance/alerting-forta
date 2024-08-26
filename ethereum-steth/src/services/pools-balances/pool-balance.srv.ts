@@ -416,7 +416,7 @@ export class PoolBalanceSrv {
       `\t\tStEth:Eth: ${this.cache.lastReportedCurveStEthToEthPrice.toFixed(4)}\n` +
       `\t\tImbalance: ${this.calcImbalance(this.cache.curveEthBalance, this.cache.curveStEthBalance).toFixed(4)}%\n\n` +
       `\tChainlink\n` +
-      `\t\tStEth:Eth: ${this.cache.lastReportedChainlinkPriceChangeLevel.toString()}`
+      `\t\tStEth:Eth: ${this.cache.lastReportedChainlinkStEthToEthPrice.toString()}`
 
     return line
   }
