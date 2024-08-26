@@ -76,3 +76,5 @@ export const Address: Address = {
   KNOWN_ERC20,
   ENS_BASE_REGISTRAR_ADDRESS,
 }
+
+export const SIGNIFICANT_VP_AMOUNT = new BigNumber(500_000).pow(18)

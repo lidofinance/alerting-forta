@@ -19,4 +19,5 @@ export abstract class IAragonVotingClient {
     toBlock: BlockTag,
   ): Promise<E.Either<Error, Map<number, IVoteInfo>>>
   public abstract getVote(voteId: number, toBlock: BlockTag): Promise<E.Either<Error, IVoteInfo>>
+  public abstract getVotingPower(voter: string, block: BlockTag): Promise<E.Either<Error, BigNumber>>
 }

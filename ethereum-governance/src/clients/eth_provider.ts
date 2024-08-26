@@ -9,6 +9,7 @@ import {
   CrossChainController__factory,
   ENS as EnsContract,
   IncreaseStakingLimit as IncreaseStakingLimitContract,
+  LDO as LDOContract,
   NodeOperatorsRegistry as NodeOperatorsRegistryContract,
   Stonks__factory,
   Swap__factory,
@@ -53,6 +54,7 @@ export class ETHProvider
   private readonly increaseStakingLimitContract: IncreaseStakingLimitContract
   private readonly nodeOperatorsRegistryContract: NodeOperatorsRegistryContract
   private readonly aragonVotingContract: AragonVotingContract
+  private readonly ldoContract: LDOContract
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
@@ -62,6 +64,7 @@ export class ETHProvider
     increaseStakingLimitContract: IncreaseStakingLimitContract,
     nodeOperatorsRegistryContract: NodeOperatorsRegistryContract,
     aragonVotingContract: AragonVotingContract,
+    ldoContract: LDOContract,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.etherscanProvider = etherscanProvider
@@ -70,6 +73,7 @@ export class ETHProvider
     this.increaseStakingLimitContract = increaseStakingLimitContract
     this.nodeOperatorsRegistryContract = nodeOperatorsRegistryContract
     this.aragonVotingContract = aragonVotingContract
+    this.ldoContract = ldoContract
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
@@ -541,5 +545,22 @@ export class ETHProvider
     }
 
     return E.right(bscAdapters)
+  }
+
+  public async getVotingPower(voter: string, blockTag: BlockTag): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const votingPower = await retryAsync(
+        async () => {
+          const balance = await this.ldoContract.balanceOfAt(voter, blockTag)
+          return new BigNumber(String(balance))
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(votingPower)
+    } catch (e) {
+      return E.left(
+        new NetworkError(e, `Could not call ethers.ldoContract.balanceOfAt voter ${voter} block ${blockTag}`),
+      )
+    }
   }
 }
