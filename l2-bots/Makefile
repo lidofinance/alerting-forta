@@ -16,7 +16,7 @@ gen_js:
 	mkdir -p dist/common/generated/proto
 	# generate js codes via grpc-tools
 	yarn grpc_tools_node_protoc \
-	  --js_out=import_style=commonjs,binary:./src/common/generated/proto \
+	  --js_out=import_style=commonjs,binary:./dist/common/generated/proto \
 	  --grpc_out=grpc_js:./dist/common/generated/proto \
 	  --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
 	  --proto_path=./src/common/brief/proto \

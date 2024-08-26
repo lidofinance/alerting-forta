@@ -1,7 +1,9 @@
-import { Constants, DEFAULT_ROLES_MAP, getHugeWithdrawalsFromL2AlertFactory } from '../common/constants'
+import { Constants, DEFAULT_ROLES_MAP, getHugeWithdrawalsFromL2AlertFactory, COMMON_CONFIG } from '../common/constants'
 
 const L2_NAME = 'Optimism'
 export const optimismConstants: Constants = {
+  ...COMMON_CONFIG,
+  APP_NAME: `l2-${L2_NAME.toLowerCase()}`,
   L2_NAME: L2_NAME,
   L2_NETWORK_RPC: 'https://mainnet.optimism.io',
   MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: 10_000,

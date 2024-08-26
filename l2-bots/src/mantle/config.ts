@@ -1,9 +1,13 @@
-import { Constants, DEFAULT_ROLES_MAP, getHugeWithdrawalsFromL2AlertFactory } from '../common/constants'
+import 'dotenv/config'
+import { Constants, DEFAULT_ROLES_MAP, getHugeWithdrawalsFromL2AlertFactory, COMMON_CONFIG } from '../common/constants'
 
 const L2_NAME = 'Mantle'
+
 export const mantleConstants: Constants = {
+  ...COMMON_CONFIG,
+  APP_NAME: `l2-${L2_NAME.toLowerCase()}`, // used for metrics and production env
   L2_NAME: L2_NAME,
-  L2_NETWORK_RPC: 'https://rpc.mantle.xyz',
+  L2_NETWORK_RPC: process.env.L2_RPC_URL || 'https://rpc.mantle.xyz',
   MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: 10_000,
   L2_NETWORK_ID: 5000,
   L2_APPROX_BLOCK_TIME_SECONDS: 2,

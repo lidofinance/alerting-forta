@@ -10,10 +10,15 @@ import { BlockDto } from '../entity/blockDto'
 import BigNumber from 'bignumber.js'
 import { ERC20Short as BridgedWstEthRunner } from '../generated'
 import { networkAlert } from '../utils/error'
+import { Metrics, StatusFail, StatusOK } from '../utils/metrics/metrics'
+
+const DELAY_IN_500MS = 500
+const ATTEMPTS_5 = 5
 
 
 export class L2Client {
   private readonly logger: Logger
+  private readonly metrics: Metrics
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly bridgedWstEthRunner: BridgedWstEthRunner
   private readonly maxBlocksPerGetLogsRequest: number
@@ -22,12 +27,14 @@ export class L2Client {
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
+    metrics: Metrics,
     logger: Logger,
     bridgedWstEthRunner: BridgedWstEthRunner,
     maxBlocksPerGetLogsRequest: number,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.logger = logger
+    this.metrics = metrics
     this.bridgedWstEthRunner = bridgedWstEthRunner
     this.maxBlocksPerGetLogsRequest = maxBlocksPerGetLogsRequest
   }
@@ -143,7 +150,7 @@ export class L2Client {
             }
             return await this.jsonRpcProvider.send('eth_getLogs', [params])
           },
-          { delay: 500, maxTry: 5 },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
         )
       } catch (e) {
         this.logger.warn(
@@ -160,13 +167,17 @@ export class L2Client {
   }
 
   public async getLatestL2Block(): Promise<E.Either<NetworkError, BlockDto>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getLatestL2Block.name }).startTimer()
     try {
       const block = await retryAsync<Block>(
         async (): Promise<Block> => {
           return await this.jsonRpcProvider.getBlock('latest')
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
+
+      this.metrics.etherJsRequest.labels({ method: this.getLatestL2Block.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
 
       return E.right(
         new BlockDto(
@@ -178,11 +189,15 @@ export class L2Client {
       )
       // return E.right(block)
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getLatestL2Block.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
+
       return E.left(new NetworkError(e, `Could not fetch latest block`))
     }
   }
 
   public async getWstEthTotalSupply(l2blockNumber: number): Promise<E.Either<Error, BigNumber>> {
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getWstEthTotalSupply.name }).startTimer()
     try {
       const out = await retryAsync<string>(
         async (): Promise<string> => {
@@ -192,11 +207,16 @@ export class L2Client {
 
           return balance.toString()
         },
-        { delay: 500, maxTry: 5 },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
+
+      this.metrics.etherJsRequest.labels({ method: this.getWstEthTotalSupply.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
 
       return E.right(new BigNumber(out))
     } catch (e) {
+      this.metrics.etherJsRequest.labels({ method: this.getWstEthTotalSupply.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
       return E.left(new NetworkError(e, `Could not call bridgedWstEthRunner.functions.totalSupply`))
     }
   }

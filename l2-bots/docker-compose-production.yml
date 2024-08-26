@@ -1,0 +1,29 @@
+---
+services:
+  l2-mantle:
+    container_name: l2-mantle
+    image: nothingishere/l2-unified:stable
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+    healthcheck:
+      test: wget -O- --quiet http://localhost:3000/health 2>&1 | grep -q ok
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+    networks:
+      - forta_default
+    labels:
+      - "prometheus-job=l2-unified"
+      - "prometheus-port=3000"
+    environment:
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://eth.drpc.org}
+      - L2_RPC_URL=${MANTLE_RPC_URL:-https://rpc.mantle.xyz}
+    command: ["yarn", "start:mantle:prod"]
+
+networks:
+  forta_default:
+    name: forta_default
+    external: true

@@ -1,11 +1,12 @@
 import { ethers, /*BlockEvent,*/ } from 'forta-agent'
 import { strict as assert } from 'node:assert'
+import express, { Express, Request, Response } from 'express'
 import * as process from 'process'
 import * as grpc from '@grpc/grpc-js'
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
+
 // import { InitializeResponse } from 'forta-agent/dist/sdk/initialize.response'
-import { getJsonRpcUrl } from 'forta-agent/dist/sdk/utils'
-import { Initialize } from 'forta-agent/dist/sdk/handlers'
+import { Metrics, createMetrics, HandleL1BlockLabel, HandleL2BlockLabel, HandleTxLabel, StatusOK, StatusFail } from './utils/metrics/metrics'
 import * as E from 'fp-ts/Either'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { knex } from 'knex'
@@ -24,18 +25,16 @@ import { Finding } from './generated/proto/alert_pb'
 import { AgentService } from './generated/proto/agent_grpc_pb'
 
 import { elapsedTime, elapsed } from './utils/time'
-import { Config } from './utils/env'
 import { L2Client } from './clients/l2_client'
 import { EventWatcher } from './services/event_watcher_universal'
 import { ERC20Short__factory } from './generated'
 // import { MonitorWithdrawals } from './services/monitor_withdrawals'
 import { ETHProvider } from './clients/eth_provider_client'
 // import { BridgeBalanceSrv } from './services/bridge_balance'
-import { Constants, MAINNET_CHAIN_ID, DRPC_URL, L1_WSTETH_ADDRESS } from './constants'
+import { Constants, L1_WSTETH_ADDRESS, getKnexConfig } from './constants'
 import { getEventBasedAlerts } from './alert-bundles'
 
 const MINUTES_6 = 60 * 6
-
 
 
 export class Agent {
@@ -49,44 +48,42 @@ export class Agent {
   public l2EventWatcher: EventWatcher
   public initializeFindings: Finding[]
   public dbClient: knex.Knex
-  public config: Config
+  public metrics: Metrics
 
-  public constructor(params: Constants) {
+  public constructor(params: Constants, metrics: Metrics) {
     this.params = params
-    const config = new Config()
-    this.config = config
     this.initializeFindings = []
 
-    this.dbClient = knex(config.knexConfig)
+    this.dbClient = knex(getKnexConfig())
     this.logger = Winston.createLogger({
-      format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
+      format: params.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
       transports: [new Winston.transports.Console()],
     })
+    this.metrics = metrics
 
     this.l2Provider = new ethers.providers.JsonRpcProvider(params.L2_NETWORK_RPC, params.L2_NETWORK_ID)
     const bridgedWstethRunner = ERC20Short__factory.connect(params.L2_WSTETH_BRIDGED.address, this.l2Provider)
 
-    this.l1Provider = config.useFortaProvider
-      ? new ethers.providers.JsonRpcProvider(getJsonRpcUrl(), config.chainId)
-      : new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, config.chainId)
+    this.l1Provider = new ethers.providers.JsonRpcProvider(params.l1RpcUrl)
 
-      const wstethRunner = ERC20Short__factory.connect(L1_WSTETH_ADDRESS, this.l1Provider)
-      this.l1Client = new ETHProvider(this.logger, wstethRunner, this.l1Provider)
+    const wstethRunner = ERC20Short__factory.connect(L1_WSTETH_ADDRESS, this.l1Provider)
+    this.l1Client = new ETHProvider(this.logger, this.metrics, wstethRunner, this.l1Provider)
 
-      const eventAlertsToWatch = getEventBasedAlerts(params.L2_NAME)
-      this.l2EventWatcher = new EventWatcher(eventAlertsToWatch, this.logger)
+    const eventAlertsToWatch = getEventBasedAlerts(params.L2_NAME)
+    this.l2EventWatcher = new EventWatcher(eventAlertsToWatch, this.logger)
 
-      this.l2Client = new L2Client(this.l2Provider, this.logger, bridgedWstethRunner, params.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
-      const L2BlockRepo = new L2BlocksRepo(this.dbClient)
+    this.l2Client = new L2Client(this.l2Provider, this.metrics, this.logger, bridgedWstethRunner, params.MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST)
+    const L2BlockRepo = new L2BlocksRepo(this.dbClient)
 
-      assert(String(params.govExecutor) === params.govExecutor)
-      this.l2BlocksSrv = new L2BlocksSrv(this.l2Client, L2BlockRepo)
-      // TODO
-      // this.l2BlocksSrv = new L2BlocksSrv(this.l2Client, L2BlockRepo, [
-      //   params.govExecutor as unknown as string, // TODO: it might be TransparentProxyInfo
-      //   params.L2_ERC20_TOKEN_GATEWAY.address,
-      //   params.L2_WSTETH_BRIDGED.address,
-      // ])
+    assert(String(params.govExecutor) === params.govExecutor)
+    this.l2BlocksSrv = new L2BlocksSrv(this.l2Client, L2BlockRepo)
+    // TODO
+    // this.l2BlocksSrv = new L2BlocksSrv(this.l2Client, L2BlockRepo, [
+    //   params.govExecutor as unknown as string, // TODO: it might be TransparentProxyInfo
+    //   params.L2_ERC20_TOKEN_GATEWAY.address,
+    //   params.L2_WSTETH_BRIDGED.address,
+    // ])
+
   }
 
   public async initialize() {
@@ -124,6 +121,8 @@ export class Agent {
 
   public async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
     const startTime = new Date()
+    this.metrics.lastAgentTouch.labels({ method: HandleL1BlockLabel }).set(startTime.getTime())
+    const end = this.metrics.summaryHandlers.labels({ method: HandleL1BlockLabel }).startTimer()
 
     const block = <BlockEvent.EthBlock>blockEvent.getBlock()
     const l1Block = new BlockDto(
@@ -167,8 +166,8 @@ export class Agent {
         findings.push(networkErr)
 
         this.logger.error(`Could not handleBlock: ${store.left.message}`)
-        // this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusFail }).inc()
-        // end()
+        this.metrics.processedIterations.labels({ method: HandleL1BlockLabel, status: StatusFail }).inc()
+        end()
 
         // callback(null, out)
         return findings
@@ -197,12 +196,14 @@ export class Agent {
         this.logger.info(
           `${handleBlock} ${l2Blocks.right[0].number} - ${l2Blocks.right[l2Blocks.right.length - 1].number} Cnt(${l2Blocks.right.length}). ${duration}`,
         )
-        // this.metrics.processedIterations
-          // .labels({ method: HandleL2BlockLabel, status: StatusOK })
-          // .inc(l2Blocks.right.length)
+        this.metrics.processedIterations
+          .labels({ method: HandleL2BlockLabel, status: StatusOK })
+          .inc(l2Blocks.right.length)
+        end()
       } else {
         this.logger.info(`${handleBlock} 0. ${duration}`)
-        // this.metrics.processedIterations.labels({ method: HandleL2BlockLabel, status: StatusFail }).inc()
+        this.metrics.processedIterations.labels({ method: HandleL2BlockLabel, status: StatusFail }).inc()
+        end()
       }
     }
 
@@ -230,7 +231,6 @@ function getInitializeHandler(app: Agent) {
   }
 }
 
-
 function getHandleBlockHandler(app: Agent) {
     return async (
       call: ServerUnaryCall<EvaluateBlockRequest, EvaluateBlockResponse>,
@@ -244,6 +244,8 @@ function getHandleBlockHandler(app: Agent) {
       out.setStatus(ResponseStatus.SUCCESS)
       out.setPrivate(false)
       out.setFindingsList(findings)
+
+      callback(null, out)
     }
 }
 
@@ -271,7 +273,8 @@ function getHandleTxHandler(app: Agent) {
 
 export const commonMain = async (params: Constants) => {
   console.debug(`RUN: commonMain`)
-  const app = new Agent(params)
+  const metrics = createMetrics(params)
+  const app = new Agent(params, metrics)
 
   const grpcServer = new grpc.Server()
 
@@ -284,13 +287,21 @@ export const commonMain = async (params: Constants) => {
     // evaluateAlert: alertH.handleAlert(),
   })
 
-
-  grpcServer.bindAsync(`0.0.0.0:${app.config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+  grpcServer.bindAsync(`0.0.0.0:${params.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err != null) {
       app.logger.error(err)
 
       process.exit(1)
     }
-    app.logger.info(`${app.config.appName} is listening on ${port}`)
+    app.logger.info(`${params.L2_NAME} bot is listening on ${port}`)
+  })
+
+  const httpService: Express = express()
+  httpService.get('/metrics', async (_: Request, res: Response) => {
+    res.set('Content-Type', app.metrics.registry.contentType)
+    res.send(await app.metrics.registry.metrics())
+  })
+  httpService.listen(params.httpPort, () => {
+    app.logger.info(`Http server is running at http://localhost:${params.httpPort}`)
   })
 }

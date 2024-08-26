@@ -4,6 +4,8 @@ import { L2Network, getEventBasedAlerts } from '../src/common/alert-bundles'
 
 import { globalExtended, paramsByNetwork, getBlockEvent, consoleDebugFinding, getAlertsString, skipNetwork } from './test.helpers'
 import { SECOND_MS } from '../src/common/utils/time'
+import { createMetrics } from '../src/common/utils/metrics/metrics'
+import { COMMON_CONFIG } from '../src/common/constants'
 
 import { Agent } from '../src/common/agent'
 
@@ -11,12 +13,14 @@ import { Agent } from '../src/common/agent'
 describe('Bundle tests', () => {
 
   test(`All event-based tests`, async () => {
+    const metrics = createMetrics({ l1RpcUrl: COMMON_CONFIG.l1RpcUrl, APP_NAME: 'l2-test', instance: 'test-instance' })
 
     for (const network of Object.values(L2Network)) {
       if (skipNetwork(network)) { continue }
       assert(network !== L2Network.Default)
 
-      const app = new Agent({ ...paramsByNetwork[network], L2_NETWORK_RPC: globalExtended.testNodes[network].rpcUrl })
+      const appConfig = { ...paramsByNetwork[network], L2_NETWORK_RPC: globalExtended.testNodes[network].rpcUrl }
+      const app = new Agent(appConfig, metrics)
 
       await app.initialize()
       const findings = await app.handleBlock(await getBlockEvent(app.l1Provider, 'latest'))

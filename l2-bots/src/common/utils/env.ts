@@ -16,7 +16,6 @@ export class Config {
   public readonly logLevel: string
 
   public readonly chainId: number
-  public readonly arbChainID: number
   public readonly promPrefix: string
   public readonly useFortaProvider: boolean
 
@@ -34,9 +33,8 @@ export class Config {
     this.logLevel = process.env.LOG_LEVEL || 'info'
 
     this.chainId = parseInt(process.env.FORTA_CHAIN_ID!, 10) || 1
-    this.arbChainID = 42161
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://eth.drpc.org'
-    this.arbitrumRpcUrl = process.env.ARBITRUM_RPC_URL || 'https://arbitrum-one.publicnode.com'
+    this.arbitrumRpcUrl = process.env.RPC_URL || 'https://arbitrum-one.publicnode.com'
 
     this.promPrefix = this.appName.replaceAll('-', '_')
 

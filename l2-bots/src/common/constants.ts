@@ -1,13 +1,14 @@
+import 'dotenv/config'
 import { FindingSeverity, FindingType, Finding } from 'forta-agent'
 import { EventOfNotice } from './entity/events'
 import { getUniqueKey, formatEther } from './utils/finding.helpers'
 import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
+import { knex } from 'knex'
+
 
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
 export const ETH_DECIMALS2 = 10n ** 18n
-export const MAINNET_CHAIN_ID = 1
-export const DRPC_URL = 'https://eth.drpc.org/'
 export const L1_WSTETH_ADDRESS = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'
 export const DEFAULT_ROLES_MAP: RoleHashToName = new Map<string, string>([
   ['0x4b43b36766bde12c5e9cbbc37d15f8d1f769f08f54720ab370faeb4ce893753a', 'DEPOSITS_ENABLER_ROLE'],
@@ -17,6 +18,17 @@ export const DEFAULT_ROLES_MAP: RoleHashToName = new Map<string, string>([
   ['0x0000000000000000000000000000000000000000000000000000000000000000', 'DEFAULT_ADMIN_ROLE'],
 ])
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+export const COMMON_CONFIG = {
+  grpcPort: 50051,
+  httpPort: 3000,
+  logFormat: process.env.LOG_FORMAT || 'simple',
+  logLevel: process.env.LOG_LEVEL || 'info',
+  instance: process.env.INSTANCE || 'DEFAULT_INSTANCE',
+  l1ChainId: 1,
+  l1RpcUrl: process.env.ETHEREUM_RPC_URL || 'https://eth.drpc.org',
+}
+
 
 export const getHugeWithdrawalsFromL2AlertFactory = (l2Name: string, uniqueKey: string) => {
   return (params: HugeWithdrawalsFromL2AlertParams) => {
@@ -32,6 +44,20 @@ export const getHugeWithdrawalsFromL2AlertFactory = (l2Name: string, uniqueKey: 
       uniqueKey: getUniqueKey(uniqueKey, params.l2BlockNumber),
     })
   }
+}
+
+export function getKnexConfig() {
+  return {
+    client: 'sqlite3',
+    connection: {
+      filename: ':memory:',
+    },
+    migrations: {
+      tableName: 'knex_migrations',
+      directory: './src/common/db/migrations',
+    },
+    useNullAsDefault: false,
+  } as knex.Knex.Config
 }
 
 export type RoleHashToName = Map<string, string>
@@ -59,7 +85,8 @@ export type HugeWithdrawalsFromL2AlertParams = {
   withdrawalsSum: bigint,
 }
 
-export type Constants = {
+export type Constants = typeof COMMON_CONFIG & {
+  APP_NAME: string,
   L2_NAME: string,
   L2_NETWORK_RPC: string,
   MAX_BLOCKS_PER_RPC_GET_LOGS_REQUEST: number,

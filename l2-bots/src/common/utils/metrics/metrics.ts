@@ -1,4 +1,5 @@
-import { Counter, Gauge, Histogram, Registry, Summary } from 'prom-client'
+import promClient, { Counter, Gauge, Histogram, Registry, Summary } from 'prom-client'
+
 
 export const StatusOK = 'ok'
 export const StatusFail = 'fail'
@@ -12,8 +13,30 @@ export const ldo = `ldo`
 export const stETH = `stETH`
 export const wStETH = `wStETH`
 
+
+export function createMetrics({ l1RpcUrl, APP_NAME, instance } : {l1RpcUrl: string, APP_NAME: string, instance: string}) {
+  const defaultRegistry = promClient
+  defaultRegistry.collectDefaultMetrics()
+
+  let dataProvider = ''
+  const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^/\n]+)/
+  const match = l1RpcUrl.match(urlRegex)
+  if (match) {
+    dataProvider = match[1]
+  }
+  const customRegister = new promClient.Registry()
+  const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
+  const promPrefix = APP_NAME.replace('-', '_')
+  mergedRegistry.setDefaultLabels({
+    instance: instance,
+    dataProvider: dataProvider,
+    botName: promPrefix,
+  })
+  return new Metrics(mergedRegistry)
+}
+
 export class Metrics {
-  private readonly registry: Registry
+  public readonly registry: Registry
 
   public readonly healthStatus: Gauge
   public readonly buildInfo: Gauge

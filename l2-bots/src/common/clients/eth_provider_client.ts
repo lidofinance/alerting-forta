@@ -2,6 +2,7 @@ import { Logger } from 'winston'
 import { ethers } from 'ethers'
 // import { IL1BridgeBalanceClient } from '../services/bridge_balance'
 import * as E from 'fp-ts/Either'
+import { Metrics, StatusOK, StatusFail } from '../utils/metrics/metrics'
 import BigNumber from 'bignumber.js'
 import { NetworkError } from '../utils/error'
 import { retryAsync } from 'ts-retry'
@@ -15,8 +16,10 @@ export class ETHProvider {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private readonly wStEthRunner: wStEthRunner
   private readonly logger: Logger
+  private readonly metrics: Metrics
 
-  constructor(logger: Logger, wStEthRunner: wStEthRunner, jsonRpcProvider: ethers.providers.JsonRpcProvider) {
+  constructor(logger: Logger, metrics: Metrics, wStEthRunner: wStEthRunner, jsonRpcProvider: ethers.providers.JsonRpcProvider) {
+    this.metrics = metrics
     this.wStEthRunner = wStEthRunner
     this.logger = logger
     this.jsonRpcProvider = jsonRpcProvider
@@ -43,12 +46,12 @@ export class ETHProvider {
 
   public async getBlockByTag(tag: string): Promise<E.Either<Error, BlockDto>> {
     // TODO: restore metrics
-    // const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getBlockByTag.name }).startTimer()
+    const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getBlockByTag.name }).startTimer()
     try {
       const block = await this.jsonRpcProvider.getBlock(tag)
 
-      // this.metrics.etherJsRequest.labels({ method: this.getBlockByTag.name, status: StatusOK }).inc()
-      // end({ status: StatusOK })
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByTag.name, status: StatusOK }).inc()
+      end({ status: StatusOK })
 
       const l1Block = new BlockDto(
         block.hash,
@@ -59,8 +62,8 @@ export class ETHProvider {
 
       return E.right(l1Block)
     } catch (e) {
-      // this.metrics.etherJsRequest.labels({ method: this.getBlockByTag.name, status: StatusFail }).inc()
-      // end({ status: StatusFail })
+      this.metrics.etherJsRequest.labels({ method: this.getBlockByTag.name, status: StatusFail }).inc()
+      end({ status: StatusFail })
 
       return E.left(new NetworkError(e, `Could not fetch l1block by tag ${tag}`))
     }
