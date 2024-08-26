@@ -233,4 +233,16 @@ describe('AragonVotingSrv', () => {
     expect(findings).toHaveLength(1)
     expect(findings[0].name).toBe('ℹ️ Significant amount of LDO was delegated at once')
   })
+
+  it('handles assignDelegate transaction without findings when vp amount is lower than significant', async () => {
+    txEvent.addresses[ARAGON_VOTING_ADDRESS] = true
+    jest.spyOn(ethProvider, 'getVotingPower').mockResolvedValue(E.right(BigNumber(100)))
+    jest
+      .mocked(txEvent.filterLog)
+      .mockReturnValue([{ args: { voter: '0x123', assignedDelegate: '0x345' } }] as unknown as LogDescription[])
+
+    const findings = await aragonVotingSrv.handleAssignDelegateTransaction(txEvent)
+
+    expect(findings).toEqual([])
+  })
 })
