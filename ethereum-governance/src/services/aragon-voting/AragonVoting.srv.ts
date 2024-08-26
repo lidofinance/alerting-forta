@@ -15,8 +15,8 @@ import {
   ARAGON_VOTING_EVENTS_OF_NOTICE,
   ASSIGN_DELEGATE_EVENT,
 } from '../../shared/events/aragon_events'
-import { SIGNIFICANT_VP_AMOUNT } from 'src/shared/constants'
-import { formatBN2Str } from 'src/shared/format'
+import { SIGNIFICANT_VP_AMOUNT } from '../../shared/constants'
+import { formatBN2Str } from '../../shared/format'
 
 export enum Outcomes {
   Pass = 'Pass',
