@@ -16,6 +16,10 @@ import {
 import BigNumber from 'bignumber.js'
 export abstract class ICSFeeOracleClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
+
+  public getEthersProvider(): ethers.JsonRpcProvider {
+    return this.getEthersProvider()
+  }
 }
 
 interface MemberReport {
@@ -74,7 +78,11 @@ export class CSFeeOracleSrv {
       return currBlock.left
     }
 
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
+    const hashConsensus = new ethers.Contract(
+      this.hashConsensusAddress,
+      HASH_CONSENSUS_ABI,
+      this.csFeeOracleClient.getEthersProvider(),
+    )
     this.membersAddresses = await this.getOracleMembers(currentBlock, hashConsensus)
     const hashConsensusReportReceivedFilter = hashConsensus.getEvent(HASH_CONSENSUS_REPORT_RECEIVED_EVENT)
     const frameConfig = await hashConsensus.getFrameConfig()
@@ -129,7 +137,11 @@ export class CSFeeOracleSrv {
   }
 
   async getReportSubmits(blockFrom: number, blockTo: number) {
-    const csFeeOracle = new ethers.Contract(this.csFeeOracleAddress, CS_FEE_ORACLE_ABI)
+    const csFeeOracle = new ethers.Contract(
+      this.csFeeOracleAddress,
+      CS_FEE_ORACLE_ABI,
+      this.csFeeOracleClient.getEthersProvider(),
+    )
     const oracleReportFilter = csFeeOracle.getEvent(CS_FEE_ORACLE_REPORT_SUBMITTED_EVENT)
     return await getLogsByChunks(csFeeOracle, oracleReportFilter, blockFrom, blockTo)
   }
@@ -152,7 +164,11 @@ export class CSFeeOracleSrv {
 
     const now = blockDto.timestamp
 
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
+    const hashConsensus = new ethers.Contract(
+      this.hashConsensusAddress,
+      HASH_CONSENSUS_ABI,
+      this.csFeeOracleClient.getEthersProvider(),
+    )
     const frameConfig = await hashConsensus.getFrameConfig()
     const MAX_REPORT_DELAY = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
 

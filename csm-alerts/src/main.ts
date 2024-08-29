@@ -32,7 +32,6 @@ import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributo
 import { CSAccountingSrv } from './services/CSAccounting/CSAccounting.srv'
 import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
 import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
 import express = require('express')
 import { ProxyWatcherSrv } from './services/ProxyWatcher/ProxyWatcher.srv'
 import {
@@ -102,15 +101,15 @@ const main = async () => {
 
   const etherscanProvider = new ethers.EtherscanProvider(await ethProvider._detectNetwork(), config.etherscanKey)
 
-  const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS)
-  const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS)
-  const csFeeDistributorRunner = CSFeeDistributor__factory.connect(address.CS_FEE_DISTRIBUTOR_ADDRESS)
-  const csFeeOracleRunner = CSFeeOracle__factory.connect(address.CS_FEE_ORACLE_ADDRESS)
+  const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, ethProvider)
+  const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS, ethProvider)
+  const csFeeDistributorRunner = CSFeeDistributor__factory.connect(address.CS_FEE_DISTRIBUTOR_ADDRESS, ethProvider)
+  const csFeeOracleRunner = CSFeeOracle__factory.connect(address.CS_FEE_ORACLE_ADDRESS, ethProvider)
 
   const ethClient = new ETHProvider(
     logger,
     metrics,
-    getEthersProvider(),
+    ethProvider,
     etherscanProvider,
     csModuleRunner,
     csAccountingRunner,

@@ -13,6 +13,10 @@ import { getLogsByChunks } from '../../utils/utils'
 
 export abstract class ICSFeeDistributorClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
+
+  public getEthersProvider(): ethers.JsonRpcProvider {
+    return this.getEthersProvider()
+  }
 }
 
 export class CSFeeDistributorSrv {
@@ -57,8 +61,16 @@ export class CSFeeDistributorSrv {
       return currBlock.left
     }
 
-    const csFeeDistributor = new ethers.Contract(this.csFeeDistributorAddress, CS_FEE_DISTRIBUTOR_ABI)
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
+    const csFeeDistributor = new ethers.Contract(
+      this.csFeeDistributorAddress,
+      CS_FEE_DISTRIBUTOR_ABI,
+      this.csFeeDistributorClient.getEthersProvider(),
+    )
+    const hashConsensus = new ethers.Contract(
+      this.hashConsensusAddress,
+      HASH_CONSENSUS_ABI,
+      this.csFeeDistributorClient.getEthersProvider(),
+    )
     const frameConfig = await hashConsensus.getFrameConfig()
     const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
     const startBlock = currentBlock - Math.ceil(frameInSeconds / SECONDS_PER_SLOT)
