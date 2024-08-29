@@ -6,7 +6,8 @@ import { Finding } from '../../generated/proto/alert_pb'
 import CS_FEE_DISTRIBUTOR_ABI from '../../brief/abi/CSFeeDistributor.json'
 import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
 import { ONE_DAY, SECONDS_PER_SLOT } from '../../utils/constants'
-import { ethers, filterLog, getEthersProvider } from 'forta-agent'
+import { filterLog } from 'forta-agent'
+import { ethers } from 'ethers'
 import { DISTRIBUTION_DATA_UPDATED_EVENT, TRANSFER_SHARES_EVENT } from '../../utils/events/cs_fee_distributor_events'
 import { getLogsByChunks } from '../../utils/utils'
 
@@ -56,16 +57,12 @@ export class CSFeeDistributorSrv {
       return currBlock.left
     }
 
-    const csFeeDistributor = new ethers.Contract(
-      this.csFeeDistributorAddress,
-      CS_FEE_DISTRIBUTOR_ABI,
-      getEthersProvider(),
-    )
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
-    const frameConfig = await hashConsensus.functions.getFrameConfig()
+    const csFeeDistributor = new ethers.Contract(this.csFeeDistributorAddress, CS_FEE_DISTRIBUTOR_ABI)
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
+    const frameConfig = await hashConsensus.getFrameConfig()
     const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
     const startBlock = currentBlock - Math.ceil(frameInSeconds / SECONDS_PER_SLOT)
-    const csFeeDistributorDistributionDataUpdatedFilter = csFeeDistributor.filters.DistributionDataUpdated()
+    const csFeeDistributorDistributionDataUpdatedFilter = csFeeDistributor.getEvent(DISTRIBUTION_DATA_UPDATED_EVENT)
     const distributionDataUpdatedEvents = await getLogsByChunks(
       csFeeDistributor,
       csFeeDistributorDistributionDataUpdatedFilter,
@@ -121,13 +118,13 @@ export class CSFeeDistributorSrv {
   private async handleDistributionDataUpdated(blockDto: BlockDto): Promise<Finding[]> {
     const out: Finding[] = []
 
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
-    const frameConfig = await hashConsensus.functions.getFrameConfig()
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
+    const frameConfig = await hashConsensus.getFrameConfig()
     const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
 
     const now = blockDto.timestamp
 
-    const chainConfig = hashConsensus.getChainConfig()
+    const chainConfig = await hashConsensus.getChainConfig()
     const genesisTimestamp = chainConfig.genesisTime
     const currentEpoch = Math.floor((now - genesisTimestamp) / 32 / SECONDS_PER_SLOT)
     if (currentEpoch < frameConfig.initialEpoch + frameConfig.epochsPerFrame) {

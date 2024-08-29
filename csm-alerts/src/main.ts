@@ -92,11 +92,7 @@ const main = async () => {
 
   const metrics = new Metrics(mergedRegistry, config.promPrefix)
 
-  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl)
-  let fortaEthersProvider = getEthersProvider()
-  if (!config.useFortaProvider) {
-    fortaEthersProvider = ethProvider
-  }
+  const ethProvider = new ethers.JsonRpcProvider(config.ethereumRpcUrl)
 
   const { deploymentAddresses, contractsWithAssetRecoverer, csmProxyContracts, pausableContracts } = loadDeploymentData(
     config.chainId,
@@ -104,20 +100,17 @@ const main = async () => {
 
   const address = deploymentAddresses
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
+  const etherscanProvider = new ethers.EtherscanProvider(await ethProvider._detectNetwork(), config.etherscanKey)
 
-  const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
-  const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS, fortaEthersProvider)
-  const csFeeDistributorRunner = CSFeeDistributor__factory.connect(
-    address.CS_FEE_DISTRIBUTOR_ADDRESS,
-    fortaEthersProvider,
-  )
-  const csFeeOracleRunner = CSFeeOracle__factory.connect(address.CS_FEE_ORACLE_ADDRESS, fortaEthersProvider)
+  const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS)
+  const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS)
+  const csFeeDistributorRunner = CSFeeDistributor__factory.connect(address.CS_FEE_DISTRIBUTOR_ADDRESS)
+  const csFeeOracleRunner = CSFeeOracle__factory.connect(address.CS_FEE_ORACLE_ADDRESS)
 
   const ethClient = new ETHProvider(
     logger,
     metrics,
-    fortaEthersProvider,
+    getEthersProvider(),
     etherscanProvider,
     csModuleRunner,
     csAccountingRunner,
