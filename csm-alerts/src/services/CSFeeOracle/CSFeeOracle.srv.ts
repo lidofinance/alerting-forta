@@ -3,8 +3,7 @@ import { either as E } from 'fp-ts'
 import { Logger } from 'winston'
 import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
-import { filterLog } from 'forta-agent'
-import { ethers } from 'ethers'
+import { ethers, filterLog, getEthersProvider } from 'forta-agent'
 import { ONE_DAY, ONE_MONTH, SECONDS_PER_SLOT } from '../../utils/constants'
 import CS_FEE_ORACLE_ABI from '../../brief/abi/CSFeeOracle.json'
 import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
@@ -59,7 +58,7 @@ export class CSFeeOracleSrv {
   }
 
   async getOracleMembers(blockNumber: number, hashConsensus: ethers.Contract): Promise<string[]> {
-    const members = await hashConsensus.getMembers({
+    const members = await hashConsensus.functions.getMembers({
       blockTag: blockNumber,
     })
     return members.addresses
@@ -74,10 +73,10 @@ export class CSFeeOracleSrv {
       return currBlock.left
     }
 
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
     this.membersAddresses = await this.getOracleMembers(currentBlock, hashConsensus)
-    const hashConsensusReportReceivedFilter = hashConsensus.getEvent(HASH_CONSENSUS_REPORT_RECEIVED_EVENT)
-    const frameConfig = await hashConsensus.getFrameConfig()
+    const hashConsensusReportReceivedFilter = hashConsensus.filters.ReportReceived()
+    const frameConfig = await hashConsensus.functions.getFrameConfig()
     const reportReceivedStartBlock = currentBlock - Math.ceil(frameConfig.epochsPerFrame * 32)
     const reportReceivedEvents = await getLogsByChunks(
       hashConsensus,
@@ -129,8 +128,8 @@ export class CSFeeOracleSrv {
   }
 
   async getReportSubmits(blockFrom: number, blockTo: number) {
-    const csFeeOracle = new ethers.Contract(this.csFeeOracleAddress, CS_FEE_ORACLE_ABI)
-    const oracleReportFilter = csFeeOracle.getEvent(CS_FEE_ORACLE_REPORT_SUBMITTED_EVENT)
+    const csFeeOracle = new ethers.Contract(this.csFeeOracleAddress, CS_FEE_ORACLE_ABI, getEthersProvider())
+    const oracleReportFilter = csFeeOracle.filters.ReportSubmitted()
     return await getLogsByChunks(csFeeOracle, oracleReportFilter, blockFrom, blockTo)
   }
 
@@ -152,13 +151,13 @@ export class CSFeeOracleSrv {
 
     const now = blockDto.timestamp
 
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI)
-    const frameConfig = await hashConsensus.getFrameConfig()
+    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
+    const frameConfig = await hashConsensus.functions.getFrameConfig()
     const MAX_REPORT_DELAY = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
 
     const reportDelay = now - (this.lastReportSubmitTimestamp ? this.lastReportSubmitTimestamp : 0)
 
-    const chainConfig = await hashConsensus.getChainConfig()
+    const chainConfig = hashConsensus.getChainConfig()
     const genesisTimestamp = chainConfig.genesisTime
     const currentEpoch = Math.floor((now - genesisTimestamp) / 32 / SECONDS_PER_SLOT)
     if (currentEpoch < frameConfig.initialEpoch + frameConfig.epochsPerFrame) {

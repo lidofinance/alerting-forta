@@ -71,24 +71,22 @@ export function handleEventsOfNotice(txEvent: TransactionDto, eventsOfNotice: Ev
   for (const log of txEvent.logs) {
     if (addresses.has(log.address.toLowerCase())) {
       for (const eventInfo of eventsOfNotice) {
-        const parser = new ethers.Interface([eventInfo.abi])
+        const parser = new ethers.utils.Interface([eventInfo.abi])
 
         try {
           const logDesc = parser.parseLog(log)
-          if (logDesc) {
-            const f: Finding = new Finding()
+          const f: Finding = new Finding()
 
-            f.setName(eventInfo.name)
-            f.setDescription(eventInfo.description(logDesc.args))
-            f.setAlertid(eventInfo.alertId)
-            f.setSeverity(eventInfo.severity)
-            f.setType(eventInfo.type)
-            f.setProtocol('ethereum')
-            const m = f.getMetadataMap()
-            m.set('args', String(logDesc.args))
+          f.setName(eventInfo.name)
+          f.setDescription(eventInfo.description(logDesc.args))
+          f.setAlertid(eventInfo.alertId)
+          f.setSeverity(eventInfo.severity)
+          f.setType(eventInfo.type)
+          f.setProtocol('ethereum')
+          const m = f.getMetadataMap()
+          m.set('args', String(logDesc.args))
 
-            out.push(f)
-          }
+          out.push(f)
         } catch (e) {
           // Only one from eventsOfNotice could be correct
           // Others - skipping
