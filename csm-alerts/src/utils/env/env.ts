@@ -14,7 +14,6 @@ export class Config {
 
   public readonly chainId: number
   public readonly promPrefix: string
-  public readonly etherscanKey: string
   public readonly useFortaProvider: boolean
 
   constructor() {
@@ -31,9 +30,6 @@ export class Config {
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://holesky.drpc.org'
 
     this.promPrefix = this.appName.replace('-', '_') + '_'
-    this.etherscanKey =
-      process.env.ETHERSCAN_KEY! ||
-      Buffer.from('SVZCSjZUSVBXWUpZSllXSVM0SVJBSlcyNjRITkFUUjZHVQ==', 'base64').toString('utf-8')
     this.useFortaProvider = process.env.USE_FORTA_RPC_URL === 'true'
 
     const urlRegex = /^(?:https?:\/\/)?(?:www\.)?([^/\n]+)/

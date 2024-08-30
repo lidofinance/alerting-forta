@@ -1,7 +1,6 @@
 import { ethers } from 'forta-agent'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
-import { BigNumber as EtherBigNumber } from '@ethersproject/bignumber/lib/bignumber'
 import {
   CSModule as CSModuleRunner,
   CSAccounting as CSAccountingRunner,
@@ -11,7 +10,7 @@ import {
 import { NetworkError } from '../utils/errors'
 import { Logger } from 'winston'
 import { ICSAccountingClient } from '../services/CSAccounting/CSAccounting.srv'
-import { Block, BlockTag } from '@ethersproject/providers'
+import { Block } from '@ethersproject/providers'
 import { ICSModuleClient } from '../services/CSModule/CSModule.srv'
 import { ICSFeeOracleClient } from '../services/CSFeeOracle/CSFeeOracle.srv'
 import { ICSFeeDistributorClient } from '../services/CSFeeDistributor/CSFeeDistributor.srv'
@@ -21,16 +20,8 @@ import { BlockDto } from '../entity/events'
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
-export abstract class IEtherscanProvider {
-  abstract getBalance(
-    addressOrName: string | Promise<string>,
-    blockTag?: BlockTag | Promise<BlockTag>,
-  ): Promise<EtherBigNumber>
-}
-
 export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFeeOracleClient, ICSFeeDistributorClient {
   private jsonRpcProvider: ethers.providers.JsonRpcProvider
-  private etherscanProvider: IEtherscanProvider
 
   private readonly csModuleRunner: CSModuleRunner
   private readonly csAccountingRunner: CSAccountingRunner
@@ -44,14 +35,12 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
     logger: Logger,
     metrcs: Metrics,
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
-    etherscanProvider: IEtherscanProvider,
     csModuleRunner: CSModuleRunner,
     csAccountingRunner: CSAccountingRunner,
     csFeeDistributorRunner: CSFeeDistributorRunner,
     csFeeOracleRunner: CSFeeOracleRunner,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
-    this.etherscanProvider = etherscanProvider
     this.csModuleRunner = csModuleRunner
     this.csAccountingRunner = csAccountingRunner
     this.csFeeDistributorRunner = csFeeDistributorRunner

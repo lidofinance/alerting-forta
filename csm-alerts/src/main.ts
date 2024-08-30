@@ -104,8 +104,6 @@ const main = async () => {
 
   const address = deploymentAddresses
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(ethProvider.network, config.etherscanKey)
-
   const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
   const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS, fortaEthersProvider)
   const csFeeDistributorRunner = CSFeeDistributor__factory.connect(
@@ -118,7 +116,6 @@ const main = async () => {
     logger,
     metrics,
     fortaEthersProvider,
-    etherscanProvider,
     csModuleRunner,
     csAccountingRunner,
     csFeeDistributorRunner,

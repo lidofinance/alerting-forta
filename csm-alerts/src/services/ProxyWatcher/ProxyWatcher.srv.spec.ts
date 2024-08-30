@@ -21,7 +21,6 @@ import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
-import { EtherscanProviderMock } from '../../clients/mocks/mock'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'
 
@@ -53,7 +52,6 @@ describe('ProxyWatcher event tests', () => {
     logger,
     m,
     fortaEthersProvider,
-    EtherscanProviderMock(),
     csModuleRunner,
     csAccountingRunner,
     csFeeDistributorRunner,
