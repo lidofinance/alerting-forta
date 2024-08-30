@@ -1,4 +1,4 @@
-import { ethers, Block } from 'ethers'
+import { ethers } from 'forta-agent'
 import { either as E } from 'fp-ts'
 import { retryAsync } from 'ts-retry'
 import {
@@ -10,6 +10,7 @@ import {
 import { NetworkError } from '../utils/errors'
 import { Logger } from 'winston'
 import { ICSAccountingClient } from '../services/CSAccounting/CSAccounting.srv'
+import { Block } from '@ethersproject/providers'
 import { ICSModuleClient } from '../services/CSModule/CSModule.srv'
 import { ICSFeeOracleClient } from '../services/CSFeeOracle/CSFeeOracle.srv'
 import { ICSFeeDistributorClient } from '../services/CSFeeDistributor/CSFeeDistributor.srv'
@@ -22,7 +23,7 @@ const ATTEMPTS_5 = 5
 export abstract class IEtherscanProvider {}
 
 export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFeeOracleClient, ICSFeeDistributorClient {
-  private jsonRpcProvider: ethers.JsonRpcProvider
+  private jsonRpcProvider: ethers.providers.JsonRpcProvider
   private etherscanProvider: IEtherscanProvider
 
   private readonly csModuleRunner: CSModuleRunner
@@ -36,7 +37,7 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
   constructor(
     logger: Logger,
     metrcs: Metrics,
-    jsonRpcProvider: ethers.JsonRpcProvider,
+    jsonRpcProvider: ethers.providers.JsonRpcProvider,
     etherscanProvider: IEtherscanProvider,
     csModuleRunner: CSModuleRunner,
     csAccountingRunner: CSAccountingRunner,
@@ -51,10 +52,6 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
     this.csFeeOracleRunner = csFeeOracleRunner
     this.logger = logger
     this.metrics = metrcs
-  }
-
-  public getEthersProvider(): ethers.JsonRpcProvider {
-    return this.jsonRpcProvider
   }
 
   public async getBlockNumber(): Promise<E.Either<Error, number>> {
@@ -80,11 +77,7 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
-          const block = await this.jsonRpcProvider.getBlock(blockHash)
-          if (block === null) {
-            throw new Error('Block is null')
-          }
-          return block
+          return await this.jsonRpcProvider.getBlock(blockHash)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
@@ -96,7 +89,7 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
         number: out.number,
         timestamp: out.timestamp,
         parentHash: out.parentHash,
-        hash: out.hash ?? '',
+        hash: out.hash,
       })
     } catch (e) {
       this.metrics.etherJsRequest.labels({ method: 'getBlockByHash', status: StatusFail }).inc()
@@ -112,11 +105,7 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
     try {
       const out = await retryAsync<Block>(
         async (): Promise<Block> => {
-          const block = await this.jsonRpcProvider.getBlock(blockNumber)
-          if (block === null) {
-            throw new Error('Block is null')
-          }
-          return block
+          return await this.jsonRpcProvider.getBlock(blockNumber)
         },
         { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
       )
@@ -128,7 +117,7 @@ export class ETHProvider implements ICSAccountingClient, ICSModuleClient, ICSFee
         number: out.number,
         timestamp: out.timestamp,
         parentHash: out.parentHash,
-        hash: out.hash ?? '',
+        hash: out.hash,
       })
     } catch (e) {
       this.metrics.etherJsRequest.labels({ method: this.getBlockByNumber.name, status: StatusFail }).inc()
