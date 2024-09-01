@@ -21,7 +21,7 @@ describe('l2Client', () => {
   const bridgedLdoRunner = ArbERC20__factory.connect(adr.ARBITRUM_LDO_BRIDGED_ADDRESS, l2Provider)
 
   const customRegister = new promClient.Registry()
-  const metrics = new Metrics(customRegister, config.promPrefix)
+  const metrics = new Metrics(customRegister)
 
   const logger: Winston.Logger = Winston.createLogger({
     format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),

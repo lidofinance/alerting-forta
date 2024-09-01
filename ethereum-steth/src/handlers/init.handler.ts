@@ -5,6 +5,7 @@ import { Metadata } from '../entity/metadata'
 import { InitializeRequest, InitializeResponse, Error as pbError, ResponseStatus } from '../generated/proto/agent_pb'
 import { Finding } from '../generated/proto/alert_pb'
 import { GateSealSrv } from '../services/gate-seal/GateSeal.srv'
+import { PoolBalanceSrv } from '../services/pools-balances/pool-balance.srv'
 import { StethOperationSrv } from '../services/steth_operation/StethOperation.srv'
 import { VaultSrv } from '../services/vault/Vault.srv'
 import { WithdrawalsSrv } from '../services/withdrawals/Withdrawals.srv'
@@ -18,6 +19,7 @@ export class InitHandler {
   private readonly withdrawalsSrv: WithdrawalsSrv
   private readonly gateSealSrv: GateSealSrv
   private readonly vaultSrv: VaultSrv
+  private readonly poolBalanceSrv: PoolBalanceSrv
   private readonly appName: string
   private readonly latestBlock: BlockDto
 
@@ -30,6 +32,7 @@ export class InitHandler {
     WithdrawalsSrv: WithdrawalsSrv,
     GateSealSrv: GateSealSrv,
     VaultSrv: VaultSrv,
+    poolBalanceSrv: PoolBalanceSrv,
     onAppStartFindings: Finding[],
     latestBlock: BlockDto,
   ) {
@@ -40,6 +43,7 @@ export class InitHandler {
     this.gateSealSrv = GateSealSrv
     this.vaultSrv = VaultSrv
     this.onAppStartFindings = onAppStartFindings
+    this.poolBalanceSrv = poolBalanceSrv
     this.latestBlock = latestBlock
   }
 
@@ -68,6 +72,20 @@ export class InitHandler {
         this.logger.error('Could not init withdrawalsSrv', withdrawalsSrvErr)
         const err = new pbError()
         err.setMessage(`Could not init withdrawalsSrvErr ${withdrawalsSrvErr}`)
+
+        const resp = new InitializeResponse()
+        resp.setStatus(ResponseStatus.ERROR)
+        resp.addErrors(err)
+
+        callback(null, resp)
+        return
+      }
+
+      const poolBalanceErr = await this.poolBalanceSrv.init(this.latestBlock)
+      if (poolBalanceErr !== null) {
+        this.logger.error('Could not init poolBalanceSrv', poolBalanceErr)
+        const err = new pbError()
+        err.setMessage(`Could not init poolBalanceSrv ${poolBalanceErr}`)
 
         const resp = new InitializeResponse()
         resp.setStatus(ResponseStatus.ERROR)
