@@ -11,6 +11,7 @@ export type DeploymentAddress = {
   LIDO_STETH_ADDRESS: string
   BURNER_ADDRESS: string
   HASH_CONSENSUS_ADDRESS: string
+  STAKING_ROUTER_ADDRESS: string
 }
 
 export const DeploymentAddresses: DeploymentAddress = {
@@ -24,6 +25,7 @@ export const DeploymentAddresses: DeploymentAddress = {
   LIDO_STETH_ADDRESS: '0x3F1c547b21f65e10480dE3ad8E19fAAC46C95034',
   BURNER_ADDRESS: '0x4E46BD7147ccf666E1d73A3A456fC7a68de82eCA',
   HASH_CONSENSUS_ADDRESS: '0xbF38618Ea09B503c1dED867156A0ea276Ca1AE37',
+  STAKING_ROUTER_ADDRESS: '0xd6EbF043D30A7fe46D1Db32BA90a0A51207FE229',
 }
 export interface Proxy {
   name: string

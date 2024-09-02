@@ -21,6 +21,7 @@ import { ethers } from 'ethers'
 import { ETHProvider } from './clients/eth_provider'
 import { getCSFeeDistributorEvents } from './utils/events/cs_fee_distributor_events'
 import { getCSFeeOracleEvents, getHashConsensusEvents } from './utils/events/cs_fee_oracle_events'
+import { getCSModuleEvents } from './utils/events/cs_module_events'
 import { getOssifiedProxyEvents } from './utils/events/ossified_proxy_events'
 import { getPausableEvents } from './utils/events/pausable_events'
 import { getCSAccountingEvents } from './utils/events/cs_accounting_events'
@@ -122,7 +123,13 @@ const main = async () => {
     csFeeOracleRunner,
   )
 
-  const csModuleSrv = new CSModuleSrv(logger, ethClient)
+  const csModuleSrv = new CSModuleSrv(
+    logger,
+    ethClient,
+    address.CS_MODULE_ADDRESS,
+    address.STAKING_ROUTER_ADDRESS,
+    getCSModuleEvents(address.CS_MODULE_ADDRESS),
+  )
 
   const csFeeDistributorSrv = new CSFeeDistributorSrv(
     logger,

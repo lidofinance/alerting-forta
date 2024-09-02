@@ -1,0 +1,108 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CSModule event tests 🔴 CSModule: EL Rewards stealing penalty reported 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      4,
+      [],
+      4,
+      "CS-MODULE-EL-REWARDS-STEALING-PENALTY-REPORTED",
+      "🔴 CSModule: EL Rewards stealing penalty reported",
+      "EL Rewards stealing penalty reported for Node Operator #37 with 0.004 ETH potentially stolen",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "37,0x9abf3544139d770248221e34fc90b40d9d2d526c7ae1638dc482bbcfae213c3b,3570000000000000",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;
+
+exports[`CSModule event tests 🔵 CSModule: Notable Node Operator creation 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      1,
+      ,
+      4,
+      "CS-MODULE-NOTABLE-NODE-OPERATOR-CREATION",
+      "🔵 CSModule: Notable Node Operator creation",
+      "Operator #69 was created.",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": null,
+  },
+]
+`;
+
+exports[`CSModule event tests 🟠 CSModule: Target limit mode changed 1`] = `
+[
+  {
+    "array": [
+      "ethereum",
+      3,
+      [],
+      4,
+      "CS-MODULE-TARGET-LIMIT-MODE-CHANGED",
+      "🟠 CSModule: Target limit mode changed",
+      "Target limit mode: 2 (forced mode)",
+      ,
+      ,
+      [],
+      ,
+      [],
+      [],
+    ],
+    "arrayIndexOffset_": -1,
+    "convertedPrimitiveFields_": {},
+    "messageId_": undefined,
+    "pivot_": 1.7976931348623157e+308,
+    "wrappers_": {
+      "3": {
+        "arrClean": false,
+        "arr_": [],
+        "map_": {
+          "args": {
+            "key": "args",
+            "value": "3,2,5",
+            "valueWrapper": undefined,
+          },
+        },
+        "valueCtor_": null,
+      },
+    },
+  },
+]
+`;

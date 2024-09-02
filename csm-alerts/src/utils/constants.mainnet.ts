@@ -12,6 +12,7 @@ export type DeploymentAddress = {
   BURNER_ADDRESS: string
   ACCOUNTING_HASH_CONSENSUS_ADDRESS: string
   HASH_CONSENSUS_ADDRESS: string
+  STAKING_ROUTER_ADDRESS: string
 }
 
 export const DeploymentAddresses: DeploymentAddress = {
@@ -26,6 +27,7 @@ export const DeploymentAddresses: DeploymentAddress = {
   BURNER_ADDRESS: '',
   ACCOUNTING_HASH_CONSENSUS_ADDRESS: '',
   HASH_CONSENSUS_ADDRESS: '',
+  STAKING_ROUTER_ADDRESS: '',
 }
 export interface Proxy {
   name: string
