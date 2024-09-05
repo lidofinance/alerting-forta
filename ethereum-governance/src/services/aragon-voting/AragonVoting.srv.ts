@@ -6,7 +6,7 @@ import { handleEventsOfNotice } from '../../shared/notice'
 
 import { Block, BlockEvent, Finding, FindingSeverity, FindingType, TransactionEvent, TxEventBlock } from 'forta-agent'
 
-import { ARAGON_VOTING_ADDRESS, ONE_HOUR } from 'constants/common'
+import { ARAGON_VOTING_ADDRESS, ETH_DECIMALS, ONE_HOUR } from 'constants/common'
 
 import { PHASE_ONE_DURATION, TRIGGER_AFTER, FIVE_DAYS_BLOCKS, BLOCK_WINDOW } from 'constants/aragon-voting'
 
@@ -186,12 +186,12 @@ export class AragonVotingSrv {
         }
 
         if (votingPower.right.isGreaterThanOrEqualTo(SIGNIFICANT_VP_AMOUNT)) {
-          const vpFormatted = formatBN2Str(votingPower.right)
+          const vpFormatted = formatBN2Str(votingPower.right.div(ETH_DECIMALS))
 
           out.push(
             Finding.fromObject({
               name: 'ℹ️ Significant amount of LDO was delegated at once',
-              description: `An account ${event.args.voter} with ${vpFormatted} LDO on their balance has delegated their voting power to ${event.args.assignedDelegate}.`,
+              description: `An account ${event.args.voter} with ${vpFormatted} LDO has delegated their voting power to ${event.args.assignedDelegate}.`,
               alertId: 'ARAGON-SIGNIFICANT-DELEGATE',
               severity: FindingSeverity.Info,
               type: FindingType.Info,

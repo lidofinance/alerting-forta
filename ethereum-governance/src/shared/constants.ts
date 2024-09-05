@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js'
+
 export type ERC20 = {
   decimals: number
   name: string
@@ -77,4 +78,4 @@ export const Address: Address = {
   ENS_BASE_REGISTRAR_ADDRESS,
 }
 
-export const SIGNIFICANT_VP_AMOUNT = new BigNumber(500_000).pow(18)
+export const SIGNIFICANT_VP_AMOUNT = new BigNumber(500_000).multipliedBy(ETH_DECIMALS)
