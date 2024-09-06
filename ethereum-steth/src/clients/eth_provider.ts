@@ -4,6 +4,7 @@ import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
 import { keccak256, toUtf8Bytes } from 'ethers/lib/utils'
 import { either as E } from 'fp-ts'
+import { randomUUID } from 'node:crypto'
 import { retryAsync } from 'ts-retry'
 import { Logger } from 'winston'
 import { BlockDto } from '../entity/events'
@@ -113,25 +114,47 @@ export class ETHProvider
   public async getUnbufferedEvents(startBlock: number, endBlock: number): Promise<E.Either<Error, UnbufferedEvent[]>> {
     const end = this.metrics.etherJsDurationHistogram.labels({ method: this.getUnbufferedEvents.name }).startTimer()
 
+    const fetchUnbufferedEvents = async (startBlock: number, endBlock: number): Promise<UnbufferedEvent[]> => {
+      try {
+        const out = await retryAsync<UnbufferedEvent[]>(
+          async (): Promise<UnbufferedEvent[]> => {
+            return await this.lidoRunner.queryFilter(this.lidoRunner.filters.Unbuffered(), startBlock, endBlock)
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+
+        this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusOK }).inc()
+        end({ status: StatusOK })
+
+        return out
+      } catch (e) {
+        this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusFail }).inc()
+        end({ status: StatusFail })
+
+        throw new NetworkError(e, `Could not call UnbufferedEvents`)
+      }
+    }
+
+    const unbufferedBatchSize = 500
+    const promises = []
+    for (let i = startBlock; i <= endBlock; i += unbufferedBatchSize) {
+      const start = i
+      const end = Math.min(i + unbufferedBatchSize - 1, endBlock)
+
+      promises.push(fetchUnbufferedEvents(start, end))
+    }
+
     try {
-      const out = await retryAsync<UnbufferedEvent[]>(
-        async (): Promise<UnbufferedEvent[]> => {
-          return await this.lidoRunner.queryFilter(this.lidoRunner.filters.Unbuffered(), startBlock, endBlock)
-        },
-        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
-      )
+      const events = (await Promise.all(promises)).flat()
+      events.sort((a, b) => a.blockNumber - b.blockNumber)
 
-      out.sort((a, b) => a.blockNumber - b.blockNumber)
-
-      this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusOK }).inc()
-      end({ status: StatusOK })
-
-      return E.right(out)
+      return E.right(events)
     } catch (e) {
-      this.metrics.etherJsRequest.labels({ method: this.getUnbufferedEvents.name, status: StatusFail }).inc()
-      end({ status: StatusFail })
+      if (e instanceof NetworkError) {
+        return E.left(e)
+      }
 
-      throw new NetworkError(e, `Could not call StakingRouterETHDeposited`)
+      return E.left(new Error(`Could not fetch unbuffered events`))
     }
   }
 
@@ -313,7 +336,7 @@ export class ETHProvider
     }
 
     const chunkPromises: Promise<void>[] = []
-    const MAX_REQUESTS_CHUNK_SIZE = 875
+    const MAX_REQUESTS_CHUNK_SIZE = 500
     const out = new DataRW<WithdrawalRequest>([])
 
     for (let i = 0; i < requestIds.length; i += MAX_REQUESTS_CHUNK_SIZE) {
@@ -898,6 +921,7 @@ export class ETHProvider
       jsonrpc: string
       method: string
       params: Array<any>
+      id: string
     }
 
     type RpcResponse = {
@@ -916,12 +940,13 @@ export class ETHProvider
       jsonrpc: '2.0',
       method: `eth_getStorageAt`,
       params: [address, slot, blockTag],
+      id: randomUUID().toLowerCase(),
     }
 
     try {
       const data = await retryAsync<string>(
         async (): Promise<string> => {
-          const response: Response = await fetch(`https://eth.drpc.org`, {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -972,6 +997,7 @@ export class ETHProvider
       jsonrpc: string
       method: string
       params: Array<any>
+      id: string
     }
 
     type RpcResponse = {
@@ -988,12 +1014,13 @@ export class ETHProvider
       jsonrpc: '2.0',
       method: `eth_getStorageAt`,
       params: [address, slotAddr, blockTag],
+      id: randomUUID().toLowerCase(),
     }
 
     try {
       const data = await retryAsync<string>(
         async (): Promise<string> => {
-          const response: Response = await fetch(`https://eth.drpc.org`, {
+          const response: Response = await fetch(this.jsonRpcProvider.connection.url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

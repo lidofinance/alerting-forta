@@ -221,7 +221,7 @@ export class L2Client implements IL2BridgeBalanceClient {
   }
 
   public async fetchL2Logs(startBlock: number, endBlock: number, address: string[]): Promise<E.Either<Error, Log[]>> {
-    const batchSize = 2_000
+    const batchSize = 500
     const batchRequests: RpcRequest[] = []
     for (let i = startBlock; i <= endBlock; i += batchSize) {
       const from = i
