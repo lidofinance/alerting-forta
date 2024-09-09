@@ -8,7 +8,15 @@
 
 1. **CSModule**
    1. General
-      - _To be added_
+      1. 🔵 INFO: Public release is activated.
+      2. 🟢 LOW: Module's share is close to the targetShare.
+      3. 🟢 LOW: More than N "empty" batches in the queue. (N = 30)
+      4. 🟢 LOW: More than N validators in the queue. (N = 200)
+      5. 🔵 INFO: Every 100 new operators created (69th as well).
+      6. 🔴 HIGH: EL rewards stealing penalty reported/settled/cancelled for an operator.
+      7. 🟠 MEDIUM: targetLimitMode was set for an operator.
+      8. 🔵 INFO: Operator X was unvetted.
+      9. 🟢 LOW: More than 3 operators have the same manager or reward address.
    2. Roles monitoring
       - _To be added_
 2. **CSAccounting**
@@ -69,22 +77,22 @@
    - CSFeeOracle
    - CSFeeDistributor
 
-1.  🚨 CRITICAL: event ProxyOssified()
-2.  🚨 CRITICAL: event Upgraded(address indexed implementation)
-3.  🚨 CRITICAL: event AdminChanged(address previousAdmin, address newAdmin)
-4.  🚨 CRITICAL: event BeaconUpgraded(address indexed beacon)
+   1. 🚨 CRITICAL: event ProxyOssified()
+   2. 🚨 CRITICAL: event Upgraded(address indexed implementation)
+   3. 🚨 CRITICAL: event AdminChanged(address previousAdmin, address newAdmin)
+   4. 🚨 CRITICAL: event BeaconUpgraded(address indexed beacon)
 
-7.  **PausableUntil**
+7. **PausableUntil**
     For the following contracts:
 
     - CSModule
     - CSAccounting
     - CSFeeOracle
 
-    1.  🚨 CRITICAL: Paused(uint256 duration);
-    2.  🚨 CRITICAL: Resumed();
+    1. 🚨 CRITICAL: Paused(uint256 duration);
+    2. 🚨 CRITICAL: Resumed();
 
-8.  **AssetRecoverer**
+8. **AssetRecoverer**
     For the following contracts:
 
     - CSModule
@@ -92,11 +100,11 @@
     - CSFeeOracle
     - CSFeeDistributor
 
-    1.  🔴 HIGH: EtherRecovered()
-    2.  🔴 HIGH: ERC20Recovered()
-    3.  🔴 HIGH: StETHSharesRecovered()
-    4.  🔴 HIGH: ERC721Recovered()
-    5.  🔴 HIGH: ERC1155Recovered()
+    1. 🔴 HIGH: EtherRecovered()
+    2. 🔴 HIGH: ERC20Recovered()
+    3. 🔴 HIGH: StETHSharesRecovered()
+    4. 🔴 HIGH: ERC721Recovered()
+    5. 🔴 HIGH: ERC1155Recovered()
 
 ## Development (Forta specific)
 
@@ -117,10 +125,13 @@ docker-compose up -d
 ## Testing alerts
 
 1. For testing alerts you have to install promtool on your machine.
+
    ```
    make tools
    ```
+
 2. Check alerts
+
    ```
    make test_alerts
    ```
