@@ -13,6 +13,7 @@ export class Config {
   public readonly logLevel: string
 
   public readonly chainId: number
+  public readonly csModuleInitBlock: number
   public readonly promPrefix: string
   public readonly useFortaProvider: boolean
 
@@ -27,6 +28,7 @@ export class Config {
     this.logLevel = process.env.LOG_LEVEL || 'info'
 
     this.chainId = parseInt(process.env.FORTA_CHAIN_ID!, 10) || 17000
+    this.csModuleInitBlock = 1774651
     this.ethereumRpcUrl = process.env.ETHEREUM_RPC_URL || 'https://holesky.drpc.org'
 
     this.promPrefix = this.appName.replace('-', '_') + '_'

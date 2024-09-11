@@ -4,6 +4,9 @@ import { Finding } from '../../generated/proto/alert_pb'
 import { toEthString } from '../string'
 import BigNumber from 'bignumber.js'
 
+export const NODE_OPERATOR_ADDED_EVENT_ABI =
+  'event NodeOperatorAdded(uint256 indexed nodeOperatorId, address indexed managerAddress, address indexed rewardAddress)'
+
 export function getCSModuleEvents(CS_MODULE_ADDRESS: string): EventOfNotice[] {
   return [
     {
@@ -30,7 +33,13 @@ export function getCSModuleEvents(CS_MODULE_ADDRESS: string): EventOfNotice[] {
       alertId: 'CS-MODULE-TARGET-LIMIT-MODE-CHANGED',
       name: '🟠 CSModule: Target limit mode changed',
       description: (args: Result) =>
-        `Target limit mode: ${args.targetLimitMode} (${Number(args.targetLimitMode) === 1 ? 'soft mode' : 'forced mode'})`,
+        `Target limit mode: ${args.targetLimitMode} (${
+          Number(args.targetLimitMode) === 0
+            ? 'disabled'
+            : Number(args.targetLimitMode) === 1
+              ? 'soft mode'
+              : 'forced mode'
+        })`,
       severity: Finding.Severity.MEDIUM,
       type: Finding.FindingType.INFORMATION,
     },
