@@ -286,8 +286,8 @@ export class CSModuleSrv {
     if (timeSinceLastEmptyBatchesAlert > ONE_DAY) {
       if (emptyBatchCount > MAX_EMPTY_BATCHES_IN_THE_QUEUE) {
         const f: Finding = new Finding()
-        f.setName(`🟢 CSModule: Too many empty batches in the deposit queue.`)
-        f.setDescription(`${emptyBatchCount} empty batches in the deposit queue.`)
+        f.setName(`🟢 CSModule: Too many empty batces in the deposit queue.`)
+        f.setDescription(`${emptyBatchCount} empty batces in the deposit queue.`)
         f.setAlertid('CS-MODULE-TOO-MANY-EMPTY-BATCHES-IN-THE-QUEUE')
         f.setSeverity(Finding.Severity.LOW)
         f.setType(Finding.FindingType.INFORMATION)
