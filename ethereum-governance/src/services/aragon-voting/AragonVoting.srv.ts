@@ -8,7 +8,13 @@ import { Block, BlockEvent, Finding, FindingSeverity, FindingType, TransactionEv
 
 import { ARAGON_VOTING_ADDRESS, ETH_DECIMALS, ONE_HOUR } from 'constants/common'
 
-import { PHASE_ONE_DURATION, TRIGGER_AFTER, FIVE_DAYS_BLOCKS, BLOCK_WINDOW } from 'constants/aragon-voting'
+import {
+  PHASE_ONE_DURATION,
+  TRIGGER_AFTER,
+  FIVE_DAYS_BLOCKS,
+  BLOCK_WINDOW,
+  PUBLIC_DELEGATES_MAP,
+} from 'constants/aragon-voting'
 
 import {
   CAST_VOTE_EVENT,
@@ -17,6 +23,7 @@ import {
 } from '../../shared/events/aragon_events'
 import { SIGNIFICANT_VP_AMOUNT } from '../../shared/constants'
 import { formatBN2Str } from '../../shared/format'
+import { etherscanAddress } from '../../shared/string'
 
 export enum Outcomes {
   Pass = 'Pass',
@@ -188,10 +195,13 @@ export class AragonVotingSrv {
         if (votingPower.right.isGreaterThanOrEqualTo(SIGNIFICANT_VP_AMOUNT)) {
           const vpFormatted = formatBN2Str(votingPower.right.div(ETH_DECIMALS))
 
+          const delegateName =
+            PUBLIC_DELEGATES_MAP[event.args.assignedDelegate.toLowerCase()] ?? event.args.assignedDelegate
+
           out.push(
             Finding.fromObject({
-              name: 'ℹ️ Significant amount of LDO was delegated at once',
-              description: `An account ${event.args.voter} with ${vpFormatted} LDO has delegated their voting power to ${event.args.assignedDelegate}.`,
+              name: 'ℹ️ Big delegation',
+              description: `${vpFormatted} LDO was delegated to ${etherscanAddress(event.args.assignedDelegate, delegateName)} from ${etherscanAddress(event.args.voter)}.`,
               alertId: 'ARAGON-SIGNIFICANT-DELEGATE',
               severity: FindingSeverity.Info,
               type: FindingType.Info,
