@@ -28,7 +28,7 @@ export const PUBLIC_DELEGATES_MAP: Record<string, string | undefined> = {
   '0x3b9f47629cd4d5903cf3eb897aac4f6b41dd2589': 'Blockful (Daniela Zschaber)',
   '0x8787fc2de4de95c53e5e3a4e5459247d9773ea52': 'karpatkey',
   '0xecc2a9240268bc7a26386ecb49e1befca2706ac9': 'StableLab',
-  '0xbeb3364D14DbB4D9A406966B97B9FB3fF8aB7646': 'DegentradingLSD',
+  '0xbeb3364d14dbb4d9a406966b97b9fb3ff8ab7646': 'DegentradingLSD',
   '0x000b4369b71b6634f27f5de9cbaaabb0d21b8be5': 'NodeSoda',
   '0x5ef980c7bda50c81e8fb13dff2b804113065ed1c': 'eboadom (Ernesto)',
   '0x4f894bfc9481110278c356ade1473ebe2127fd3c': 'ReservoirDAO',
