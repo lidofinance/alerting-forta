@@ -217,7 +217,7 @@ export const VAULT_DVSTETH = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
-  integrityWarningLimit: 0.0015,
+  integrityWarningLimit: 0.0025,
   integrityCriticalLimit: 0.01,
   hasWETH: true,
 }
