@@ -231,7 +231,7 @@ describe('AragonVotingSrv', () => {
     const findings = await aragonVotingSrv.handleAssignDelegateTransaction(txEvent)
 
     expect(findings).toHaveLength(1)
-    expect(findings[0].name).toBe('ℹ️ Significant amount of LDO was delegated at once')
+    expect(findings[0].name).toBe('ℹ️ Big delegation')
   })
 
   it('handles assignDelegate transaction without findings when vp amount is lower than significant', async () => {
