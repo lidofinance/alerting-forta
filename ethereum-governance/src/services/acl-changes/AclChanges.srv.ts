@@ -277,8 +277,8 @@ export class AclChangesSrv {
 
   public async handlePermissionChange(permission: IPermission, out: Finding[]) {
     const shortState = permission.state.replace(' from', '').replace(' to', '')
-    const role = LIDO_ROLES.get(permission.role) || 'unknown'
-    const app = LIDO_APPS.get(permission.app.toLowerCase()) || 'unknown'
+    const roleLabel = LIDO_ROLES.get(permission.role) || 'unknown'
+    const appLabel = LIDO_APPS.get(permission.app.toLowerCase()) || 'unknown'
     const entityRaw = permission.entity.toLowerCase()
     let severity = FindingSeverity.Info
     let entity = ORDINARY_ENTITIES.get(entityRaw)
@@ -311,7 +311,7 @@ export class AclChangesSrv {
     out.push(
       Finding.fromObject({
         name: `🚨 Aragon ACL: Permission ${shortState}`,
-        description: `Role ${permission.role} (${role}) on the app ${etherscanAddress(permission.app)} (${app}) was ${
+        description: `Role ${permission.role} (${roleLabel}) on the app ${etherscanAddress(permission.app)} (${appLabel}) was ${
           permission.state
         } ${permission.entity} (${entity})`,
         alertId: 'ARAGON-ACL-PERMISSION-CHANGED',
@@ -329,15 +329,15 @@ export class AclChangesSrv {
 
     const managerEvents = txEvent.filterLog(CHANGE_PERMISSION_MANAGER_EVENT, ARAGON_ACL_ADDRESS)
     managerEvents.forEach((event) => {
-      const role = LIDO_ROLES.get(event.args.role) || 'unknown'
-      const app = LIDO_APPS.get(event.args.app.toLowerCase()) || 'unknown'
-      const manager = LIDO_APPS.get(event.args.manager.toLowerCase()) || 'unknown'
+      const roleLabel = LIDO_ROLES.get(event.args.role) || 'unknown'
+      const appLabel = LIDO_APPS.get(event.args.app.toLowerCase()) || 'unknown'
+      const managerLabel = LIDO_APPS.get(event.args.manager.toLowerCase()) || 'unknown'
       out.push(
         Finding.fromObject({
           name: `🚨 Aragon ACL: Permission manager changed`,
-          description: `Permission manager for the role ${event.args.role} (${role}) on the app ${etherscanAddress(
+          description: `Permission manager for the role ${event.args.role} (${roleLabel}) on the app ${etherscanAddress(
             event.args.app,
-          )} (${app}) was set to ${etherscanAddress(event.args.manager)} (${manager})`,
+          )} (${appLabel}) was set to ${etherscanAddress(event.args.manager)} (${managerLabel})`,
           alertId: 'ARAGON-ACL-PERMISSION-MANAGER-CHANGED',
           severity: FindingSeverity.Critical,
           type: FindingType.Info,
