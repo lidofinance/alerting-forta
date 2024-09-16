@@ -100,4 +100,15 @@ describe("agent-node-operators-registry e2e tests", () => {
     },
     TEST_TIMEOUT,
   );
+
+  it(
+    "should process tx with added simple dvt clusters",
+    async () => {
+      const findings = await runTransaction(
+        "0xc3338fc9ef0419109b90dcc318ac89bcdb235a1fe7b9960611a7d0666c1e8170",
+      );
+      expect(findings).toMatchSnapshot();
+    },
+    TEST_TIMEOUT,
+  );
 });
