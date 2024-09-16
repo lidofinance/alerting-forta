@@ -7,9 +7,7 @@
 ## Alerts
 
 1. Infra:
-
-   1. ⚠️ Currently processing Ethereum network block is outdated
-
+   1. ℹ️ Steth: Currently processing Ethereum network block is outdated
 2. StETH operations
    1. HandleBlock
       1. 🚨🚨🚨 Buffered ETH drain (checks each block)
@@ -87,21 +85,45 @@
       6. ℹ️ EL Vault Balance significant change
    2. HandleTransaction
       1. 🚨 Burner shares transfer
-
-## Development (Forta specific)
-
-Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
+6. Storage Watcher
+   1. 🚨 Storage slot value changed
+      1. in LIDO_STETH
+      2. in NOR
+      3. in LEGACY_ORACLE
+      4. in ACCOUNTING_ORACLE
+      5. in ACCOUNTING_HASH_CONSENSUS
+      6. in VEBO
+      7. in VEBO_HASH_CONSENSUS
+      8. in DSM
+      9. in WSTETH
+      10. in MEV_BOOST_RELAY_ALLOWED_LIST
+      11. in ARAGON_VOTING
+      12. in ARAGON_TOKEN_MANAGER
+      13. in ARAGON_FINANCE
+      14. in LIDO_TREASURY
+      15. in LIDO_INSURANCE
+      16. in STAKING_ROUTER
+      17. in WITHDRAWALS_QUEUE
+      18. in SIMPLE_DVT
+7. Aave operations
+   1. HandleBlock
+      1. 🚨🚨🚨 astETH balance - astETH totalSupply >= 1ETH
+      2. 🚨🚨🚨 stableDebtStETH totalSupply is not 0
+      3. 🚨🚨🚨 variableDebtStETH totalSupply is not 0
+8. Pool balances
+   1. HandleBlock
+      1. 🚨 Super low stETH:ETH price on Curve
+      2. 🚨 Super low stETH:ETH price on Chainlink
+      3. 🚨 Curve Pool rapid imbalance change
+      4. 🚨️ Significant Curve Pool size change
+      5. ⚠️ Significant Curve Pool size change
+      6. ⚠️ Curve Pool is imbalanced
+      7. ⚠️ stETH:ETH price on Curve decreased
+      8. ⚠️ stETH:ETH price on Chainlink decreased
 
 ```
 yarn install
-yarn build
 yarn start
-```
-
-In separate console run
-
-```
-docker-compose up -d
 ```
 
 ## Testing alerts

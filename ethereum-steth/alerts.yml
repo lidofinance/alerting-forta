@@ -6,5 +6,5 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Eth-steth has detected {{ $value }} network errors in the last 15 minutes"
-          description: "The ethereum_steth_network_errors_total {{ $value }} in the last 15 minutes."
+          summary: 'Eth-steth has detected {{ $value }} network errors in the last 15 minutes'
+          description: 'The ethereum_steth_network_errors_total {{ $value }} in the last 15 minutes.'

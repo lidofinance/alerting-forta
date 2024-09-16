@@ -1,5 +1,5 @@
-import BigNumber from 'bignumber.js'
 import { Result } from '@ethersproject/abi/lib'
+import BigNumber from 'bignumber.js'
 import { EventOfNotice } from '../../entity/events'
 import { Finding } from '../../generated/proto/alert_pb'
 
@@ -9,9 +9,6 @@ export const WITHDRAWALS_BUNKER_MODE_DISABLED_EVENT = 'event BunkerModeDisabled(
 
 export const WITHDRAWAL_QUEUE_WITHDRAWAL_REQUESTED_EVENT =
   'event WithdrawalRequested(uint256 indexed requestId, address indexed requestor, address indexed owner, uint256 amountOfStETH, uint256 amountOfShares)'
-
-export const LIDO_TOKEN_REBASED_EVENT =
-  'event TokenRebased(uint256 indexed reportTimestamp, uint256 timeElapsed, uint256 preTotalShares, uint256 preTotalEther, uint256 postTotalShares, uint256 postTotalEther, uint256 sharesMintedAsFees)'
 
 export const WITHDRAWAL_QUEUE_WITHDRAWALS_FINALIZED_EVENT =
   'event WithdrawalsFinalized(uint256 indexed from, uint256 indexed to, uint256 amountOfETHLocked, uint256 sharesToBurn, uint256 timestamp)'

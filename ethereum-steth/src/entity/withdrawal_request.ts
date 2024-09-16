@@ -3,12 +3,25 @@ import { WithdrawalQueueBase } from '../generated/typechain/WithdrawalQueueERC72
 
 export type WithdrawalRequestSql = {
   id: number
-  amountOfStETH: string
-  amountOfShares: string
+  amount_steth: string
+  amount_shares: string
   owner: string
   timestamp: number
-  isFinalized: number
-  isClaimed: number
+  finalized: number
+  claimed: number
+}
+
+export type WithdrawalStat = {
+  finalizedSteth: number
+  unFinalizedSteth: number
+  claimedSteth: number
+  unClaimedSteth: number
+  stethAmount: number
+  totalRequests: number
+  finalizedRequests: number
+  unFinalizedRequests: number
+  claimedRequests: number
+  unClaimedRequests: number
 }
 
 export class WithdrawalRequest {
@@ -56,24 +69,24 @@ export class WithdrawalRequest {
   public toSqlObject(): WithdrawalRequestSql {
     return {
       id: this.id,
-      amountOfStETH: this.amountOfStETH.toString(),
-      amountOfShares: this.amountOfShares.toString(),
+      amount_steth: this.amountOfStETH.toString(),
+      amount_shares: this.amountOfShares.toString(),
       owner: this.owner,
       timestamp: this.timestamp,
-      isFinalized: Number(this.isFinalized),
-      isClaimed: Number(this.isClaimed),
+      finalized: Number(this.isFinalized),
+      claimed: Number(this.isClaimed),
     }
   }
 
   public static sqlToWithdrawalRequest(o: WithdrawalRequestSql): WithdrawalRequest {
     return new WithdrawalRequest(
       o.id,
-      new BigNumber(o.amountOfStETH.toString()),
-      new BigNumber(o.amountOfShares.toString()),
+      new BigNumber(o.amount_steth.toString()),
+      new BigNumber(o.amount_shares.toString()),
       o.owner,
       o.timestamp,
-      Boolean(o.isFinalized),
-      Boolean(o.isClaimed),
+      Boolean(o.finalized),
+      Boolean(o.claimed),
     )
   }
 }

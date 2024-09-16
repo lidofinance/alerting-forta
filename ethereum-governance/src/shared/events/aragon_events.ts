@@ -26,3 +26,5 @@ export const ARAGON_VOTING_EVENTS_OF_NOTICE = [
     type: FindingType.Info,
   },
 ]
+
+export const ASSIGN_DELEGATE_EVENT = 'event AssignDelegate(address indexed voter, address indexed assignedDelegate)'

@@ -89,4 +89,15 @@ describe("agent-node-operators-registry e2e tests", () => {
     },
     TEST_TIMEOUT,
   );
+
+  it(
+    "should process tx with setting node operator name",
+    async () => {
+      const findings = await runTransaction(
+        "0x14bd64e4262041d762de83edce9a0b4c88dbb49ef678e3fd524cdc4cfdc3d88c",
+      );
+      expect(findings).toMatchSnapshot();
+    },
+    TEST_TIMEOUT,
+  );
 });

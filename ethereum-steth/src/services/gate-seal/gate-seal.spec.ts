@@ -1,52 +1,76 @@
-import { Address, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024 } from '../../utils/constants'
-import { either as E } from 'fp-ts'
-import { GateSeal } from '../../entity/gate_seal'
 import { expect } from '@jest/globals'
-import { BlockDto, TransactionDto } from '../../entity/events'
-import {
-  GateSeal__factory,
-  Lido__factory,
-  ValidatorsExitBusOracle__factory,
-  WithdrawalQueueERC721__factory,
-} from '../../generated/typechain'
-import { GateSealSrv, IGateSealClient } from './GateSeal.srv'
-import { GateSealCache } from './GateSeal.cache'
+import { ethers } from 'ethers'
+import { either as E } from 'fp-ts'
+import * as promClient from 'prom-client'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
-import { ethers } from 'forta-agent'
+import { BlockDto, TransactionDto } from '../../entity/events'
+import { GateSeal } from '../../entity/gate_seal'
 import { Finding } from '../../generated/proto/alert_pb'
-import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
-import promClient from 'prom-client'
+import {
+  AstETH__factory,
+  ChainlinkAggregator__factory,
+  CurvePool__factory,
+  GateSeal__factory,
+  Lido__factory,
+  StableDebtStETH__factory,
+  ValidatorsExitBusOracle__factory,
+  VariableDebtStETH__factory,
+  WithdrawalQueueERC721__factory,
+} from '../../generated/typechain'
+import { Address } from '../../utils/constants'
+import { Config } from '../../utils/env/env'
 import { Metrics } from '../../utils/metrics/metrics'
+import { GateSealCache } from './GateSeal.cache'
+import { GateSealSrv, IGateSealClient } from './GateSeal.srv'
 
 const TEST_TIMEOUT = 120_000 // ms
 
 describe('GateSeal srv functional tests', () => {
-  const chainId = 1
-
+  const config = new Config()
   const logger: Winston.Logger = Winston.createLogger({
     format: Winston.format.simple(),
     transports: [new Winston.transports.Console()],
   })
+  const address: Address = Address
+  const chainId = 1
 
   const adr: Address = Address
 
-  const fortaEthersProvider = new ethers.providers.JsonRpcProvider(getFortaConfig().jsonRpcUrl, chainId)
-  const lidoRunner = Lido__factory.connect(adr.LIDO_STETH_ADDRESS, fortaEthersProvider)
-  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(adr.WITHDRAWALS_QUEUE_ADDRESS, fortaEthersProvider)
-  const gateSealRunner = GateSeal__factory.connect(adr.GATE_SEAL_DEFAULT_ADDRESS, fortaEthersProvider)
-  const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.EXIT_BUS_ORACLE_ADDRESS, fortaEthersProvider)
+  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl, chainId)
+  const lidoRunner = Lido__factory.connect(adr.LIDO_STETH_ADDRESS, ethProvider)
+  const wdQueueRunner = WithdrawalQueueERC721__factory.connect(adr.WITHDRAWALS_QUEUE_ADDRESS, ethProvider)
+  const gateSealRunner = GateSeal__factory.connect(adr.GATE_SEAL_DEFAULT_ADDRESS, ethProvider)
+  const veboRunner = ValidatorsExitBusOracle__factory.connect(adr.VEBO_ADDRESS, ethProvider)
+  const astRunner = AstETH__factory.connect(address.AAVE_ASTETH_ADDRESS, ethProvider)
+
+  const stableDebtStEthRunner = StableDebtStETH__factory.connect(address.AAVE_STABLE_DEBT_STETH_ADDRESS, ethProvider)
+  const variableDebtStEthRunner = VariableDebtStETH__factory.connect(
+    address.AAVE_VARIABLE_DEBT_STETH_ADDRESS,
+    ethProvider,
+  )
+
+  const curvePoolRunner = CurvePool__factory.connect(address.CURVE_POOL_ADDRESS, ethProvider)
+  const chainlinkAggregatorRunner = ChainlinkAggregator__factory.connect(
+    address.CHAINLINK_STETH_PRICE_FEED,
+    ethProvider,
+  )
 
   const registry = new promClient.Registry()
-  const m = new Metrics(registry, 'test_')
+  const m = new Metrics(registry)
 
   const gateSealClient: IGateSealClient = new ETHProvider(
     logger,
     m,
-    fortaEthersProvider,
+    ethProvider,
     lidoRunner,
     wdQueueRunner,
     gateSealRunner,
+    astRunner,
+    stableDebtStEthRunner,
+    variableDebtStEthRunner,
+    curvePoolRunner,
+    chainlinkAggregatorRunner,
     veboRunner,
   )
 
@@ -54,15 +78,16 @@ describe('GateSeal srv functional tests', () => {
     logger,
     gateSealClient,
     new GateSealCache(),
-    GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024,
+    adr.GATE_SEAL_DEFAULT_ADDRESS,
     adr.GATE_SEAL_FACTORY_ADDRESS,
   )
 
   test(
     'handle pause role true',
     async () => {
-      const blockNumber = 19_113_580
-      const block = await fortaEthersProvider.getBlock(blockNumber)
+      const blockNumber = 20_569_059
+
+      const block = await ethProvider.getBlock(blockNumber)
       const blockDto: BlockDto = {
         number: block.number,
         timestamp: block.timestamp,
@@ -75,7 +100,7 @@ describe('GateSeal srv functional tests', () => {
         throw initErr
       }
 
-      const status = await gateSealClient.checkGateSeal(blockNumber, GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024)
+      const status = await gateSealClient.checkGateSeal(blockNumber, adr.GATE_SEAL_DEFAULT_ADDRESS)
       if (E.isLeft(status)) {
         throw status
       }
@@ -96,50 +121,10 @@ describe('GateSeal srv functional tests', () => {
   )
 
   test(
-    '⚠️ GateSeal: is about to be expired',
-    async () => {
-      const initBlock = 19_172_614
-
-      const initErr = await gateSealSrv.initialize(initBlock)
-      if (initErr instanceof Error) {
-        throw initErr
-      }
-
-      const neededBlock = 19_172_615
-      const block = await fortaEthersProvider.getBlock(neededBlock)
-      const blockDto: BlockDto = {
-        number: block.number,
-        timestamp: block.timestamp,
-        parentHash: block.parentHash,
-        hash: block.hash,
-      }
-      const result = await gateSealSrv.handleExpiryGateSeal(blockDto)
-
-      const expected = {
-        alertId: 'GATE-SEAL-IS-ABOUT-TO-BE-EXPIRED',
-        description:
-          `GateSeal address: [${GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024}](https://etherscan.io/address/${GATE_SEAL_DEFAULT_ADDRESS_BEFORE_26_APR_2024})\n` +
-          'Expiry date Wed, 01 May 2024 00:00:00 GMT',
-        name: '⚠️ GateSeal: is about to be expired',
-        severity: Finding.Severity.MEDIUM,
-        type: Finding.FindingType.DEGRADED,
-      }
-
-      expect(result.length).toEqual(1)
-      expect(result[0].getAlertid()).toEqual(expected.alertId)
-      expect(result[0].getDescription()).toEqual(expected.description)
-      expect(result[0].getName()).toEqual(expected.name)
-      expect(result[0].getSeverity()).toEqual(expected.severity)
-      expect(result[0].getType()).toEqual(expected.type)
-    },
-    TEST_TIMEOUT,
-  )
-
-  test(
     '⚠️ GateSeal: a new instance deployed from factory',
     async () => {
       const txHash = '0x1547f17108830a92673b967aff13971fae18b4d35681b93a38a97a22083deb93'
-      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const trx = await ethProvider.getTransaction(txHash)
       const receipt = await trx.wait()
 
       const transactionDto: TransactionDto = {
@@ -172,7 +157,7 @@ describe('GateSeal srv functional tests', () => {
 
       const txHashEmptyFindings = '0xb00783f3eb79bd60f63e5744bbf0cb4fdc2f98bbca54cd2d3f611f032faa6a57'
 
-      const trxWithEmptyFindings = await fortaEthersProvider.getTransaction(txHashEmptyFindings)
+      const trxWithEmptyFindings = await ethProvider.getTransaction(txHashEmptyFindings)
       const receiptWithEmptyFindings = await trxWithEmptyFindings.wait()
 
       const trxDTOWithEmptyFindings: TransactionDto = {

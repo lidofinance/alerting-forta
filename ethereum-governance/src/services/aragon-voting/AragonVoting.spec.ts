@@ -6,6 +6,7 @@ import * as E from 'fp-ts/Either'
 import BigNumber from 'bignumber.js'
 import { BLOCK_WINDOW, TRIGGER_AFTER } from '../../shared/constants/aragon-voting/mainnet'
 import { ARAGON_VOTING_ADDRESS } from '../../shared/constants/common/mainnet'
+import { SIGNIFICANT_VP_AMOUNT } from '../../shared/constants'
 
 describe('AragonVotingSrv', () => {
   let logger: Logger
@@ -16,11 +17,19 @@ describe('AragonVotingSrv', () => {
 
   beforeEach(() => {
     logger = { info: jest.fn(), debug: jest.fn() } as unknown as Logger
-    ethProvider = { getStartedVotes: jest.fn(), getVote: jest.fn() } as unknown as IAragonVotingClient
+    ethProvider = {
+      getStartedVotes: jest.fn(),
+      getVote: jest.fn(),
+      getVotingPower: jest.fn(),
+    } as unknown as IAragonVotingClient
     jest.spyOn(ethProvider, 'getStartedVotes').mockResolvedValue(E.right(new Map<number, IVoteInfo>()))
     aragonVotingSrv = new AragonVotingSrv(logger, ethProvider)
     blockEvent = { block: { number: 100, timestamp: 1000 } } as BlockEvent
-    txEvent = { addresses: { '0x123': true }, filterLog: jest.fn() } as unknown as TransactionEvent
+    txEvent = {
+      addresses: { '0x123': true },
+      filterLog: jest.fn(),
+      block: { number: 123 },
+    } as unknown as TransactionEvent
   })
 
   it('initializes without error', () => {
@@ -201,5 +210,39 @@ describe('AragonVotingSrv', () => {
     const outcome = aragonVotingSrv.getVoteOutcome(voteInfo)
 
     expect(outcome).toBe(Outcomes.Fail)
+  })
+
+  it('handles assignDelegate transaction without findings when no matching events', async () => {
+    txEvent.addresses[ARAGON_VOTING_ADDRESS] = true
+    jest.mocked(txEvent.filterLog).mockReturnValue([])
+
+    const findings = await aragonVotingSrv.handleAssignDelegateTransaction(txEvent)
+
+    expect(findings).toEqual([])
+  })
+
+  it('handles assignDelegate transaction with findings when matching events', async () => {
+    txEvent.addresses[ARAGON_VOTING_ADDRESS] = true
+    jest.spyOn(ethProvider, 'getVotingPower').mockResolvedValue(E.right(SIGNIFICANT_VP_AMOUNT))
+    jest
+      .mocked(txEvent.filterLog)
+      .mockReturnValue([{ args: { voter: '0x123', assignedDelegate: '0x345' } }] as unknown as LogDescription[])
+
+    const findings = await aragonVotingSrv.handleAssignDelegateTransaction(txEvent)
+
+    expect(findings).toHaveLength(1)
+    expect(findings[0].name).toBe('ℹ️ Big delegation')
+  })
+
+  it('handles assignDelegate transaction without findings when vp amount is lower than significant', async () => {
+    txEvent.addresses[ARAGON_VOTING_ADDRESS] = true
+    jest.spyOn(ethProvider, 'getVotingPower').mockResolvedValue(E.right(BigNumber(100)))
+    jest
+      .mocked(txEvent.filterLog)
+      .mockReturnValue([{ args: { voter: '0x123', assignedDelegate: '0x345' } }] as unknown as LogDescription[])
+
+    const findings = await aragonVotingSrv.handleAssignDelegateTransaction(txEvent)
+
+    expect(findings).toEqual([])
   })
 })

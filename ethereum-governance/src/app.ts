@@ -3,6 +3,7 @@ import {
   ARAGON_VOTING_ADDRESS,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
+  LDO_ADDRESS,
 } from 'constants/common'
 import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
@@ -11,6 +12,7 @@ import {
   IncreaseStakingLimit__factory,
   NodeOperatorsRegistry__factory,
   AragonVoting__factory,
+  LDO__factory,
 } from './generated'
 import { EnsNamesSrv } from './services/ens-names/EnsNames.srv'
 import { EasyTrackSrv } from './services/easy-track/EasyTrack.srv'
@@ -84,6 +86,8 @@ export class App {
       )
       const aragonVotingContract = AragonVoting__factory.connect(ARAGON_VOTING_ADDRESS, ethersProvider)
 
+      const ldoContract = LDO__factory.connect(LDO_ADDRESS, ethersProvider)
+
       const ethClient = new ETHProvider(
         ethersProvider,
         etherscanProvider,
@@ -91,6 +95,7 @@ export class App {
         increaseStakingLimitContact,
         nodeOperatorsRegistryContract,
         aragonVotingContract,
+        ldoContract,
       )
 
       const logger: Winston.Logger = Winston.createLogger({

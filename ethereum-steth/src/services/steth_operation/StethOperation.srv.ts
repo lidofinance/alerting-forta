@@ -1,25 +1,24 @@
-import { StethOperationCache } from './StethOperation.cache'
-import { ETH_DECIMALS } from '../../utils/constants'
-import { either as E } from 'fp-ts'
-import { EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
-import { elapsedTime } from '../../utils/time'
-import { Logger } from 'winston'
-import { alertId_token_rebased } from '../../utils/events/lido_events'
-import { networkAlert } from '../../utils/errors'
-import { BlockDto } from '../../entity/events'
 import type { BigNumber } from 'bignumber.js'
-import type { TypedEvent } from '../../generated/typechain/common'
+import { either as E } from 'fp-ts'
+import { Logger } from 'winston'
+import { BlockDto, EventOfNotice, handleEventsOfNotice, TransactionDto } from '../../entity/events'
 import { StakingLimitInfo } from '../../entity/staking_limit_info'
 import { Finding } from '../../generated/proto/alert_pb'
+import type { TypedEvent } from '../../generated/typechain/common'
 import { UnbufferedEvent } from '../../generated/typechain/Lido'
+import { ETH_DECIMALS } from '../../utils/constants'
+import { networkAlert } from '../../utils/errors'
+import { alertId_token_rebased } from '../../utils/events/lido_events'
+import { elapsedTime } from '../../utils/time'
+import { StethOperationCache } from './StethOperation.cache'
 
 // Formula: (60 * 60 * 24 * 7) / 12 = 50_400
-export const HISTORY_BLOCK_OFFSET: number = Math.floor((60 * 60 * 24 * 7) / 12)
+const HOURS_24 = 60 * 60 * 24 // 24 hours
+export const DAYS_7_IN_BLOCKS: number = Math.floor((HOURS_24 * 7) / 12)
 const ONCE_PER_100_BLOCKS: number = 100
 const ONCE_PER_25_BLOCKS: number = 25
 export const ETH_10K = 10_000 // 10000 ETH
 export const ETH_20K: number = 20_000 // 20000 ETH
-const HOURS_24 = 60 * 60 * 24 // 24 hours
 export const HOUR_1 = 60 * 60 // 1 hour
 const HOURS_4 = 60 * 60 * 4 // 4 Hours
 const HOURS_12 = 60 * 60 * 12 // 12 Hours
@@ -92,22 +91,24 @@ export class StethOperationSrv {
 
   public async initialize(currentBlock: number): Promise<Error | null> {
     const start = new Date().getTime()
-    const events = await this.stethClient.getUnbufferedEvents(currentBlock - HISTORY_BLOCK_OFFSET, currentBlock - 1)
+    const events = await this.stethClient.getUnbufferedEvents(currentBlock - DAYS_7_IN_BLOCKS, currentBlock - 1)
 
     if (E.isLeft(events)) {
       this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
       return events.left
     }
 
-    const latestDepositBlock = await this.stethClient.getBlockByNumber(
-      events.right[events.right.length - 1].blockNumber,
-    )
-    if (E.isLeft(latestDepositBlock)) {
-      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
-      return latestDepositBlock.left
-    }
+    if (events.right.length > 0) {
+      const latestDepositBlock = await this.stethClient.getBlockByNumber(
+        events.right[events.right.length - 1].blockNumber,
+      )
+      if (E.isLeft(latestDepositBlock)) {
+        this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+        return latestDepositBlock.left
+      }
 
-    this.cache.setLastDepositorTxTime(latestDepositBlock.right.timestamp)
+      this.cache.setLastDepositorTxTime(latestDepositBlock.right.timestamp)
+    }
 
     const bufferedEthRaw = await this.stethClient.getStethBalance(this.lidoStethAddress, currentBlock)
     if (E.isLeft(bufferedEthRaw)) {
@@ -128,6 +129,17 @@ export class StethOperationSrv {
       this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
       return prev4Blocks.left
     }
+
+    const shareRate = await this.stethClient.getShareRate(currentBlock)
+    if (E.isLeft(shareRate)) {
+      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
+      return shareRate.left
+    }
+
+    this.cache.setShareRate({
+      amount: shareRate.right,
+      blockNumber: currentBlock,
+    })
 
     this.cache.setPrev4Blocks(prev4Blocks.right)
 
@@ -213,27 +225,31 @@ export class StethOperationSrv {
     const depositSecFindings = handleEventsOfNotice(txEvent, this.depositSecurityEvents)
     const insuranceFundFindings = handleEventsOfNotice(txEvent, this.insuranceFundEvents)
     const burnerFindings = handleEventsOfNotice(txEvent, this.burnerEvents)
-    out.push(...lidoFindings, ...depositSecFindings, ...insuranceFundFindings, ...burnerFindings)
 
     for (const f of lidoFindings) {
-      if (f.getAlertid() === alertId_token_rebased) {
-        const shareRate = await this.stethClient.getShareRate(txEvent.block.number)
-        if (E.isLeft(shareRate)) {
-          const f: Finding = networkAlert(
-            shareRate.left,
-            `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:192`,
-            `Could not call stethClient.getShareRate`,
-          )
+      if (f.getAlertid() !== alertId_token_rebased) {
+        out.push(f)
+        continue
+      }
 
-          out.push(f)
-        } else {
-          this.cache.setShareRate({
-            amount: shareRate.right,
-            blockNumber: txEvent.block.number,
-          })
-        }
+      const shareRate = await this.stethClient.getShareRate(txEvent.block.number)
+      if (E.isLeft(shareRate)) {
+        const f: Finding = networkAlert(
+          shareRate.left,
+          `Error in ${StethOperationSrv.name}.${this.handleTransaction.name}:192`,
+          `Could not call stethClient.getShareRate`,
+        )
+
+        out.push(f)
+      } else {
+        this.cache.setShareRate({
+          amount: shareRate.right,
+          blockNumber: txEvent.block.number,
+        })
       }
     }
+
+    out.push(...depositSecFindings, ...insuranceFundFindings, ...burnerFindings)
 
     return out
   }
@@ -505,5 +521,9 @@ export class StethOperationSrv {
 
   public getStorage(): StethOperationCache {
     return this.cache
+  }
+
+  public getLidoStethAddress(): string {
+    return this.lidoStethAddress.toLowerCase()
   }
 }

@@ -1,6 +1,6 @@
-import { NetworkErrorFinding } from '../../utils/errors'
-import { Finding } from '../../generated/proto/alert_pb'
 import { Logger } from 'winston'
+import { Finding } from '../../generated/proto/alert_pb'
+import { BotOutdatedAlertID, NetworkErrorFinding } from '../../utils/errors'
 import { Metrics } from '../../utils/metrics/metrics'
 
 export const BorderTime = 15 * 60 * 1000 // 15 minutes
@@ -15,6 +15,7 @@ export class HealthChecker {
   private errorStartedAt: number | null
   private logger: Logger
   private metrics: Metrics
+  private isBotOutdated: boolean
 
   constructor(logger: Logger, metrics: Metrics, borderTime: number, maxCountErrors: number) {
     this.logger = logger
@@ -25,6 +26,7 @@ export class HealthChecker {
     this.isAppOk = true
     this.borderTime = borderTime
     this.maxCountErrors = maxCountErrors
+    this.isBotOutdated = false
   }
 
   public check(findings: Finding[]): number {
@@ -33,17 +35,26 @@ export class HealthChecker {
     let errCount: number = 0
     for (const f of findings) {
       if (f.getAlertid() === NetworkErrorFinding) {
-        this.logger.warn(f.getName(), {
-          desc: f.getDescription(),
-          err: {
-            stack: f.getMetadataMap()['stack'],
-            msg: f.getMetadataMap()['message'],
-            err: f.getMetadataMap()['name'],
-          },
-        })
+        const m = f.getMetadataMap()
+        const errName = m.get('name')
+        const errMessage = m.get('message')
+        const errStack = m.get('stack')
+
+        const warnLine =
+          `Finding: ${f.getName()}: ${f.getDescription()}\n` + `NetworkErr: ${errName}, ${errMessage}, ${errStack}`
+
+        this.logger.warn(warnLine, errStack)
         errCount += 1
 
         this.metrics.networkErrors.inc()
+      }
+
+      if (f.getAlertid() === BotOutdatedAlertID) {
+        this.logger.error(f.getName(), {
+          desc: f.getDescription(),
+        })
+
+        this.isBotOutdated = true
       }
     }
 
@@ -73,6 +84,10 @@ export class HealthChecker {
   }
 
   public isHealth(): boolean {
+    if (this.isBotOutdated) {
+      return false
+    }
+
     return this.isAppOk
   }
 }

@@ -1,11 +1,10 @@
-import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
+import express, { Request, Response } from 'express'
+import { Logger } from 'winston'
 import * as agent_pb from '../generated/proto/agent_pb'
 import { HealthCheckRequest, HealthCheckResponse, ResponseStatus } from '../generated/proto/agent_pb'
+import { HealthChecker } from '../services/health-checker/health-checker.srv'
 import { Metrics } from '../utils/metrics/metrics'
-import express, { Request, Response } from 'express'
-import BigNumber from 'bignumber.js'
-import { Logger } from 'winston'
 
 export class HealthHandler {
   private healthChecker: HealthChecker
@@ -48,28 +47,8 @@ export class HealthHandler {
 
   public healthHttp(): express.Handler {
     return async (req: Request, res: Response) => {
-      try {
-        type data = {
-          jsonrpc: string
-          id: number
-          result: string
-        }
-
-        const resp = await fetch(this.ethereumRpcUrl, {
-          method: 'POST',
-          body: JSON.stringify({
-            method: 'eth_chainId',
-          }),
-        })
-
-        // @ts-expect-error @typescript-eslint/ban-ts-comment
-        const data: data = await resp.json()
-        const chainId = new BigNumber(data.result)
-        if (chainId.toNumber() === this.chainId) {
-          return res.status(200).send('ok')
-        }
-      } catch (e) {
-        this.logger.error(e)
+      if (this.healthChecker.isHealth()) {
+        return res.status(200).send('ok')
       }
 
       return res.status(503).send('not ok')

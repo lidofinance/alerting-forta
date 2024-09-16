@@ -28,5 +28,8 @@ jobs:
       - name: Setup prettier
         run: npm install prettier@^3.2.5
 
+      - name: Setup prettier import plugin
+        run: npm install prettier-plugin-organize-imports@^4.0.0
+
       - name: Check formatting with prettier
         run: npx prettier --check .

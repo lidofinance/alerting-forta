@@ -1,6 +1,7 @@
 import { Finding } from '../generated/proto/alert_pb'
 
 export const NetworkErrorFinding = 'NETWORK-ERROR'
+export const BotOutdatedAlertID = 'L1-BLOCK-OUTDATED'
 
 export function networkAlert(err: Error, name: string, desc: string): Finding {
   const f: Finding = new Finding()
