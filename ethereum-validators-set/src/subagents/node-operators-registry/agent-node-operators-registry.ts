@@ -152,7 +152,12 @@ export async function handleTransaction(txEvent: TransactionEvent) {
   const findings: Finding[] = [];
 
   for (const norContext of stakingModulesOperatorRegistry) {
-    handleEventsOfNotice(txEvent, findings, norContext.eventsOfNotice, norContext.nodeOperatorNames);
+    handleEventsOfNotice(
+      txEvent,
+      findings,
+      norContext.eventsOfNotice,
+      norContext.nodeOperatorNames,
+    );
 
     const stuckEvents = txEvent.filterLog(
       NODE_OPERATORS_REGISTRY_STUCK_CHANGED_EVENT,

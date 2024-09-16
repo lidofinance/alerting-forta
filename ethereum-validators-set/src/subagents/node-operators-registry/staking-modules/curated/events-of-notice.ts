@@ -49,9 +49,9 @@ export const getEventsOfNoticeForStakingModule = (
       name: `ℹ️ ${moduleName}: Node operator active set`,
       description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} ` +
-        `Node operator [${args.nodeOperatorId} ${names.get(
-          Number(args.nodeOperatorId),
-        )?.name}] active status set to ${args.active}`,
+        `Node operator [${args.nodeOperatorId} ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] active status set to ${args.active}`,
       severity: FindingSeverity.Info,
     },
     {
@@ -62,9 +62,9 @@ export const getEventsOfNoticeForStakingModule = (
       name: `ℹ️ ${moduleName}: Node operator name set`,
       description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} ` +
-        `Node operator [${args.nodeOperatorId} ${names.get(
-          Number(args.nodeOperatorId),
-        )?.name}] name set to ${args.name}`,
+        `Node operator [${args.nodeOperatorId} ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] name set to ${args.name}`,
       severity: FindingSeverity.Info,
     },
     {
@@ -75,9 +75,9 @@ export const getEventsOfNoticeForStakingModule = (
       name: `ℹ️ ${moduleName}: Node operator reward address set`,
       description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} ` +
-        `Node operator [${args.nodeOperatorId} ${names.get(
-          Number(args.nodeOperatorId),
-        )?.name}] reward address set to ${etherscanAddress(args.rewardAddress)}`,
+        `Node operator [${args.nodeOperatorId} ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] reward address set to ${etherscanAddress(args.rewardAddress)}`,
       severity: FindingSeverity.Info,
     },
     {
@@ -88,9 +88,9 @@ export const getEventsOfNoticeForStakingModule = (
       name: `⚠️ ${moduleName}: Node operator total keys trimmed`,
       description: (args: any, names: Map<number, NodeOperatorFullInfo>) =>
         `${moduleName} ` +
-        `Node operator [${args.nodeOperatorId}: ${names.get(
-          Number(args.nodeOperatorId),
-        )?.name}] total keys trimmed ${args.totalKeysTrimmed}`,
+        `Node operator [${args.nodeOperatorId}: ${
+          names.get(Number(args.nodeOperatorId))?.name
+        }] total keys trimmed ${args.totalKeysTrimmed}`,
       severity: FindingSeverity.Info,
     },
     {
