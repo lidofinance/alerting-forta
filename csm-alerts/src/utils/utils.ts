@@ -1,5 +1,5 @@
 import { Contract, EventFilter, Event } from 'ethers'
-import { Finding } from '../../generated/proto/alert_pb'
+import { Finding } from '../generated/proto/alert_pb'
 
 const LOG_FILTER_CHUNK = 2000
 

@@ -257,9 +257,10 @@ export class CSModuleSrv {
     const csModule = new ethers.Contract(this.csModuleAddress, CS_MODULE_ABI, getEthersProvider())
     const queueLookup: Map<bigint, bigint> = new Map()
     let emptyBatchCount = 0
-    let index = csModule.depositQueue.head
+    const queue = await csModule.depositQueue()
+    let index = queue.head
 
-    while (index < csModule.depositQueue.tail) {
+    while (index < queue.tail) {
       const batchValue: bigint = await csModule.depositQueueItem(index)
       const batch = new Batch(batchValue)
       if (batch.next() === BigInt(0)) {
@@ -382,8 +383,9 @@ export class CSModuleSrv {
         `Invariant failed: rewardAddress should not be zero address for Node Operator ${noId}`,
       )
 
-      let index = await csModule.depositQueue.head
-      const tail = await csModule.depositQueue.tail
+      const queue = await csModule.depositQueue()
+      let index = queue.head
+      const tail = queue.tail
       let enqueuedCount = BigInt(0)
       while (index < tail) {
         const batchValue: bigint = await csModule.depositQueueItem(index)
