@@ -17,9 +17,7 @@ export async function getLogsByChunks(contract: Contract, filter: EventFilter, s
   return events
 }
 
-export function assertInvariant(condition: boolean, message: string) {
-  const out: Finding[] = []
-
+export function assertInvariant(condition: boolean, message: string, findings: Finding[]) {
   if (condition) {
     const f = new Finding()
     f.setName('🚨 Assert invariant failed')
@@ -29,6 +27,6 @@ export function assertInvariant(condition: boolean, message: string) {
     f.setType(Finding.FindingType.INFORMATION)
     f.setProtocol('ethereum')
 
-    out.push(f)
+    findings.push(f)
   }
 }

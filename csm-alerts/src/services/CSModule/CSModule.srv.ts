@@ -24,22 +24,22 @@ export abstract class ICSModuleClient {
 }
 
 class Batch {
-  value: bigint
+  value: BigNumber
 
-  constructor(v: bigint) {
+  constructor(v: BigNumber) {
     this.value = v
   }
 
   noId(): bigint {
-    return this.value >> BigInt(192)
+    return BigInt(this.value.toString()) >> BigInt(192)
   }
 
   keys(): bigint {
-    return (this.value >> BigInt(128)) & BigInt('0xFFFFFFFFFFFFFFFF')
+    return (BigInt(this.value.toString()) >> BigInt(128)) & BigInt('0xFFFFFFFFFFFFFFFF')
   }
 
   next(): bigint {
-    return this.value & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+    return BigInt(this.value.toString()) & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
   }
 }
 
@@ -258,17 +258,18 @@ export class CSModuleSrv {
     const queueLookup: Map<bigint, bigint> = new Map()
     let emptyBatchCount = 0
     const queue = await csModule.depositQueue()
+    let validatorsInQueue = 0
     let index = queue.head
 
     while (index < queue.tail) {
-      const batchValue: bigint = await csModule.depositQueueItem(index)
+      const batchValue: BigNumber = await csModule.depositQueueItem(index)
       const batch = new Batch(batchValue)
       if (batch.next() === BigInt(0)) {
         break
       }
       const nodeOperatorId = batch.noId()
       const keysInBatch = batch.keys()
-      const nodeOperator = csModule.getNodeOperator(nodeOperatorId, { blockTag: blockDto.number })
+      const nodeOperator = await csModule.getNodeOperator(nodeOperatorId, { blockTag: blockDto.number })
       const depositableKeys = nodeOperator.depositableValidatorsCount
 
       const keysSeenForOperator = queueLookup.get(nodeOperatorId) || 0
@@ -277,6 +278,7 @@ export class CSModuleSrv {
         emptyBatchCount++
       } else {
         queueLookup.set(nodeOperatorId, BigInt(keysSeenForOperator) + keysInBatch)
+        validatorsInQueue += Number(keysInBatch)
       }
 
       index = batch.next()
@@ -303,24 +305,18 @@ export class CSModuleSrv {
     const timeSinceLastMaxValidatorsAlert = now - this.lastTooManyValidatorsAlertTimestamp
 
     if (timeSinceLastMaxValidatorsAlert > ONE_DAY) {
-      let validatorsInQueue = 0
-      for (const [nodeOperatorId, keysInQueue] of queueLookup.entries()) {
-        const depositableKeys = csModule.getNodeOperator(nodeOperatorId).depositableValidatorsCount
-        const validatorsInQueuePerOperator = Math.min(Number(keysInQueue), depositableKeys)
-        validatorsInQueue += validatorsInQueuePerOperator
-        if (validatorsInQueue > MAX_VALIDATORS_IN_THE_QUEUE) {
-          const f: Finding = new Finding()
-          f.setName('🟢 CSModule: Too many validators in the queue.')
-          f.setDescription(`CSModule has ${validatorsInQueue} keys in the deposit queue.`)
-          f.setAlertid('CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE')
-          f.setSeverity(Finding.Severity.LOW)
-          f.setType(Finding.FindingType.INFORMATION)
-          f.setProtocol('ethereum')
+      if (validatorsInQueue > MAX_VALIDATORS_IN_THE_QUEUE) {
+        const f: Finding = new Finding()
+        f.setName('🟢 CSModule: Too many validators in the queue.')
+        f.setDescription(`CSModule has ${validatorsInQueue} keys in the deposit queue.`)
+        f.setAlertid('CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE')
+        f.setSeverity(Finding.Severity.LOW)
+        f.setType(Finding.FindingType.INFORMATION)
+        f.setProtocol('ethereum')
 
-          out.push(f)
+        out.push(f)
 
-          this.lastTooManyValidatorsAlertTimestamp = now
-        }
+        this.lastTooManyValidatorsAlertTimestamp = now
       }
     }
 
@@ -345,6 +341,7 @@ export class CSModuleSrv {
         assertInvariant(
           noSummary.totalAddedKeys > csModule.MAX_SIGNING_KEYS_PER_OPERATOR_BEFORE_PUBLIC_RELEASE,
           `Invariant failed: Node Operator ${noId} has more keys than allowed before public release.`,
+          findings,
         )
       }
 
@@ -353,34 +350,42 @@ export class CSModuleSrv {
       assertInvariant(
         !(no.totalAddedKeys >= no.totalDepositedKeys && no.totalDepositedKeys >= no.totalWithdrawnKeys),
         `Invariant failed: totalAddedKeys >= totalDepositedKeys >= totalWithdrawnKeys for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         !(no.totalDepositedKeys <= no.totalVettedKeys && no.totalVettedKeys <= no.totalAddedKeys),
         `Invariant failed: totalDepositedKeys <= totalVettedKeys <= totalAddedKeys for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         !(no.stuckValidatorsCount + no.totalWithdrawnKeys <= no.totalDepositedKeys),
         `Invariant failed: stuckValidatorsCount + totalWithdrawnKeys <= totalDepositedKeys for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         !(no.depositableValidatorsCount + no.totalExitedKeys <= no.totalAddedKeys),
         `Invariant failed: depositableValidatorsCount + totalExitedKeys <= totalAddedKeys for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         no.proposedManagerAddress === no.managerAddress,
         `Invariant failed: proposedManagerAddress should not equal managerAddress for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         no.proposedRewardAddress === no.rewardAddress,
         `Invariant failed: proposedRewardAddress should not equal rewardAddress for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         no.managerAddress === ethers.constants.AddressZero,
         `Invariant failed: managerAddress should not be zero address for Node Operator ${noId}`,
+        findings,
       )
       assertInvariant(
         no.rewardAddress === ethers.constants.AddressZero,
         `Invariant failed: rewardAddress should not be zero address for Node Operator ${noId}`,
+        findings,
       )
 
       const queue = await csModule.depositQueue()
@@ -388,7 +393,7 @@ export class CSModuleSrv {
       const tail = queue.tail
       let enqueuedCount = BigInt(0)
       while (index < tail) {
-        const batchValue: bigint = await csModule.depositQueueItem(index)
+        const batchValue: BigNumber = await csModule.depositQueueItem(index)
         const batch = new Batch(batchValue)
         if (batch.noId() === BigInt(noId)) {
           enqueuedCount += batch.keys()
@@ -402,6 +407,7 @@ export class CSModuleSrv {
       assertInvariant(
         no.enqueuedCount !== enqueuedCount,
         `Invariant failed: enqueuedCount mismatch for Node Operator ${noId}`,
+        findings,
       )
 
       totalDepositedValidators += new BigNumber(noSummary.totalDepositedKeys.toString()).toNumber()
@@ -415,6 +421,7 @@ export class CSModuleSrv {
         smSummary.totalExitedValidators !== totalExitedValidators ||
         smSummary.depositableValidatorsCount !== depositableValidatorsCount,
       `Invariant failed: Global summary values do not match the accumulated node operator summaries.`,
+      findings,
     )
 
     const moduleShareIsCloseToTargetShareFindings = this.handleModuleShareIsCloseToTargetShare(
