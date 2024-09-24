@@ -4,6 +4,7 @@ import {
   DeploymentAddress,
   DeploymentAddresses,
   PAUSABLE_CONTRACTS,
+  ROLES_MONITORING_CONTRACTS,
 } from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
@@ -16,6 +17,7 @@ import {
 import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
 import { getPausableEvents } from '../../utils/events/pausable_events'
 import { getAssetRecovererEvents } from '../../utils/events/asset_recoverer_events'
+import { getRolesMonitoringEvents } from '../../utils/events/roles_monitoring_events'
 import { ProxyWatcherSrv, IProxyWatcherClient } from './ProxyWatcher.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
@@ -64,6 +66,7 @@ describe('ProxyWatcher event tests', () => {
     getOssifiedProxyEvents(CSM_PROXY_CONTRACTS),
     getPausableEvents(PAUSABLE_CONTRACTS),
     getAssetRecovererEvents(CONTRACTS_WITH_ASSET_RECOVERER),
+    getRolesMonitoringEvents(ROLES_MONITORING_CONTRACTS),
   )
 
   test(
@@ -81,6 +84,7 @@ describe('ProxyWatcher event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
@@ -106,6 +110,7 @@ describe('ProxyWatcher event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
@@ -131,6 +136,7 @@ describe('ProxyWatcher event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = proxyWatcherSrv.handleTransaction(transactionDto)
@@ -156,6 +162,7 @@ describe('ProxyWatcher event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = proxyWatcherSrv.handleTransaction(transactionDto)

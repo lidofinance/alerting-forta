@@ -55,19 +55,10 @@ export class CSAccountingSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [rolesChangingFindings] = await Promise.all([this.handleRolesChanging(blockDto.number)])
-
-    findings.push(...rolesChangingFindings)
-
     this.logger.info(elapsedTime(CSAccountingSrv.name + '.' + this.handleBlock.name, start))
+    this.logger.info(blockDto.timestamp)
 
     return findings
-  }
-  // to be implemented
-  handleRolesChanging(blockNumber: number): Promise<Finding[]> {
-    const out: Finding = new Finding()
-    this.logger.info(`${blockNumber}`)
-    return Promise.resolve([out])
   }
 
   public handleStETHApprovalEvents(txEvent: TransactionDto): Finding[] {

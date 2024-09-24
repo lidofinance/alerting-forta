@@ -16,6 +16,7 @@ export class ProxyWatcherSrv {
   private readonly ossifiedProxyEvents: EventOfNotice[]
   private readonly pausableEvents: EventOfNotice[]
   private readonly assetRecovererEvents: EventOfNotice[]
+  private readonly rolesMonitoringEvents: EventOfNotice[]
 
   constructor(
     logger: Logger,
@@ -23,6 +24,7 @@ export class ProxyWatcherSrv {
     ossifiedProxyEvents: EventOfNotice[],
     pausableEvents: EventOfNotice[],
     assetRecovererEvents: EventOfNotice[],
+    rolesMonitoringEvents: EventOfNotice[],
   ) {
     this.logger = logger
     this.proxyWatcherClient = ethProvider
@@ -30,6 +32,7 @@ export class ProxyWatcherSrv {
     this.ossifiedProxyEvents = ossifiedProxyEvents
     this.pausableEvents = pausableEvents
     this.assetRecovererEvents = assetRecovererEvents
+    this.rolesMonitoringEvents = rolesMonitoringEvents
   }
 
   public async initialize(currentBlock: number): Promise<Finding[] | null | Error> {
@@ -64,8 +67,9 @@ export class ProxyWatcherSrv {
     const ossifiedProxyFindings = handleEventsOfNotice(txEvent, this.ossifiedProxyEvents)
     const pausableEventsFindings = handleEventsOfNotice(txEvent, this.pausableEvents)
     const assetRecovererFindings = handleEventsOfNotice(txEvent, this.assetRecovererEvents)
+    const rolesMonitoringFindings = handleEventsOfNotice(txEvent, this.rolesMonitoringEvents)
 
-    out.push(...ossifiedProxyFindings, ...pausableEventsFindings, ...assetRecovererFindings)
+    out.push(...ossifiedProxyFindings, ...pausableEventsFindings, ...assetRecovererFindings, ...rolesMonitoringFindings)
 
     return out
   }

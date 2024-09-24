@@ -104,26 +104,16 @@ export class CSFeeDistributorSrv {
     // )
     // assertInvariant(!(treeRoot === ZERO_HASH && treeCid !== ''), 'Tree exists, but no CID.', findings)
 
-    const rolesChangingFindings = await this.handleRolesChanging(blockDto.number)
-
     if (blockDto.number % 10 === 0) {
       const distributionDataUpdatedFindings = await this.handleDistributionDataUpdated(blockDto)
       findings.push(...distributionDataUpdatedFindings)
     }
-
-    findings.push(...rolesChangingFindings)
 
     this.logger.info(elapsedTime(CSFeeDistributorSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
   }
 
-  // to be implemented
-  handleRolesChanging(blockNumber: number): Promise<Finding[]> {
-    const out: Finding = new Finding()
-    this.logger.info(`${blockNumber}`)
-    return Promise.resolve([out])
-  }
   private async handleRevertedTx(txEvent: TransactionDto): Promise<Finding[]> {
     const out: Finding[] = []
 
