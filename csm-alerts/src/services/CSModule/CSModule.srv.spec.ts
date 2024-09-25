@@ -73,6 +73,7 @@ describe('CSModule event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = await csModuleSrv.handleTransaction(transactionDto)
@@ -98,6 +99,7 @@ describe('CSModule event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = await csModuleSrv.handleTransaction(transactionDto)
@@ -123,6 +125,7 @@ describe('CSModule event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = await csModuleSrv.handleTransaction(transactionDto)

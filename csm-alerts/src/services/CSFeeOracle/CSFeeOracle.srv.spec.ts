@@ -73,6 +73,7 @@ describe('CSFeeOracle and HashConsensus events tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = csFeeOracleSrv.handleTransaction(transactionDto)
@@ -97,6 +98,7 @@ describe('CSFeeOracle and HashConsensus events tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const result = csFeeOracleSrv.handleTransaction(transactionDto)
@@ -122,6 +124,7 @@ describe('CSFeeOracle and HashConsensus events tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = csFeeOracleSrv.handleTransaction(transactionDto)
@@ -146,6 +149,7 @@ describe('CSFeeOracle and HashConsensus events tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const result = csFeeOracleSrv.handleTransaction(transactionDto)
@@ -170,6 +174,7 @@ describe('CSFeeOracle and HashConsensus events tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const result = csFeeOracleSrv.handleTransaction(transactionDto)
@@ -193,6 +198,7 @@ describe('CSFeeOracle and HashConsensus events tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const result = csFeeOracleSrv.handleTransaction(transactionDto)

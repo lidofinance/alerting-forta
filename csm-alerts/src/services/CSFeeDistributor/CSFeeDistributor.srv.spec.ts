@@ -75,6 +75,7 @@ describe('CsFeeDistributor event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
       const results = await csFeeDistributorSrv.handleTransaction(transactionDto)

@@ -58,7 +58,7 @@ export class TxHandler {
       findings.push(
         ...(await csModuleFindings),
         ...csFeeDistributorFindings,
-        ...csAccountingFindings,
+        ...(await csAccountingFindings),
         ...csFeeOracleFindings,
         ...proxyWatcherFindings,
       )
