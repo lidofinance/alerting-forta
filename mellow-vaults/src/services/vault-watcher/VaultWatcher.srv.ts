@@ -14,6 +14,7 @@ import {
   VAULT_WATCH_METHOD_NAMES,
   MINUTE_IN_BLOCK,
   DELAY_BEFORE_REPETITION_INTERVAL,
+  ETH_DECIMALS,
 } from 'constants/common'
 import { aclNotices, MELLOW_VAULT_STRATEGY_ACL_EVENTS } from '../../utils/events/acl_events'
 import { handleEventsOfNotice } from '../../shared/notice'
@@ -397,6 +398,8 @@ export class VaultWatcherSrv {
       warningLimit: vault.integrityWarningLimit,
       criticalLimit: vault.integrityCriticalLimit,
       supplyToUnderlying: vaultTotalSupply.right.div(vaultUnderlyingTvl.right),
+      vaultTotalSupply: vaultTotalSupply.right,
+      vaultUnderlyingTvl: vaultUnderlyingTvl.right,
     }
 
     if (result.supplyToUnderlying.minus(1).abs().gte(result.criticalLimit)) {
@@ -411,10 +414,15 @@ export class VaultWatcherSrv {
       )
       this.skipMap.set(key, true)
     } else if (result.warningLimit && result.supplyToUnderlying.minus(1).abs().gte(result.warningLimit)) {
+      const removeTail = (n: number) => n.toString().replace(/(\d+\.0*\d\d)\d+/g, '$1')
+
+      const division = result.supplyToUnderlying.minus(1).abs().toNumber()
+      const diffInETH = result.vaultUnderlyingTvl.minus(result.vaultTotalSupply).div(ETH_DECIMALS).toNumber()
+
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: vaultTotalSupply and vaultUnderlyingTvl is not the same',
-          description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
+          description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl difference is ${removeTail(division)} of vaultUnderlyingTvl or about ${removeTail(diffInETH)} ETH`,
           alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-MEDIUM',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
