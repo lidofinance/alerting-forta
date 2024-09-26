@@ -1,11 +1,4 @@
-import {
-  CONTRACTS_WITH_ASSET_RECOVERER,
-  CSM_PROXY_CONTRACTS,
-  DeploymentAddress,
-  DeploymentAddresses,
-  PAUSABLE_CONTRACTS,
-  ROLES_MONITORING_CONTRACTS,
-} from '../../utils/constants.holesky'
+import { DeploymentAddress, DeploymentAddresses } from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -14,11 +7,8 @@ import {
   CSFeeDistributor__factory,
   CSFeeOracle__factory,
 } from '../../generated/typechain'
-import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
-import { getPausableEvents } from '../../utils/events/pausable_events'
-import { getAssetRecovererEvents } from '../../utils/events/asset_recoverer_events'
-import { getRolesMonitoringEvents } from '../../utils/events/roles_monitoring_events'
-import { ProxyWatcherSrv, IProxyWatcherClient } from './ProxyWatcher.srv'
+import { CSModuleSrv, ICSModuleClient } from './CSModule.srv'
+import { getCSModuleEvents } from '../../utils/events/cs_module_events'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from 'forta-agent'
@@ -28,7 +18,7 @@ import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('ProxyWatcher event tests', () => {
+describe('CSModule event tests', () => {
   const chainId = 17000
 
   const logger: Winston.Logger = Winston.createLogger({
@@ -50,7 +40,7 @@ describe('ProxyWatcher event tests', () => {
   const registry = new promClient.Registry()
   const m = new Metrics(registry, 'test_')
 
-  const proxyWatcherClient: IProxyWatcherClient = new ETHProvider(
+  const csModuleClient: ICSModuleClient = new ETHProvider(
     logger,
     m,
     fortaEthersProvider,
@@ -60,19 +50,18 @@ describe('ProxyWatcher event tests', () => {
     csFeeOracleRunner,
   )
 
-  const proxyWatcherSrv = new ProxyWatcherSrv(
+  const csModuleSrv = new CSModuleSrv(
     logger,
-    proxyWatcherClient,
-    getOssifiedProxyEvents(CSM_PROXY_CONTRACTS),
-    getPausableEvents(PAUSABLE_CONTRACTS),
-    getAssetRecovererEvents(CONTRACTS_WITH_ASSET_RECOVERER),
-    getRolesMonitoringEvents(ROLES_MONITORING_CONTRACTS),
+    csModuleClient,
+    address.CS_MODULE_ADDRESS,
+    address.STAKING_ROUTER_ADDRESS,
+    getCSModuleEvents(address.CS_MODULE_ADDRESS),
   )
 
   test(
-    '🚨 Proxy Watcher: Admin Changed',
+    '🟠 CSModule: Target limit mode changed',
     async () => {
-      const txHash = '0x92410350f567757d8f73b2f4b3670454af3899d095103ea0e745c92714673277'
+      const txHash = '0xd8bb4389a056be70fe20e3b6b903c3e7cdbf053610bd8d647c4e2fe49c94f8b6'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -87,18 +76,18 @@ describe('ProxyWatcher event tests', () => {
         hash: trx.hash,
       }
 
-      const results = proxyWatcherSrv.handleTransaction(transactionDto)
+      const results = await csModuleSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(4)
+      expect(results.length).toBe(1)
     },
     TEST_TIMEOUT,
   )
 
   test(
-    '🚨 Proxy Watcher: Implementation Upgraded',
+    '🔴 CSModule: EL Rewards stealing penalty reported',
     async () => {
-      const txHash = '0x262faac95560f7fc0c831580d17e48daa69b17831b798e0b00bc43168a310c52'
+      const txHash = '0x45d08822a9e025d374ab182612a119d837a0869b0c343379025303f53c4c63be'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -113,18 +102,18 @@ describe('ProxyWatcher event tests', () => {
         hash: trx.hash,
       }
 
-      const results = proxyWatcherSrv.handleTransaction(transactionDto)
+      const results = await csModuleSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(4)
+      expect(results.length).toBe(1)
     },
     TEST_TIMEOUT,
   )
 
   test(
-    '🚨 Proxy Watcher: Paused',
+    '🔵 CSModule: Notable Node Operator creation',
     async () => {
-      const txHash = '0x56a49219b4e40d146c0dc11d795b6d43696947f0ceb63fad7e9b820eab2b3e14'
+      const txHash = '0x87ece6668905293fd00c7eeff15ff685ed1d10810bc5cbba204f0881ab877be6'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -139,36 +128,10 @@ describe('ProxyWatcher event tests', () => {
         hash: trx.hash,
       }
 
-      const results = proxyWatcherSrv.handleTransaction(transactionDto)
+      const results = await csModuleSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(3)
-    },
-    TEST_TIMEOUT,
-  )
-
-  test(
-    '🚨 Proxy Watcher: Resumed',
-    async () => {
-      const txHash = '0xa44ac96956f254fe1b9d6ff0a60ad2b5b4a7eaff951eb98150c0f7bbe90dc5df'
-
-      const trx = await fortaEthersProvider.getTransaction(txHash)
-      const receipt = await trx.wait()
-
-      const transactionDto: TransactionDto = {
-        logs: receipt.logs,
-        to: trx.to ? trx.to : null,
-        block: {
-          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
-          number: trx.blockNumber ? trx.blockNumber : 1,
-        },
-        hash: trx.hash,
-      }
-
-      const results = proxyWatcherSrv.handleTransaction(transactionDto)
-
-      expect(results).toMatchSnapshot()
-      expect(results.length).toBe(3)
+      expect(results.length).toBe(1)
     },
     TEST_TIMEOUT,
   )

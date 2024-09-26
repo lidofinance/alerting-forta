@@ -9,6 +9,7 @@ import { ONE_DAY, SECONDS_PER_SLOT } from '../../utils/constants'
 import { ethers, filterLog, getEthersProvider } from 'forta-agent'
 import { DISTRIBUTION_DATA_UPDATED_EVENT, TRANSFER_SHARES_EVENT } from '../../utils/events/cs_fee_distributor_events'
 import { getLogsByChunks } from '../../utils/utils'
+import { toKebabCase } from '../../utils/string'
 
 export abstract class ICSFeeDistributorClient {
   public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
@@ -87,35 +88,95 @@ export class CSFeeDistributorSrv {
 
   async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
     const start = new Date().getTime()
-    const out: Finding[] = []
+    const findings: Finding[] = []
 
-    const [revertedTxFindings, rolesChangingFindings] = await Promise.all([
-      this.handleRevertedTx(blockDto.number),
-      this.handleRolesChanging(blockDto.number),
-    ])
+    // * Invariants
+    // const csFeeDistributor = new ethers.Contract(
+    //   this.csFeeDistributorAddress,
+    //   CS_FEE_DISTRIBUTOR_ABI,
+    //   getEthersProvider(),
+    // )
+    //Check that total distributed shares do not exceed total shares distributed by oracle
+    // assertInvariant(
+    //   totalDistributedShares.lte(treeValues.reduce((acc, val) => acc.add(val), BigNumber.from(0))),
+    //   'Claimed more than distributed by oracle.',
+    //   findings,
+    // )
+    // assertInvariant(!(treeRoot === ZERO_HASH && treeCid !== ''), 'Tree exists, but no CID.', findings)
 
     if (blockDto.number % 10 === 0) {
       const distributionDataUpdatedFindings = await this.handleDistributionDataUpdated(blockDto)
-      out.push(...distributionDataUpdatedFindings)
+      findings.push(...distributionDataUpdatedFindings)
     }
-
-    out.push(...revertedTxFindings, ...rolesChangingFindings)
 
     this.logger.info(elapsedTime(CSFeeDistributorSrv.name + '.' + this.handleBlock.name, start))
 
+    return findings
+  }
+
+  private async handleRevertedTx(txEvent: TransactionDto): Promise<Finding[]> {
+    const out: Finding[] = []
+
+    const txReceipt = await getEthersProvider().getTransactionReceipt(txEvent.hash)
+
+    // Checks if transaction reverted
+    if (txReceipt.status === 0) {
+      for (const log of txReceipt.logs) {
+        try {
+          const decodedLog = ethers.utils.defaultAbiCoder.decode(['string'], log.data)
+          const reason = decodedLog[0]
+
+          if (reason) {
+            switch (reason) {
+              case 'InvalidShares':
+                out.push(
+                  this.createCriticalFindingForRevertedTx(
+                    'CSFeeOracle reports incorrect amount of shares to distribute',
+                    'InvalidShares',
+                  ),
+                )
+                break
+              case 'NotEnoughShares':
+                out.push(
+                  this.createCriticalFindingForRevertedTx(
+                    'CSFeeDistributor internal accounting error',
+                    'NotEnoughShares',
+                  ),
+                )
+                break
+              case 'InvalidTreeRoot':
+                out.push(
+                  this.createCriticalFindingForRevertedTx('CSFeeOracle built incorrect report', 'InvalidTreeRoot'),
+                )
+                break
+              case 'InvalidTreeCID':
+                out.push(
+                  this.createCriticalFindingForRevertedTx('CSFeeOracle built incorrect report', 'InvalidTreeCID'),
+                )
+                break
+              default:
+                this.logger.warn(`Unrecognized revert reason: ${reason}`)
+                break
+            }
+          }
+        } catch (error) {
+          this.logger.error(`Failed to decode log data: ${error}`)
+        }
+      }
+    }
+
     return out
   }
-  // to be implemented
-  handleRolesChanging(blockNumber: number): Promise<Finding[]> {
-    const out: Finding = new Finding()
-    this.logger.info(`${blockNumber}`)
-    return Promise.resolve([out])
-  }
-  // to be implemented
-  handleRevertedTx(blockNumber: number): Promise<Finding[]> {
-    const out: Finding = new Finding()
-    this.logger.info(`${blockNumber}`)
-    return Promise.resolve([out])
+
+  private createCriticalFindingForRevertedTx(description: string, reason: string): Finding {
+    const f = new Finding()
+    f.setName(`🟣 CRITICAL: ${reason}`)
+    f.setDescription(`Transaction reverted. ${description}`)
+    f.setAlertid(`CSFEE-${toKebabCase(reason)}`)
+    f.setSeverity(Finding.Severity.CRITICAL)
+    f.setType(Finding.FindingType.INFORMATION)
+    f.setProtocol('ethereum')
+    return f
   }
 
   private async handleDistributionDataUpdated(blockDto: BlockDto): Promise<Finding[]> {
@@ -171,8 +232,9 @@ export class CSFeeDistributorSrv {
 
     const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
     const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
+    const revertedTxFindings = await this.handleRevertedTx(txEvent)
 
-    out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings)
+    out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings, ...revertedTxFindings)
 
     return out
   }

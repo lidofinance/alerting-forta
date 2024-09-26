@@ -21,10 +21,12 @@ import { ethers } from 'ethers'
 import { ETHProvider } from './clients/eth_provider'
 import { getCSFeeDistributorEvents } from './utils/events/cs_fee_distributor_events'
 import { getCSFeeOracleEvents, getHashConsensusEvents } from './utils/events/cs_fee_oracle_events'
+import { getCSModuleEvents } from './utils/events/cs_module_events'
 import { getOssifiedProxyEvents } from './utils/events/ossified_proxy_events'
 import { getPausableEvents } from './utils/events/pausable_events'
 import { getCSAccountingEvents } from './utils/events/cs_accounting_events'
 import { getAssetRecovererEvents } from './utils/events/asset_recoverer_events'
+import { getRolesMonitoringEvents } from './utils/events/roles_monitoring_events'
 import * as promClient from 'prom-client'
 import { Metrics } from './utils/metrics/metrics'
 import { CSModuleSrv } from './services/CSModule/CSModule.srv'
@@ -40,12 +42,14 @@ import {
   CSM_PROXY_CONTRACTS,
   PAUSABLE_CONTRACTS,
   DeploymentAddresses,
+  ROLES_MONITORING_CONTRACTS,
 } from './utils/constants.mainnet'
 import {
   CONTRACTS_WITH_ASSET_RECOVERER as HOLESKY_CONTRACTS_WITH_ASSET_RECOVERER,
   CSM_PROXY_CONTRACTS as HOLESKY_CSM_PROXY_CONTRACTS,
   PAUSABLE_CONTRACTS as HOLESKY_PAUSABLE_CONTRACTS,
   DeploymentAddresses as HoleskyDeploymentAddresses,
+  ROLES_MONITORING_CONTRACTS as HOLESKY_ROLES_MONITORING_CONTRACTS,
 } from './utils/constants.holesky'
 
 const loadDeploymentData = (chainId: number) => {
@@ -56,6 +60,7 @@ const loadDeploymentData = (chainId: number) => {
         contractsWithAssetRecoverer: CONTRACTS_WITH_ASSET_RECOVERER,
         csmProxyContracts: CSM_PROXY_CONTRACTS,
         pausableContracts: PAUSABLE_CONTRACTS,
+        rolesMonitoringContracts: ROLES_MONITORING_CONTRACTS,
       }
     case 17000:
       return {
@@ -63,6 +68,7 @@ const loadDeploymentData = (chainId: number) => {
         contractsWithAssetRecoverer: HOLESKY_CONTRACTS_WITH_ASSET_RECOVERER,
         csmProxyContracts: HOLESKY_CSM_PROXY_CONTRACTS,
         pausableContracts: HOLESKY_PAUSABLE_CONTRACTS,
+        rolesMonitoringContracts: HOLESKY_ROLES_MONITORING_CONTRACTS,
       }
     default:
       throw new Error(`Unsupported chain ID: ${chainId}`)
@@ -98,9 +104,13 @@ const main = async () => {
     fortaEthersProvider = ethProvider
   }
 
-  const { deploymentAddresses, contractsWithAssetRecoverer, csmProxyContracts, pausableContracts } = loadDeploymentData(
-    config.chainId,
-  )
+  const {
+    deploymentAddresses,
+    contractsWithAssetRecoverer,
+    csmProxyContracts,
+    pausableContracts,
+    rolesMonitoringContracts,
+  } = loadDeploymentData(config.chainId)
 
   const address = deploymentAddresses
 
@@ -122,7 +132,13 @@ const main = async () => {
     csFeeOracleRunner,
   )
 
-  const csModuleSrv = new CSModuleSrv(logger, ethClient)
+  const csModuleSrv = new CSModuleSrv(
+    logger,
+    ethClient,
+    address.CS_MODULE_ADDRESS,
+    address.STAKING_ROUTER_ADDRESS,
+    getCSModuleEvents(address.CS_MODULE_ADDRESS),
+  )
 
   const csFeeDistributorSrv = new CSFeeDistributorSrv(
     logger,
@@ -140,6 +156,7 @@ const main = async () => {
     getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
     address.CS_ACCOUNTING_ADDRESS,
     address.LIDO_STETH_ADDRESS,
+    address.CS_MODULE_ADDRESS,
   )
 
   const csFeeOracleSrv = new CSFeeOracleSrv(
@@ -157,6 +174,7 @@ const main = async () => {
     getOssifiedProxyEvents(csmProxyContracts),
     getPausableEvents(pausableContracts),
     getAssetRecovererEvents(contractsWithAssetRecoverer),
+    getRolesMonitoringEvents(rolesMonitoringContracts),
   )
 
   const onAppFindings: Finding[] = []

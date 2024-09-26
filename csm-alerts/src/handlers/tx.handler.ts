@@ -56,9 +56,9 @@ export class TxHandler {
       const proxyWatcherFindings = this.proxyWatcherSrv.handleTransaction(txEvent)
 
       findings.push(
-        ...csModuleFindings,
+        ...(await csModuleFindings),
         ...csFeeDistributorFindings,
-        ...csAccountingFindings,
+        ...(await csAccountingFindings),
         ...csFeeOracleFindings,
         ...proxyWatcherFindings,
       )

@@ -56,6 +56,7 @@ describe('CSAccounting event tests', () => {
     getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
     address.CS_ACCOUNTING_ADDRESS,
     address.LIDO_STETH_ADDRESS,
+    address.CS_MODULE_ADDRESS,
   )
 
   test(
@@ -73,9 +74,10 @@ describe('CSAccounting event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
-      const results = csAccountingSrv.handleTransaction(transactionDto)
+      const results = await csAccountingSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(1)
@@ -98,9 +100,10 @@ describe('CSAccounting event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
-      const results = csAccountingSrv.handleTransaction(transactionDto)
+      const results = await csAccountingSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(4)
@@ -123,9 +126,10 @@ describe('CSAccounting event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
-      const results = csAccountingSrv.handleTransaction(transactionDto)
+      const results = await csAccountingSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(1)
@@ -148,9 +152,10 @@ describe('CSAccounting event tests', () => {
           timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
           number: trx.blockNumber ? trx.blockNumber : 1,
         },
+        hash: trx.hash,
       }
 
-      const results = csAccountingSrv.handleTransaction(transactionDto)
+      const results = await csAccountingSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(1)

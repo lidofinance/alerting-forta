@@ -30,6 +30,7 @@ export type TransactionDto = {
     timestamp: number
     number: number
   }
+  hash: string
 }
 
 export function newTransactionDto(request: agent_pb.EvaluateTxRequest): TransactionDto {
@@ -60,6 +61,7 @@ export function newTransactionDto(request: agent_pb.EvaluateTxRequest): Transact
       number: new BigNumber(block.getBlocknumber(), 10).toNumber(),
       timestamp: new BigNumber(block.getBlocktimestamp(), 10).toNumber(),
     },
+    hash: transaction.getHash(),
   }
 }
 
