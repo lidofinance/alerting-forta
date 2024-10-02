@@ -23,4 +23,14 @@ export const ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS = {
     "requestTimestampMargin",
   "event MaxPositiveTokenRebaseSet(uint256 maxPositiveTokenRebase)":
     "maxPositiveTokenRebase",
+  "event InitialSlashingAmountSet(uint256 initialSlashingAmountPWei)":
+    "initialSlashingAmountPWei",
+  "event InactivityPenaltiesAmountSet(uint256 inactivityPenaltiesAmountPWei)":
+    "inactivityPenaltiesAmountPWei",
+  "event CLBalanceOraclesErrorUpperBPLimitSet(uint256 clBalanceOraclesErrorUpperBPLimit)":
+    "clBalanceOraclesErrorUpperBPLimit",
+  "event NegativeCLRebaseConfirmed(uint256 refSlot, uint256 clBalanceWei, uint256 withdrawalVaultBalance)":
+    "withdrawalVaultBalance",
+  "event NegativeCLRebaseAccepted(uint256 refSlot, uint256 clTotalBalance, uint256 clBalanceDecrease, uint256 maxAllowedCLRebaseNegativeSum)":
+    "maxAllowedCLRebaseNegativeSum",
 };
