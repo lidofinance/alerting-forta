@@ -10,6 +10,6 @@
     "tests",
     "dist",
     "**/*spec.ts",
-    "**/*mock.ts"
+    "**/*mock.ts",
   ]
 }

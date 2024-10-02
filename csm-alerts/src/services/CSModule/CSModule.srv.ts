@@ -1,444 +1,239 @@
-import { either as E } from 'fp-ts'
-import { EventOfNotice, TransactionDto, handleEventsOfNotice, BlockDto } from '../../entity/events'
-import { elapsedTime } from '../../utils/time'
-import { Logger } from 'winston'
-import { Finding } from '../../generated/proto/alert_pb'
-import { ethers, filterLog, getEthersProvider } from 'forta-agent'
-import CS_MODULE_ABI from '../../brief/abi/CSModule.json'
-import BigNumber from 'bignumber.js'
 import {
-  BASIS_POINTS_DIVIDER,
-  MAX_EMPTY_BATCHES_IN_THE_QUEUE,
-  MAX_OPERATORS_WITH_SAME_MANAGER_OR_REWARD_ADDRESS,
-  MAX_TARGET_SHARE_PERCENT_USED,
-  MAX_VALIDATORS_IN_THE_QUEUE,
-  ONE_DAY,
-} from '../../utils/constants'
-import { assertInvariant, getLogsByChunks } from '../../utils/utils'
-import STAKING_ROUTER_ABI from '../../brief/abi/StakingRouter.json'
-import { Config } from '../../utils/env/env'
-import { NODE_OPERATOR_ADDED_EVENT_ABI } from '../../utils/events/cs_module_events'
+  BlockEvent,
+  Finding,
+  FindingSeverity,
+  FindingType,
+  TransactionEvent,
+  ethers,
+  filterLog,
+} from '@fortanetwork/forta-bot'
+import { Logger } from 'winston'
 
-export abstract class ICSModuleClient {
-  public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
-}
+import { IS_CLI } from '../../config'
+import { CSModule__factory, StakingRouter__factory } from '../../generated/typechain'
+import { getLogger } from '../../logger'
+import { BASIS_POINT_MUL, SECONDS_PER_DAY } from '../../shared/constants'
+import { sourceFromEvent } from '../../utils/findings'
+import { RedefineMode, requireWithTier } from '../../utils/require'
+import * as Constants from '../constants'
+
+const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(module, '../constants', RedefineMode.Merge)
+const ICSModule = CSModule__factory.createInterface()
+
+const CHECK_QUEUE_INTERVAL_BLOCKS = 1801 // ~ 4 times a day
+const TARGET_SHARE_USED_PERCENT_MAX = 95
+const QUEUE_EMPTY_BATCHES_MAX = 30
+const QUEUE_VALIDATORS_MAX = 200
 
 class Batch {
-  value: BigNumber
+  value: bigint
 
-  constructor(v: BigNumber) {
+  constructor(v: bigint) {
     this.value = v
   }
 
   noId(): bigint {
-    return BigInt(this.value.toString()) >> BigInt(192)
+    return this.value >> 192n
   }
 
   keys(): bigint {
-    return (BigInt(this.value.toString()) >> BigInt(128)) & BigInt('0xFFFFFFFFFFFFFFFF')
+    return (this.value >> 128n) & BigInt('0xFFFFFFFFFFFFFFFF')
   }
 
   next(): bigint {
-    return BigInt(this.value.toString()) & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+    return this.value & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
   }
-}
-
-interface StakingModule {
-  stakingModuleAddress: string
-  targetShare: number // in basis points
 }
 
 export class CSModuleSrv {
-  private readonly name = 'CSModuleSrv'
   private readonly logger: Logger
-  private readonly csModuleClient: ICSModuleClient
-  private readonly csModuleAddress: string
-  private readonly stakingRouterAddress: string
-  private readonly csModuleEvents: EventOfNotice[]
-  private lastDuplicateAddressesAlertTimestamp: number = 0
-  private lastModuleShareIsCloseToTargetShareAlertTimestamp: number = 0
-  private lastTooManyEmptyBatchesAlertTimestamp: number = 0
-  private lastTooManyValidatorsAlertTimestamp: number = 0
-  private addressCounts: { [address: string]: number } = {}
-  private nodeOperatorAddedEvents: ethers.Event[] = []
 
-  constructor(
-    logger: Logger,
-    csModuleClient: ICSModuleClient,
-    csModuleAddress: string,
-    stakingRouterAddress: string,
-    csModuleEvents: EventOfNotice[],
-  ) {
-    this.logger = logger
-    this.csModuleClient = csModuleClient
-    this.csModuleAddress = csModuleAddress
-    this.stakingRouterAddress = stakingRouterAddress
-    this.csModuleEvents = csModuleEvents
+  private lastFiredAt = {
+    moduleShareIsCloseToTargetShare: 0,
+    tooManyEmptyBatches: 0,
+    tooManyValidators: 0,
   }
 
-  public async initialize(currentBlock: number): Promise<Error | null> {
-    const start = new Date().getTime()
-
-    const config = new Config()
-
-    const currBlock = await this.csModuleClient.getBlockByNumber(currentBlock)
-    if (E.isLeft(currBlock)) {
-      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
-      return currBlock.left
-    }
-
-    const csModule = new ethers.Contract(this.csModuleAddress, CS_MODULE_ABI, getEthersProvider())
-    const startBlock = config.csModuleInitBlock
-    const csModuleNodeOperatorAddedFilter = csModule.filters.NodeOperatorAdded()
-    this.nodeOperatorAddedEvents = await getLogsByChunks(
-      csModule,
-      csModuleNodeOperatorAddedFilter,
-      startBlock,
-      currentBlock,
-    )
-
-    this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-    return null
+  constructor() {
+    this.logger = getLogger(CSModuleSrv.name)
   }
 
-  public getName(): string {
-    return this.name
+  async handleBlock(blockEvent: BlockEvent, provider: ethers.Provider): Promise<Finding[]> {
+    return [
+      ...(await this.checkDepositQueue(blockEvent, provider)),
+      ...(await this.checkModuleShare(blockEvent, provider)),
+    ]
   }
 
-  public handleEveryHundredOperatorsCreated(txEvent: TransactionDto) {
+  async handleTransaction(txEvent: TransactionEvent, provider: ethers.Provider): Promise<Finding[]> {
+    return this.handleNotableOperatorsCreated(txEvent)
+  }
+
+  private handleNotableOperatorsCreated(txEvent: TransactionEvent) {
     const out: Finding[] = []
 
-    const nodeOperatorAddedEvents = filterLog(txEvent.logs, NODE_OPERATOR_ADDED_EVENT_ABI, this.csModuleAddress)
-    nodeOperatorAddedEvents.forEach((event) => {
-      if (Number(event.args.nodeOperatorId) % 100 === 0 || Number(event.args.nodeOperatorId) === 69) {
-        const f: Finding = new Finding()
-        f.setName(`🔵 CSModule: Notable Node Operator creation`)
-        f.setDescription(`Operator #${event.args.nodeOperatorId} was created.`)
-        f.setAlertid('CS-MODULE-NOTABLE-NODE-OPERATOR-CREATION')
-        f.setSeverity(Finding.Severity.INFO)
-        f.setType(Finding.FindingType.INFORMATION)
-        f.setProtocol('ethereum')
+    const nodeOperatorAddedEvents = filterLog(
+      txEvent.logs,
+      ICSModule.getEvent('NodeOperatorAdded').format('full'),
+      DEPLOYED_ADDRESSES.CS_MODULE,
+    )
 
+    for (const event of nodeOperatorAddedEvents) {
+      if (event.args.nodeOperatorId % 100n === 0n || event.args.nodeOperatorId === 69n) {
+        const f = Finding.fromObject({
+          name: `🔵 CSModule: Notable Node Operator creation`,
+          description: `Operator #${event.args.nodeOperatorId} was created.`,
+          alertId: 'CS-MODULE-NOTABLE-NODE-OPERATOR-CREATION',
+          source: sourceFromEvent(txEvent),
+          severity: FindingSeverity.Info,
+          type: FindingType.Info,
+        })
         out.push(f)
       }
-    })
+    }
 
     return out
   }
 
-  async handleTransaction(txEvent: TransactionDto): Promise<Finding[]> {
-    const out: Finding[] = []
+  private async checkModuleShare(blockEvent: BlockEvent, provider: ethers.Provider): Promise<Finding[]> {
+    const stakingRouter = StakingRouter__factory.connect(DEPLOYED_ADDRESSES.STAKING_ROUTER, provider)
 
-    const csModule = new ethers.Contract(this.csModuleAddress, CS_MODULE_ABI, getEthersProvider())
-    // Important to get events of type ethers.Event specificly
-    // therefore fetching current block
-    const csModuleNodeOperatorAddedFilter = csModule.filters.NodeOperatorAdded()
-    const [events] = await getLogsByChunks(
-      csModule,
-      csModuleNodeOperatorAddedFilter,
-      txEvent.block.number, // start block,
-      txEvent.block.number, // end block,
-    )
-    if (events) {
-      this.nodeOperatorAddedEvents.push(events)
-    }
+    let totalActiveValidators = 0n
+    let csmActiveValidators = 0n
+    let csmTargetShareBP = 0n
 
-    const csModuleFindings = handleEventsOfNotice(txEvent, this.csModuleEvents)
-    const everyHundredOperatorsCreatedFindings = this.handleEveryHundredOperatorsCreated(txEvent)
+    const digests = await stakingRouter.getAllStakingModuleDigests({ blockTag: blockEvent.blockHash })
 
-    out.push(...csModuleFindings, ...everyHundredOperatorsCreatedFindings)
+    for (const d of digests) {
+      const moduleActiveValidators = d.summary.totalDepositedValidators - d.summary.totalExitedValidators
+      totalActiveValidators += moduleActiveValidators
 
-    return out
-  }
-
-  async getTotalActiveValidators(blockDto: BlockDto) {
-    const stakingRouter = new ethers.Contract(this.stakingRouterAddress, STAKING_ROUTER_ABI, getEthersProvider())
-    const [smDigests] = await stakingRouter.functions.getAllStakingModuleDigests({
-      blockTag: blockDto.number,
-    })
-    let totalActiveValidators = 0
-    for (const smDigest of smDigests) {
-      const summary = smDigest.summary
-      const totalDepositedValidators = (summary.totalDepositedValidators as BigNumber).toNumber()
-      const totalExitedValidators = (summary.totalExitedValidators as BigNumber).toNumber()
-      totalActiveValidators += totalDepositedValidators - totalExitedValidators
-    }
-
-    return totalActiveValidators
-  }
-
-  public async handleModuleShareIsCloseToTargetShare(
-    blockDto: BlockDto,
-    totalActiveValidators: number,
-  ): Promise<Finding[]> {
-    const out: Finding[] = []
-    const now = blockDto.timestamp
-
-    const csModule = new ethers.Contract(this.csModuleAddress, CS_MODULE_ABI, getEthersProvider())
-    const stakingRouter = new ethers.Contract(this.stakingRouterAddress, STAKING_ROUTER_ABI, getEthersProvider())
-
-    const summary = await csModule.functions.getStakingModuleSummary()
-    const csTotalDepositedValidators = (summary.totalDepositedValidators as BigNumber).toNumber()
-    const csTotalExitedValidators = (summary.totalExitedValidators as BigNumber).toNumber()
-    const csTotalActiveValidators = csTotalDepositedValidators - csTotalExitedValidators
-
-    const stakingModules = await stakingRouter.functions.getStakingModules()
-    const csModuleInfo = stakingModules.find(
-      (module: StakingModule) => module.stakingModuleAddress === this.csModuleAddress,
-    )
-
-    const currentShare = Math.ceil((csTotalActiveValidators / totalActiveValidators) * 100)
-    const targetShare = Math.ceil(csModuleInfo.targetShare / BASIS_POINTS_DIVIDER)
-    const percentUsed = Math.ceil((currentShare / targetShare) * 100)
-
-    const timeSinceLastAlert = now - this.lastModuleShareIsCloseToTargetShareAlertTimestamp
-
-    if (timeSinceLastAlert > ONE_DAY) {
-      if (percentUsed >= MAX_TARGET_SHARE_PERCENT_USED) {
-        const f: Finding = new Finding()
-        f.setName(`🟢 CSModule: Module's share is close to the targetShare.`)
-        f.setDescription(
-          `The module's share is close to the target share (${percentUsed}% used). The module has ${csTotalActiveValidators} validators against ${totalActiveValidators} total. Target share: ${csModule.targetShare}`,
-        )
-        f.setAlertid('CS-MODULE-CLOSE-TO-TARGET-SHARE')
-        f.setSeverity(Finding.Severity.LOW)
-        f.setType(Finding.FindingType.INFORMATION)
-        f.setProtocol('ethereum')
-
-        out.push(f)
-
-        this.lastModuleShareIsCloseToTargetShareAlertTimestamp = now
+      if (d.state.stakingModuleAddress === DEPLOYED_ADDRESSES.CS_MODULE) {
+        csmActiveValidators = moduleActiveValidators
+        csmTargetShareBP = d.state.targetShare
       }
     }
-    return out
-  }
 
-  public async handleDuplicateAddresses(blockDto: BlockDto) {
-    const out: Finding[] = []
-    const now = blockDto.timestamp
-
-    this.nodeOperatorAddedEvents.forEach((event) => {
-      const addresses = [event.args?.managerAddress, event.args?.rewardAddress]
-      addresses.forEach((address) => {
-        if (address) {
-          this.addressCounts[address] = (this.addressCounts[address] ?? 0) + 1
-        }
-      })
-    })
-
-    const timeSinceLastAlert = now - this.lastDuplicateAddressesAlertTimestamp
-
-    if (timeSinceLastAlert > ONE_DAY) {
-      Object.entries(this.addressCounts).forEach(([address, count]) => {
-        if (count > MAX_OPERATORS_WITH_SAME_MANAGER_OR_REWARD_ADDRESS) {
-          const f: Finding = new Finding()
-          f.setName(
-            `🟢 CSModule: More than ${MAX_OPERATORS_WITH_SAME_MANAGER_OR_REWARD_ADDRESS} operators have the same manager or reward address.`,
-          )
-          f.setDescription(`${count} operators have ${address} as manager or reward address.`)
-          f.setAlertid('CS-MODULE-DUPLICATE-MANAGER-OR-REWARD-ADDRESS')
-          f.setSeverity(Finding.Severity.LOW)
-          f.setType(Finding.FindingType.INFORMATION)
-          f.setProtocol('ethereum')
-
-          out.push(f)
-
-          this.lastDuplicateAddressesAlertTimestamp = now
-        }
-      })
+    if (totalActiveValidators === 0n || csmActiveValidators === 0n) {
+      this.logger.debug('No validators in modules or in the CSM')
+      return []
     }
+
+    if (csmTargetShareBP === 0n) {
+      this.logger.debug('CSM has no target share')
+      return []
+    }
+
+    const csmCurrentShareBP = (csmActiveValidators * BASIS_POINT_MUL) / totalActiveValidators
+    const percentUsed = (csmCurrentShareBP * 100n) / csmTargetShareBP
+
+    const now = blockEvent.block.timestamp
+    const out: Finding[] = []
+
+    if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY) {
+      if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
+        const f = Finding.fromObject({
+          name: `🟢 CSModule: Module's share is close to the target share.`,
+          description: `The module's share is close to the target share (${percentUsed}% utilization). Current share is ${(Number(csmCurrentShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Target share is ${(Number(csmTargetShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%`,
+          alertId: 'CS-MODULE-CLOSE-TO-TARGET-SHARE',
+          // NOTE: Do not include the source to reach quorum.
+          // source: sourceFromEvent(blockEvent),
+          severity: FindingSeverity.Low,
+          type: FindingType.Info,
+        })
+        out.push(f)
+        this.lastFiredAt.moduleShareIsCloseToTargetShare = now
+      }
+    }
+
     return out
   }
 
-  public async handleDepositQueueAlerts(blockDto: BlockDto) {
-    const out: Finding[] = []
-    const now = blockDto.timestamp
+  private async checkDepositQueue(blockEvent: BlockEvent, provider: ethers.Provider): Promise<Finding[]> {
+    if (blockEvent.blockNumber % CHECK_QUEUE_INTERVAL_BLOCKS !== 0 && !IS_CLI) {
+      return []
+    }
 
-    const csModule = new ethers.Contract(this.csModuleAddress, CS_MODULE_ABI, getEthersProvider())
+    const csm = CSModule__factory.connect(DEPLOYED_ADDRESSES.CS_MODULE, provider)
+    const ethCallOpts = { blockTag: blockEvent.blockHash }
+
     const queueLookup: Map<bigint, bigint> = new Map()
+    let validatorsInQueue = 0n
     let emptyBatchCount = 0
-    const queue = await csModule.depositQueue()
-    let validatorsInQueue = 0
+
+    const queue = await csm.depositQueue(ethCallOpts)
     let index = queue.head
 
-    while (index < queue.tail) {
-      const batchValue: BigNumber = await csModule.depositQueueItem(index)
+    this.logger.debug(`Queue head: ${queue.head}`)
+    this.logger.debug(`Queue tail: ${queue.tail}`)
+
+    while (index >= queue.head && index < queue.tail) {
+      const batchValue = await csm.depositQueueItem(index, ethCallOpts)
       const batch = new Batch(batchValue)
-      if (batch.next() === BigInt(0)) {
+
+      // Covers zero-batch case as well.
+      if (batch.next() === 0n) {
         break
       }
+
       const nodeOperatorId = batch.noId()
       const keysInBatch = batch.keys()
-      const nodeOperator = await csModule.getNodeOperator(nodeOperatorId, { blockTag: blockDto.number })
-      const depositableKeys = nodeOperator.depositableValidatorsCount
+      const no = await csm.getNodeOperator(nodeOperatorId, ethCallOpts)
 
-      const keysSeenForOperator = queueLookup.get(nodeOperatorId) || 0
-
-      if (BigInt(keysSeenForOperator) >= depositableKeys) {
+      const keysSeenForOperator = queueLookup.get(nodeOperatorId) ?? 0n
+      if (keysSeenForOperator >= no.depositableValidatorsCount) {
         emptyBatchCount++
       } else {
-        queueLookup.set(nodeOperatorId, BigInt(keysSeenForOperator) + keysInBatch)
-        validatorsInQueue += Number(keysInBatch)
+        const depositableFromBatch =
+          keysSeenForOperator + keysInBatch > no.depositableValidatorsCount
+            ? no.depositableValidatorsCount - keysSeenForOperator
+            : keysInBatch
+        validatorsInQueue += depositableFromBatch
+        queueLookup.set(nodeOperatorId, depositableFromBatch)
       }
 
+      // TODO: Think about how it works in on-chain code.
       index = batch.next()
     }
 
-    const timeSinceLastEmptyBatchesAlert = now - this.lastTooManyEmptyBatchesAlertTimestamp
+    this.logger.debug(`Empty batches: ${emptyBatchCount}`)
+    this.logger.debug(`Validators in the queue: ${validatorsInQueue}`)
 
-    if (timeSinceLastEmptyBatchesAlert > ONE_DAY) {
-      if (emptyBatchCount > MAX_EMPTY_BATCHES_IN_THE_QUEUE) {
-        const f: Finding = new Finding()
-        f.setName(`🟢 CSModule: Too many empty batces in the deposit queue.`)
-        f.setDescription(`${emptyBatchCount} empty batces in the deposit queue.`)
-        f.setAlertid('CS-MODULE-TOO-MANY-EMPTY-BATCHES-IN-THE-QUEUE')
-        f.setSeverity(Finding.Severity.LOW)
-        f.setType(Finding.FindingType.INFORMATION)
-        f.setProtocol('ethereum')
+    const now = blockEvent.block.timestamp
+    const out: Finding[] = []
 
+    if (now - this.lastFiredAt.tooManyEmptyBatches > SECONDS_PER_DAY) {
+      if (emptyBatchCount > QUEUE_EMPTY_BATCHES_MAX) {
+        const f = Finding.fromObject({
+          name: `🟢 CSModule: Too many empty batches in the deposit queue.`,
+          description: `More than ${QUEUE_EMPTY_BATCHES_MAX} empty batches in the deposit queue.`,
+          alertId: 'CS-MODULE-TOO-MANY-EMPTY-BATCHES-IN-THE-QUEUE',
+          // NOTE: Do not include the source to reach quorum.
+          // source: sourceFromEvent(blockEvent),
+          severity: FindingSeverity.Low,
+          type: FindingType.Info,
+        })
         out.push(f)
-
-        this.lastTooManyEmptyBatchesAlertTimestamp = now
+        this.lastFiredAt.tooManyEmptyBatches = now
       }
     }
 
-    const timeSinceLastMaxValidatorsAlert = now - this.lastTooManyValidatorsAlertTimestamp
-
-    if (timeSinceLastMaxValidatorsAlert > ONE_DAY) {
-      if (validatorsInQueue > MAX_VALIDATORS_IN_THE_QUEUE) {
-        const f: Finding = new Finding()
-        f.setName('🟢 CSModule: Too many validators in the queue.')
-        f.setDescription(`CSModule has ${validatorsInQueue} keys in the deposit queue.`)
-        f.setAlertid('CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE')
-        f.setSeverity(Finding.Severity.LOW)
-        f.setType(Finding.FindingType.INFORMATION)
-        f.setProtocol('ethereum')
-
+    if (now - this.lastFiredAt.tooManyValidators > SECONDS_PER_DAY) {
+      if (validatorsInQueue > QUEUE_VALIDATORS_MAX) {
+        const f = Finding.fromObject({
+          name: '🟢 CSModule: Too many validators in the queue.',
+          description: `There's ${validatorsInQueue} keys waiting for deposit in CSM.`,
+          alertId: 'CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE',
+          // NOTE: Do not include the source to reach quorum.
+          // source: sourceFromEvent(blockEvent),
+          severity: FindingSeverity.Low,
+          type: FindingType.Info,
+        })
         out.push(f)
-
-        this.lastTooManyValidatorsAlertTimestamp = now
+        this.lastFiredAt.tooManyValidators = now
       }
     }
 
     return out
-  }
-
-  async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
-    const start = new Date().getTime()
-    const findings: Finding[] = []
-
-    const csModule = new ethers.Contract(this.csModuleAddress, CS_MODULE_ABI, getEthersProvider())
-
-    // Invariants
-    let totalDepositedValidators = 0
-    let totalExitedValidators = 0
-    let depositableValidatorsCount = 0
-
-    for (let noId = 0; noId < csModule.getNodeOperatorsCount(); noId++) {
-      const noSummary = csModule.getNodeOperatorSummary(noId)
-
-      if (!csModule.publicRelease) {
-        assertInvariant(
-          noSummary.totalAddedKeys > csModule.MAX_SIGNING_KEYS_PER_OPERATOR_BEFORE_PUBLIC_RELEASE,
-          `Invariant failed: Node Operator ${noId} has more keys than allowed before public release.`,
-          findings,
-        )
-      }
-
-      const no = await csModule.getNodeOperator(noId)
-
-      assertInvariant(
-        !(no.totalAddedKeys >= no.totalDepositedKeys && no.totalDepositedKeys >= no.totalWithdrawnKeys),
-        `Invariant failed: totalAddedKeys >= totalDepositedKeys >= totalWithdrawnKeys for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        !(no.totalDepositedKeys <= no.totalVettedKeys && no.totalVettedKeys <= no.totalAddedKeys),
-        `Invariant failed: totalDepositedKeys <= totalVettedKeys <= totalAddedKeys for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        !(no.stuckValidatorsCount + no.totalWithdrawnKeys <= no.totalDepositedKeys),
-        `Invariant failed: stuckValidatorsCount + totalWithdrawnKeys <= totalDepositedKeys for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        !(no.depositableValidatorsCount + no.totalExitedKeys <= no.totalAddedKeys),
-        `Invariant failed: depositableValidatorsCount + totalExitedKeys <= totalAddedKeys for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        no.proposedManagerAddress === no.managerAddress,
-        `Invariant failed: proposedManagerAddress should not equal managerAddress for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        no.proposedRewardAddress === no.rewardAddress,
-        `Invariant failed: proposedRewardAddress should not equal rewardAddress for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        no.managerAddress === ethers.constants.AddressZero,
-        `Invariant failed: managerAddress should not be zero address for Node Operator ${noId}`,
-        findings,
-      )
-      assertInvariant(
-        no.rewardAddress === ethers.constants.AddressZero,
-        `Invariant failed: rewardAddress should not be zero address for Node Operator ${noId}`,
-        findings,
-      )
-
-      const queue = await csModule.depositQueue()
-      let index = queue.head
-      const tail = queue.tail
-      let enqueuedCount = BigInt(0)
-      while (index < tail) {
-        const batchValue: BigNumber = await csModule.depositQueueItem(index)
-        const batch = new Batch(batchValue)
-        if (batch.noId() === BigInt(noId)) {
-          enqueuedCount += batch.keys()
-        }
-        index = batch.next()
-        if (index === BigInt(0)) {
-          break
-        }
-      }
-
-      assertInvariant(
-        no.enqueuedCount !== enqueuedCount,
-        `Invariant failed: enqueuedCount mismatch for Node Operator ${noId}`,
-        findings,
-      )
-
-      totalDepositedValidators += new BigNumber(noSummary.totalDepositedKeys.toString()).toNumber()
-      totalExitedValidators += new BigNumber(noSummary.totalExitedKeys.toString()).toNumber()
-      depositableValidatorsCount += new BigNumber(noSummary.depositableValidatorsCount.toString()).toNumber()
-    }
-
-    const smSummary = await csModule.functions.getStakingModuleSummary()
-    assertInvariant(
-      smSummary.totalDepositedValidators !== totalDepositedValidators ||
-        smSummary.totalExitedValidators !== totalExitedValidators ||
-        smSummary.depositableValidatorsCount !== depositableValidatorsCount,
-      `Invariant failed: Global summary values do not match the accumulated node operator summaries.`,
-      findings,
-    )
-
-    const moduleShareIsCloseToTargetShareFindings = this.handleModuleShareIsCloseToTargetShare(
-      blockDto,
-      await this.getTotalActiveValidators(blockDto),
-    )
-    const duplicateAddressesFindings = this.handleDuplicateAddresses(blockDto)
-    const depositQueueFindings = this.handleDepositQueueAlerts(blockDto)
-
-    findings.push(
-      ...(await moduleShareIsCloseToTargetShareFindings),
-      ...(await duplicateAddressesFindings),
-      ...(await depositQueueFindings),
-    )
-
-    this.logger.info(elapsedTime(CSModuleSrv.name + '.' + this.handleBlock.name, start))
-
-    return findings
   }
 }

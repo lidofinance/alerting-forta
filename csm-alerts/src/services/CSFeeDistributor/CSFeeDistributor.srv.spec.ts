@@ -11,7 +11,7 @@ import { getCSFeeDistributorEvents } from '../../utils/events/cs_fee_distributor
 import { CSFeeDistributorSrv, ICSFeeDistributorClient } from './CSFeeDistributor.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
-import { ethers } from 'forta-agent'
+import { ethers } from '@fortanetwork/forta-bot'
 import { getFortaConfig } from 'forta-agent/dist/sdk/utils'
 import promClient from 'prom-client'
 import { Metrics } from '../../utils/metrics/metrics'

@@ -1,4 +1,11 @@
-import { DeploymentAddress, DeploymentAddresses } from '../../utils/constants.holesky'
+import {
+  CONTRACTS_WITH_ASSET_RECOVERER,
+  CSM_PROXY_CONTRACTS,
+  DeploymentAddress,
+  DeploymentAddresses,
+  PAUSABLE_CONTRACTS,
+  ROLES_MONITORING_CONTRACTS,
+} from '../../utils/constants.holesky'
 import { expect } from '@jest/globals'
 import { TransactionDto } from '../../entity/events'
 import {
@@ -7,8 +14,11 @@ import {
   CSFeeDistributor__factory,
   CSFeeOracle__factory,
 } from '../../generated/typechain'
-import { getCSAccountingEvents } from '../../utils/events/cs_accounting_events'
-import { CSAccountingSrv, ICSAccountingClient } from './CSAccounting.srv'
+import { getOssifiedProxyEvents } from '../../utils/events/ossified_proxy_events'
+import { getPausableEvents } from '../../utils/events/pausable_events'
+import { getAssetRecovererEvents } from '../../utils/events/asset_recoverer_events'
+import { getRolesMonitoringEvents } from '../../utils/events/roles_monitoring_events'
+import { ProxyWatcherSrv, IProxyWatcherClient } from './ProxyWatcher.srv'
 import * as Winston from 'winston'
 import { ETHProvider } from '../../clients/eth_provider'
 import { ethers } from '@fortanetwork/forta-bot'
@@ -18,7 +28,7 @@ import { Metrics } from '../../utils/metrics/metrics'
 
 const TEST_TIMEOUT = 120_000 // ms
 
-describe('CSAccounting event tests', () => {
+describe('ProxyWatcher event tests', () => {
   const chainId = 17000
 
   const logger: Winston.Logger = Winston.createLogger({
@@ -40,7 +50,7 @@ describe('CSAccounting event tests', () => {
   const registry = new promClient.Registry()
   const m = new Metrics(registry, 'test_')
 
-  const csAccountingClient: ICSAccountingClient = new ETHProvider(
+  const proxyWatcherClient: IProxyWatcherClient = new ETHProvider(
     logger,
     m,
     fortaEthersProvider,
@@ -50,19 +60,19 @@ describe('CSAccounting event tests', () => {
     csFeeOracleRunner,
   )
 
-  const csAccountingSrv = new CSAccountingSrv(
+  const proxyWatcherSrv = new ProxyWatcherSrv(
     logger,
-    csAccountingClient,
-    getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
-    address.CS_ACCOUNTING_ADDRESS,
-    address.LIDO_STETH_ADDRESS,
-    address.CS_MODULE_ADDRESS,
+    proxyWatcherClient,
+    getOssifiedProxyEvents(CSM_PROXY_CONTRACTS),
+    getPausableEvents(PAUSABLE_CONTRACTS),
+    getAssetRecovererEvents(CONTRACTS_WITH_ASSET_RECOVERER),
+    getRolesMonitoringEvents(ROLES_MONITORING_CONTRACTS),
   )
 
   test(
-    '🚨 CSAccounting: Bond Curve Updated',
+    '🚨 Proxy Watcher: Admin Changed',
     async () => {
-      const txHash = '0x8b904da83d58e520c778cc562b10fa4e0943a9f991b9050d93481fdabf2da9c2'
+      const txHash = '0x92410350f567757d8f73b2f4b3670454af3899d095103ea0e745c92714673277'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -77,33 +87,7 @@ describe('CSAccounting event tests', () => {
         hash: trx.hash,
       }
 
-      const results = await csAccountingSrv.handleTransaction(transactionDto)
-
-      expect(results).toMatchSnapshot()
-      expect(results.length).toBe(1)
-    },
-    TEST_TIMEOUT,
-  )
-
-  test(
-    '🔴 CSAccounting: Bond Curve added, stETH Approval',
-    async () => {
-      const txHash = '0xcc92653babec3b1748d8e04de777796cab2d1ae40fbe926db857e9103a9b74a5'
-
-      const trx = await fortaEthersProvider.getTransaction(txHash)
-      const receipt = await trx.wait()
-
-      const transactionDto: TransactionDto = {
-        logs: receipt.logs,
-        to: trx.to ? trx.to : null,
-        block: {
-          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
-          number: trx.blockNumber ? trx.blockNumber : 1,
-        },
-        hash: trx.hash,
-      }
-
-      const results = await csAccountingSrv.handleTransaction(transactionDto)
+      const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
       expect(results.length).toBe(4)
@@ -112,9 +96,9 @@ describe('CSAccounting event tests', () => {
   )
 
   test(
-    '🚨 CSAccounting: Charge Penalty Recipient Set',
+    '🚨 Proxy Watcher: Implementation Upgraded',
     async () => {
-      const txHash = '0xf62269919009e1cb9c6ea8c29cb6c83f9c1d113d97d401ed5ff2b696cee6d82f'
+      const txHash = '0x262faac95560f7fc0c831580d17e48daa69b17831b798e0b00bc43168a310c52'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -129,18 +113,18 @@ describe('CSAccounting event tests', () => {
         hash: trx.hash,
       }
 
-      const results = await csAccountingSrv.handleTransaction(transactionDto)
+      const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(1)
+      expect(results.length).toBe(4)
     },
     TEST_TIMEOUT,
   )
 
   test(
-    '🔴 CSAccounting: Bond Curve Set',
+    '🚨 Proxy Watcher: Paused',
     async () => {
-      const txHash = '0xcea4d214c8f6e4f3415fc941fdb6802f4243a7b3e12ba5288cf7e7df39d457a0'
+      const txHash = '0x56a49219b4e40d146c0dc11d795b6d43696947f0ceb63fad7e9b820eab2b3e14'
 
       const trx = await fortaEthersProvider.getTransaction(txHash)
       const receipt = await trx.wait()
@@ -155,10 +139,36 @@ describe('CSAccounting event tests', () => {
         hash: trx.hash,
       }
 
-      const results = await csAccountingSrv.handleTransaction(transactionDto)
+      const results = proxyWatcherSrv.handleTransaction(transactionDto)
 
       expect(results).toMatchSnapshot()
-      expect(results.length).toBe(1)
+      expect(results.length).toBe(3)
+    },
+    TEST_TIMEOUT,
+  )
+
+  test(
+    '🚨 Proxy Watcher: Resumed',
+    async () => {
+      const txHash = '0xa44ac96956f254fe1b9d6ff0a60ad2b5b4a7eaff951eb98150c0f7bbe90dc5df'
+
+      const trx = await fortaEthersProvider.getTransaction(txHash)
+      const receipt = await trx.wait()
+
+      const transactionDto: TransactionDto = {
+        logs: receipt.logs,
+        to: trx.to ? trx.to : null,
+        block: {
+          timestamp: trx.timestamp ? trx.timestamp : new Date().getTime(),
+          number: trx.blockNumber ? trx.blockNumber : 1,
+        },
+        hash: trx.hash,
+      }
+
+      const results = proxyWatcherSrv.handleTransaction(transactionDto)
+
+      expect(results).toMatchSnapshot()
+      expect(results.length).toBe(3)
     },
     TEST_TIMEOUT,
   )

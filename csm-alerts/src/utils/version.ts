@@ -9,7 +9,7 @@ export interface Version {
   isWdClean: boolean
 }
 
-export default readVersion(path.join(__dirname, '..', './version.json'))
+export default readVersion(path.join(__dirname, '..', '..', 'version.json'))
 
 function readVersion(versionFilePath: string): Version {
   try {

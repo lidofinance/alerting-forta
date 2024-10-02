@@ -1,270 +1,237 @@
-import { elapsedTime } from '../../utils/time'
-import { BlockDto, EventOfNotice, TransactionDto, handleEventsOfNotice } from '../../entity/events'
+import {
+  BlockEvent,
+  Finding,
+  FindingSeverity,
+  FindingType,
+  TransactionEvent,
+  ethers,
+  filterLog,
+} from '@fortanetwork/forta-bot'
+import { Provider } from 'ethers'
 import { Logger } from 'winston'
-import { either as E } from 'fp-ts'
-import { Finding } from '../../generated/proto/alert_pb'
-import CS_FEE_DISTRIBUTOR_ABI from '../../brief/abi/CSFeeDistributor.json'
-import HASH_CONSENSUS_ABI from '../../brief/abi/HashConsensus.json'
-import { ONE_DAY, SECONDS_PER_SLOT } from '../../utils/constants'
-import { ethers, filterLog, getEthersProvider } from 'forta-agent'
-import { DISTRIBUTION_DATA_UPDATED_EVENT, TRANSFER_SHARES_EVENT } from '../../utils/events/cs_fee_distributor_events'
-import { getLogsByChunks } from '../../utils/utils'
-import { toKebabCase } from '../../utils/string'
 
-export abstract class ICSFeeDistributorClient {
-  public abstract getBlockByNumber(blockNumber: number): Promise<E.Either<Error, BlockDto>>
-}
+import { CSFeeDistributor__factory, HashConsensus__factory, Lido__factory } from '../../generated/typechain'
+import { getLogger } from '../../logger'
+import { SECONDS_PER_DAY, SECONDS_PER_SLOT, SLOTS_PER_EPOCH } from '../../shared/constants'
+import { getEpoch } from '../../utils/epochs'
+import { failedTxAlert, invariantAlert, sourceFromEvent } from '../../utils/findings'
+import { getLogsByChunks } from '../../utils/logs'
+import { RedefineMode, requireWithTier } from '../../utils/require'
+import { formatDelay } from '../../utils/time'
+import * as Constants from '../constants'
+
+const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(module, '../constants', RedefineMode.Merge)
+const ICSFeeDistributor = CSFeeDistributor__factory.createInterface()
 
 export class CSFeeDistributorSrv {
-  private name = `CSFeeDistributorSrv`
-
   private readonly logger: Logger
-  private readonly csFeeDistributorClient: ICSFeeDistributorClient
 
-  private readonly csFeeDistributorEvents: EventOfNotice[]
-  private readonly csAccountingAddress: string
-  private readonly csFeeDistributorAddress: string
-  private readonly stETHAddress: string
-  private readonly hashConsensusAddress: string
-
-  private lastDistributionDataUpdatedTimestamp: number = 0
-  private lastNoDistributionDataUpdatedAlertTimestamp: number = 0
-
-  constructor(
-    logger: Logger,
-    ethProvider: ICSFeeDistributorClient,
-    csFeeDistributorEvents: EventOfNotice[],
-    csAccountingAddress: string,
-    csFeeDistributorAddress: string,
-    stETHAddress: string,
-    hashConsensusAddress: string,
-  ) {
-    this.logger = logger
-    this.csFeeDistributorClient = ethProvider
-    this.csFeeDistributorEvents = csFeeDistributorEvents
-    this.csAccountingAddress = csAccountingAddress
-    this.csFeeDistributorAddress = csFeeDistributorAddress
-    this.stETHAddress = stETHAddress
-    this.hashConsensusAddress = hashConsensusAddress
+  private lastFiredAt = {
+    distributionUpdateOverdue: 0,
   }
 
-  async initialize(currentBlock: number): Promise<Error | null> {
-    const start = new Date().getTime()
+  private state = {
+    lastDistributionUpdatedAt: 0,
+    frameInitialEpoch: 0,
+    frameInSlots: 0,
+  }
 
-    const currBlock = await this.csFeeDistributorClient.getBlockByNumber(currentBlock)
-    if (E.isLeft(currBlock)) {
-      this.logger.error(elapsedTime(`Failed [${this.name}.initialize]`, start))
-      return currBlock.left
+  constructor() {
+    this.logger = getLogger(CSFeeDistributorSrv.name)
+  }
+
+  async initialize(blockIdentifier: ethers.BlockTag, provider: ethers.Provider): Promise<void> {
+    const hc = HashConsensus__factory.connect(DEPLOYED_ADDRESSES.HASH_CONSENSUS, provider)
+    const frameConfig = await hc.getFrameConfig({ blockTag: blockIdentifier })
+    this.state.frameInitialEpoch = Number(frameConfig.initialEpoch)
+
+    const frameInSlots = Number(frameConfig.epochsPerFrame) * SLOTS_PER_EPOCH
+    this.state.frameInSlots = frameInSlots
+
+    const distributor = CSFeeDistributor__factory.connect(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR, provider)
+    if ((await distributor.treeRoot({ blockTag: blockIdentifier })) === ethers.ZeroHash) {
+      this.logger.debug('No distribution happened so far')
+      return
     }
 
-    const csFeeDistributor = new ethers.Contract(
-      this.csFeeDistributorAddress,
-      CS_FEE_DISTRIBUTOR_ABI,
-      getEthersProvider(),
-    )
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
-    const frameConfig = await hashConsensus.functions.getFrameConfig()
-    const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
-    const startBlock = currentBlock - Math.ceil(frameInSeconds / SECONDS_PER_SLOT)
-    const csFeeDistributorDistributionDataUpdatedFilter = csFeeDistributor.filters.DistributionDataUpdated()
-    const distributionDataUpdatedEvents = await getLogsByChunks(
-      csFeeDistributor,
-      csFeeDistributorDistributionDataUpdatedFilter,
-      startBlock,
-      currentBlock,
+    const toBlock = await provider.getBlock(blockIdentifier)
+    if (!toBlock) {
+      throw Error('Unable to get the latest block')
+    }
+
+    const distributedEvents = await getLogsByChunks(
+      distributor as any,
+      distributor.filters.DistributionDataUpdated,
+      toBlock.number - frameInSlots * 2,
+      toBlock.number,
     )
 
-    if (distributionDataUpdatedEvents.length > 0) {
-      this.lastDistributionDataUpdatedTimestamp = currBlock.right.timestamp
+    const lastDistributionEvent = distributedEvents.sort((a, b) => a.blockNumber - b.blockNumber).pop()
+    if (!lastDistributionEvent) {
+      this.logger.debug('No distribution event found')
+      return
     }
 
-    this.logger.info(elapsedTime(`[${this.name}.initialize]`, start))
-    return null
+    this.state.lastDistributionUpdatedAt = (await lastDistributionEvent.getBlock())?.timestamp ?? 0
+    this.logger.debug(`Last distribution observed at timestamp ${this.state.lastDistributionUpdatedAt}`)
   }
 
-  public getName(): string {
-    return this.name
+  async handleBlock(blockEvent: BlockEvent, provider: Provider): Promise<Finding[]> {
+    return [...this.handleDistributionOverdue(blockEvent), ...(await this.checkInvariants(blockEvent, provider))]
   }
 
-  async handleBlock(blockDto: BlockDto): Promise<Finding[]> {
-    const start = new Date().getTime()
-    const findings: Finding[] = []
-
-    // * Invariants
-    // const csFeeDistributor = new ethers.Contract(
-    //   this.csFeeDistributorAddress,
-    //   CS_FEE_DISTRIBUTOR_ABI,
-    //   getEthersProvider(),
-    // )
-    //Check that total distributed shares do not exceed total shares distributed by oracle
-    // assertInvariant(
-    //   totalDistributedShares.lte(treeValues.reduce((acc, val) => acc.add(val), BigNumber.from(0))),
-    //   'Claimed more than distributed by oracle.',
-    //   findings,
-    // )
-    // assertInvariant(!(treeRoot === ZERO_HASH && treeCid !== ''), 'Tree exists, but no CID.', findings)
-
-    if (blockDto.number % 10 === 0) {
-      const distributionDataUpdatedFindings = await this.handleDistributionDataUpdated(blockDto)
-      findings.push(...distributionDataUpdatedFindings)
-    }
-
-    this.logger.info(elapsedTime(CSFeeDistributorSrv.name + '.' + this.handleBlock.name, start))
-
-    return findings
-  }
-
-  private async handleRevertedTx(txEvent: TransactionDto): Promise<Finding[]> {
-    const out: Finding[] = []
-
-    const txReceipt = await getEthersProvider().getTransactionReceipt(txEvent.hash)
-
-    // Checks if transaction reverted
-    if (txReceipt.status === 0) {
-      for (const log of txReceipt.logs) {
-        try {
-          const decodedLog = ethers.utils.defaultAbiCoder.decode(['string'], log.data)
-          const reason = decodedLog[0]
-
-          if (reason) {
-            switch (reason) {
-              case 'InvalidShares':
-                out.push(
-                  this.createCriticalFindingForRevertedTx(
-                    'CSFeeOracle reports incorrect amount of shares to distribute',
-                    'InvalidShares',
-                  ),
-                )
-                break
-              case 'NotEnoughShares':
-                out.push(
-                  this.createCriticalFindingForRevertedTx(
-                    'CSFeeDistributor internal accounting error',
-                    'NotEnoughShares',
-                  ),
-                )
-                break
-              case 'InvalidTreeRoot':
-                out.push(
-                  this.createCriticalFindingForRevertedTx('CSFeeOracle built incorrect report', 'InvalidTreeRoot'),
-                )
-                break
-              case 'InvalidTreeCID':
-                out.push(
-                  this.createCriticalFindingForRevertedTx('CSFeeOracle built incorrect report', 'InvalidTreeCID'),
-                )
-                break
-              default:
-                this.logger.warn(`Unrecognized revert reason: ${reason}`)
-                break
-            }
-          }
-        } catch (error) {
-          this.logger.error(`Failed to decode log data: ${error}`)
-        }
-      }
-    }
-
-    return out
-  }
-
-  private createCriticalFindingForRevertedTx(description: string, reason: string): Finding {
-    const f = new Finding()
-    f.setName(`🟣 CRITICAL: ${reason}`)
-    f.setDescription(`Transaction reverted. ${description}`)
-    f.setAlertid(`CSFEE-${toKebabCase(reason)}`)
-    f.setSeverity(Finding.Severity.CRITICAL)
-    f.setType(Finding.FindingType.INFORMATION)
-    f.setProtocol('ethereum')
-    return f
-  }
-
-  private async handleDistributionDataUpdated(blockDto: BlockDto): Promise<Finding[]> {
-    const out: Finding[] = []
-
-    const hashConsensus = new ethers.Contract(this.hashConsensusAddress, HASH_CONSENSUS_ABI, getEthersProvider())
-    const frameConfig = await hashConsensus.functions.getFrameConfig()
-    const frameInSeconds = frameConfig.epochsPerFrame * 32 * SECONDS_PER_SLOT
-
-    const now = blockDto.timestamp
-
-    const chainConfig = hashConsensus.getChainConfig()
-    const genesisTimestamp = chainConfig.genesisTime
-    const currentEpoch = Math.floor((now - genesisTimestamp) / 32 / SECONDS_PER_SLOT)
-    if (currentEpoch < frameConfig.initialEpoch + frameConfig.epochsPerFrame) {
-      return out
-    }
-
-    const timeSinceLastAlert = now - this.lastNoDistributionDataUpdatedAlertTimestamp
-
-    if (timeSinceLastAlert > ONE_DAY) {
-      if (now - this.lastDistributionDataUpdatedTimestamp > frameInSeconds) {
-        const daysSinceLastUpdate = Math.floor((now - this.lastDistributionDataUpdatedTimestamp) / ONE_DAY)
-
-        const f = new Finding()
-        f.setName(`🔴 CSFeeDistributor: No DistributionDataUpdated Event`)
-        f.setDescription(`There has been no DistributionDataUpdated event for ${daysSinceLastUpdate} days.`)
-        f.setAlertid('CSFEE-NO-DISTRIBUTION-DATA-UPDATED')
-        f.setSeverity(Finding.Severity.HIGH)
-        f.setType(Finding.FindingType.INFORMATION)
-        f.setProtocol('ethereum')
-
-        out.push(f)
-
-        this.lastNoDistributionDataUpdatedAlertTimestamp = now
-      }
-    }
-    return out
-  }
-
-  public async handleTransaction(txEvent: TransactionDto): Promise<Finding[]> {
-    const out: Finding[] = []
-
+  public async handleTransaction(txEvent: TransactionEvent, provider: ethers.Provider): Promise<Finding[]> {
     const distributionDataUpdatedEvents = filterLog(
       txEvent.logs,
-      DISTRIBUTION_DATA_UPDATED_EVENT,
-      this.csFeeDistributorAddress,
+      ICSFeeDistributor.getEvent('DistributionDataUpdated').format('full'),
+      DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR,
     )
 
     if (distributionDataUpdatedEvents.length > 0) {
-      this.lastDistributionDataUpdatedTimestamp = txEvent.block.timestamp
+      this.state.lastDistributionUpdatedAt = txEvent.block.timestamp
     }
 
-    const csFeeDistributorFindings = handleEventsOfNotice(txEvent, this.csFeeDistributorEvents)
-    const transferSharesInvalidReceiverFindings = this.handleTransferSharesInvalidReceiver(txEvent)
-    const revertedTxFindings = await this.handleRevertedTx(txEvent)
-
-    out.push(...csFeeDistributorFindings, ...transferSharesInvalidReceiverFindings, ...revertedTxFindings)
-
-    return out
+    return (
+      await Promise.all([this.handleTransferSharesInvalidReceiver(txEvent), this.handleRevertedTx(txEvent, provider)])
+    ).flat()
   }
 
-  public handleTransferSharesInvalidReceiver(txEvent: TransactionDto): Finding[] {
-    const out: Finding[] = []
-
-    const transferSharesEvents = filterLog(txEvent.logs, TRANSFER_SHARES_EVENT, this.stETHAddress)
-    if (transferSharesEvents.length === 0) {
+  private handleDistributionOverdue(blockEvent: BlockEvent): Finding[] {
+    if (this.state.lastDistributionUpdatedAt === 0) {
+      this.logger.debug('No previous distribution observed so far')
       return []
     }
 
+    const now = blockEvent.block.timestamp
+
+    if (getEpoch(blockEvent.chainId, now) < this.state.frameInitialEpoch) {
+      this.logger.debug('Initial epoch has not been reached yet')
+      return []
+    }
+
+    if (now - this.lastFiredAt.distributionUpdateOverdue < SECONDS_PER_DAY) {
+      return []
+    }
+
+    // Just add 1 day to the frame length because it seems as a good approximation of more complex approach.
+    // TODO: Fetch the current frame every time?
+    const distributionIntervalSecondsMax = this.state.frameInSlots * SECONDS_PER_SLOT + SECONDS_PER_DAY
+    const distributionDelaySeconds = now - this.state.lastDistributionUpdatedAt
+    if (distributionDelaySeconds < distributionIntervalSecondsMax) {
+      return []
+    }
+
+    this.lastFiredAt.distributionUpdateOverdue = now
+
+    return [
+      Finding.fromObject({
+        name: `🔴 CSFeeDistributor: Distribution overdue`,
+        description: `There has been no DistributionDataUpdated event for more than ${formatDelay(distributionIntervalSecondsMax)}.`,
+        alertId: 'CSFEE-DISTRIBUTION-OVERDUE',
+        // NOTE: Do not include the source to reach quorum.
+        // source: sourceFromEvent(blockEvent),
+        severity: FindingSeverity.High,
+        type: FindingType.Info,
+      }),
+    ]
+  }
+
+  public handleTransferSharesInvalidReceiver(txEvent: TransactionEvent): Finding[] {
+    const transferSharesEvents = filterLog(
+      txEvent.logs,
+      Lido__factory.createInterface().getEvent('TransferShares').format('full'),
+      DEPLOYED_ADDRESSES.LIDO_STETH,
+    )
+
+    const out: Finding[] = []
     for (const event of transferSharesEvents) {
       if (
-        event.args.from.toLowerCase() === this.csFeeDistributorAddress.toLowerCase() &&
-        event.args.to.toLowerCase() !== this.csAccountingAddress.toLowerCase()
+        event.args.from.toLowerCase() === DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR.toLowerCase() &&
+        event.args.to.toLowerCase() !== DEPLOYED_ADDRESSES.CS_ACCOUNTING.toLowerCase()
       ) {
-        const f: Finding = new Finding()
-        f.setName(`🚨 CSFeeDistributor: Invalid TransferShares receiver`)
-        f.setDescription(
-          `TransferShares from CSFeeDistributor to an invalid address ${event.args.to} (expected CSAccounting)`,
-        )
-        f.setAlertid('CSFEE-DISTRIBUTOR-INVALID-TRANSFER')
-        f.setSeverity(Finding.Severity.CRITICAL)
-        f.setType(Finding.FindingType.INFORMATION)
-        f.setProtocol('ethereum')
+        const f = Finding.fromObject({
+          name: `🚨 CSFeeDistributor: Invalid TransferShares receiver`,
+          description: `TransferShares from CSFeeDistributor to an invalid address ${event.args.to} (expected CSAccounting)`,
+          alertId: 'CSFEE-DISTRIBUTOR-INVALID-TRANSFER',
+          source: sourceFromEvent(txEvent),
+          severity: FindingSeverity.Critical,
+          type: FindingType.Info,
+        })
 
         out.push(f)
       }
     }
+    return out
+  }
+
+  private async handleRevertedTx(txEvent: TransactionEvent, provider: ethers.Provider): Promise<Finding[]> {
+    // if (!(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR.toLowerCase() in txEvent.addresses)) {
+    //   return []
+    // }
+    //
+    // const txReceipt = await provider.getTransactionReceipt(txEvent.hash)
+    // // Nothing to do if the transaction succeeded.
+    // if (txReceipt?.status === 0) {
+    //   this.logger.debug(`Skipping successful transaction ${txEvent.hash}`)
+    //   return []
+    // }
+    //
+    // // FIXME: I can't find a node with getTransactionResult call working.
+    // let decodedLog: ethers.ErrorDescription | null = null
+    // try {
+    //   const data = await txReceipt?.getResult()
+    //   decodedLog = CSFeeDistributorInterface.parseError(data ?? '')
+    // } catch (error: any) {
+    //   if (error.code === 'UNSUPPORTED_OPERATION') {
+    //     this.logger.debug('Ethereum RPC does not support `getTransactionResult`')
+    //     return []
+    //   }
+    //
+    //   throw error
+    // }
+    //
+    // const reason = decodedLog?.name
+    // if (!reason) {
+    //   return []
+    // }
+    //
+    // switch (reason) {
+    //   case 'InvalidShares':
+    //     return [failedTxAlert(txEvent, 'CSFeeOracle reports incorrect amount of shares to distribute', 'InvalidShares')]
+    //   case 'NotEnoughShares':
+    //     return [failedTxAlert(txEvent, 'CSFeeDistributor internal accounting error', 'NotEnoughShares')]
+    //   case 'InvalidTreeRoot':
+    //     return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeRoot')]
+    //   case 'InvalidTreeCID':
+    //     return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeCID')]
+    //   default:
+    //     this.logger.warn(`Unrecognized revert reason: ${reason}`)
+    // }
+
+    return []
+  }
+
+  private async checkInvariants(blockEvent: BlockEvent, provider: ethers.Provider) {
+    const distributor = CSFeeDistributor__factory.connect(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR, provider)
+    const steth = Lido__factory.connect(DEPLOYED_ADDRESSES.LIDO_STETH, provider)
+
+    const blockTag = blockEvent.blockHash
+
+    const out: Finding[] = []
+
+    const treeRoot = await distributor.treeRoot({ blockTag })
+    const treeCid = await distributor.treeCid({ blockTag })
+    if (treeRoot !== ethers.ZeroHash && treeCid === '') {
+      out.push(invariantAlert(blockEvent, 'Tree exists, but no CID.'))
+    }
+
+    if (
+      (await steth.sharesOf(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR, { blockTag })) <
+      (await distributor.totalClaimableShares({ blockTag }))
+    ) {
+      out.push(invariantAlert(blockEvent, "distributed more than the contract's balance"))
+    }
+
     return out
   }
 }

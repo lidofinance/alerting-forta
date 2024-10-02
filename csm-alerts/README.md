@@ -10,13 +10,12 @@
    1. General
       1. 🔴 HIGH: EL rewards stealing penalty reported/settled/cancelled for an operator.
       2. 🟠 MEDIUM: targetLimitMode was set for an operator.
-      3. 🟢 LOW: More than 3 operators have the same manager or reward address.
-      4. 🟢 LOW: Module's share is close to the targetShare.
-      5. 🟢 LOW: More than N "empty" batches in the queue. (N = 30)
-      6. 🟢 LOW: More than N validators in the queue. (N = 200)
-      7. 🔵 INFO: Operator X was unvetted.
-      8. 🔵 INFO: Public release is activated.
-      9. 🔵 INFO: Every 100 new operators created (69th as well).
+      3. 🟢 LOW: Module's share is close to the targetShare.
+      4. 🟢 LOW: More than N "empty" batches in the queue. (N = 30)
+      5. 🟢 LOW: More than N validators in the queue. (N = 200)
+      6. 🔵 INFO: Operator X was unvetted.
+      7. 🔵 INFO: Public release is activated.
+      8. 🔵 INFO: Every 100 new operators created (69th as well).
    2. Roles monitoring
       1. 🚨 CRITICAL: role change: DEFAULT_ADMIN_ROLE
       2. 🚨 CRITICAL: role change: PAUSE_ROLE
@@ -30,9 +29,8 @@
 2. **CSAccounting**
    1. General
       1. 🟢 LOW: Average bond value for a validator is below some threshold.
-      2. 🟢 LOW: Node operator has X unbonded validators since last block.
-      3. 🟢 LOW: Total bond lock more than some value.
-      4. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 100 wei
+      2. 🟢 LOW: Total bond lock more than some value.
+      3. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
    2. Events monitoring
       1. 🚨 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
       2. 🚨 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
@@ -54,11 +52,9 @@
       2. 🔴 HIGH: PerfLeewaySet(uint256 valueBP)
       3. 🔴 HIGH: FeeDistributorContractSet(address feeDistributorContract)
       4. 🔴 HIGH: ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)
-      5. 🔴 HIGH: report overdue (expect consensus every 28 days)
-      6. 🔴 HIGH: WarnProcessingMissed(uint256 indexed refSlot)
-      7. 🔵 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
-      8. 🔵 INFO: ProcessingStarted(uint256 indexed refSlot, bytes32 hash)
-      9. 🔵 INFO: ReportSettled(uint256 indexed refSlot, uint256 distributed, bytes32 treeRoot, string treeCid)
+      5. 🔵 INFO: WarnProcessingMissed(uint256 indexed refSlot)
+      6. 🔵 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
+      7. 🔵 INFO: ProcessingStarted(uint256 indexed refSlot, bytes32 hash)
    2. Roles monitoring
       1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
       2. 🚨 CRITICAL: CONTRACT_MANAGER_ROLE
@@ -85,19 +81,17 @@
          5. 🚨 CRITICAL: MANAGE_FAST_LANE_CONFIG_ROLE
          6. 🚨 CRITICAL: MANAGE_REPORT_PROCESSOR_ROLE
 4. **CSFeeDistributor**
-   1. Alerting for failed transactions
-      1. 🚨 CRITICAL: transaction reverted with InvalidShares -> CSFeeOracle reports incorrect amount of shares to distribute.
-      2. 🚨 CRITICAL: transaction reverted with NotEnoughShares -> CSFeeDistributor internal accounting error.
-      3. 🚨 CRITICAL: transaction reverted with InvalidTreeRoot or InvalidTreeCID -> CSFeeOracle built incorrect report.
-   2. Events monitoring
+
+   1. Events monitoring
       1. 🚨 CRITICAL: Receiver of TransferShares is NOT CSAccounting, if from is CSFeeDistributor
       2. 🔴 HIGH: No fees distributed for X days (repeat every 1 day).
       3. 🔵 INFO: DistributionDataUpdated -> Oracle settled a new report.
-   3. Roles monitoring
+   2. Roles monitoring
       1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
       2. 🚨 CRITICAL: RECOVERER_ROLE
 
 5. **CSEarlyAdoption**
+
    - _To be added_
 
 6. **OssifiableProxy**
@@ -111,31 +105,30 @@
    1. 🚨 CRITICAL: event ProxyOssified()
    2. 🚨 CRITICAL: event Upgraded(address indexed implementation)
    3. 🚨 CRITICAL: event AdminChanged(address previousAdmin, address newAdmin)
-   4. 🚨 CRITICAL: event BeaconUpgraded(address indexed beacon)
 
 7. **PausableUntil**
-    For the following contracts:
+   For the following contracts:
 
-    - CSModule
-    - CSAccounting
-    - CSFeeOracle
+   - CSModule
+   - CSAccounting
+   - CSFeeOracle
 
-    1. 🚨 CRITICAL: Paused(uint256 duration);
-    2. 🚨 CRITICAL: Resumed();
+   1. 🚨 CRITICAL: Paused(uint256 duration);
+   2. 🚨 CRITICAL: Resumed();
 
 8. **AssetRecoverer**
-    For the following contracts:
+   For the following contracts:
 
-    - CSModule
-    - CSAccounting
-    - CSFeeOracle
-    - CSFeeDistributor
+   - CSModule
+   - CSAccounting
+   - CSFeeOracle
+   - CSFeeDistributor
 
-    1. 🔴 HIGH: EtherRecovered()
-    2. 🔴 HIGH: ERC20Recovered()
-    3. 🔴 HIGH: StETHSharesRecovered()
-    4. 🔴 HIGH: ERC721Recovered()
-    5. 🔴 HIGH: ERC1155Recovered()
+   1. 🔴 HIGH: EtherRecovered()
+   2. 🔴 HIGH: ERC20Recovered()
+   3. 🔴 HIGH: StETHSharesRecovered()
+   4. 🔴 HIGH: ERC721Recovered()
+   5. 🔴 HIGH: ERC1155Recovered()
 
 ## Development (Forta specific)
 

@@ -1,259 +1,145 @@
-import * as grpc from '@grpc/grpc-js'
-import { either as E } from 'fp-ts'
-import { BlockHandler } from './handlers/block.handler'
-import { HealthHandler } from './handlers/health.handler'
-import { TxHandler } from './handlers/tx.handler'
-import { InitHandler } from './handlers/init.handler'
-import { AlertHandler } from './handlers/alert.handler'
-import { AgentService } from './generated/proto/agent_grpc_pb'
-import { Express, Request, Response } from 'express'
-import Version from './utils/version'
-import { Finding } from './generated/proto/alert_pb'
 import {
-  CSModule__factory,
-  CSAccounting__factory,
-  CSFeeDistributor__factory,
-  CSFeeOracle__factory,
-} from './generated/typechain'
-import { Config } from './utils/env/env'
-import * as Winston from 'winston'
-import { ethers } from 'ethers'
-import { ETHProvider } from './clients/eth_provider'
-import { getCSFeeDistributorEvents } from './utils/events/cs_fee_distributor_events'
-import { getCSFeeOracleEvents, getHashConsensusEvents } from './utils/events/cs_fee_oracle_events'
-import { getCSModuleEvents } from './utils/events/cs_module_events'
-import { getOssifiedProxyEvents } from './utils/events/ossified_proxy_events'
-import { getPausableEvents } from './utils/events/pausable_events'
-import { getCSAccountingEvents } from './utils/events/cs_accounting_events'
-import { getAssetRecovererEvents } from './utils/events/asset_recoverer_events'
-import { getRolesMonitoringEvents } from './utils/events/roles_monitoring_events'
-import * as promClient from 'prom-client'
-import { Metrics } from './utils/metrics/metrics'
-import { CSModuleSrv } from './services/CSModule/CSModule.srv'
-import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributor.srv'
+  BlockEvent,
+  Finding,
+  TransactionEvent,
+  ethers,
+  getProvider,
+  isProduction,
+  scanEthereum,
+} from '@fortanetwork/forta-bot'
+
+import { RPC_URL } from './config'
+import { getLogger } from './logger'
 import { CSAccountingSrv } from './services/CSAccounting/CSAccounting.srv'
+import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributor.srv'
 import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
-import { BorderTime, HealthChecker, MaxNumberErrorsPerBorderTime } from './services/health-checker/health-checker.srv'
-import { getEthersProvider } from 'forta-agent/dist/sdk/utils'
-import express = require('express')
-import { ProxyWatcherSrv } from './services/ProxyWatcher/ProxyWatcher.srv'
-import {
-  CONTRACTS_WITH_ASSET_RECOVERER,
-  CSM_PROXY_CONTRACTS,
-  PAUSABLE_CONTRACTS,
-  DeploymentAddresses,
-  ROLES_MONITORING_CONTRACTS,
-} from './utils/constants.mainnet'
-import {
-  CONTRACTS_WITH_ASSET_RECOVERER as HOLESKY_CONTRACTS_WITH_ASSET_RECOVERER,
-  CSM_PROXY_CONTRACTS as HOLESKY_CSM_PROXY_CONTRACTS,
-  PAUSABLE_CONTRACTS as HOLESKY_PAUSABLE_CONTRACTS,
-  DeploymentAddresses as HoleskyDeploymentAddresses,
-  ROLES_MONITORING_CONTRACTS as HOLESKY_ROLES_MONITORING_CONTRACTS,
-} from './utils/constants.holesky'
+import { CSModuleSrv } from './services/CSModule/CSModule.srv'
+import { EventsWatcherSrv } from './services/EventsWatcher/EventsWatcher.srv'
+import { errorAlert, launchAlert } from './utils/findings'
 
-const loadDeploymentData = (chainId: number) => {
-  switch (chainId) {
-    case 1:
-      return {
-        deploymentAddresses: DeploymentAddresses,
-        contractsWithAssetRecoverer: CONTRACTS_WITH_ASSET_RECOVERER,
-        csmProxyContracts: CSM_PROXY_CONTRACTS,
-        pausableContracts: PAUSABLE_CONTRACTS,
-        rolesMonitoringContracts: ROLES_MONITORING_CONTRACTS,
-      }
-    case 17000:
-      return {
-        deploymentAddresses: HoleskyDeploymentAddresses,
-        contractsWithAssetRecoverer: HOLESKY_CONTRACTS_WITH_ASSET_RECOVERER,
-        csmProxyContracts: HOLESKY_CSM_PROXY_CONTRACTS,
-        pausableContracts: HOLESKY_PAUSABLE_CONTRACTS,
-        rolesMonitoringContracts: HOLESKY_ROLES_MONITORING_CONTRACTS,
-      }
-    default:
-      throw new Error(`Unsupported chain ID: ${chainId}`)
+const logger = getLogger('main')
+
+async function main() {
+  const { handleTransaction, handleBlock } = await getHandlers()
+
+  scanEthereum({
+    handleTransaction,
+    handleBlock,
+    rpcUrl: RPC_URL,
+  })
+
+  if (!isProduction) {
+    return
   }
+
+  // Run metrics server here if needed.
 }
 
-const main = async () => {
-  const config = new Config()
-  if (config.dataProvider === '') {
-    console.log('Could not set up dataProvider')
-    process.exit(1)
-  }
+if (require.main === module) {
+  main().catch(logger.error)
+}
 
-  const logger: Winston.Logger = Winston.createLogger({
-    format: config.logFormat === 'simple' ? Winston.format.simple() : Winston.format.json(),
-    transports: [new Winston.transports.Console()],
-  })
+async function getHandlers() {
+  const { blockIdentifier } = await parseArgs()
 
-  const defaultRegistry = promClient
-  defaultRegistry.collectDefaultMetrics({
-    prefix: config.promPrefix,
-  })
+  const services = [
+    new CSFeeDistributorSrv(),
+    new EventsWatcherSrv(),
+    new CSAccountingSrv(),
+    new CSFeeOracleSrv(),
+    new CSModuleSrv(),
+  ]
 
-  const customRegister = new promClient.Registry()
-  const mergedRegistry = promClient.Registry.merge([defaultRegistry.register, customRegister])
-  mergedRegistry.setDefaultLabels({ instance: config.instance, dataProvider: config.dataProvider })
-
-  const metrics = new Metrics(mergedRegistry, config.promPrefix)
-
-  const ethProvider = new ethers.providers.JsonRpcProvider(config.ethereumRpcUrl)
-  let fortaEthersProvider = getEthersProvider()
-  if (!config.useFortaProvider) {
-    fortaEthersProvider = ethProvider
-  }
-
-  const {
-    deploymentAddresses,
-    contractsWithAssetRecoverer,
-    csmProxyContracts,
-    pausableContracts,
-    rolesMonitoringContracts,
-  } = loadDeploymentData(config.chainId)
-
-  const address = deploymentAddresses
-
-  const csModuleRunner = CSModule__factory.connect(address.CS_MODULE_ADDRESS, fortaEthersProvider)
-  const csAccountingRunner = CSAccounting__factory.connect(address.CS_ACCOUNTING_ADDRESS, fortaEthersProvider)
-  const csFeeDistributorRunner = CSFeeDistributor__factory.connect(
-    address.CS_FEE_DISTRIBUTOR_ADDRESS,
-    fortaEthersProvider,
-  )
-  const csFeeOracleRunner = CSFeeOracle__factory.connect(address.CS_FEE_ORACLE_ADDRESS, fortaEthersProvider)
-
-  const ethClient = new ETHProvider(
-    logger,
-    metrics,
-    fortaEthersProvider,
-    csModuleRunner,
-    csAccountingRunner,
-    csFeeDistributorRunner,
-    csFeeOracleRunner,
-  )
-
-  const csModuleSrv = new CSModuleSrv(
-    logger,
-    ethClient,
-    address.CS_MODULE_ADDRESS,
-    address.STAKING_ROUTER_ADDRESS,
-    getCSModuleEvents(address.CS_MODULE_ADDRESS),
-  )
-
-  const csFeeDistributorSrv = new CSFeeDistributorSrv(
-    logger,
-    ethClient,
-    getCSFeeDistributorEvents(address.CS_FEE_DISTRIBUTOR_ADDRESS),
-    address.CS_ACCOUNTING_ADDRESS,
-    address.CS_FEE_DISTRIBUTOR_ADDRESS,
-    address.LIDO_STETH_ADDRESS,
-    address.HASH_CONSENSUS_ADDRESS,
-  )
-
-  const csAccountingSrv = new CSAccountingSrv(
-    logger,
-    ethClient,
-    getCSAccountingEvents(address.CS_ACCOUNTING_ADDRESS),
-    address.CS_ACCOUNTING_ADDRESS,
-    address.LIDO_STETH_ADDRESS,
-    address.CS_MODULE_ADDRESS,
-  )
-
-  const csFeeOracleSrv = new CSFeeOracleSrv(
-    logger,
-    ethClient,
-    getHashConsensusEvents(address.HASH_CONSENSUS_ADDRESS),
-    getCSFeeOracleEvents(address.CS_FEE_ORACLE_ADDRESS),
-    address.HASH_CONSENSUS_ADDRESS,
-    address.CS_FEE_ORACLE_ADDRESS,
-  )
-
-  const proxyWatcherSrv = new ProxyWatcherSrv(
-    logger,
-    ethClient,
-    getOssifiedProxyEvents(csmProxyContracts),
-    getPausableEvents(pausableContracts),
-    getAssetRecovererEvents(contractsWithAssetRecoverer),
-    getRolesMonitoringEvents(rolesMonitoringContracts),
-  )
-
-  const onAppFindings: Finding[] = []
-
-  const healthChecker = new HealthChecker(logger, metrics, BorderTime, MaxNumberErrorsPerBorderTime)
-
-  const gRPCserver = new grpc.Server()
-  const blockH = new BlockHandler(
-    logger,
-    metrics,
-    csModuleSrv,
-    csAccountingSrv,
-    csFeeDistributorSrv,
-    csFeeOracleSrv,
-    healthChecker,
-    onAppFindings,
-  )
-  const txH = new TxHandler(
-    metrics,
-    csModuleSrv,
-    csFeeDistributorSrv,
-    csAccountingSrv,
-    csFeeOracleSrv,
-    proxyWatcherSrv,
-    healthChecker,
-  )
-  const healthH = new HealthHandler(healthChecker, metrics, logger, config.ethereumRpcUrl, config.chainId)
-
-  const latestBlockNumber = await ethClient.getBlockNumber()
-  if (E.isLeft(latestBlockNumber)) {
-    logger.error(latestBlockNumber.left)
-
-    process.exit(1)
-  }
-
-  const initH = new InitHandler(
-    config.appName,
-    logger,
-    csModuleSrv,
-    csFeeDistributorSrv,
-    csAccountingSrv,
-    csFeeOracleSrv,
-    proxyWatcherSrv,
-    onAppFindings,
-    latestBlockNumber.right,
-  )
-  const alertH = new AlertHandler()
-
-  gRPCserver.addService(AgentService, {
-    initialize: initH.handleInit(),
-    evaluateBlock: blockH.handleBlock(),
-    evaluateTx: txH.handleTx(),
-    healthCheck: healthH.healthGrpc(),
-    evaluateAlert: alertH.handleAlert(),
-  })
-
-  metrics.buildInfo.set({ commitHash: Version.commitHash }, 1)
-
-  gRPCserver.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
-    if (err != null) {
-      logger.error(err)
-
-      process.exit(1)
+  for (const srv of services) {
+    if ('initialize' in srv) {
+      await srv.initialize(
+        blockIdentifier ?? 'latest',
+        await getProvider({
+          rpcUrl: RPC_URL,
+        }),
+      )
     }
-    logger.info(`${config.appName} is listening on ${port}`)
-  })
+  }
 
-  const httpService: Express = express()
+  logger.debug('Initialization complete')
+  let isLaunchReported = false
 
-  httpService.get('/metrics', async (req: Request, res: Response) => {
-    res.set('Content-Type', mergedRegistry.contentType)
-    res.send(await mergedRegistry.metrics())
-  })
+  async function handleTransaction(txEvent: TransactionEvent, provider: ethers.Provider) {
+    // prettier-ignore
+    const results = await Promise.allSettled(
+      services.filter((srv) => 'handleTransaction' in srv)
+        .map((srv) => srv.handleTransaction(txEvent, provider)),
+    )
 
-  httpService.get('/health', healthH.healthHttp())
+    const out: Finding[] = []
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        out.push(...r.value)
+      } else {
+        // TODO: Some exceptions should crash an application in fact.
+        // out.push(errorAlert(`Error processing tx ${txEvent.transaction.hash}`, r.reason))
+        logger.error(r.reason)
+      }
+    }
+    return out
+  }
 
-  httpService.listen(config.httpPort, () => {
-    logger.info(`Http server is running at http://localhost:${config.httpPort}`)
-  })
+  async function handleBlock(blockEvent: BlockEvent, provider: ethers.Provider) {
+    logger.debug(`Running handlers for block ${blockEvent.blockNumber}`)
+
+    // prettier-ignore
+    const results = await Promise.allSettled(
+      services.filter((srv) => 'handleBlock' in srv)
+        .map((srv) => srv.handleBlock(blockEvent, provider)),
+    )
+
+    const out: Finding[] = []
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        out.push(...r.value)
+      } else {
+        // TODO: Some exceptions should crash an application in fact.
+        // out.push(errorAlert(`Error processing block ${blockEvent.block.hash}`, r.reason))
+        logger.error(r.reason)
+      }
+    }
+
+    if (!isLaunchReported) {
+      out.push(launchAlert())
+      isLaunchReported = true
+    }
+
+    return out
+  }
+
+  return {
+    handleTransaction,
+    handleBlock,
+  }
 }
 
-main()
+async function parseArgs() {
+  let blockIdentifier: string | number | undefined = process.env['FORTA_CLI_BLOCK']
+  if (blockIdentifier && !blockIdentifier.startsWith('0x')) {
+    blockIdentifier = parseInt(blockIdentifier)
+  }
+
+  const txIdentifier = process.env['FORTA_CLI_TX']
+  if (txIdentifier) {
+    const provider = await getProvider({
+      rpcUrl: RPC_URL,
+    })
+
+    const tx = await provider.getTransaction(txIdentifier)
+    if (!tx?.blockHash) {
+      throw Error(`Transaction ${txIdentifier} not mined`)
+    }
+
+    blockIdentifier = tx.blockHash
+  }
+
+  return {
+    blockIdentifier,
+    txIdentifier,
+  }
+}
