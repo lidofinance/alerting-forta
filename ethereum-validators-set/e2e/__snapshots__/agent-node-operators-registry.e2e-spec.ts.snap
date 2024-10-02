@@ -383,22 +383,6 @@ exports[`agent-node-operators-registry e2e tests should process tx with set NO t
 [
   Finding {
     "addresses": [],
-    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATOR-TARGET-VALIDATORS-COUNT-CHANGED",
-    "description": "curated-onchain-v1 Node operator 1 target validators count changed to 0",
-    "labels": [],
-    "metadata": {
-      "args": "1,0",
-    },
-    "name": "⚠️ curated-onchain-v1: Node operator target validators count changed",
-    "protocol": "ethereum",
-    "severity": 3,
-    "source": {},
-    "timestamp": 2023-12-31T00:00:00.000Z,
-    "type": 4,
-    "uniqueKey": "",
-  },
-  Finding {
-    "addresses": [],
     "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATOR-ADDED",
     "description": "curated-onchain-v1 Node operator 32 added
 Name: A41
