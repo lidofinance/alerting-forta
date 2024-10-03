@@ -31,6 +31,7 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0x935cb3366faf2cfc415b2099d1f974fd27202b77', 'Add recipient (stETH reWARDS)'],
   ['0x22010d1747cafc370b1f1fbba61022a313c5693b', 'Remove recipient (stETH reWARDS)'],
   ['0x1f2b79fe297b7098875930bba6dd17068103897e', 'Top up recipients (stETH reWARDS)'],
+  ['0xe5656eee7eed02bde009d77c88247bc8271e26eb', 'Top up recipients (Alliance Ops stablecoins)'],
 ])
 
 export const EASY_TRACK_STONKS_CONTRACTS = [STONKS_ALLOWED_RECIPIENT_ADDRESS]
