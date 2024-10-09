@@ -13,7 +13,7 @@ describe('getMotionType', () => {
 
   it('returns the correct type when the evmScriptFactory is not in the types map', () => {
     const result = getMotionType(types, '0x789')
-    expect(result).toBe('New ')
+    expect(result).toBe('New')
   })
 
   it('returns the correct type when the evmScriptFactory is in the types map but in different case', () => {

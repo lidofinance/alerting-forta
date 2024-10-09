@@ -18,7 +18,7 @@ export function etherscanAddress(address: string, text = address): string {
 }
 
 export const getMotionType = (types: Map<string, string>, evmScriptFactory: string) => {
-  return types.get(evmScriptFactory.toLowerCase()) || 'New '
+  return types.get(evmScriptFactory.toLowerCase()) || 'New'
 }
 
 export const getMotionLink = (motionId: string) => {

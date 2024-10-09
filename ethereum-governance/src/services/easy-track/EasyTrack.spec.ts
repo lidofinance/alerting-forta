@@ -48,7 +48,7 @@ describe('EasyTrackSrv', () => {
       totalSigningKeys: BigNumber(100),
       stakingLimit: BigNumber(50),
       expectedName: 'ℹ️ EasyTrack: New motion created',
-      expectedDescription: 'New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123',
+      expectedDescription: 'New motion [1](https://easytrack.lido.fi/motions/1) created by 0x123',
     },
     {
       name: 'Increase node operator staking limit motion',
@@ -124,7 +124,7 @@ describe('EasyTrackSrv', () => {
     expect(findings).toHaveLength(1)
     expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
     expect(findings[0].description).toBe(
-      'New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nTop up STONKS:\n[stETH -> DAI](https://etherscan.io/address/0x3e2D251275A92a8169A3B17A2C49016e2de492a7) pair with 100.00 stETH',
+      'Top up recipients (Stonks stETH) motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nTop up STONKS:\n[stETH -> DAI](https://etherscan.io/address/0x3e2D251275A92a8169A3B17A2C49016e2de492a7) pair with 100.00 stETH',
     )
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })
@@ -186,7 +186,7 @@ describe('EasyTrackSrv', () => {
     expect(findings).toHaveLength(1)
     expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
     expect(findings[0].description).toBe(
-      `New  motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\n${expectedDescription}`,
+      `Top up recipients (ATC stETH) motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\n${expectedDescription}`,
     )
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })
