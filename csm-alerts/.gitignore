@@ -1,0 +1,12 @@
+node_modules
+
+dist
+generated
+
+forta.config.json
+version.json
+
+.direnv
+.env
+
+.DS_Store
