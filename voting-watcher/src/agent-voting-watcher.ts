@@ -1,12 +1,12 @@
 import BigNumber from "bignumber.js";
 
 import {
-  ethers,
   BlockEvent,
-  TransactionEvent,
   Finding,
-  FindingType,
   FindingSeverity,
+  FindingType,
+  TransactionEvent,
+  ethers,
 } from "forta-agent";
 
 import VOTING_ABI from "./abi/AragonVoting.json";
@@ -16,15 +16,15 @@ import {
   ETH_DECIMALS,
   HUGE_VOTE_DISTANCE,
   LIDO_VOTING_ADDRESS,
-  VOTING_BASE_URL,
   PINGER_SCHEDULE,
+  VOTING_BASE_URL,
 } from "./constants";
 
 import { ethersProvider } from "./ethers";
 import {
+  abbreviateNumber,
   formatLink,
   getResultStr,
-  abbreviateNumber,
   secondsToDaysAndHours,
 } from "./helpers";
 
@@ -52,6 +52,7 @@ interface VoteInfo {
 }
 
 let activeVotes: Map<number, VoteInfo> = new Map<number, VoteInfo>();
+let prevBlockVotes: Map<number, VoteInfo> = new Map<number, VoteInfo>();
 let voteLength: number;
 let objectionsTime: number;
 
@@ -63,7 +64,20 @@ export async function initialize(
   console.log(`[${name}]`);
 
   await updateVotingDurations(currentBlock);
-  activeVotes = await getActiveVotes(currentBlock, true);
+  activeVotes = await getActiveVotes(currentBlock);
+
+  if (activeVotes.size !== 0) {
+    // Get previous block votes to correctly compare with the current one after the restart.
+    prevBlockVotes = await getActiveVotes(currentBlock - 1);
+    activeVotes.forEach((vote, key) => {
+      if (!vote) {
+        return;
+      }
+      const prevVote = prevBlockVotes.get(key);
+      vote.lastReportedTotal = prevVote ? prevVote.total : new BigNumber(0);
+      activeVotes.set(key, vote);
+    });
+  }
 
   return {
     activeVotes: Array.from(activeVotes.keys()).toString(),
@@ -75,7 +89,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   await handleActiveVotes(blockEvent, findings);
   await handlePinger(blockEvent, findings);
-  await handleHugeVotes(blockEvent, findings);
+  await handleHugeVotes(findings);
 
   return findings;
 }
@@ -126,28 +140,26 @@ async function handleActiveVotes(blockEvent: BlockEvent, findings: Finding[]) {
   });
 }
 
-async function handleHugeVotes(blockEvent: BlockEvent, findings: Finding[]) {
+async function handleHugeVotes(findings: Finding[]) {
   Array.from(activeVotes.keys()).forEach((key) => {
     const vote = activeVotes.get(key);
-    if (vote) {
-      const total = vote.yea.plus(vote.nay);
-      const lastTotal = vote.lastReportedTotal || new BigNumber(0);
-      const url = `${VOTING_BASE_URL}${key}`;
-      if (total.gte(lastTotal.plus(HUGE_VOTE_DISTANCE)) && !vote.noMorePing) {
-        if (vote.passed) {
-          reportHugeVotesWithQuorum(
-            total.minus(lastTotal),
-            key,
-            vote,
-            findings,
-          );
-          vote.noMorePing = true;
-        } else {
-          reportHugeVotes(total.minus(lastTotal), key, vote, findings);
-        }
-        vote.lastReportedTotal = total;
-        activeVotes.set(key, vote);
+    if (!vote) {
+      return;
+    }
+
+    const total = vote.yea.plus(vote.nay);
+    const lastTotal = vote.lastReportedTotal || new BigNumber(0);
+
+    if (total.gte(lastTotal.plus(HUGE_VOTE_DISTANCE)) && !vote.noMorePing) {
+      if (vote.passed) {
+        reportHugeVotesWithQuorum(total.minus(lastTotal), key, vote, findings);
+        vote.noMorePing = true;
+      } else {
+        reportHugeVotes(total.minus(lastTotal), key, vote, findings);
       }
+
+      vote.lastReportedTotal = total;
+      activeVotes.set(key, vote);
     }
   });
 }
@@ -220,7 +232,6 @@ async function updateVotingDurations(block: number) {
 
 async function getActiveVotes(
   blockNumber: number,
-  init: boolean = false,
 ): Promise<Map<number, VoteInfo>> {
   const blockTag = { blockTag: blockNumber };
   const block = await ethersProvider.getBlock(blockNumber);
@@ -276,9 +287,6 @@ async function getActiveVotes(
       timeLeft,
       resultsStr,
     };
-    if (init) {
-      voteInfo.lastReportedTotal = total;
-    }
     votesInfo.set(i, voteInfo);
   }
   return votesInfo;
