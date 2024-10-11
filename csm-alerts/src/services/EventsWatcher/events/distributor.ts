@@ -2,6 +2,7 @@ import { FindingSeverity, FindingType, ethers } from '@fortanetwork/forta-bot'
 
 import { CSFeeDistributor__factory } from '../../../generated/typechain'
 import { EventOfNotice } from '../../../shared/types'
+import { ipfsLink } from '../../../utils/string'
 
 const ICSFeeDistributor = CSFeeDistributor__factory.createInterface()
 
@@ -15,7 +16,7 @@ export function getCSFeeDistributorEvents(distributorAddress: string): EventOfNo
             description: (args: ethers.Result) =>
                 `Total Claimable Shares: ${args.totalClaimableShares}\n` +
                 `Tree Root: ${args.treeRoot}\n` +
-                `Tree CID: ${args.treeCid}`,
+                `Tree CID: ${ipfsLink(args.treeCid)}`,
             severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
@@ -24,7 +25,7 @@ export function getCSFeeDistributorEvents(distributorAddress: string): EventOfNo
             abi: ICSFeeDistributor.getEvent('DistributionLogUpdated').format('full'),
             alertId: 'CSFEE-DISTRIBUTOR-DISTRIBUTION-LOG-UPDATED',
             name: '🔵 CSFeeDistributor: Distribution log updated',
-            description: (args: ethers.Result) => `Log CID: ${args.logCid}`,
+            description: (args: ethers.Result) => `Log CID: ${ipfsLink(args.logCid)}`,
             severity: FindingSeverity.Info,
             type: FindingType.Info,
         },

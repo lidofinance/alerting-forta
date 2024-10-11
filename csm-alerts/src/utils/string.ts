@@ -21,3 +21,7 @@ export function formatEther(amount: bigint): string {
     amount = amount - (amount % (WEI_PER_ETH / 100n))
     return `${ethers.formatEther(amount)} ether`
 }
+
+export function ipfsLink(cid: string): string {
+    return `[${cid}](https://ipfs.io/ipfs/${cid})`
+}
