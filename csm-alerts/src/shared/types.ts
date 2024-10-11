@@ -1,4 +1,10 @@
-import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
+import {
+    FindingSeverity,
+    FindingType,
+    HandleBlock,
+    HandleTransaction,
+    ethers,
+} from '@fortanetwork/forta-bot'
 
 export type EventOfNotice = {
     name: string
@@ -22,4 +28,14 @@ export type DeployedAddresses = {
     BURNER: string
     HASH_CONSENSUS: string
     STAKING_ROUTER: string
+}
+
+interface Initialize {
+    (blockIdentifier: ethers.BlockTag, provider: ethers.Provider): Promise<void>
+}
+
+export interface Service {
+    handleTransaction?: HandleTransaction
+    handleBlock?: HandleBlock
+    initialize?: Initialize
 }

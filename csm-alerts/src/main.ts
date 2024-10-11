@@ -15,7 +15,7 @@ import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributo
 import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
 import { CSModuleSrv } from './services/CSModule/CSModule.srv'
 import { EventsWatcherSrv } from './services/EventsWatcher/EventsWatcher.srv'
-import { errorAlert, launchAlert } from './utils/findings'
+import { launchAlert } from './utils/findings'
 
 const logger = getLogger('main')
 

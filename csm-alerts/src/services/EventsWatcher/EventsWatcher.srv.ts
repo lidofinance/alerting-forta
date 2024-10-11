@@ -1,7 +1,7 @@
-import { Finding, TransactionEvent, ethers } from '@fortanetwork/forta-bot'
+import { Finding, TransactionEvent } from '@fortanetwork/forta-bot'
 
 import { handleEventsOfNotice } from '../../entity/events'
-import { DeployedAddresses, EventOfNotice } from '../../shared/types'
+import { DeployedAddresses, EventOfNotice, Service } from '../../shared/types'
 import { RedefineMode, requireWithTier } from '../../utils/require'
 import * as Constants from '../constants'
 import * as Events from './events'
@@ -44,7 +44,7 @@ const CSM_PAUSABLE_CONTRACTS = [
     asContract('CS_FEE_ORACLE'),
 ]
 
-export class EventsWatcherSrv {
+export class EventsWatcherSrv implements Service {
     private readonly eventsOfNotice: EventOfNotice[]
 
     constructor() {
@@ -61,7 +61,7 @@ export class EventsWatcherSrv {
         ]
     }
 
-    public handleTransaction(txEvent: TransactionEvent, provider: ethers.Provider): Finding[] {
+    public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
         return handleEventsOfNotice(txEvent, this.eventsOfNotice)
     }
 }

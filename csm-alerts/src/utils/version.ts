@@ -1,6 +1,6 @@
 import path from 'path'
 
-export interface Version {
+export interface VersionJSON {
     desc: string
     commitHash: string
     commitHashShort: string
@@ -11,9 +11,10 @@ export interface Version {
 
 export default readVersion(path.join(__dirname, '..', '..', 'version.json'))
 
-function readVersion(versionFilePath: string): Version {
+function readVersion(versionFilePath: string): VersionJSON {
     try {
         return require(versionFilePath)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
         return {
             desc: 'unknown',

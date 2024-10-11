@@ -17,8 +17,9 @@ import {
 } from '../../generated/typechain'
 import { getLogger } from '../../logger'
 import { SECONDS_PER_DAY, SECONDS_PER_SLOT, SLOTS_PER_EPOCH } from '../../shared/constants'
+import { Service } from '../../shared/types'
 import { getEpoch } from '../../utils/epochs'
-import { failedTxAlert, invariantAlert, sourceFromEvent } from '../../utils/findings'
+import { invariantAlert, sourceFromEvent } from '../../utils/findings'
 import { getLogsByChunks } from '../../utils/logs'
 import { RedefineMode, requireWithTier } from '../../utils/require'
 import { formatDelay } from '../../utils/time'
@@ -31,7 +32,7 @@ const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
 )
 const ICSFeeDistributor = CSFeeDistributor__factory.createInterface()
 
-export class CSFeeDistributorSrv {
+export class CSFeeDistributorSrv implements Service {
     private readonly logger: Logger
 
     private lastFiredAt = {
@@ -99,10 +100,7 @@ export class CSFeeDistributorSrv {
         ]
     }
 
-    public async handleTransaction(
-        txEvent: TransactionEvent,
-        provider: ethers.Provider,
-    ): Promise<Finding[]> {
+    public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
         const distributionDataUpdatedEvents = filterLog(
             txEvent.logs,
             ICSFeeDistributor.getEvent('DistributionDataUpdated').format('full'),
@@ -113,12 +111,7 @@ export class CSFeeDistributorSrv {
             this.state.lastDistributionUpdatedAt = txEvent.block.timestamp
         }
 
-        return (
-            await Promise.all([
-                this.handleTransferSharesInvalidReceiver(txEvent),
-                this.handleRevertedTx(txEvent, provider),
-            ])
-        ).flat()
+        return this.handleTransferSharesInvalidReceiver(txEvent)
     }
 
     private handleDistributionOverdue(blockEvent: BlockEvent): Finding[] {
@@ -191,55 +184,55 @@ export class CSFeeDistributorSrv {
         return out
     }
 
-    private async handleRevertedTx(
-        txEvent: TransactionEvent,
-        provider: ethers.Provider,
-    ): Promise<Finding[]> {
-        // if (!(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR.toLowerCase() in txEvent.addresses)) {
-        //   return []
-        // }
-        //
-        // const txReceipt = await provider.getTransactionReceipt(txEvent.hash)
-        // // Nothing to do if the transaction succeeded.
-        // if (txReceipt?.status === 0) {
-        //   this.logger.debug(`Skipping successful transaction ${txEvent.hash}`)
-        //   return []
-        // }
-        //
-        // // FIXME: I can't find a node with getTransactionResult call working.
-        // let decodedLog: ethers.ErrorDescription | null = null
-        // try {
-        //   const data = await txReceipt?.getResult()
-        //   decodedLog = CSFeeDistributorInterface.parseError(data ?? '')
-        // } catch (error: any) {
-        //   if (error.code === 'UNSUPPORTED_OPERATION') {
-        //     this.logger.debug('Ethereum RPC does not support `getTransactionResult`')
-        //     return []
-        //   }
-        //
-        //   throw error
-        // }
-        //
-        // const reason = decodedLog?.name
-        // if (!reason) {
-        //   return []
-        // }
-        //
-        // switch (reason) {
-        //   case 'InvalidShares':
-        //     return [failedTxAlert(txEvent, 'CSFeeOracle reports incorrect amount of shares to distribute', 'InvalidShares')]
-        //   case 'NotEnoughShares':
-        //     return [failedTxAlert(txEvent, 'CSFeeDistributor internal accounting error', 'NotEnoughShares')]
-        //   case 'InvalidTreeRoot':
-        //     return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeRoot')]
-        //   case 'InvalidTreeCID':
-        //     return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeCID')]
-        //   default:
-        //     this.logger.warn(`Unrecognized revert reason: ${reason}`)
-        // }
-
-        return []
-    }
+    // private async handleRevertedTx(
+    //     txEvent: TransactionEvent,
+    //     provider: ethers.Provider,
+    // ): Promise<Finding[]> {
+    //     if (!(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR.toLowerCase() in txEvent.addresses)) {
+    //       return []
+    //     }
+    //
+    //     const txReceipt = await provider.getTransactionReceipt(txEvent.hash)
+    //     // Nothing to do if the transaction succeeded.
+    //     if (txReceipt?.status === 0) {
+    //       this.logger.debug(`Skipping successful transaction ${txEvent.hash}`)
+    //       return []
+    //     }
+    //
+    //     // FIXME: I can't find a node with getTransactionResult call working.
+    //     let decodedLog: ethers.ErrorDescription | null = null
+    //     try {
+    //       const data = await txReceipt?.getResult()
+    //       decodedLog = CSFeeDistributorInterface.parseError(data ?? '')
+    //     } catch (error: any) {
+    //       if (error.code === 'UNSUPPORTED_OPERATION') {
+    //         this.logger.debug('Ethereum RPC does not support `getTransactionResult`')
+    //         return []
+    //       }
+    //
+    //       throw error
+    //     }
+    //
+    //     const reason = decodedLog?.name
+    //     if (!reason) {
+    //       return []
+    //     }
+    //
+    //     switch (reason) {
+    //       case 'InvalidShares':
+    //         return [failedTxAlert(txEvent, 'CSFeeOracle reports incorrect amount of shares to distribute', 'InvalidShares')]
+    //       case 'NotEnoughShares':
+    //         return [failedTxAlert(txEvent, 'CSFeeDistributor internal accounting error', 'NotEnoughShares')]
+    //       case 'InvalidTreeRoot':
+    //         return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeRoot')]
+    //       case 'InvalidTreeCID':
+    //         return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeCID')]
+    //       default:
+    //         this.logger.warn(`Unrecognized revert reason: ${reason}`)
+    //     }
+    //
+    //     return []
+    // }
 
     private async checkInvariants(blockEvent: BlockEvent, provider: ethers.Provider) {
         const distributor = CSFeeDistributor__factory.connect(

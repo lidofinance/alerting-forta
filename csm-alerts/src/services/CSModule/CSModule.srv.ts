@@ -13,6 +13,7 @@ import { IS_CLI } from '../../config'
 import { CSModule__factory, StakingRouter__factory } from '../../generated/typechain'
 import { getLogger } from '../../logger'
 import { BASIS_POINT_MUL, SECONDS_PER_DAY } from '../../shared/constants'
+import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
 import * as Constants from '../constants'
@@ -49,7 +50,7 @@ class Batch {
     }
 }
 
-export class CSModuleSrv {
+export class CSModuleSrv implements Service {
     private readonly logger: Logger
 
     private lastFiredAt = {
@@ -69,10 +70,7 @@ export class CSModuleSrv {
         ]
     }
 
-    async handleTransaction(
-        txEvent: TransactionEvent,
-        provider: ethers.Provider,
-    ): Promise<Finding[]> {
+    async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
         return this.handleNotableOperatorsCreated(txEvent)
     }
 

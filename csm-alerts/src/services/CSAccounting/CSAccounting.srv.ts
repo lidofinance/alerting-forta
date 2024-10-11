@@ -13,6 +13,7 @@ import { IS_CLI } from '../../config'
 import { CSAccounting__factory, CSModule__factory, Lido__factory } from '../../generated/typechain'
 import { getLogger } from '../../logger'
 import { SECONDS_PER_DAY, WEI_PER_ETH } from '../../shared/constants'
+import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
 import { formatEther } from '../../utils/string'
@@ -32,7 +33,7 @@ const ACCOUNTING_BALANCE_EXCESS_SHARES_MAX = WEI_PER_ETH / 10n
 const CURVE_EARLY_ADOPTION_ID = 1n
 const CURVE_DEFAULT_ID = 0n
 
-export class CSAccountingSrv {
+export class CSAccountingSrv implements Service {
     private readonly logger: Logger
 
     private lastFiredAt = {
@@ -52,10 +53,7 @@ export class CSAccountingSrv {
         ]
     }
 
-    public async handleTransaction(
-        txEvent: TransactionEvent,
-        provider: ethers.Provider,
-    ): Promise<Finding[]> {
+    public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
         return [
             ...this.handleStETHApprovalEvents(txEvent),
             ...this.handleSetBondCurveEvent(txEvent),

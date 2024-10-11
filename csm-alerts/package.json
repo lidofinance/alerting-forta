@@ -33,8 +33,8 @@
     "eslint:format": "eslint ./src --fix",
     "prettier:check": "prettier --check ./src",
     "prettier:format": "prettier --write ./src README.md",
-    "lint": "yarn run prettier:check && yarn run eslint:lint",
-    "format": "yarn run eslint:format && yarn run prettier:format",
+    "lint": "eslint ./src",
+    "format": "yarn lint --fix",
     "postinstall": "yarn generate-types"
   },
   "dependencies": {

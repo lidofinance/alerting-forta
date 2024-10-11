@@ -8,6 +8,7 @@ import {
 } from '@fortanetwork/forta-bot'
 
 import { CSFeeOracle__factory, HashConsensus__factory } from '../../generated/typechain'
+import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
 import { etherscanAddress } from '../../utils/string'
@@ -23,7 +24,7 @@ const ICSFeeOracle = CSFeeOracle__factory.createInterface()
 
 // TODO: Extract HashConsensus part maybe?
 
-export class CSFeeOracleSrv {
+export class CSFeeOracleSrv implements Service {
     private membersLastReport: Map<
         string,
         {

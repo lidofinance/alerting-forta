@@ -24,13 +24,16 @@ module.exports = {
         node: true,
         jest: true,
     },
-    ignorePatterns: ['.eslintrc.js'],
+    // FIXME: Remove *.spec.ts after implementing tests.
+    ignorePatterns: ['.eslintrc.js', '*.spec.ts'],
     rules: {
+        '@typescript-eslint/no-unused-vars': 'warn',
         '@typescript-eslint/interface-name-prefix': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-empty-interface': 'off',
+        '@typescript-eslint/no-require-imports': 'off',
         'sort-imports': [
             'error',
             {

@@ -20,9 +20,8 @@ export function requireWithTier<T>(
 ): T {
     const defaultContent = require(`${module.path}/${path}`)
     if (!RUN_TIER) return defaultContent
-    let tieredContent: any
     // NOTE: It fails if it can't find the requested tier.
-    tieredContent = require(`${module.path}/${path}.${RUN_TIER}`)
+    const tieredContent = require(`${module.path}/${path}.${RUN_TIER}`)
     module.exports.__tier__ = RUN_TIER
     if (mode == RedefineMode.Strict) {
         const valid = (key: string) => {
