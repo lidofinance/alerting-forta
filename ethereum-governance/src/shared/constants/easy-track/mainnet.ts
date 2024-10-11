@@ -66,6 +66,8 @@ export const SAFES = {
     ['0xa02FC823cCE0D016bD7e17ac684c9abAb2d6D647', 'Treasury Management Committee'],
     ['0x98be4a407bff0c125e25fbe9eb1165504349c37d', 'Relay Maintenance Committee'],
     ['0x8772e3a2d86b9347a2688f9bc1808a6d8917760c', 'Gate Seal Committee'],
+    ['0x08637515E85A4633E23dfc7861e2A9f53af640f7', 'Simple DVT Module Committee'],
+    ['0xC52fC3081123073078698F1EAc2f1Dc7Bd71880f', 'CSM Committee'],
   ],
   [Blockchain.POLYGON]: [['0x87d93d9b2c672bf9c9642d853a8682546a5012b5', 'Liquidity Observation Lab (Polygon)']],
   [Blockchain.ARBITRUM]: [
