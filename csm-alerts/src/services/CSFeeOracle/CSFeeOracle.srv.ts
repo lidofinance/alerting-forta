@@ -75,16 +75,19 @@ export class CSFeeOracleSrv {
                 currentReportHashes.length > 0 &&
                 !currentReportHashes.includes(event.args.report)
             ) {
-                const f = Finding.fromObject({
-                    name: '🔴 HashConsensus: Another report variant appeared (alternative hash)',
-                    description: `More than one distinct report hash received for slot ${event.args.refSlot}. Member: ${event.args.member}. Report: ${event.args.report}`,
-                    alertId: 'HASH-CONSENSUS-REPORT-RECEIVED',
-                    source: sourceFromEvent(txEvent),
-                    severity: FindingSeverity.High,
-                    type: FindingType.Info,
-                })
-
-                out.push(f)
+                out.push(
+                    Finding.fromObject({
+                        name: '🔴 HashConsensus: Another report variant appeared (alternative hash)',
+                        description:
+                            `More than one distinct report hash received for slot ${event.args.refSlot}.` +
+                            `Member: ${etherscanAddress(event.args.member)} (${ORACLE_MEMBERS[event.args.member] || 'unknown'}).` +
+                            `Report: ${event.args.report}`,
+                        alertId: 'HASH-CONSENSUS-REPORT-RECEIVED',
+                        source: sourceFromEvent(txEvent),
+                        severity: FindingSeverity.High,
+                        type: FindingType.Info,
+                    }),
+                )
             }
 
             this.membersLastReport.set(event.args.member, {
@@ -121,7 +124,9 @@ export class CSFeeOracleSrv {
                 out.push(
                     Finding.fromObject({
                         name: '🔴 CSM: Sloppy oracle fast lane member',
-                        description: `Member ${etherscanAddress(addr)} (${ORACLE_MEMBERS[addr] || 'unknown'}) was in the fast lane but did not report`,
+                        description:
+                            `Member ${etherscanAddress(addr)} (${ORACLE_MEMBERS[addr] || 'unknown'}) ` +
+                            `was in the fast lane but did not report`,
                         alertId: 'HASH-CONSENSUS-SLOPPY-MEMBER',
                         source: sourceFromEvent(txEvent),
                         severity: FindingSeverity.Medium,
