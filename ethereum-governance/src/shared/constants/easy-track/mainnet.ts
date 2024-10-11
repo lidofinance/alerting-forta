@@ -44,6 +44,7 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0x75bdecbb6453a901ebbb945215416561547dfdd4', 'Top up recipients (RCC stablecoins)'],
   ['0x92a27c4e5e35cfea112acab53851ec70e2d99a8d', 'Top up recipients (PML stablecoins)'],
   ['0x1843bc35d1fd15abe1913b9f72852a79457c42ab', 'Top up recipients (ATC stablecoins)'],
+  ['0xF6B6E7997338C48Ea3a8BCfa4BB64a315fDa76f4', 'Settle EL Rewards Stealing penalty for CSM operators'],
 ])
 
 export const EASY_TRACK_STONKS_CONTRACTS = [STONKS_ALLOWED_RECIPIENT_ADDRESS]
