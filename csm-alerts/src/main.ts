@@ -120,6 +120,11 @@ async function getHandlers() {
 
 async function parseArgs() {
     let blockIdentifier: string | number | undefined = process.env['FORTA_CLI_BLOCK']
+
+    if (process.env['FORTA_CLI_RANGE']) {
+        blockIdentifier = process.env['FORTA_CLI_RANGE'].split('..')[0]
+    }
+
     if (blockIdentifier && !blockIdentifier.startsWith('0x')) {
         blockIdentifier = parseInt(blockIdentifier)
     }
