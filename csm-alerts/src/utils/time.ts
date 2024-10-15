@@ -22,6 +22,10 @@ function formatTimeToHumanReadable(date: Date): string {
 export function formatDelay(fullDelaySec: bigint | number): string {
     fullDelaySec = BigInt(fullDelaySec)
 
+    if (fullDelaySec === 0n) {
+        return '0 sec'
+    }
+
     const sign = fullDelaySec >= 0 ? 1n : -1n
     fullDelaySec = sign * fullDelaySec
 
@@ -40,11 +44,14 @@ export function formatDelay(fullDelaySec: bigint | number): string {
         delayHours -= delayDays * 24n
     }
 
-    return (
-        (sign == 1n ? '' : '-') +
-        (delayDays > 0 ? `${delayDays} day` : '') +
-        (delayHours > 0 ? ` ${delayHours} hr` : '') +
-        (delayMin > 0 ? ` ${delayMin} min` : '') +
-        (delaySec > 0 ? ` ${delaySec} sec` : '')
-    )
+    const delayString = [
+        delayDays > 0 ? `${delayDays} day` : '',
+        delayHours > 0 ? `${delayHours} hr` : '',
+        delayMin > 0 ? `${delayMin} min` : '',
+        delaySec > 0 ? `${delaySec} sec` : '',
+    ]
+        .filter(Boolean)
+        .join(' ')
+
+    return `${sign ? '' : '-'}${delayString}`
 }
