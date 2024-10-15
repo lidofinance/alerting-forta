@@ -64,7 +64,7 @@ export function getHashConsensusEvents(
             alertId: 'HASH-CONSENSUS-FRAME-CONFIG-SET',
             name: '🔴 HashConsensus: Frame config set',
             description: (args: ethers.Result) =>
-                `Frame configuration set.\n` +
+                `Frame configuration set:\n` +
                 `New initial epoch: ${args.newInitialEpoch}\n` +
                 `Epochs per frame: ${args.newEpochsPerFrame}`,
             severity: FindingSeverity.High,
