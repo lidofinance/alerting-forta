@@ -20,6 +20,10 @@ import {
   ARAGON_FINANCE_ADDRESS as financeAddress,
   LIDO_DAO_ADDRESS as daoAddress,
   ANCHOR_VAULT_ADDRESS as anchorVaultAddress,
+  CS_MODULE as csmAddress,
+  CS_ACCOUNTING as csmAccountingAddress,
+  CS_FEE_DISTRIBUTOR as csmFeeDistributorAddress,
+  CS_FEE_ORACLE as csmFeeOracleAddress,
 } from 'constants/common'
 
 export const implementationFuncShortABI =
@@ -166,6 +170,34 @@ export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> = new Ma
     ebOracleAddress,
     {
       name: 'Validator Exit Bus Oracle',
+      shortABI: ossifiableProxyImplABI,
+    },
+  ],
+  [
+    csmAddress,
+    {
+      name: 'Community Staking Module',
+      shortABI: ossifiableProxyImplABI,
+    },
+  ],
+  [
+    csmAccountingAddress,
+    {
+      name: 'CSM Accounting',
+      shortABI: ossifiableProxyImplABI,
+    },
+  ],
+  [
+    csmFeeDistributorAddress,
+    {
+      name: 'CSM FeeDistributor',
+      shortABI: ossifiableProxyImplABI,
+    },
+  ],
+  [
+    csmFeeOracleAddress,
+    {
+      name: 'CSM FeeOracle',
       shortABI: ossifiableProxyImplABI,
     },
   ],
