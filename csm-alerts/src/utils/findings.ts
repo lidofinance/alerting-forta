@@ -25,7 +25,7 @@ export function launchAlert(): Finding {
     return Finding.fromObject({
         name: `🚀🚀🚀 Bot ${APP_NAME} launched`,
         description: `Commit ${Version.commitHashShort}`,
-        alertId: 'BOT-LAUNCH',
+        alertId: 'LIDO-AGENT-LAUNCHED',
         severity: FindingSeverity.Info,
         type: FindingType.Info,
     })
