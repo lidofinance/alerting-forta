@@ -13,6 +13,7 @@ export const STUCK_PENALTY_ENDED_TRIGGER_PERIOD = ONE_DAY;
 
 export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
 export const SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const CSM_NODE_OPERATOR_REGISTRY_MODULE_ID = 3;
 
 export const EASY_TRACK_ADDRESS = easyTrackAddress;
 export const CURATED_NODE_OPERATORS_REGISTRY_ADDRESS = curatedNorAddress;
@@ -23,6 +24,8 @@ export const SPLIT_WALLET_FACTORY_SSV_CLUSTER_ADDRESS =
   splitWalletFactorySsvClusterAddress;
 export const STAKING_ROUTER_ADDRESS = srAddress;
 export const BLOCK_INTERVAL = 100;
+export const SET_VETTED_VALIDATORS_LIMITS_ADDRESS =
+  setVettedValidatorsLimitsSDvtAddress;
 
 // basis points
 export const BASIS_POINTS_MULTIPLIER = 100_00;
@@ -44,22 +47,6 @@ export const NODE_OPERATOR_REWARD_ADDRESS_SET_EVENT =
 
 export const NODE_OPERATOR_BIG_EXITED_COUNT_THRESHOLD = 100;
 export const NODE_OPERATOR_NEW_STUCK_KEYS_THRESHOLD = 5;
-
-export const STAKING_MODULES = [
-  {
-    moduleId: CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID,
-    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "Curated",
-    alertPrefix: "",
-  },
-  {
-    moduleId: SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
-    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "SimpleDVT",
-    alertPrefix: "SDVT-",
-    setVettedValidatorsLimitsAddress: setVettedValidatorsLimitsSDvtAddress,
-  },
-];
 
 export const OBOL_LIDO_SPLIT_FACTORY_CLUSTERS = [
   {
