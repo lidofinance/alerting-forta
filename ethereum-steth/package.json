@@ -42,6 +42,7 @@
     "@grpc/grpc-js": "^1.10.2",
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.4.1",
+    "@types/uuid": "^10.0.0",
     "async-mutex": "^0.5.0",
     "bignumber.js": "^9.1.2",
     "dotenv": "^16.4.5",
