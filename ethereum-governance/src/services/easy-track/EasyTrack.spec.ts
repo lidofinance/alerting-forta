@@ -13,6 +13,7 @@ import { TopUpAllowedRecipients__factory } from '../../generated'
 import { ETH_DECIMALS } from '../../shared/constants'
 import { TOP_UP_ALLOWED_RECIPIENTS_CONTRACT } from '../../shared/constants/easy-track/mainnet'
 import { etherscanAddress, formatAmount } from '../../shared/string'
+import { getMotionCreatorNamedLink } from './utils'
 
 describe('EasyTrackSrv', () => {
   let logger: Logger
@@ -48,7 +49,7 @@ describe('EasyTrackSrv', () => {
       totalSigningKeys: BigNumber(100),
       stakingLimit: BigNumber(50),
       expectedName: 'ℹ️ EasyTrack: New motion created',
-      expectedDescription: 'New motion [1](https://easytrack.lido.fi/motions/1) created by 0x123',
+      expectedDescription: `New motion [1](https://easytrack.lido.fi/motions/1) created by ${getMotionCreatorNamedLink('0x123')}`,
     },
     {
       name: 'Increase node operator staking limit motion',
@@ -56,8 +57,7 @@ describe('EasyTrackSrv', () => {
       totalSigningKeys: BigNumber(100),
       stakingLimit: BigNumber(50),
       expectedName: 'ℹ️ EasyTrack: New motion created',
-      expectedDescription:
-        'Increase node operator staking limit motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nOperator Test wants to increase staking limit to **50**.\nNo issues with keys! ✅',
+      expectedDescription: `Increase node operator staking limit motion [1](https://easytrack.lido.fi/motions/1) created by ${getMotionCreatorNamedLink('0x123')}\nOperator Test wants to increase staking limit to **50**.\nNo issues with keys! ✅`,
     },
     {
       name: 'Increase node operator staking limit motion - not enough keys',
@@ -65,8 +65,7 @@ describe('EasyTrackSrv', () => {
       totalSigningKeys: BigNumber(50),
       stakingLimit: BigNumber(100),
       expectedName: '⚠️️ EasyTrack: New motion created',
-      expectedDescription:
-        'Increase node operator staking limit motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nOperator Test wants to increase staking limit to **100**.\nBut operator has not enough keys uploaded! ⚠️\nRequired: 100\nAvailable: 50',
+      expectedDescription: `Increase node operator staking limit motion [1](https://easytrack.lido.fi/motions/1) created by ${getMotionCreatorNamedLink('0x123')}\nOperator Test wants to increase staking limit to **100**.\nBut operator has not enough keys uploaded! ⚠️\nRequired: 100\nAvailable: 50`,
     },
   ])(
     'handles EasyTrack motion - $name',
@@ -124,7 +123,7 @@ describe('EasyTrackSrv', () => {
     expect(findings).toHaveLength(1)
     expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
     expect(findings[0].description).toBe(
-      'Top up recipients (Stonks stETH) motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\nTop up STONKS:\n[stETH -> DAI](https://etherscan.io/address/0x3e2D251275A92a8169A3B17A2C49016e2de492a7) pair with 100.00 stETH',
+      `Top up recipients (Stonks stETH) motion [1](https://easytrack.lido.fi/motions/1) created by ${getMotionCreatorNamedLink('0x123')}\nTop up STONKS:\n[stETH -> DAI](https://etherscan.io/address/0x3e2D251275A92a8169A3B17A2C49016e2de492a7) pair with 100.00 stETH`,
     )
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })
@@ -186,7 +185,7 @@ describe('EasyTrackSrv', () => {
     expect(findings).toHaveLength(1)
     expect(findings[0].name).toBe('ℹ️ EasyTrack: New motion created')
     expect(findings[0].description).toBe(
-      `Top up recipients (ATC stETH) motion [1](https://easytrack.lido.fi/motions/1) created by 0x123\n${expectedDescription}`,
+      `Top up recipients (ATC stETH) motion [1](https://easytrack.lido.fi/motions/1) created by ${getMotionCreatorNamedLink('0x123')}\n${expectedDescription}`,
     )
     expect(findings[0].alertId).toBe('EASY-TRACK-MOTION-CREATED')
   })
