@@ -32,18 +32,16 @@
     "prettier:check": "prettier --check .",
     "prettier:format": "prettier --write .",
     "lint": "yarn run prettier:check && yarn run eslint:lint",
-    "format": "yarn run eslint:format && yarn run prettier:format",
-    "generate-types": "typechain --target=ethers-v5 --out-dir=./src/generated ./src/abi/*",
-    "postinstall": "yarn generate-types"
+    "format": "yarn run eslint:format && yarn run prettier:format"
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",
+    "ethers": "^6.13.2",
     "forta-agent": "^0.1.48"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@tsconfig/node20": "^20.1.4",
-    "@typechain/ethers-v5": "^11.1.2",
     "@types/jest": "^29.5.12",
     "@types/nodemon": "^1.19.0",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
@@ -56,7 +54,6 @@
     "nodemon": "^2.0.8",
     "prettier": "^3.1.0",
     "ts-jest": "^29.2.4",
-    "typechain": "^8.3.2",
     "typescript": "^5.3.2"
   },
   "packageManager": "yarn@3.3.0"
