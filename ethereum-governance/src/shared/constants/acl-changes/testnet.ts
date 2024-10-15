@@ -90,8 +90,6 @@ export const WHITELISTED_OWNERS = [
   ...DEV_EOAs,
 ]
 
-// TODO: Remove due to no use?
-// i.e. keccak256("APP_MANAGER_ROLE")
 export const LIDO_ROLES = new Map([
   ['0xb6d92708f3d4817afc106147d969e229ced5c46e65e0a5002a0d391287762bd0', 'APP MANAGER ROLE'],
   ['0x068ca51c9d69625c7add396c98ca4f3b27d894c3b973051ad3ee53017d7094ea', 'UNSAFELY MODIFY VOTE TIME ROLE'],
