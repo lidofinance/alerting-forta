@@ -43,7 +43,11 @@ export class CSAccountingSrv implements Service {
     }
 
     constructor() {
-        this.logger = getLogger(CSAccountingSrv.name)
+        this.logger = getLogger(this.getName())
+    }
+
+    getName() {
+        return CSAccountingSrv.name
     }
 
     async handleBlock(blockEvent: BlockEvent, provider: ethers.Provider): Promise<Finding[]> {

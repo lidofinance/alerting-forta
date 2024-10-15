@@ -6,8 +6,10 @@ import {
     ethers,
     filterLog,
 } from '@fortanetwork/forta-bot'
+import { Logger } from 'winston'
 
 import { CSFeeOracle__factory, HashConsensus__factory } from '../../generated/typechain'
+import { getLogger } from '../../logger'
 import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
@@ -25,6 +27,8 @@ const ICSFeeOracle = CSFeeOracle__factory.createInterface()
 // TODO: Extract HashConsensus part maybe?
 
 export class CSFeeOracleSrv implements Service {
+    private readonly logger: Logger
+
     private membersLastReport: Map<
         string,
         {
@@ -32,6 +36,14 @@ export class CSFeeOracleSrv implements Service {
             report: string
         }
     > = new Map()
+
+    constructor() {
+        this.logger = getLogger(this.getName())
+    }
+
+    getName() {
+        return CSFeeOracleSrv.name
+    }
 
     public async initialize(
         blockIdentifier: ethers.BlockTag,

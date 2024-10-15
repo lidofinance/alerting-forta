@@ -1,10 +1,12 @@
 import { Finding, TransactionEvent } from '@fortanetwork/forta-bot'
+import { Logger } from 'winston'
 
 import { handleEventsOfNotice } from '../../entity/events'
 import { DeployedAddresses, EventOfNotice, Service } from '../../shared/types'
 import { RedefineMode, requireWithTier } from '../../utils/require'
 import * as Constants from '../constants'
 import * as Events from './events'
+import { getLogger } from '../../logger'
 
 const { ALIASES, DEPLOYED_ADDRESSES, ORACLE_MEMBERS } = requireWithTier<typeof Constants>(
     module,
@@ -45,6 +47,8 @@ const CSM_PAUSABLE_CONTRACTS = [
 ]
 
 export class EventsWatcherSrv implements Service {
+    private readonly logger: Logger
+
     private readonly eventsOfNotice: EventOfNotice[]
 
     constructor() {
@@ -59,6 +63,12 @@ export class EventsWatcherSrv implements Service {
             ...Events.getRolesMonitoringEvents(CSM_ACL_CONTRACTS),
             ...Events.getPausableEvents(CSM_PAUSABLE_CONTRACTS),
         ]
+
+        this.logger = getLogger(this.getName())
+    }
+
+    getName() {
+        return EventsWatcherSrv.name
     }
 
     public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {

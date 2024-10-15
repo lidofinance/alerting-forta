@@ -46,7 +46,11 @@ export class CSFeeDistributorSrv implements Service {
     }
 
     constructor() {
-        this.logger = getLogger(CSFeeDistributorSrv.name)
+        this.logger = getLogger(this.getName())
+    }
+
+    getName() {
+        return CSFeeDistributorSrv.name
     }
 
     async initialize(blockIdentifier: ethers.BlockTag, provider: ethers.Provider): Promise<void> {

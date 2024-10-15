@@ -38,4 +38,5 @@ export interface Service {
     handleTransaction?: HandleTransaction
     handleBlock?: HandleBlock
     initialize?: Initialize
+    getName: () => string
 }

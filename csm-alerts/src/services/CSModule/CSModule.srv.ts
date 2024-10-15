@@ -60,7 +60,11 @@ export class CSModuleSrv implements Service {
     }
 
     constructor() {
-        this.logger = getLogger(CSModuleSrv.name)
+        this.logger = getLogger(this.getName())
+    }
+
+    getName() {
+        return CSModuleSrv.name
     }
 
     async handleBlock(blockEvent: BlockEvent, provider: ethers.Provider): Promise<Finding[]> {
