@@ -44,6 +44,7 @@ import {
   CS_COMMITTEE as csmCommitteeAddress,
   CS_VERIFIER as csmVerifierAddress,
 } from 'constants/common'
+import { BSC_L1_CROSS_CHAIN_CONTROLLER as bscL1CrossChainControllerAddress } from '../cross-chain/mainnet'
 
 export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60 // 24h
 export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60 // 1h
@@ -260,10 +261,38 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
     },
   ],
   [
-    '0x93559892d3c7f66de4570132d68b69bd3c369a7c',
+    bscL1CrossChainControllerAddress,
     {
       name: 'EHT -> BSC cross chain controller',
       ownershipMethod: 'owner',
+    },
+  ],
+  [
+    csmAddress,
+    {
+      name: 'Community Staking Module',
+      ownershipMethod: 'proxy__getAdmin',
+    },
+  ],
+  [
+    csmAccountingAddress,
+    {
+      name: 'CSM Accounting',
+      ownershipMethod: 'proxy__getAdmin',
+    },
+  ],
+  [
+    csmFeeDistributorAddress,
+    {
+      name: 'CSM FeeDistributor',
+      ownershipMethod: 'proxy__getAdmin',
+    },
+  ],
+  [
+    csmFeeOracleAddress,
+    {
+      name: 'CSM FeeOracle',
+      ownershipMethod: 'proxy__getAdmin',
     },
   ],
 ])
