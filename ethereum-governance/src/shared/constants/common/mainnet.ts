@@ -25,6 +25,16 @@ export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = '0x9305c1dbfe22c12c66339184c
 export const ORACLE_DAEMON_CONFIG_ADDRESS = '0xbf05a929c3d7885a6aead833a992da6e5ac23b09'
 export const LEGACY_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb'
 
+// CSM Contracts
+export const CS_MODULE = '0xda7de2ecddfccc6c3af10108db212acbbf9ea83f'
+export const CS_ACCOUNTING = '0x4d72bff1beac69925f8bd12526a39baab069e5da'
+export const CS_FEE_DISTRIBUTOR = '0xd99cc66fec647e68294c6477b40fc7e0f6f618d0'
+export const CS_FEE_ORACLE = '0x4d4074628678bd302921c20573eea1ed38ddf7fb'
+export const CS_HASH_CONSENSUS = '0x71093eff8d8599b5fa340d665ad60fa7c80688e4'
+export const CS_GATE_SEAL = '0x5cfca30450b1e5548f140c24a47e36c10ce306f0'
+export const CS_VERIFIER = '0x3dfc50f22aca652a0a6f28a0f892ab62074b5583'
+export const CS_COMMITTEE = '0xc52fc3081123073078698f1eac2f1dc7bd71880f'
+
 // Lido DAO Contracts
 export const LIDO_DAO_ADDRESS = '0xb8ffc3cd6e7cf5a098a1c92f48009765b24088dc'
 export const LDO_ADDRESS = '0x5a98fcbea516cf06857215779fd812ca3bef1b32'

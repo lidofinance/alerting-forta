@@ -30,4 +30,5 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0x785a8b1cdc03bb191670ed4696e9ed5b11af910a', 'Add recipient (stETH reWARDS)'],
   ['0xefea524d1739800ff6f7d2532ed4c8508220239a', 'Remove recipient (stETH reWARDS)'],
   ['0xf2f7fc1e8879c10d4579bc82d5fea923a5a228de', 'Top up recipients (stETH reWARDS)'],
+  ['0x07696ea8a5b53c3e35d9cce10cc62c6c79c4691d', 'Settle EL Rewards Stealing penalty for CSM operators'],
 ])

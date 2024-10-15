@@ -32,6 +32,14 @@ import {
   CURVE_LIQUIDITY_FARMING_MANAGER_ADDRESS as curveManagerAddress,
   EMERGENCY_BRAKES_MS_ADDRESS as emergencyMsAddress,
   DEV_MS_ADDRESS as devMsAddress,
+  CS_MODULE as csmAddress,
+  CS_ACCOUNTING as csmAccountingAddress,
+  CS_FEE_DISTRIBUTOR as csmFeeDistributorAddress,
+  CS_FEE_ORACLE as csmFeeOracleAddress,
+  CS_HASH_CONSENSUS as csmHashConsensusAddress,
+  CS_GATE_SEAL as csmGateSealAddress,
+  CS_COMMITTEE as csmCommitteeAddress,
+  CS_VERIFIER as csmVerifierAddress,
 } from 'constants/common'
 
 export const DEV_EOAs = [
@@ -82,6 +90,7 @@ export const WHITELISTED_OWNERS = [
   ...DEV_EOAs,
 ]
 
+// TODO: Remove due to no use?
 // i.e. keccak256("APP_MANAGER_ROLE")
 export const LIDO_ROLES = new Map([
   ['0xb6d92708f3d4817afc106147d969e229ced5c46e65e0a5002a0d391287762bd0', 'APP MANAGER ROLE'],
@@ -214,6 +223,16 @@ export const ROLES_OWNERS = {
   accountingOracle: accountingOracleAddress,
   lido: lidoStethAddress,
   gateSeal: gsAddress,
+  stakingRouter: srAddress,
+  evmExecutor: evmExecutorAddress,
+  csm: csmAddress,
+  csmAccounting: csmAccountingAddress,
+  csmFeeDistributor: csmFeeDistributorAddress,
+  csmFeeOracle: csmFeeOracleAddress,
+  csmHashConsensus: csmHashConsensusAddress,
+  csmGateSeal: csmGateSealAddress,
+  csmCommittee: csmCommitteeAddress,
+  csmVerifier: csmVerifierAddress,
 }
 
 export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
@@ -339,6 +358,79 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName('REPORT_EXITED_VALIDATORS_ROLE'), [ROLES_OWNERS.accountingOracle]],
         [roleByName('UNSAFE_SET_EXITED_VALIDATORS_ROLE'), []],
         [roleByName('REPORT_REWARDS_MINTED_ROLE'), [ROLES_OWNERS.lido]],
+      ]),
+    },
+  ],
+  [
+    csmAddress,
+    {
+      name: 'Community Staking Module',
+      roles: new Map<INamedRole, string[]>([
+        [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
+        [roleByName('MODULE_MANAGER_ROLE'), []],
+        [roleByName('PAUSE_ROLE'), [ROLES_OWNERS.csmGateSeal]],
+        [roleByName('RECOVERER_ROLE'), []],
+        [roleByName('REPORT_EL_REWARDS_STEALING_PENALTY_ROLE'), [ROLES_OWNERS.csmCommittee]],
+        [roleByName('RESUME_ROLE'), []],
+        [roleByName('SETTLE_EL_REWARDS_STEALING_PENALTY_ROLE'), [ROLES_OWNERS.evmExecutor]],
+        [roleByName('STAKING_ROUTER_ROLE'), [ROLES_OWNERS.stakingRouter]],
+        [roleByName('VERIFIER_ROLE'), [ROLES_OWNERS.csmVerifier]],
+      ]),
+    },
+  ],
+  [
+    csmAccountingAddress,
+    {
+      name: 'CSM Accounting',
+      roles: new Map<INamedRole, string[]>([
+        [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
+        [roleByName('ACCOUNTING_MANAGER_ROLE'), []],
+        [roleByName('MANAGE_BOND_CURVES_ROLE'), []],
+        [roleByName('PAUSE_ROLE'), [ROLES_OWNERS.csmGateSeal]],
+        [roleByName('RECOVERER_ROLE'), []],
+        [roleByName('RESET_BOND_CURVE_ROLE'), [ROLES_OWNERS.csm, ROLES_OWNERS.csmCommittee]],
+        [roleByName('RESUME_ROLE'), []],
+        [roleByName('SET_BOND_CURVE_ROLE'), [ROLES_OWNERS.csm, ROLES_OWNERS.csmCommittee]],
+      ]),
+    },
+  ],
+  [
+    csmFeeDistributorAddress,
+    {
+      name: 'CSM FeeDistributor',
+      roles: new Map<INamedRole, string[]>([
+        [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
+        [roleByName('RECOVERER_ROLE'), []],
+      ]),
+    },
+  ],
+  [
+    csmFeeOracleAddress,
+    {
+      name: 'CSM FeeOracle',
+      roles: new Map<INamedRole, string[]>([
+        [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
+        [roleByName('CONTRACT_MANAGER_ROLE'), []],
+        [roleByName('MANAGE_CONSENSUS_CONTRACT_ROLE'), []],
+        [roleByName('MANAGE_CONSENSUS_VERSION_ROLE'), []],
+        [roleByName('PAUSE_ROLE'), [ROLES_OWNERS.csmGateSeal]],
+        [roleByName('RECOVERER_ROLE'), []],
+        [roleByName('RESUME_ROLE'), []],
+        [roleByName('SUBMIT_DATA_ROLE'), []],
+      ]),
+    },
+  ],
+  [
+    csmHashConsensusAddress,
+    {
+      name: 'CSM HashConsensus',
+      roles: new Map<INamedRole, string[]>([
+        [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
+        [roleByName('DISABLE_CONSENSUS_ROLE'), []],
+        [roleByName('MANAGE_FAST_LANE_CONFIG_ROLE'), []],
+        [roleByName('MANAGE_FRAME_CONFIG_ROLE'), []],
+        [roleByName('MANAGE_MEMBERS_AND_QUORUM_ROLE'), []],
+        [roleByName('MANAGE_REPORT_PROCESSOR_ROLE'), []],
       ]),
     },
   ],
