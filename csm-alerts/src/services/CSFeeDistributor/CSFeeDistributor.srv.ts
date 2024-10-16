@@ -76,7 +76,7 @@ export class CSFeeDistributorSrv implements Service {
         }
 
         const distributedEvents = await getLogsByChunks(
-            distributor as any,
+            distributor,
             distributor.filters.DistributionDataUpdated,
             toBlock.number - frameInSlots * 2,
             toBlock.number,

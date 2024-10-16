@@ -3,7 +3,7 @@ import { ethers } from '@fortanetwork/forta-bot'
 const LOG_FILTER_CHUNK = 2000
 
 export async function getLogsByChunks(
-    contract: ethers.Contract,
+    contract: ethers.BaseContract,
     filter: ethers.ContractEventName,
     startblock: number,
     endBlock: number,
