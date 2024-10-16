@@ -3,18 +3,17 @@ import {
     Finding,
     TransactionEvent,
     ethers,
-    getProvider,
     isProduction,
     scanEthereum,
 } from '@fortanetwork/forta-bot'
 
-import { RPC_URL } from './config'
 import { getLogger } from './logger'
 import { CSAccountingSrv } from './services/CSAccounting/CSAccounting.srv'
 import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributor.srv'
 import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
 import { CSModuleSrv } from './services/CSModule/CSModule.srv'
 import { EventsWatcherSrv } from './services/EventsWatcher/EventsWatcher.srv'
+import { RPC_OPTS, getProvider } from './shared/provider'
 import { launchAlert } from './utils/findings'
 
 const logger = getLogger('main')
@@ -25,7 +24,7 @@ async function main() {
     scanEthereum({
         handleTransaction,
         handleBlock,
-        rpcUrl: RPC_URL,
+        ...RPC_OPTS,
     })
 
     if (!isProduction) {
@@ -52,12 +51,7 @@ async function getHandlers() {
 
     for (const srv of services) {
         if ('initialize' in srv) {
-            await srv.initialize(
-                blockIdentifier ?? 'latest',
-                await getProvider({
-                    rpcUrl: RPC_URL,
-                }),
-            )
+            await srv.initialize(blockIdentifier ?? 'latest', await getProvider())
         }
     }
 
@@ -131,9 +125,7 @@ async function parseArgs() {
 
     const txIdentifier = process.env['FORTA_CLI_TX']?.split(',')[0]
     if (txIdentifier) {
-        const provider = await getProvider({
-            rpcUrl: RPC_URL,
-        })
+        const provider = await getProvider()
 
         const tx = await provider.getTransaction(txIdentifier)
         if (!tx?.blockHash) {
