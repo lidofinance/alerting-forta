@@ -129,7 +129,7 @@ async function parseArgs() {
         blockIdentifier = parseInt(blockIdentifier)
     }
 
-    const txIdentifier = process.env['FORTA_CLI_TX']
+    const txIdentifier = process.env['FORTA_CLI_TX']?.split(',')[0]
     if (txIdentifier) {
         const provider = await getProvider({
             rpcUrl: RPC_URL,
