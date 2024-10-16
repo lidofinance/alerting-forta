@@ -16,7 +16,7 @@ import { SECONDS_PER_DAY, WEI_PER_ETH } from '../../shared/constants'
 import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
-import { formatEther } from '../../utils/string'
+import { etherscanAddress } from '../../utils/string'
 import * as Constants from '../constants'
 
 const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
@@ -26,9 +26,6 @@ const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
 )
 
 const CHECK_ACCOUNTING_INTERVAL_BLOCKS = 301 // ~ every hour
-const CHECK_OPERATORS_INTERVAL_BLOCKS = 2401 // ~ 3 times a day
-const BOND_AVG_WEI_MIN = WEI_PER_ETH * 1n
-const LOCK_TOTAL_WEI_MAX = WEI_PER_ETH * 32n
 const ACCOUNTING_BALANCE_EXCESS_SHARES_MAX = WEI_PER_ETH / 10n
 const CURVE_EARLY_ADOPTION_ID = 1n
 const CURVE_DEFAULT_ID = 0n
@@ -36,11 +33,7 @@ const CURVE_DEFAULT_ID = 0n
 export class CSAccountingSrv implements Service {
     private readonly logger: Logger
 
-    private lastFiredAt = {
-        accountingExcessShares: 0,
-        totalLockAlert: 0,
-        avgBondAlert: 0,
-    }
+    private lastFiredAt = { accountingExcessShares: 0 }
 
     constructor() {
         this.logger = getLogger(this.getName())
@@ -51,10 +44,7 @@ export class CSAccountingSrv implements Service {
     }
 
     async handleBlock(blockEvent: BlockEvent, provider: ethers.Provider): Promise<Finding[]> {
-        return [
-            ...(await this.checkAccountingSharesDiscrepancy(blockEvent, provider)),
-            ...(await this.handleBondAndLockValues(blockEvent, provider)),
-        ]
+        return [...(await this.checkAccountingSharesDiscrepancy(blockEvent, provider))]
     }
 
     public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
@@ -62,77 +52,6 @@ export class CSAccountingSrv implements Service {
             ...this.handleStETHApprovalEvents(txEvent),
             ...this.handleSetBondCurveEvent(txEvent),
         ]
-    }
-
-    public async handleBondAndLockValues(
-        blockEvent: BlockEvent,
-        provider: ethers.Provider,
-    ): Promise<Finding[]> {
-        if (blockEvent.blockNumber % CHECK_OPERATORS_INTERVAL_BLOCKS !== 0 && !IS_CLI) {
-            return []
-        }
-
-        const accounting = CSAccounting__factory.connect(DEPLOYED_ADDRESSES.CS_ACCOUNTING, provider)
-        const csm = CSModule__factory.connect(DEPLOYED_ADDRESSES.CS_MODULE, provider)
-        const ethCallOpts = { blockTag: blockEvent.blockHash }
-
-        const operatorsCount = await csm.getNodeOperatorsCount(ethCallOpts)
-        this.logger.debug(`Total operators count: ${operatorsCount}`)
-
-        let totalValidators = 0n
-        let totalBondWei = 0n
-        let totalLockWei = 0n
-
-        for (let noId = 0; noId < operatorsCount; noId++) {
-            totalValidators += await csm.getNodeOperatorNonWithdrawnKeys(noId, ethCallOpts)
-            totalBondWei += (await accounting.getBondSummary(noId, ethCallOpts)).current
-            totalLockWei += await accounting.getActualLockedBond(noId, ethCallOpts)
-        }
-        this.logger.debug(`Read ${operatorsCount} operators info`)
-
-        const avgBondWei = totalBondWei / totalValidators
-
-        this.logger.debug(`Averave bond is ${formatEther(avgBondWei)}`)
-        this.logger.debug(`Total bond is ${formatEther(totalBondWei)}`)
-        this.logger.debug(`Total lock is ${formatEther(totalLockWei)}`)
-
-        const now = blockEvent.block.timestamp
-        const out: Finding[] = []
-
-        if (now - this.lastFiredAt.avgBondAlert > SECONDS_PER_DAY) {
-            if (avgBondWei < BOND_AVG_WEI_MIN) {
-                const f = Finding.fromObject({
-                    name: `🟢 CSAccounting: Average bond value for a validator is below threshold.`,
-                    description: `Average bond value for a validator is less than ${formatEther(BOND_AVG_WEI_MIN)}`,
-                    alertId: 'CS-ACCOUNTING-AVERAGE-BOND-VALUE',
-                    // source: sourceFromEvent(blockEvent),
-                    severity: FindingSeverity.Low,
-                    type: FindingType.Info,
-                })
-
-                out.push(f)
-                this.lastFiredAt.avgBondAlert = now
-            }
-        }
-
-        if (now - this.lastFiredAt.totalLockAlert > SECONDS_PER_DAY) {
-            if (totalLockWei > LOCK_TOTAL_WEI_MAX) {
-                const f = Finding.fromObject({
-                    name: `🟢 Total bond lock exceeds threshold.`,
-                    description: `Total bond lock is more than ${formatEther(LOCK_TOTAL_WEI_MAX)}`,
-                    alertId: 'CS-ACCOUNTING-TOTAL-BOND-LOCK',
-                    // NOTE: Do not include the source to reach quorum.
-                    // source: sourceFromEvent(blockEvent),
-                    severity: FindingSeverity.Low,
-                    type: FindingType.Info,
-                })
-
-                out.push(f)
-                this.lastFiredAt.totalLockAlert = now
-            }
-        }
-
-        return out
     }
 
     async checkAccountingSharesDiscrepancy(
@@ -186,23 +105,27 @@ export class CSAccountingSrv implements Service {
         return out
     }
 
-    // TODO: Does it makes sense for us at all?
     handleStETHApprovalEvents(txEvent: TransactionEvent): Finding[] {
         const approvalEvents = filterLog(
             txEvent.logs,
-            Lido__factory.createInterface().getEvent('TransferShares').format('full'),
+            Lido__factory.createInterface().getEvent('Approval').format('full'),
             DEPLOYED_ADDRESSES.LIDO_STETH,
         )
 
         const out: Finding[] = []
         for (const event of approvalEvents) {
-            if (event.args.owner === DEPLOYED_ADDRESSES.CS_ACCOUNTING) {
+            if (
+                event.args.owner === DEPLOYED_ADDRESSES.CS_ACCOUNTING &&
+                event.args.spender !== DEPLOYED_ADDRESSES.BURNER
+            ) {
                 const f = Finding.fromObject({
-                    name: `🔵 Lido stETH: Approval`,
-                    description: `${event.args.spender} received allowance from ${event.args.owner} to ${event.args.value}`,
+                    name: `🔴 Unexpected stETH approval from CSAccounting`,
+                    description:
+                        `${etherscanAddress(event.args.spender)} received allowance from ` +
+                        `${etherscanAddress(event.args.owner)} for ${event.args.value} stETH`,
                     alertId: 'STETH-APPROVAL',
                     source: sourceFromEvent(txEvent),
-                    severity: FindingSeverity.Low,
+                    severity: FindingSeverity.Critical,
                     type: FindingType.Info,
                 })
                 out.push(f)
@@ -212,27 +135,23 @@ export class CSAccountingSrv implements Service {
     }
 
     handleSetBondCurveEvent(txEvent: TransactionEvent): Finding[] {
-        const events = filterLog(
+        const curveSetEvents = filterLog(
             txEvent.logs,
             CSAccounting__factory.createInterface().getEvent('BondCurveSet').format('full'),
             DEPLOYED_ADDRESSES.CS_ACCOUNTING,
         )
 
+        const creationEvents = filterLog(
+            txEvent.logs,
+            CSModule__factory.createInterface().getEvent('NodeOperatorAdded').format('full'),
+            DEPLOYED_ADDRESSES.CS_MODULE,
+        )
+        const createdIds = creationEvents.map((e) => e.args.nodeOperatorId)
+
         const out: Finding[] = []
 
-        for (const e of events) {
-            if (e.args.curveId == CURVE_EARLY_ADOPTION_ID) {
-                out.push(
-                    Finding.fromObject({
-                        alertId: 'CS-ACCOUNTING-BOND-CURVE-SET',
-                        name: '🔵 CSAccounting: Bond curve set',
-                        description: `Early adoption bond curve set for Node Operator #${e.args.nodeOperatorId}`,
-                        source: sourceFromEvent(txEvent),
-                        severity: FindingSeverity.Info,
-                        type: FindingType.Info,
-                    }),
-                )
-            } else if (e.args.curveId == CURVE_DEFAULT_ID) {
+        for (const e of curveSetEvents) {
+            if (e.args.curveId == CURVE_DEFAULT_ID) {
                 out.push(
                     Finding.fromObject({
                         alertId: 'CS-ACCOUNTING-BOND-CURVE-SET',
@@ -244,6 +163,13 @@ export class CSAccountingSrv implements Service {
                     }),
                 )
             } else {
+                if (
+                    e.args.curveId == CURVE_EARLY_ADOPTION_ID &&
+                    createdIds.includes(e.args.nodeOperatorId)
+                ) {
+                    continue
+                }
+
                 out.push(
                     Finding.fromObject({
                         alertId: 'CS-ACCOUNTING-BOND-CURVE-SET',

@@ -26,6 +26,7 @@ const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
 const ICSModule = CSModule__factory.createInterface()
 
 const CHECK_QUEUE_INTERVAL_BLOCKS = 1801 // ~ 4 times a day
+const CHECK_SHARE_INTERVAL_BLOCKS = 2401 // ~ 3 times a day
 const TARGET_SHARE_USED_PERCENT_MAX = 95
 const QUEUE_EMPTY_BATCHES_MAX = 30
 const QUEUE_VALIDATORS_MAX = 200
@@ -108,6 +109,10 @@ export class CSModuleSrv implements Service {
         blockEvent: BlockEvent,
         provider: ethers.Provider,
     ): Promise<Finding[]> {
+        if (blockEvent.blockNumber % CHECK_SHARE_INTERVAL_BLOCKS !== 0 && !IS_CLI) {
+            return []
+        }
+
         const stakingRouter = StakingRouter__factory.connect(
             DEPLOYED_ADDRESSES.STAKING_ROUTER,
             provider,
@@ -148,7 +153,7 @@ export class CSModuleSrv implements Service {
         const now = blockEvent.block.timestamp
         const out: Finding[] = []
 
-        if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY) {
+        if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY * 7) {
             if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
                 const f = Finding.fromObject({
                     name: `🟢 CSModule: Module's share is close to the target share.`,
@@ -213,7 +218,6 @@ export class CSModuleSrv implements Service {
                 queueLookup.set(nodeOperatorId, depositableFromBatch)
             }
 
-            // TODO: Think about how it works in on-chain code.
             index = batch.next()
         }
 

@@ -24,8 +24,6 @@ const { DEPLOYED_ADDRESSES, ORACLE_MEMBERS } = requireWithTier<typeof Constants>
 const IHashConsensus = HashConsensus__factory.createInterface()
 const ICSFeeOracle = CSFeeOracle__factory.createInterface()
 
-// TODO: Extract HashConsensus part maybe?
-
 export class CSFeeOracleSrv implements Service {
     private readonly logger: Logger
 
@@ -52,11 +50,20 @@ export class CSFeeOracleSrv implements Service {
         const hc = HashConsensus__factory.connect(DEPLOYED_ADDRESSES.HASH_CONSENSUS, provider)
         const [members] = await hc.getMembers({ blockTag: blockIdentifier })
         for (const m of members) {
-            const lastReport = await hc.getConsensusStateForMember(m, { blockTag: blockIdentifier })
-            this.membersLastReport.set(m, {
-                refSlot: lastReport.lastMemberReportRefSlot,
-                report: lastReport.currentFrameMemberReport,
-            })
+            try {
+                const lastReport = await hc.getConsensusStateForMember(m, {
+                    blockTag: blockIdentifier,
+                })
+                this.membersLastReport.set(m, {
+                    refSlot: lastReport.lastMemberReportRefSlot,
+                    report: lastReport.currentFrameMemberReport,
+                })
+            } catch (e: any) {
+                if (e.reason === 'InitialEpochIsYetToArrive()') {
+                    this.logger.debug('Initial epoch is not reached yet')
+                    break
+                }
+            }
         }
     }
 
@@ -71,43 +78,41 @@ export class CSFeeOracleSrv implements Service {
     }
 
     private handleAlternativeHashReceived(txEvent: TransactionEvent): Finding[] {
-        const out: Finding[] = []
-
         const [event] = filterLog(
             txEvent.logs,
             IHashConsensus.getEvent('ReportReceived').format('full'),
             DEPLOYED_ADDRESSES.HASH_CONSENSUS,
         )
 
-        if (event) {
-            const currentReportHashes = [...this.membersLastReport.values()]
-                .filter((r) => r.refSlot === event.args.refSlot)
-                .map((r) => r.report)
-
-            if (
-                currentReportHashes.length > 0 &&
-                !currentReportHashes.includes(event.args.report)
-            ) {
-                out.push(
-                    Finding.fromObject({
-                        name: '🔴 HashConsensus: Another report variant appeared (alternative hash)',
-                        description:
-                            `More than one distinct report hash received for slot ${event.args.refSlot}.` +
-                            `Member: ${etherscanAddress(event.args.member)} (${ORACLE_MEMBERS[event.args.member] || 'unknown'}).` +
-                            `Report: ${event.args.report}`,
-                        alertId: 'HASH-CONSENSUS-REPORT-RECEIVED',
-                        source: sourceFromEvent(txEvent),
-                        severity: FindingSeverity.High,
-                        type: FindingType.Info,
-                    }),
-                )
-            }
-
-            this.membersLastReport.set(event.args.member, {
-                refSlot: event.args.refSlot,
-                report: event.args.report,
-            })
+        if (!event) {
+            return []
         }
+
+        const out: Finding[] = []
+
+        const currentReportHashes = [...this.membersLastReport.values()]
+            .filter((r) => r.refSlot === event.args.refSlot)
+            .map((r) => r.report)
+
+        if (currentReportHashes.length > 0 && !currentReportHashes.includes(event.args.report)) {
+            out.push(
+                Finding.fromObject({
+                    name: '🔴 HashConsensus: Alternative report received',
+                    description:
+                        `Member ${etherscanAddress(event.args.member)} (${ORACLE_MEMBERS[event.args.member] || 'unknown'}) ` +
+                        `has reported a hash unmatched by other members. Reference slot: ${event.args.refSlot}`,
+                    alertId: 'HASH-CONSENSUS-RECEIVED-ALTERNATIVE-HASH',
+                    source: sourceFromEvent(txEvent),
+                    severity: FindingSeverity.High,
+                    type: FindingType.Info,
+                }),
+            )
+        }
+
+        this.membersLastReport.set(event.args.member, {
+            refSlot: event.args.refSlot,
+            report: event.args.report,
+        })
 
         return out
     }

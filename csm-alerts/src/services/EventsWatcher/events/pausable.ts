@@ -1,7 +1,7 @@
-import { Result } from '@ethersproject/abi/lib'
 import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 
 import { PausableUntil__factory } from '../../../generated/typechain'
+import * as PausableUntil from '../../../generated/typechain/PausableUntil'
 import { EventOfNotice } from '../../../shared/types'
 import { etherscanAddress, toKebabCase } from '../../../utils/string'
 import { formatDelay } from '../../../utils/time'
@@ -16,7 +16,8 @@ export function getPausableEvents(contracts: { name: string; address: string }[]
                 abi: IPausableUntil.getEvent('Paused').format('full'),
                 alertId: `${toKebabCase(contract.name)}-PAUSED`,
                 name: `🚨 ${contract.name}: contract was paused`,
-                description: (args: Result) => `Contract ${etherscanAddress(contract.address)} paused for ${formatDelay(args.duration)}`,
+                description: (args: PausableUntil.PausedEvent.OutputObject) =>
+                    `Contract ${etherscanAddress(contract.address)} paused for ${formatDelay(args.duration)}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
             },

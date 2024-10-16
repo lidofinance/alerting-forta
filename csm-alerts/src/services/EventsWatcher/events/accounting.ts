@@ -1,6 +1,7 @@
-import { FindingSeverity, FindingType, ethers } from '@fortanetwork/forta-bot'
+import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 
 import { CSAccounting__factory } from '../../../generated/typechain'
+import * as CSAccounting from '../../../generated/typechain/CSAccounting'
 import { EventOfNotice } from '../../../shared/types'
 import { etherscanAddress, formatEther } from '../../../utils/string'
 
@@ -13,8 +14,8 @@ export function getCSAccountingEvents(accounting: string): EventOfNotice[] {
             abi: ICSAccounting.getEvent('ChargePenaltyRecipientSet').format('full'),
             alertId: 'CS-ACCOUNTING-CHARGE-PENALTY-RECIPIENT-SET',
             name: '🚨 CSAccounting: Charge penalty recipient set',
-            description: (args: ethers.Result) =>
-                `Charge penalty recipient set to ${etherscanAddress(args.chargeRecipient)} (expecting the treasury)`,
+            description: (args: CSAccounting.ChargePenaltyRecipientSetEvent.OutputObject) =>
+                `Charge penalty recipient set to ${etherscanAddress(args.chargePenaltyRecipient)} (expecting the treasury)`,
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
         },
@@ -23,7 +24,7 @@ export function getCSAccountingEvents(accounting: string): EventOfNotice[] {
             abi: ICSAccounting.getEvent('BondCurveUpdated').format('full'),
             alertId: 'CS-ACCOUNTING-BOND-CURVE-UPDATED',
             name: '🚨 CSAccounting: Bond curve updated',
-            description: (args: ethers.Result) => {
+            description: (args: CSAccounting.BondCurveUpdatedEvent.OutputObject) => {
                 const bondCurveString = args.bondCurve
                     .map((value: bigint) => formatEther(value))
                     .join(', ')
@@ -37,7 +38,7 @@ export function getCSAccountingEvents(accounting: string): EventOfNotice[] {
             abi: ICSAccounting.getEvent('BondCurveAdded').format('full'),
             alertId: 'CS-ACCOUNTING-BOND-CURVE-ADDED',
             name: '🔴 CSAccounting: Bond curve added',
-            description: (args: ethers.Result) => {
+            description: (args: CSAccounting.BondCurveAddedEvent.OutputObject) => {
                 const bondCurveString = args.bondCurve
                     .map((value: bigint) => formatEther(value))
                     .join(', ')

@@ -1,6 +1,7 @@
-import { FindingSeverity, FindingType, ethers } from '@fortanetwork/forta-bot'
+import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 
 import { OssifiableProxy__factory } from '../../../generated/typechain'
+import * as OssifiableProxy from '../../../generated/typechain/OssifiableProxy'
 import { EventOfNotice } from '../../../shared/types'
 import { etherscanAddress } from '../../../utils/string'
 
@@ -26,7 +27,7 @@ export function getOssifiedProxyEvents(
                 abi: IOssifiableProxy.getEvent('Upgraded').format('full'),
                 alertId: 'PROXY-UPGRADED',
                 name: `🚨 ${contract.name}: Implementation Upgraded`,
-                description: (args: ethers.Result) =>
+                description: (args: OssifiableProxy.UpgradedEvent.OutputObject) =>
                     `The proxy implementation has been upgraded to ${args.implementation}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
@@ -36,7 +37,7 @@ export function getOssifiedProxyEvents(
                 abi: IOssifiableProxy.getEvent('AdminChanged').format('full'),
                 alertId: 'PROXY-ADMIN-CHANGED',
                 name: `🚨 ${contract.name}: Admin Changed`,
-                description: (args: ethers.Result) =>
+                description: (args: OssifiableProxy.AdminChangedEvent.OutputObject) =>
                     `The proxy admin for ${contract.name}(${contract.address}) has been changed from ${etherscanAddress(args.previousAdmin)} to ${etherscanAddress(args.newAdmin)}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,

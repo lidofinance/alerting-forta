@@ -93,7 +93,8 @@ export class CSFeeDistributorSrv implements Service {
         this.state.lastDistributionUpdatedAt =
             (await lastDistributionEvent.getBlock())?.timestamp ?? 0
         this.logger.debug(
-            `Last distribution observed at timestamp ${this.state.lastDistributionUpdatedAt}`,
+            `Last distribution observed at timestamp ${this.state.lastDistributionUpdatedAt}` +
+                ` (${formatDelay(toBlock.timestamp - this.state.lastDistributionUpdatedAt)} ago)`,
         )
     }
 
@@ -169,9 +170,8 @@ export class CSFeeDistributorSrv implements Service {
         const out: Finding[] = []
         for (const event of transferSharesEvents) {
             if (
-                event.args.from.toLowerCase() ===
-                    DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR.toLowerCase() &&
-                event.args.to.toLowerCase() !== DEPLOYED_ADDRESSES.CS_ACCOUNTING.toLowerCase()
+                event.args.from === DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR &&
+                event.args.to !== DEPLOYED_ADDRESSES.CS_ACCOUNTING
             ) {
                 const f = Finding.fromObject({
                     name: `🚨 CSFeeDistributor: Invalid TransferShares receiver`,
@@ -188,56 +188,6 @@ export class CSFeeDistributorSrv implements Service {
         return out
     }
 
-    // private async handleRevertedTx(
-    //     txEvent: TransactionEvent,
-    //     provider: ethers.Provider,
-    // ): Promise<Finding[]> {
-    //     if (!(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR.toLowerCase() in txEvent.addresses)) {
-    //       return []
-    //     }
-    //
-    //     const txReceipt = await provider.getTransactionReceipt(txEvent.hash)
-    //     // Nothing to do if the transaction succeeded.
-    //     if (txReceipt?.status === 0) {
-    //       this.logger.debug(`Skipping successful transaction ${txEvent.hash}`)
-    //       return []
-    //     }
-    //
-    //     // FIXME: I can't find a node with getTransactionResult call working.
-    //     let decodedLog: ethers.ErrorDescription | null = null
-    //     try {
-    //       const data = await txReceipt?.getResult()
-    //       decodedLog = CSFeeDistributorInterface.parseError(data ?? '')
-    //     } catch (error: any) {
-    //       if (error.code === 'UNSUPPORTED_OPERATION') {
-    //         this.logger.debug('Ethereum RPC does not support `getTransactionResult`')
-    //         return []
-    //       }
-    //
-    //       throw error
-    //     }
-    //
-    //     const reason = decodedLog?.name
-    //     if (!reason) {
-    //       return []
-    //     }
-    //
-    //     switch (reason) {
-    //       case 'InvalidShares':
-    //         return [failedTxAlert(txEvent, 'CSFeeOracle reports incorrect amount of shares to distribute', 'InvalidShares')]
-    //       case 'NotEnoughShares':
-    //         return [failedTxAlert(txEvent, 'CSFeeDistributor internal accounting error', 'NotEnoughShares')]
-    //       case 'InvalidTreeRoot':
-    //         return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeRoot')]
-    //       case 'InvalidTreeCID':
-    //         return [failedTxAlert(txEvent, 'CSFeeOracle built incorrect report', 'InvalidTreeCID')]
-    //       default:
-    //         this.logger.warn(`Unrecognized revert reason: ${reason}`)
-    //     }
-    //
-    //     return []
-    // }
-
     private async checkInvariants(blockEvent: BlockEvent, provider: ethers.Provider) {
         const distributor = CSFeeDistributor__factory.connect(
             DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR,
@@ -252,12 +202,15 @@ export class CSFeeDistributorSrv implements Service {
         const treeRoot = await distributor.treeRoot({ blockTag })
         const treeCid = await distributor.treeCid({ blockTag })
         if (treeRoot !== ethers.ZeroHash && treeCid === '') {
-            out.push(invariantAlert(blockEvent, 'Tree exists, but no CID.'))
+            out.push(invariantAlert(blockEvent, 'Tree exists, but no CID'))
+        }
+        if (treeRoot === ethers.ZeroHash && treeCid !== '') {
+            out.push(invariantAlert(blockEvent, 'Tree CID exists, but no root'))
         }
 
         if (
-            (await steth.sharesOf(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR, { blockTag })) <
-            (await distributor.totalClaimableShares({ blockTag }))
+            (await distributor.totalClaimableShares({ blockTag })) >
+            (await steth.sharesOf(distributor, { blockTag }))
         ) {
             out.push(invariantAlert(blockEvent, "distributed more than the contract's balance"))
         }
