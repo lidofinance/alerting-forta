@@ -2,7 +2,8 @@
 
 ## Supported chains
 
--   Holesky testnet
+-   Mainnet
+-   Holesky
 
 ## Alerts
 
@@ -27,10 +28,7 @@
         8. 🚨 CRITICAL: role change: VERIFIER_ROLE
         9. 🚨 CRITICAL: role change: RECOVERER_ROLE
 2. **CSAccounting**
-    1. General
-        1. 🟢 LOW: Average bond value for a validator is below some threshold.
-        2. 🟢 LOW: Total bond lock more than some value.
-        3. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
+    1. General 3. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
     2. Events monitoring
         1. 🚨 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
         2. 🚨 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
@@ -54,7 +52,6 @@
         4. 🔴 HIGH: ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)
         5. 🔵 INFO: WarnProcessingMissed(uint256 indexed refSlot)
         6. 🔵 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
-        7. 🔵 INFO: ProcessingStarted(uint256 indexed refSlot, bytes32 hash)
     2. Roles monitoring
         1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: CONTRACT_MANAGER_ROLE
@@ -86,6 +83,7 @@
         1. 🚨 CRITICAL: Receiver of TransferShares is NOT CSAccounting, if from is CSFeeDistributor
         2. 🔴 HIGH: No fees distributed for X days (repeat every 1 day).
         3. 🔵 INFO: DistributionDataUpdated -> Oracle settled a new report.
+        4. 🔵 INFO: DistributionLogUpdated.
     2. Roles monitoring
         1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: RECOVERER_ROLE
@@ -130,32 +128,54 @@
     4. 🔴 HIGH: ERC721Recovered()
     5. 🔴 HIGH: ERC1155Recovered()
 
-## Development (Forta specific)
+## Deployment
 
-Edit `alerting-forta/<SUBMODULE>/forta.config.json` and set `jsonRpcUrl` to your JSON-RPC provider. Install deps:
+-   Make sure you have uncommitted changes
+-   Run `yarn push` command
+-   Copy the resulting docker image reference
+-   Deploy a new version via https://app.forta.network with the image reference from the previous step
 
-```
+## Development
+
+Install dependencies.
+
+```shell
 yarn install
-yarn build
-yarn start
 ```
 
-In separate console run
+Create a `forta.config.json` file with the following content and replace Ethereum RPC URL with the
+one you're gonna use for development.
 
+```json
+{
+    "localRpcUrls": {
+        "ethereum": "http://127.0.0.1:8545"
+    }
+}
 ```
-docker-compose up -d
+
+To start the bot in local mode just run:
+
+```shell
+yarn run start
 ```
 
-## Testing alerts
+Use one of the following commands to check specific range/block/transaction(s):
 
-1. For testing alerts you have to install promtool on your machine.
+```shell
+yarn run range $BLOCK_NUMBER..$BLOCK_NUMBER
+yarn run block $SOME_BLOCK_NUMBER_OR_HASH
+yarn run tx $SOME_TX_HASH[,$ANOTHER_HASH]
+```
 
-    ```
-    make tools
-    ```
+## Forta bot v1 or v2?
 
-2. Check alerts
+This bot is developed using SDKv2, so it's the v2 bot. But the project provides a shim to be used as
+a v1 bot, though not well tested. By default, the `yarn push` command uses the Dockerfile in the
+repository to build an image of the v2 bot. If you want to push an image to be used as a v1 bot,
+replace the command in the Dockerfile with `yarn run start:prod:v1`.
 
-    ```
-    make test_alerts
-    ```
+```diff
+- CMD ["yarn", "run", "start:prod:v2"]
++ CMD ["yarn", "run", "start:prod:v1"]
+```
