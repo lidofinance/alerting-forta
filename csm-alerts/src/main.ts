@@ -8,11 +8,14 @@ import {
 } from '@fortanetwork/forta-bot'
 
 import { getLogger } from './logger'
-import { CSAccountingSrv } from './services/CSAccounting/CSAccounting.srv'
-import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributor.srv'
-import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
-import { CSModuleSrv } from './services/CSModule/CSModule.srv'
-import { EventsWatcherSrv } from './services/EventsWatcher/EventsWatcher.srv'
+import {
+    CSAccountingSrv,
+    CSFeeDistributorSrv,
+    CSFeeOracleSrv,
+    CSModuleSrv,
+    EventsWatcherSrv,
+    GateSealSrv,
+} from './services'
 import { RPC_OPTS, getProvider } from './shared/provider'
 import { launchAlert } from './utils/findings'
 
@@ -47,6 +50,7 @@ async function getHandlers() {
         new CSAccountingSrv(),
         new CSFeeOracleSrv(),
         new CSModuleSrv(),
+        new GateSealSrv(),
     ]
 
     for (const srv of services) {

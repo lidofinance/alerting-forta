@@ -55,6 +55,7 @@ export class EventsWatcherSrv implements Service {
         this.eventsOfNotice = [
             ...Events.getHashConsensusEvents(DEPLOYED_ADDRESSES.HASH_CONSENSUS, ORACLE_MEMBERS),
             ...Events.getCSFeeDistributorEvents(DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR),
+            ...Events.getGateSealEvents(DEPLOYED_ADDRESSES.CS_GATE_SEAL, ALIASES),
             ...Events.getCSAccountingEvents(DEPLOYED_ADDRESSES.CS_ACCOUNTING),
             ...Events.getCSFeeOracleEvents(DEPLOYED_ADDRESSES.CS_FEE_ORACLE),
             ...Events.getCSModuleEvents(DEPLOYED_ADDRESSES.CS_MODULE),

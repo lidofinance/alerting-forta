@@ -5,11 +5,14 @@ import { Finding, HandleBlock, HandleTransaction, Initialize, getJsonRpcUrl } fr
 import yargs from 'yargs'
 
 import { getLogger } from './logger'
-import { CSAccountingSrv } from './services/CSAccounting/CSAccounting.srv'
-import { CSFeeDistributorSrv } from './services/CSFeeDistributor/CSFeeDistributor.srv'
-import { CSFeeOracleSrv } from './services/CSFeeOracle/CSFeeOracle.srv'
-import { CSModuleSrv } from './services/CSModule/CSModule.srv'
-import { EventsWatcherSrv } from './services/EventsWatcher/EventsWatcher.srv'
+import {
+    CSAccountingSrv,
+    CSFeeDistributorSrv,
+    CSFeeOracleSrv,
+    CSModuleSrv,
+    EventsWatcherSrv,
+    GateSealSrv,
+} from './services'
 import { launchAlert } from './utils/findings'
 import { blockEventV1toV2, findingV2toV1, txEventV1toV2 } from './utils/shim'
 
@@ -21,6 +24,7 @@ const SERVICES = [
     new CSAccountingSrv(),
     new CSFeeOracleSrv(),
     new CSModuleSrv(),
+    new GateSealSrv(),
 ]
 
 let isLaunchReported = false
