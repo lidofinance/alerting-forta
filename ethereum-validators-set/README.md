@@ -90,6 +90,10 @@ DAO operations related alerts
 
 Alerting for the Staking Router events
 
+### Guardians
+
+- GUARDIAN-MEMBER-LOW-BALANCE - Guardian has low account balance
+
 ## Development
 
 Install deps:
