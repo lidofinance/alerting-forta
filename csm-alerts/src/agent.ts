@@ -30,6 +30,8 @@ const SERVICES = [
 let isLaunchReported = false
 
 const handleBlock: HandleBlock = async (blockEvent) => {
+    logger.info(`Running handlers for block ${blockEvent.blockNumber}`)
+
     const out: Finding[] = []
 
     const provider = await getProvider({ rpcUrl: getJsonRpcUrl() })
