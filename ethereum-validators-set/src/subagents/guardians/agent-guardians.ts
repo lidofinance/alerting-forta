@@ -14,7 +14,7 @@ import { ethersProvider } from "../../ethers";
 import DEPOSIT_SECURITY_MODULE_ABI from "../../abi/DepositSecurityModule.json";
 import type * as Constants from "./constants";
 import BigNumber from "bignumber.js";
-import { ETH_DECIMALS, ONE_WEEK } from "../../common/constants";
+import { ETH_DECIMALS, ONE_DAY } from "../../common/constants";
 
 export const name = "Guardians";
 
@@ -105,8 +105,8 @@ async function handleGuardianBalance(
   const now = blockEvent.block.timestamp;
   const lastAlert = guardiansBalanceLastAlert.get(guardianAddress) || 0;
 
-  // Skip if the last alert was sent within the past week
-  if (now <= lastAlert + ONE_WEEK) {
+  // Skip if the last alert was sent within the one day
+  if (now <= lastAlert + ONE_DAY) {
     return null;
   }
 
