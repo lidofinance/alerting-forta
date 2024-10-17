@@ -7,7 +7,6 @@ import {
     ethers,
     filterLog,
 } from '@fortanetwork/forta-bot'
-import { Provider } from 'ethers'
 import { Logger } from 'winston'
 
 import {
@@ -98,25 +97,30 @@ export class CSFeeDistributorSrv implements Service {
         )
     }
 
-    async handleBlock(blockEvent: BlockEvent, provider: Provider): Promise<Finding[]> {
-        return [
-            ...this.handleDistributionOverdue(blockEvent),
-            ...(await this.checkInvariants(blockEvent, provider)),
-        ]
+    async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+        return [...this.handleDistributionOverdue(blockEvent)]
     }
 
-    public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
+    public async handleTransaction(
+        txEvent: TransactionEvent,
+        provider: ethers.Provider,
+    ): Promise<Finding[]> {
         const distributionDataUpdatedEvents = filterLog(
             txEvent.logs,
             ICSFeeDistributor.getEvent('DistributionDataUpdated').format('full'),
             DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR,
         )
 
+        const out: Finding[] = []
+
         if (distributionDataUpdatedEvents.length > 0) {
             this.state.lastDistributionUpdatedAt = txEvent.block.timestamp
+            out.push(...(await this.checkInvariants(txEvent, provider)))
         }
 
-        return this.handleTransferSharesInvalidReceiver(txEvent)
+        out.push(...this.handleTransferSharesInvalidReceiver(txEvent))
+
+        return out
     }
 
     private handleDistributionOverdue(blockEvent: BlockEvent): Finding[] {
@@ -188,31 +192,31 @@ export class CSFeeDistributorSrv implements Service {
         return out
     }
 
-    private async checkInvariants(blockEvent: BlockEvent, provider: ethers.Provider) {
+    private async checkInvariants(txEvent: TransactionEvent, provider: ethers.Provider) {
         const distributor = CSFeeDistributor__factory.connect(
             DEPLOYED_ADDRESSES.CS_FEE_DISTRIBUTOR,
             provider,
         )
         const steth = Lido__factory.connect(DEPLOYED_ADDRESSES.LIDO_STETH, provider)
 
-        const blockTag = blockEvent.blockHash
+        const blockTag = txEvent.block.hash
 
         const out: Finding[] = []
 
         const treeRoot = await distributor.treeRoot({ blockTag })
         const treeCid = await distributor.treeCid({ blockTag })
         if (treeRoot !== ethers.ZeroHash && treeCid === '') {
-            out.push(invariantAlert(blockEvent, 'Tree exists, but no CID'))
+            out.push(invariantAlert(txEvent, 'Tree exists, but no CID'))
         }
         if (treeRoot === ethers.ZeroHash && treeCid !== '') {
-            out.push(invariantAlert(blockEvent, 'Tree CID exists, but no root'))
+            out.push(invariantAlert(txEvent, 'Tree CID exists, but no root'))
         }
 
         if (
             (await distributor.totalClaimableShares({ blockTag })) >
             (await steth.sharesOf(distributor, { blockTag }))
         ) {
-            out.push(invariantAlert(blockEvent, "distributed more than the contract's balance"))
+            out.push(invariantAlert(txEvent, "distributed more than the contract's balance"))
         }
 
         return out
