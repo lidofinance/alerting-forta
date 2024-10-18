@@ -57,5 +57,8 @@ jobs:
         id: check_scripts
 
       - name: Run e2e tests
+        env:
+          ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
         run: yarn test:e2e
         if: ${{ steps.check_scripts.outputs.has_e2e == 'true' }}
