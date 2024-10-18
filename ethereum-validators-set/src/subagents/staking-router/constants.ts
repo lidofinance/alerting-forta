@@ -58,6 +58,30 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
   {
     address: STAKING_ROUTER_ADDRESS,
     event:
+      "event StakingModuleMaxDepositsPerBlockSet(uint256 indexed stakingModuleId, uint256 maxDepositsPerBlock, address setBy)",
+    alertId: "STAKING-ROUTER-MODULE-MAX-DEPOSITS-PER-BLOCK-SET",
+    name: "⚠️ Staking Router: staking module max deposits per block set",
+    description: (args: any) =>
+      `ID: ${args.stakingModuleId}\nMax deposits per block: ${
+        args.maxDepositsPerBlock
+      }\nSet by: ${etherscanAddress(args.setBy)}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: STAKING_ROUTER_ADDRESS,
+    event:
+      "event StakingModuleMinDepositBlockDistanceSet(uint256 indexed stakingModuleId, uint256 minDepositBlockDistance, address setBy)",
+    alertId: "STAKING-ROUTER-MODULE-MIN-DEPOSIT-BLOCK-DISTANCE-SET",
+    name: "⚠️ Staking Router: staking module min deposit block distance set",
+    description: (args: any) =>
+      `ID: ${args.stakingModuleId}\nMin deposit block distance set: ${
+        args.minDepositBlockDistance
+      }\nSet by: ${etherscanAddress(args.setBy)}`,
+    severity: FindingSeverity.High,
+  },
+  {
+    address: STAKING_ROUTER_ADDRESS,
+    event:
       "event StakingModuleStatusSet(uint256 indexed stakingModuleId, StakingModuleStatus status, address setBy)",
     alertId: "STAKING-ROUTER-MODULE-STATUS-SET",
     name: "⚠️ Staking Router: staking module status set",
@@ -84,12 +108,14 @@ export const STAKING_ROUTER_EVENTS_OF_NOTICE = [
   {
     address: STAKING_ROUTER_ADDRESS,
     event:
-      "event StakingModuleTargetShareSet(uint256 indexed stakingModuleId, uint256 targetShare, address setBy)",
+      "event StakingModuleShareLimitSet(uint256 indexed stakingModuleId, uint256 stakeShareLimit, uint256 priorityExitShareThreshold, address setBy)",
     alertId: "STAKING-ROUTER-MODULE-TARGET-SHARE-SET",
-    name: "⚠️ Staking Router: staking module target share set",
+    name: "⚠️ Staking Router: staking module share limit set",
     description: (args: any) =>
-      `ID: ${args.stakingModuleId}\nTarget share: ${
-        args.targetShare
+      `ID: ${args.stakingModuleId}\n Stake share limit: ${
+        args.stakeShareLimit
+      }\nPriority exit share threshold: ${
+        args.priorityExitShareThreshold
       }\nSet by: ${etherscanAddress(args.setBy)}`,
     severity: FindingSeverity.High,
   },
