@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 import { CSFeeDistributor__factory } from '../../../generated/typechain'
 import * as CSFeeDistributor from '../../../generated/typechain/CSFeeDistributor'
 import { EventOfNotice } from '../../../shared/types'
-import { ipfsLink } from '../../../utils/string'
+import { formatShares, ipfsLink } from '../../../utils/string'
 
 const ICSFeeDistributor = CSFeeDistributor__factory.createInterface()
 
@@ -15,7 +15,7 @@ export function getCSFeeDistributorEvents(distributorAddress: string): EventOfNo
             alertId: 'CSFEE-DISTRIBUTOR-DISTRIBUTION-DATA-UPDATED',
             name: '🔵 CSFeeDistributor: Distribution data updated',
             description: (args: CSFeeDistributor.DistributionDataUpdatedEvent.OutputObject) =>
-                `Total Claimable Shares: ${args.totalClaimableShares}\n` +
+                `Total Claimable Shares: ${formatShares(args.totalClaimableShares)}\n` +
                 `Tree Root: ${args.treeRoot}\n` +
                 `Tree CID: ${ipfsLink(args.treeCid)}`,
             severity: FindingSeverity.Info,
