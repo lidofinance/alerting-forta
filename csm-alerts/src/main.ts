@@ -17,7 +17,7 @@ import {
     GateSealSrv,
 } from './services'
 import { RPC_OPTS, getProvider } from './shared/provider'
-import { launchAlert } from './utils/findings'
+import { errorAlert, launchAlert } from './utils/findings'
 
 const logger = getLogger('main')
 
@@ -75,7 +75,7 @@ async function getHandlers() {
                 out.push(...r.value)
             } else {
                 // TODO: Some exceptions should crash an application in fact.
-                // out.push(errorAlert(`Error processing tx ${txEvent.transaction.hash}`, r.reason))
+                out.push(errorAlert(`Error processing tx ${txEvent.transaction.hash}`, r.reason))
                 logger.error(r.reason)
             }
         }
@@ -97,7 +97,7 @@ async function getHandlers() {
                 out.push(...r.value)
             } else {
                 // TODO: Some exceptions should crash an application in fact.
-                // out.push(errorAlert(`Error processing block ${blockEvent.block.hash}`, r.reason))
+                out.push(errorAlert(`Error processing block ${blockEvent.block.hash}`, r.reason))
                 logger.error(r.reason)
             }
         }
