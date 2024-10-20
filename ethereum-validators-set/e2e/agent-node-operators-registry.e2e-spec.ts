@@ -96,6 +96,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     async () => {
       const findings = await runTransaction(
         "0x14bd64e4262041d762de83edce9a0b4c88dbb49ef678e3fd524cdc4cfdc3d88c",
+        20597472,
       );
       expect(findings).toMatchSnapshot();
     },
@@ -107,6 +108,7 @@ describe("agent-node-operators-registry e2e tests", () => {
     async () => {
       const findings = await runTransaction(
         "0xc3338fc9ef0419109b90dcc318ac89bcdb235a1fe7b9960611a7d0666c1e8170",
+        20719100,
       );
       expect(findings).toMatchSnapshot();
     },
