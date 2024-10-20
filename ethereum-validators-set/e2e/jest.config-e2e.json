@@ -4,5 +4,6 @@
   "moduleDirectories": ["node_modules", "src"],
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
-  "preset": "ts-jest"
+  "preset": "ts-jest",
+  "testTimeout": 120000
 }
