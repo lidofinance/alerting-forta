@@ -1,4 +1,5 @@
 export * from './assetRecoverer'
+export * from './hashconsensus'
 export * from './distributor'
 export * from './accounting'
 export * from './pausable'

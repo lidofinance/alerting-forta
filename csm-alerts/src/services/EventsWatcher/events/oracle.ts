@@ -1,112 +1,11 @@
 import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 
-import { CSFeeOracle__factory, HashConsensus__factory } from '../../../generated/typechain'
+import { CSFeeOracle__factory } from '../../../generated/typechain'
 import * as CSFeeOracle from '../../../generated/typechain/CSFeeOracle'
-import * as HashConsensus from '../../../generated/typechain/HashConsensus'
 import { EventOfNotice } from '../../../shared/types'
 import { etherscanAddress } from '../../../utils/string'
 
-const IHashConsensus = HashConsensus__factory.createInterface()
 const ICSFeeOracle = CSFeeOracle__factory.createInterface()
-
-export function getHashConsensusEvents(
-    address: string,
-    knownMembers: { [key: string]: string },
-): EventOfNotice[] {
-    return [
-        {
-            address,
-            abi: IHashConsensus.getEvent('MemberAdded').format('full'),
-            alertId: 'HASH-CONSENSUS-MEMBER-ADDED',
-            name: '🔴 HashConsensus: Member added',
-            description: (args: HashConsensus.MemberAddedEvent.OutputObject) =>
-                `New member ${etherscanAddress(args.addr)} (${knownMembers[args.addr] ?? 'unknown'}) added\n` +
-                `Total members: ${args.newTotalMembers}\n` +
-                `New quorum: ${args.newQuorum}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('MemberRemoved').format('full'),
-            alertId: 'HASH-CONSENSUS-MEMBER-REMOVED',
-            name: '🔴 HashConsensus: Member removed',
-            description: (args: HashConsensus.MemberRemovedEvent.OutputObject) =>
-                `Member ${etherscanAddress(args.addr)} (${knownMembers[args.addr] ?? 'unknown'}) removed\n` +
-                `Total members: ${args.newTotalMembers}\n` +
-                `New quorum: ${args.newQuorum}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('QuorumSet').format('full'),
-            alertId: 'HASH-CONSENSUS-QUORUM-SET',
-            name: '🔴 HashConsensus: Quorum set',
-            description: (args: HashConsensus.QuorumSetEvent.OutputObject) =>
-                `Quorum set to ${args.newQuorum}.\n` +
-                `Total members: ${args.totalMembers}\n` +
-                `Previous quorum: ${args.prevQuorum}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('FastLaneConfigSet').format('full'),
-            alertId: 'HASH-CONSENSUS-FASTLANE-CONFIG-SET',
-            name: '🔴 HashConsensus: Fastlane config set',
-            description: (args: HashConsensus.FastLaneConfigSetEvent.OutputObject) =>
-                `Fastlane configuration set with length slots: ${args.fastLaneLengthSlots}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('FrameConfigSet').format('full'),
-            alertId: 'HASH-CONSENSUS-FRAME-CONFIG-SET',
-            name: '🔴 HashConsensus: Frame config set',
-            description: (args: HashConsensus.FrameConfigSetEvent.OutputObject) =>
-                `Frame configuration set:\n` +
-                `New initial epoch: ${args.newInitialEpoch}\n` +
-                `Epochs per frame: ${args.newEpochsPerFrame}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('ReportProcessorSet').format('full'),
-            alertId: 'HASH-CONSENSUS-REPORT-PROCESSOR-SET',
-            name: '🔴 HashConsensus: Report processor set',
-            description: (args: HashConsensus.ReportProcessorSetEvent.OutputObject) =>
-                `Previous processor: ${etherscanAddress(args.prevProcessor)}\n` +
-                `Current processor: ${etherscanAddress(args.processor)}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('ConsensusLost').format('full'),
-            alertId: 'HASH-CONSENSUS-LOST',
-            name: '🔴 HashConsensus: Consensus lost',
-            description: (args: HashConsensus.ConsensusLostEvent.OutputObject) =>
-                `Consensus lost for slot ${args.refSlot}`,
-            severity: FindingSeverity.High,
-            type: FindingType.Info,
-        },
-        {
-            address,
-            abi: IHashConsensus.getEvent('ConsensusReached').format('full'),
-            alertId: 'HASH-CONSENSUS-REACHED',
-            name: '🔵 HashConsensus: Consensus reached, report received',
-            description: (args: HashConsensus.ConsensusReachedEvent.OutputObject) =>
-                `Consensus reached for slot ${args.refSlot}\n` +
-                `Report hash: ${args.report}\n` +
-                `Support: ${args.support}`,
-            severity: FindingSeverity.Info,
-            type: FindingType.Info,
-        },
-    ]
-}
 
 export function getCSFeeOracleEvents(address: string): EventOfNotice[] {
     return [
