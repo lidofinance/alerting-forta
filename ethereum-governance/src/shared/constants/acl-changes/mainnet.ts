@@ -395,7 +395,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName('RECOVER_ASSETS_ROLE'), []],
         [
           roleByName('REQUEST_BURN_SHARES_ROLE'),
-          [ROLES_OWNERS.lido, ROLES_OWNERS.curatedNor, ROLES_OWNERS.simpleDvtNor],
+          [ROLES_OWNERS.lido, ROLES_OWNERS.curatedNor, ROLES_OWNERS.simpleDvtNor, ROLES_OWNERS.csm],
         ],
       ]),
     },
@@ -416,6 +416,8 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
         [roleByName('MAX_NODE_OPERATORS_PER_EXTRA_DATA_ITEM_COUNT_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('REQUEST_TIMESTAMP_MARGIN_MANAGER_ROLE'), []],
         [roleByName('MAX_POSITIVE_TOKEN_REBASE_MANAGER_ROLE'), []],
+        [roleByName('APPEARED_VALIDATORS_PER_DAY_LIMIT_MANAGER_ROLE'), [ROLES_OWNERS.agent]],
+        [roleByName('EXITED_VALIDATORS_PER_DAY_LIMIT_MANAGER_ROLE'), []],
       ]),
     },
   ],
@@ -440,8 +442,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
       roles: new Map<INamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('MANAGE_WITHDRAWAL_CREDENTIALS_ROLE'), []],
-        [roleByName('STAKING_MODULE_PAUSE_ROLE'), [ROLES_OWNERS.dsm]],
-        [roleByName('STAKING_MODULE_RESUME_ROLE'), [ROLES_OWNERS.dsm]],
+        [roleByName('STAKING_MODULE_UNVETTING_ROLE'), [ROLES_OWNERS.dsm]],
         [roleByName('STAKING_MODULE_MANAGE_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('REPORT_EXITED_VALIDATORS_ROLE'), [ROLES_OWNERS.accountingOracle]],
         [roleByName('UNSAFE_SET_EXITED_VALIDATORS_ROLE'), []],
