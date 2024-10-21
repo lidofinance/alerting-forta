@@ -35,7 +35,8 @@ export const ORACLE_MEMBERS: { [key: string]: string } = {
     '0x007DE4a5F7bc37E2F26c0cb2E8A95006EE9B89b5': 'P2P',
     '0xc79F702202E3A6B0B6310B537E786B9ACAA19BAf': 'Chainlayer',
     '0x61c91ECd902EB56e314bB2D5c5C07785444Ea1c8': 'bloXroute',
-    '0x1Ca0fEC59b86F549e1F1184d97cb47794C8Af58d': 'Instadapp',
+    '0x1Ca0fEC59b86F549e1F1184d97cb47794C8Af58d': 'Instadapp', // Revoked one.
+    '0x73181107c8D9ED4ce0bbeF7A0b4ccf3320C41d12': 'Instadapp',
     '0xe57B3792aDCc5da47EF4fF588883F0ee0c9835C9': 'MatrixedLink',
     '0xA7410857ABbf75043d61ea54e07D57A6EB6EF186': 'Kyber Network',
 }
