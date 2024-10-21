@@ -34,16 +34,17 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0xe5656eee7eed02bde009d77c88247bc8271e26eb', 'Top up recipients (Alliance Ops stablecoins)'],
   ['0x87b02df27cd6ec128532add7c8bc19f62e6f1fb9', 'Top up recipients (ATC stETH)'],
   ['0x6e04aed774b7c89bb43721acdd7d03c872a51b69', 'Top up recipients (Stonks stETH)'],
-  ['0x41cf3dbdc939c5115823fba1432c4ec5e7bd226c', '(SDVT) Update target validator limits'],
-  ['0xd75778b855886fc5e1ea7d6bfada9eb68b35c19d', '(SDVT) Set vetted validators limits'],
-  ['0x589e298964b9181d9938b84bb034c3bb9024e2c0', '(SDVT) Set node operators reward addresses'],
-  ['0xcaa3af7460e83e665eefec73a7a542e5005c9639', '(SDVT) Add Node Operators'],
+  ['0x41cf3dbdc939c5115823fba1432c4ec5e7bd226c', 'Update target validator limits (SDVT)'],
+  ['0xd75778b855886fc5e1ea7d6bfada9eb68b35c19d', 'Set vetted validators limits (SDVT)'],
+  ['0x589e298964b9181d9938b84bb034c3bb9024e2c0', 'Set node operators reward addresses (SDVT)'],
+  ['0xcaa3af7460e83e665eefec73a7a542e5005c9639', 'Add Node Operators (SDVT)'],
   ['0x1f809d2cb72a5ab13778811742050eda876129b6', 'Add Rewards Share Program participant'],
   ['0xbd08f9d6bf1d25cc7407e4855df1d46c2043b3ea', 'Top up recipients (Rewards Share stETH)'],
   ['0x6ab39a8be67d9305799c3f8fdfc95caf3150d17c', 'Top up recipients (LEGO stablecoins)'],
   ['0x75bdecbb6453a901ebbb945215416561547dfdd4', 'Top up recipients (RCC stablecoins)'],
   ['0x92a27c4e5e35cfea112acab53851ec70e2d99a8d', 'Top up recipients (PML stablecoins)'],
   ['0x1843bc35d1fd15abe1913b9f72852a79457c42ab', 'Top up recipients (ATC stablecoins)'],
+  ['0xF6B6E7997338C48Ea3a8BCfa4BB64a315fDa76f4', 'Settle EL Rewards Stealing penalty for CSM operators'],
 ])
 
 export const EASY_TRACK_STONKS_CONTRACTS = [STONKS_ALLOWED_RECIPIENT_ADDRESS]
@@ -66,6 +67,7 @@ export const SAFES = {
     ['0x98be4a407bff0c125e25fbe9eb1165504349c37d', 'Relay Maintenance Committee'],
     ['0x8772e3a2d86b9347a2688f9bc1808a6d8917760c', 'Gate Seal Committee'],
     ['0x08637515E85A4633E23dfc7861e2A9f53af640f7', 'Simple DVT Module Committee'],
+    ['0xC52fC3081123073078698F1EAc2f1Dc7Bd71880f', 'CSM Committee'],
   ],
   [Blockchain.POLYGON]: [['0x87d93d9b2c672bf9c9642d853a8682546a5012b5', 'Liquidity Observation Lab (Polygon)']],
   [Blockchain.ARBITRUM]: [
