@@ -28,7 +28,8 @@
         8. 🚨 CRITICAL: role change: VERIFIER_ROLE
         9. 🚨 CRITICAL: role change: RECOVERER_ROLE
 2. **CSAccounting**
-    1. General 3. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
+    1. General
+        1. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
     2. Events monitoring
         1. 🚨 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
         2. 🚨 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
@@ -69,7 +70,8 @@
             6. 🔴 HIGH: ReportProcessorSet(address indexed processor, address indexed prevProcessor)
             7. 🔴 HIGH: another report variant appeared (alternative hash) event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)
             8. 🔴 HIGH: ConsensusLost(uint256 indexed refSlot)
-            9. 🔵 INFO: ConsensusReached(uint256 indexed refSlot, bytes32 report, uint256 support)
+            9. 🟡 MEDIUM: Sloppy oracle fast lane member
+            10. 🔵 INFO: ConsensusReached(uint256 indexed refSlot, bytes32 report, uint256 support)
         2. Roles monitoring
             1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
             2. 🚨 CRITICAL: DISABLE_CONSENSUS_ROLE
@@ -127,6 +129,9 @@
     3. 🔴 HIGH: StETHSharesRecovered()
     4. 🔴 HIGH: ERC721Recovered()
     5. 🔴 HIGH: ERC1155Recovered()
+
+9. **GateSeal**
+    1. 🔴 HIGH: CSM GateSeal expires soon (less than 3 months).
 
 ## Deployment
 
