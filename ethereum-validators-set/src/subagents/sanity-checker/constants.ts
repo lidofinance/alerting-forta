@@ -3,8 +3,10 @@ import { ORACLE_REPORT_SANITY_CHECKER_ADDRESS as checkerAddress } from "../../co
 export const ORACLE_REPORT_SANITY_CHECKER_ADDRESS = checkerAddress;
 
 export const ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS = {
-  "event ChurnValidatorsPerDayLimitSet(uint256 churnValidatorsPerDayLimit)":
-    "churnValidatorsPerDayLimit",
+  "event ExitedValidatorsPerDayLimitSet(uint256 exitedValidatorsPerDayLimit)":
+    "exitedValidatorsPerDayLimit",
+  "event AppearedValidatorsPerDayLimitSet(uint256 appearedValidatorsPerDayLimit)":
+    "appearedValidatorsPerDayLimit",
   "event OneOffCLBalanceDecreaseBPLimitSet(uint256 oneOffCLBalanceDecreaseBPLimit)":
     "oneOffCLBalanceDecreaseBPLimit",
   "event AnnualBalanceIncreaseBPLimitSet(uint256 annualBalanceIncreaseBPLimit)":
@@ -21,4 +23,10 @@ export const ORACLE_REPORT_SANITY_CHECKER_LIMITS_EVENTS = {
     "requestTimestampMargin",
   "event MaxPositiveTokenRebaseSet(uint256 maxPositiveTokenRebase)":
     "maxPositiveTokenRebase",
+  "event InitialSlashingAmountSet(uint256 initialSlashingAmountPWei)":
+    "initialSlashingAmountPWei",
+  "event InactivityPenaltiesAmountSet(uint256 inactivityPenaltiesAmountPWei)":
+    "inactivityPenaltiesAmountPWei",
+  "event CLBalanceOraclesErrorUpperBPLimitSet(uint256 clBalanceOraclesErrorUpperBPLimit)":
+    "clBalanceOraclesErrorUpperBPLimit",
 };

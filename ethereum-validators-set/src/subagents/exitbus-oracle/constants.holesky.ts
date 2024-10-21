@@ -47,22 +47,9 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0xd892c09b556b547c80b7d8c8cb8d75bf541B2284", "Lido Valset"],
 ]);
 
-export const STAKING_MODULES: {
-  moduleAddress: string;
-  moduleName: string;
-  moduleId: number;
-}[] = [
-  {
-    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "Curated",
-    moduleId: 1,
-  },
-  {
-    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "SimpleDVT",
-    moduleId: 2,
-  },
-];
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const CSM_NODE_OPERATOR_REGISTRY_MODULE_ID = 4;
 
 export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
   (event) => ({

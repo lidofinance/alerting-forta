@@ -25,6 +25,7 @@ import * as agentStakingRouter from "./subagents/staking-router/agent-staking-ro
 import * as agentClusterMultisig from "./subagents/multisig-watchers/agent-cluster-multisig";
 import * as agentModuleManager from "./subagents/multisig-watchers/agent-module-manager";
 import * as agentSplitterWrapper from "./subagents/splitter-wrapper/agent-splitter-wrapper";
+import * as agentGuardians from "./subagents/guardians/agent-guardians";
 
 import VERSION from "./version";
 import { mergeFindings } from "./common/utils";
@@ -53,6 +54,7 @@ const subAgents: SubAgent[] = [
   agentClusterMultisig,
   agentModuleManager,
   agentSplitterWrapper,
+  agentGuardians,
 ].filter((agent: SubAgent) => {
   if (!RUN_TIER) return true;
   if (agent.__tier__ == RUN_TIER) return true;
