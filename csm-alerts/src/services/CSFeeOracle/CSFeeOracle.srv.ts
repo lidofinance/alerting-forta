@@ -141,7 +141,7 @@ export class CSFeeOracleSrv implements Service {
             if (event.args.refSlot !== lastReportedRefSlots[index]) {
                 out.push(
                     Finding.fromObject({
-                        name: '🔴 CSM: Sloppy oracle fast lane member',
+                        name: '🟡 CSM: Sloppy oracle fast lane member',
                         description:
                             `Member ${etherscanAddress(addr)} (${ORACLE_MEMBERS[addr] || 'unknown'}) ` +
                             `was in the fast lane but did not report`,
