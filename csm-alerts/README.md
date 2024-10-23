@@ -9,11 +9,11 @@
 
 1. **CSModule**
     1. General
-        1. 🔴 HIGH: EL rewards stealing penalty reported/settled/cancelled for an operator.
-        2. 🟠 MEDIUM: targetLimitMode was set for an operator.
-        3. 🟢 LOW: Module's share is close to the targetShare.
-        4. 🟢 LOW: More than N "empty" batches in the queue. (N = 30)
-        5. 🟢 LOW: More than N validators in the queue. (N = 200)
+        1. 🟠 MEDIUM: targetLimitMode was set for an operator.
+        2. 🫧 LOW: Module's share is close to the targetShare.
+        3. 🫧 LOW: More than N "empty" batches in the queue. (N = 30)
+        4. 🫧 LOW: More than N validators in the queue. (N = 200)
+        5. 🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
         6. 🔵 INFO: Operator X was unvetted.
         7. 🔵 INFO: Public release is activated.
         8. 🔵 INFO: Every 100 new operators created (69th as well).
@@ -29,13 +29,14 @@
         9. 🚨 CRITICAL: role change: RECOVERER_ROLE
 2. **CSAccounting**
     1. General
-        1. 🟢 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
+        1. 🚨 CRITICAL: sharesOf(CSAccounting.address) < CSBondCoreStorage.totalBondShares
+        2. 🫧 LOW: sharesOf(CSAccounting.address) - CSBondCoreStorage.totalBondShares > 0.1 ether
     2. Events monitoring
         1. 🚨 CRITICAL: ChargePenaltyRecipientSet(address chargeRecipient)
         2. 🚨 CRITICAL: BondCurveUpdated(uint256 indexed curveId, uint256[] bondCurve)
-        3. 🔴 HIGH: BondCurveAdded(uint256[] bondCurve)
-        4. 🔴 HIGH: BondCurveSet(uint256 indexed nodeOperatorId, uint256 curveId)
-        5. 🔵 INFO: Approval(address owner, address spender, uint256 value) (stETH contract)
+        3. 🚨 CRITICAL: Approval(address owner, address spender, uint256 value) of stETH from CSAccounting, unless to the Burner
+        4. 🔴 HIGH: BondCurveAdded(uint256[] bondCurve)
+        5. 🔴 HIGH: BondCurveSet(uint256 indexed nodeOperatorId, uint256 curveId)
     3. Roles monitoring
         1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: PAUSE_ROLE
@@ -47,12 +48,12 @@
         8. 🚨 CRITICAL: RECOVERER_ROLE
 3. **CSFeeOracle**
     1. General
-        1. 🚨 CRITICAL: ConsensusHashContractSet(address indexed addr, address indexed prevAddr)
-        2. 🔴 HIGH: PerfLeewaySet(uint256 valueBP)
-        3. 🔴 HIGH: FeeDistributorContractSet(address feeDistributorContract)
+        1. 🚨 CRITICAL: FeeDistributorContractSet(address feeDistributorContract)
+        2. 🚨 CRITICAL: ConsensusHashContractSet(address indexed addr, address indexed prevAddr)
+        3. 🔴 HIGH: PerfLeewaySet(uint256 valueBP)
         4. 🔴 HIGH: ConsensusVersionSet(uint256 indexed version, uint256 indexed prevVersion)
-        5. 🔵 INFO: WarnProcessingMissed(uint256 indexed refSlot)
-        6. 🔵 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
+        5. 🫧 INFO: WarnProcessingMissed(uint256 indexed refSlot)
+        6. 🫧 INFO: ReportSubmitted(uint256 indexed refSlot, bytes32 hash, uint256 processingDeadlineTime)
     2. Roles monitoring
         1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: CONTRACT_MANAGER_ROLE
@@ -90,11 +91,7 @@
         1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: RECOVERER_ROLE
 
-5. **CSEarlyAdoption**
-
-    - _To be added_
-
-6. **OssifiableProxy**
+5. **OssifiableProxy**
    For the following contracts:
 
     - CSModule
@@ -106,7 +103,7 @@
     2. 🚨 CRITICAL: event Upgraded(address indexed implementation)
     3. 🚨 CRITICAL: event AdminChanged(address previousAdmin, address newAdmin)
 
-7. **PausableUntil**
+6. **PausableUntil**
    For the following contracts:
 
     - CSModule
@@ -116,7 +113,7 @@
     1. 🚨 CRITICAL: Paused(uint256 duration);
     2. 🚨 CRITICAL: Resumed();
 
-8. **AssetRecoverer**
+7. **AssetRecoverer**
    For the following contracts:
 
     - CSModule
@@ -130,7 +127,7 @@
     4. 🔴 HIGH: ERC721Recovered()
     5. 🔴 HIGH: ERC1155Recovered()
 
-9. **GateSeal**
+8. **GateSeal**
     1. 🔴 HIGH: CSM GateSeal expires soon (less than 3 months).
 
 ## Deployment
