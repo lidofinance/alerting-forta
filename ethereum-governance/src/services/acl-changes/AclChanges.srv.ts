@@ -277,7 +277,7 @@ export class AclChangesSrv {
 
   public async handlePermissionChange(permission: IPermission, out: Finding[]) {
     const shortState = permission.state.replace(' from', '').replace(' to', '')
-    const roleLabel = LIDO_ROLES.get(permission.role) || 'unknown'
+    const roleLabel = LIDO_ROLES[permission.role] ?? 'unknown'
     const appLabel = LIDO_APPS.get(permission.app.toLowerCase()) || 'unknown'
     const entityRaw = permission.entity.toLowerCase()
     let severity = FindingSeverity.Info
@@ -329,7 +329,7 @@ export class AclChangesSrv {
 
     const managerEvents = txEvent.filterLog(CHANGE_PERMISSION_MANAGER_EVENT, ARAGON_ACL_ADDRESS)
     managerEvents.forEach((event) => {
-      const roleLabel = LIDO_ROLES.get(event.args.role) || 'unknown'
+      const roleLabel = LIDO_ROLES[event.args.role] ?? 'unknown'
       const appLabel = LIDO_APPS.get(event.args.app.toLowerCase()) || 'unknown'
       const managerLabel = LIDO_APPS.get(event.args.manager.toLowerCase()) || 'unknown'
       out.push(
