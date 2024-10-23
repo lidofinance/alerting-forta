@@ -156,7 +156,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY * 7) {
             if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
                 const f = Finding.fromObject({
-                    name: `🟢 CSModule: Module's share is close to the target share.`,
+                    name: `🫧CSModule: Module's share is close to the target share.`,
                     description: `The module's share is close to the target share (${percentUsed}% utilization). Current share is ${(Number(csmCurrentShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Target share is ${(Number(csmTargetShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%`,
                     alertId: 'CS-MODULE-CLOSE-TO-TARGET-SHARE',
                     // NOTE: Do not include the source to reach quorum.
@@ -230,7 +230,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.tooManyEmptyBatches > SECONDS_PER_DAY) {
             if (emptyBatchCount > QUEUE_EMPTY_BATCHES_MAX) {
                 const f = Finding.fromObject({
-                    name: `🟢 CSModule: Too many empty batches in the deposit queue.`,
+                    name: `🫧CSModule: Too many empty batches in the deposit queue.`,
                     description: `More than ${QUEUE_EMPTY_BATCHES_MAX} empty batches in the deposit queue.`,
                     alertId: 'CS-MODULE-TOO-MANY-EMPTY-BATCHES-IN-THE-QUEUE',
                     // NOTE: Do not include the source to reach quorum.
@@ -246,7 +246,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.tooManyValidators > SECONDS_PER_DAY) {
             if (validatorsInQueue > QUEUE_VALIDATORS_MAX) {
                 const f = Finding.fromObject({
-                    name: '🟢 CSModule: Significant number of validator keys in the queue.',
+                    name: '🫧SModule: Significant number of validator keys in the queue.',
                     description: `There's ${validatorsInQueue} keys waiting for deposit in CSM.`,
                     alertId: 'CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE',
                     // NOTE: Do not include the source to reach quorum.

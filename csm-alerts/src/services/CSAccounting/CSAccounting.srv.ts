@@ -16,7 +16,7 @@ import { SECONDS_PER_DAY, WEI_PER_ETH } from '../../shared/constants'
 import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
-import { etherscanAddress } from '../../utils/string'
+import { etherscanAddress, formatShares } from '../../utils/string'
 import * as Constants from '../constants'
 
 const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
@@ -75,8 +75,8 @@ export class CSAccountingSrv implements Service {
         if (now - this.lastFiredAt.accountingExcessShares > SECONDS_PER_DAY) {
             if (diff > ACCOUNTING_BALANCE_EXCESS_SHARES_MAX) {
                 const f = Finding.fromObject({
-                    name: `🟢 Shares to recover on CSAccounting.`,
-                    description: `There's a valuable amount of shares to recover on CSAccounting.`,
+                    name: `🫧 Shares to recover on CSAccounting.`,
+                    description: `There's more than ${formatShares(ACCOUNTING_BALANCE_EXCESS_SHARES_MAX)} to recover on CSAccounting.`,
                     alertId: 'CS-ACCOUNTING-EXCESS-SHARES',
                     // NOTE: Do not include the source to reach quorum.
                     // source: sourceFromEvent(blockEvent),
