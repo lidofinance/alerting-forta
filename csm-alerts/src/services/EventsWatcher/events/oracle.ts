@@ -54,7 +54,7 @@ export function getCSFeeOracleEvents(address: string): EventOfNotice[] {
             address,
             abi: ICSFeeOracle.getEvent('WarnProcessingMissed').format('full'),
             alertId: 'CSFEE-ORACLE-PROCESSING-MISSED',
-            name: '🔵 CSFeeOracle: Processing missed',
+            name: '🔴 CSFeeOracle: Processing missed',
             description: (args: CSFeeOracle.WarnProcessingMissedEvent.OutputObject) =>
                 `Processing missed for slot ${args.refSlot}`,
             severity: FindingSeverity.High,

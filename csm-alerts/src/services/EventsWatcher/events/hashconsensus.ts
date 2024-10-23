@@ -102,7 +102,7 @@ export function getHashConsensusEvents(
             address,
             abi: IHashConsensus.getEvent('ConsensusReached').format('full'),
             alertId: 'HASH-CONSENSUS-REACHED',
-            name: '🔵 CSM HashConsensus: Consensus reached, report received',
+            name: '🔵 CSM HashConsensus: Consensus reached',
             description: (args: HashConsensus.ConsensusReachedEvent.OutputObject) =>
                 `Consensus reached for slot ${args.refSlot}\n` +
                 `Report hash: ${args.report}\n` +

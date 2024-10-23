@@ -14,7 +14,7 @@ export function getCSModuleEvents(csmAddress: string): EventOfNotice[] {
             abi: ICSModule.getEvent('PublicRelease').format('full'),
             alertId: 'CS-MODULE-PUBLIC-RELEASE',
             name: '🔵 CSModule: Public release',
-            description: () => 'CSM public release is activated! 🥳',
+            description: () => 'CSM public release has been activated! 🥳',
             severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
@@ -52,7 +52,7 @@ export function getCSModuleEvents(csmAddress: string): EventOfNotice[] {
             description: (args: CSModule.ELRewardsStealingPenaltyReportedEvent.OutputObject) =>
                 `EL Rewards stealing penalty reported for Node Operator #${args.nodeOperatorId} ` +
                 `with ${formatEther(args.stolenAmount)} potentially stolen`,
-            severity: FindingSeverity.High,
+            severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
         {
@@ -62,7 +62,7 @@ export function getCSModuleEvents(csmAddress: string): EventOfNotice[] {
             name: '🔴 CSModule: EL Rewards stealing penalty cancelled',
             description: (args: CSModule.ELRewardsStealingPenaltyCancelledEvent.OutputObject) =>
                 `EL Rewards stealing penalty (${formatEther(args.amount)}) cancelled for Node Operator #${args.nodeOperatorId}`,
-            severity: FindingSeverity.High,
+            severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
         {
@@ -72,7 +72,7 @@ export function getCSModuleEvents(csmAddress: string): EventOfNotice[] {
             name: '🔴 CSModule: EL Rewards stealing penalty settled',
             description: (args: CSModule.ELRewardsStealingPenaltySettledEvent.OutputObject) =>
                 `EL Rewards stealing penalty settled for Node Operator #${args.nodeOperatorId}`,
-            severity: FindingSeverity.High,
+            severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
         {
@@ -82,7 +82,7 @@ export function getCSModuleEvents(csmAddress: string): EventOfNotice[] {
             name: '🔴 CSModule: EL Rewards stealing penalty compensated',
             description: (args: CSModule.ELRewardsStealingPenaltyCompensatedEvent.OutputObject) =>
                 `${formatEther(args.amount)} of EL Rewards stealing penalty was compensated for Node Operator #${args.nodeOperatorId}`,
-            severity: FindingSeverity.High,
+            severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
     ]

@@ -68,7 +68,7 @@ export function getAssetRecovererEvents(
                 address: contract.address,
                 abi: IAssetRecoverer.getEvent('StETHSharesRecovered').format('full'),
                 alertId: 'ASSET-RECOVERER-STETH-SHARES-RECOVERED',
-                name: '🔴 AssetRecoverer: StETH Shares recovered',
+                name: '🔴 AssetRecoverer: stETH Shares recovered',
                 description: (args: AssetRecoverer.StETHSharesRecoveredEvent.OutputObject) =>
                     `StETH Shares recovered on ${contract.name}:\n` +
                     `Recipient: ${etherscanAddress(args.recipient)}\n` +
