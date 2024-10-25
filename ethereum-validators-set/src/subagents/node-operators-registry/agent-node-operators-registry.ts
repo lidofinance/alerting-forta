@@ -168,7 +168,9 @@ export async function handleTransaction(txEvent: TransactionEvent) {
     handleExitedCountChanged(txEvent, stuckEvents, findings, norContext);
     handleStuckStateChanged(stuckEvents, findings, norContext);
     await handleSigningKeysRemoved(txEvent, findings, norContext);
-    handleStakeLimitSet(txEvent, findings, norContext);
+    if (norContext.params.moduleId !== CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+      handleStakeLimitSet(txEvent, findings, norContext);
+    }
     handleSetRewardAddress(txEvent, findings, norContext);
   }
 
