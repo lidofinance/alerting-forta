@@ -41,8 +41,9 @@ export class StonksSrv {
 
     const initResult = await this.loadCreatedOrders(currentBlock.right)
     if (E.isLeft(initResult)) {
-      throw new Error(`Could not initialize ${this.name}. Cause: ${initResult.left}`)
+      return initResult.left
     }
+    return null
   }
 
   private async loadCreatedOrders(currentBlock: ethers.providers.Block) {
@@ -82,7 +83,7 @@ export class StonksSrv {
       )
       return E.right(null)
     } catch (e) {
-      return E.left(`Could not load created orders. Cause: ${e}`)
+      return E.left(e as Error)
     }
   }
 

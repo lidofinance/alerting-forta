@@ -32,6 +32,7 @@ export class CrossChainWatcherSrv {
     }
 
     this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
+    return null
   }
 
   public getName(): string {

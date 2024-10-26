@@ -1,4 +1,4 @@
-import { IProxyContractData } from 'constants/common'
+import { ProxyInfo } from '../../../shared/types'
 import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
   LIDO_LOCATOR_ADDRESS as lidoLocatorAddress,
@@ -30,7 +30,7 @@ export const implementationFuncShortABI =
 export const ossifiableProxyImplABI =
   '[{"inputs":[],"name":"proxy__getImplementation","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]'
 
-export const LIDO_PROXY_CONTRACTS_DATA: Map<string, IProxyContractData> = new Map<string, IProxyContractData>([
+export const LIDO_PROXY_CONTRACTS_DATA = new Map<string, ProxyInfo>([
   [
     lidoStethAddress,
     {

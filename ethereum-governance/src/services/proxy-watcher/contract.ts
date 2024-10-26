@@ -1,11 +1,11 @@
 import * as E from 'fp-ts/Either'
-import { IProxyContractData } from '../../clients/eth_provider'
+import { ProxyInfo } from '../../shared/types'
 
 export abstract class IProxyWatcherClient {
   public abstract isDeployed(address: string, blockNumber?: number): Promise<E.Either<Error, boolean>>
   public abstract getProxyImplementation(
     address: string,
-    data: IProxyContractData,
+    data: ProxyInfo,
     currentBlock: number,
-  ): Promise<E.Either<Error, string[]>>
+  ): Promise<E.Either<Error, string>>
 }
