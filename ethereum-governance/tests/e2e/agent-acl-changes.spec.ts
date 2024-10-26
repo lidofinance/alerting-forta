@@ -5,7 +5,7 @@ import { roleByName } from '../../src/shared/string'
 import { App } from '../../src/app'
 import { createTransactionEvent } from './utils'
 import * as E from 'fp-ts/Either'
-import { ORACLE_DAEMON_CONFIG_ADDRESS } from 'constants/common'
+import { ORACLE_DAEMON_CONFIG_ADDRESS } from '../../src/shared/constants/common/mainnet'
 
 const TEST_TIMEOUT = 60_000 // ms
 
