@@ -113,7 +113,7 @@ describe('AclChangesSrv', () => {
     expect(findings).toEqual([
       Finding.fromObject({
         alertId: 'ACL-UNEXPECTED-ROLE-MEMBERS',
-        description: `Role DEFAULT ADMIN ROLE members of OracleDaemonConfig are {[${fakeAddress}](https://etherscan.io/address/${fakeAddress})} but expected {[${ROLES_OWNERS.agent}](https://etherscan.io/address/${ROLES_OWNERS.agent})}.\nPlease update the constants file if the change was expected.`,
+        description: `Role DEFAULT ADMIN ROLE members of OracleDaemonConfig are {[${fakeAddress}](https://etherscan.io/address/${fakeAddress})} but expected {[${ROLES_OWNERS.agent}](https://etherscan.io/address/${ROLES_OWNERS.agent})}.\n\nPlease update the constants file if the change was expected.`,
         name: '🚨 ACL: Unexpected role members',
         severity: FindingSeverity.Critical,
         type: FindingType.Info,

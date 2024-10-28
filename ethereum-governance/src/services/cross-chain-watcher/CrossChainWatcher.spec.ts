@@ -52,7 +52,7 @@ describe('CrossChainWatcherSrv', () => {
   })
 
   it('returns the correct name', () => {
-    expect(crossChainSrv.getName()).toBe('CrossChainWatcher')
+    expect(crossChainSrv.getName()).toBe('CrossChainWatcherSrv')
   })
 
   it('calls handleBridgeBalance on handleBlock', async () => {
