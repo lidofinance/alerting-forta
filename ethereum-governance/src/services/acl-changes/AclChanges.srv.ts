@@ -19,7 +19,6 @@ import {
   NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
   NEW_ROLE_MEMBERS_REPORT_INTERVAL,
-  IHasRoles,
 } from 'constants/acl-changes'
 import { ARAGON_ACL_ADDRESS, SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/common'
 
@@ -28,6 +27,7 @@ import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
 import { networkAlert } from '../../shared/errors'
 import type { IAclChangesClient } from './contract'
+import { ContractRolesInfo, OwnableContractInfo } from '../../shared/types'
 
 interface IPermission {
   app: string
@@ -42,14 +42,14 @@ export class AclChangesSrv {
   private readonly logger: Logger
   private readonly name = 'AclChangesSrv'
   private readonly ethProvider: IAclChangesClient
-  private readonly findingsTimestamps: Map<string, number>
-  private readonly roleMembersReports: Map<string, number>
+  private readonly ownersReportsTimestamps: Map<string, number>
+  private readonly roleMembersReportsTimestamps: Map<string, number>
 
   constructor(logger: Logger, ethProvider: IAclChangesClient) {
     this.logger = logger
     this.ethProvider = ethProvider
-    this.findingsTimestamps = new Map<string, number>()
-    this.roleMembersReports = new Map<string, number>()
+    this.ownersReportsTimestamps = new Map<string, number>()
+    this.roleMembersReportsTimestamps = new Map<string, number>()
   }
 
   public initialize(currentBlock: number): null {
@@ -79,12 +79,12 @@ export class AclChangesSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [rolesMembersFindings, ownerChangeFindings] = await Promise.all([
+    const [roleChanges, ownerChanges] = await Promise.all([
       this.handleRolesMembersChanges(blockEvent),
-      this.handleOwnerChange(blockEvent),
+      this.handleContractsOwnersChanges(blockEvent),
     ])
 
-    findings.push(...rolesMembersFindings, ...ownerChangeFindings)
+    findings.push(...roleChanges, ...ownerChanges)
     this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
@@ -110,12 +110,12 @@ export class AclChangesSrv {
     const currentTimestamp = blockEvent.block.timestamp
 
     for (const address of ACL_ENUMERABLE_CONTRACTS.keys()) {
-      const lastReportTime = this.roleMembersReports.get(address) || 0
+      const lastReportTime = this.roleMembersReportsTimestamps.get(address) || 0
       if (currentTimestamp - lastReportTime < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
         continue
       }
 
-      const aclContractInfo = ACL_ENUMERABLE_CONTRACTS.get(address) as IHasRoles
+      const aclContractInfo = ACL_ENUMERABLE_CONTRACTS.get(address) as ContractRolesInfo
 
       for (const [role, members] of aclContractInfo.roles.entries()) {
         const membersInLower = members.map((m) => m.toLowerCase())
@@ -151,7 +151,7 @@ export class AclChangesSrv {
             }),
           )
 
-          this.roleMembersReports.set(address, currentTimestamp)
+          this.roleMembersReportsTimestamps.set(address, currentTimestamp)
         }
       }
     }
@@ -159,80 +159,86 @@ export class AclChangesSrv {
     return findings
   }
 
-  public async handleOwnerChange(blockEvent: BlockEvent): Promise<Finding[]> {
-    const out: Finding[] = []
+  public async handleContractsOwnersChanges(blockEvent: BlockEvent): Promise<Finding[]> {
+    const findings: Finding[] = []
 
-    const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(async (address: string) => {
-      const data = OWNABLE_CONTRACTS.get(address)
-      if (!data) {
-        return
-      }
+    for (const address of OWNABLE_CONTRACTS.keys()) {
+      const ownerInfo = OWNABLE_CONTRACTS.get(address) as OwnableContractInfo
 
-      const curOwner = await this.ethProvider.getContractOwner(address, data.ownershipMethod, blockEvent.blockNumber)
+      const contractOwnerResponse = await this.ethProvider.getContractOwner(
+        address,
+        ownerInfo.ownershipMethod,
+        blockEvent.blockNumber,
+      )
 
-      if (E.isLeft(curOwner)) {
-        out.push(
+      if (E.isLeft(contractOwnerResponse)) {
+        findings.push(
           networkAlert(
-            curOwner.left,
-            `Error in ${AclChangesSrv.name}.${this.handleOwnerChange.name} (uid:790dc305)`,
+            contractOwnerResponse.left,
+            `Error in ${AclChangesSrv.name}.${this.handleContractsOwnersChanges.name} (uid:790dc305)`,
             `Could not call ethProvider.getOwner for address - ${address}`,
           ),
         )
-        return
+
+        continue
       }
 
-      if (WHITELISTED_OWNERS.includes(curOwner.right.toLowerCase())) {
-        return
-      }
+      const currentOwner = contractOwnerResponse.right.toLowerCase()
 
-      const curOwnerIsContract = await this.ethProvider.isDeployed(curOwner.right)
+      if (!WHITELISTED_OWNERS.includes(currentOwner)) {
+        let isOwnerAContract = false
+        const isDeployed = await this.ethProvider.isDeployed(currentOwner)
 
-      if (E.isLeft(curOwnerIsContract)) {
-        out.push(
-          networkAlert(
-            curOwnerIsContract.left,
-            `Error in ${AclChangesSrv.name}.${this.handleRolesMembersChanges.name} (uid:eb602bbc)`,
-            `Could not call ethProvider.isDeployed for curOwner - ${curOwner}`,
-          ),
+        if (E.isLeft(isDeployed)) {
+          findings.push(
+            networkAlert(
+              isDeployed.left,
+              `Error in ${AclChangesSrv.name}.${this.handleRolesMembersChanges.name} (uid:eb602bbc)`,
+              `Could not call ethProvider.isDeployed for currentOwner - ${currentOwner}`,
+            ),
+          )
+        } else {
+          isOwnerAContract = isDeployed.right
+        }
+
+        const currentTimestamp = blockEvent.block.timestamp
+        const reportKey = `${address}+${currentOwner}`
+
+        // skip alert if reported recently
+        const lastReportTimestamp = this.ownersReportsTimestamps.get(reportKey)
+        const reportInterval = isOwnerAContract
+          ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
+          : NEW_OWNER_IS_EOA_REPORT_INTERVAL
+
+        if (lastReportTimestamp && reportInterval > currentTimestamp - lastReportTimestamp) {
+          continue
+        }
+
+        findings.push(
+          Finding.fromObject({
+            name: isOwnerAContract
+              ? '🚨 Contract owner set to address not in whitelist'
+              : '🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨',
+            description: `${ownerInfo.name} contract (${etherscanAddress(address)}) owner is set to ${
+              isOwnerAContract ? 'contract' : 'EOA'
+            } address ${etherscanAddress(currentOwner)}`,
+            alertId: 'SUSPICIOUS-CONTRACT-OWNER',
+            severity: isOwnerAContract ? FindingSeverity.High : FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+            metadata: {
+              contract: address,
+              name: ownerInfo.name,
+              owner: currentOwner,
+              isDeployedLoaded: `${!E.isLeft(isDeployed)}`,
+            },
+          }),
         )
-        return
+
+        this.ownersReportsTimestamps.set(reportKey, currentTimestamp)
       }
+    }
 
-      const key = `${address}+${curOwner}`
-      const now = blockEvent.block.timestamp
-      // skip if reported recently
-      const lastReportTimestamp = this.findingsTimestamps.get(key)
-      const interval = curOwnerIsContract.right
-        ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
-        : NEW_OWNER_IS_EOA_REPORT_INTERVAL
-      if (lastReportTimestamp && interval > now - lastReportTimestamp) {
-        return
-      }
-
-      out.push(
-        Finding.fromObject({
-          name: curOwnerIsContract.right
-            ? '🚨 Contract owner set to address not in whitelist'
-            : '🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨',
-          description: `${data.name} contract (${etherscanAddress(address)}) owner is set to ${
-            curOwnerIsContract.right ? 'contract' : 'EOA'
-          } address ${etherscanAddress(curOwner.right)}`,
-          alertId: 'SUSPICIOUS-CONTRACT-OWNER',
-          type: FindingType.Suspicious,
-          severity: curOwnerIsContract.right ? FindingSeverity.High : FindingSeverity.Critical,
-          metadata: {
-            contract: address,
-            name: data.name,
-            owner: curOwner.right,
-          },
-        }),
-      )
-
-      this.findingsTimestamps.set(key, now)
-    })
-
-    await Promise.all(promises)
-    return out
+    return findings
   }
 
   public async handleSetPermission(txEvent: TransactionEvent) {
