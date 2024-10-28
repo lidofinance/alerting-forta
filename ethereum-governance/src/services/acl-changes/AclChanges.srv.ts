@@ -2,7 +2,7 @@ import { BlockEvent, Finding, FindingSeverity, FindingType, LogDescription, Tran
 
 import _ from 'lodash'
 
-import { etherscanAddress } from '../../shared/string'
+import { etherscanAddress, roleByName } from '../../shared/string'
 import {
   SET_PERMISSION_EVENT,
   SET_PERMISSION_PARAMS_EVENT,
@@ -21,7 +21,7 @@ import {
   NEW_ROLE_MEMBERS_REPORT_INTERVAL,
   IHasRoles,
 } from 'constants/acl-changes'
-import { ARAGON_ACL_ADDRESS } from 'constants/common'
+import { ARAGON_ACL_ADDRESS, SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/common'
 
 import * as E from 'fp-ts/Either'
 import { elapsedTime } from '../../shared/time'
@@ -303,14 +303,28 @@ export class AclChangesSrv {
         }
       }
     }
+
+    // When new NOs are being added to the SDVT registry, the permission alert shouldn't be critical
+    const isSdvtOperatorBeingAdded =
+      shortState === 'granted with params' &&
+      permission.app.toLowerCase() === SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS.toLowerCase() &&
+      permission.role === roleByName('MANAGE_SIGNING_KEYS').hash
+
+    if (isSdvtOperatorBeingAdded) {
+      severity = FindingSeverity.Info
+      entity = 'new SDVT operator'
+    }
+
+    const icon = severity === FindingSeverity.Info ? 'ℹ️' : '🚨'
+
     out.push(
       Finding.fromObject({
-        name: `🚨 Aragon ACL: Permission ${shortState}`,
+        name: `${icon} Aragon ACL: Permission ${shortState}`,
         description: `Role ${permission.role} (${roleLabel}) on the app ${etherscanAddress(permission.app)} (${appLabel}) was ${
           permission.state
         } ${permission.entity} (${entity})`,
         alertId: 'ARAGON-ACL-PERMISSION-CHANGED',
-        severity: severity,
+        severity,
         type: FindingType.Info,
       }),
     )
