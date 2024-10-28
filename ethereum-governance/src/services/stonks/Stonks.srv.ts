@@ -92,10 +92,16 @@ export class StonksSrv {
   }
 
   public async handleBlock(blockEvent: BlockEvent): Promise<Finding[]> {
+    const start = new Date().getTime()
     if (blockEvent.blockNumber % BLOCK_WINDOW != 0) {
+      this.logger.info(`${StonksSrv.name}: skipping block ${blockEvent.blockNumber}`)
       return []
     }
-    return this.handleOrderSettlement(blockEvent)
+
+    const findings = await this.handleOrderSettlement(blockEvent)
+
+    this.logger.info(elapsedTime(StonksSrv.name + '.' + this.handleBlock.name, start))
+    return findings
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
