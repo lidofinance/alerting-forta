@@ -19,6 +19,7 @@ import {
   NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
   NEW_ROLE_MEMBERS_REPORT_INTERVAL,
+  IHasRoles,
 } from 'constants/acl-changes'
 import { ARAGON_ACL_ADDRESS } from 'constants/common'
 
@@ -42,11 +43,13 @@ export class AclChangesSrv {
   private readonly name = 'AclChangesSrv'
   private readonly ethProvider: IAclChangesClient
   private readonly findingsTimestamps: Map<string, number>
+  private readonly roleMembersReports: Map<string, number>
 
   constructor(logger: Logger, ethProvider: IAclChangesClient) {
     this.logger = logger
     this.ethProvider = ethProvider
     this.findingsTimestamps = new Map<string, number>()
+    this.roleMembersReports = new Map<string, number>()
   }
 
   public initialize(currentBlock: number): null {
@@ -77,7 +80,7 @@ export class AclChangesSrv {
     const findings: Finding[] = []
 
     const [rolesMembersFindings, ownerChangeFindings] = await Promise.all([
-      this.handleRolesMembers(blockEvent),
+      this.handleRolesMembersChanges(blockEvent),
       this.handleOwnerChange(blockEvent),
     ])
 
@@ -102,64 +105,58 @@ export class AclChangesSrv {
     return findings
   }
 
-  public async handleRolesMembers(blockEvent: BlockEvent): Promise<Finding[]> {
-    const out: Finding[] = []
-    const roleMembersReports = new Map<string, number>()
+  public async handleRolesMembersChanges(blockEvent: BlockEvent): Promise<Finding[]> {
+    const findings: Finding[] = []
+    const currentTimestamp = blockEvent.block.timestamp
 
-    const promises = Array.from(ACL_ENUMERABLE_CONTRACTS.keys()).map(async (address: string) => {
-      const lastReportedAt = roleMembersReports.get(address) || 0
-      const now = blockEvent.block.timestamp
-      if (now - lastReportedAt < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
-        return
+    for (const address of ACL_ENUMERABLE_CONTRACTS.keys()) {
+      const lastReportTime = this.roleMembersReports.get(address) || 0
+      if (currentTimestamp - lastReportTime < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
+        continue
       }
 
-      const data = ACL_ENUMERABLE_CONTRACTS.get(address)
-      if (!data) {
-        return
-      }
+      const aclContractInfo = ACL_ENUMERABLE_CONTRACTS.get(address) as IHasRoles
 
-      await Promise.all(
-        Array.from(data.roles.entries()).map(async (entry) => {
-          const [role, members] = entry
-          const membersInLower = members.map((m) => m.toLowerCase())
-          const curMembers = await this.ethProvider.getRoleMembers(address, role.hash, blockEvent.blockNumber)
+      for (const [role, members] of aclContractInfo.roles.entries()) {
+        const membersInLower = members.map((m) => m.toLowerCase())
+        const currentRoleMembers: string[] = []
+        const roleMembersFromNetwork = await this.ethProvider.getRoleMembers(address, role.hash, blockEvent.blockNumber)
 
-          if (E.isLeft(curMembers)) {
-            out.push(
-              networkAlert(
-                curMembers.left,
-                `Error in ${AclChangesSrv.name}.${this.handleRolesMembers.name} (uid:550c057c)`,
-                `Could not call ethProvider.getRoleMembers for address - ${address}`,
-              ),
-            )
-            return
-          }
+        if (E.isLeft(roleMembersFromNetwork)) {
+          findings.push(
+            networkAlert(
+              roleMembersFromNetwork.left,
+              `Error in ${AclChangesSrv.name}.${this.handleRolesMembersChanges.name} (uid:550c057c)`,
+              `Could not call ethProvider.getRoleMembers for address - ${address}`,
+            ),
+          )
+        } else {
+          currentRoleMembers.push(...roleMembersFromNetwork.right)
+        }
 
-          if (_.isEqual(curMembers.right, membersInLower)) {
-            return
-          }
+        if (!_.isEqual(currentRoleMembers, membersInLower)) {
+          const currentRoleMembersString = E.isLeft(roleMembersFromNetwork)
+            ? `UNKNOWN`
+            : currentRoleMembers.map((m) => etherscanAddress(m)).join(', ')
 
-          out.push(
+          findings.push(
             Finding.fromObject({
               name: `🚨 ACL: Unexpected role members`,
-              description:
-                `Role ${role.name} members of ${data.name} ` +
-                `are {${curMembers.right.map((m) => etherscanAddress(m)).join(', ')}}` +
-                ` but expected {${membersInLower.map((m) => etherscanAddress(m)).join(', ')}}.` +
-                `\nPlease update the constants file if the change was expected.`,
+              description: `Role ${role.name} members of ${aclContractInfo.name} are
+                {${currentRoleMembersString}} but expected {${membersInLower.map((m) => etherscanAddress(m)).join(', ')}}.
+                \nPlease update the constants file if the change was expected.`,
               alertId: 'ACL-UNEXPECTED-ROLE-MEMBERS',
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
             }),
           )
 
-          roleMembersReports.set(address, now)
-        }),
-      )
-    })
+          this.roleMembersReports.set(address, currentTimestamp)
+        }
+      }
+    }
 
-    await Promise.all(promises)
-    return out
+    return findings
   }
 
   public async handleOwnerChange(blockEvent: BlockEvent): Promise<Finding[]> {
@@ -194,7 +191,7 @@ export class AclChangesSrv {
         out.push(
           networkAlert(
             curOwnerIsContract.left,
-            `Error in ${AclChangesSrv.name}.${this.handleRolesMembers.name} (uid:eb602bbc)`,
+            `Error in ${AclChangesSrv.name}.${this.handleRolesMembersChanges.name} (uid:eb602bbc)`,
             `Could not call ethProvider.isDeployed for curOwner - ${curOwner}`,
           ),
         )

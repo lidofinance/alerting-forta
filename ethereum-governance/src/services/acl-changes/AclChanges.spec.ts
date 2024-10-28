@@ -66,7 +66,7 @@ describe('AclChangesSrv', () => {
   })
 
   it('handles block without error', async () => {
-    jest.spyOn(aclChangesSrv, 'handleRolesMembers').mockResolvedValue([])
+    jest.spyOn(aclChangesSrv, 'handleRolesMembersChanges').mockResolvedValue([])
     jest.spyOn(aclChangesSrv, 'handleOwnerChange').mockResolvedValue([])
 
     const findings = await aclChangesSrv.handleBlock(blockEvent)
@@ -88,7 +88,7 @@ describe('AclChangesSrv', () => {
       return E.right(roleMembersMap.get(roleHash + address) || [])
     })
 
-    const findings = await aclChangesSrv.handleRolesMembers(blockEvent)
+    const findings = await aclChangesSrv.handleRolesMembersChanges(blockEvent)
 
     expect(findings).toEqual([])
   })
@@ -108,7 +108,7 @@ describe('AclChangesSrv', () => {
       return E.right([fakeAddress])
     })
 
-    const findings = await aclChangesSrv.handleRolesMembers(blockEvent)
+    const findings = await aclChangesSrv.handleRolesMembersChanges(blockEvent)
 
     expect(findings).toEqual([
       Finding.fromObject({
