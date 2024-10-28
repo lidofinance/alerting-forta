@@ -142,9 +142,7 @@ export class AclChangesSrv {
           findings.push(
             Finding.fromObject({
               name: `🚨 ACL: Unexpected role members`,
-              description: `Role ${role.name} members of ${aclContractInfo.name} are
-                {${currentRoleMembersString}} but expected {${membersInLower.map((m) => etherscanAddress(m)).join(', ')}}.
-                \nPlease update the constants file if the change was expected.`,
+              description: `Role ${role.name} members of ${aclContractInfo.name} are {${currentRoleMembersString}} but expected {${membersInLower.map((m) => etherscanAddress(m)).join(', ')}}.\nPlease update the constants file if the change was expected.`,
               alertId: 'ACL-UNEXPECTED-ROLE-MEMBERS',
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
