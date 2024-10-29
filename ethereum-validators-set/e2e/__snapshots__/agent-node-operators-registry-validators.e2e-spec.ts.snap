@@ -1,0 +1,161 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-node-operators-registry e2e tests should process tx with a lot of validators exited 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #13 Blockdaemon
+New exited: 117",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #20 HashKey Cloud
+New exited: 167",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #23 CryptoManufaktur
+New exited: 117",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #24 Kukis Global
+New exited: 117",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #25 Nethermind
+New exited: 116",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #26 ChainSafe
+New exited: 216",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #27 Prysm Team at Offchain Labs
+New exited: 116",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #28 Sigma Prime
+New exited: 116",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-BIG-EXIT",
+    "description": "Operator: #29 Attestant (BVI) Limited
+New exited: 116",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ curated-onchain-v1: operator exited more than 100 validators",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
+exports[`agent-node-operators-registry e2e tests should process tx with removed signing keys 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "CURATED-ONCHAIN-V1-NODE-OPERATORS-KEYS-REMOVED",
+    "description": "Signing keys has been removed for:
+ Kiln: 50",
+    "labels": [],
+    "metadata": {},
+    "name": "🚨 curated-onchain-v1: Signing keys removed",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
