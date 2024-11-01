@@ -119,7 +119,7 @@ export class CSAccountingSrv implements Service {
                 event.args.spender !== DEPLOYED_ADDRESSES.BURNER
             ) {
                 const f = Finding.fromObject({
-                    name: `🔴 Unexpected stETH approval from CSAccounting`,
+                    name: `🚨 Unexpected stETH approval from CSAccounting`,
                     description:
                         `${etherscanAddress(event.args.spender)} received allowance from ` +
                         `${etherscanAddress(event.args.owner)} for ${event.args.value} stETH`,

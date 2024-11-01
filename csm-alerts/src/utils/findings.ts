@@ -56,18 +56,3 @@ export function errorAlert(name: string, err: string | Error | undefined): Findi
         },
     })
 }
-
-export function failedTxAlert(
-    txEvent: TransactionEvent,
-    description: string,
-    reason: string,
-): Finding {
-    return Finding.fromObject({
-        name: `🟣 CRITICAL: ${reason}`,
-        description: `Transaction reverted. ${description}`,
-        alertId: `CSFEE-${toKebabCase(reason)}`,
-        source: sourceFromEvent(txEvent),
-        severity: FindingSeverity.Critical,
-        type: FindingType.Info,
-    })
-}

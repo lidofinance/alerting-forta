@@ -23,7 +23,7 @@ export function getCSFeeOracleEvents(address: string): EventOfNotice[] {
             address,
             abi: ICSFeeOracle.getEvent('FeeDistributorContractSet').format('full'),
             alertId: 'CSFEE-ORACLE-FEE-DISTRIBUTOR-CONTRACT-SET',
-            name: '🔴 CSFeeOracle: New CSFeeDistributor set',
+            name: '🚨 CSFeeOracle: New CSFeeDistributor set',
             description: (args: CSFeeOracle.FeeDistributorContractSetEvent.OutputObject) =>
                 `New CSFeeDistributor contract set to ${etherscanAddress(args.feeDistributorContract)}`,
             severity: FindingSeverity.Critical,
