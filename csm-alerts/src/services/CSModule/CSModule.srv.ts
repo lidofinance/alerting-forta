@@ -246,7 +246,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.tooManyValidators > SECONDS_PER_DAY) {
             if (validatorsInQueue > QUEUE_VALIDATORS_MAX) {
                 const f = Finding.fromObject({
-                    name: '🫧SModule: Significant number of validator keys in the queue.',
+                    name: '🫧CSModule: Significant number of validator keys in the queue.',
                     description: `There's ${validatorsInQueue} keys waiting for deposit in CSM.`,
                     alertId: 'CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE',
                     // NOTE: Do not include the source to reach quorum.
