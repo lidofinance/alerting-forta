@@ -33,6 +33,8 @@ import {
 } from "../../common/constants";
 import BigNumber from "bignumber.js";
 import WITHDRAWAL_QUEUE_ABI from "../../abi/WithdrawalQueueERC721.json";
+import { CommunityRegistryModule } from "../../common/staking-modules/csm-registry";
+import { CuratedRegistryModule } from "../../common/staking-modules/curated-registry";
 
 // re-fetched from history on startup
 let lastReportSubmitTimestamp = 0;
@@ -62,7 +64,7 @@ const {
   EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD,
   ORACLE_REPORT_SANITY_CHECKER_ADDRESS,
   EXIT_REQUESTS_COUNT_THRESHOLD_PERCENT,
-  STAKING_MODULES,
+  CSM_NODE_OPERATOR_REGISTRY_MODULE_ID,
   BLOCK_INTERVAL,
 } = requireWithTier<typeof Constants>(
   module,
@@ -72,42 +74,9 @@ const {
 
 const log = (text: string) => console.log(`[${name}] ${text}`);
 
-interface NodeOperatorModuleParams {
-  moduleAddress: string;
-  moduleName: string;
-}
-
-class NodeOperatorsRegistryModuleContext {
-  public nodeOperatorNames = new Map<number, string>();
-  public readonly contract: ethers.Contract;
-
-  constructor(public readonly params: NodeOperatorModuleParams) {
-    this.contract = new ethers.Contract(
-      params.moduleAddress,
-      NODE_OPERATORS_REGISTRY_ABI,
-      ethersProvider,
-    );
-  }
-
-  public async updateNoNames(block: number) {
-    // limit=1000 is times higher than possible number of the NOs in the registry
-    const nodeOperatorIDs = await this.contract.getNodeOperatorIds(0, 1000, {
-      blockTag: block,
-    });
-    await Promise.all(
-      nodeOperatorIDs.map(async (id: BigNumber) => {
-        const { name } = await this.contract.getNodeOperator(id, true, {
-          blockTag: block,
-        });
-        this.nodeOperatorNames.set(id.toNumber(), name);
-      }),
-    );
-  }
-}
-
 const stakingModulesOperatorRegistry = new Map<
   number,
-  NodeOperatorsRegistryModuleContext
+  CuratedRegistryModule | CommunityRegistryModule
 >();
 
 export async function initialize(
@@ -121,32 +90,32 @@ export async function initialize(
     ethersProvider,
   );
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
 
   stakingModulesOperatorRegistry.clear();
-  for (const { moduleId, moduleAddress, moduleName } of STAKING_MODULES) {
-    if (!moduleAddress) {
-      console.log(`${moduleName} is not supported on this network for ${name}`);
-      continue;
+
+  for (const { id, stakingModuleAddress, name } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
+    const moduleAddress = (stakingModuleAddress as string).toLowerCase();
+    const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
+
+    let registry: CommunityRegistryModule | CommunityRegistryModule;
+    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+      registry = new CommunityRegistryModule(
+        { moduleAddress, moduleId, moduleName, alertPrefix },
+        stakingRouter,
+      );
+    } else {
+      registry = new CuratedRegistryModule(
+        { moduleAddress, moduleId, moduleName, alertPrefix },
+        stakingRouter,
+      );
     }
 
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
-      continue;
-    }
-
-    const nor = new NodeOperatorsRegistryModuleContext({
-      moduleAddress,
-      moduleName,
-    });
-    await nor.updateNoNames(currentBlock);
-
-    stakingModulesOperatorRegistry.set(moduleId, nor);
+    stakingModulesOperatorRegistry.set(moduleId, registry);
   }
 
   const block48HoursAgo =
@@ -207,7 +176,7 @@ export async function initialize(
   );
 
   for await (const nor of stakingModulesOperatorRegistry.values()) {
-    await nor.updateNoNames(currentBlock);
+    await nor.initialize(currentBlock);
   }
 
   return {
@@ -258,7 +227,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
   // Update NO names each 100 blocks
   if (blockEvent.blockNumber % BLOCK_INTERVAL) {
     for await (const nor of stakingModulesOperatorRegistry.values()) {
-      await nor.updateNoNames(blockEvent.blockNumber);
+      await nor.updateNodeOperatorsInfo(blockEvent.blockNumber);
     }
   }
 
@@ -484,9 +453,12 @@ async function handleProcessingStarted(
   }
 }
 
-function prepareExitsDigest(exitRequests: LogDescription[]): string {
+async function prepareExitsDigest(
+  exitRequests: LogDescription[],
+  blockNumber: number,
+): Promise<string> {
   let digest = new Map<String, Map<String, number>>();
-  exitRequests.forEach((request: any) => {
+  for (const request of exitRequests) {
     let args = request.args;
     let nodeOperatorId = Number(args.nodeOperatorId);
     let name = String(args.nodeOperatorId);
@@ -496,14 +468,14 @@ function prepareExitsDigest(exitRequests: LogDescription[]): string {
     );
     if (stakingModule) {
       stakingModuleName = stakingModule.params.moduleName;
-      name = stakingModule.nodeOperatorNames.get(nodeOperatorId) || name;
+      name = stakingModule.getOperatorName(name);
     }
     let moduleDigest =
       digest.get(stakingModuleName) || new Map<string, number>();
     let prevModuleExitsCount = moduleDigest.get(name) || 0;
     moduleDigest.set(name, prevModuleExitsCount + 1);
     digest.set(stakingModuleName, moduleDigest);
-  });
+  }
   let digestStr = "";
   for (let [moduleName, moduleDigest] of digest.entries()) {
     digestStr += `\n**Module**: ${moduleName}`;
@@ -533,7 +505,7 @@ async function handleExitRequest(
   if (exitRequests.length == 0) {
     digest = "No validator exits requested";
   } else {
-    digest = prepareExitsDigest(exitRequests);
+    digest = await prepareExitsDigest(exitRequests, txEvent.blockNumber);
   }
   findings.push(
     Finding.fromObject({

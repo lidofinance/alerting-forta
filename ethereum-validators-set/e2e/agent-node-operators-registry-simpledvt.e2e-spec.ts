@@ -46,34 +46,11 @@ describe("agent-node-operators-registry e2e tests", () => {
   });
 
   it(
-    "should process tx with set NO target limit set",
+    "should process tx with added simple dvt clusters",
     async () => {
       const findings = await runTransaction(
-        "0xcd406d8439cf7b635ede687ea4fbe6d3e3a7d33e1a16c78ca5ba304ac06cb415",
-        18293300,
-      );
-      expect(findings).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should process tx with added Node operator",
-    async () => {
-      const findings = await runTransaction(
-        "0xa4629245311d93a11cedb9143d8b7530057685b4b568a026bac194e162002c13",
-      );
-      expect(findings).toMatchSnapshot();
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
-    "should process tx with setting node operator name",
-    async () => {
-      const findings = await runTransaction(
-        "0x14bd64e4262041d762de83edce9a0b4c88dbb49ef678e3fd524cdc4cfdc3d88c",
-        20597472,
+        "0xc3338fc9ef0419109b90dcc318ac89bcdb235a1fe7b9960611a7d0666c1e8170",
+        20719100,
       );
       expect(findings).toMatchSnapshot();
     },

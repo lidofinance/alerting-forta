@@ -30,6 +30,9 @@ import {
   ONE_YEAR,
   SECONDS_PER_SLOT,
 } from "../../common/constants";
+import { BaseRegistryModuleContext } from "./staking-modules/base-node-operators-registry";
+import { CommunityRegistryModuleContext } from "./staking-modules/csm-registry";
+import { CuratedRegistryModuleContext } from "./staking-modules/curated-registry";
 const {
   LIDO_STETH_ADDRESS,
   ACCOUNTING_ORACLE_ADDRESS,
@@ -38,7 +41,7 @@ const {
   EL_REWARDS_VAULT_ADDRESS,
   WITHDRAWALS_VAULT_ADDRESS,
   BURNER_ADDRESS,
-  STAKING_MODULES,
+  CSM_NODE_OPERATOR_REGISTRY_MODULE_ID,
   ACCOUNTING_ORACLE_EXTRA_DATA_SUBMITTED_EVENT,
   LIDO_ETHDESTRIBUTED_EVENT,
   LIDO_ELREWARDSRECEIVED_EVENT,
@@ -63,67 +66,7 @@ const {
 
 export const name = "LidoReport";
 
-interface NodeOperatorModuleParams {
-  moduleId: number;
-  moduleName: string;
-  alertPrefix: string;
-}
-
-class NodeOperatorsRegistryModuleContext {
-  // re-fetched from history on startup
-  public lastAllExited = 0;
-  public lastAllStuck = 0;
-  public lastAllRefunded = 0;
-
-  public nodeOperatorNames = new Map<number, string>();
-
-  constructor(public readonly params: NodeOperatorModuleParams) {}
-
-  async initialize(currentBlock: number) {
-    const { allExited, allStuck, allRefunded } =
-      await this.getSummaryDigest(currentBlock);
-    this.lastAllExited = allExited;
-    this.lastAllStuck = allStuck;
-    this.lastAllRefunded = allRefunded;
-
-    const withdrawalsQueue = new ethers.Contract(
-      WITHDRAWAL_QUEUE_ADDRESS,
-      WITHDRAWAL_QUEUE_ABI,
-      ethersProvider,
-    );
-  }
-
-  async getSummaryDigest(block: number) {
-    const stakingRouter = new ethers.Contract(
-      STAKING_ROUTER_ADDRESS,
-      STAKING_ROUTER_ABI,
-      ethersProvider,
-    );
-
-    const [operators] = await stakingRouter.functions.getAllNodeOperatorDigests(
-      this.params.moduleId,
-      { blockTag: block },
-    );
-
-    let allExited = 0;
-    let allStuck = 0;
-    let allRefunded = 0;
-
-    operators.forEach((digest: any) => {
-      allStuck += Number(digest.summary.stuckValidatorsCount);
-      allRefunded += Number(digest.summary.refundedValidatorsCount);
-      allExited += Number(digest.summary.totalExitedValidators);
-    });
-
-    return {
-      allExited,
-      allStuck,
-      allRefunded,
-    };
-  }
-}
-
-const stakingModulesOperatorRegistry: NodeOperatorsRegistryModuleContext[] = [];
+const stakingModulesOperatorRegistry: BaseRegistryModuleContext[] = [];
 
 let lastRebaseEventTimestamp = 0;
 let lastELOverfillAlertTimestamp = 0;
@@ -148,31 +91,40 @@ export async function initialize(
 
   stakingModulesOperatorRegistry.length = 0;
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
 
-  for (const { moduleId, moduleName, alertPrefix } of STAKING_MODULES) {
-    if (!moduleId) {
-      console.log(`${moduleName} is not supported on this network for ${name}`);
-      continue;
+  for (const { id, name, stakingModuleAddress } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
+    const moduleAddress = (stakingModuleAddress as string).toLowerCase();
+    const alertPrefix = `${moduleName.replace(" ", "-").toUpperCase()}-`;
+
+    let stakingModule: BaseRegistryModuleContext;
+    if (moduleId === CSM_NODE_OPERATOR_REGISTRY_MODULE_ID) {
+      stakingModule = new CommunityRegistryModuleContext(
+        {
+          moduleId,
+          moduleAddress,
+          moduleName,
+          alertPrefix,
+        },
+        stakingRouter,
+      );
+    } else {
+      stakingModule = new CuratedRegistryModuleContext(
+        {
+          moduleId,
+          moduleAddress,
+          moduleName,
+          alertPrefix,
+        },
+        stakingRouter,
+      );
     }
 
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
-      continue;
-    }
-
-    stakingModulesOperatorRegistry.push(
-      new NodeOperatorsRegistryModuleContext({
-        moduleId,
-        moduleName,
-        alertPrefix,
-      }),
-    );
+    stakingModulesOperatorRegistry.push(stakingModule);
   }
 
   await Promise.all(
@@ -415,7 +367,7 @@ export async function handleTransaction(txEvent: TransactionEvent) {
 async function handleExitedStuckRefundedKeysDigest(
   txEvent: TransactionEvent,
   findings: Finding[],
-  norContext: NodeOperatorsRegistryModuleContext,
+  norContext: BaseRegistryModuleContext,
 ) {
   const { allExited, allStuck, allRefunded } =
     await norContext.getSummaryDigest(txEvent.blockNumber);
