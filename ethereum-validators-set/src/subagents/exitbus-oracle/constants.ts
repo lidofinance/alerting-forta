@@ -54,7 +54,7 @@ export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
   ["0x007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5", "P2P Validator"],
   ["0x946d3b081ed19173dc83cd974fc69e1e760b7d78", "Stakefish"],
   ["0x61c91ecd902eb56e314bb2d5c5c07785444ea1c8", "bloXroute"],
-  ["0x73181107c8D9ED4ce0bbeF7A0b4ccf3320C41d12", "Instadapp"],
+  ["0x73181107c8d9ed4ce0bbef7a0b4ccf3320c41d12", "Instadapp"],
   ["0xa7410857abbf75043d61ea54e07d57a6eb6ef186", "Kyber Network"],
   ["0xe57b3792adcc5da47ef4ff588883f0ee0c9835c9", "Matrixedlink"],
 ]);
