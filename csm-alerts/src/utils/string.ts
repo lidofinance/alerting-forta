@@ -25,3 +25,7 @@ export function formatEther(amount: bigint): string {
 export function ipfsLink(cid: string): string {
     return `[${cid}](https://ipfs.io/ipfs/${cid})`
 }
+
+export function maskUrls(msg: string): string {
+  return msg.replace(/https?:\/\/[^"\s]*/g, '***')
+}
