@@ -1,4 +1,4 @@
-import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { BlockEvent, ethers, fetchJwt, Finding, getEthersProvider, TransactionEvent, verifyJwt } from 'forta-agent'
 import {
   ARAGON_VOTING_ADDRESS,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
@@ -28,6 +28,13 @@ import { TrpChangesSrv } from './services/trp-changes/TrpChanges.srv'
 import { StonksSrv } from './services/stonks/Stonks.srv'
 import { CrossChainWatcherSrv } from './services/cross-chain-watcher/CrossChainWatcher.srv'
 
+type SubAgent = {
+  initialize: (currentBlock: number) => Promise<Error | null> | Error | null
+  getName: () => string
+  handleBlock?: (block: BlockEvent) => Promise<Finding[]>
+  handleTransaction?: (tx: TransactionEvent) => Promise<Finding[]>
+}
+
 export type Container = {
   ethClient: ETHProvider
   EnsNamesSrv: EnsNamesSrv
@@ -40,6 +47,7 @@ export type Container = {
   CrossChainWatcherSrv: CrossChainWatcherSrv
   findingsRW: DataRW<Finding>
   healthChecker: HealthChecker
+  subAgents: SubAgent[]
 }
 
 export class App {
@@ -104,7 +112,6 @@ export class App {
       })
 
       const proxyWatcherSrv = new ProxyWatcherSrv(logger, ethClient)
-
       const ensNamesSrv = new EnsNamesSrv(logger, ethClient)
       const easyTrackSrv = new EasyTrackSrv(logger, ethClient)
       const aclChangesSrv = new AclChangesSrv(logger, ethClient)
@@ -112,6 +119,17 @@ export class App {
       const trpChangesSrv = new TrpChangesSrv(logger)
       const stonksSrv = new StonksSrv(logger, ethClient)
       const crossChainWatcherSrv = new CrossChainWatcherSrv(logger, ethClient)
+
+      const subAgents = [
+        aclChangesSrv,
+        aragonVotingSrv,
+        easyTrackSrv,
+        ensNamesSrv,
+        proxyWatcherSrv,
+        trpChangesSrv,
+        stonksSrv,
+        crossChainWatcherSrv,
+      ]
 
       App.instance = {
         ethClient: ethClient,
@@ -125,6 +143,7 @@ export class App {
         CrossChainWatcherSrv: crossChainWatcherSrv,
         findingsRW: new DataRW([]),
         healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
+        subAgents,
       }
     }
 

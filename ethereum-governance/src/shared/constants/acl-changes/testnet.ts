@@ -1,4 +1,5 @@
-import { INamedRole, roleByName } from '../../string'
+import { ContractRolesInfo, NamedRole, OwnableContractInfo } from '../../types'
+import { roleByName } from '../../string'
 
 import {
   ACCOUNTING_ORACLE_ADDRESS as accountingOracleAddress,
@@ -90,13 +91,8 @@ export const WHITELISTED_OWNERS = [
   ...DEV_EOAs,
 ]
 
-export interface IOwnable {
-  name: string
-  ownershipMethod: string
-}
-
 // List of contracts to monitor for owner
-export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
+export const OWNABLE_CONTRACTS = new Map<string, OwnableContractInfo>([
   [
     dsAddress,
     {
@@ -162,11 +158,6 @@ export const OWNABLE_CONTRACTS = new Map<string, IOwnable>([
   ],
 ])
 
-export interface IHasRoles {
-  name: string
-  roles: Map<INamedRole, string[]>
-}
-
 export const ROLES_OWNERS = {
   agent: agentAddress,
   dsm: dsAddress,
@@ -186,12 +177,12 @@ export const ROLES_OWNERS = {
   csmVerifier: csmVerifierAddress,
 }
 
-export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
+export const ACL_ENUMERABLE_CONTRACTS = new Map<string, ContractRolesInfo>([
   [
     oracleConfigAddress,
     {
       name: 'OracleDaemonConfig',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('CONFIG_MANAGER_ROLE'), [DEV_EOAs[0]]],
       ]),
@@ -201,7 +192,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     accountingHashConsensusAddress,
     {
       name: 'Accounting HashConsensus',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('MANAGE_MEMBERS_AND_QUORUM_ROLE'), [DEV_EOAs[0], ROLES_OWNERS.agent]],
         [roleByName('MANAGE_FAST_LANE_CONFIG_ROLE'), []],
@@ -215,7 +206,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     ebHashAddress,
     {
       name: 'Validators Exit Bus HashConsensus',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('MANAGE_MEMBERS_AND_QUORUM_ROLE'), [DEV_EOAs[0], ROLES_OWNERS.agent]],
         [roleByName('MANAGE_FAST_LANE_CONFIG_ROLE'), []],
@@ -229,7 +220,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     accountingOracleAddress,
     {
       name: 'Accounting Oracle',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('MANAGE_CONSENSUS_CONTRACT_ROLE'), []],
         [roleByName('MANAGE_CONSENSUS_VERSION_ROLE'), []],
@@ -241,7 +232,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     ebOracleAddress,
     {
       name: 'Validators Exit Bus Oracle',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('SUBMIT_DATA_ROLE'), []],
         [roleByName('PAUSE_ROLE'), [ROLES_OWNERS.gateSeal]],
@@ -255,7 +246,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     burnerAddress,
     {
       name: 'Burner',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('REQUEST_BURN_MY_STETH_ROLE'), []],
         [roleByName('RECOVER_ASSETS_ROLE'), []],
@@ -267,7 +258,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     checkerAddress,
     {
       name: 'Oracle Report Sanity Checker',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('ALL_LIMITS_MANAGER_ROLE'), []],
         [roleByName('CHURN_VALIDATORS_PER_DAY_LIMIT_MANGER_ROLE'), []],
@@ -286,7 +277,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     wqAddress,
     {
       name: 'Withdrawal Queue',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('PAUSE_ROLE'), [ROLES_OWNERS.gateSeal]],
         [roleByName('RESUME_ROLE'), []],
@@ -300,7 +291,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     srAddress,
     {
       name: 'Staking Router',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent]],
         [roleByName('MANAGE_WITHDRAWAL_CREDENTIALS_ROLE'), []],
         [roleByName('STAKING_MODULE_PAUSE_ROLE'), [DEV_EOAs[4], DEV_EOAs[2]]],
@@ -316,7 +307,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     csmAddress,
     {
       name: 'Community Staking Module',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
         [roleByName('MODULE_MANAGER_ROLE'), []],
         [roleByName('PAUSE_ROLE'), [ROLES_OWNERS.csmGateSeal]],
@@ -333,7 +324,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     csmAccountingAddress,
     {
       name: 'CSM Accounting',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
         [roleByName('ACCOUNTING_MANAGER_ROLE'), []],
         [roleByName('MANAGE_BOND_CURVES_ROLE'), []],
@@ -349,7 +340,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     csmFeeDistributorAddress,
     {
       name: 'CSM FeeDistributor',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
         [roleByName('RECOVERER_ROLE'), []],
       ]),
@@ -359,7 +350,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     csmFeeOracleAddress,
     {
       name: 'CSM FeeOracle',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
         [roleByName('CONTRACT_MANAGER_ROLE'), []],
         [roleByName('MANAGE_CONSENSUS_CONTRACT_ROLE'), []],
@@ -375,7 +366,7 @@ export const ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
     csmHashConsensusAddress,
     {
       name: 'CSM HashConsensus',
-      roles: new Map<INamedRole, string[]>([
+      roles: new Map<NamedRole, string[]>([
         [roleByName('DEFAULT_ADMIN_ROLE'), [ROLES_OWNERS.agent, ROLES_OWNERS.csmCommittee]],
         [roleByName('DISABLE_CONSENSUS_ROLE'), []],
         [roleByName('MANAGE_FAST_LANE_CONFIG_ROLE'), []],

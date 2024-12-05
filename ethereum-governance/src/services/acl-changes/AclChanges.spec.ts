@@ -6,8 +6,6 @@ import * as E from 'fp-ts/Either'
 import * as constants from '../../shared/constants/acl-changes/mainnet'
 import {
   ACL_ENUMERABLE_CONTRACTS,
-  IHasRoles,
-  IOwnable,
   NEW_ROLE_MEMBERS_REPORT_INTERVAL,
   OWNABLE_CONTRACTS,
   ROLES_OWNERS,
@@ -24,6 +22,7 @@ import { etherscanAddress, INamedRole, roleByName } from '../../shared/string'
 import { SET_PERMISSION_PARAMS_EVENT } from '../../shared/events/acl_events'
 import { networkAlert } from '../../shared/errors'
 import { expect } from '@jest/globals'
+import { ContractRolesInfo, OwnableContractInfo } from '../../shared/types'
 
 describe('AclChangesSrv', () => {
   let logger: Logger
@@ -66,8 +65,8 @@ describe('AclChangesSrv', () => {
   })
 
   it('handles block without error', async () => {
-    jest.spyOn(aclChangesSrv, 'handleRolesMembers').mockResolvedValue([])
-    jest.spyOn(aclChangesSrv, 'handleOwnerChange').mockResolvedValue([])
+    jest.spyOn(aclChangesSrv, 'handleRolesMembersChanges').mockResolvedValue([])
+    jest.spyOn(aclChangesSrv, 'handleContractsOwnersChanges').mockResolvedValue([])
 
     const findings = await aclChangesSrv.handleBlock(blockEvent)
 
@@ -88,14 +87,14 @@ describe('AclChangesSrv', () => {
       return E.right(roleMembersMap.get(roleHash + address) || [])
     })
 
-    const findings = await aclChangesSrv.handleRolesMembers(blockEvent)
+    const findings = await aclChangesSrv.handleRolesMembersChanges(blockEvent)
 
     expect(findings).toEqual([])
   })
 
   it('handles roles members with findings', async () => {
     jest.mock('../../shared/constants/acl-changes/mainnet')
-    jest.mocked(constants).ACL_ENUMERABLE_CONTRACTS = new Map<string, IHasRoles>([
+    jest.mocked(constants).ACL_ENUMERABLE_CONTRACTS = new Map<string, ContractRolesInfo>([
       [
         oracleConfigAddress,
         {
@@ -108,12 +107,12 @@ describe('AclChangesSrv', () => {
       return E.right([fakeAddress])
     })
 
-    const findings = await aclChangesSrv.handleRolesMembers(blockEvent)
+    const findings = await aclChangesSrv.handleRolesMembersChanges(blockEvent)
 
     expect(findings).toEqual([
       Finding.fromObject({
         alertId: 'ACL-UNEXPECTED-ROLE-MEMBERS',
-        description: `Role DEFAULT ADMIN ROLE members of OracleDaemonConfig are {[${fakeAddress}](https://etherscan.io/address/${fakeAddress})} but expected {[${ROLES_OWNERS.agent}](https://etherscan.io/address/${ROLES_OWNERS.agent})}.\nPlease update the constants file if the change was expected.`,
+        description: `Role DEFAULT ADMIN ROLE members of OracleDaemonConfig are {[${fakeAddress}](https://etherscan.io/address/${fakeAddress})} but expected {[${ROLES_OWNERS.agent}](https://etherscan.io/address/${ROLES_OWNERS.agent})}.\n\nPlease update the constants file if the change was expected.`,
         name: '🚨 ACL: Unexpected role members',
         severity: FindingSeverity.Critical,
         type: FindingType.Info,
@@ -124,7 +123,7 @@ describe('AclChangesSrv', () => {
   it('handles owner change without errors', async () => {
     jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.right(whitelistedOwner))
 
-    const findings = await aclChangesSrv.handleOwnerChange(blockEvent)
+    const findings = await aclChangesSrv.handleContractsOwnersChanges(blockEvent)
 
     expect(findings).toEqual([])
   })
@@ -133,11 +132,11 @@ describe('AclChangesSrv', () => {
     jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.left(new Error('Test error')))
     const finding = networkAlert(
       new Error('Test error'),
-      `Error in AclChangesSrv.handleOwnerChange (uid:790dc305)`,
+      `Error in AclChangesSrv.handleContractsOwnersChanges (uid:790dc305)`,
       `Could not call ethProvider.getOwner for address - ${dsAddress}`,
     )
 
-    const findings = await aclChangesSrv.handleOwnerChange(blockEvent)
+    const findings = await aclChangesSrv.handleContractsOwnersChanges(blockEvent)
 
     expect(findings).toHaveLength(OWNABLE_CONTRACTS.size)
     expect(findings[0].name).toEqual(finding.name)
@@ -159,6 +158,7 @@ describe('AclChangesSrv', () => {
           contract: dsAddress,
           name: 'Deposit Security module',
           owner: fakeAddress,
+          isDeployedLoaded: 'true',
         },
       },
     ],
@@ -175,6 +175,7 @@ describe('AclChangesSrv', () => {
           contract: dsAddress,
           name: 'Deposit Security module',
           owner: fakeAddress,
+          isDeployedLoaded: 'true',
         },
       },
     ],
@@ -182,7 +183,7 @@ describe('AclChangesSrv', () => {
     jest.spyOn(ethProvider, 'getContractOwner').mockResolvedValue(E.right(fakeAddress))
     jest.spyOn(ethProvider, 'isDeployed').mockResolvedValue(E.right(isContract))
     jest.mock('../../shared/constants/acl-changes/mainnet')
-    jest.mocked(constants).OWNABLE_CONTRACTS = new Map<string, IOwnable>([
+    jest.mocked(constants).OWNABLE_CONTRACTS = new Map<string, OwnableContractInfo>([
       [
         dsAddress,
         {
@@ -192,7 +193,7 @@ describe('AclChangesSrv', () => {
       ],
     ]) as never
 
-    const findings = await aclChangesSrv.handleOwnerChange(blockEvent)
+    const findings = await aclChangesSrv.handleContractsOwnersChanges(blockEvent)
 
     expect(findings).toEqual([Finding.fromObject(assertedObject)])
   })

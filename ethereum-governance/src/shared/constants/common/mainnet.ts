@@ -84,8 +84,3 @@ export const ONE_YEAR = 365 * ONE_DAY
 
 // 1 ETH
 export const ETH_DECIMALS = new BigNumber(10).pow(18)
-
-export interface IProxyContractData {
-  name: string
-  shortABI: string
-}

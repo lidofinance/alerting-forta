@@ -29,14 +29,10 @@ import { formatEther } from 'ethers/lib/utils'
 import { BSC_CHAIN_ID, BSC_L1_CROSS_CHAIN_CONTROLLER } from '../shared/constants/cross-chain/mainnet'
 import { ICrossChainForwarder } from '../generated/CrossChainController'
 import { ICrossChainClient } from '../services/cross-chain-watcher/contract'
+import { ProxyInfo } from '../shared/types'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
-
-export interface IProxyContractData {
-  name: string
-  shortABI: string
-}
 
 export class ETHProvider
   implements
@@ -231,22 +227,24 @@ export class ETHProvider
 
   public async getProxyImplementation(
     address: string,
-    data: IProxyContractData,
+    data: ProxyInfo,
     currentBlock: number,
-  ): Promise<E.Either<Error, string[]>> {
+  ): Promise<E.Either<Error, string>> {
     try {
       const str = await retryAsync(
-        async (): Promise<string[]> => {
+        async (): Promise<string> => {
           const proxyContract = new ethers.Contract(address, data.shortABI, this.jsonRpcProvider)
           if ('implementation' in proxyContract.functions) {
-            return await proxyContract.functions.implementation({
+            const implementation = await proxyContract.functions.implementation({
               blockTag: currentBlock,
             })
+            return implementation[0]
           }
           if ('proxy__getImplementation' in proxyContract.functions) {
-            return await proxyContract.functions.proxy__getImplementation({
+            const implementation = await proxyContract.functions.proxy__getImplementation({
               blockTag: currentBlock,
             })
+            return implementation[0]
           }
 
           throw new Error(

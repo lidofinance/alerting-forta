@@ -46,7 +46,6 @@ export class AragonVotingSrv {
 
   public async initialize(currentBlock: number, hasBlockWindow = true): Promise<Error | null> {
     const start = new Date().getTime()
-    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
     this.hasBlockWindow = hasBlockWindow
     const votes = await this.ethProvider.getStartedVotes(currentBlock - FIVE_DAYS_BLOCKS, currentBlock)
 
@@ -55,6 +54,7 @@ export class AragonVotingSrv {
     }
 
     this.activeVotes = votes.right
+    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
     return null
   }
 

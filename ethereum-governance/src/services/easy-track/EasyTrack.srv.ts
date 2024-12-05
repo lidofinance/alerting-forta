@@ -2,7 +2,6 @@ import { ethers, Finding, FindingSeverity, FindingType, getEthersProvider } from
 import { elapsedTime } from '../../shared/time'
 import { etherscanAddress, formatEth, getMotionLink, getMotionType } from '../../shared/string'
 import { TransactionEvent } from 'forta-agent/dist/sdk/transaction.event'
-import { MOTION_CREATED_EVENT } from '../../shared/events/motion_created_events'
 
 import { Logger } from 'winston'
 import { IEasyTrackClient } from './contract'
@@ -17,7 +16,7 @@ import {
 } from 'constants/easy-track'
 import * as E from 'fp-ts/Either'
 import { networkAlert } from '../../shared/errors'
-import { EASY_TRACK_EVENTS } from '../../shared/events/easytrack_events'
+import { EASY_TRACK_EVENTS, MOTION_CREATED_EVENT } from '../../shared/events/easytrack_events'
 import { TopUpAllowedRecipients__factory } from '../../generated'
 import { getMotionCreatorNamedLink, getSafeNameByAddress, getStonksContractInfo } from './utils'
 

@@ -2,7 +2,7 @@ import { BlockEvent, Finding, FindingSeverity, FindingType, LogDescription, Tran
 
 import _ from 'lodash'
 
-import { etherscanAddress } from '../../shared/string'
+import { etherscanAddress, roleByName } from '../../shared/string'
 import {
   SET_PERMISSION_EVENT,
   SET_PERMISSION_PARAMS_EVENT,
@@ -20,13 +20,14 @@ import {
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
   NEW_ROLE_MEMBERS_REPORT_INTERVAL,
 } from 'constants/acl-changes'
-import { ARAGON_ACL_ADDRESS } from 'constants/common'
+import { ARAGON_ACL_ADDRESS, EASY_TRACK_ADDRESS, SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/common'
 
 import * as E from 'fp-ts/Either'
 import { elapsedTime } from '../../shared/time'
 import { Logger } from 'winston'
 import { networkAlert } from '../../shared/errors'
 import type { IAclChangesClient } from './contract'
+import { ContractRolesInfo, OwnableContractInfo } from '../../shared/types'
 
 interface IPermission {
   app: string
@@ -41,12 +42,14 @@ export class AclChangesSrv {
   private readonly logger: Logger
   private readonly name = 'AclChangesSrv'
   private readonly ethProvider: IAclChangesClient
-  private readonly findingsTimestamps: Map<string, number>
+  private readonly ownersReportsTimestamps: Map<string, number>
+  private readonly roleMembersReportsTimestamps: Map<string, number>
 
   constructor(logger: Logger, ethProvider: IAclChangesClient) {
     this.logger = logger
     this.ethProvider = ethProvider
-    this.findingsTimestamps = new Map<string, number>()
+    this.ownersReportsTimestamps = new Map<string, number>()
+    this.roleMembersReportsTimestamps = new Map<string, number>()
   }
 
   public initialize(currentBlock: number): null {
@@ -76,12 +79,12 @@ export class AclChangesSrv {
     const start = new Date().getTime()
     const findings: Finding[] = []
 
-    const [rolesMembersFindings, ownerChangeFindings] = await Promise.all([
-      this.handleRolesMembers(blockEvent),
-      this.handleOwnerChange(blockEvent),
+    const [roleChanges, ownerChanges] = await Promise.all([
+      this.handleRolesMembersChanges(blockEvent),
+      this.handleContractsOwnersChanges(blockEvent),
     ])
 
-    findings.push(...rolesMembersFindings, ...ownerChangeFindings)
+    findings.push(...roleChanges, ...ownerChanges)
     this.logger.info(elapsedTime(AclChangesSrv.name + '.' + this.handleBlock.name, start))
 
     return findings
@@ -102,140 +105,140 @@ export class AclChangesSrv {
     return findings
   }
 
-  public async handleRolesMembers(blockEvent: BlockEvent): Promise<Finding[]> {
-    const out: Finding[] = []
-    const roleMembersReports = new Map<string, number>()
+  public async handleRolesMembersChanges(blockEvent: BlockEvent): Promise<Finding[]> {
+    const findings: Finding[] = []
+    const currentTimestamp = blockEvent.block.timestamp
 
-    const promises = Array.from(ACL_ENUMERABLE_CONTRACTS.keys()).map(async (address: string) => {
-      const lastReportedAt = roleMembersReports.get(address) || 0
-      const now = blockEvent.block.timestamp
-      if (now - lastReportedAt < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
-        return
+    for (const address of ACL_ENUMERABLE_CONTRACTS.keys()) {
+      const lastReportTime = this.roleMembersReportsTimestamps.get(address) || 0
+      if (currentTimestamp - lastReportTime < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
+        continue
       }
 
-      const data = ACL_ENUMERABLE_CONTRACTS.get(address)
-      if (!data) {
-        return
-      }
+      const aclContractInfo = ACL_ENUMERABLE_CONTRACTS.get(address) as ContractRolesInfo
 
-      await Promise.all(
-        Array.from(data.roles.entries()).map(async (entry) => {
-          const [role, members] = entry
-          const membersInLower = members.map((m) => m.toLowerCase())
-          const curMembers = await this.ethProvider.getRoleMembers(address, role.hash, blockEvent.blockNumber)
+      for (const [role, members] of aclContractInfo.roles.entries()) {
+        const membersInLower = members.map((m) => m.toLowerCase())
+        const currentRoleMembers: string[] = []
+        const roleMembersFromNetwork = await this.ethProvider.getRoleMembers(address, role.hash, blockEvent.blockNumber)
 
-          if (E.isLeft(curMembers)) {
-            out.push(
-              networkAlert(
-                curMembers.left,
-                `Error in ${AclChangesSrv.name}.${this.handleRolesMembers.name} (uid:550c057c)`,
-                `Could not call ethProvider.getRoleMembers for address - ${address}`,
-              ),
-            )
-            return
-          }
+        if (E.isLeft(roleMembersFromNetwork)) {
+          findings.push(
+            networkAlert(
+              roleMembersFromNetwork.left,
+              `Error in ${AclChangesSrv.name}.${this.handleRolesMembersChanges.name} (uid:550c057c)`,
+              `Could not call ethProvider.getRoleMembers for address - ${address}`,
+            ),
+          )
+        } else {
+          currentRoleMembers.push(...roleMembersFromNetwork.right)
+        }
 
-          if (_.isEqual(curMembers.right, membersInLower)) {
-            return
-          }
+        if (!_.isEqual(currentRoleMembers, membersInLower)) {
+          const currentRoleMembersString = E.isLeft(roleMembersFromNetwork)
+            ? `UNKNOWN`
+            : currentRoleMembers.map((m) => etherscanAddress(m)).join(', ')
 
-          out.push(
+          const expectedRoleMembersString = membersInLower.map((m) => etherscanAddress(m)).join(', ')
+
+          findings.push(
             Finding.fromObject({
               name: `🚨 ACL: Unexpected role members`,
-              description:
-                `Role ${role.name} members of ${data.name} ` +
-                `are {${curMembers.right.map((m) => etherscanAddress(m)).join(', ')}}` +
-                ` but expected {${membersInLower.map((m) => etherscanAddress(m)).join(', ')}}.` +
-                `\nPlease update the constants file if the change was expected.`,
+              description: `Role ${role.name} members of ${aclContractInfo.name} are {${currentRoleMembersString}} but expected {${expectedRoleMembersString}}.\n\nPlease update the constants file if the change was expected.`,
               alertId: 'ACL-UNEXPECTED-ROLE-MEMBERS',
               severity: FindingSeverity.Critical,
               type: FindingType.Info,
             }),
           )
 
-          roleMembersReports.set(address, now)
-        }),
-      )
-    })
+          this.roleMembersReportsTimestamps.set(address, currentTimestamp)
+        }
+      }
+    }
 
-    await Promise.all(promises)
-    return out
+    return findings
   }
 
-  public async handleOwnerChange(blockEvent: BlockEvent): Promise<Finding[]> {
-    const out: Finding[] = []
+  public async handleContractsOwnersChanges(blockEvent: BlockEvent): Promise<Finding[]> {
+    const findings: Finding[] = []
 
-    const promises = Array.from(OWNABLE_CONTRACTS.keys()).map(async (address: string) => {
-      const data = OWNABLE_CONTRACTS.get(address)
-      if (!data) {
-        return
-      }
+    for (const address of OWNABLE_CONTRACTS.keys()) {
+      const ownerInfo = OWNABLE_CONTRACTS.get(address) as OwnableContractInfo
 
-      const curOwner = await this.ethProvider.getContractOwner(address, data.ownershipMethod, blockEvent.blockNumber)
+      const contractOwnerResponse = await this.ethProvider.getContractOwner(
+        address,
+        ownerInfo.ownershipMethod,
+        blockEvent.blockNumber,
+      )
 
-      if (E.isLeft(curOwner)) {
-        out.push(
+      if (E.isLeft(contractOwnerResponse)) {
+        findings.push(
           networkAlert(
-            curOwner.left,
-            `Error in ${AclChangesSrv.name}.${this.handleOwnerChange.name} (uid:790dc305)`,
+            contractOwnerResponse.left,
+            `Error in ${AclChangesSrv.name}.${this.handleContractsOwnersChanges.name} (uid:790dc305)`,
             `Could not call ethProvider.getOwner for address - ${address}`,
           ),
         )
-        return
+
+        continue
       }
 
-      if (WHITELISTED_OWNERS.includes(curOwner.right.toLowerCase())) {
-        return
-      }
+      const currentOwner = contractOwnerResponse.right.toLowerCase()
 
-      const curOwnerIsContract = await this.ethProvider.isDeployed(curOwner.right)
+      if (!WHITELISTED_OWNERS.includes(currentOwner)) {
+        let isOwnerAContract = false
+        const isDeployed = await this.ethProvider.isDeployed(currentOwner)
 
-      if (E.isLeft(curOwnerIsContract)) {
-        out.push(
-          networkAlert(
-            curOwnerIsContract.left,
-            `Error in ${AclChangesSrv.name}.${this.handleRolesMembers.name} (uid:eb602bbc)`,
-            `Could not call ethProvider.isDeployed for curOwner - ${curOwner}`,
-          ),
+        if (E.isLeft(isDeployed)) {
+          findings.push(
+            networkAlert(
+              isDeployed.left,
+              `Error in ${AclChangesSrv.name}.${this.handleRolesMembersChanges.name} (uid:eb602bbc)`,
+              `Could not call ethProvider.isDeployed for currentOwner - ${currentOwner}`,
+            ),
+          )
+        } else {
+          isOwnerAContract = isDeployed.right
+        }
+
+        const currentTimestamp = blockEvent.block.timestamp
+        const reportKey = `${address}+${currentOwner}`
+
+        // skip alert if reported recently
+        const lastReportTimestamp = this.ownersReportsTimestamps.get(reportKey)
+        const reportInterval = isOwnerAContract
+          ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
+          : NEW_OWNER_IS_EOA_REPORT_INTERVAL
+
+        if (lastReportTimestamp && reportInterval > currentTimestamp - lastReportTimestamp) {
+          continue
+        }
+
+        findings.push(
+          Finding.fromObject({
+            name: isOwnerAContract
+              ? '🚨 Contract owner set to address not in whitelist'
+              : '🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨',
+            description: `${ownerInfo.name} contract (${etherscanAddress(address)}) owner is set to ${
+              isOwnerAContract ? 'contract' : 'EOA'
+            } address ${etherscanAddress(currentOwner)}`,
+            alertId: 'SUSPICIOUS-CONTRACT-OWNER',
+            severity: isOwnerAContract ? FindingSeverity.High : FindingSeverity.Critical,
+            type: FindingType.Suspicious,
+            metadata: {
+              contract: address,
+              name: ownerInfo.name,
+              owner: currentOwner,
+              isDeployedLoaded: `${!E.isLeft(isDeployed)}`,
+            },
+          }),
         )
-        return
+
+        this.ownersReportsTimestamps.set(reportKey, currentTimestamp)
       }
+    }
 
-      const key = `${address}+${curOwner}`
-      const now = blockEvent.block.timestamp
-      // skip if reported recently
-      const lastReportTimestamp = this.findingsTimestamps.get(key)
-      const interval = curOwnerIsContract.right
-        ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
-        : NEW_OWNER_IS_EOA_REPORT_INTERVAL
-      if (lastReportTimestamp && interval > now - lastReportTimestamp) {
-        return
-      }
-
-      out.push(
-        Finding.fromObject({
-          name: curOwnerIsContract.right
-            ? '🚨 Contract owner set to address not in whitelist'
-            : '🚨🚨🚨 Contract owner set to EOA 🚨🚨🚨',
-          description: `${data.name} contract (${etherscanAddress(address)}) owner is set to ${
-            curOwnerIsContract.right ? 'contract' : 'EOA'
-          } address ${etherscanAddress(curOwner.right)}`,
-          alertId: 'SUSPICIOUS-CONTRACT-OWNER',
-          type: FindingType.Suspicious,
-          severity: curOwnerIsContract.right ? FindingSeverity.High : FindingSeverity.Critical,
-          metadata: {
-            contract: address,
-            name: data.name,
-            owner: curOwner.right,
-          },
-        }),
-      )
-
-      this.findingsTimestamps.set(key, now)
-    })
-
-    await Promise.all(promises)
-    return out
+    return findings
   }
 
   public async handleSetPermission(txEvent: TransactionEvent) {
@@ -269,16 +272,17 @@ export class AclChangesSrv {
     })
     await Promise.all(
       Array.from(permissions.values()).map(async (permission: IPermission) => {
-        await this.handlePermissionChange(permission, out)
+        await this.handlePermissionChange(txEvent, permission, out)
       }),
     )
     return out
   }
 
-  public async handlePermissionChange(permission: IPermission, out: Finding[]) {
+  public async handlePermissionChange(txEvent: TransactionEvent, permission: IPermission, out: Finding[]) {
     const shortState = permission.state.replace(' from', '').replace(' to', '')
     const roleLabel = LIDO_ROLES[permission.role] ?? 'unknown'
-    const appLabel = LIDO_APPS.get(permission.app.toLowerCase()) || 'unknown'
+    const appLower = permission.app.toLowerCase()
+    const appLabel = LIDO_APPS.get(appLower) || 'unknown'
     const entityRaw = permission.entity.toLowerCase()
     let severity = FindingSeverity.Info
     let entity = ORDINARY_ENTITIES.get(entityRaw)
@@ -308,14 +312,39 @@ export class AclChangesSrv {
         }
       }
     }
+
+    // When new NOs are being added to the SDVT registry, the permission alert shouldn't be critical
+    const isSdvtChange =
+      appLower === SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS.toLowerCase() &&
+      permission.role === roleByName('MANAGE_SIGNING_KEYS').hash
+
+    if (isSdvtChange) {
+      // Check that events are being emitted within motion enactment and NO addition to SDVT
+      const motionEnactedEvents = txEvent.filterLog(
+        'event MotionEnacted(uint256 indexed _motionId)',
+        EASY_TRACK_ADDRESS,
+      )
+      const nodeOperatorAddedEvents = txEvent.filterLog(
+        'event NodeOperatorAdded(uint256 nodeOperatorId, string name, address rewardAddress, uint64 stakingLimit)',
+        SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+      )
+
+      if (motionEnactedEvents.length > 0 && nodeOperatorAddedEvents.length > 0) {
+        severity = FindingSeverity.Info
+        entity = 'new SDVT operator'
+      }
+    }
+
+    const icon = severity === FindingSeverity.Info ? 'ℹ️' : '🚨'
+
     out.push(
       Finding.fromObject({
-        name: `🚨 Aragon ACL: Permission ${shortState}`,
+        name: `${icon} Aragon ACL: Permission ${shortState}`,
         description: `Role ${permission.role} (${roleLabel}) on the app ${etherscanAddress(permission.app)} (${appLabel}) was ${
           permission.state
         } ${permission.entity} (${entity})`,
         alertId: 'ARAGON-ACL-PERMISSION-CHANGED',
-        severity: severity,
+        severity,
         type: FindingType.Info,
       }),
     )

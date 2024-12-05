@@ -10,7 +10,7 @@ import { BSC_L1_CROSS_CHAIN_CONTROLLER_EVENTS } from '../../shared/events/cross_
 
 export class CrossChainWatcherSrv {
   private readonly logger: Logger
-  private readonly name = 'CrossChainWatcher'
+  private readonly name = 'CrossChainWatcherSrv'
   private readonly ethProvider
   private bscAdapters: Map<string, string> = new Map()
 
@@ -32,6 +32,7 @@ export class CrossChainWatcherSrv {
     }
 
     this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
+    return null
   }
 
   public getName(): string {
@@ -39,7 +40,12 @@ export class CrossChainWatcherSrv {
   }
 
   public async handleBlock(block: BlockEvent): Promise<Finding[]> {
-    return await handleBridgeBalance(this.ethProvider, block)
+    const start = new Date().getTime()
+
+    const findings = await handleBridgeBalance(this.ethProvider, block)
+
+    this.logger.info(elapsedTime(CrossChainWatcherSrv.name + '.' + this.handleBlock.name, start))
+    return findings
   }
 
   public async handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
