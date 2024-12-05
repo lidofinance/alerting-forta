@@ -20,7 +20,7 @@ import {
   NEW_OWNER_IS_EOA_REPORT_INTERVAL,
   NEW_ROLE_MEMBERS_REPORT_INTERVAL,
 } from 'constants/acl-changes'
-import { ARAGON_ACL_ADDRESS, SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/common'
+import { ARAGON_ACL_ADDRESS, EASY_TRACK_ADDRESS, SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/common'
 
 import * as E from 'fp-ts/Either'
 import { elapsedTime } from '../../shared/time'
@@ -272,16 +272,17 @@ export class AclChangesSrv {
     })
     await Promise.all(
       Array.from(permissions.values()).map(async (permission: IPermission) => {
-        await this.handlePermissionChange(permission, out)
+        await this.handlePermissionChange(txEvent, permission, out)
       }),
     )
     return out
   }
 
-  public async handlePermissionChange(permission: IPermission, out: Finding[]) {
+  public async handlePermissionChange(txEvent: TransactionEvent, permission: IPermission, out: Finding[]) {
     const shortState = permission.state.replace(' from', '').replace(' to', '')
     const roleLabel = LIDO_ROLES[permission.role] ?? 'unknown'
-    const appLabel = LIDO_APPS.get(permission.app.toLowerCase()) || 'unknown'
+    const appLower = permission.app.toLowerCase()
+    const appLabel = LIDO_APPS.get(appLower) || 'unknown'
     const entityRaw = permission.entity.toLowerCase()
     let severity = FindingSeverity.Info
     let entity = ORDINARY_ENTITIES.get(entityRaw)
@@ -313,14 +314,25 @@ export class AclChangesSrv {
     }
 
     // When new NOs are being added to the SDVT registry, the permission alert shouldn't be critical
-    const isSdvtOperatorBeingAdded =
-      shortState === 'granted with params' &&
-      permission.app.toLowerCase() === SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS.toLowerCase() &&
+    const isSdvtChange =
+      appLower === SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS.toLowerCase() &&
       permission.role === roleByName('MANAGE_SIGNING_KEYS').hash
 
-    if (isSdvtOperatorBeingAdded) {
-      severity = FindingSeverity.Info
-      entity = 'new SDVT operator'
+    if (isSdvtChange) {
+      // Check that events are being emitted within motion enactment and NO addition to SDVT
+      const motionEnactedEvents = txEvent.filterLog(
+        'event MotionEnacted(uint256 indexed _motionId)',
+        EASY_TRACK_ADDRESS,
+      )
+      const nodeOperatorAddedEvents = txEvent.filterLog(
+        'event NodeOperatorAdded(uint256 nodeOperatorId, string name, address rewardAddress, uint64 stakingLimit)',
+        SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
+      )
+
+      if (motionEnactedEvents.length > 0 && nodeOperatorAddedEvents.length > 0) {
+        severity = FindingSeverity.Info
+        entity = 'new SDVT operator'
+      }
     }
 
     const icon = severity === FindingSeverity.Info ? 'ℹ️' : '🚨'
