@@ -13,7 +13,7 @@ export const processWithdrawalsAllNotices: Record<string, EventOfNotice> = {
     name: 'ℹ️ Vault: Withdrawal all',
     description: (_: Result, address: string) => {
       const vault = getVaultByAddress(address)
-      return `Mellow Vault [${vault?.name}] (${vault?.vault}) - withdrawal, bond strategy address - ${address}`
+      return `Mellow Vault [${vault?.name}](${vault?.vault}) - withdrawal, bond strategy address - ${address}`
     },
     severity: FindingSeverity.Info,
     type: FindingType.Info,
@@ -28,7 +28,7 @@ export const processWithdrawalsPartNotices: Record<string, EventOfNotice> = {
     name: '⚠️ Vault: Withdrawal partial',
     description: (_: Result, address: string) => {
       const vault = getVaultByAddress(address)
-      return `Mellow Vault [${vault?.name}] (${vault?.vault}) - bond strategy address - ${address}`
+      return `Mellow Vault [${vault?.name}](${vault?.vault}) - bond strategy address - ${address}`
     },
     severity: FindingSeverity.Medium,
     type: FindingType.Suspicious,

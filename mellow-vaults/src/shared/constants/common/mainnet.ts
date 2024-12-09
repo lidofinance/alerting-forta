@@ -113,7 +113,7 @@ export const VAULT_STEAKHOUSE = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_RE7LABS = {
@@ -126,7 +126,7 @@ export const VAULT_RE7LABS = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0xe86399fe6d7007fdecb08a2ee1434ee677a04433',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_MEV_CAP = {
@@ -139,7 +139,7 @@ export const VAULT_MEV_CAP = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0xa1e38210b06a05882a7e7bfe167cd67f07fa234a',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_P2P = {
@@ -152,7 +152,7 @@ export const VAULT_P2P = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x4a3c7f2470aa00ebe6ae7cb1faf95964b9de1ef4',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 
@@ -166,7 +166,7 @@ export const VAULT_INFSTONES = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0xd3895c43e886778e7e1e099c280a8c5aa5b2a4d8',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_LUGA = {
@@ -179,7 +179,7 @@ export const VAULT_LUGA = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x1fbbc71b60a499c09d454725acf1d6931515671a',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_CHORUS_ONE = {
@@ -192,7 +192,7 @@ export const VAULT_CHORUS_ONE = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x3ea145d6cea2e939d866ba71136dca6a1b96919f',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_RENZO = {
@@ -205,7 +205,7 @@ export const VAULT_RENZO = {
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x6e5cad73d00bc8340f38afb61fc5e34f7193f599',
   integrityWarningLimit: 0,
-  integrityCriticalLimit: 1e-9,
+  integrityCriticalLimit: 1e-6,
   hasWETH: false,
 }
 export const VAULT_DVSTETH = {
@@ -217,8 +217,8 @@ export const VAULT_DVSTETH = {
   proxyAdmin: '0x81698f87c6482bf1ce9bfcfc0f103c4a0adf0af0',
   admin: '0x9437b2a8cf3b69d782a61f9814baabc172f72003',
   curator: '0x2afc096981c2cfe3501be4054160048718f6c0c8',
-  integrityWarningLimit: 0.008,
-  integrityCriticalLimit: 0.01,
+  integrityWarningLimit: 0.01,
+  integrityCriticalLimit: 0.1,
   hasWETH: true,
 }
 

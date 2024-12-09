@@ -406,7 +406,7 @@ export class VaultWatcherSrv {
       out.push(
         Finding.fromObject({
           name: '🚨🚨🚨 Vault: vaultTotalSupply and vaultUnderlyingTvl has sensitive difference',
-          description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
+          description: `Mellow Vault [${result?.name}](${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
           alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-CRITICAL',
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
@@ -422,7 +422,7 @@ export class VaultWatcherSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: vaultTotalSupply and vaultUnderlyingTvl is not the same',
-          description: `Mellow Vault [${result?.name}] (${result.address}) - vaultTotalSupply and vaultUnderlyingTvl difference is ${removeTail(division)} of vaultUnderlyingTvl or about ${removeTail(diffInETH)} ETH`,
+          description: `Mellow Vault [${result?.name}](${result.address}) - vaultTotalSupply and vaultUnderlyingTvl difference is ${removeTail(division)} of vaultUnderlyingTvl or about ${removeTail(diffInETH)} ETH`,
           alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-MEDIUM',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
