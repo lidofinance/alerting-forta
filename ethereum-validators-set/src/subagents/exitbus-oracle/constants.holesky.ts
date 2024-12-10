@@ -35,27 +35,21 @@ export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD = 2;
 export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_MEDIUM_HIGH_THRESHOLD = 4;
 
 export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
-  ["0x12A1D74F8697b9f4F1eEBb0a9d0FB6a751366399", "oracle1"],
-  ["0xD892c09b556b547c80B7d8c8cB8d75bf541B2284", "oracle2"],
-  ["0xf7aE520e99ed3C41180B5E12681d31Aa7302E4e5", "oracle3"],
+  ["0xf0f23944efc5a63c53632c571e7377b85d5e6b6f", "Chorus One"],
+  ["0xb29dd2f6672c0dff2d2f173087739a42877a5172", "Staking Facilities"],
+  ["0x31fa51343297ffce0cc1e67a50b2d3428057d1b1", "P2P Validator"],
+  ["0xd3b1e36a372ca250eeff61f90e833ca070559970", "Stakefish"],
+  ["0x4c75fa734a39f3a21c57e583c1c29942f021c6b7", "bloXroute"],
+  ["0x81e411f1bfda43493d7994f82fb61a415f6b8fd4", "Instadapp"],
+  ["0x3ff28f2ede8358e288798afc23ee299a503ad5c9", "Kyber Network"],
+  ["0xf7ae520e99ed3c41180b5e12681d31aa7302e4e5", "Chainlayer"],
+  ["0x12a1d74f8697b9f4f1eebb0a9d0fB6a751366399", "Lido"],
+  ["0xd892c09b556b547c80b7d8c8cb8d75bf541B2284", "Lido Valset"],
 ]);
 
-export const STAKING_MODULES: {
-  moduleAddress: string;
-  moduleName: string;
-  moduleId: number;
-}[] = [
-  {
-    moduleAddress: CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "Curated",
-    moduleId: 1,
-  },
-  {
-    moduleAddress: SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS,
-    moduleName: "SimpleDVT",
-    moduleId: 2,
-  },
-];
+export const CURATED_NODE_OPERATOR_REGISTRY_MODULE_ID = 1;
+export const SIMPLEDVT_NODE_OPERATOR_REGISTRY_MODULE_ID = 2;
+export const CSM_NODE_OPERATOR_REGISTRY_MODULE_ID = 4;
 
 export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = hashConsensusEvents.map(
   (event) => ({

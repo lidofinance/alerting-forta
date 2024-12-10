@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EventWatcher srv functional tests should find nothing 1`] = `[]`;

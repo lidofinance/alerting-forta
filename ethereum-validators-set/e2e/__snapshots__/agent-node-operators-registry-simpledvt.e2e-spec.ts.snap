@@ -1,0 +1,177 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`agent-node-operators-registry e2e tests should process tx with added simple dvt clusters 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 48 added
+Name: Lido x SSV: Mysterious Manta
+Reward address: [0xD0EB99690beda238C185D3D8f7cd35Ec014AD567](https://etherscan.io/address/0xD0EB99690beda238C185D3D8f7cd35Ec014AD567)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "48,Lido x SSV: Mysterious Manta,0xD0EB99690beda238C185D3D8f7cd35Ec014AD567,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 49 added
+Name: Lido x SSV: Noble Newt
+Reward address: [0x7cFB8250D2CbCC4645342350959633800F3A03A3](https://etherscan.io/address/0x7cFB8250D2CbCC4645342350959633800F3A03A3)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "49,Lido x SSV: Noble Newt,0x7cFB8250D2CbCC4645342350959633800F3A03A3,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 50 added
+Name: Lido x SSV: Optimistic Orca
+Reward address: [0xc292731e9d1862dCb3D5729F1ADe9760D3f99b43](https://etherscan.io/address/0xc292731e9d1862dCb3D5729F1ADe9760D3f99b43)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "50,Lido x SSV: Optimistic Orca,0xc292731e9d1862dCb3D5729F1ADe9760D3f99b43,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 51 added
+Name: Lido x SSV: Playful Penguin
+Reward address: [0x9e29400E9E917c0C7c639245c731360fBc8F16AC](https://etherscan.io/address/0x9e29400E9E917c0C7c639245c731360fBc8F16AC)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "51,Lido x SSV: Playful Penguin,0x9e29400E9E917c0C7c639245c731360fBc8F16AC,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 52 added
+Name: Lido x SSV: Quiet Quetzal
+Reward address: [0x19EcB86A441b6DFFA18379727eC8C0fd737a1140](https://etherscan.io/address/0x19EcB86A441b6DFFA18379727eC8C0fd737a1140)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "52,Lido x SSV: Quiet Quetzal,0x19EcB86A441b6DFFA18379727eC8C0fd737a1140,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 53 added
+Name: Lido x SSV: Resilient Rabbit
+Reward address: [0xF8bF822F5De86879Fd0C2F9A67761D348d89c343](https://etherscan.io/address/0xF8bF822F5De86879Fd0C2F9A67761D348d89c343)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "53,Lido x SSV: Resilient Rabbit,0xF8bF822F5De86879Fd0C2F9A67761D348d89c343,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 54 added
+Name: Lido x SSV: Splendid Swan
+Reward address: [0x222186393aA0b2b037ECEdddfDcb66ecA81C8888](https://etherscan.io/address/0x222186393aA0b2b037ECEdddfDcb66ecA81C8888)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "54,Lido x SSV: Splendid Swan,0x222186393aA0b2b037ECEdddfDcb66ecA81C8888,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 55 added
+Name: Lido x SSV: Thoughtful Tiger
+Reward address: [0x95f8739ae18b5ffCeEa124968988c2287F295914](https://etherscan.io/address/0x95f8739ae18b5ffCeEa124968988c2287F295914)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "55,Lido x SSV: Thoughtful Tiger,0x95f8739ae18b5ffCeEa124968988c2287F295914,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SIMPLEDVT-NODE-OPERATOR-ADDED",
+    "description": "SimpleDVT Node operator 56 added
+Name: Lido x SSV: Unique Unicorn
+Reward address: [0xa3477C96F2b1F7744cFAa854Dd36CDE3dF00b34f](https://etherscan.io/address/0xa3477C96F2b1F7744cFAa854Dd36CDE3dF00b34f)
+StakingLimit: 0",
+    "labels": [],
+    "metadata": {
+      "args": "56,Lido x SSV: Unique Unicorn,0xa3477C96F2b1F7744cFAa854Dd36CDE3dF00b34f,0",
+    },
+    "name": "ℹ️ SimpleDVT: Node operator added",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;

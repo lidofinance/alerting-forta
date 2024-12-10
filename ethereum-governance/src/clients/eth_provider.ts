@@ -4,10 +4,14 @@ import * as E from 'fp-ts/Either'
 import { retryAsync } from 'ts-retry'
 import BigNumber from 'bignumber.js'
 import {
-  ENS as EnsContract,
   AragonVoting as AragonVotingContract,
+  BaseAdapter__factory,
+  CrossChainController__factory,
+  ENS as EnsContract,
   IncreaseStakingLimit as IncreaseStakingLimitContract,
+  LDO as LDOContract,
   NodeOperatorsRegistry as NodeOperatorsRegistryContract,
+  Stonks__factory,
   Swap__factory,
 } from '../generated'
 import { IEtherscanProvider } from './contracts'
@@ -21,19 +25,23 @@ import { IAclChangesClient } from '../services/acl-changes/contract'
 import { IAragonVotingClient, IVoteInfo } from '../services/aragon-voting/contract'
 import { BLOCK_TO_WATCH, COW_PROTOCOL_ADDRESS } from 'constants/stonks'
 import { TypedEvent } from '../generated/common'
-import { Stonks__factory } from '../generated'
 import { formatEther } from 'ethers/lib/utils'
+import { BSC_CHAIN_ID, BSC_L1_CROSS_CHAIN_CONTROLLER } from '../shared/constants/cross-chain/mainnet'
+import { ICrossChainForwarder } from '../generated/CrossChainController'
+import { ICrossChainClient } from '../services/cross-chain-watcher/contract'
+import { ProxyInfo } from '../shared/types'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
 
-export interface IProxyContractData {
-  name: string
-  shortABI: string
-}
-
 export class ETHProvider
-  implements IEnsNamesClient, IEasyTrackClient, IProxyWatcherClient, IAclChangesClient, IAragonVotingClient
+  implements
+    IEnsNamesClient,
+    IEasyTrackClient,
+    IProxyWatcherClient,
+    IAclChangesClient,
+    IAragonVotingClient,
+    ICrossChainClient
 {
   private readonly jsonRpcProvider: ethers.providers.JsonRpcProvider
   private etherscanProvider: IEtherscanProvider
@@ -42,6 +50,7 @@ export class ETHProvider
   private readonly increaseStakingLimitContract: IncreaseStakingLimitContract
   private readonly nodeOperatorsRegistryContract: NodeOperatorsRegistryContract
   private readonly aragonVotingContract: AragonVotingContract
+  private readonly ldoContract: LDOContract
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
@@ -51,6 +60,7 @@ export class ETHProvider
     increaseStakingLimitContract: IncreaseStakingLimitContract,
     nodeOperatorsRegistryContract: NodeOperatorsRegistryContract,
     aragonVotingContract: AragonVotingContract,
+    ldoContract: LDOContract,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.etherscanProvider = etherscanProvider
@@ -59,6 +69,7 @@ export class ETHProvider
     this.increaseStakingLimitContract = increaseStakingLimitContract
     this.nodeOperatorsRegistryContract = nodeOperatorsRegistryContract
     this.aragonVotingContract = aragonVotingContract
+    this.ldoContract = ldoContract
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
@@ -216,22 +227,24 @@ export class ETHProvider
 
   public async getProxyImplementation(
     address: string,
-    data: IProxyContractData,
+    data: ProxyInfo,
     currentBlock: number,
-  ): Promise<E.Either<Error, string[]>> {
+  ): Promise<E.Either<Error, string>> {
     try {
       const str = await retryAsync(
-        async (): Promise<string[]> => {
+        async (): Promise<string> => {
           const proxyContract = new ethers.Contract(address, data.shortABI, this.jsonRpcProvider)
           if ('implementation' in proxyContract.functions) {
-            return await proxyContract.functions.implementation({
+            const implementation = await proxyContract.functions.implementation({
               blockTag: currentBlock,
             })
+            return implementation[0]
           }
           if ('proxy__getImplementation' in proxyContract.functions) {
-            return await proxyContract.functions.proxy__getImplementation({
+            const implementation = await proxyContract.functions.proxy__getImplementation({
               blockTag: currentBlock,
             })
+            return implementation[0]
           }
 
           throw new Error(
@@ -437,6 +450,39 @@ export class ETHProvider
     }
   }
 
+  public async getBalance(address: string, tokenAddress?: string): Promise<E.Either<Error, ethers.BigNumber>> {
+    if (!tokenAddress) {
+      try {
+        const result = await retryAsync(
+          async () => {
+            return await this.jsonRpcProvider.getBalance(address)
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+        return E.right(result)
+      } catch (e) {
+        return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getBalance`))
+      }
+    }
+
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ['function balanceOf(address) view returns (uint256)'],
+      this.jsonRpcProvider,
+    )
+    try {
+      const result = await retryAsync(
+        async () => {
+          return await tokenContract.balanceOf(address)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(result)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call jsonRpcProvider.getLinkBalance`))
+    }
+  }
+
   public async getTokenSymbol(tokenAddress: string) {
     const abi = [
       {
@@ -458,6 +504,61 @@ export class ETHProvider
       return E.right(result)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not get symbol for token ${tokenAddress}`))
+    }
+  }
+
+  public async getBSCForwarderBridgeAdapterNames() {
+    const cccContract = CrossChainController__factory.connect(BSC_L1_CROSS_CHAIN_CONTROLLER, this.jsonRpcProvider)
+    let adapters: ICrossChainForwarder.ChainIdBridgeConfigStructOutput[] = []
+    const bscAdapters = new Map<string, string>()
+
+    try {
+      adapters = await retryAsync(
+        async () => {
+          return await cccContract.getForwarderBridgeAdaptersByChain(BSC_CHAIN_ID)
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not get forwarder bridge adapters for BSC chain`))
+    }
+
+    for (const adapterAddress of adapters) {
+      const bridgeAdapterContract = BaseAdapter__factory.connect(
+        adapterAddress.currentChainBridgeAdapter,
+        this.jsonRpcProvider,
+      )
+
+      try {
+        const adapterName = await retryAsync(
+          async () => {
+            return await bridgeAdapterContract.adapterName()
+          },
+          { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+        )
+        bscAdapters.set(adapterAddress.currentChainBridgeAdapter, adapterName)
+      } catch (e) {
+        return E.left(new NetworkError(e, `Could not get forwarder bridge adapters for BSC chain`))
+      }
+    }
+
+    return E.right(bscAdapters)
+  }
+
+  public async getVotingPower(voter: string, blockTag: BlockTag): Promise<E.Either<Error, BigNumber>> {
+    try {
+      const votingPower = await retryAsync(
+        async () => {
+          const balance = await this.ldoContract.balanceOfAt(voter, blockTag)
+          return new BigNumber(String(balance))
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(votingPower)
+    } catch (e) {
+      return E.left(
+        new NetworkError(e, `Could not call ethers.ldoContract.balanceOfAt voter ${voter} block ${blockTag}`),
+      )
     }
   }
 }

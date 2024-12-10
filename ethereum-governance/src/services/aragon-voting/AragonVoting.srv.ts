@@ -6,11 +6,24 @@ import { handleEventsOfNotice } from '../../shared/notice'
 
 import { Block, BlockEvent, Finding, FindingSeverity, FindingType, TransactionEvent, TxEventBlock } from 'forta-agent'
 
-import { ARAGON_VOTING_ADDRESS, ONE_HOUR } from 'constants/common'
+import { ARAGON_VOTING_ADDRESS, ETH_DECIMALS, ONE_HOUR } from 'constants/common'
 
-import { PHASE_ONE_DURATION, TRIGGER_AFTER, FIVE_DAYS_BLOCKS, BLOCK_WINDOW } from 'constants/aragon-voting'
+import {
+  PHASE_ONE_DURATION,
+  TRIGGER_AFTER,
+  FIVE_DAYS_BLOCKS,
+  BLOCK_WINDOW,
+  PUBLIC_DELEGATES_MAP,
+} from 'constants/aragon-voting'
 
-import { CAST_VOTE_EVENT, ARAGON_VOTING_EVENTS_OF_NOTICE } from '../../shared/events/aragon_events'
+import {
+  CAST_VOTE_EVENT,
+  ARAGON_VOTING_EVENTS_OF_NOTICE,
+  ASSIGN_DELEGATE_EVENT,
+} from '../../shared/events/aragon_events'
+import { SIGNIFICANT_VP_AMOUNT } from '../../shared/constants'
+import { formatBN2Str } from '../../shared/format'
+import { etherscanAddress } from '../../shared/string'
 
 export enum Outcomes {
   Pass = 'Pass',
@@ -33,7 +46,6 @@ export class AragonVotingSrv {
 
   public async initialize(currentBlock: number, hasBlockWindow = true): Promise<Error | null> {
     const start = new Date().getTime()
-    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
     this.hasBlockWindow = hasBlockWindow
     const votes = await this.ethProvider.getStartedVotes(currentBlock - FIVE_DAYS_BLOCKS, currentBlock)
 
@@ -42,6 +54,7 @@ export class AragonVotingSrv {
     }
 
     this.activeVotes = votes.right
+    this.logger.info(elapsedTime(`[${this.name}.initialize] on ${currentBlock}`, start))
     return null
   }
 
@@ -134,16 +147,18 @@ export class AragonVotingSrv {
     const findings: Finding[] = []
     const start = new Date().getTime()
 
-    const [findingsAragonTransaction, findingsEventsOfNotice] = await Promise.all([
+    const [findingsAragonTransaction, findingsEventsOfNotice, findingsDelegation] = await Promise.all([
       this.handleAragonTransaction(txEvent),
       handleEventsOfNotice(txEvent, ARAGON_VOTING_EVENTS_OF_NOTICE),
+      this.handleAssignDelegateTransaction(txEvent),
     ])
 
-    findings.push(...findingsAragonTransaction, ...findingsEventsOfNotice)
+    findings.push(...findingsAragonTransaction, ...findingsEventsOfNotice, ...findingsDelegation)
     this.logger.debug(elapsedTime(AragonVotingSrv.name + '.' + this.handleTransaction.name, start))
 
     return findings
   }
+
   public async handleAragonTransaction(txEvent: TransactionEvent) {
     const out: Finding[] = []
     if (!txEvent.addresses[ARAGON_VOTING_ADDRESS]) {
@@ -157,6 +172,42 @@ export class AragonVotingSrv {
       const result = await this.handleVoteInfo(event.args.voteId.toNumber(), txEvent.block)
       if (result) {
         out.push(result)
+      }
+    }
+    return out
+  }
+
+  public async handleAssignDelegateTransaction(txEvent: TransactionEvent) {
+    const out: Finding[] = []
+    if (!txEvent.addresses[ARAGON_VOTING_ADDRESS]) {
+      return out
+    }
+
+    const events = txEvent.filterLog(ASSIGN_DELEGATE_EVENT, ARAGON_VOTING_ADDRESS)
+    for (const event of events) {
+      if (event) {
+        const votingPower = await this.ethProvider.getVotingPower(event.args.voter, txEvent.block.number)
+
+        if (E.isLeft(votingPower)) {
+          throw votingPower.left
+        }
+
+        if (votingPower.right.isGreaterThanOrEqualTo(SIGNIFICANT_VP_AMOUNT)) {
+          const vpFormatted = formatBN2Str(votingPower.right.div(ETH_DECIMALS))
+
+          const delegateName =
+            PUBLIC_DELEGATES_MAP[event.args.assignedDelegate.toLowerCase()] ?? event.args.assignedDelegate
+
+          out.push(
+            Finding.fromObject({
+              name: 'ℹ️ Big delegation',
+              description: `${vpFormatted} LDO was delegated to ${etherscanAddress(event.args.assignedDelegate, delegateName)} from ${etherscanAddress(event.args.voter)}.`,
+              alertId: 'ARAGON-SIGNIFICANT-DELEGATE',
+              severity: FindingSeverity.Info,
+              type: FindingType.Info,
+            }),
+          )
+        }
       }
     }
     return out

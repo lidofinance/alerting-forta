@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AclChanges srv functional tests should find owner not in whitelist 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "BSC-ADI-VAULT-CONTRACT-OWNER",
+    "description": "BSC ADI upgradeable Proxy Admin contract ([0x40c4464fca8cacd550c33b39d674fc257966022f](https://bscscan.com/address/0x40c4464fca8cacd550c33b39d674fc257966022f)) owner is set to contract address [0x250227c30e3b26525f292f63756e5eB3C425427E](https://bscscan.com/address/0x250227c30e3b26525f292f63756e5eB3C425427E)",
+    "labels": [],
+    "metadata": {
+      "contract": "0x40c4464fca8cacd550c33b39d674fc257966022f",
+      "name": "BSC ADI upgradeable Proxy Admin",
+      "owner": "0x250227c30e3b26525f292f63756e5eB3C425427E",
+    },
+    "name": "🚨 BSC a.DI: Contract owner set to address not in whitelist",
+    "protocol": "ethereum",
+    "severity": 4,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 2,
+    "uniqueKey": "",
+  },
+]
+`;

@@ -17,8 +17,12 @@ export function etherscanAddress(address: string, text = address): string {
   return `[${text}](https://${getSubpathForNetwork()}etherscan.io/address/${address})`
 }
 
+export function getSafeAddress(address: string, text = address): string {
+  return `[${text}](https://app.safe.global/home?safe=eth:${address})`
+}
+
 export const getMotionType = (types: Map<string, string>, evmScriptFactory: string) => {
-  return types.get(evmScriptFactory.toLowerCase()) || 'New '
+  return types.get(evmScriptFactory.toLowerCase()) || 'New'
 }
 
 export const getMotionLink = (motionId: string) => {

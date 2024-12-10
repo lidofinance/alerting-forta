@@ -45,25 +45,25 @@ export function initialize(): Initialize {
       process.exit(1)
     }
 
-    const [, aragonVotingSrvErr] = await Promise.all([
-      app.AclChangesSrv.initialize(latestBlockNumber.right),
-      app.AragonVotingSrv.initialize(latestBlockNumber.right),
-      app.EasyTrackSrv.initialize(latestBlockNumber.right),
-      app.EnsNamesSrv.initialize(latestBlockNumber.right),
-      app.ProxyWatcherSrv.initialize(latestBlockNumber.right),
-      app.TrpChangesSrv.initialize(latestBlockNumber.right),
-      app.StonksSrv.initialize(latestBlockNumber.right),
-    ])
+    const initResults = await Promise.all(
+      app.subAgents.map(async (agent) => {
+        return await agent.initialize(latestBlockNumber.right)
+      }),
+    )
 
-    if (aragonVotingSrvErr !== null) {
-      console.error(`Error: ${aragonVotingSrvErr.message}`)
-      console.error(`Stack: ${aragonVotingSrvErr.stack}`)
+    const errors = initResults.filter(Boolean) as Error[]
+
+    if (errors.length > 0) {
+      errors.forEach((error) => {
+        console.error(`Error: ${error.message}`)
+        console.error(`Stack: ${error.stack}`)
+      })
 
       process.exit(1)
     }
 
-    const agents: string[] = [app.EnsNamesSrv.getName(), app.EasyTrackSrv.getName()]
-    metadata.agents = '[' + agents.toString() + ']'
+    const agentsNames = app.subAgents.map((agent) => agent.getName())
+    metadata.agents = '[' + agentsNames.toString() + ']'
 
     const decodedJwt = decodeJwt(token.right)
 
@@ -100,16 +100,12 @@ export const handleBlock = (): HandleBlock => {
       findings.push(...findingsAsync)
     }
 
-    const servicesFindings = (
-      await Promise.all([
-        app.AclChangesSrv.handleBlock(blockEvent),
-        app.AragonVotingSrv.handleBlock(blockEvent),
-        app.EnsNamesSrv.handleBlock(blockEvent),
-        app.ProxyWatcherSrv.handleBlock(blockEvent),
-        app.StonksSrv.handleBlock(blockEvent),
-      ])
-    ).flat()
-    findings.push(...servicesFindings)
+    for (const agent of app.subAgents) {
+      if (agent.handleBlock) {
+        const agentFindings = await agent.handleBlock(blockEvent)
+        findings.push(...agentFindings)
+      }
+    }
 
     app.healthChecker.check(findings)
 
@@ -123,15 +119,14 @@ export const handleTransaction = (): HandleTransaction => {
   return async function (txEvent: TransactionEvent): Promise<Finding[]> {
     const app = await App.getInstance()
 
-    const findings: Finding[] = (
-      await Promise.all([
-        await app.AclChangesSrv.handleTransaction(txEvent),
-        await app.AragonVotingSrv.handleTransaction(txEvent),
-        await app.EasyTrackSrv.handleTransaction(txEvent),
-        await app.TrpChangesSrv.handleTransaction(txEvent),
-        await app.StonksSrv.handleTransaction(txEvent),
-      ])
-    ).flat()
+    const findings: Finding[] = []
+
+    for (const agent of app.subAgents) {
+      if (agent.handleTransaction) {
+        const agentFindings = await agent.handleTransaction(txEvent)
+        findings.push(...agentFindings)
+      }
+    }
 
     app.healthChecker.check(findings)
 

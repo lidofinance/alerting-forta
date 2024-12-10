@@ -44,9 +44,9 @@ describe('StonksSrv', () => {
     const errMsg = faker.lorem.sentence()
     mocked(ethProvider.getStonksOrderEvents).mockResolvedValue(E.left(new Error(errMsg)))
 
-    await expect(stonksSrv.initialize(100)).rejects.toThrow(
-      new Error(`Could not initialize StonksSrv. Cause: Could not load created orders. Cause: Error: ${errMsg}`),
-    )
+    const error = await stonksSrv.initialize(100)
+
+    expect(error).toEqual(Error(errMsg))
   })
 
   it('fails on initialize if getStonksOrderParams fails', async () => {
@@ -54,11 +54,9 @@ describe('StonksSrv', () => {
     mocked(ethProvider.getStonksOrderEvents).mockResolvedValue(E.right([]))
     mocked(ethProvider.getStonksOrderParams).mockResolvedValue(E.left(new Error(errMsg)))
 
-    await expect(stonksSrv.initialize(100)).rejects.toThrow(
-      new Error(
-        `Could not initialize StonksSrv. Cause: Could not load created orders. Cause: Error: Could not get tokenFrom or orderDuration for ${STONKS[0].address}`,
-      ),
-    )
+    const error = await stonksSrv.initialize(100)
+
+    expect(error).toEqual(Error(`Could not get tokenFrom or orderDuration for ${STONKS[0].address}`))
   })
 
   it('returns the correct name', () => {

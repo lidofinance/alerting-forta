@@ -2,8 +2,17 @@ import { EventOfNotice } from '../../entity/events'
 import { FindingSeverity, FindingType } from 'forta-agent'
 import { etherscanAddress } from '../string'
 import { EASY_TRACK_ADDRESS, REWARD_PROGRAMS_REGISTRY_ADDRESS, EVM_SCRIPT_EXECUTOR_ADDRESS } from 'constants/easy-track'
-import { MOTION_ENACTED_EVENT } from './motion_enacted_events'
 import { Result } from '@ethersproject/abi/lib'
+
+export const MOTION_CREATED_EVENT = `
+    event MotionCreated(
+        uint256 indexed _motionId,
+        address _creator,
+        address indexed _evmScriptFactory,
+        bytes _evmScriptCallData,
+        bytes _evmScript
+    )
+`
 
 export const EASY_TRACK_EVENTS: EventOfNotice[] = [
   {
@@ -50,7 +59,7 @@ export const EASY_TRACK_EVENTS: EventOfNotice[] = [
   },
   {
     address: EASY_TRACK_ADDRESS,
-    event: MOTION_ENACTED_EVENT,
+    event: 'event MotionEnacted(uint256 indexed _motionId)',
     alertId: 'EASY-TRACK-MOTION-ENACTED',
     name: '✅ EasyTrack: Motion executed successfully 🎉',
     description: (args: Result) => `EasyTrack motion ${args._motionId} was enacted`,

@@ -4,7 +4,7 @@ import { handleEventsOfNotice } from '../../shared/notice'
 
 import { Finding, TransactionEvent } from 'forta-agent'
 
-import { TRP_EVENTS_OF_NOTICE } from '../../shared/events/trp_changes'
+import { TRP_EVENTS_OF_NOTICE } from '../../shared/events/trp_events'
 
 export class TrpChangesSrv {
   private readonly logger: Logger

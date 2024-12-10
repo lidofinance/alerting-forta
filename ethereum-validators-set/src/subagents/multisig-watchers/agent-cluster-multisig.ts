@@ -18,7 +18,7 @@ import { GnosisSafeFortaHandler } from "./gnosis-safe-handler";
 const {
   ARAGON_ACL_ADDRESS,
   STAKING_ROUTER_ADDRESS,
-  STAKING_MODULES,
+  SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID,
   BLOCKCHAIN_INFO,
   SET_PERMISSION_EVENT,
 } = requireWithTier<typeof Constants>(
@@ -150,29 +150,19 @@ export async function initialize(
     ethersProvider,
   );
 
-  const moduleIds: { stakingModuleIds: BigNumber[] } =
-    await stakingRouter.functions.getStakingModuleIds({
-      blockTag: currentBlock,
-    });
-
   stakingModuleManagersMultisigList.length = 0;
-  for (const {
-    moduleId,
-    moduleAddress,
-    moduleName,
-    alertPrefix,
-  } of STAKING_MODULES) {
-    if (!moduleId) {
-      console.warn(
-        `Multisig monitoring is not supported for ${moduleName} module`,
-      );
-      continue;
-    }
 
-    const moduleExists = moduleIds.stakingModuleIds.some(
-      (stakingModuleId) => stakingModuleId.toString() === moduleId.toString(),
-    );
-    if (!moduleExists) {
+  const [modules] = await stakingRouter.functions.getStakingModules({
+    blockTag: currentBlock,
+  });
+
+  for (const { id, name, stakingModuleAddress } of modules) {
+    const moduleId = id as number;
+    const moduleName = name as string;
+    const moduleAddress = (stakingModuleAddress as string).toLowerCase();
+    const alertPrefix = moduleName.replace(" ", "-").toUpperCase();
+
+    if (moduleId !== SIMPLE_DVT_NODE_OPERATOR_REGISTRY_MODULE_ID) {
       continue;
     }
 

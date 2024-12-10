@@ -1,8 +1,9 @@
-import { ethers, fetchJwt, Finding, getEthersProvider, verifyJwt } from 'forta-agent'
+import { BlockEvent, ethers, fetchJwt, Finding, getEthersProvider, TransactionEvent, verifyJwt } from 'forta-agent'
 import {
   ARAGON_VOTING_ADDRESS,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
+  LDO_ADDRESS,
 } from 'constants/common'
 import { ETHProvider } from './clients/eth_provider'
 import { FormatterWithEIP1898 } from './clients/eth_formatter'
@@ -11,6 +12,7 @@ import {
   IncreaseStakingLimit__factory,
   NodeOperatorsRegistry__factory,
   AragonVoting__factory,
+  LDO__factory,
 } from './generated'
 import { EnsNamesSrv } from './services/ens-names/EnsNames.srv'
 import { EasyTrackSrv } from './services/easy-track/EasyTrack.srv'
@@ -24,6 +26,14 @@ import { AclChangesSrv } from './services/acl-changes/AclChanges.srv'
 import { AragonVotingSrv } from './services/aragon-voting/AragonVoting.srv'
 import { TrpChangesSrv } from './services/trp-changes/TrpChanges.srv'
 import { StonksSrv } from './services/stonks/Stonks.srv'
+import { CrossChainWatcherSrv } from './services/cross-chain-watcher/CrossChainWatcher.srv'
+
+type SubAgent = {
+  initialize: (currentBlock: number) => Promise<Error | null> | Error | null
+  getName: () => string
+  handleBlock?: (block: BlockEvent) => Promise<Finding[]>
+  handleTransaction?: (tx: TransactionEvent) => Promise<Finding[]>
+}
 
 export type Container = {
   ethClient: ETHProvider
@@ -34,8 +44,10 @@ export type Container = {
   AragonVotingSrv: AragonVotingSrv
   TrpChangesSrv: TrpChangesSrv
   StonksSrv: StonksSrv
+  CrossChainWatcherSrv: CrossChainWatcherSrv
   findingsRW: DataRW<Finding>
   healthChecker: HealthChecker
+  subAgents: SubAgent[]
 }
 
 export class App {
@@ -82,6 +94,8 @@ export class App {
       )
       const aragonVotingContract = AragonVoting__factory.connect(ARAGON_VOTING_ADDRESS, ethersProvider)
 
+      const ldoContract = LDO__factory.connect(LDO_ADDRESS, ethersProvider)
+
       const ethClient = new ETHProvider(
         ethersProvider,
         etherscanProvider,
@@ -89,6 +103,7 @@ export class App {
         increaseStakingLimitContact,
         nodeOperatorsRegistryContract,
         aragonVotingContract,
+        ldoContract,
       )
 
       const logger: Winston.Logger = Winston.createLogger({
@@ -97,13 +112,24 @@ export class App {
       })
 
       const proxyWatcherSrv = new ProxyWatcherSrv(logger, ethClient)
-
       const ensNamesSrv = new EnsNamesSrv(logger, ethClient)
       const easyTrackSrv = new EasyTrackSrv(logger, ethClient)
       const aclChangesSrv = new AclChangesSrv(logger, ethClient)
       const aragonVotingSrv = new AragonVotingSrv(logger, ethClient)
       const trpChangesSrv = new TrpChangesSrv(logger)
       const stonksSrv = new StonksSrv(logger, ethClient)
+      const crossChainWatcherSrv = new CrossChainWatcherSrv(logger, ethClient)
+
+      const subAgents = [
+        aclChangesSrv,
+        aragonVotingSrv,
+        easyTrackSrv,
+        ensNamesSrv,
+        proxyWatcherSrv,
+        trpChangesSrv,
+        stonksSrv,
+        crossChainWatcherSrv,
+      ]
 
       App.instance = {
         ethClient: ethClient,
@@ -114,8 +140,10 @@ export class App {
         AragonVotingSrv: aragonVotingSrv,
         TrpChangesSrv: trpChangesSrv,
         StonksSrv: stonksSrv,
+        CrossChainWatcherSrv: crossChainWatcherSrv,
         findingsRW: new DataRW([]),
         healthChecker: new HealthChecker(BorderTime, MaxNumberErrorsPerBorderTime),
+        subAgents,
       }
     }
 
