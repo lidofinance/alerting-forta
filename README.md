@@ -16,21 +16,11 @@ mainnet)
 [arb-subgraph](./arb-subgraph) - Lido Subgraph bot on the Arbitrum network (should be launched against Arbitrum
 mainnet)
 
-[l2-bridge-arbitrum](./l2-bridge-arbitrum) - Detection bot for Arbitrum part of L2 bridge
-
-[l2-bridge-balance](./l2-bridge-balance) - Detection bot for L2 bridges balances
-
-[l2-bridge-base](./l2-bridge-base) - Detection bot for Base part of L2 bridge
-
 [l2-bridge-ethereum](./l2-bridge-ethereum) - Detection bot for Ethereum part of L2 bridges
 
 [l2-bridge-mantle](./l2-bridge-mantle) - Detection bot for Mantle part of L2 bridges
 
-[l2-bridge-optimism](./l2-bridge-optimism) - Detection bot for Optimism part of L2 bridge
-
-[l2-bridge-zkSync](./l2-bridge-zksync) - Detection bot for ZkSync part of L2 bridge
-
-[l2-bridge-scroll](./l2-bridge-scroll) - Detection bot for Scroll part of L2 bridge
+[l2-bridge-linea](./l2-bridge-linea) - Detection bot for Linea part of L2 bridges
 
 [phishing-detect](./phishing-detect) - Phishing detection bot for the Lido ERC20 tokens
 
