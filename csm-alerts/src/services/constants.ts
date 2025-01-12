@@ -12,6 +12,7 @@ export const DEPLOYED_ADDRESSES: DeployedAddresses = {
     BURNER: '0xD15a672319Cf0352560eE76d9e89eAB0889046D3',
     HASH_CONSENSUS: '0x71093efF8D8599b5fA340D665Ad60fA7C80688e4',
     STAKING_ROUTER: '0xFdDf38947aFB03C621C71b06C9C70bce73f12999',
+    MULTICALL3: '0xcA11bde05977b3631167028862bE2a173976CA11',
 }
 
 export const ALIASES: Record<keyof DeployedAddresses, string> = {
@@ -26,6 +27,7 @@ export const ALIASES: Record<keyof DeployedAddresses, string> = {
     BURNER: 'Burner',
     HASH_CONSENSUS: 'CSM HashConsensus',
     STAKING_ROUTER: 'StakingRouter',
+    MULTICALL3: 'Multicall3',
 }
 
 export const ORACLE_MEMBERS: { [key: string]: string } = {

@@ -28,6 +28,7 @@ export type DeployedAddresses = {
     BURNER: string
     HASH_CONSENSUS: string
     STAKING_ROUTER: string
+    MULTICALL3: string
 }
 
 interface Initialize {

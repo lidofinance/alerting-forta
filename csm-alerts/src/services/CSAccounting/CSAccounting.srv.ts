@@ -10,7 +10,12 @@ import {
 import { Logger } from 'winston'
 
 import { IS_CLI } from '../../config'
-import { CSAccounting__factory, CSModule__factory, Lido__factory } from '../../generated/typechain'
+import {
+    CSAccounting__factory,
+    CSModule__factory,
+    Lido__factory,
+    Multicall3__factory,
+} from '../../generated/typechain'
 import { getLogger } from '../../logger'
 import { SECONDS_PER_DAY, WEI_PER_ETH } from '../../shared/constants'
 import { Service } from '../../shared/types'
@@ -24,6 +29,9 @@ const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
     '../constants',
     RedefineMode.Merge,
 )
+
+const ILido = Lido__factory.createInterface()
+const ICSAccounting = CSAccounting__factory.createInterface()
 
 const CHECK_ACCOUNTING_INTERVAL_BLOCKS = 301 // ~ every hour
 const ACCOUNTING_BALANCE_EXCESS_SHARES_MAX = WEI_PER_ETH / 10n
@@ -62,11 +70,32 @@ export class CSAccountingSrv implements Service {
             return []
         }
 
-        const accounting = CSAccounting__factory.connect(DEPLOYED_ADDRESSES.CS_ACCOUNTING, provider)
-        const steth = Lido__factory.connect(DEPLOYED_ADDRESSES.LIDO_STETH, provider)
+        const multicall = Multicall3__factory.connect(DEPLOYED_ADDRESSES.MULTICALL3, provider)
+        const { blockNumber, returnData } = await multicall.tryBlockAndAggregate(
+            true, // requireSuccess
+            [
+                {
+                    target: DEPLOYED_ADDRESSES.LIDO_STETH,
+                    callData: ILido.encodeFunctionData('sharesOf', [
+                        DEPLOYED_ADDRESSES.CS_ACCOUNTING,
+                    ]) as `0x${string}`,
+                },
+                {
+                    target: DEPLOYED_ADDRESSES.CS_ACCOUNTING,
+                    callData: ICSAccounting.encodeFunctionData('totalBondShares') as `0x${string}`,
+                },
+            ],
+            { blockTag: blockEvent.blockHash },
+        )
 
-        const totalBondShares = await accounting.totalBondShares({ blockTag: blockEvent.blockHash })
-        const actualBalance = await steth.sharesOf(accounting, { blockTag: blockEvent.blockHash })
+        if (blockNumber != BigInt(blockEvent.blockNumber)) {
+            this.logger.warn(
+                `Unexpected block number, got=${blockNumber}, expected=${blockEvent.blockNumber}`,
+            )
+        }
+
+        const totalBondShares = BigInt(returnData[0][1])
+        const actualBalance = BigInt(returnData[1][1])
         const diff = totalBondShares - actualBalance
 
         const now = blockEvent.block.timestamp
