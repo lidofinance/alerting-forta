@@ -125,8 +125,14 @@ export class CSAccountingSrv implements Service {
                 alertId: 'CS-ACCOUNTING-NOT-ENOUGH-SHARES',
                 // NOTE: Do not include the source to reach quorum.
                 // source: sourceFromEvent(blockEvent),
-                severity: FindingSeverity.Critical,
+                severity: FindingSeverity.Unknown,
                 type: FindingType.Info,
+                metadata: {
+                    blockHash: blockEvent.blockHash,
+                    multicallResult: JSON.stringify(returnData),
+                    totalBondShares: String(totalBondShares),
+                    actualBalance: String(actualBalance),
+                }
             })
             out.push(f)
         }
