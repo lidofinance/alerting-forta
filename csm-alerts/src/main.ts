@@ -83,7 +83,7 @@ async function getHandlers() {
     }
 
     async function handleBlock(blockEvent: BlockEvent, provider: ethers.Provider) {
-        logger.info(`Running handlers for block ${blockEvent.blockNumber}`)
+        logger.info(`Running handlers for block ${blockEvent.blockNumber}::${blockEvent.blockHash}`)
 
         const results = await Promise.allSettled(
             services
