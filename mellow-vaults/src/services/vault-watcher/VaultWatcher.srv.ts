@@ -26,6 +26,7 @@ import {
 } from '../../utils/events/withdrawals_events'
 import { LogDescription } from '@ethersproject/abi'
 import { BlockDto, TransactionDto } from '../../entity/events'
+import { etherscanAddress } from '../../shared/string'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class IVaultWatcherClient {
@@ -288,11 +289,13 @@ export class VaultWatcherSrv {
       eq: vaultTotalSupply.right.minus(vaultConfiguratorMaxTotalSupply.right.multipliedBy(0.9999999)),
     }
 
+    const etherscanAddressLink = etherscanAddress(result.address)
+
     if (result.diff.gt(0)) {
       out.push(
         Finding.fromObject({
           name: '🚨🚨🚨 Vault: totalSupply more than maximalTotalSupply',
-          description: `Mellow Vault [${result?.name}] (${result.address}) - more than maximalTotalSupply`,
+          description: `Mellow Vault [${result?.name}](${etherscanAddressLink}) - more than maximalTotalSupply`,
           alertId: 'VAULT-LIMITS-INTEGRITY',
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
@@ -302,7 +305,7 @@ export class VaultWatcherSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: totalSupply reached maximalTotalSupply',
-          description: `Mellow Vault [${result?.name}] (${result.address}) - maximalTotalSupply reached`,
+          description: `Mellow Vault [${result?.name}](${etherscanAddressLink}) - maximalTotalSupply reached`,
           alertId: 'VAULT-LIMITS-INTEGRITY-REACHED-TO-MAX',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
@@ -312,7 +315,7 @@ export class VaultWatcherSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: totalSupply close to maximalTotalSupply',
-          description: `Mellow Vault [${result?.name}] (${result.address}) - totalSupply more than 90% of maximalTotalSupply`,
+          description: `Mellow Vault [${result?.name}](${etherscanAddressLink}) - totalSupply more than 90% of maximalTotalSupply`,
           alertId: 'VAULT-LIMITS-INTEGRITY-CLOSE-TO-MAX',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
@@ -402,11 +405,13 @@ export class VaultWatcherSrv {
       vaultUnderlyingTvl: vaultUnderlyingTvl.right,
     }
 
+    const etherscanAddressLink = etherscanAddress(result.address)
+
     if (result.supplyToUnderlying.minus(1).abs().gte(result.criticalLimit)) {
       out.push(
         Finding.fromObject({
           name: '🚨🚨🚨 Vault: vaultTotalSupply and vaultUnderlyingTvl has sensitive difference',
-          description: `Mellow Vault [${result?.name}](${result.address}) - vaultTotalSupply and vaultUnderlyingTvl different`,
+          description: `Mellow Vault [${result?.name}](${etherscanAddressLink}) - vaultTotalSupply and vaultUnderlyingTvl different`,
           alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-CRITICAL',
           severity: FindingSeverity.Critical,
           type: FindingType.Suspicious,
@@ -422,7 +427,7 @@ export class VaultWatcherSrv {
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: vaultTotalSupply and vaultUnderlyingTvl is not the same',
-          description: `Mellow Vault [${result?.name}](${result.address}) - vaultTotalSupply and vaultUnderlyingTvl difference is ${removeTail(division)} of vaultUnderlyingTvl or about ${removeTail(diffInETH)} ETH`,
+          description: `Mellow Vault [${result?.name}](${etherscanAddressLink}) - vaultTotalSupply and vaultUnderlyingTvl difference is ${removeTail(division)} of vaultUnderlyingTvl or about ${removeTail(diffInETH)} ETH`,
           alertId: 'VAULT-WSTETH-LIMITS-INTEGRITY-MEDIUM',
           severity: FindingSeverity.Medium,
           type: FindingType.Info,
@@ -538,11 +543,11 @@ export class VaultWatcherSrv {
       count: pendingCount.right,
     }
 
-    if (!result.events[0] && result.count.gt(0)) {
+    if (!result.events[0] && result.count.gt(1)) {
       out.push(
         Finding.fromObject({
           name: '⚠️ Vault: Withdrawals haven’t been called for at least 48 hours',
-          description: `Mellow Vault [${result?.name}] (${result?.address}) pending withdrawers count - ${result.count}`,
+          description: `Mellow Vault [${result?.name}](${etherscanAddress(result?.address)}) pending withdrawers count - ${result.count}`,
           alertId: 'VAULT-NO-WITHDRAWAL-48',
           severity: FindingSeverity.Medium,
           type: FindingType.Suspicious,
