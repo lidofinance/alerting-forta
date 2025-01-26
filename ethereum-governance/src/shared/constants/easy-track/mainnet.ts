@@ -34,7 +34,7 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0xe5656eee7eed02bde009d77c88247bc8271e26eb', 'Top up recipients (Alliance Ops stablecoins)'],
   ['0x87b02df27cd6ec128532add7c8bc19f62e6f1fb9', 'Top up recipients (ATC stETH)'],
   ['0x6e04aed774b7c89bb43721acdd7d03c872a51b69', 'Top up recipients (Stonks stETH)'],
-  ['0x41cf3dbdc939c5115823fba1432c4ec5e7bd226c', 'Update target validator limits (SDVT)'],
+  ['0x161a4552a625844c822954c5acbac928ee0f399b', 'Update target validator limits (SDVT)'],
   ['0xd75778b855886fc5e1ea7d6bfada9eb68b35c19d', 'Set vetted validators limits (SDVT)'],
   ['0x589e298964b9181d9938b84bb034c3bb9024e2c0', 'Set node operators reward addresses (SDVT)'],
   ['0xcaa3af7460e83e665eefec73a7a542e5005c9639', 'Add Node Operators (SDVT)'],
