@@ -10,9 +10,9 @@ const safes = SAFES[blockchain];
 let lastProcessedBlock = 0;
 
 export async function initialize(
-  currentBlock: number,
+  currentBlock: number
 ): Promise<{ [key: string]: string }> {
-  console.log(`[${name}]`);
+  console.log(`[${name}] initialized on block ${currentBlock}`);
   lastProcessedBlock = await provider.getBlockNumber();
   return { lastProcessedBlock: lastProcessedBlock.toString() };
 }
@@ -30,7 +30,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
       blockchain,
       safes,
       prevProcessedBlock,
-      currentBlock,
+      currentBlock
     );
   }
 
