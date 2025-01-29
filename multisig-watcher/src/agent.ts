@@ -16,8 +16,6 @@ import * as agentEthereum from "./agent-ethereum";
 import * as agentPolygon from "./agent-polygon";
 import * as agentArbitrum from "./agent-arbitrum";
 import * as agentOptimism from "./agent-optimism";
-import * as agentMoonbeam from "./agent-moonbeam";
-import * as agentMoonriver from "./agent-moonriver";
 
 import VERSION from "./version";
 
@@ -35,8 +33,6 @@ const subAgents: SubAgent[] = [
   agentPolygon,
   agentArbitrum,
   agentOptimism,
-  // agentMoonbeam,
-  agentMoonriver,
 ];
 
 // block or tx handling should take no more than 240 sec. Increased due to free RPC usage.
