@@ -27,5 +27,5 @@ export function ipfsLink(cid: string): string {
 }
 
 export function maskUrls(msg: string): string {
-  return msg.replace(/https?:\/\/[^"\s]*/g, '***')
+    return msg.replace(/https?:\/\/[^"\s]*/g, '***')
 }

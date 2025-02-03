@@ -132,7 +132,7 @@ export class CSAccountingSrv implements Service {
                     multicallResult: JSON.stringify(returnData),
                     totalBondShares: String(totalBondShares),
                     actualBalance: String(actualBalance),
-                }
+                },
             })
             out.push(f)
         }

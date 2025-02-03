@@ -2,8 +2,8 @@
 
 ## Supported chains
 
--   Mainnet
--   Holesky
+- Mainnet
+- Holesky
 
 ## Alerts
 
@@ -132,10 +132,10 @@
 
 ## Deployment
 
--   Make sure you have uncommitted changes
--   Run `yarn push` command
--   Copy the resulting docker image reference
--   Deploy a new version via https://app.forta.network with the image reference from the previous step
+- Make sure you have uncommitted changes
+- Run `yarn push` command
+- Copy the resulting docker image reference
+- Deploy a new version via https://app.forta.network with the image reference from the previous step
 
 ## Development
 
