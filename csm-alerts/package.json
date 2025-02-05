@@ -43,7 +43,7 @@
     "bignumber.js": "^9.1.2",
     "dotenv": "^16.4.5",
     "ethers": "^6.9.0",
-    "express": "^4.19.2",
+    "express": "^4.20.0",
     "forta-agent": "^0.1.48",
     "fp-ts": "^2.16.1",
     "google-protobuf": "^3.21.4",
