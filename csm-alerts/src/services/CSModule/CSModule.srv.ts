@@ -16,6 +16,7 @@ import { BASIS_POINT_MUL, SECONDS_PER_DAY } from '../../shared/constants'
 import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
+import { formatEther } from '../../utils/string'
 import * as Constants from '../constants'
 
 const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
@@ -27,9 +28,11 @@ const ICSModule = CSModule__factory.createInterface()
 
 const CHECK_QUEUE_INTERVAL_BLOCKS = 1801 // ~ 4 times a day
 const CHECK_SHARE_INTERVAL_BLOCKS = 2401 // ~ 3 times a day
+const CHECK_PROVER_BALANCE_INTERVAL_BLOCKS = 7201 // ~ 1 time a day
 const TARGET_SHARE_USED_PERCENT_MAX = 95
 const QUEUE_EMPTY_BATCHES_MAX = 30
 const QUEUE_VALIDATORS_MAX = 200
+const MIN_PROVER_BALANCE = 5n * (10n ** 17n) // 0.5 ether
 
 class Batch {
     value: bigint
@@ -72,6 +75,7 @@ export class CSModuleSrv implements Service {
         return [
             ...(await this.checkDepositQueue(blockEvent, provider)),
             ...(await this.checkModuleShare(blockEvent, provider)),
+            ...(await this.checkProverBalance(blockEvent, provider)),
         ]
     }
 
@@ -156,7 +160,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY * 7) {
             if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
                 const f = Finding.fromObject({
-                    name: `🫧CSModule: Module's share is close to the target share.`,
+                    name: `🫧 CSModule: Module's share is close to the target share.`,
                     description: `The module's share is close to the target share (${percentUsed}% utilization). Current share is ${(Number(csmCurrentShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Target share is ${(Number(csmTargetShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%`,
                     alertId: 'CS-MODULE-CLOSE-TO-TARGET-SHARE',
                     // NOTE: Do not include the source to reach quorum.
@@ -230,7 +234,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.tooManyEmptyBatches > SECONDS_PER_DAY) {
             if (emptyBatchCount > QUEUE_EMPTY_BATCHES_MAX) {
                 const f = Finding.fromObject({
-                    name: `🫧CSModule: Too many empty batches in the deposit queue.`,
+                    name: `🫧 CSModule: Too many empty batches in the deposit queue.`,
                     description: `More than ${QUEUE_EMPTY_BATCHES_MAX} empty batches in the deposit queue.`,
                     alertId: 'CS-MODULE-TOO-MANY-EMPTY-BATCHES-IN-THE-QUEUE',
                     // NOTE: Do not include the source to reach quorum.
@@ -246,7 +250,7 @@ export class CSModuleSrv implements Service {
         if (now - this.lastFiredAt.tooManyValidators > SECONDS_PER_DAY) {
             if (validatorsInQueue > QUEUE_VALIDATORS_MAX) {
                 const f = Finding.fromObject({
-                    name: '🫧CSModule: Significant number of validator keys in the queue.',
+                    name: '🫧 CSModule: Significant number of validator keys in the queue.',
                     description: `There's ${validatorsInQueue} keys waiting for deposit in CSM.`,
                     alertId: 'CS-MODULE-TOO-MANY-VALIDATORS-IN-THE-QUEUE',
                     // NOTE: Do not include the source to reach quorum.
@@ -257,6 +261,34 @@ export class CSModuleSrv implements Service {
                 out.push(f)
                 this.lastFiredAt.tooManyValidators = now
             }
+        }
+
+        return out
+    }
+
+    private async checkProverBalance(
+        blockEvent: BlockEvent,
+        provider: ethers.Provider,
+    ): Promise<Finding[]> {
+        if (blockEvent.blockNumber % CHECK_PROVER_BALANCE_INTERVAL_BLOCKS !== 0 && !IS_CLI) {
+            return []
+        }
+
+        const out: Finding[] = []
+
+        const balance = await provider.getBalance(DEPLOYED_ADDRESSES.PROVER)
+
+        if (balance < MIN_PROVER_BALANCE) {
+            const f = Finding.fromObject({
+                name: '🔴 CSModule: Low prover wallet balance',
+                description: `CSM Prover wallet balance is ${formatEther(balance)}`,
+                alertId: 'CS-MODULE-LOW-PROVER-BALANCE',
+                // NOTE: Do not include the source to reach quorum.
+                // source: sourceFromEvent(blockEvent),
+                severity: FindingSeverity.High,
+                type: FindingType.Info,
+            })
+            out.push(f)
         }
 
         return out

@@ -13,6 +13,7 @@ export const DEPLOYED_ADDRESSES: DeployedAddresses = {
     HASH_CONSENSUS: '0x71093efF8D8599b5fA340D665Ad60fA7C80688e4',
     STAKING_ROUTER: '0xFdDf38947aFB03C621C71b06C9C70bce73f12999',
     MULTICALL3: '0xcA11bde05977b3631167028862bE2a173976CA11',
+    PROVER: '0xDCBDb89D30E921C73B496e9d20a61d283A5D2401',
 }
 
 export const ALIASES: Record<keyof DeployedAddresses, string> = {
@@ -28,6 +29,7 @@ export const ALIASES: Record<keyof DeployedAddresses, string> = {
     HASH_CONSENSUS: 'CSM HashConsensus',
     STAKING_ROUTER: 'StakingRouter',
     MULTICALL3: 'Multicall3',
+    PROVER: 'Prover Wallet'
 }
 
 export const ORACLE_MEMBERS: { [key: string]: string } = {

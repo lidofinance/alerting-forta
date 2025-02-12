@@ -29,6 +29,7 @@ export type DeployedAddresses = {
     HASH_CONSENSUS: string
     STAKING_ROUTER: string
     MULTICALL3: string
+    PROVER: string
 }
 
 interface Initialize {
