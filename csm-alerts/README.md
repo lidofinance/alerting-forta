@@ -9,14 +9,15 @@
 
 1. **CSModule**
     1. General
-        1. 🟠 MEDIUM: targetLimitMode was set for an operator.
-        2. 🫧 LOW: Module's share is close to the targetShare.
-        3. 🫧 LOW: More than N "empty" batches in the queue. (N = 30)
-        4. 🫧 LOW: More than N validators in the queue. (N = 200)
-        5. 🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
-        6. 🔵 INFO: Operator X was unvetted.
-        7. 🔵 INFO: Public release is activated.
-        8. 🔵 INFO: Every 100 new operators created (69th as well).
+        1. 🔴 HIGH: Low prover wallet balance
+        2. 🟠 MEDIUM: targetLimitMode was set for an operator.
+        3. 🫧 LOW: Module's share is close to the targetShare.
+        4. 🫧 LOW: More than N "empty" batches in the queue. (N = 30)
+        5. 🫧 LOW: More than N validators in the queue. (N = 200)
+        6. 🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
+        7. 🔵 INFO: Operator X was unvetted.
+        8. 🔵 INFO: Public release is activated.
+        9. 🔵 INFO: Every 100 new operators created (69th as well).
     2. Roles monitoring
         1. 🚨 CRITICAL: role change: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: role change: PAUSE_ROLE
@@ -37,6 +38,7 @@
         3. 🚨 CRITICAL: Approval(address owner, address spender, uint256 value) of stETH from CSAccounting, unless to the Burner
         4. 🔴 HIGH: BondCurveAdded(uint256[] bondCurve)
         5. 🔴 HIGH: BondCurveSet(uint256 indexed nodeOperatorId, uint256 curveId)
+        6. 🔴 HIGH: Penalty exceeding bond applied
     3. Roles monitoring
         1. 🚨 CRITICAL: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: PAUSE_ROLE
@@ -177,7 +179,4 @@ a v1 bot, though not well tested. By default, the `yarn push` command uses the D
 repository to build an image of the v2 bot. If you want to push an image to be used as a v1 bot,
 replace the command in the Dockerfile with `yarn run start:prod:v1`.
 
-```diff
-- CMD ["yarn", "run", "start:prod:v2"]
-+ CMD ["yarn", "run", "start:prod:v1"]
-```
+CMD ["yarn", "run", "start:prod:v1"]

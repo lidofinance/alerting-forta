@@ -59,6 +59,7 @@ export class CSAccountingSrv implements Service {
         return [
             ...this.handleStETHApprovalEvents(txEvent),
             ...this.handleSetBondCurveEvent(txEvent),
+            ...this.handleBondBurnedEvent(txEvent),
         ]
     }
 
@@ -212,6 +213,33 @@ export class CSAccountingSrv implements Service {
                         description: `Bond curve set for Node Operator #${e.args.nodeOperatorId} with curve ID ${e.args.curveId}`,
                         source: sourceFromEvent(txEvent),
                         severity: FindingSeverity.Info,
+                        type: FindingType.Info,
+                    }),
+                )
+            }
+        }
+
+        return out
+    }
+
+    handleBondBurnedEvent(txEvent: TransactionEvent): Finding[] {
+        const bondBurnedEvents = filterLog(
+            txEvent.logs,
+            CSAccounting__factory.createInterface().getEvent('BondBurned').format('full'),
+            DEPLOYED_ADDRESSES.CS_ACCOUNTING,
+        )
+
+        const out: Finding[] = []
+
+        for (const e of bondBurnedEvents) {
+            if (e.args.toBurnAmount > e.args.burnedAmount + 10n) {
+                out.push(
+                    Finding.fromObject({
+                        alertId: 'CS-ACCOUNTING-PENALTY-HIGHER-THAN-BOND',
+                        name: '🔴 CSAccounting: Penalty exceeding bond',
+                        description: `Penalty exceeding bond applied for Node Operator #${e.args.nodeOperatorId}`,
+                        source: sourceFromEvent(txEvent),
+                        severity: FindingSeverity.High,
                         type: FindingType.Info,
                     }),
                 )
