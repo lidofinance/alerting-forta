@@ -32,7 +32,7 @@ const CHECK_PROVER_BALANCE_INTERVAL_BLOCKS = 7201 // ~ 1 time a day
 const TARGET_SHARE_USED_PERCENT_MAX = 95
 const QUEUE_EMPTY_BATCHES_MAX = 30
 const QUEUE_VALIDATORS_MAX = 200
-const MIN_PROVER_BALANCE = 5n * (10n ** 17n) // 0.5 ether
+const MIN_PROVER_BALANCE = 5n * 10n ** 17n // 0.5 ether
 
 class Batch {
     value: bigint

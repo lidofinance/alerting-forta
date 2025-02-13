@@ -29,7 +29,7 @@ export const ALIASES: Record<keyof DeployedAddresses, string> = {
     HASH_CONSENSUS: 'CSM HashConsensus',
     STAKING_ROUTER: 'StakingRouter',
     MULTICALL3: 'Multicall3',
-    PROVER: 'Prover Wallet'
+    PROVER: 'Prover Wallet',
 }
 
 export const ORACLE_MEMBERS: { [key: string]: string } = {
