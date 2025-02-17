@@ -22,6 +22,7 @@ export async function handleBlock(blockEvent: BlockEvent) {
 
   if (blockEvent.blockNumber % NON_ETH_FETCH_INTERVAL == 0) {
     const currentBlock = await provider.getBlockNumber();
+    console.log(`ARBITRUM block: ${currentBlock}`);
     const prevProcessedBlock = lastProcessedBlock;
     lastProcessedBlock = currentBlock;
     await handleSafeEvents(

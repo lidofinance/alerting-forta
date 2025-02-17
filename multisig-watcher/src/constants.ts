@@ -9,8 +9,6 @@ export enum Blockchain {
   POLYGON = "Polygon",
   ARBITRUM = "Arbitrum",
   OPTIMISM = "Optimism",
-  MOONBEAM = "Moonbeam",
-  MOONRIVER = "Moonriver",
 }
 
 export interface SafeTX {
@@ -61,18 +59,6 @@ export const BLOCKCHAIN_INFO: { [key in Blockchain]: BlockchainInfo } = {
     txUrlPrefix: "https://optimistic.etherscan.io/tx/",
     safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=oeth:",
     safeUrlPrefix: "https://app.safe.global/home?safe=oeth:",
-  },
-  [Blockchain.MOONBEAM]: {
-    addressUrlPrefix: "https://moonbeam.moonscan.io/address/",
-    txUrlPrefix: "https://moonbeam.moonscan.io/tx/",
-    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=mbeam:",
-    safeUrlPrefix: "https://app.safe.global/home?safe=mbeam:",
-  },
-  [Blockchain.MOONRIVER]: {
-    addressUrlPrefix: "https://moonriver.moonscan.io/address/",
-    txUrlPrefix: "https://moonriver.moonscan.io/tx/",
-    safeTxUrlPrefix: "https://app.safe.global/transactions/tx?safe=mriver:",
-    safeUrlPrefix: "https://app.safe.global/home?safe=mriver:",
   },
 };
 
@@ -165,50 +151,6 @@ export const SAFES = {
     [
       "0x75483CE83100890c6bf1718c26052cE44e0F2839",
       "Liquidity Observation Lab AAVE rewards (Optimism)",
-    ],
-  ],
-  [Blockchain.MOONBEAM]: [
-    [
-      "0x007132343ca619c5449297507b26c3f85e80d1b1",
-      "Liquidity Observation Lab (Moonbeam)",
-    ],
-    [
-      "0x34fc04fa7e8e142001aaeed25da8cf7dd887a5f3",
-      "Contracts updater (Moonbeam)",
-    ],
-    [
-      "0xd00e0d8e42b8222745f4e921c6fa7ff620fa8e96",
-      "Parameters manager (Moonbeam)",
-    ],
-    [
-      "0xab4046bdf1a58c628d925602b05fb1696b74ac2c",
-      "Parameters setter (Moonbeam)",
-    ],
-    [
-      "0x3ef396fa1a363025b3cedc07d828fa512ccc7156",
-      "Renomination manager (Moonbeam)",
-    ],
-  ],
-  [Blockchain.MOONRIVER]: [
-    [
-      "0xdafc1dcb93da415604ac6187638f88a8ff8d77a4",
-      "Liquidity Observation Lab (Moonriver)",
-    ],
-    [
-      "0xdafc1dcb93da415604ac6187638f88a8ff8d77a4",
-      "Contracts updater (Moonriver)",
-    ],
-    [
-      "0xf3b2c83400d60ee91f716eaa4e9ef59c49f2d1ae",
-      "Parameters manager (Moonriver)",
-    ],
-    [
-      "0xb4d206664c53986b66eba65203c7f2d2924ab351",
-      "Parameters setter (Moonriver)",
-    ],
-    [
-      "0xc4520846052adc9d92ad161a5bde907869cd0da4",
-      "Renomination manager (Moonriver)",
     ],
   ],
 };
