@@ -15,7 +15,12 @@ import {
     Lido__factory,
 } from '../../generated/typechain'
 import { getLogger } from '../../logger'
-import { SECONDS_PER_DAY, SECONDS_PER_SLOT, SLOTS_PER_EPOCH } from '../../shared/constants'
+import {
+    SECONDS_PER_DAY,
+    SECONDS_PER_HOUR,
+    SECONDS_PER_SLOT,
+    SLOTS_PER_EPOCH,
+} from '../../shared/constants'
 import { Service } from '../../shared/types'
 import { getEpoch } from '../../utils/epochs'
 import { invariantAlert, sourceFromEvent } from '../../utils/findings'
@@ -143,7 +148,7 @@ export class CSFeeDistributorSrv implements Service {
         // Just add 1 day to the frame length because it seems as a good approximation of more complex approach.
         // TODO: Fetch the current frame every time?
         const distributionIntervalSecondsMax =
-            this.state.frameInSlots * SECONDS_PER_SLOT + SECONDS_PER_DAY
+            this.state.frameInSlots * SECONDS_PER_SLOT + SECONDS_PER_HOUR
         const distributionDelaySeconds = now - this.state.lastDistributionUpdatedAt
         if (distributionDelaySeconds < distributionIntervalSecondsMax) {
             return []
