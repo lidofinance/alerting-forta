@@ -1,0 +1,20 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": ".",
+    "downlevelIteration": true,
+    "sourceMap": true,
+    "paths": {
+      "constants/common": ["./src/shared/constants/common/mainnet"],
+      "constants/acl-changes": ["./src/shared/constants/acl-changes/mainnet"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "tests",
+    "dist",
+    "**/*spec.ts",
+    "**/*mock.ts"
+  ]
+}
