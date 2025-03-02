@@ -1,11 +1,4 @@
-import {
-  ethers,
-  BlockEvent,
-  TransactionEvent,
-  Finding,
-  FindingType,
-  FindingSeverity,
-} from "forta-agent";
+import { TransactionEvent, Finding, FindingType } from "forta-agent";
 
 import {
   Blockchain,
