@@ -45,6 +45,8 @@ export const EASY_TRACK_TYPES_BY_FACTORIES = new Map<string, string>([
   ['0x92a27c4e5e35cfea112acab53851ec70e2d99a8d', 'Top up recipients (PML stablecoins)'],
   ['0x1843bc35d1fd15abe1913b9f72852a79457c42ab', 'Top up recipients (ATC stablecoins)'],
   ['0xF6B6E7997338C48Ea3a8BCfa4BB64a315fDa76f4', 'Settle EL Rewards Stealing penalty for CSM operators'],
+  ['0xf2476f967c826722f5505edfc4b2561a34033477', 'Top up recipients (Lido Ecosystem BORG stablecoins)'],
+  ['0xe1f6babb445f809b97e3505ea91749461050f780', 'Top up recipients (Lido Labs BORG stablecoins)'],
 ])
 
 export const EASY_TRACK_STONKS_CONTRACTS = [STONKS_ALLOWED_RECIPIENT_ADDRESS]
@@ -68,6 +70,8 @@ export const SAFES = {
     ['0x8772e3a2d86b9347a2688f9bc1808a6d8917760c', 'Gate Seal Committee'],
     ['0x08637515E85A4633E23dfc7861e2A9f53af640f7', 'Simple DVT Module Committee'],
     ['0xC52fC3081123073078698F1EAc2f1Dc7Bd71880f', 'CSM Committee'],
+    ['0x55897893c19e4B0c52731a3b7C689eC417005Ad6', 'Ecosystem ET trusted caller'], // TODO: add proper name
+    ['0x95B521B4F55a447DB89f6a27f951713fC2035f3F', 'Labs ET trusted caller'], // TODO: add proper name
   ],
   [Blockchain.POLYGON]: [['0x87d93d9b2c672bf9c9642d853a8682546a5012b5', 'Liquidity Observation Lab (Polygon)']],
   [Blockchain.ARBITRUM]: [
