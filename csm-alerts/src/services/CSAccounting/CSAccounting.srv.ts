@@ -21,7 +21,7 @@ import { SECONDS_PER_DAY, WEI_PER_ETH } from '../../shared/constants'
 import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
-import { etherscanAddress, formatShares } from '../../utils/string'
+import { addressOnExplorer, formatShares } from '../../utils/string'
 import * as Constants from '../constants'
 
 const { DEPLOYED_ADDRESSES } = requireWithTier<typeof Constants>(
@@ -157,8 +157,8 @@ export class CSAccountingSrv implements Service {
                 const f = Finding.fromObject({
                     name: `🚨 Unexpected stETH approval from CSAccounting`,
                     description:
-                        `${etherscanAddress(event.args.spender)} received allowance from ` +
-                        `${etherscanAddress(event.args.owner)} for ${event.args.value} stETH`,
+                        `${addressOnExplorer(event.args.spender)} received allowance from ` +
+                        `${addressOnExplorer(event.args.owner)} for ${event.args.value} stETH`,
                     alertId: 'STETH-APPROVAL',
                     source: sourceFromEvent(txEvent),
                     severity: FindingSeverity.Critical,

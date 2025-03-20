@@ -4,7 +4,7 @@ import { ACL__factory } from '../../../generated/typechain'
 import * as ACL from '../../../generated/typechain/ACL'
 import { RolesMapping } from '../../../shared/roles'
 import { EventOfNotice } from '../../../shared/types'
-import { etherscanAddress } from '../../../utils/string'
+import { addressOnExplorer } from '../../../utils/string'
 
 const IACL = ACL__factory.createInterface()
 
@@ -20,7 +20,7 @@ export function getRolesMonitoringEvents(
                 name: `🚨 ${contract.name}: Role granted`,
                 description: (args: ACL.RoleGrantedEvent.OutputObject) =>
                     `Role ${args.role} (${RolesMapping[args.role] ?? 'unknown'}) was granted ` +
-                    `to ${etherscanAddress(args.account)} on ${etherscanAddress(contract.address)}`,
+                    `to ${addressOnExplorer(args.account)} on ${addressOnExplorer(contract.address)}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
             },
@@ -31,7 +31,7 @@ export function getRolesMonitoringEvents(
                 name: `🚨 ${contract.name}: Role revoked`,
                 description: (args: ACL.RoleRevokedEvent.OutputObject) =>
                     `Role ${args.role} (${RolesMapping[args.role] ?? 'unknown'}) was revoked ` +
-                    `from ${etherscanAddress(args.account)} on ${etherscanAddress(contract.address)}`,
+                    `from ${addressOnExplorer(args.account)} on ${addressOnExplorer(contract.address)}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
             },
@@ -42,7 +42,7 @@ export function getRolesMonitoringEvents(
                 name: `🚨 ${contract.name}: Role's admin role changed`,
                 description: (args: ACL.RoleAdminChangedEvent.OutputObject) =>
                     `Admin role of role ${args.role} (${RolesMapping[args.role] ?? 'unknown'}) was changed ` +
-                    `from ${args.previousAdminRole} to ${args.newAdminRole} on ${etherscanAddress(contract.address)}`,
+                    `from ${args.previousAdminRole} to ${args.newAdminRole} on ${addressOnExplorer(contract.address)}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
             },

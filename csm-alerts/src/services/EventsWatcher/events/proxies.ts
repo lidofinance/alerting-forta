@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 import { OssifiableProxy__factory } from '../../../generated/typechain'
 import * as OssifiableProxy from '../../../generated/typechain/OssifiableProxy'
 import { EventOfNotice } from '../../../shared/types'
-import { etherscanAddress } from '../../../utils/string'
+import { addressOnExplorer } from '../../../utils/string'
 
 const IOssifiableProxy = OssifiableProxy__factory.createInterface()
 
@@ -18,7 +18,7 @@ export function getOssifiedProxyEvents(
                 alertId: 'PROXY-OSSIFIED',
                 name: `🚨 ${contract.name}: Proxy Ossified`,
                 description: () =>
-                    `Proxy for ${contract.name}(${etherscanAddress(contract.address)}) was ossified`,
+                    `Proxy for ${contract.name}(${addressOnExplorer(contract.address)}) was ossified`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
             },
@@ -38,7 +38,7 @@ export function getOssifiedProxyEvents(
                 alertId: 'PROXY-ADMIN-CHANGED',
                 name: `🚨 ${contract.name}: Admin Changed`,
                 description: (args: OssifiableProxy.AdminChangedEvent.OutputObject) =>
-                    `The proxy admin for ${contract.name}(${contract.address}) has been changed from ${etherscanAddress(args.previousAdmin)} to ${etherscanAddress(args.newAdmin)}`,
+                    `The proxy admin for ${contract.name}(${contract.address}) has been changed from ${addressOnExplorer(args.previousAdmin)} to ${addressOnExplorer(args.newAdmin)}`,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Info,
             },

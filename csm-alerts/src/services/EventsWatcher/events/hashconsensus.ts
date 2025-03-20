@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 import { HashConsensus__factory } from '../../../generated/typechain'
 import * as HashConsensus from '../../../generated/typechain/HashConsensus'
 import { EventOfNotice } from '../../../shared/types'
-import { etherscanAddress } from '../../../utils/string'
+import { addressOnExplorer } from '../../../utils/string'
 
 const IHashConsensus = HashConsensus__factory.createInterface()
 
@@ -18,10 +18,10 @@ export function getHashConsensusEvents(
             alertId: 'HASH-CONSENSUS-MEMBER-ADDED',
             name: '🔴 CSM HashConsensus: Member added',
             description: (args: HashConsensus.MemberAddedEvent.OutputObject) =>
-                `New member ${etherscanAddress(args.addr)} (${knownMembers[args.addr] ?? 'unknown'}) added\n` +
+                `New member ${addressOnExplorer(args.addr)} (${knownMembers[args.addr] ?? 'unknown'}) added\n` +
                 `Total members: ${args.newTotalMembers}\n` +
                 `New quorum: ${args.newQuorum}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -31,10 +31,10 @@ export function getHashConsensusEvents(
             alertId: 'HASH-CONSENSUS-MEMBER-REMOVED',
             name: '🔴 CSM HashConsensus: Member removed',
             description: (args: HashConsensus.MemberRemovedEvent.OutputObject) =>
-                `Member ${etherscanAddress(args.addr)} (${knownMembers[args.addr] ?? 'unknown'}) removed\n` +
+                `Member ${addressOnExplorer(args.addr)} (${knownMembers[args.addr] ?? 'unknown'}) removed\n` +
                 `Total members: ${args.newTotalMembers}\n` +
                 `New quorum: ${args.newQuorum}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -47,7 +47,7 @@ export function getHashConsensusEvents(
                 `Quorum set to ${args.newQuorum}.\n` +
                 `Total members: ${args.totalMembers}\n` +
                 `Previous quorum: ${args.prevQuorum}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -58,7 +58,7 @@ export function getHashConsensusEvents(
             name: '🔴 CSM HashConsensus: Fastlane config set',
             description: (args: HashConsensus.FastLaneConfigSetEvent.OutputObject) =>
                 `Fastlane configuration set with length slots: ${args.fastLaneLengthSlots}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -71,7 +71,7 @@ export function getHashConsensusEvents(
                 `Frame configuration set:\n` +
                 `New initial epoch: ${args.newInitialEpoch}\n` +
                 `Epochs per frame: ${args.newEpochsPerFrame}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -81,9 +81,9 @@ export function getHashConsensusEvents(
             alertId: 'HASH-CONSENSUS-REPORT-PROCESSOR-SET',
             name: '🔴 CSM HashConsensus: Report processor set',
             description: (args: HashConsensus.ReportProcessorSetEvent.OutputObject) =>
-                `Previous processor: ${etherscanAddress(args.prevProcessor)}\n` +
-                `Current processor: ${etherscanAddress(args.processor)}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Previous processor: ${addressOnExplorer(args.prevProcessor)}\n` +
+                `Current processor: ${addressOnExplorer(args.processor)}\n` +
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -94,7 +94,7 @@ export function getHashConsensusEvents(
             name: '🔴 CSM HashConsensus: Consensus lost',
             description: (args: HashConsensus.ConsensusLostEvent.OutputObject) =>
                 `Consensus lost for slot ${args.refSlot}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.High,
             type: FindingType.Info,
         },
@@ -107,7 +107,7 @@ export function getHashConsensusEvents(
                 `Consensus reached for slot ${args.refSlot}\n` +
                 `Report hash: ${args.report}\n` +
                 `Support: ${args.support}\n` +
-                `Contract: ${etherscanAddress(address)}`,
+                `Contract: ${addressOnExplorer(address)}`,
             severity: FindingSeverity.Info,
             type: FindingType.Info,
         },
