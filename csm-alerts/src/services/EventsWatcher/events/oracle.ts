@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 import { CSFeeOracle__factory } from '../../../generated/typechain'
 import * as CSFeeOracle from '../../../generated/typechain/CSFeeOracle'
 import { EventOfNotice } from '../../../shared/types'
-import { etherscanAddress } from '../../../utils/string'
+import { addressOnExplorer } from '../../../utils/string'
 
 const ICSFeeOracle = CSFeeOracle__factory.createInterface()
 
@@ -25,7 +25,7 @@ export function getCSFeeOracleEvents(address: string): EventOfNotice[] {
             alertId: 'CSFEE-ORACLE-FEE-DISTRIBUTOR-CONTRACT-SET',
             name: '🚨 CSFeeOracle: New CSFeeDistributor set',
             description: (args: CSFeeOracle.FeeDistributorContractSetEvent.OutputObject) =>
-                `New CSFeeDistributor contract set to ${etherscanAddress(args.feeDistributorContract)}`,
+                `New CSFeeDistributor contract set to ${addressOnExplorer(args.feeDistributorContract)}`,
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
         },
@@ -35,8 +35,8 @@ export function getCSFeeOracleEvents(address: string): EventOfNotice[] {
             alertId: 'CSFEE-ORACLE-CONSENSUS-HASH-CONTRACT-SET',
             name: '🚨 CSFeeOracle: Consensus hash contract set',
             description: (args: CSFeeOracle.ConsensusHashContractSetEvent.OutputObject) =>
-                `Consensus hash contract set to ${etherscanAddress(args.addr)}, ` +
-                `previous contract was ${etherscanAddress(args.prevAddr)}`,
+                `Consensus hash contract set to ${addressOnExplorer(args.addr)}, ` +
+                `previous contract was ${addressOnExplorer(args.prevAddr)}`,
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
         },

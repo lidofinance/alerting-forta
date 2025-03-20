@@ -7,7 +7,7 @@ import {
 } from '@fortanetwork/forta-bot'
 import { FindingSource } from '@fortanetwork/forta-bot/dist/findings/finding.source'
 
-import { maskUrls, toKebabCase } from './string'
+import { maskUrls } from './string'
 import { APP_NAME } from '../config'
 import Version from './version'
 

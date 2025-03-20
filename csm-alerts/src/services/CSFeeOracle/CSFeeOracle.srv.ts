@@ -13,7 +13,7 @@ import { getLogger } from '../../logger'
 import { Service } from '../../shared/types'
 import { sourceFromEvent } from '../../utils/findings'
 import { RedefineMode, requireWithTier } from '../../utils/require'
-import { etherscanAddress } from '../../utils/string'
+import { addressOnExplorer } from '../../utils/string'
 import * as Constants from '../constants'
 
 const { DEPLOYED_ADDRESSES, ORACLE_MEMBERS } = requireWithTier<typeof Constants>(
@@ -99,7 +99,7 @@ export class CSFeeOracleSrv implements Service {
                 Finding.fromObject({
                     name: '🔴 HashConsensus: Alternative report received',
                     description:
-                        `Member ${etherscanAddress(event.args.member)} (${ORACLE_MEMBERS[event.args.member] || 'unknown'}) ` +
+                        `Member ${addressOnExplorer(event.args.member)} (${ORACLE_MEMBERS[event.args.member] || 'unknown'}) ` +
                         `has reported a hash unmatched by other members. Reference slot: ${event.args.refSlot}`,
                     alertId: 'HASH-CONSENSUS-RECEIVED-ALTERNATIVE-HASH',
                     source: sourceFromEvent(txEvent),
@@ -143,7 +143,7 @@ export class CSFeeOracleSrv implements Service {
                     Finding.fromObject({
                         name: '🟡 CSM: Sloppy oracle fast lane member',
                         description:
-                            `Member ${etherscanAddress(addr)} (${ORACLE_MEMBERS[addr] || 'unknown'}) ` +
+                            `Member ${addressOnExplorer(addr)} (${ORACLE_MEMBERS[addr] || 'unknown'}) ` +
                             `was in the fast lane but did not report`,
                         alertId: 'HASH-CONSENSUS-SLOPPY-MEMBER',
                         source: sourceFromEvent(txEvent),
