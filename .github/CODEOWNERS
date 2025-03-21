@@ -4,8 +4,8 @@
 /l2-bridge-mantle/ @lidofinance/lido-eth-protocol
 /l2-bridge-linea/ @lidofinance/lido-eth-protocol
 /arb-subgraph/ @lidofinance/lido-si
-/ethereum-governance/ @lidofinance/lido-dao-tech-infra-team
-/multisig-watcher/ @lidofinance/lido-dao-tech-infra-team
-/voting-watcher/ @lidofinance/lido-dao-tech-infra-team
+/ethereum-governance/ @lidofinance/lido-dao-tech-infra
+/multisig-watcher/ @lidofinance/lido-dao-tech-infra
+/voting-watcher/ @lidofinance/lido-dao-tech-infra
 /ethereum-validators-set/ @lidofinance/lido-valset-tech
-/bsc-adi-governance/ @lidofinance/lido-dao-tech-infra-team
+/bsc-adi-governance/ @lidofinance/lido-dao-tech-infra
