@@ -422,14 +422,14 @@ async function handleSigningKeysRemoved(
       });
       findings.push(
         Finding.fromObject({
-          name: `🚨 ${norContext.params.moduleName}: Signing keys removed`,
+          name: `⚠️ ${norContext.params.moduleName}: Signing keys removed`,
           description:
             `Signing keys has been removed for:` +
             `\n ${Array.from(digest.entries())
               .map(([name, count]) => `${name}: ${count}`)
               .join("\n")}`,
           alertId: `${norContext.params.alertPrefix}NODE-OPERATORS-KEYS-REMOVED`,
-          severity: FindingSeverity.High,
+          severity: FindingSeverity.Medium,
           type: FindingType.Info,
         }),
       );
