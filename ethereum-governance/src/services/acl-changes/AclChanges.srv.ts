@@ -201,16 +201,16 @@ export class AclChangesSrv {
           isOwnerAContract = isDeployed.right
         }
 
-        const currentTimestamp = blockEvent.block.timestamp
+        const blockNumber = blockEvent.block.number
         const reportKey = `${address}+${currentOwner}`
 
         // skip alert if reported recently
-        const lastReportTimestamp = this.ownersReportsBlocks.get(reportKey)
+        const lastReportBlock = this.ownersReportsBlocks.get(reportKey) || 0
         const reportInterval = isOwnerAContract
           ? NEW_OWNER_IS_CONTRACT_REPORT_BLOCK_INTERVAL
           : NEW_OWNER_IS_EOA_REPORT_BLOCK_INTERVAL
 
-        if (lastReportTimestamp && reportInterval > currentTimestamp - lastReportTimestamp) {
+        if (blockNumber - lastReportBlock < reportInterval) {
           continue
         }
 
@@ -234,7 +234,7 @@ export class AclChangesSrv {
           }),
         )
 
-        this.ownersReportsBlocks.set(reportKey, currentTimestamp)
+        this.ownersReportsBlocks.set(reportKey, blockNumber)
       }
     }
 
