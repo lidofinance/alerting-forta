@@ -10,6 +10,9 @@ export function getEpoch(chainId: number, timestamp: number) {
         case 17_000:
             genesisTimestamp = 1695902400
             break
+        case 560048:
+            genesisTimestamp = 1742213400
+            break
         default:
             throw Error(`Unsupported chain ${chainId} to get genesis timestamp`)
     }
