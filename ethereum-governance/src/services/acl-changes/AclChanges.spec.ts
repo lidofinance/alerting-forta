@@ -6,7 +6,7 @@ import * as E from 'fp-ts/Either'
 import * as constants from '../../shared/constants/acl-changes/mainnet'
 import {
   ACL_ENUMERABLE_CONTRACTS,
-  NEW_ROLE_MEMBERS_REPORT_INTERVAL,
+  NEW_ROLE_MEMBERS_REPORT_BLOCK_INTERVAL,
   OWNABLE_CONTRACTS,
   ROLES_OWNERS,
   WHITELISTED_OWNERS,
@@ -52,7 +52,7 @@ describe('AclChangesSrv', () => {
       isDeployed: jest.fn(),
     } as unknown as IAclChangesClient
     aclChangesSrv = new AclChangesSrv(logger, ethProvider)
-    blockEvent = { block: { number: 100, timestamp: NEW_ROLE_MEMBERS_REPORT_INTERVAL * 2 } } as BlockEvent
+    blockEvent = { block: { number: NEW_ROLE_MEMBERS_REPORT_BLOCK_INTERVAL * 2 } } as BlockEvent
     txEvent = { addresses: { '0x123': true }, filterLog: jest.fn() } as unknown as TransactionEvent
   })
 

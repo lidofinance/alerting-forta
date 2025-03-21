@@ -16,9 +16,9 @@ import {
   ORDINARY_ENTITIES,
   WHITELISTED_OWNERS,
   OWNABLE_CONTRACTS,
-  NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL,
-  NEW_OWNER_IS_EOA_REPORT_INTERVAL,
-  NEW_ROLE_MEMBERS_REPORT_INTERVAL,
+  NEW_ROLE_MEMBERS_REPORT_BLOCK_INTERVAL,
+  NEW_OWNER_IS_CONTRACT_REPORT_BLOCK_INTERVAL,
+  NEW_OWNER_IS_EOA_REPORT_BLOCK_INTERVAL,
 } from 'constants/acl-changes'
 import { ARAGON_ACL_ADDRESS, EASY_TRACK_ADDRESS, SIMPLEDVT_NODE_OPERATORS_REGISTRY_ADDRESS } from 'constants/common'
 
@@ -42,14 +42,14 @@ export class AclChangesSrv {
   private readonly logger: Logger
   private readonly name = 'AclChangesSrv'
   private readonly ethProvider: IAclChangesClient
-  private readonly ownersReportsTimestamps: Map<string, number>
-  private readonly roleMembersReportsTimestamps: Map<string, number>
+  private readonly ownersReportsBlocks: Map<string, number>
+  private readonly roleMembersReportsBlocks: Map<string, number>
 
   constructor(logger: Logger, ethProvider: IAclChangesClient) {
     this.logger = logger
     this.ethProvider = ethProvider
-    this.ownersReportsTimestamps = new Map<string, number>()
-    this.roleMembersReportsTimestamps = new Map<string, number>()
+    this.ownersReportsBlocks = new Map<string, number>()
+    this.roleMembersReportsBlocks = new Map<string, number>()
   }
 
   public initialize(currentBlock: number): null {
@@ -107,11 +107,11 @@ export class AclChangesSrv {
 
   public async handleRolesMembersChanges(blockEvent: BlockEvent): Promise<Finding[]> {
     const findings: Finding[] = []
-    const currentTimestamp = blockEvent.block.timestamp
+    const blockNumber = blockEvent.block.number
 
     for (const address of ACL_ENUMERABLE_CONTRACTS.keys()) {
-      const lastReportTime = this.roleMembersReportsTimestamps.get(address) || 0
-      if (currentTimestamp - lastReportTime < NEW_ROLE_MEMBERS_REPORT_INTERVAL) {
+      const lastReportBlock = this.roleMembersReportsBlocks.get(address) || 0
+      if (blockNumber - lastReportBlock < NEW_ROLE_MEMBERS_REPORT_BLOCK_INTERVAL) {
         continue
       }
 
@@ -151,7 +151,7 @@ export class AclChangesSrv {
             }),
           )
 
-          this.roleMembersReportsTimestamps.set(address, currentTimestamp)
+          this.roleMembersReportsBlocks.set(address, blockNumber)
         }
       }
     }
@@ -205,10 +205,10 @@ export class AclChangesSrv {
         const reportKey = `${address}+${currentOwner}`
 
         // skip alert if reported recently
-        const lastReportTimestamp = this.ownersReportsTimestamps.get(reportKey)
+        const lastReportTimestamp = this.ownersReportsBlocks.get(reportKey)
         const reportInterval = isOwnerAContract
-          ? NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL
-          : NEW_OWNER_IS_EOA_REPORT_INTERVAL
+          ? NEW_OWNER_IS_CONTRACT_REPORT_BLOCK_INTERVAL
+          : NEW_OWNER_IS_EOA_REPORT_BLOCK_INTERVAL
 
         if (lastReportTimestamp && reportInterval > currentTimestamp - lastReportTimestamp) {
           continue
@@ -234,7 +234,7 @@ export class AclChangesSrv {
           }),
         )
 
-        this.ownersReportsTimestamps.set(reportKey, currentTimestamp)
+        this.ownersReportsBlocks.set(reportKey, currentTimestamp)
       }
     }
 
