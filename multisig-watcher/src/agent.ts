@@ -16,8 +16,6 @@ import * as agentEthereum from "./agent-ethereum";
 import * as agentPolygon from "./agent-polygon";
 import * as agentArbitrum from "./agent-arbitrum";
 import * as agentOptimism from "./agent-optimism";
-import * as agentMoonbeam from "./agent-moonbeam";
-import * as agentMoonriver from "./agent-moonriver";
 
 import VERSION from "./version";
 
@@ -35,8 +33,6 @@ const subAgents: SubAgent[] = [
   agentPolygon,
   agentArbitrum,
   agentOptimism,
-  agentMoonbeam,
-  agentMoonriver,
 ];
 
 // block or tx handling should take no more than 240 sec. Increased due to free RPC usage.
@@ -90,7 +86,7 @@ const initialize = async () => {
           process.exit(1);
         }
       }
-    }),
+    })
   );
 
   metadata.agents = "[" + subAgents.map((a) => `"${a.name}"`).join(", ") + "]";
@@ -103,7 +99,7 @@ const initialize = async () => {
       severity: FindingSeverity.Info,
       type: FindingType.Info,
       metadata,
-    }),
+    })
   );
   console.log("Bot initialization is done!");
 };
@@ -117,7 +113,7 @@ const timeout = async (agent: SubAgent) =>
   });
 
 const handleBlock: HandleBlock = async (
-  blockEvent: BlockEvent,
+  blockEvent: BlockEvent
 ): Promise<Finding[]> => {
   let blockFindings: Finding[] = [];
   // report findings from init. Will be done only for the first block report.
@@ -154,13 +150,13 @@ const handleBlock: HandleBlock = async (
   const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
       return await Promise.race([run(agent, blockEvent), timeout(agent)]);
-    }),
+    })
   );
 
   runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
       blockFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
+        errorToFinding(r.reason, subAgents[index], "handleBlock")
       );
     }
   });
@@ -169,7 +165,7 @@ const handleBlock: HandleBlock = async (
 };
 
 const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent,
+  txEvent: TransactionEvent
 ) => {
   let txFindings: Finding[] = [];
   const run = async (agent: SubAgent, txEvent: TransactionEvent) => {
@@ -199,13 +195,13 @@ const handleTransaction: HandleTransaction = async (
   const runs = await Promise.allSettled(
     subAgents.map(async (agent) => {
       return await Promise.race([run(agent, txEvent), timeout(agent)]);
-    }),
+    })
   );
 
   runs.forEach((r: PromiseSettledResult<any>, index: number) => {
     if (r.status == "rejected") {
       txFindings.push(
-        errorToFinding(r.reason, subAgents[index], "handleBlock"),
+        errorToFinding(r.reason, subAgents[index], "handleBlock")
       );
     }
   });

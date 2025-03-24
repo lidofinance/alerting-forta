@@ -1,17 +1,11 @@
 {
-    "Arbitrum": {
-        "RpcUrlBase64": "aHR0cHM6Ly9hcmItbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
-    },
-    "Optimism": {
-        "RpcUrlBase64": "aHR0cHM6Ly9vcHQtbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
-    },
-    "Polygon": {
-        "RpcUrlBase64": "aHR0cHM6Ly9wb2x5Z29uLW1haW5uZXQuZy5hbGNoZW15LmNvbS92Mi9OM0dzNlZ0UFNoVGZhRzlFdlI4TFNoNEVFR2FnTHVucQ"
-    },
-    "Moonriver": {
-        "RpcUrlBase64": "aHR0cHM6Ly9tb29ucml2ZXItcnBjLmR3ZWxsaXIuY29t"
-    },
-    "Moonbeam": {
-        "RpcUrlBase64": "aHR0cHM6Ly8xcnBjLmlvL2dsbXI="
-    }
+  "Arbitrum": {
+    "RpcUrlBase64": "aHR0cHM6Ly9hcmItbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
+  },
+  "Optimism": {
+    "RpcUrlBase64": "aHR0cHM6Ly9vcHQtbWFpbm5ldC5nLmFsY2hlbXkuY29tL3YyL04zR3M2VnRQU2hUZmFHOUV2UjhMU2g0RUVHYWdMdW5x"
+  },
+  "Polygon": {
+    "RpcUrlBase64": "aHR0cHM6Ly9wb2x5Z29uLW1haW5uZXQuZy5hbGNoZW15LmNvbS92Mi9OM0dzNlZ0UFNoVGZhRzlFdlI4TFNoNEVFR2FnTHVucQ"
+  }
 }
