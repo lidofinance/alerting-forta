@@ -2,23 +2,23 @@
 
 ## Supported chains
 
--   Mainnet
--   Holesky
--   Hoodi
+- Mainnet
+- Holesky
+- Hoodi
 
 ## Alerts
 
 1. **CSModule**
     1. General
-        1.  🔴 HIGH: Low prover wallet balance
-        2.  🟠 MEDIUM: targetLimitMode was set for an operator.
-        3.  🫧 LOW: Module's share is close to the targetShare.
-        4.  🫧 LOW: More than N "empty" batches in the queue. (N = 30)
-        5.  🫧 LOW: More than N validators in the queue. (N = 200)
-        6.  🔵 INFO: Module's share is close to the priority exit share.
-        7.  🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
-        8.  🔵 INFO: Operator X was unvetted.
-        9.  🔵 INFO: Public release is activated.
+        1. 🔴 HIGH: Low prover wallet balance
+        2. 🟠 MEDIUM: targetLimitMode was set for an operator.
+        3. 🫧 LOW: Module's share is close to the targetShare.
+        4. 🫧 LOW: More than N "empty" batches in the queue. (N = 30)
+        5. 🫧 LOW: More than N validators in the queue. (N = 200)
+        6. 🔵 INFO: Module's share is close to the priority exit share.
+        7. 🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
+        8. 🔵 INFO: Operator X was unvetted.
+        9. 🔵 INFO: Public release is activated.
         10. 🔵 INFO: Every 100 new operators created (69th as well).
     2. Roles monitoring
         1. 🚨 CRITICAL: role change: DEFAULT_ADMIN_ROLE
@@ -136,10 +136,10 @@
 
 ## Deployment
 
--   Make sure you have uncommitted changes
--   Run `yarn push` command
--   Copy the resulting docker image reference
--   Deploy a new version via https://app.forta.network with the image reference from the previous step
+- Make sure you have uncommitted changes
+- Run `yarn push` command
+- Copy the resulting docker image reference
+- Deploy a new version via https://app.forta.network with the image reference from the previous step
 
 ## Development
 
