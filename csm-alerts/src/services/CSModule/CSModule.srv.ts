@@ -30,6 +30,7 @@ const CHECK_QUEUE_INTERVAL_BLOCKS = 1801 // ~ 4 times a day
 const CHECK_SHARE_INTERVAL_BLOCKS = 2401 // ~ 3 times a day
 const CHECK_PROVER_BALANCE_INTERVAL_BLOCKS = 7201 // ~ 1 time a day
 const TARGET_SHARE_USED_PERCENT_MAX = 95
+const TARGET_SHARE_TOLERANCE_BP = 5n
 const QUEUE_EMPTY_BATCHES_MAX = 30
 const QUEUE_VALIDATORS_MAX = 200
 const MIN_PROVER_BALANCE = 5n * 10n ** 17n // 0.5 ether
@@ -158,7 +159,11 @@ export class CSModuleSrv implements Service {
         const out: Finding[] = []
 
         if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY * 7) {
-            if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
+            if (csmCurrentShareBP > csmTargetShareBP - TARGET_SHARE_TOLERANCE_BP) {
+                this.logger.debug(
+                    `High CSM share utilization: current=${csmCurrentShareBP}BP, target=${csmTargetShareBP}BP, do not fire alert.`,
+                )
+            } else if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
                 const f = Finding.fromObject({
                     name: `🫧 CSModule: Module's share is close to the target share.`,
                     description: `The module's share is close to the target share (${percentUsed}% utilization). Current share is ${(Number(csmCurrentShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Target share is ${(Number(csmTargetShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%`,
