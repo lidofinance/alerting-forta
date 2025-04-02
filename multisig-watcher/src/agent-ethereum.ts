@@ -10,37 +10,18 @@ import {
   APPROVAL_EVENT,
   BIG_ALLOWANCES,
   Blockchain,
-  BLOCKCHAIN_INFO,
   getSafeLink,
   GNOSIS_SAFE_EVENTS_OF_NOTICE,
   LIDO_AGENT_ETHEREUM,
   SAFES,
 } from "./constants";
 import { eventSig } from "./helpers";
+import { etherscanAddress, formatTokenAmount } from "./utils";
 
 export const name = "Ethereum-multisig-watcher";
 
 const blockchain = Blockchain.ETH;
 const safes = SAFES[blockchain];
-const blockchainInfo = BLOCKCHAIN_INFO[blockchain];
-
-function etherscanAddress(address: string, text = address): string {
-  return `[${text}](${blockchainInfo.addressUrlPrefix}${address})`;
-}
-
-export const formatTokenAmount = (
-  amount: ethers.BigNumber,
-  decimals: number
-): string => {
-  const amountStr = ethers.utils.formatUnits(amount, decimals);
-
-  const formatter = new Intl.NumberFormat("en", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  });
-
-  return formatter.format(parseFloat(amountStr));
-};
 
 export async function initialize(
   currentBlock: number
@@ -151,7 +132,7 @@ export function handleApprovalEvents(txEvent: TransactionEvent) {
               name: "🚨 Gnosis Safe: Unlimited allowance has been granted",
               description: `Unlimited allowance has been granted to an address other than the Aragon Agent.
               \nOwner: ${getSafeLink(safeInfo)}.
-              \nSpender: ${etherscanAddress(spender)}.`,
+              \nSpender: ${etherscanAddress(blockchain, spender)}.`,
               alertId: "SAFE-UNLIMITED-ALLOWANCE",
               severity: FindingSeverity.Medium,
               type: FindingType.Info,
@@ -168,7 +149,7 @@ export function handleApprovalEvents(txEvent: TransactionEvent) {
               name: "🚨 Gnosis Safe: A large allowance has been approved",
               description: `A large allowance has been approved for a spender other than the Aragon Agent.
               \nOwner: ${getSafeLink(safeInfo)}.
-              \nSpender: ${etherscanAddress(spender)}.
+              \nSpender: ${etherscanAddress(blockchain, spender)}.
               \nApproved amount: ${approvedAmount}.`,
               alertId: "SAFE-BIG-ALLOWANCE",
               severity: FindingSeverity.Medium,
