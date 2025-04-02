@@ -309,10 +309,14 @@ export const GNOSIS_SAFE_EVENTS_OF_NOTICE = [
   },
 ];
 
-function getSafeLink(safeTx: SafeTX): string {
-  return `[${safeTx.safeName}](${
-    BLOCKCHAIN_INFO[safeTx.blockchain].safeUrlPrefix
-  }${safeTx.safeAddress})`;
+export function getSafeLink(safeInfo: {
+  safeName: string;
+  blockchain: Blockchain;
+  safeAddress: string;
+}): string {
+  return `[${safeInfo.safeName}](${
+    BLOCKCHAIN_INFO[safeInfo.blockchain].safeUrlPrefix
+  }${safeInfo.safeAddress})`;
 }
 
 function getTxLink(safeTx: SafeTX): string {
@@ -324,3 +328,26 @@ function getSafeTxLink(safeTx: SafeTX): string {
     safeTx.safeAddress
   }&id=multisig_${safeTx.safeAddress}_${safeTx.safeTx}`;
 }
+
+export const LIDO_AGENT_ETHEREUM = "0x3e40d73eb977dc6a537af587d48316fee66e9c8c";
+const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+const WSTETH_ADDRESS = "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0";
+const STETH_ADDRESS = "0xae7ab96520de3a18e5e111b5eaab095312d7fe84";
+const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
+export const USDT_ADDRESS = "0xdac17f958d2ee523a2206206994597c13d831ec7";
+const USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+
+export const BIG_ALLOWANCES: Record<
+  string,
+  { allowance: string; decimals: number } | undefined
+> = {
+  [WETH_ADDRESS]: { allowance: "200", decimals: 18 },
+  [WSTETH_ADDRESS]: { allowance: "170", decimals: 18 },
+  [STETH_ADDRESS]: { allowance: "200", decimals: 18 },
+  [DAI_ADDRESS]: { allowance: "500000", decimals: 18 },
+  [USDT_ADDRESS]: { allowance: "500000", decimals: 6 },
+  [USDC_ADDRESS]: { allowance: "500000", decimals: 6 },
+};
+
+export const APPROVAL_EVENT =
+  "event Approval(address indexed owner, address indexed spender, uint256 value)";
