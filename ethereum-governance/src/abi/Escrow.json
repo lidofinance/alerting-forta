@@ -1,0 +1,1264 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IStETH",
+        "name": "stETH",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IWstETH",
+        "name": "wstETH",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IWithdrawalQueue",
+        "name": "withdrawalQueue",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IDualGovernance",
+        "name": "dualGovernance",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minWithdrawalsBatchSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "Duration",
+        "name": "maxMinAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "AddressInsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BatchesQueueIsNotClosed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "CallerIsNotDualGovernance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ClaimingIsFinished",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DivisionByZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DurationOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ETHValueOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ETHValueUnderflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EmptyBatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EmptyUnstETHIds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EthWithdrawalsDelayNotPassed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FailedInnerCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IndexOneBasedOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IndexOneBasedUnderflow",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "size",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidBatchSize",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "unstETHId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "ETHValue",
+        "name": "claimableAmount",
+        "type": "uint128"
+      }
+    ],
+    "name": "InvalidClaimableAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "actual",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "expected",
+        "type": "address"
+      }
+    ],
+    "name": "InvalidETHSender",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "unstETHId",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidFromUnstETHId",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "actual",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expected",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidHintsLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "newMinAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "name": "InvalidMinAssetsLockDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "SharesValue",
+        "name": "value",
+        "type": "uint128"
+      }
+    ],
+    "name": "InvalidSharesValue",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "unstETHId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      }
+    ],
+    "name": "InvalidUnstETHHolder",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidUnstETHIdsSequence",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "unstETHId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum UnstETHRecordStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "InvalidUnstETHStatus",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Timestamp",
+        "name": "lockDurationExpiresAt",
+        "type": "uint40"
+      }
+    ],
+    "name": "MinAssetsLockDurationNotPassed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NonProxyCallsForbidden",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PercentD16Overflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RageQuitExtensionPeriodNotStarted",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "bits",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "SafeCastOverflowedUintDowncast",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SharesValueOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SharesValueUnderflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TimestampOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnclaimedBatches",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum State",
+        "name": "state",
+        "type": "uint8"
+      }
+    ],
+    "name": "UnexpectedEscrowState",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum State",
+        "name": "state",
+        "type": "uint8"
+      }
+    ],
+    "name": "UnexpectedWithdrawalsBatchesQueueState",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnfinalizedUnstETHIds",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "ETHValue",
+        "name": "amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "ETHClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "SharesValue",
+        "name": "shares",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "ETHValue",
+        "name": "value",
+        "type": "uint128"
+      }
+    ],
+    "name": "ETHWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "enum State",
+        "name": "from",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "enum State",
+        "name": "to",
+        "type": "uint8"
+      }
+    ],
+    "name": "EscrowStateChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "Duration",
+        "name": "newAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "name": "MinAssetsLockDurationSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "Timestamp",
+        "name": "startedAt",
+        "type": "uint40"
+      }
+    ],
+    "name": "RageQuitExtensionPeriodStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "Duration",
+        "name": "rageQuitExtensionPeriodDuration",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "Duration",
+        "name": "rageQuitEthWithdrawalsDelay",
+        "type": "uint32"
+      }
+    ],
+    "name": "RageQuitStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "SharesValue",
+        "name": "shares",
+        "type": "uint128"
+      }
+    ],
+    "name": "StETHSharesLocked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "SharesValue",
+        "name": "shares",
+        "type": "uint128"
+      }
+    ],
+    "name": "StETHSharesUnlocked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "ETHValue",
+        "name": "totalAmountClaimed",
+        "type": "uint128"
+      }
+    ],
+    "name": "UnstETHClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "SharesValue[]",
+        "name": "finalizedShares",
+        "type": "uint128[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "ETHValue[]",
+        "name": "finalizedAmount",
+        "type": "uint128[]"
+      }
+    ],
+    "name": "UnstETHFinalized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "UnstETHIdsAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "UnstETHIdsClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "SharesValue",
+        "name": "shares",
+        "type": "uint128"
+      }
+    ],
+    "name": "UnstETHLocked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "SharesValue",
+        "name": "finalizedSharesIncrement",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "ETHValue",
+        "name": "finalizedAmountIncrement",
+        "type": "uint128"
+      }
+    ],
+    "name": "UnstETHUnlocked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "ETHValue",
+        "name": "amountWithdrawn",
+        "type": "uint128"
+      }
+    ],
+    "name": "UnstETHWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "WithdrawalsBatchesQueueClosed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "boundaryUnstETHId",
+        "type": "uint256"
+      }
+    ],
+    "name": "WithdrawalsBatchesQueueOpened",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DUAL_GOVERNANCE",
+    "outputs": [
+      {
+        "internalType": "contract IDualGovernance",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ESCROW_MASTER_COPY",
+    "outputs": [
+      {
+        "internalType": "contract IEscrowBase",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_MIN_ASSETS_LOCK_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_TRANSFERRABLE_ST_ETH_AMOUNT",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_WITHDRAWALS_BATCH_SIZE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ST_ETH",
+    "outputs": [
+      {
+        "internalType": "contract IStETH",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "WITHDRAWAL_QUEUE",
+    "outputs": [
+      {
+        "internalType": "contract IWithdrawalQueue",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "WST_ETH",
+    "outputs": [
+      {
+        "internalType": "contract IWstETH",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "fromUnstETHId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "hints",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "claimNextWithdrawalsBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxUnstETHIdsCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimNextWithdrawalsBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "hints",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "claimUnstETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getEscrowState",
+    "outputs": [
+      {
+        "internalType": "enum State",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getLockedUnstETHDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum UnstETHRecordStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "lockedBy",
+            "type": "address"
+          },
+          {
+            "internalType": "SharesValue",
+            "name": "shares",
+            "type": "uint128"
+          },
+          {
+            "internalType": "ETHValue",
+            "name": "claimableAmount",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct ISignallingEscrow.LockedUnstETHDetails[]",
+        "name": "unstETHDetails",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMinAssetsLockDuration",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "minAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getNextWithdrawalBatch",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getRageQuitEscrowDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsDelay",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitExtensionPeriodDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Timestamp",
+            "name": "rageQuitExtensionPeriodStartedAt",
+            "type": "uint40"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRageQuitExtensionPeriodStarted",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct IRageQuitEscrow.RageQuitEscrowDetails",
+        "name": "details",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getRageQuitSupport",
+    "outputs": [
+      {
+        "internalType": "PercentD16",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSignallingEscrowDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "SharesValue",
+            "name": "totalStETHLockedShares",
+            "type": "uint128"
+          },
+          {
+            "internalType": "ETHValue",
+            "name": "totalStETHClaimedETH",
+            "type": "uint128"
+          },
+          {
+            "internalType": "SharesValue",
+            "name": "totalUnstETHUnfinalizedShares",
+            "type": "uint128"
+          },
+          {
+            "internalType": "ETHValue",
+            "name": "totalUnstETHFinalizedETH",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct ISignallingEscrow.SignallingEscrowDetails",
+        "name": "details",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getUnclaimedUnstETHIdsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vetoer",
+        "type": "address"
+      }
+    ],
+    "name": "getVetoerDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "unstETHIdsCount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "SharesValue",
+            "name": "stETHLockedShares",
+            "type": "uint128"
+          },
+          {
+            "internalType": "SharesValue",
+            "name": "unstETHLockedShares",
+            "type": "uint128"
+          },
+          {
+            "internalType": "Timestamp",
+            "name": "lastAssetsLockTimestamp",
+            "type": "uint40"
+          }
+        ],
+        "internalType": "struct ISignallingEscrow.VetoerDetails",
+        "name": "details",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vetoer",
+        "type": "address"
+      }
+    ],
+    "name": "getVetoerUnstETHIds",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "minAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isRageQuitFinalized",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isWithdrawalsBatchesClosed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "lockStETH",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "lockedStETHShares",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "lockUnstETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "lockWstETH",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "lockedStETHShares",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "hints",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "markUnstETHFinalized",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "batchSize",
+        "type": "uint256"
+      }
+    ],
+    "name": "requestNextWithdrawalsBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "newMinAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "name": "setMinAssetsLockDuration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "rageQuitExtensionPeriodDuration",
+        "type": "uint32"
+      },
+      {
+        "internalType": "Duration",
+        "name": "rageQuitEthWithdrawalsDelay",
+        "type": "uint32"
+      }
+    ],
+    "name": "startRageQuit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "startRageQuitExtensionPeriod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unlockStETH",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "unlockedStETHShares",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "unlockUnstETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unlockWstETH",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "wstETHUnlocked",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unstETHIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "withdrawETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]

@@ -2,6 +2,7 @@ import { BlockEvent, ethers, fetchJwt, Finding, getEthersProvider, TransactionEv
 import {
   ARAGON_VOTING_ADDRESS,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
+  DUAL_GOVERNANCE_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
   LDO_ADDRESS,
 } from 'constants/common'
@@ -13,6 +14,7 @@ import {
   NodeOperatorsRegistry__factory,
   AragonVoting__factory,
   LDO__factory,
+  DualGovernance__factory,
 } from './generated'
 import { EnsNamesSrv } from './services/ens-names/EnsNames.srv'
 import { EasyTrackSrv } from './services/easy-track/EasyTrack.srv'
@@ -27,6 +29,7 @@ import { AragonVotingSrv } from './services/aragon-voting/AragonVoting.srv'
 import { TrpChangesSrv } from './services/trp-changes/TrpChanges.srv'
 import { StonksSrv } from './services/stonks/Stonks.srv'
 import { CrossChainWatcherSrv } from './services/cross-chain-watcher/CrossChainWatcher.srv'
+import { DualGovernanceSrv } from './services/dual-governance/DualGovernance.srv'
 
 type SubAgent = {
   initialize: (currentBlock: number) => Promise<Error | null> | Error | null
@@ -42,6 +45,7 @@ export type Container = {
   AclChangesSrv: AclChangesSrv
   ProxyWatcherSrv: ProxyWatcherSrv
   AragonVotingSrv: AragonVotingSrv
+  DualGovernanceSrv: DualGovernanceSrv
   TrpChangesSrv: TrpChangesSrv
   StonksSrv: StonksSrv
   CrossChainWatcherSrv: CrossChainWatcherSrv
@@ -96,6 +100,8 @@ export class App {
 
       const ldoContract = LDO__factory.connect(LDO_ADDRESS, ethersProvider)
 
+      const dualGovernanceContract = DualGovernance__factory.connect(DUAL_GOVERNANCE_ADDRESS, ethersProvider)
+
       const ethClient = new ETHProvider(
         ethersProvider,
         etherscanProvider,
@@ -104,6 +110,7 @@ export class App {
         nodeOperatorsRegistryContract,
         aragonVotingContract,
         ldoContract,
+        dualGovernanceContract,
       )
 
       const logger: Winston.Logger = Winston.createLogger({
@@ -116,6 +123,7 @@ export class App {
       const easyTrackSrv = new EasyTrackSrv(logger, ethClient)
       const aclChangesSrv = new AclChangesSrv(logger, ethClient)
       const aragonVotingSrv = new AragonVotingSrv(logger, ethClient)
+      const dualGovernanceSrv = new DualGovernanceSrv(logger, ethClient)
       const trpChangesSrv = new TrpChangesSrv(logger)
       const stonksSrv = new StonksSrv(logger, ethClient)
       const crossChainWatcherSrv = new CrossChainWatcherSrv(logger, ethClient)
@@ -123,6 +131,7 @@ export class App {
       const subAgents = [
         aclChangesSrv,
         aragonVotingSrv,
+        dualGovernanceSrv,
         easyTrackSrv,
         ensNamesSrv,
         proxyWatcherSrv,
@@ -138,6 +147,7 @@ export class App {
         AclChangesSrv: aclChangesSrv,
         ProxyWatcherSrv: proxyWatcherSrv,
         AragonVotingSrv: aragonVotingSrv,
+        DualGovernanceSrv: dualGovernanceSrv,
         TrpChangesSrv: trpChangesSrv,
         StonksSrv: stonksSrv,
         CrossChainWatcherSrv: crossChainWatcherSrv,

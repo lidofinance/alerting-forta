@@ -13,6 +13,9 @@ import {
   NodeOperatorsRegistry as NodeOperatorsRegistryContract,
   Stonks__factory,
   Swap__factory,
+  DualGovernance as DualGovernanceContract,
+  DGConfigProvider__factory,
+  Escrow__factory,
 } from '../generated'
 import { IEtherscanProvider } from './contracts'
 import { NetworkError } from '../shared/errors'
@@ -29,7 +32,8 @@ import { formatEther } from 'ethers/lib/utils'
 import { BSC_CHAIN_ID, BSC_L1_CROSS_CHAIN_CONTROLLER } from '../shared/constants/cross-chain/mainnet'
 import { ICrossChainForwarder } from '../generated/CrossChainController'
 import { ICrossChainClient } from '../services/cross-chain-watcher/contract'
-import { ProxyInfo } from '../shared/types'
+import { Address, ProxyInfo } from '../shared/types'
+import { DualGovernanceConfig, DualGovernanceDetailedState } from '../services/dual-governance/contract'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -51,16 +55,17 @@ export class ETHProvider
   private readonly nodeOperatorsRegistryContract: NodeOperatorsRegistryContract
   private readonly aragonVotingContract: AragonVotingContract
   private readonly ldoContract: LDOContract
+  private readonly dualGovernanceContract: DualGovernanceContract
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
     etherscanProvider: IEtherscanProvider,
-
     ensContract: EnsContract,
     increaseStakingLimitContract: IncreaseStakingLimitContract,
     nodeOperatorsRegistryContract: NodeOperatorsRegistryContract,
     aragonVotingContract: AragonVotingContract,
     ldoContract: LDOContract,
+    dualGovernanceContract: DualGovernanceContract,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.etherscanProvider = etherscanProvider
@@ -70,6 +75,7 @@ export class ETHProvider
     this.nodeOperatorsRegistryContract = nodeOperatorsRegistryContract
     this.aragonVotingContract = aragonVotingContract
     this.ldoContract = ldoContract
+    this.dualGovernanceContract = dualGovernanceContract
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
@@ -559,6 +565,108 @@ export class ETHProvider
       return E.left(
         new NetworkError(e, `Could not call ethers.ldoContract.balanceOfAt voter ${voter} block ${blockTag}`),
       )
+    }
+  }
+
+  // ===== Dual Governance =====
+
+  public async getVetoSignallingEscrow(): Promise<E.Either<Error, Address>> {
+    try {
+      const vetoSignallingEscrowAddress = await retryAsync(
+        async () => {
+          return await this.dualGovernanceContract.getVetoSignallingEscrow()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(vetoSignallingEscrowAddress as Address)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.dualGovernanceContract.getVetoSignallingEscrow`))
+    }
+  }
+
+  public async getRageQuitEscrow(): Promise<E.Either<Error, Address>> {
+    try {
+      const vetoSignallingEscrowAddress = await retryAsync(
+        async () => {
+          return await this.dualGovernanceContract.getRageQuitEscrow()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(vetoSignallingEscrowAddress as Address)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.dualGovernanceContract.getRageQuitEscrow`))
+    }
+  }
+
+  public async getConfig(): Promise<E.Either<Error, DualGovernanceConfig>> {
+    try {
+      const configAddress = await retryAsync(
+        async () => {
+          return await this.dualGovernanceContract.getConfigProvider()
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      const dualGovernanceConfigProviderContract = DGConfigProvider__factory.connect(
+        configAddress,
+        this.jsonRpcProvider,
+      )
+
+      const config: DualGovernanceConfig = await retryAsync(
+        async () => {
+          const _config = await dualGovernanceConfigProviderContract.getDualGovernanceConfig()
+          return {
+            ..._config,
+            firstSealRageQuitSupport: new BigNumber(String(_config.firstSealRageQuitSupport)),
+            secondSealRageQuitSupport: new BigNumber(String(_config.secondSealRageQuitSupport)),
+          }
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      console.log(config, 'config')
+      return E.right(config)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.dualGovernanceContract.getConfigProvider`))
+    }
+  }
+
+  public async getRageQuitSupport(escrowAddress: Address): Promise<E.Either<Error, BigNumber>> {
+    if (!escrowAddress) {
+      return E.left(new Error('Escrow address must be provided'))
+    }
+    try {
+      const escrowContract = Escrow__factory.connect(escrowAddress, this.jsonRpcProvider)
+
+      const rageQuitSupport = await retryAsync(
+        async () => {
+          const support = await escrowContract.getRageQuitSupport()
+          return new BigNumber(String(support))
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+
+      return E.right(rageQuitSupport)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.rageQuitSupport.getRageQuitSupport`))
+    }
+  }
+
+  public async getDualGovernanceStateDetails(): Promise<E.Either<Error, DualGovernanceDetailedState>> {
+    try {
+      const stateDetails = await retryAsync(
+        async () => {
+          const state = await this.dualGovernanceContract.getStateDetails()
+          return {
+            ...state,
+            rageQuitRound: new BigNumber(String(state.rageQuitRound)),
+          }
+        },
+        { delay: DELAY_IN_500MS, maxTry: ATTEMPTS_5 },
+      )
+      return E.right(stateDetails)
+    } catch (e) {
+      return E.left(new NetworkError(e, `Could not call ethers.dualGovernanceContract.getStateDetails`))
     }
   }
 }
