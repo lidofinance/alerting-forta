@@ -251,7 +251,7 @@ export class CSModuleSrv implements Service {
                         ? no.depositableValidatorsCount - keysSeenForOperator
                         : keysInBatch
                 validatorsInQueue += depositableFromBatch
-                queueLookup.set(nodeOperatorId, depositableFromBatch)
+                queueLookup.set(nodeOperatorId, keysSeenForOperator + depositableFromBatch)
             }
 
             index = batch.next()
