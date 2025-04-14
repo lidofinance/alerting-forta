@@ -5,7 +5,7 @@
 /l2-bridge-linea/ @lidofinance/lido-eth-protocol
 /arb-subgraph/ @lidofinance/lido-si
 /ethereum-governance/ @lidofinance/lido-dao-ops-team
-/ethereum-governance-v2/ @lidofinance/lido-dao-ops-team
+/mellow-vaults/ @lidofinance/lido-dao-ops-team
 /multisig-watcher/ @lidofinance/lido-dao-ops-team
 /voting-watcher/ @lidofinance/lido-dao-ops-team
 /ethereum-validators-set/ @lidofinance/lido-valset-tech
