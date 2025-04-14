@@ -6,3 +6,6 @@ forta.config.json
 *.log
 version.json
 .DS_Store
+
+# Env
+.env
