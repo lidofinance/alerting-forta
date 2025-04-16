@@ -59,6 +59,7 @@ describe('DualGovernanceSrv', () => {
     } as unknown as TransactionEvent
     blockEvent = {
       blockNumber: 100,
+      block: { timestamp: 1000 },
     } as unknown as BlockEvent
     jest.clearAllMocks()
     ;(handleEventsOfNotice as jest.Mock).mockResolvedValue([])

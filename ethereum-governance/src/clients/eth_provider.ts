@@ -14,6 +14,7 @@ import {
   Stonks__factory,
   Swap__factory,
   DualGovernance as DualGovernanceContract,
+  EmergencyProtectedTimelock as EmergencyProtectedTimelockContract,
   DGConfigProvider__factory,
   Escrow__factory,
 } from '../generated'
@@ -33,7 +34,11 @@ import { BSC_CHAIN_ID, BSC_L1_CROSS_CHAIN_CONTROLLER } from '../shared/constants
 import { ICrossChainForwarder } from '../generated/CrossChainController'
 import { ICrossChainClient } from '../services/cross-chain-watcher/contract'
 import { Address, ProxyInfo } from '../shared/types'
-import { DualGovernanceConfig, DualGovernanceDetailedState } from '../services/dual-governance/contract'
+import {
+  DualGovernanceConfig,
+  DualGovernanceDetailedState,
+  ProposalsDelays,
+} from '../services/dual-governance/contract'
 
 const DELAY_IN_500MS = 500
 const ATTEMPTS_5 = 5
@@ -56,6 +61,7 @@ export class ETHProvider
   private readonly aragonVotingContract: AragonVotingContract
   private readonly ldoContract: LDOContract
   private readonly dualGovernanceContract: DualGovernanceContract
+  private readonly emergencyProtectedTimelockContract: EmergencyProtectedTimelockContract
 
   constructor(
     jsonRpcProvider: ethers.providers.JsonRpcProvider,
@@ -66,6 +72,7 @@ export class ETHProvider
     aragonVotingContract: AragonVotingContract,
     ldoContract: LDOContract,
     dualGovernanceContract: DualGovernanceContract,
+    emergencyProtectedTimelockContract: EmergencyProtectedTimelockContract,
   ) {
     this.jsonRpcProvider = jsonRpcProvider
     this.etherscanProvider = etherscanProvider
@@ -76,6 +83,7 @@ export class ETHProvider
     this.aragonVotingContract = aragonVotingContract
     this.ldoContract = ldoContract
     this.dualGovernanceContract = dualGovernanceContract
+    this.emergencyProtectedTimelockContract = emergencyProtectedTimelockContract
   }
 
   public async getBlock(blockNumber: number): Promise<E.Either<Error, ethers.providers.Block>> {
@@ -667,6 +675,24 @@ export class ETHProvider
       return E.right(stateDetails)
     } catch (e) {
       return E.left(new NetworkError(e, `Could not call ethers.dualGovernanceContract.getStateDetails`))
+    }
+  }
+
+  public async getProposalsDelays(): Promise<E.Either<Error, ProposalsDelays>> {
+    try {
+      const promises = [
+        this.emergencyProtectedTimelockContract.getAfterSubmitDelay(),
+        this.emergencyProtectedTimelockContract.getAfterScheduleDelay(),
+      ]
+
+      const [afterSubmitDelay, afterScheduleDelay] = await Promise.all(promises)
+
+      return E.right({
+        afterSubmitDelay,
+        afterScheduleDelay,
+      })
+    } catch (e) {
+      return E.left(new NetworkError(e, 'Could not fetch proposals delays'))
     }
   }
 }

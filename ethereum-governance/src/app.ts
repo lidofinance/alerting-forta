@@ -3,6 +3,7 @@ import {
   ARAGON_VOTING_ADDRESS,
   CURATED_NODE_OPERATORS_REGISTRY_ADDRESS,
   DUAL_GOVERNANCE_ADDRESS,
+  EMERGENCY_PROTECTED_TIMELOCK_ADDRESS,
   ENS_BASE_REGISTRAR_ADDRESS,
   LDO_ADDRESS,
 } from 'constants/common'
@@ -15,6 +16,7 @@ import {
   AragonVoting__factory,
   LDO__factory,
   DualGovernance__factory,
+  EmergencyProtectedTimelock__factory,
 } from './generated'
 import { EnsNamesSrv } from './services/ens-names/EnsNames.srv'
 import { EasyTrackSrv } from './services/easy-track/EasyTrack.srv'
@@ -102,6 +104,11 @@ export class App {
 
       const dualGovernanceContract = DualGovernance__factory.connect(DUAL_GOVERNANCE_ADDRESS, ethersProvider)
 
+      const emergencyProtectedTimelockContract = EmergencyProtectedTimelock__factory.connect(
+        EMERGENCY_PROTECTED_TIMELOCK_ADDRESS,
+        ethersProvider,
+      )
+
       const ethClient = new ETHProvider(
         ethersProvider,
         etherscanProvider,
@@ -111,6 +118,7 @@ export class App {
         aragonVotingContract,
         ldoContract,
         dualGovernanceContract,
+        emergencyProtectedTimelockContract,
       )
 
       const logger: Winston.Logger = Winston.createLogger({

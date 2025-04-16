@@ -2,6 +2,15 @@ import { DUAL_GOVERNANCE_ADDRESS, EMERGENCY_PROTECTED_TIMELOCK_ADDRESS } from 'c
 import { Result } from '@ethersproject/abi'
 import { FindingSeverity, FindingType } from 'forta-agent'
 
+export const PROPOSAL_SUBMITTED_SIGNATURE =
+  'event ProposalSubmitted(address indexed proposerAccount, uint256 indexed proposalId, string metadata)'
+
+export const PROPOSAL_SCHEDULED_SIGNATURE = 'event ProposalScheduled(uint256 indexed id)'
+
+export const PROPOSAL_EXECUTED_SIGNATURE = 'event ProposalExecuted(uint256 indexed id)'
+
+export const PROPOSAL_CANCELLED_SIGNATURE = 'event ProposalsCancelledTill(uint256 proposalId)'
+
 export const DUAL_GOVERNANCE_PROPOSAL_STATUS_EVENTS = [
   {
     address: DUAL_GOVERNANCE_ADDRESS,

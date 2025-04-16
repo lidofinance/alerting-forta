@@ -1,4 +1,4 @@
-import { BlockEvent, Finding, TransactionEvent } from 'forta-agent'
+import { BlockEvent, Finding, FindingSeverity, FindingType, LogDescription, TransactionEvent } from 'forta-agent'
 import { Logger } from 'winston'
 import { DualGovernanceDetailedState, IDualGovernanceClient } from './contract'
 import { elapsedTime } from '../../shared/time'
@@ -8,17 +8,29 @@ import { Address } from '../../shared/types'
 import BigNumber from 'bignumber.js'
 import { GovernanceState } from './types'
 import {
-  vetoSignallingEscrowThresholdHandler,
-  VetoSignallingThresholdResult,
   rageQuitEscrowThresholdHandler,
   RageQuitThresholdResult,
+  vetoSignallingEscrowThresholdHandler,
+  VetoSignallingThresholdResult,
 } from './handlers/'
 
 import {
   DUAL_GOVERNANCE_COMMITTEE_RELATED_EVENTS,
   DUAL_GOVERNANCE_PROPOSAL_STATUS_EVENTS,
   DUAL_GOVERNANCE_STATE_CHANGE_EVENTS,
+  PROPOSAL_CANCELLED_SIGNATURE,
+  PROPOSAL_EXECUTED_SIGNATURE,
+  PROPOSAL_SCHEDULED_SIGNATURE,
+  PROPOSAL_SUBMITTED_SIGNATURE,
 } from './events'
+import { DUAL_GOVERNANCE_ADDRESS, EMERGENCY_PROTECTED_TIMELOCK_ADDRESS } from 'constants/common'
+
+interface ProposalTimerState {
+  startTime: number
+  startBlock: number
+  type: 'submitted' | 'scheduled'
+  proposalId: string
+}
 
 export class DualGovernanceSrv {
   private readonly logger: Logger
@@ -31,6 +43,9 @@ export class DualGovernanceSrv {
   private lastAlertedVetoSignallingThresholdLevel: number = 0
   private lastAlertedRageQuitThresholdLevel: number = 0
   private currentMonitoredState: GovernanceState | null = null
+  private afterSubmitDelay: number | null = null
+  private afterScheduleDelay: number | null = null
+  private activeProposalTimers: Map<string, ProposalTimerState> = new Map()
 
   constructor(logger: Logger, ethProvider: IDualGovernanceClient) {
     this.logger = logger
@@ -91,6 +106,16 @@ export class DualGovernanceSrv {
       this.logger.error(`[${this.name}.initialize] Failed to fetch VS escrow address: ${error}`)
     }
 
+    try {
+      const proposalsDelays = await this.ethProvider.getProposalsDelays()
+      if (E.isRight(proposalsDelays)) {
+        this.afterSubmitDelay = proposalsDelays.right.afterSubmitDelay
+        this.afterScheduleDelay = proposalsDelays.right.afterScheduleDelay
+      }
+    } catch (error) {
+      this.logger.error(`[${this.name}.initialize] Failed to fetch proposals delays: ${error}`)
+    }
+
     this.logger.info(elapsedTime(`[${this.name}.initialize] Completed on ${currentBlock}`, start))
     return null
   }
@@ -109,6 +134,83 @@ export class DualGovernanceSrv {
 
     findings.push(...findingsEventsOfNotice)
     this.logger.debug(elapsedTime(DualGovernanceSrv.name + '.' + this.handleTransaction.name, start))
+
+    const proposalSubmittedLogs: LogDescription[] =
+      txEvent.filterLog(PROPOSAL_SUBMITTED_SIGNATURE, DUAL_GOVERNANCE_ADDRESS) || []
+
+    proposalSubmittedLogs.forEach((log) => {
+      const proposalId = log.args.proposalId.toString()
+      const key = `${proposalId}-submitted`
+      if (this.afterSubmitDelay !== null && this.afterSubmitDelay > 0) {
+        if (!this.activeProposalTimers.has(key)) {
+          this.activeProposalTimers.set(key, {
+            startTime: txEvent.timestamp,
+            startBlock: txEvent.blockNumber,
+            type: 'submitted',
+            proposalId: proposalId,
+          })
+          this.logger.info(
+            `[${this.name}] Started 'afterSubmitDelay' timer (${this.afterSubmitDelay}s) for proposal ${proposalId} (key: ${key})`,
+          )
+        }
+      } else {
+        this.logger.warn(
+          `[${this.name}] afterSubmitDelay is not valid (${this.afterSubmitDelay}), cannot start timer for submitted proposal ${proposalId}.`,
+        )
+      }
+    })
+
+    const proposalScheduledLogs: LogDescription[] =
+      txEvent.filterLog(PROPOSAL_SCHEDULED_SIGNATURE, EMERGENCY_PROTECTED_TIMELOCK_ADDRESS) || []
+    proposalScheduledLogs.forEach((log) => {
+      const proposalId = log.args.id.toString()
+      const key = `${proposalId}-scheduled`
+      if (this.afterScheduleDelay !== null && this.afterScheduleDelay > 0) {
+        if (!this.activeProposalTimers.has(key)) {
+          this.activeProposalTimers.set(key, {
+            startTime: txEvent.timestamp,
+            startBlock: txEvent.blockNumber,
+            type: 'scheduled',
+            proposalId: proposalId,
+          })
+          this.logger.info(
+            `[${this.name}] Started 'afterScheduleDelay' timer (${this.afterScheduleDelay}s) for proposal ${proposalId} (key: ${key})`,
+          )
+        }
+      } else {
+        this.logger.warn(
+          `[${this.name}] afterScheduleDelay is not valid (${this.afterScheduleDelay}), cannot start timer for scheduled proposal ${proposalId}.`,
+        )
+      }
+    })
+
+    const proposalExecutedLogs: LogDescription[] =
+      txEvent.filterLog(PROPOSAL_EXECUTED_SIGNATURE, EMERGENCY_PROTECTED_TIMELOCK_ADDRESS) || []
+    proposalExecutedLogs.forEach((log) => {
+      const proposalId = log.args.id.toString()
+      const submittedKey = `${proposalId}-submitted`
+      const scheduledKey = `${proposalId}-scheduled`
+      if (this.activeProposalTimers.delete(submittedKey)) {
+        this.logger.info(`[${this.name}] Deleted 'submitted' timer for executed proposal ${proposalId}`)
+      }
+      if (this.activeProposalTimers.delete(scheduledKey)) {
+        this.logger.info(`[${this.name}] Deleted 'scheduled' timer for executed proposal ${proposalId}`)
+      }
+    })
+
+    const proposalCancelledLogs: LogDescription[] =
+      txEvent.filterLog(PROPOSAL_CANCELLED_SIGNATURE, EMERGENCY_PROTECTED_TIMELOCK_ADDRESS) || []
+    proposalCancelledLogs.forEach((log) => {
+      const proposalId = log.args.proposalId.toString() // Adjust arg name if needed
+      const submittedKey = `${proposalId}-submitted`
+      const scheduledKey = `${proposalId}-scheduled`
+      if (this.activeProposalTimers.delete(submittedKey)) {
+        this.logger.info(`[${this.name}] Deleted 'submitted' timer for cancelled proposal ${proposalId}`)
+      }
+      if (this.activeProposalTimers.delete(scheduledKey)) {
+        this.logger.info(`[${this.name}] Deleted 'scheduled' timer for cancelled proposal ${proposalId}`)
+      }
+    })
 
     return findings
   }
@@ -226,6 +328,59 @@ export class DualGovernanceSrv {
         }
       }
     }
+
+    const currentTimestamp = blockEvent.block.timestamp
+    const currentBlockNumber = blockEvent.block.number
+    const expiredTimerKeys: string[] = []
+
+    for (const [key, timerState] of this.activeProposalTimers.entries()) {
+      let timeoutDuration: number | null = null
+      let alertName = ''
+      let alertDesc = ''
+      let alertId = ''
+
+      if (timerState.type === 'submitted') {
+        timeoutDuration = this.afterSubmitDelay
+        alertName = 'Proposal Submission Timelock Ended'
+        alertDesc = ` Submission timelock ended for proposal ${timerState.proposalId}. It is now ready to be scheduled.`
+        alertId = 'DUAL-GOVERNANCE-SUBMISSION-TIMELOCK-ENDED'
+      } else if (timerState.type === 'scheduled') {
+        timeoutDuration = this.afterScheduleDelay
+        alertName = 'Proposal Scheduled Timelock Ended'
+        alertDesc = `Scheduled timelock ended for proposal ${timerState.proposalId}. It is now ready for execution.`
+        alertId = 'DUAL-GOVERNANCE-SCHEDULING-TIMELOCK-ENDED'
+      }
+
+      if (timeoutDuration !== null && timeoutDuration > 0) {
+        const elapsedTime = currentTimestamp - timerState.startTime
+
+        if (elapsedTime >= timeoutDuration) {
+          this.logger.info(`[${this.name}] Timeout reached for proposal timer key: ${key}`)
+          findings.push(
+            Finding.fromObject({
+              name: alertName,
+              description: alertDesc,
+              alertId: alertId,
+              severity: FindingSeverity.Info,
+              type: FindingType.Info,
+              metadata: {
+                proposalId: timerState.proposalId,
+                alertTimestamp: currentTimestamp.toString(),
+                alertBlock: currentBlockNumber.toString(),
+              },
+            }),
+          )
+          expiredTimerKeys.push(key)
+        }
+      } else {
+        this.logger.warn(
+          `[${this.name}] Invalid or missing timeout duration (${timerState.type === 'submitted' ? 'afterSubmitDelay' : 'afterScheduleDelay'} = ${timeoutDuration}) for timer key: ${key}. Removing timer.`,
+        )
+        expiredTimerKeys.push(key)
+      }
+    }
+
+    expiredTimerKeys.forEach((key) => this.activeProposalTimers.delete(key))
 
     return findings
   }

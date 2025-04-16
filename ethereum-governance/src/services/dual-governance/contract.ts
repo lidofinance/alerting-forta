@@ -13,6 +13,11 @@ export type DualGovernanceDetailedState = {
   vetoSignallingDuration: number
 }
 
+export type ProposalsDelays = {
+  afterSubmitDelay: number
+  afterScheduleDelay: number
+}
+
 export type DualGovernanceConfig = {
   firstSealRageQuitSupport: BigNumber
   secondSealRageQuitSupport: BigNumber
@@ -38,4 +43,6 @@ export abstract class IDualGovernanceClient {
   public abstract getRageQuitSupport(escrowAddress: Address): Promise<E.Either<Error, BigNumber>>
 
   public abstract getDualGovernanceStateDetails(): Promise<E.Either<Error, DualGovernanceDetailedState>>
+
+  public abstract getProposalsDelays(): Promise<E.Either<Error, ProposalsDelays>>
 }
