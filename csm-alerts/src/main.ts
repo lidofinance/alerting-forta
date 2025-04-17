@@ -6,6 +6,7 @@ import {
     isProduction,
     scanEthereum,
 } from '@fortanetwork/forta-bot'
+import { BlockTag } from 'ethers'
 
 import { getLogger } from './logger'
 import {
@@ -41,8 +42,8 @@ if (require.main === module) {
     main().catch(logger.error)
 }
 
-async function getHandlers() {
-    const { blockIdentifier } = await parseArgs()
+export async function getHandlers(blockIdentifier?: BlockTag) {
+    blockIdentifier = blockIdentifier ?? (await parseArgs()).blockIdentifier
 
     const services = [
         new CSFeeDistributorSrv(),
@@ -53,13 +54,14 @@ async function getHandlers() {
         new GateSealSrv(),
     ]
 
+    logger.info('Starting initialization')
     for (const srv of services) {
         if ('initialize' in srv) {
             await srv.initialize(blockIdentifier ?? 'latest', await getProvider())
         }
     }
+    logger.info('Initialization complete')
 
-    logger.debug('Initialization complete')
     let isLaunchReported = false
 
     async function handleTransaction(txEvent: TransactionEvent, provider: ethers.Provider) {
