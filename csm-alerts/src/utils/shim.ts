@@ -9,7 +9,7 @@ import {
     TransactionEvent as TransactionEventV1,
 } from 'forta-agent'
 
-import { BlockEvent, Receipt } from '../shared/nats'
+import { BlockEvent } from '../shared/nats'
 
 export function blockEventV1toV2(
     blockEvent: BlockEventV1,
@@ -40,7 +40,7 @@ export function onchainMonBlockToBlockEventV2(
         stateRoot: '',
         timestamp: blockEvent.timestamp,
         totalDifficulty: '',
-        transactions: blockEvent.receipts.map(receiptToTxHash),
+        transactions: blockEvent.receipts.map((r) => r.transactionHash),
         transactionsRoot: '',
         uncles: [],
     })
@@ -51,13 +51,13 @@ export function onchainMonBlockToListTransactionEventV2(
     chainId: number | undefined,
 ) {
     return blockEvent.receipts.map(
-        (r) =>
+        ({ from, logs, to, transactionHash }) =>
             new TransactionEventV2(
                 chainId ?? 1,
                 {
-                    hash: receiptToTxHash(r),
-                    from: 'fixme',
-                    to: r.to ?? null,
+                    hash: transactionHash,
+                    from: from,
+                    to: to ?? null,
                     nonce: -1,
                     gas: '',
                     gasPrice: '',
@@ -68,20 +68,20 @@ export function onchainMonBlockToListTransactionEventV2(
                     v: '',
                 },
                 [], // traces
-                {}, // addresses, not really used in the bot
+                (() => {
+                    const addresses = { [from]: true }
+                    if (to) addresses[to] = true
+                    return addresses
+                })(), // addresses
                 {
                     hash: blockEvent.hash,
                     number: blockEvent.number,
                     timestamp: blockEvent.timestamp,
                 },
-                r.logs,
-                null, // @see https://github.com/forta-network/forta-bot-sdk-v2/blob/1b63a9b81681b2db147e1ee7416404293b4cd735/ts-sdk/src/transactions/create.transaction.event.ts#L102-L106
+                logs,
+                null, // TODO: use getCreateAddress from 'ethers'
             ),
     )
-}
-
-function receiptToTxHash(r: Receipt) {
-    return r.logs[0]?.transactionHash ?? 'undefined'
 }
 
 export function txEventV1toV2(

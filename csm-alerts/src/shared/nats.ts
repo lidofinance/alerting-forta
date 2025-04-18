@@ -14,7 +14,9 @@ export interface BlockEvent {
 
 export interface Receipt {
     to?: string
+    from: string
     logs: Logs
+    transactionHash: string
 
     [k: string]: unknown
 }
