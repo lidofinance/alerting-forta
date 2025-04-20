@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 import { CSAccounting__factory } from '../../../generated/typechain'
 import * as CSAccounting from '../../../generated/typechain/CSAccounting'
 import { EventOfNotice } from '../../../shared/types'
-import { etherscanAddress, formatEther } from '../../../utils/string'
+import { addressOnExplorer, formatEther } from '../../../utils/string'
 
 const ICSAccounting = CSAccounting__factory.createInterface()
 
@@ -15,7 +15,7 @@ export function getCSAccountingEvents(accounting: string): EventOfNotice[] {
             alertId: 'CS-ACCOUNTING-CHARGE-PENALTY-RECIPIENT-SET',
             name: '🚨 CSAccounting: Charge penalty recipient set',
             description: (args: CSAccounting.ChargePenaltyRecipientSetEvent.OutputObject) =>
-                `Charge penalty recipient set to ${etherscanAddress(args.chargePenaltyRecipient)} (expecting the treasury)`,
+                `Charge penalty recipient set to ${addressOnExplorer(args.chargePenaltyRecipient)} (expecting the treasury)`,
             severity: FindingSeverity.Critical,
             type: FindingType.Info,
         },

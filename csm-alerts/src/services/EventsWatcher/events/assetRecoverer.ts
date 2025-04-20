@@ -3,7 +3,7 @@ import { FindingSeverity, FindingType } from '@fortanetwork/forta-bot'
 import { AssetRecoverer__factory } from '../../../generated/typechain'
 import * as AssetRecoverer from '../../../generated/typechain/AssetRecoverer'
 import { EventOfNotice } from '../../../shared/types'
-import { etherscanAddress, formatEther, formatShares } from '../../../utils/string'
+import { addressOnExplorer, formatEther, formatShares } from '../../../utils/string'
 
 const IAssetRecoverer = AssetRecoverer__factory.createInterface()
 
@@ -19,8 +19,8 @@ export function getAssetRecovererEvents(
                 name: '🔴 AssetRecoverer: ERC20 recovered',
                 description: (args: AssetRecoverer.ERC20RecoveredEvent.OutputObject) =>
                     `ERC20 recovered on ${contract.name}:\n` +
-                    `Recipient: ${etherscanAddress(args.recipient)}\n` +
-                    `Token: ${etherscanAddress(args.token)}\n` +
+                    `Recipient: ${addressOnExplorer(args.recipient)}\n` +
+                    `Token: ${addressOnExplorer(args.token)}\n` +
                     `Amount: ${args.amount}`,
                 severity: FindingSeverity.High,
                 type: FindingType.Info,
@@ -32,8 +32,8 @@ export function getAssetRecovererEvents(
                 name: '🔴 AssetRecoverer: ERC721 recovered',
                 description: (args: AssetRecoverer.ERC721RecoveredEvent.OutputObject) =>
                     `ERC721 recovered on ${contract.name}:\n` +
-                    `Recipient: ${etherscanAddress(args.recipient)}\n` +
-                    `Token: ${etherscanAddress(args.token)}\n` +
+                    `Recipient: ${addressOnExplorer(args.recipient)}\n` +
+                    `Token: ${addressOnExplorer(args.token)}\n` +
                     `Token ID: ${args.tokenId}`,
                 severity: FindingSeverity.High,
                 type: FindingType.Info,
@@ -45,8 +45,8 @@ export function getAssetRecovererEvents(
                 name: '🔴 AssetRecoverer: ERC1155 recovered',
                 description: (args: AssetRecoverer.ERC1155RecoveredEvent.OutputObject) =>
                     `ERC1155 recovered on ${contract.name}:\n` +
-                    `Recipient: ${etherscanAddress(args.recipient)}\n` +
-                    `Token: ${etherscanAddress(args.token)}\n` +
+                    `Recipient: ${addressOnExplorer(args.recipient)}\n` +
+                    `Token: ${addressOnExplorer(args.token)}\n` +
                     `Token ID: ${args.tokenId}\n` +
                     `Amount: ${args.amount}`,
                 severity: FindingSeverity.High,
@@ -59,7 +59,7 @@ export function getAssetRecovererEvents(
                 name: '🔴 AssetRecoverer: Ether recovered',
                 description: (args: AssetRecoverer.EtherRecoveredEvent.OutputObject) =>
                     `Ether recovered on ${contract.name}:\n` +
-                    `Recipient: ${etherscanAddress(args.recipient)}\n` +
+                    `Recipient: ${addressOnExplorer(args.recipient)}\n` +
                     `Amount: ${formatEther(args.amount)}`,
                 severity: FindingSeverity.High,
                 type: FindingType.Info,
@@ -71,7 +71,7 @@ export function getAssetRecovererEvents(
                 name: '🔴 AssetRecoverer: stETH Shares recovered',
                 description: (args: AssetRecoverer.StETHSharesRecoveredEvent.OutputObject) =>
                     `StETH Shares recovered on ${contract.name}:\n` +
-                    `Recipient: ${etherscanAddress(args.recipient)}\n` +
+                    `Recipient: ${addressOnExplorer(args.recipient)}\n` +
                     `Amount: ${formatShares(args.shares)}`,
                 severity: FindingSeverity.High,
                 type: FindingType.Info,

@@ -4,6 +4,7 @@
 
 - Mainnet
 - Holesky
+- Hoodi
 
 ## Alerts
 
@@ -14,10 +15,11 @@
         3. 🫧 LOW: Module's share is close to the targetShare.
         4. 🫧 LOW: More than N "empty" batches in the queue. (N = 30)
         5. 🫧 LOW: More than N validators in the queue. (N = 200)
-        6. 🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
-        7. 🔵 INFO: Operator X was unvetted.
-        8. 🔵 INFO: Public release is activated.
-        9. 🔵 INFO: Every 100 new operators created (69th as well).
+        6. 🔵 INFO: Module's share is close to the priority exit share.
+        7. 🔵 INFO: EL rewards stealing penalty reported/settled/cancelled for an operator.
+        8. 🔵 INFO: Operator X was unvetted.
+        9. 🔵 INFO: Public release is activated.
+        10. 🔵 INFO: Every 100 new operators created (69th as well).
     2. Roles monitoring
         1. 🚨 CRITICAL: role change: DEFAULT_ADMIN_ROLE
         2. 🚨 CRITICAL: role change: PAUSE_ROLE

@@ -30,6 +30,8 @@ const CHECK_QUEUE_INTERVAL_BLOCKS = 1801 // ~ 4 times a day
 const CHECK_SHARE_INTERVAL_BLOCKS = 2401 // ~ 3 times a day
 const CHECK_PROVER_BALANCE_INTERVAL_BLOCKS = 7201 // ~ 1 time a day
 const TARGET_SHARE_USED_PERCENT_MAX = 95
+const TARGET_SHARE_TOLERANCE_BP = 5n
+const PRIORITY_EXIT_SHARE_DIFF_TO_ALERT_BP = 5n
 const QUEUE_EMPTY_BATCHES_MAX = 30
 const QUEUE_VALIDATORS_MAX = 200
 const MIN_PROVER_BALANCE = 5n * 10n ** 17n // 0.5 ether
@@ -58,6 +60,7 @@ export class CSModuleSrv implements Service {
     private readonly logger: Logger
 
     private lastFiredAt = {
+        moduleShareIsCloseToPriorityExitShare: 0,
         moduleShareIsCloseToTargetShare: 0,
         tooManyEmptyBatches: 0,
         tooManyValidators: 0,
@@ -125,6 +128,7 @@ export class CSModuleSrv implements Service {
         let totalActiveValidators = 0n
         let csmActiveValidators = 0n
         let csmTargetShareBP = 0n
+        let csmPriorityExitShareBP = 0n
 
         const digests = await stakingRouter.getAllStakingModuleDigests({
             blockTag: blockEvent.blockHash,
@@ -137,7 +141,8 @@ export class CSModuleSrv implements Service {
 
             if (d.state.stakingModuleAddress === DEPLOYED_ADDRESSES.CS_MODULE) {
                 csmActiveValidators = moduleActiveValidators
-                csmTargetShareBP = d.state.targetShare
+                csmTargetShareBP = d.state.stakeShareLimit
+                csmPriorityExitShareBP = d.state.priorityExitShareThreshold
             }
         }
 
@@ -158,7 +163,11 @@ export class CSModuleSrv implements Service {
         const out: Finding[] = []
 
         if (now - this.lastFiredAt.moduleShareIsCloseToTargetShare > SECONDS_PER_DAY * 7) {
-            if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
+            if (csmCurrentShareBP > csmTargetShareBP - TARGET_SHARE_TOLERANCE_BP) {
+                this.logger.debug(
+                    `High CSM share utilization: current=${csmCurrentShareBP}BP, target=${csmTargetShareBP}BP, do not fire CS-MODULE-CLOSE-TO-TARGET-SHARE.`,
+                )
+            } else if (percentUsed > TARGET_SHARE_USED_PERCENT_MAX) {
                 const f = Finding.fromObject({
                     name: `🫧 CSModule: Module's share is close to the target share.`,
                     description: `The module's share is close to the target share (${percentUsed}% utilization). Current share is ${(Number(csmCurrentShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Target share is ${(Number(csmTargetShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%`,
@@ -170,6 +179,29 @@ export class CSModuleSrv implements Service {
                 })
                 out.push(f)
                 this.lastFiredAt.moduleShareIsCloseToTargetShare = now
+            }
+        }
+
+        if (now - this.lastFiredAt.moduleShareIsCloseToPriorityExitShare > SECONDS_PER_DAY * 7) {
+            if (csmCurrentShareBP >= csmPriorityExitShareBP) {
+                this.logger.debug(
+                    `CSM share is higher than priority exit share: current=${csmCurrentShareBP}BP, exitShare=${csmPriorityExitShareBP}BP, do not fire CS-MODULE-CLOSE-TO-PRIORITY-EXIT-SHARE.`,
+                )
+            } else if (
+                csmCurrentShareBP >
+                csmPriorityExitShareBP - PRIORITY_EXIT_SHARE_DIFF_TO_ALERT_BP
+            ) {
+                const f = Finding.fromObject({
+                    name: `🔵 CSModule: Module's share is close to the priority exit share.`,
+                    description: `The module's share is close to the priority exit share. Current share is ${(Number(csmCurrentShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Priority exit share is ${(Number(csmPriorityExitShareBP * 100n) / Number(BASIS_POINT_MUL)).toFixed(2)}%. Module's validators can be requested to exit.`,
+                    alertId: 'CS-MODULE-CLOSE-TO-PRIORITY-EXIT-SHARE',
+                    // NOTE: Do not include the source to reach quorum.
+                    // source: sourceFromEvent(blockEvent),
+                    severity: FindingSeverity.Info,
+                    type: FindingType.Info,
+                })
+                out.push(f)
+                this.lastFiredAt.moduleShareIsCloseToPriorityExitShare = now
             }
         }
 
@@ -219,7 +251,7 @@ export class CSModuleSrv implements Service {
                         ? no.depositableValidatorsCount - keysSeenForOperator
                         : keysInBatch
                 validatorsInQueue += depositableFromBatch
-                queueLookup.set(nodeOperatorId, depositableFromBatch)
+                queueLookup.set(nodeOperatorId, keysSeenForOperator + depositableFromBatch)
             }
 
             index = batch.next()

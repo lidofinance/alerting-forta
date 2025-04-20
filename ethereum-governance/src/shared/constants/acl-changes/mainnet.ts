@@ -48,9 +48,9 @@ import {
 import { BSC_L1_CROSS_CHAIN_CONTROLLER as bscL1CrossChainControllerAddress } from '../cross-chain/mainnet'
 import { ContractRolesInfo, NamedRole, OwnableContractInfo } from '../../types'
 
-export const NEW_OWNER_IS_CONTRACT_REPORT_INTERVAL = 24 * 60 * 60 // 24h
-export const NEW_OWNER_IS_EOA_REPORT_INTERVAL = 60 * 60 // 1h
-export const NEW_ROLE_MEMBERS_REPORT_INTERVAL = 6 * 60 * 60 // 6h
+export const NEW_OWNER_IS_CONTRACT_REPORT_BLOCK_INTERVAL = 7200 // ~24h
+export const NEW_OWNER_IS_EOA_REPORT_BLOCK_INTERVAL = 300 // ~1h
+export const NEW_ROLE_MEMBERS_REPORT_BLOCK_INTERVAL = 1800 // ~6h
 
 export const AclEnumerableABI = [
   'function getRoleMember(bytes32, uint256) view returns (address)',

@@ -3,7 +3,11 @@ import { ethers } from '@fortanetwork/forta-bot'
 import { RUN_TIER } from '../config'
 import { SHARES_PRECISION, WEI_PER_ETH } from '../shared/constants'
 
-export function etherscanAddress(address: string): string {
+export function addressOnExplorer(address: string): string {
+    if (RUN_TIER == 'hoodi') {
+        return `[${address}](https://hoodi.cloud.blockscout.com/address/${address})`
+    }
+
     const subpath = RUN_TIER == 'holesky' ? 'holesky.' : ''
     return `[${address}](https://${subpath}etherscan.io/address/${address})`
 }
