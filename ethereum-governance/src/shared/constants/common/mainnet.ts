@@ -32,7 +32,7 @@ export const CS_FEE_DISTRIBUTOR = '0xd99cc66fec647e68294c6477b40fc7e0f6f618d0'
 export const CS_FEE_ORACLE = '0x4d4074628678bd302921c20573eea1ed38ddf7fb'
 export const CS_HASH_CONSENSUS = '0x71093eff8d8599b5fa340d665ad60fa7c80688e4'
 export const CS_GATE_SEAL = '0x16dbd4b85a448be564f1742d5c8ccdd2bb3185d0'
-export const CS_VERIFIER = '0x3dfc50f22aca652a0a6f28a0f892ab62074b5583'
+export const CS_VERIFIER = '0x0c345dfa318f9f4977cdd4f33d80f9d0ffa38e8b'
 export const CS_COMMITTEE = '0xc52fc3081123073078698f1eac2f1dc7bd71880f'
 
 // Lido DAO Contracts
