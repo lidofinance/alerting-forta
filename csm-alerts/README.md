@@ -1,5 +1,8 @@
 # Lido CSM bot
 
+> [!WARNING]
+> The bot is not maintained anymore.
+
 ## Supported chains
 
 - Mainnet
