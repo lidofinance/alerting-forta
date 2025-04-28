@@ -182,3 +182,15 @@ repository to build an image of the v2 bot. If you want to push an image to be u
 replace the command in the Dockerfile with `yarn run start:prod:v1`.
 
 CMD ["yarn", "run", "start:prod:v1"]
+
+## [onchain-mon](https://github.com/lidofinance/onchain-mon) compatibility
+
+There's a shim to run the bot in the infra provided by the `onchain-mon`:
+
+```shell
+yarn run start:prod:om
+```
+
+Use the corresponding command in the Dockerfile:
+
+CMD ["yarn", "run", "start:prod:om"]
