@@ -57,6 +57,17 @@ describe("agent-node-operators-registry e2e tests", () => {
   );
 
   it(
+    "should process tx with csm removed signing keys",
+    async () => {
+      const findings = await runTransaction(
+        "0x2dfe92fad0397179082990bce51633d8334aa729d4566f6392a988c7fce7c2be",
+      );
+      expect(findings).toMatchSnapshot();
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
     "should process tx with a lot of validators exited",
     async () => {
       const findings = await runTransaction(
