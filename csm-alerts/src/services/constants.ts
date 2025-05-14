@@ -33,7 +33,8 @@ export const ALIASES: Record<keyof DeployedAddresses, string> = {
 }
 
 export const ORACLE_MEMBERS: { [key: string]: string } = {
-    '0x140Bd8FbDc884f48dA7cb1c09bE8A2fAdfea776E': 'Chorus One',
+    '0x140Bd8FbDc884f48dA7cb1c09bE8A2fAdfea776E': 'Chorus One (compromized)', // Revoked one.
+    '0x285f8537e1dAeEdaf617e96C742F2Cf36d63CcfB': 'Chorus One',
     '0x404335BcE530400a5814375E7Ec1FB55fAff3eA2': 'Staking Facilities',
     '0x946D3b081ed19173dC83Cd974fC69e1e760B7d78': 'Stakefish',
     '0x007DE4a5F7bc37E2F26c0cb2E8A95006EE9B89b5': 'P2P',
