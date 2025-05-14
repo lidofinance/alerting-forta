@@ -19,7 +19,7 @@ export const ACCOUNTING_HASH_CONSENSUS_REPORT_RECEIVED_EVENT =
   "event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)";
 
 export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
-  ["0x140bd8fbdc884f48da7cb1c09be8a2fadfea776e", "Chorus One"],
+  ["0x285f8537e1daeedaf617e96c742f2cf36d63ccfb", "Chorus One"],
   ["0xc79f702202e3a6b0b6310b537e786b9acaa19baf", "ChainLayer"],
   ["0x404335bce530400a5814375e7ec1fb55faff3ea2", "Staking Facilities"],
   ["0x007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5", "P2P Validator"],
@@ -33,10 +33,10 @@ export const ACCOUNTING_ORACLE_MEMBERS = new Map<string, string>([
 export const FETCH_BALANCES_BLOCK_INTERVAL = 1000;
 
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
-  ONE_WEEK / SECONDS_PER_SLOT,
+  ONE_WEEK / SECONDS_PER_SLOT
 );
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (2 * ONE_WEEK) / SECONDS_PER_SLOT,
+  (2 * ONE_WEEK) / SECONDS_PER_SLOT
 );
 
 // max delay between two oracle reports
@@ -134,7 +134,7 @@ export const ACCOUNTING_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️ Accounting Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${etherscanAddress(
-        args.addr,
+        args.addr
       )}\nPrevious address: ${etherscanAddress(args.prevAddr)}`,
     severity: FindingSeverity.Critical,
   },
