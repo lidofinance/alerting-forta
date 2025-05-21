@@ -17,3 +17,5 @@ export type OwnableContractInfo = {
   name: string
   ownershipMethod: string
 }
+
+export type Address = `0x${string}`
