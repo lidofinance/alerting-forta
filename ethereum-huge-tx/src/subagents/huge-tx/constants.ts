@@ -431,6 +431,11 @@ export const ADDRESS_TO_NAME = new Map<string, string>(
     ["0x650f9607f1371a4b8f80d2949162aedb3a4a839e", "Gnosis safe"],
     ["0xaf52695e1bb01a16d33d7194c28c42b10e0dbec2", "Aura: Voter Proxy"],
     ["0x7818a1da7bd1e64c199029e86ba244a9798eee10", "Aura: Booster"],
+    ["0xb99a2c4c1c4f1fc27150681b740396f6ce1cbcf5", "Elysium Fund (Abraxas Capital)"],
+    ["0xEd0C6079229E2d407672a117c22b62064f4a4312", "Elysium Fund (Abraxas Capital)"],
+    ["0xcF80631b469A54dcba8c8ee1aF84505f496ed248", "Elysium Fund (Abraxas Capital)"],
+    ["0x0f1DfeF1a40557d279d0de6E49aB306891A638b8", "Elysium Fund (Abraxas Capital)"],
+    ["0xDdE0d6e90bfB74f1dC8ea070cFd0c0180C03Ad16", "Elysium Fund (Abraxas Capital)"],
   ].map((pair: string[]) => [pair[0].toLowerCase(), pair[1]]),
 );
 
