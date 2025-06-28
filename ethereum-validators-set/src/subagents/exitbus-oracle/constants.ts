@@ -48,7 +48,7 @@ export const EXITBUS_HASH_CONSENSUS_REPORT_RECEIVED_EVENT =
   "event ReportReceived(uint256 indexed refSlot, address indexed member, bytes32 report)";
 
 export const EXITBUS_ORACLE_MEMBERS = new Map<string, string>([
-  ["0x140bd8fbdc884f48da7cb1c09be8a2fadfea776e", "Chorus One"],
+  ["0x285f8537e1daeedaf617e96c742f2cf36d63ccfb", "Chorus One"],
   ["0xc79f702202e3a6b0b6310b537e786b9acaa19baf", "ChainLayer"],
   ["0x404335bce530400a5814375e7ec1fb55faff3ea2", "Staking Facilities"],
   ["0x007de4a5f7bc37e2f26c0cb2e8a95006ee9b89b5", "P2P Validator"],
@@ -66,10 +66,10 @@ export const CSM_NODE_OPERATOR_REGISTRY_MODULE_ID = 3;
 export const FETCH_BALANCES_BLOCK_INTERVAL = 1000;
 
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_INFO = Math.floor(
-  ONE_WEEK / SECONDS_PER_SLOT,
+  ONE_WEEK / SECONDS_PER_SLOT
 );
 export const MAX_REPORT_SUBMIT_SKIP_BLOCKS_MEDIUM = Math.floor(
-  (2 * ONE_WEEK) / SECONDS_PER_SLOT,
+  (2 * ONE_WEEK) / SECONDS_PER_SLOT
 );
 
 export const EXIT_REQUESTS_AND_QUEUE_DIFF_RATE_INFO_THRESHOLD = 8;
@@ -147,7 +147,7 @@ export const EXITBUS_HASH_CONSENSUS_EVENTS_OF_NOTICE = [
     name: "🚨 ExitBus Oracle: Report Processor set",
     description: (args: any) =>
       `New report processor: ${etherscanAddress(
-        args.processor,
+        args.processor
       )}\nPrev report processor: ${etherscanAddress(args.prevProcessor)}`,
     severity: FindingSeverity.High,
   },
@@ -170,7 +170,7 @@ export const EXITBUS_ORACLE_EVENTS_OF_NOTICE = [
     name: "⚠️ ExitBus Oracle: Consensus Hash Contract Set",
     description: (args: any) =>
       `New address: ${etherscanAddress(
-        args.addr,
+        args.addr
       )}\nPrevious address: ${etherscanAddress(args.prevAddr)}`,
     severity: FindingSeverity.Critical,
   },
