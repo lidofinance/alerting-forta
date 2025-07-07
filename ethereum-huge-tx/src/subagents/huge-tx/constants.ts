@@ -1351,7 +1351,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were repaid to AaveV3\n` +
-      `by: ${info.to} (${info.toName})`,
+      `by: ${info.from} (${info.fromName})`,
   },
 
   {
@@ -1878,6 +1878,80 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
       `**${info.amountPretty} ${info.tokenName}** ` +
       `was deposited to Symbiotic by Mellow Protocol: Renzo Vault\n` +
       `Vault: ${info.to} `,
+  },
+
+    {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xC035a7cf15375cE2706766804551791aD035E0C2",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xC035a7cf15375cE2706766804551791aD035E0C2",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `wstETH was supplied to Aave Prime\n` +
+      `by: ${info.from} (${info.fromName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0xC035a7cf15375cE2706766804551791aD035E0C2",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xC035a7cf15375cE2706766804551791aD035E0C2",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `wstETH was withdrawn from Aave Prime\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        from: "0xC035a7cf15375cE2706766804551791aD035E0C2",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xE439edd2625772AA635B437C099C607B6eb7d35f",
+          from: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `wstETH was borrowed on Aave Prime\n` +
+      `by: ${info.to} (${info.toName})`,
+  },
+  {
+    transferPatterns: {
+      mainTransfer: {
+        contract: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        to: "0xC035a7cf15375cE2706766804551791aD035E0C2",
+      },
+      additionalTransfers: [
+        {
+          contract: "0xE439edd2625772AA635B437C099C607B6eb7d35f",
+          to: NULL_ADDRESS,
+        },
+      ],
+    },
+    description: (info: TransferEventInfo) =>
+      `**${info.amountPretty} ${info.tokenName}** ` +
+      `wstETH was repaid to Aave Prime\n` +
+      `by: ${info.from} (${info.fromName})`,
   },
 ];
 
