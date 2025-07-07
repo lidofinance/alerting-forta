@@ -1296,7 +1296,7 @@ export const COMPLEX_TRANSFERS_TEMPLATES: ComplexTransferPattern[] = [
     description: (info: TransferEventInfo) =>
       `**${info.amountPretty} ${info.tokenName}** ` +
       `were supplied to AaveV3\n` +
-      `by: ${info.to} (${info.toName})`,
+      `by: ${info.from} (${info.fromName})`,
   },
   {
     transferPatterns: {
