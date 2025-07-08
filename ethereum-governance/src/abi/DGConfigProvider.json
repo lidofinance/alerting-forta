@@ -1,0 +1,365 @@
+[
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "PercentD16",
+            "name": "firstSealRageQuitSupport",
+            "type": "uint128"
+          },
+          {
+            "internalType": "PercentD16",
+            "name": "secondSealRageQuitSupport",
+            "type": "uint128"
+          },
+          {
+            "internalType": "Duration",
+            "name": "minAssetsLockDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingMinDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingMaxDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingMinActiveDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingDeactivationMaxDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoCooldownDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitExtensionPeriodDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsMinDelay",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsMaxDelay",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsDelayGrowth",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct DualGovernanceConfig.Context",
+        "name": "dualGovernanceConfig",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "minAssetsLockDuration",
+        "type": "uint32"
+      }
+    ],
+    "name": "InvalidMinAssetsLockDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "rageQuitEthWithdrawalsMinDelay",
+        "type": "uint32"
+      },
+      {
+        "internalType": "Duration",
+        "name": "rageQuitEthWithdrawalsMaxDelay",
+        "type": "uint32"
+      }
+    ],
+    "name": "InvalidRageQuitEthWithdrawalsDelayRange",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "PercentD16",
+        "name": "firstSealRageQuitSupport",
+        "type": "uint128"
+      },
+      {
+        "internalType": "PercentD16",
+        "name": "secondSealRageQuitSupport",
+        "type": "uint128"
+      }
+    ],
+    "name": "InvalidRageQuitSupportRange",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "Duration",
+        "name": "vetoSignallingMinDuration",
+        "type": "uint32"
+      },
+      {
+        "internalType": "Duration",
+        "name": "vetoSignallingMaxDuration",
+        "type": "uint32"
+      }
+    ],
+    "name": "InvalidVetoSignallingDurationRange",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FIRST_SEAL_RAGE_QUIT_SUPPORT",
+    "outputs": [
+      {
+        "internalType": "PercentD16",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_ASSETS_LOCK_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "RAGE_QUIT_ETH_WITHDRAWALS_DELAY_GROWTH",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "RAGE_QUIT_ETH_WITHDRAWALS_MAX_DELAY",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "RAGE_QUIT_ETH_WITHDRAWALS_MIN_DELAY",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "RAGE_QUIT_EXTENSION_PERIOD_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SECOND_SEAL_RAGE_QUIT_SUPPORT",
+    "outputs": [
+      {
+        "internalType": "PercentD16",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VETO_COOLDOWN_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VETO_SIGNALLING_DEACTIVATION_MAX_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VETO_SIGNALLING_MAX_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VETO_SIGNALLING_MIN_ACTIVE_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VETO_SIGNALLING_MIN_DURATION",
+    "outputs": [
+      {
+        "internalType": "Duration",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDualGovernanceConfig",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "PercentD16",
+            "name": "firstSealRageQuitSupport",
+            "type": "uint128"
+          },
+          {
+            "internalType": "PercentD16",
+            "name": "secondSealRageQuitSupport",
+            "type": "uint128"
+          },
+          {
+            "internalType": "Duration",
+            "name": "minAssetsLockDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingMinDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingMaxDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingMinActiveDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoSignallingDeactivationMaxDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "vetoCooldownDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitExtensionPeriodDuration",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsMinDelay",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsMaxDelay",
+            "type": "uint32"
+          },
+          {
+            "internalType": "Duration",
+            "name": "rageQuitEthWithdrawalsDelayGrowth",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct DualGovernanceConfig.Context",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
