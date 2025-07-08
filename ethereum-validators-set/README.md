@@ -1,3 +1,5 @@
+# ⛔️ DEPRECATED
+
 # Lido Detection Bot for Forta
 
 ## Supported chains

@@ -1,3 +1,5 @@
+# ⛔️ DEPRECATED
+
 # Lido Detection bots for Forta
 
 ## Bots list
