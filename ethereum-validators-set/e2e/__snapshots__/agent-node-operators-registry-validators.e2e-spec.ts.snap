@@ -140,6 +140,26 @@ New exited: 116",
 ]
 `;
 
+exports[`agent-node-operators-registry e2e tests should process tx with csm removed signing keys 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "COMMUNITY-STAKING-NODE-OPERATORS-KEYS-REMOVED",
+    "description": "Signing keys has been removed for:
+ CSM Operator #333: 25",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ Community Staking: Signing keys removed",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2023-12-31T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;
+
 exports[`agent-node-operators-registry e2e tests should process tx with removed signing keys 1`] = `
 [
   Finding {
@@ -149,9 +169,9 @@ exports[`agent-node-operators-registry e2e tests should process tx with removed 
  Kiln: 50",
     "labels": [],
     "metadata": {},
-    "name": "🚨 curated-onchain-v1: Signing keys removed",
+    "name": "⚠️ curated-onchain-v1: Signing keys removed",
     "protocol": "ethereum",
-    "severity": 4,
+    "severity": 3,
     "source": {},
     "timestamp": 2023-12-31T00:00:00.000Z,
     "type": 4,
