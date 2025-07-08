@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VaultWatchers srv functional tests should find limits integrity medium 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "VAULT-WSTETH-LIMITS-INTEGRITY-MEDIUM",
+    "description": "Mellow Vault [Decentralized Validator Token] (0x5e362eb2c0706bd1d134689ec75176018385430b) - vaultTotalSupply and vaultUnderlyingTvl different",
+    "labels": [],
+    "metadata": {},
+    "name": "⚠️ Vault: vaultTotalSupply and vaultUnderlyingTvl is not the same",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "",
+  },
+]
+`;

@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MultisigWatcher srv functional tests should process tx with Added Owner and Execution Success 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-OWNER-ADDED",
+    "description": "New owner 0x59F8D74Fe49d5ebEAc069E3baf07eB4b614BD5A7 was added to [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003)",
+    "labels": [],
+    "metadata": {
+      "args": "0x59F8D74Fe49d5ebEAc069E3baf07eB4b614BD5A7",
+    },
+    "name": "⚠️ Gnosis Safe: Owner added",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-OWNER-ADDED",
+    "description": "New owner 0xFB864C1127ff77215d0A8e652bB632F526A4A89f was added to [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003)",
+    "labels": [],
+    "metadata": {
+      "args": "0xFB864C1127ff77215d0A8e652bB632F526A4A89f",
+    },
+    "name": "⚠️ Gnosis Safe: Owner added",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-OWNER-ADDED",
+    "description": "New owner 0xa94e4ADceC38074967b17F6e8856AB12368686B5 was added to [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003)",
+    "labels": [],
+    "metadata": {
+      "args": "0xa94e4ADceC38074967b17F6e8856AB12368686B5",
+    },
+    "name": "⚠️ Gnosis Safe: Owner added",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-OWNER-ADDED",
+    "description": "New owner 0xEA685f0AF4A0BF5E7D6729b2C63eDF574D3EE27f was added to [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003)",
+    "labels": [],
+    "metadata": {
+      "args": "0xEA685f0AF4A0BF5E7D6729b2C63eDF574D3EE27f",
+    },
+    "name": "⚠️ Gnosis Safe: Owner added",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "14f4c38e-7e1e-49df-af02-6c582e79158c",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-EXECUTION-SUCCESS",
+    "description": "[TX](https://app.safe.global/transactions/tx?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003&id=multisig_0x9437b2a8cf3b69d782a61f9814baabc172f72003_0x94a28231af2efbd2b1408ed0e49026adb1874fa2b91aabe5899e9123b4ce3ecb) executed by [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003)
+[blockchain explorer](https://etherscan.io/tx/0x4c3e507fd78daac24dd75e33e7c69381481db8bce62c795d2eec67126ad6d396)",
+    "labels": [],
+    "metadata": {
+      "args": "0x94a28231af2efbd2b1408ed0e49026adb1874fa2b91aabe5899e9123b4ce3ecb,0",
+    },
+    "name": "ℹ️ ✅ Gnosis Safe: TX Executed",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "8dd6c439-842b-4a2a-a7e8-b404ffbac5ce",
+  },
+]
+`;
+
+exports[`MultisigWatcher srv functional tests should process tx with Changed Threshold and Execution Success 1`] = `
+[
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-THRESHOLD-CHANGED",
+    "description": "Threshold for [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003) was changed to 5",
+    "labels": [],
+    "metadata": {
+      "args": "5",
+    },
+    "name": "⚠️ Gnosis Safe: Threshold changed",
+    "protocol": "ethereum",
+    "severity": 3,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "e70d0bb5-0033-4f34-a1cc-3b9f177f215f",
+  },
+  Finding {
+    "addresses": [],
+    "alertId": "SAFE-EXECUTION-SUCCESS",
+    "description": "[TX](https://app.safe.global/transactions/tx?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003&id=multisig_0x9437b2a8cf3b69d782a61f9814baabc172f72003_0xa9dc9b05a3462baba5892e962a8d91815660346c4af348e42e5d5c348a9e81a9) executed by [Mellow Vaults Admin multisig](https://app.safe.global/home?safe=eth:0x9437b2a8cf3b69d782a61f9814baabc172f72003)
+[blockchain explorer](https://etherscan.io/tx/0xb58e9e81ad1dac1f33b9dfc4d19f2d909a2a3ea890c31aa27a0df10f86bd4eea)",
+    "labels": [],
+    "metadata": {
+      "args": "0xa9dc9b05a3462baba5892e962a8d91815660346c4af348e42e5d5c348a9e81a9,0",
+    },
+    "name": "ℹ️ ✅ Gnosis Safe: TX Executed",
+    "protocol": "ethereum",
+    "severity": 1,
+    "source": {},
+    "timestamp": 2024-01-01T00:00:00.000Z,
+    "type": 4,
+    "uniqueKey": "8dd6c439-842b-4a2a-a7e8-b404ffbac5ce",
+  },
+]
+`;
